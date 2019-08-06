@@ -1,14 +1,14 @@
 use crate::{
     glyphs::{UiGlyphs, UiGlyphsResource},
-    Selected, TextEditing, UiImage, UiTransform,
+    Selected, TextEditing, UiGlyphsSystemDesc, UiImage, UiTransform,
 };
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
     ecs::{
-        DispatcherBuilder, Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources,
-        SystemData,
+        hibitset::BitSet, DispatcherBuilder, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+        SystemData, World,
     },
-    Hidden, HiddenPropagate,
+    Hidden, HiddenPropagate, SystemDesc,
 };
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -42,7 +42,6 @@ use amethyst_rendy::{
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use glsl_layout::{vec2, vec4, AsStd140};
-use hibitset::BitSet;
 use std::cmp::Ordering;
 
 #[cfg(feature = "profiler")]
@@ -63,8 +62,16 @@ impl RenderUi {
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderUi {
-    fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        builder.add(crate::UiGlyphsSystem::<B>::new(), "ui_glyphs_system", &[]);
+    fn on_build<'a, 'b>(
+        &mut self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
+        builder.add(
+            UiGlyphsSystemDesc::<B>::default().build(world),
+            "ui_glyphs_system",
+            &[],
+        );
         Ok(())
     }
 
@@ -72,7 +79,7 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _res: &Resources,
+        _world: &World,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(RenderOrder::Overlay, DrawUiDesc::new().builder())?;
@@ -134,19 +141,19 @@ impl DrawUiDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
+impl<B: Backend> RenderGroupDesc<B, World> for DrawUiDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        resources: &Resources,
+        resources: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -205,14 +212,14 @@ struct CachedDrawOrder {
     pub cache: Vec<(f32, Entity)>,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
+impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
@@ -444,7 +451,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &Resources,
+        _resources: &World,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -463,7 +470,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -527,7 +534,7 @@ fn mul_blend(a: &[f32; 4], b: &[f32; 4]) -> [f32; 4] {
 
 fn render_image<B: Backend>(
     factory: &Factory<B>,
-    resources: &Resources,
+    resources: &World,
     transform: &UiTransform,
     raw_image: &UiImage,
     tint: &Option<[f32; 4]>,

@@ -1,11 +1,13 @@
 use amethyst::{
-    core::Transform,
-    ecs::prelude::{Join, ReadExpect, System, Write, WriteStorage},
+    core::{SystemDesc, Transform},
+    derive::SystemDesc,
+    ecs::prelude::{Join, ReadExpect, System, SystemData, World, Write, WriteStorage},
     ui::UiText,
 };
 
 use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
 
+#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {

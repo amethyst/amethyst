@@ -1,11 +1,13 @@
 use std::marker::PhantomData;
 
-use amethyst_core::ecs::prelude::{
-    Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage,
+use amethyst_core::ecs::{
+    prelude::{
+        Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage, World,
+    },
+    shred::{ResourceId, SystemData},
 };
 
 use serde::{Deserialize, Serialize};
-use shred_derive::SystemData;
 
 use super::{Anchor, ScaleMode, Stretch};
 

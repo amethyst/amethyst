@@ -2,7 +2,7 @@ use std::{marker::PhantomData, net::SocketAddr};
 
 use serde::{de::DeserializeOwned, Serialize};
 
-use amethyst_core::{bundle::SystemBundle, shred::DispatcherBuilder};
+use amethyst_core::{bundle::SystemBundle, ecs::World, shred::DispatcherBuilder};
 use amethyst_error::{Error, ResultExt};
 
 use crate::{server::ServerConfig, NetSocketSystem};
@@ -46,7 +46,11 @@ where
     T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
 {
     /// Build the networking bundle by adding the networking system to the application.
-    fn build(self, builder: &mut DispatcherBuilder<'_, '_>) -> Result<(), Error> {
+    fn build(
+        self,
+        _world: &mut World,
+        builder: &mut DispatcherBuilder<'_, '_>,
+    ) -> Result<(), Error> {
         let socket_system = NetSocketSystem::<T>::new(self.config)
             .with_context(|_| Error::from_string("Failed to open network system."))?;
         builder.add(socket_system, "net_socket", &[]);

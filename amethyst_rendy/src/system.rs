@@ -14,9 +14,7 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
 use amethyst_core::{
     components::Transform,
-    ecs::{
-        Read, ReadExpect, ReadStorage, Resources, RunNow, System, SystemData, Write, WriteExpect,
-    },
+    ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, World, Write, WriteExpect},
     timing::Time,
     Hidden, HiddenPropagate,
 };
@@ -37,10 +35,10 @@ use thread_profiler::profile_scope;
 pub trait GraphCreator<B: Backend> {
     /// Check if graph needs to be rebuilt.
     /// This function is evaluated every frame before running the graph.
-    fn rebuild(&mut self, res: &Resources) -> bool;
+    fn rebuild(&mut self, world: &World) -> bool;
 
     /// Retrieve configured complete graph builder.
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources>;
+    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World>;
 }
 
 /// Amethyst rendering system
@@ -50,7 +48,7 @@ where
     B: Backend,
     G: GraphCreator<B>,
 {
-    graph: Option<Graph<B, Resources>>,
+    graph: Option<Graph<B, World>>,
     families: Option<Families<B>>,
     graph_creator: G,
 }
@@ -93,42 +91,42 @@ where
     B: Backend,
     G: GraphCreator<B>,
 {
-    fn rebuild_graph(&mut self, res: &Resources) {
+    fn rebuild_graph(&mut self, world: &World) {
         #[cfg(feature = "profiler")]
         profile_scope!("rebuild_graph");
 
-        let mut factory = res.fetch_mut::<Factory<B>>();
+        let mut factory = world.fetch_mut::<Factory<B>>();
 
         if let Some(graph) = self.graph.take() {
             #[cfg(feature = "profiler")]
             profile_scope!("dispose_graph");
-            graph.dispose(&mut *factory, res);
+            graph.dispose(&mut *factory, world);
         }
 
         let builder = {
             #[cfg(feature = "profiler")]
             profile_scope!("run_graph_creator");
-            self.graph_creator.builder(&mut factory, res)
+            self.graph_creator.builder(&mut factory, world)
         };
 
         let graph = {
             #[cfg(feature = "profiler")]
             profile_scope!("build_graph");
             builder
-                .build(&mut factory, self.families.as_mut().unwrap(), res)
+                .build(&mut factory, self.families.as_mut().unwrap(), world)
                 .unwrap()
         };
 
         self.graph = Some(graph);
     }
 
-    fn run_graph(&mut self, res: &Resources) {
-        let mut factory = res.fetch_mut::<Factory<B>>();
+    fn run_graph(&mut self, world: &World) {
+        let mut factory = world.fetch_mut::<Factory<B>>();
         factory.maintain(self.families.as_mut().unwrap());
         self.graph
             .as_mut()
             .unwrap()
-            .run(&mut factory, self.families.as_mut().unwrap(), res)
+            .run(&mut factory, self.families.as_mut().unwrap(), world)
     }
 }
 
@@ -137,15 +135,15 @@ where
     B: Backend,
     G: GraphCreator<B>,
 {
-    fn run_now(&mut self, res: &'a Resources) {
-        let rebuild = self.graph_creator.rebuild(res);
+    fn run_now(&mut self, world: &'a World) {
+        let rebuild = self.graph_creator.rebuild(world);
         if self.graph.is_none() || rebuild {
-            self.rebuild_graph(res);
+            self.rebuild_graph(world);
         }
-        self.run_graph(res);
+        self.run_graph(world);
     }
 
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, world: &mut World) {
         let config: rendy::factory::Config = Default::default();
         let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
 
@@ -155,27 +153,27 @@ where
         };
 
         self.families = Some(families);
-        res.insert(factory);
-        res.insert(queue_id);
+        world.insert(factory);
+        world.insert(queue_id);
 
-        SetupData::setup(res);
+        SetupData::setup(world);
 
-        let mat = create_default_mat::<B>(res);
-        res.insert(MaterialDefaults(mat));
+        let mat = create_default_mat::<B>(world);
+        world.insert(MaterialDefaults(mat));
     }
 
-    fn dispose(mut self: Box<Self>, res: &mut Resources) {
+    fn dispose(mut self: Box<Self>, world: &mut World) {
         if let Some(graph) = self.graph.take() {
-            let mut factory = res.fetch_mut::<Factory<B>>();
+            let mut factory = world.fetch_mut::<Factory<B>>();
             log::debug!("Dispose graph");
-            graph.dispose(&mut *factory, res);
+            graph.dispose(&mut *factory, world);
         }
 
         log::debug!("Unload resources");
-        if let Some(mut storage) = res.try_fetch_mut::<AssetStorage<Mesh>>() {
+        if let Some(mut storage) = world.try_fetch_mut::<AssetStorage<Mesh>>() {
             storage.unload_all();
         }
-        if let Some(mut storage) = res.try_fetch_mut::<AssetStorage<Texture>>() {
+        if let Some(mut storage) = world.try_fetch_mut::<AssetStorage<Texture>>() {
             storage.unload_all();
         }
 
@@ -271,12 +269,12 @@ impl<'a, B: Backend> System<'a> for TextureProcessor<B> {
     }
 }
 
-fn create_default_mat<B: Backend>(res: &mut Resources) -> Material {
+fn create_default_mat<B: Backend>(world: &mut World) -> Material {
     use crate::mtl::TextureOffset;
 
     use amethyst_assets::Loader;
 
-    let loader = res.fetch::<Loader>();
+    let loader = world.fetch::<Loader>();
 
     let albedo = load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 1.0));
     let emission = load_from_srgba(Srgba::new(0.0, 0.0, 0.0, 0.0));
@@ -285,7 +283,7 @@ fn create_default_mat<B: Backend>(res: &mut Resources) -> Material {
     let ambient_occlusion = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0));
     let cavity = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0));
 
-    let tex_storage = res.fetch();
+    let tex_storage = world.fetch();
 
     let albedo = loader.load_from_data(albedo.into(), (), &tex_storage);
     let emission = loader.load_from_data(emission.into(), (), &tex_storage);

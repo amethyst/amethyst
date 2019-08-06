@@ -1,7 +1,7 @@
 use crate::{config::DisplayConfig, resources::ScreenDimensions};
 use amethyst_config::Config;
 use amethyst_core::{
-    ecs::{ReadExpect, Resources, RunNow, System, SystemData, Write, WriteExpect},
+    ecs::{ReadExpect, RunNow, System, SystemData, World, Write, WriteExpect},
     shrev::EventChannel,
 };
 use std::path::Path;
@@ -9,32 +9,39 @@ use winit::{Event, EventsLoop, Window};
 
 /// System for opening and managing the window.
 #[derive(Debug)]
-pub struct WindowSystem {
-    window: Option<Window>,
-}
+pub struct WindowSystem;
 
 impl WindowSystem {
     /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
     /// sources. Returns a new `WindowSystem`
-    pub fn from_config_path(events_loop: &EventsLoop, path: impl AsRef<Path>) -> Self {
-        Self::from_config(events_loop, DisplayConfig::load(path.as_ref()))
+    pub fn from_config_path(
+        world: &mut World,
+        events_loop: &EventsLoop,
+        path: impl AsRef<Path>,
+    ) -> Self {
+        Self::from_config(world, events_loop, DisplayConfig::load(path.as_ref()))
     }
 
     /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
     /// sources. Returns a new `WindowSystem`
-    pub fn from_config(events_loop: &EventsLoop, config: DisplayConfig) -> Self {
+    pub fn from_config(world: &mut World, events_loop: &EventsLoop, config: DisplayConfig) -> Self {
         let window = config
             .into_window_builder(events_loop)
             .build(events_loop)
             .unwrap();
-        Self::new(window)
+        Self::new(world, window)
     }
 
     /// Create a new `WindowSystem` wrapping the provided `Window`
-    pub fn new(window: Window) -> Self {
-        Self {
-            window: Some(window),
-        }
+    pub fn new(world: &mut World, window: Window) -> Self {
+        let (width, height) = window
+            .get_inner_size()
+            .expect("Window closed during initialization!")
+            .into();
+        let hidpi = window.get_hidpi_factor();
+        world.insert(ScreenDimensions::new(width, height, hidpi));
+        world.insert(window);
+        Self
     }
 
     fn manage_dimensions(&mut self, mut screen_dimensions: &mut ScreenDimensions, window: &Window) {
@@ -74,17 +81,6 @@ impl<'a> System<'a> for WindowSystem {
 
         self.manage_dimensions(&mut screen_dimensions, &window);
     }
-    fn setup(&mut self, res: &mut Resources) {
-        if let Some(window) = self.window.take() {
-            let (width, height) = window
-                .get_inner_size()
-                .expect("Window closed during initialization!")
-                .into();
-            let hidpi = window.get_hidpi_factor();
-            res.insert(ScreenDimensions::new(width, height, hidpi));
-            res.insert(window);
-        }
-    }
 }
 
 /// System that polls the window events and pushes them to appropriate event channels.
@@ -108,8 +104,8 @@ impl EventsLoopSystem {
 }
 
 impl<'a> RunNow<'a> for EventsLoopSystem {
-    fn run_now(&mut self, res: &'a Resources) {
-        let mut event_handler = <Write<'a, EventChannel<Event>>>::fetch(res);
+    fn run_now(&mut self, world: &'a World) {
+        let mut event_handler = <Write<'a, EventChannel<Event>>>::fetch(world);
 
         let events = &mut self.events;
         self.events_loop.poll_events(|event| {
@@ -118,7 +114,7 @@ impl<'a> RunNow<'a> for EventsLoopSystem {
         event_handler.drain_vec_write(events);
     }
 
-    fn setup(&mut self, res: &mut Resources) {
-        <Write<'a, EventChannel<Event>>>::setup(res);
+    fn setup(&mut self, world: &mut World) {
+        <Write<'a, EventChannel<Event>>>::setup(world);
     }
 }

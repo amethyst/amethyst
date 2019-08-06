@@ -24,11 +24,9 @@ amethyst_derive = { path = "../amethyst_derive", version = "0.5.0" }
 amethyst_rendy = { path = "../amethyst_rendy", version = "0.2.0" }
 amethyst_window = { path = "../amethyst_window", version = "0.2.0" }
 log = "0.4.6"
-shred-derive = "0.5"
-shred = "0.7"
 serde = { version = "1.0", features = ["derive"] }
 specs-derive = "0.4.0"
-specs-hierarchy = { version = "0.3" }
+specs-hierarchy = "0.5.1"
 
 thread_profiler = { version = "0.3", optional = true }
 

@@ -41,19 +41,21 @@ Alternatively we can add `Bundle`s of `System`s to our `DispatcherBuilder` direc
 #
 # use amethyst::{
 #     core::bundle::SystemBundle,
-#     ecs::prelude::*,
+#     ecs::{DispatcherBuilder, World, WorldExt},
 #     prelude::*,
 # };
 # #[derive(Default)] struct PongSystemsBundle;
 # impl<'a, 'b> SystemBundle<'a, 'b> for PongSystemsBundle {
-#     fn build(self, _: &mut DispatcherBuilder<'a, 'b>) -> Result<(), amethyst::Error> {
+#     fn build(self, _: &mut World, _: &mut DispatcherBuilder<'a, 'b>) -> Result<(), amethyst::Error> {
 #         Ok(())
 #     }
 # }
+#
+# let mut world = World::new();
 let mut dispatcher_builder = DispatcherBuilder::new();
 
 PongSystemsBundle::default()
-    .build(&mut dispatcher_builder)
+    .build(&mut world, &mut dispatcher_builder)
     .expect("Failed to register PongSystemsBundle");
 ```
 
@@ -79,8 +81,8 @@ pub struct CustomState<'a, 'b> {
 }
 
 impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let world = data.world;
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+        let world = &mut data.world;
         
         // Create the `DispatcherBuilder` and register some `System`s that should only run for this `State`.
         let mut dispatcher_builder = DispatcherBuilder::new();
@@ -89,9 +91,9 @@ impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
 
         // Build and setup the `Dispatcher`.
         let mut dispatcher = dispatcher_builder
-            .with_pool(world.read_resource::<ArcThreadPool>().clone())
+            .with_pool((*world.read_resource::<ArcThreadPool>()).clone())
             .build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(world);
 
         self.dispatcher = Some(dispatcher);
     }
@@ -120,8 +122,8 @@ The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifeti
 # impl<'a> System<'a> for MovePaddlesSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
 # 
 impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let world = data.world;
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+        let world = &mut data.world;
          
         // Create the `DispatcherBuilder` and register some `System`s that should only run for this `State`.
         let mut dispatcher_builder = DispatcherBuilder::new();
@@ -130,14 +132,14 @@ impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
  
         // Build and setup the `Dispatcher`.
         let mut dispatcher = dispatcher_builder.build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(world);
  
         self.dispatcher = Some(dispatcher);
     }
  
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
         if let Some(dispatcher) = self.dispatcher.as_mut() {
-            dispatcher.dispatch(&data.world.res);
+            dispatcher.dispatch(&data.world);
         }
 
         Trans::None

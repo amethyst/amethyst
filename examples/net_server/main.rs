@@ -1,9 +1,11 @@
 use amethyst::{
-    core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Component, Entities, Join, System, VecStorage, WriteStorage},
+    core::{frame_limiter::FrameRateLimitStrategy, SystemDesc},
+    derive::SystemDesc,
+    ecs::{Component, Entities, Join, System, SystemData, VecStorage, World, WriteStorage},
     network::*,
     prelude::*,
     shrev::ReaderId,
+    utils::application_root_dir,
     Result,
 };
 
@@ -14,12 +16,14 @@ use std::time::Duration;
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
+    let assets_dir = application_root_dir()?.join("./");
+
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<String>::new(
             "127.0.0.1:3455".parse().unwrap(),
         ))?
         .with(SpamReceiveSystem::new(), "rcv", &[]);
-    let mut game = Application::build("./", State1)?
+    let mut game = Application::build(assets_dir, State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             1,
@@ -43,6 +47,7 @@ impl Component for SpamReader {
 }
 
 /// A simple system that receives a ton of network events.
+#[derive(SystemDesc)]
 struct SpamReceiveSystem {}
 
 impl SpamReceiveSystem {

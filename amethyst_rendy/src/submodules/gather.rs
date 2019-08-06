@@ -5,7 +5,7 @@ use crate::{
     resources::AmbientColor,
 };
 use amethyst_core::{
-    ecs::{Join, Read, ReadStorage, Resources, SystemData},
+    ecs::{Join, Read, ReadStorage, SystemData, World},
     math::{convert, Matrix4, Vector3},
     transform::Transform,
 };
@@ -31,7 +31,7 @@ impl CameraGatherer {
     /// projection matrix.
     ///
     /// The matrix returned is the camera's `Projection` matrix and the camera `Transform::global_view_matrix`
-    pub fn gather(res: &Resources) -> Self {
+    pub fn gather(world: &World) -> Self {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_cameras");
 
@@ -39,7 +39,7 @@ impl CameraGatherer {
             Read<'_, ActiveCamera>,
             ReadStorage<'_, Camera>,
             ReadStorage<'_, Transform>,
-        )>::fetch(res);
+        )>::fetch(world);
 
         let defcam = Camera::standard_2d(1.0, 1.0);
         let identity = Transform::default();
@@ -83,8 +83,8 @@ impl CameraGatherer {
 pub struct AmbientGatherer;
 impl AmbientGatherer {
     /// If an `AmbientColor` exists in the world, return it - otherwise return pure white.
-    pub fn gather(res: &Resources) -> vec3 {
-        let ambient_color = <Option<Read<'_, AmbientColor>>>::fetch(res);
+    pub fn gather(world: &World) -> vec3 {
+        let ambient_color = <Option<Read<'_, AmbientColor>>>::fetch(world);
         ambient_color.map_or([0.0, 0.0, 0.0].into(), |c| {
             let (r, g, b, _) = c.0.into_components();
             [r, g, b].into()
