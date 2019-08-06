@@ -10,7 +10,7 @@ use cpal::OutputDevices;
 use log::error;
 use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
 
-use amethyst_core::shred::Resources;
+use amethyst_core::ecs::World;
 
 use crate::{sink::AudioSink, source::Source, DecoderError};
 
@@ -121,11 +121,12 @@ pub fn outputs() -> OutputIterator {
 }
 
 /// Initialize default output
-pub fn init_output(res: &mut Resources) {
+pub fn init_output(world: &mut World) {
     if let Some(o) = default_output() {
-        res.entry::<AudioSink>()
+        world
+            .entry::<AudioSink>()
             .or_insert_with(|| AudioSink::new(&o));
-        res.entry::<Output>().or_insert_with(|| o);
+        world.entry::<Output>().or_insert_with(|| o);
     } else {
         error!("Failed finding a default audio output to hook AudioSink to, audio will not work!")
     }

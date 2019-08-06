@@ -13,7 +13,7 @@ use crate::{
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
+    ecs::{Join, Read, ReadExpect, ReadStorage, SystemData, World},
     transform::Transform,
     Hidden, HiddenPropagate,
 };
@@ -97,19 +97,19 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, Resources> for DrawBase3DDesc<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<B, T> {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &Resources,
+        _aux: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         profile_scope_impl!("build");
 
         let env = EnvironmentSub::new(factory)?;
@@ -176,14 +176,14 @@ pub struct DrawBase3D<B: Backend, T: Base3DPassDef> {
     marker: PhantomData<T>,
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3D<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) -> PrepareResult {
         profile_scope_impl!("prepare opaque");
 
@@ -293,7 +293,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3D<B, T
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) {
         profile_scope_impl!("draw opaque");
 
@@ -365,7 +365,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3D<B, T
         }
     }
 
-    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
+    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
         profile_scope_impl!("dispose");
         unsafe {
             factory
@@ -413,21 +413,19 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, Resources>
-    for DrawBase3DTransparentDesc<B, T>
-{
+impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTransparentDesc<B, T> {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &Resources,
+        _aux: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         let env = EnvironmentSub::new(factory)?;
         let materials = MaterialSub::new(factory)?;
         let skinning = SkinningSub::new(factory)?;
@@ -493,14 +491,14 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef> {
     marker: PhantomData<(T)>,
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3DTransparent<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTransparent<B, T> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) -> PrepareResult {
         profile_scope_impl!("prepare transparent");
 
@@ -602,7 +600,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3DTrans
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) {
         profile_scope_impl!("draw transparent");
 
@@ -678,7 +676,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3DTrans
         }
     }
 
-    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
+    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
         unsafe {
             factory
                 .device()

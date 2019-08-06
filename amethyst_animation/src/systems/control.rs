@@ -1,5 +1,10 @@
-use std::{hash::Hash, marker, time::Duration};
+use std::{
+    hash::Hash,
+    marker::{self, PhantomData},
+    time::Duration,
+};
 
+use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::error;
 use minterpolate::InterpolationPrimitive;
@@ -7,10 +12,11 @@ use minterpolate::InterpolationPrimitive;
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::prelude::{
-        Component, Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData,
+        Component, Entities, Entity, Join, Read, ReadStorage, System, SystemData, World,
         WriteStorage,
     },
     timing::secs_to_duration,
+    SystemDesc,
 };
 
 use crate::resources::{
@@ -21,6 +27,27 @@ use crate::resources::{
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+/// Builds an `AnimationControlSystem`.
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct AnimationControlSystemDesc<I, T> {
+    marker: PhantomData<(I, T)>,
+}
+
+impl<'a, 'b, I, T> SystemDesc<'a, 'b, AnimationControlSystem<I, T>>
+    for AnimationControlSystemDesc<I, T>
+where
+    I: Copy + Eq + Hash + Send + Sync + 'static,
+    T: AnimationSampling + Component + Clone,
+{
+    fn build(self, world: &mut World) -> AnimationControlSystem<I, T> {
+        <AnimationControlSystem<I, T> as System<'_>>::SystemData::setup(world);
+        ReadStorage::<AnimationSet<I, T>>::setup(world);
+
+        AnimationControlSystem::new()
+    }
+}
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
@@ -199,11 +226,6 @@ where
         for entity in remove_sets {
             controls.remove(entity);
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        ReadStorage::<AnimationSet<I, T>>::setup(res);
     }
 }
 

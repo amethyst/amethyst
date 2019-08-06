@@ -1,15 +1,15 @@
 # World
 
-## What is a world?
+## What is a `World`?
 
-A world is just a holder for `Resources`, with some helper functions that make your life easier.
+A `World` is a container for resources, with some helper functions that make your life easier.
 This chapter will showcase those functions and their usage.
 
 ## Adding a resource
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::ecs::World;
+use amethyst::ecs::{World, WorldExt};
 
 // A simple struct with no data.
 struct MyResource;
@@ -22,7 +22,7 @@ fn main() {
     let my = MyResource;
     
     // We add the resource to the world.
-    world.add_resource(my);
+    world.insert(my);
 }
 ```
 
@@ -31,9 +31,10 @@ fn main() {
 Here's how to fetch a read-only resource. Be aware that this method panics if the resource isn't inserted into `Resources`.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# use amethyst::ecs::{World, WorldExt};
 # struct MyResource;
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
     let my = world.read_resource::<MyResource>();
 # }
 ```
@@ -41,10 +42,11 @@ Here's how to fetch a read-only resource. Be aware that this method panics if th
 If you are not sure that the resource will be present, use the methods available on `Resources`, as shown in the resource chapter.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# use amethyst::ecs::{World, WorldExt};
 # struct MyResource;
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
-    let my = world.res.entry::<MyResource>().or_insert_with(|| MyResource);
+#   let mut world = World::new();
+    let my = world.entry::<MyResource>().or_insert_with(|| MyResource);
 # }
 ```
 
@@ -52,9 +54,10 @@ If you are not sure that the resource will be present, use the methods available
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# use amethyst::ecs::{World, WorldExt};
 # struct MyResource;
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
     let mut my = world.write_resource::<MyResource>();
 # }
 ```
@@ -68,12 +71,13 @@ Please note that **in order to use this syntax, you need to import the ``amethys
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# use amethyst::ecs::{World, WorldExt};
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
 #   type Storage = amethyst::ecs::VecStorage<MyComponent>;
 # }
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
     world.register::<MyComponent>();
     use amethyst::prelude::Builder;
 
@@ -86,12 +90,13 @@ Please note that **in order to use this syntax, you need to import the ``amethys
 Shorter version:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# use amethyst::ecs::{World, WorldExt};
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
 #   type Storage = amethyst::ecs::VecStorage<MyComponent>;
 # }
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
     use amethyst::prelude::Builder;
 
     let my_entity = world
@@ -107,13 +112,13 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::prelude::Builder;
+# use amethyst::ecs::{Builder, World, WorldExt};
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
 #   type Storage = amethyst::ecs::VecStorage<MyComponent>;
 # }
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
     // Create an `Entity` with `MyComponent`.
     // `World` will implicitly write to the component's storage in `Resources`.
     let my_entity = world.create_entity().with(MyComponent).build();
@@ -132,13 +137,13 @@ This is almost the same as accessing a component:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::prelude::Builder;
+# use amethyst::ecs::{Builder, World, WorldExt};
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
 #   type Storage = amethyst::ecs::VecStorage<MyComponent>;
 # }
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
     let my_entity = world.create_entity().with(MyComponent).build();
     let mut storage = world.write_storage::<MyComponent>();
     let mut my = storage.get_mut(my_entity).expect("Failed to get component for entity");
@@ -151,8 +156,9 @@ It is pretty rare to use this, but can be useful in some occasions.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# use amethyst::ecs::{World, WorldExt};
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
     // Returns `EntitiesRes`
     let entities = world.entities();
 # }
@@ -163,9 +169,9 @@ It is pretty rare to use this, but can be useful in some occasions.
 Single:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::prelude::Builder;
+# use amethyst::ecs::{Builder, World, WorldExt};
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
 #   let my_entity = world.create_entity().build();
     world.delete_entity(my_entity).expect("Failed to delete entity. Was it already removed?");
 # }
@@ -174,9 +180,9 @@ Single:
 Multiple:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::prelude::Builder;
+# use amethyst::ecs::{Builder, World, WorldExt};
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
 #   let entity_vec: Vec<amethyst::ecs::Entity> = vec![world.create_entity().build()];
     world.delete_entities(entity_vec.as_slice()).expect("Failed to delete entities from specified list.");
 # }
@@ -185,8 +191,9 @@ Multiple:
 All:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# use amethyst::ecs::{World, WorldExt};
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
     world.delete_all();
 # }
 ```
@@ -197,9 +204,9 @@ __Note: Entities are lazily deleted, which means that deletion only happens at t
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::prelude::Builder;
+# use amethyst::ecs::{Builder, World, WorldExt};
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
 #   let my_entity = world.create_entity().build();
     // Returns true if the entity was **not** deleted.
     let is_alive = world.is_alive(my_entity);
@@ -215,7 +222,7 @@ There is a function that acts as a shorthand for this:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::ReadExpect;
+# use amethyst::ecs::{ReadExpect, World, WorldExt};
 # struct Dummy;
 # type SomeSystemData<'a> = ReadExpect<'a, Dummy>;
 # trait DoSomething {
@@ -225,7 +232,7 @@ There is a function that acts as a shorthand for this:
 #   fn do_something(&mut self) { }
 # }
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
     world.exec(|mut data: SomeSystemData| {
         data.do_something();
     });

@@ -52,7 +52,7 @@
 //! #     fn update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> Trans<GameData<'a, 'b>, E> {
 //! #         data.data.update(&data.world);
 //! #
-//! #         data.world.add_resource(LoadResource);
+//! #         data.world.insert(LoadResource);
 //! #
 //! #         Trans::Pop
 //! #     }
@@ -116,6 +116,21 @@
 //! Next, attach the logic you wish to test using the various `.with_*(..)` methods:
 //!
 //! ```rust,no_run
+//! # use amethyst::{
+//! #     core::{bundle::SystemBundle, SystemDesc},
+//! #     derive::SystemDesc,
+//! #     ecs::prelude::*,
+//! #     prelude::*,
+//! # };
+//! #
+//! # #[derive(Debug, SystemDesc)]
+//! # struct MySystem;
+//! #
+//! # impl<'s> System<'s> for MySystem {
+//! #     type SystemData = ();
+//! #     fn run(&mut self, _: Self::SystemData) {}
+//! # }
+//! #
 //! #[test]
 //! fn test_name() {
 //!     let visibility = false; // Whether the window should be shown
@@ -123,7 +138,7 @@
 //!         .with_bundle(MyBundle::new())                // Registers a bundle.
 //!         .with_bundle_fn(|| MyNonSendBundle::new())   // Registers a `!Send` bundle.
 //!         .with_resource(MyResource::new())            // Adds a resource to the world.
-//!         .with_system(MySystem::new(), "my_sys", &[]) // Registers a system with the main
+//!         .with_system(MySystem, "my_sys", &[])        // Registers a system with the main
 //!                                                      // dispatcher.
 //!
 //!         // These are run in the order they are invoked.
@@ -159,7 +174,8 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     core::bundle::SystemBundle,
+//! #     core::{bundle::SystemBundle, SystemDesc},
+//! #     derive::SystemDesc,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -167,25 +183,22 @@
 //! # #[derive(Debug)]
 //! # struct ApplicationResource;
 //! #
-//! # #[derive(Debug)]
+//! # #[derive(Debug, SystemDesc)]
+//! # #[system_desc(insert(ApplicationResource))]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
 //! #     type SystemData = ReadExpect<'s, ApplicationResource>;
 //! #
 //! #     fn run(&mut self, _: Self::SystemData) {}
-//! #
-//! #     fn setup(&mut self, res: &mut Resources) {
-//! #         Self::SystemData::setup(res);
-//! #         res.insert(ApplicationResource);
-//! #     }
 //! # }
 //! #
 //! # #[derive(Debug)]
 //! # struct MyBundle;
 //! # impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-//! #     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> amethyst::Result<()> {
-//! #         builder.add(MySystem, "my_system", &[]);
+//! #     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>)
+//! #     -> amethyst::Result<()> {
+//! #         builder.add(MySystem.build(world), "my_system", &[]);
 //! #         Ok(())
 //! #     }
 //! # }
@@ -211,6 +224,8 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
+//! #     core::SystemDesc,
+//! #     derive::SystemDesc,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -221,7 +236,7 @@
 //! #     type Storage = DenseVecStorage<Self>;
 //! # }
 //! #
-//! # #[derive(Debug)]
+//! # #[derive(Debug, SystemDesc)]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
@@ -241,7 +256,7 @@
 //!             .with_system(MySystem, "my_system", &[])
 //!             .with_effect(|world| {
 //!                 let entity = world.create_entity().with(MyComponent(0)).build();
-//!                 world.add_resource(EffectReturn(entity));
+//!                 world.insert(EffectReturn(entity));
 //!             })
 //!             .with_assertion(|world| {
 //!                 let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
@@ -270,6 +285,8 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
+//! #     core::SystemDesc,
+//! #     derive::SystemDesc,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -277,7 +294,7 @@
 //! # // !Default
 //! # struct MyResource(pub i32);
 //! #
-//! # #[derive(Debug)]
+//! # #[derive(Debug, SystemDesc)]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
@@ -293,7 +310,7 @@
 //!     assert!(
 //!         AmethystApplication::blank()
 //!             .with_setup(|world| {
-//!                 world.add_resource(MyResource(0));
+//!                 world.insert(MyResource(0));
 //!             })
 //!             .with_system_single(MySystem, "my_system", &[])
 //!             .with_assertion(|world| {

@@ -1,9 +1,10 @@
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
+        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, SystemData, World,
+        WriteStorage,
     },
     math::{convert, Matrix4},
-    Transform,
+    SystemDesc, Transform,
 };
 use amethyst_rendy::skinning::JointTransforms;
 
@@ -14,10 +15,24 @@ use thread_profiler::profile_scope;
 
 use super::resources::*;
 
+/// Builds a `VertexSkinningSystem`.
+#[derive(Default, Debug)]
+pub struct VertexSkinningSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, VertexSkinningSystem> for VertexSkinningSystemDesc {
+    fn build(self, world: &mut World) -> VertexSkinningSystem {
+        <VertexSkinningSystem as System<'_>>::SystemData::setup(world);
+        let mut transform = WriteStorage::<Transform>::fetch(&world);
+        let updated_id = transform.register_reader();
+
+        VertexSkinningSystem::new(updated_id)
+    }
+}
+
 /// System for performing vertex skinning.
 ///
 /// Needs to run after global transforms have been updated for the current frame.
-#[derive(Default, Debug, new)]
+#[derive(Debug, new)]
 pub struct VertexSkinningSystem {
     /// Also scratch space, used while determining which skins need to be updated.
     #[new(default)]
@@ -25,8 +40,7 @@ pub struct VertexSkinningSystem {
     #[new(default)]
     updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
-    #[new(default)]
-    updated_id: Option<ReaderId<ComponentEvent>>,
+    updated_id: ReaderId<ComponentEvent>,
 }
 
 impl<'a> System<'a> for VertexSkinningSystem {
@@ -45,9 +59,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
 
         global_transforms
             .channel()
-            .read(self.updated_id.as_mut().expect(
-                "`VertexSkinningSystem::setup` was not called before `VertexSkinningSystem::run`",
-            ))
+            .read(&mut self.updated_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.updated.add(*id);
@@ -121,12 +133,5 @@ impl<'a> System<'a> for VertexSkinningSystem {
                 }
             }
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        let mut transform = WriteStorage::<Transform>::fetch(res);
-        self.updated_id = Some(transform.register_reader());
     }
 }
