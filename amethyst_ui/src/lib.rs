@@ -32,6 +32,7 @@ pub use self::{
     prefab::{
         NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImagePrefab, UiLoader, UiLoaderSystem,
         UiLoaderSystemDesc, UiPrefab, UiTextData, UiTransformData, UiWidget,
+        UiButtonData,
     },
     resize::{ResizeSystem, ResizeSystemDesc, UiResize},
     selection::{
