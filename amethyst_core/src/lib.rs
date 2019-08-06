@@ -20,9 +20,8 @@ pub use alga;
 pub use approx;
 pub use nalgebra as math;
 pub use num_traits as num;
-pub use shred;
-pub use shrev;
 pub use specs as ecs;
+pub use specs::{shred, shrev};
 
 use rayon;
 
@@ -41,6 +40,7 @@ pub use self::{
     hidden::{Hidden, HiddenPropagate},
     hide_system::HideHierarchySystem,
     named::{Named, WithNamed},
+    system_desc::SystemDesc,
 };
 
 pub mod bundle;
@@ -53,6 +53,7 @@ mod event;
 mod hidden;
 mod hide_system;
 mod named;
+mod system_desc;
 mod system_ext;
 
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.

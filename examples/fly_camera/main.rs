@@ -1,9 +1,10 @@
 //! Demonstrates how to use the fly camera
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     controls::{FlyControlBundle, HideCursor},
     core::transform::TransformBundle,
+    ecs::WorldExt,
     input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -57,14 +58,22 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let assets_directory = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
     let display_config_path = app_root.join("examples/fly_camera/config/display.ron");
 
     let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                .with_plugin(RenderShaded3D::default()),
+        )?
         .with_bundle(
             FlyControlBundle::<StringBindings>::new(
                 Some(String::from("move_x")),
@@ -76,17 +85,9 @@ fn main() -> Result<(), Error> {
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?
-        .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
-                )
-                .with_plugin(RenderShaded3D::default()),
         )?;
 
-    let mut game = Application::build(assets_directory, ExampleState)?.build(game_data)?;
+    let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

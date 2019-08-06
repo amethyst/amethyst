@@ -18,7 +18,9 @@ pub use crate::{
     formats::RonFormat,
     helper::AssetLoaderSystemData,
     loader::Loader,
-    prefab::{AssetPrefab, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem},
+    prefab::{
+        AssetPrefab, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, PrefabLoaderSystemDesc,
+    },
     progress::{Completion, Progress, ProgressCounter, Tracker},
     reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
     source::{Directory, Source},

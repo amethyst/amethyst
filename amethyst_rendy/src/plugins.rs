@@ -7,7 +7,7 @@ use crate::{
     visibility::VisibilitySortingSystem,
     Backend, Factory,
 };
-use amethyst_core::ecs::{DispatcherBuilder, Resources};
+use amethyst_core::ecs::{DispatcherBuilder, World};
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
@@ -73,22 +73,23 @@ mod window {
     impl<B: Backend> RenderPlugin<B> for RenderToWindow {
         fn on_build<'a, 'b>(
             &mut self,
+            world: &mut World,
             builder: &mut DispatcherBuilder<'a, 'b>,
         ) -> Result<(), Error> {
             if let Some(config) = self.config.take() {
-                WindowBundle::from_config(config).build(builder)?;
+                WindowBundle::from_config(config).build(world, builder)?;
             }
 
             Ok(())
         }
 
         #[allow(clippy::map_clone)]
-        fn should_rebuild(&mut self, res: &Resources) -> bool {
-            let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        fn should_rebuild(&mut self, world: &World) -> bool {
+            let new_dimensions = world.try_fetch::<ScreenDimensions>();
             use std::ops::Deref;
             if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
                 self.dirty = true;
-                self.dimensions = new_dimensions.map(|d| d.clone());
+                self.dimensions = new_dimensions.map(|d| d.deref().clone());
                 return false;
             }
             self.dirty
@@ -98,11 +99,11 @@ mod window {
             &mut self,
             plan: &mut RenderPlan<B>,
             factory: &mut Factory<B>,
-            res: &Resources,
+            world: &World,
         ) -> Result<(), Error> {
             self.dirty = false;
 
-            let window = <ReadExpect<'_, Window>>::fetch(res);
+            let window = <ReadExpect<'_, Window>>::fetch(world);
             let surface = factory.create_surface(&window);
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
@@ -165,7 +166,11 @@ impl<D: Base3DPassDef> RenderBase3D<D> {
 }
 
 impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
-    fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn on_build<'a, 'b>(
+        &mut self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add(VisibilitySortingSystem::new(), "visibility_system", &[]);
         Ok(())
     }
@@ -174,7 +179,7 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _res: &Resources,
+        _world: &World,
     ) -> Result<(), Error> {
         let skinning = self.skinning;
         plan.extend_target(self.target, move |ctx| {
@@ -212,7 +217,11 @@ impl RenderFlat2D {
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
-    fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn on_build<'a, 'b>(
+        &mut self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add(
             SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",
@@ -225,7 +234,7 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _res: &Resources,
+        _world: &World,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(RenderOrder::Opaque, DrawFlat2DDesc::new().builder())?;
@@ -259,7 +268,7 @@ impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _res: &Resources,
+        _world: &World,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(
@@ -300,7 +309,7 @@ impl<B: Backend> RenderPlugin<B> for RenderSkybox {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _res: &Resources,
+        _world: &World,
     ) -> Result<(), Error> {
         let colors = self.colors;
         plan.extend_target(self.target, move |ctx| {

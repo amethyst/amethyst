@@ -1,7 +1,7 @@
 //! Util Resources
 
 use amethyst_core::{
-    ecs::prelude::{DispatcherBuilder, Read, System, Write},
+    ecs::prelude::{DispatcherBuilder, Read, System, World, Write},
     timing::{duration_to_nanos, Time},
     SystemBundle,
 };
@@ -28,10 +28,10 @@ use thread_profiler::profile_scope;
 /// # Example
 /// ```rust
 /// # use amethyst_utils::fps_counter::FpsCounter;
-/// # use amethyst_core::ecs::World;
+/// # use amethyst_core::ecs::{World, WorldExt};
 /// # let mut world = World::new();
 /// # let counter = FpsCounter::new(2);
-/// # world.add_resource(counter);
+/// # world.insert(counter);
 /// let mut counter = world.write_resource::<FpsCounter>();
 ///
 /// ```
@@ -107,7 +107,11 @@ impl<'a> System<'a> for FpsCounterSystem {
 pub struct FpsCounterBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for FpsCounterBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        _world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add(FpsCounterSystem, "fps_counter_system", &[]);
         Ok(())
     }

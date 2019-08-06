@@ -1,7 +1,11 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
-    core::{Named, Parent, Transform, TransformBundle},
-    ecs::{Component, Entity, Join, NullStorage, Read, ReadStorage, System, WriteStorage},
+    core::{Named, Parent, SystemDesc, Transform, TransformBundle},
+    derive::SystemDesc,
+    ecs::{
+        Component, Entity, Join, NullStorage, Read, ReadStorage, System, SystemData, World,
+        WorldExt, WriteStorage,
+    },
     input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
     prelude::*,
     renderer::{
@@ -22,6 +26,7 @@ impl Component for Player {
     type Storage = NullStorage<Self>;
 }
 
+#[derive(SystemDesc)]
 struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {
@@ -198,17 +203,10 @@ fn main() -> amethyst::Result<()> {
         .start();
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/sprite_camera_follow/assets");
+    let assets_dir = app_root.join("examples/sprite_camera_follow/assets");
     let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(
-                app_root.join("examples/sprite_camera_follow/config/input.ron"),
-            )?,
-        )?
-        .with(MovementSystem, "movement", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -216,9 +214,16 @@ fn main() -> amethyst::Result<()> {
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
                 .with_plugin(RenderFlat2D::default()),
-        )?;
+        )?
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(
+            InputBundle::<StringBindings>::new().with_bindings_from_file(
+                app_root.join("examples/sprite_camera_follow/config/input.ron"),
+            )?,
+        )?
+        .with(MovementSystem, "movement", &[]);
 
-    let mut game = Application::build(assets_directory, Example)?.build(game_data)?;
+    let mut game = Application::build(assets_dir, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }

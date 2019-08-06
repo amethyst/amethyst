@@ -1,8 +1,11 @@
 //! ECS input bundle
 
-use crate::{BindingError, BindingTypes, Bindings, InputSystem};
+use crate::{BindingError, BindingTypes, Bindings, InputSystemDesc};
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
+use amethyst_core::{
+    ecs::prelude::{DispatcherBuilder, World},
+    SystemBundle, SystemDesc,
+};
 use amethyst_error::Error;
 use derivative::Derivative;
 use std::{error, fmt, path::Path};
@@ -77,16 +80,24 @@ impl<T: BindingTypes> InputBundle<T> {
 }
 
 impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for InputBundle<T> {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         #[cfg(feature = "sdl_controller")]
         {
             use super::SdlEventsSystem;
             builder.add_thread_local(
                 // TODO: improve errors when migrating to failure
-                SdlEventsSystem::<T>::new(self.controller_mappings).unwrap(),
+                SdlEventsSystem::<T>::new(world, self.controller_mappings).unwrap(),
             );
         }
-        builder.add(InputSystem::<T>::new(self.bindings), "input_system", &[]);
+        builder.add(
+            InputSystemDesc::<T>::new(self.bindings).build(world),
+            "input_system",
+            &[],
+        );
         Ok(())
     }
 }

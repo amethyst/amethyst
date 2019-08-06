@@ -3,7 +3,7 @@
 use std::{net::SocketAddr, thread::sleep, time::Duration};
 
 use amethyst_core::{
-    ecs::{Builder, Join, World, WriteStorage},
+    ecs::{Builder, Join, World, WorldExt, WriteStorage},
     shred::{Dispatcher, DispatcherBuilder, SystemData},
 };
 
@@ -35,9 +35,9 @@ fn single_packet_early() {
     let mut rcv = conn_to_client.receive_buffer.register_reader();
     let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
 
-    cl_dispatch.dispatch(&world_cl.res);
+    cl_dispatch.dispatch(&world_cl);
     sleep(Duration::from_millis(500));
-    sv_dispatch.dispatch(&world_sv.res);
+    sv_dispatch.dispatch(&world_sv);
 
     let storage = world_sv.read_storage::<NetConnection<String>>();
     let comp = storage.get(conn_to_client_entity).unwrap();
@@ -72,7 +72,7 @@ fn send_receive_100_packets() {
 
     sleep(Duration::from_millis(50));
     {
-        let mut sto = WriteStorage::<NetConnection<String>>::fetch(&world_cl.res);
+        let mut sto = WriteStorage::<NetConnection<String>>::fetch(&world_cl);
 
         for cmp in (&mut sto).join() {
             for _i in 0..100 {
@@ -80,9 +80,9 @@ fn send_receive_100_packets() {
             }
         }
     }
-    cl_dispatch.dispatch(&world_cl.res);
+    cl_dispatch.dispatch(&world_cl);
     sleep(Duration::from_millis(100));
-    sv_dispatch.dispatch(&world_sv.res);
+    sv_dispatch.dispatch(&world_sv);
 
     let storage = world_sv.read_storage::<NetConnection<String>>();
     let comp = storage.get(conn_to_client_entity).unwrap();
@@ -119,7 +119,7 @@ fn build<'a, 'b>(
             &[],
         )
         .build();
-    cl_dispatch.setup(&mut world_cl.res);
+    cl_dispatch.setup(&mut world_cl);
     let mut sv_dispatch = DispatcherBuilder::new()
         .with(
             NetSocketSystem::<String>::new(server_config).unwrap(),
@@ -127,7 +127,7 @@ fn build<'a, 'b>(
             &[],
         )
         .build();
-    sv_dispatch.setup(&mut world_sv.res);
+    sv_dispatch.setup(&mut world_sv);
 
     (world_cl, cl_dispatch, world_sv, sv_dispatch)
 }

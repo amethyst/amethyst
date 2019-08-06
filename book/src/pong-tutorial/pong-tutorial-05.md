@@ -43,11 +43,14 @@ Then, we'll create `systems/winner.rs`:
 #
 use amethyst::{
     core::transform::Transform,
-    ecs::prelude::{Join, System, WriteStorage},
+    core::SystemDesc,
+    derive::SystemDesc,
+    ecs::prelude::{Join, System, SystemData, World, WriteStorage},
 };
 
 use crate::pong::{Ball, ARENA_WIDTH};
 
+#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {
@@ -95,29 +98,38 @@ keep playing after someone scores and log who got the point.
 # extern crate amethyst;
 #
 # use amethyst::{
-#    prelude::*,
 #    core::transform::TransformBundle,
+#    ecs::{World, WorldExt},
+#    prelude::*,
 #    input::StringBindings,
 #    window::DisplayConfig,
 # };
 #
 # mod systems {
 #     use amethyst;
+#     use amethyst::core::SystemDesc;
+#     use amethyst::core::ecs::{System, SystemData, World};
+#     use amethyst::derive::SystemDesc;
+#
+#     #[derive(SystemDesc)]
 #     pub struct PaddleSystem;
 #     impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 #         type SystemData = ();
 #         fn run(&mut self, _: Self::SystemData) { }
 #     }
+#     #[derive(SystemDesc)]
 #     pub struct MoveBallsSystem;
 #     impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
 #         type SystemData = ();
 #         fn run(&mut self, _: Self::SystemData) { }
 #     }
+#     #[derive(SystemDesc)]
 #     pub struct BounceSystem;
 #     impl<'a> amethyst::ecs::System<'a> for BounceSystem {
 #         type SystemData = ();
 #         fn run(&mut self, _: Self::SystemData) { }
 #     }
+#     #[derive(SystemDesc)]
 #     pub struct WinnerSystem;
 #     impl<'a> amethyst::ecs::System<'a> for WinnerSystem {
 #         type SystemData = ();
@@ -131,6 +143,7 @@ keep playing after someone scores and log who got the point.
 # let config = DisplayConfig::load(&path);
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
 #
+# let mut world = World::new();
 let game_data = GameDataBuilder::default()
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
@@ -170,14 +183,21 @@ use amethyst::ui::{RenderUi, UiBundle};
 
 Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
-
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::{prelude::*};
+# use amethyst::{
+#     ecs::{World, WorldExt},
+#     prelude::*,
+#     renderer::{
+#         types::DefaultBackend,
+#         RenderingBundle,
+#     },
+#     ui::RenderUi,
+# };
 # fn main() -> Result<(), amethyst::Error>{
+# let mut world = World::new();
 # let game_data = GameDataBuilder::default()
-    .with_bundle(
-        RenderingBundle::<DefaultBackend>::new()
+    .with_bundle(RenderingBundle::<DefaultBackend>::new()
         // ...
             .with_plugin(RenderUi::default()),
     )?;
@@ -188,11 +208,16 @@ Finally, add the `UiBundle` after the `InputBundle`:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::{prelude::*, input::StringBindings};
+# use amethyst::{
+#     ecs::{World, WorldExt},
+#     input::StringBindings,
+#     prelude::*,
+# };
 # use amethyst::ui::UiBundle;
 # fn main() -> Result<(), amethyst::Error>{
 # let display_config_path = "";
 # struct Pong;
+# let mut world = World::new();
 # let game_data = GameDataBuilder::default()
 .with_bundle(UiBundle::<StringBindings>::new())?
 # ;
@@ -304,7 +329,7 @@ fn initialise_scoreboard(world: &mut World) {
         )).build();
 
 # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
-    world.add_resource(ScoreText { p1_score, p2_score });
+    world.insert(ScoreText { p1_score, p2_score });
 }
 ```
 
@@ -377,13 +402,16 @@ accordingly:
 #
 use amethyst::{
 #     core::transform::Transform,
+#     core::SystemDesc,
+#     derive::SystemDesc,
     // --snip--
-    ecs::prelude::{Join, ReadExpect, System, Write, WriteStorage},
+    ecs::prelude::{Join, ReadExpect, System, SystemData, World, Write, WriteStorage},
     ui::UiText,
 };
 
 use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
 
+#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {

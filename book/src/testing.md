@@ -39,7 +39,7 @@ The following shows a simple example of testing a `State`. More examples are in 
 #     fn update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> Trans<GameData<'a, 'b>, E> {
 #         data.data.update(&data.world);
 #
-#         data.world.add_resource(LoadResource);
+#         data.world.insert(LoadResource);
 #
 #         Trans::Pop
 #     }
@@ -107,7 +107,7 @@ fn test_name() {
         .with_bundle(MyBundle::new())                // Registers a bundle.
         .with_bundle_fn(|| MyNonSendBundle::new())   // Registers a `!Send` bundle.
         .with_resource(MyResource::new())            // Adds a resource to the world.
-        .with_system(MySystem::new(), "my_sys", &[]) // Registers a system
+        .with_system(|_| MySystem::new(), "my_sys", &[]) // Registers a system
                                                      // with the main dispatcher
 
         // These are run in the order they are invoked.
