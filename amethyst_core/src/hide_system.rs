@@ -39,25 +39,12 @@ impl<'a, 'b> SystemDesc<'a, 'b, HideHierarchySystem> for HideHierarchySystemDesc
 /// [TransformBundle](struct.TransformBundle.html)
 ///
 /// Based on the [UiTransformSystem](struct.UiTransformSystem.html).
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct HideHierarchySystem {
+    #[new(default)]
     marked_as_modified: BitSet,
     hidden_events_id: ReaderId<ComponentEvent>,
     parent_events_id: ReaderId<HierarchyEvent>,
-}
-
-impl HideHierarchySystem {
-    /// Creates a new `HideHierarchySystem`.
-    pub fn new(
-        hidden_events_id: ReaderId<ComponentEvent>,
-        parent_events_id: ReaderId<HierarchyEvent>,
-    ) -> Self {
-        Self {
-            marked_as_modified: BitSet::default(),
-            hidden_events_id,
-            parent_events_id,
-        }
-    }
 }
 
 impl<'a> System<'a> for HideHierarchySystem {

@@ -23,19 +23,13 @@ use crate::{
 ///
 /// Panics in `TransformSystem` registration if the bundle is applied twice in the same dispatcher.
 ///
-#[derive(Debug, Default)]
+#[derive(Debug, Default, new)]
 pub struct TransformBundle<'a> {
+    #[new(default)]
     dep: &'a [&'a str],
 }
 
 impl<'a> TransformBundle<'a> {
-    /// Create a new transform bundle
-    pub fn new() -> Self {
-        TransformBundle {
-            dep: Default::default(),
-        }
-    }
-
     /// Set dependencies for the `TransformSystem`
     pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
         self.dep = dep;

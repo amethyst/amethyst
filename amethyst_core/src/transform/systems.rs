@@ -34,25 +34,12 @@ impl<'a, 'b> SystemDesc<'a, 'b, TransformSystem> for TransformSystemDesc {
 }
 
 /// Handles updating `global_matrix` field from `Transform` components.
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct TransformSystem {
+    #[new(default)]
     local_modified: BitSet,
     locals_events_id: ReaderId<ComponentEvent>,
     parent_events_id: ReaderId<HierarchyEvent>,
-}
-
-impl TransformSystem {
-    /// Creates a new transform processor.
-    pub fn new(
-        locals_events_id: ReaderId<ComponentEvent>,
-        parent_events_id: ReaderId<HierarchyEvent>,
-    ) -> TransformSystem {
-        TransformSystem {
-            local_modified: BitSet::default(),
-            locals_events_id,
-            parent_events_id,
-        }
-    }
 }
 
 impl<'a> System<'a> for TransformSystem {
