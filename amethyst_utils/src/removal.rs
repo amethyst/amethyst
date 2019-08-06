@@ -44,23 +44,13 @@ use serde::{Deserialize, Serialize};
 /// // Count entities remaining in the world.
 /// assert_eq!((&*world.entities(),).join().count(), 1);
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize, PrefabData)]
+#[derive(Debug, Clone, Serialize, Deserialize, PrefabData, new)]
 #[prefab(Component)]
 pub struct Removal<I>
 where
     I: Debug + Clone + Send + Sync + 'static,
 {
     id: I,
-}
-
-impl<I> Removal<I>
-where
-    I: Debug + Clone + Send + Sync + 'static,
-{
-    /// Creates a new `Removal` component with the specified id.
-    pub fn new(id: I) -> Self {
-        Removal { id }
-    }
 }
 
 impl<I> Component for Removal<I>

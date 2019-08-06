@@ -18,8 +18,10 @@ use std::collections::VecDeque;
 /// assert_eq!(*buf.queue(), VecDeque::<u32>::from(vec![2, 3]));
 /// assert_eq!(buf.capacity(), 2);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Getters)]
 pub struct CircularBuffer<A> {
+    ///Get an immutable reference to the values inside the CircularBuffer
+    #[get = "pub"]
     queue: VecDeque<A>,
     cap: usize,
 }
@@ -45,11 +47,6 @@ impl<A> CircularBuffer<A> {
 
         self.queue.push_back(elem);
         out
-    }
-
-    ///Get an immutable reference to the values inside the CircularBuffer
-    pub fn queue(&self) -> &VecDeque<A> {
-        &self.queue
     }
 
     /// Returns the capacity of the circular buffer.

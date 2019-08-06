@@ -19,35 +19,38 @@ use serde::{Deserialize, Serialize};
 use thread_profiler::profile_scope;
 
 /// A component describing the behavior of the camera in accordance with the screen dimensions
-#[derive(Clone, Debug, Deserialize, PrefabData, Serialize)]
+#[derive(Clone, Debug, Deserialize, PrefabData, Serialize, new, Setters)]
 #[prefab(Component)]
 #[serde(default)]
 pub struct AutoFov {
     /// The horizontal FOV value at the aspect ratio in the field `base_aspect_ratio`
+    #[new(default)]
     base_fovx: f32,
 
+    /// Sets `fovx_growth_rate` to the given value
+    #[set = "pub"]
     /// The factor determining how sensitive the FOV change should be
+    #[new(default)]
     fovx_growth_rate: f32,
 
     /// If the FOV grow rate specified in the field `fovx_growth_rate` should be applied as-is
+    #[new(default)]
     fixed_growth_rate: bool,
 
     /// The aspect ratio when the camera's horizontal FOV is identical to `base_fovx`
+    #[new(default)]
     base_aspect_ratio: (usize, usize),
 
     /// The minimum value the horizontal FOV can have
+    #[new(default)]
     min_fovx: f32,
 
     /// The maximum value the horizontal FOV can have
+    #[new(default)]
     max_fovx: f32,
 }
 
 impl AutoFov {
-    /// Creates a new instance with the default values for all fields
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// The horizontal FOV value at the aspect ratio in the field `base_aspect_ratio`
     ///
     /// This value should be between the `min_fovx` and `max_fovx` values. Value in radians.
@@ -115,11 +118,6 @@ impl AutoFov {
         );
 
         self.base_fovx = base_fovx;
-    }
-
-    /// Sets `fovx_growth_rate` to the given value
-    pub fn set_fovx_growth_rate(&mut self, fovx_growth_rate: f32) {
-        self.fovx_growth_rate = fovx_growth_rate;
     }
 
     /// Sets `fixed_growth_rate` to the given value
@@ -233,18 +231,10 @@ impl Default for AutoFov {
 /// If the camera is being loaded by a prefab, it is best to have the `PrefabLoaderSystem` loading
 /// the camera as a dependency of this system. It enables the system to adjust the camera right
 /// after it is created -- simply put, in the same frame.
-#[derive(Debug, SystemDesc)]
+#[derive(Debug, SystemDesc, new)]
 pub struct AutoFovSystem {
+    #[new(value = "ScreenDimensions::new(0, 0, 0.0)")]
     last_dimensions: ScreenDimensions,
-}
-
-impl AutoFovSystem {
-    /// Sets up `SystemData` and returns a new `AutoFovSystem`.
-    pub fn new() -> Self {
-        Self {
-            last_dimensions: ScreenDimensions::new(0, 0, 0.0),
-        }
-    }
 }
 
 impl<'a> System<'a> for AutoFovSystem {
