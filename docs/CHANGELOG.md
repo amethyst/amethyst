@@ -17,12 +17,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 * `SystemDesc` proc macro derive to simplify defining `SystemDesc`s. ([#1780])
+* `UiButtonData` is now exported from `amethyst_ui` and can be used for custom widgets. ([#1859])
 
 ### Changed
+
+* All `-Builder` structs in amethyst_ui/prefab.rs are now called `-Data`. ([#1859])
 
 ### Fixed
 
 [#1780]: https://github.com/amethyst/amethyst/pull/1780
+[#1859]: https://github.com/amethyst/amethyst/pull/1859
 
 ## [0.12.0] - 2019-07-30
 
