@@ -29,28 +29,16 @@ use thread_profiler::profile_scope;
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
-#[derive(Default, Debug)]
+#[derive(Default, Debug, new)]
 pub struct SamplerInterpolationSystem<T>
 where
     T: AnimationSampling,
 {
     m: marker::PhantomData<T>,
+    #[new(default)]
     inner: Vec<(f32, T::Channel, T::Primitive)>,
+    #[new(default)]
     channels: Vec<T::Channel>,
-}
-
-impl<T> SamplerInterpolationSystem<T>
-where
-    T: AnimationSampling,
-{
-    /// Creates a new `SamplerInterpolationSystem`
-    pub fn new() -> Self {
-        Self {
-            m: marker::PhantomData,
-            inner: Vec::default(),
-            channels: Vec::default(),
-        }
-    }
 }
 
 impl<'a, T> System<'a> for SamplerInterpolationSystem<T>

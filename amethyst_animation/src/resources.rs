@@ -103,28 +103,15 @@ where
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize, PrefabData)]
+#[derive(Debug, Clone, Deserialize, Serialize, PrefabData, Getters, new)]
 #[prefab(Component)]
 pub struct RestState<T>
 where
     T: AnimationSampling + Clone,
 {
-    state: T,
-}
-
-impl<T> RestState<T>
-where
-    T: AnimationSampling + Clone,
-{
-    /// Create new rest state
-    pub fn new(t: T) -> Self {
-        RestState { state: t }
-    }
-
     /// Get the rest state
-    pub fn state(&self) -> &T {
-        &self.state
-    }
+    #[get = "pub"]
+    state: T,
 }
 
 impl<T> Component for RestState<T>
@@ -137,10 +124,11 @@ where
 /// Defines the hierarchy of nodes that a single animation can control.
 /// Attached to the root entity that an animation can be defined for.
 /// Only required for animations which target more than a single node or entity.
-#[derive(Derivative, Debug, Clone)]
+#[derive(Derivative, Debug, Clone, new)]
 #[derivative(Default(bound = ""))]
 pub struct AnimationHierarchy<T> {
     /// A mapping between indices and entities
+    #[new(default)]
     pub nodes: FnvHashMap<usize, Entity>,
     m: marker::PhantomData<T>,
 }
@@ -157,11 +145,6 @@ impl<T> AnimationHierarchy<T>
 where
     T: AnimationSampling,
 {
-    /// Create a new hierarchy
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     /// Create a new hierarchy containing a single given entity
     pub fn new_single(index: usize, entity: Entity) -> Self {
         AnimationHierarchy {
@@ -219,12 +202,13 @@ where
 /// - `T`: the component type that the animation should be applied to
 ///
 /// [sampler]: struct.Sampler.html
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, new)]
 pub struct Animation<T>
 where
     T: AnimationSampling,
 {
     /// node index -> sampler handle
+    #[new(default)]
     pub nodes: Vec<(usize, T::Channel, Handle<Sampler<T::Primitive>>)>,
 }
 
@@ -232,11 +216,6 @@ impl<T> Animation<T>
 where
     T: AnimationSampling,
 {
-    /// Create new empty animation
-    pub fn new() -> Self {
-        Animation { nodes: vec![] }
-    }
-
     /// Create an animation with a single sampler
     pub fn new_single(
         index: usize,
@@ -601,7 +580,7 @@ where
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, new)]
 pub struct AnimationControl<T>
 where
     T: AnimationSampling,
@@ -610,6 +589,7 @@ where
     pub animation: Handle<Animation<T>>,
     /// Id, a value of zero means this has not been initialised yet
     /// (this is done by the control system)
+    #[new(default)]
     pub id: u64,
     /// What to do when animation ends
     pub end: EndControl,
@@ -620,30 +600,6 @@ where
     /// Control the rate of animation, default is 1.0
     pub rate_multiplier: f32,
     m: marker::PhantomData<T>,
-}
-
-impl<T> AnimationControl<T>
-where
-    T: AnimationSampling,
-{
-    /// Creates a new `AnimationControl`
-    pub fn new(
-        animation: Handle<Animation<T>>,
-        end: EndControl,
-        state: ControlState,
-        command: AnimationCommand<T>,
-        rate_multiplier: f32,
-    ) -> Self {
-        AnimationControl {
-            id: 0,
-            animation,
-            end,
-            state,
-            command,
-            rate_multiplier,
-            m: marker::PhantomData,
-        }
-    }
 }
 
 impl<T> Component for AnimationControl<T>
@@ -878,13 +834,14 @@ where
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct AnimationSet<I, T>
 where
     I: Eq + Hash,
     T: AnimationSampling,
 {
     /// The mapping between `I` and the animation handles.
+    #[new(default)]
     pub animations: FnvHashMap<I, Handle<Animation<T>>>,
 }
 
@@ -905,13 +862,6 @@ where
     I: Eq + Hash,
     T: AnimationSampling,
 {
-    /// Create
-    pub fn new() -> Self {
-        AnimationSet {
-            animations: FnvHashMap::default(),
-        }
-    }
-
     /// Insert an animation in the set
     pub fn insert(&mut self, id: I, handle: Handle<Animation<T>>) -> &mut Self {
         self.animations.insert(id, handle);

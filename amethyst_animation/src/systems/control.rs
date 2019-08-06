@@ -33,32 +33,20 @@ use thread_profiler::profile_scope;
 /// - `I`: identifier type for running animations, only one animation can be run at the same time
 ///        with the same id
 /// - `T`: the component type that the animation should be applied to
-#[derive(Default, Debug)]
+#[derive(Default, Debug, new)]
 pub struct AnimationControlSystem<I, T>
 where
     I: Eq + Hash,
 {
     m: marker::PhantomData<(I, T)>,
+    #[new(value = "1")]
     next_id: u64,
+    #[new(default)]
     remove_ids: Vec<I>,
+    #[new(default)]
     state_set: FnvHashMap<I, f32>,
+    #[new(default)]
     deferred_start: Vec<(I, f32)>,
-}
-
-impl<I, T> AnimationControlSystem<I, T>
-where
-    I: Eq + Hash,
-{
-    /// Creates a new `AnimationControlSystem`
-    pub fn new() -> Self {
-        AnimationControlSystem {
-            m: marker::PhantomData,
-            next_id: 1,
-            remove_ids: Vec::default(),
-            state_set: FnvHashMap::default(),
-            deferred_start: Vec::default(),
-        }
-    }
 }
 
 impl<'a, I, T> System<'a> for AnimationControlSystem<I, T>

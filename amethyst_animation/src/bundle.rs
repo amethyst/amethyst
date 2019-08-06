@@ -16,17 +16,13 @@ use std::{hash::Hash, marker};
 ///
 /// This registers `VertexSkinningSystem`.
 /// Note that the user must make sure this system runs after `TransformSystem`
-#[derive(Default, Debug)]
+#[derive(Default, Debug, new)]
 pub struct VertexSkinningBundle<'a> {
+    #[new(default)]
     dep: &'a [&'a str],
 }
 
 impl<'a> VertexSkinningBundle<'a> {
-    /// Create a new sampling bundle
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Set dependencies for the `VertexSkinningSystem`
     pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
         self.dep = dep;
@@ -53,27 +49,15 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
 /// ### Type parameters:
 ///
 /// - `T`: the component type that sampling should be applied to
-#[derive(Default, Debug)]
+#[derive(Default, Debug, new)]
 pub struct SamplingBundle<'a, T> {
     name: &'a str,
+    #[new(default)]
     dep: &'a [&'a str],
     m: marker::PhantomData<T>,
 }
 
 impl<'a, T> SamplingBundle<'a, T> {
-    /// Create a new sampling bundle
-    ///
-    /// ### Parameters:
-    ///
-    /// - `name`: name of the `SamplerInterpolationSystem`
-    pub fn new(name: &'a str) -> Self {
-        Self {
-            name,
-            dep: &[],
-            m: marker::PhantomData,
-        }
-    }
-
     /// Set dependencies for the `SamplerInterpolationSystem`
     pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
         self.dep = dep;
@@ -104,30 +88,16 @@ where
 /// - `I`: identifier type for running animations, only one animation can be run at the same time
 ///        with the same id (per entity)
 /// - `T`: the component type that sampling should be applied to
-#[derive(Default, Debug)]
+#[derive(Default, Debug, new)]
 pub struct AnimationBundle<'a, I, T> {
     animation_name: &'a str,
     sampling_name: &'a str,
+    #[new(default)]
     dep: &'a [&'a str],
     m: marker::PhantomData<(I, T)>,
 }
 
 impl<'a, I, T> AnimationBundle<'a, I, T> {
-    /// Create a new animation bundle
-    ///
-    /// ### Parameters:
-    ///
-    /// - `animation_name`: name of the `AnimationControlSystem`
-    /// - `sampling_name`: name of the `SamplerInterpolationSystem`
-    pub fn new(animation_name: &'a str, sampling_name: &'a str) -> Self {
-        Self {
-            animation_name,
-            sampling_name,
-            dep: &[],
-            m: marker::PhantomData,
-        }
-    }
-
     /// Set dependencies for the `AnimationControlSystem`
     pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
         self.dep = dep;
