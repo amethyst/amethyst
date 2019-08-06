@@ -329,6 +329,14 @@
 //! # }
 //! ```
 
+#[allow(unused_imports)]
+#[macro_use]
+extern crate derive_new;
+
+#[allow(unused_imports)]
+#[macro_use]
+extern crate getset;
+
 pub use crate::{
     amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH},
     effect_return::EffectReturn,
