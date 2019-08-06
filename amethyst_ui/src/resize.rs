@@ -57,24 +57,13 @@ impl<'a, 'b> SystemDesc<'a, 'b, ResizeSystem> for ResizeSystemDesc {
 
 /// This system rearranges UI elements whenever the screen is resized using their `UiResize`
 /// component.
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct ResizeSystem {
+    #[new(value = "(0.0, 0.0)")]
     screen_size: (f32, f32),
     resize_events_id: ReaderId<ComponentEvent>,
+    #[new(default)]
     local_modified: BitSet,
-}
-
-impl ResizeSystem {
-    /// Creates a new ResizeSystem that listens with the given reader Id.
-    pub fn new(resize_events_id: ReaderId<ComponentEvent>) -> ResizeSystem {
-        let screen_size = (0.0, 0.0);
-
-        ResizeSystem {
-            screen_size,
-            resize_events_id,
-            local_modified: BitSet::default(),
-        }
-    }
 }
 
 impl<'a> System<'a> for ResizeSystem {

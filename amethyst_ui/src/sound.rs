@@ -89,17 +89,12 @@ impl<'a, 'b> SystemDesc<'a, 'b, UiSoundSystem> for UiSoundSystemDesc {
 /// Handles any dispatches `UiPlaySoundAction`s and plays the received
 /// sounds through the set `Output`.
 #[derive(Debug)]
+/// Constructs a default `UiSoundSystem`. Since the `event_reader`
+/// will automatically be fetched when the system is set up, this should
+/// always be used to construct the `UiSoundSystem`.
+#[derive(new)]
 pub struct UiSoundSystem {
     event_reader: ReaderId<UiPlaySoundAction>,
-}
-
-impl UiSoundSystem {
-    /// Constructs a default `UiSoundSystem`. Since the `event_reader`
-    /// will automatically be fetched when the system is set up, this should
-    /// always be used to construct the `UiSoundSystem`.
-    pub fn new(event_reader: ReaderId<UiPlaySoundAction>) -> Self {
-        Self { event_reader }
-    }
 }
 
 impl<'s> System<'s> for UiSoundSystem {

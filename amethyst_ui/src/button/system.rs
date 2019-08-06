@@ -7,9 +7,10 @@ use std::{collections::HashMap, fmt::Debug};
 
 use crate::{UiButtonAction, UiButtonActionType::*, UiImage, UiText};
 
-#[derive(Debug)]
+#[derive(Debug, new)]
 struct ActionChangeStack<T: Debug + Clone + PartialEq> {
     initial_value: T,
+    #[new(default)]
     stack: Vec<T>,
 }
 
@@ -17,13 +18,6 @@ impl<T> ActionChangeStack<T>
 where
     T: Debug + Clone + PartialEq,
 {
-    pub fn new(initial_value: T) -> Self {
-        ActionChangeStack {
-            initial_value,
-            stack: Vec::new(),
-        }
-    }
-
     pub fn add(&mut self, change: T) {
         self.stack.push(change);
     }
@@ -73,22 +67,13 @@ impl<'a, 'b> SystemDesc<'a, 'b, UiButtonSystem> for UiButtonSystemDesc {
 /// when necessary.
 ///
 /// It's automatically registered with the `UiBundle`.
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct UiButtonSystem {
     event_reader: ReaderId<UiButtonAction>,
+    #[new(default)]
     set_images: HashMap<Entity, ActionChangeStack<UiImage>>,
+    #[new(default)]
     set_text_colors: HashMap<Entity, ActionChangeStack<[f32; 4]>>,
-}
-
-impl UiButtonSystem {
-    /// Creates a new instance of this structure
-    pub fn new(event_reader: ReaderId<UiButtonAction>) -> Self {
-        Self {
-            event_reader,
-            set_images: Default::default(),
-            set_text_colors: Default::default(),
-        }
-    }
 }
 
 impl<'s> System<'s> for UiButtonSystem {

@@ -57,19 +57,12 @@ pub enum UiEventType {
 }
 
 /// A ui event instance.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct UiEvent {
     /// The type of ui event.
     pub event_type: UiEventType,
     /// The entity on which the event happened.
     pub target: Entity,
-}
-
-impl UiEvent {
-    /// Creates a new UiEvent.
-    pub fn new(event_type: UiEventType, target: Entity) -> Self {
-        UiEvent { event_type, target }
-    }
 }
 
 impl TargetedEvent for UiEvent {
@@ -90,24 +83,15 @@ impl Component for Interactable {
 
 /// The system that generates events for `Interactable` enabled entities.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
-#[derive(Default, Debug)]
+#[derive(Default, Debug, new)]
 pub struct UiMouseSystem<T: BindingTypes> {
+    #[new(default)]
     was_down: bool,
+    #[new(default)]
     click_started_on: Option<Entity>,
+    #[new(default)]
     last_target: Option<Entity>,
     _marker: PhantomData<T>,
-}
-
-impl<T: BindingTypes> UiMouseSystem<T> {
-    /// Creates a new UiMouseSystem.
-    pub fn new() -> Self {
-        UiMouseSystem {
-            was_down: false,
-            click_started_on: None,
-            last_target: None,
-            _marker: PhantomData,
-        }
-    }
 }
 
 impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {

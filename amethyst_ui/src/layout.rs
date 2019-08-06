@@ -143,27 +143,14 @@ impl<'a, 'b> SystemDesc<'a, 'b, UiTransformSystem> for UiTransformSystemDesc {
 /// Manages the `Parent` component on entities having `UiTransform`
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct UiTransformSystem {
+    #[new(default)]
     transform_modified: BitSet,
     transform_events_id: ReaderId<ComponentEvent>,
     parent_events_id: ReaderId<HierarchyEvent>,
+    #[new(value = "(0.0, 0.0)")]
     screen_size: (f32, f32),
-}
-
-impl UiTransformSystem {
-    /// Creates a new `UiTransformSystem`.
-    pub fn new(
-        transform_events_id: ReaderId<ComponentEvent>,
-        parent_events_id: ReaderId<HierarchyEvent>,
-    ) -> Self {
-        Self {
-            transform_modified: BitSet::default(),
-            transform_events_id,
-            parent_events_id,
-            screen_size: (0.0, 0.0),
-        }
-    }
 }
 
 impl<'a> System<'a> for UiTransformSystem {

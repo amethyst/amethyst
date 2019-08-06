@@ -78,23 +78,13 @@ where
 /// System managing the selection of entities.
 /// Reacts to `UiEvent`.
 /// Reacts to Tab and Shift+Tab.
-#[derive(Debug)]
-pub struct SelectionKeyboardSystem<G> {
-    window_reader_id: ReaderId<Event>,
-    phantom: PhantomData<G>,
-}
-
-impl<G> SelectionKeyboardSystem<G>
+#[derive(Debug, new)]
+pub struct SelectionKeyboardSystem<G>
 where
     G: Send + Sync + 'static + PartialEq,
 {
-    /// Creates a new `SelectionKeyboardSystem`.
-    pub fn new(window_reader_id: ReaderId<Event>) -> Self {
-        Self {
-            window_reader_id,
-            phantom: PhantomData,
-        }
-    }
+    window_reader_id: ReaderId<Event>,
+    phantom: PhantomData<G>,
 }
 
 impl<'a, G> System<'a> for SelectionKeyboardSystem<G>
@@ -220,26 +210,14 @@ where
 }
 
 /// System handling the clicks on ui entities and selecting them, if applicable.
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct SelectionMouseSystem<G, T>
 where
     T: BindingTypes,
+    G: Send + Sync + 'static + PartialEq,
 {
     ui_reader_id: ReaderId<UiEvent>,
     phantom: PhantomData<(G, T)>,
-}
-
-impl<G, T: BindingTypes> SelectionMouseSystem<G, T>
-where
-    G: Send + Sync + 'static + PartialEq,
-{
-    /// Creates a new `SelectionMouseSystem`.
-    pub fn new(ui_reader_id: ReaderId<UiEvent>) -> Self {
-        Self {
-            ui_reader_id,
-            phantom: PhantomData,
-        }
-    }
 }
 
 impl<'a, G, T: BindingTypes> System<'a> for SelectionMouseSystem<G, T>

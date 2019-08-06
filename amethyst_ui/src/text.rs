@@ -28,26 +28,30 @@ pub enum LineMode {
 }
 
 /// A component used to display text in this entity's UiTransform
-#[derive(Clone, Derivative, Serialize)]
+#[derive(Clone, Derivative, Serialize, new)]
 #[derivative(Debug)]
 pub struct UiText {
-    /// The string rendered by this.
-    pub text: String,
-    /// The height of a line of text in pixels.
-    pub font_size: f32,
-    /// The color of the rendered text, using a range of 0.0 to 1.0 per channel.
-    pub color: [f32; 4],
     /// The font used for rendering.
     #[serde(skip)]
     pub font: FontHandle,
+    /// The string rendered by this.
+    pub text: String,
+    /// The color of the rendered text, using a range of 0.0 to 1.0 per channel.
+    pub color: [f32; 4],
+    /// The height of a line of text in pixels.
+    pub font_size: f32,
     /// If true this will be rendered as dots instead of the text.
+    #[new(default)]
     pub password: bool,
     /// How the text should handle new lines.
+    #[new(value = "LineMode::Single")]
     pub line_mode: LineMode,
     /// How to align the text within its `UiTransform`.
+    #[new(value = "Anchor::Middle")]
     pub align: Anchor,
     /// Cached glyph positions, used to process mouse highlighting
     #[serde(skip)]
+    #[new(default)]
     pub(crate) cached_glyphs: Vec<CachedGlyph>,
 }
 
@@ -58,42 +62,21 @@ pub(crate) struct CachedGlyph {
     pub(crate) advance_width: f32,
 }
 
-impl UiText {
-    /// Initializes a new UiText
-    ///
-    /// # Parameters
-    ///
-    /// * `font`: A handle to a `Font` asset
-    /// * `text`: the glyphs to render
-    /// * `color`: RGBA color with a maximum of 1.0 and a minimum of 0.0 for each channel
-    /// * `font_size`: a uniform scale applied to the glyphs
-    pub fn new(font: FontHandle, text: String, color: [f32; 4], font_size: f32) -> UiText {
-        UiText {
-            text,
-            color,
-            font_size,
-            font: font.clone(),
-            password: false,
-            line_mode: LineMode::Single,
-            align: Anchor::Middle,
-            cached_glyphs: Vec::new(),
-        }
-    }
-}
-
 impl Component for UiText {
     type Storage = DenseVecStorage<Self>;
 }
 
 /// If this component is attached to an entity with a UiText then that UiText is editable.
 /// This component also controls how that editing works.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, new)]
 pub struct TextEditing {
     /// The current editing cursor position, specified in terms of glyphs, not characters.
+    #[new(default)]
     pub cursor_position: isize,
     /// The maximum graphemes permitted in this string.
     pub max_length: usize,
     /// The amount and direction of glyphs highlighted relative to the cursor.
+    #[new(default)]
     pub highlight_vector: isize,
     /// The color of the text itself when highlighted.
     pub selected_text_color: [f32; 4],
@@ -108,27 +91,8 @@ pub struct TextEditing {
     /// When it is greater than 0.5 / CURSOR_BLINK_RATE the cursor should not display, when it
     /// is greater than or equal to 1.0 / CURSOR_BLINK_RATE it should be reset to 0.  When the
     /// player types it should be reset to 0.
+    #[new(default)]
     pub(crate) cursor_blink_timer: f32,
-}
-
-impl TextEditing {
-    /// Create a new TextEditing Component
-    pub fn new(
-        max_length: usize,
-        selected_text_color: [f32; 4],
-        selected_background_color: [f32; 4],
-        use_block_cursor: bool,
-    ) -> TextEditing {
-        TextEditing {
-            cursor_position: 0,
-            max_length,
-            highlight_vector: 0,
-            selected_text_color,
-            selected_background_color,
-            use_block_cursor,
-            cursor_blink_timer: 0.0,
-        }
-    }
 }
 
 impl Component for TextEditing {
@@ -150,25 +114,16 @@ impl<'a, 'b> SystemDesc<'a, 'b, TextEditingMouseSystem> for TextEditingMouseSyst
 }
 
 /// This system processes the underlying UI data as needed.
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct TextEditingMouseSystem {
     /// A reader for winit events.
     reader: ReaderId<Event>,
     /// This is set to true while the left mouse button is pressed.
+    #[new(default)]
     left_mouse_button_pressed: bool,
     /// The screen coordinates of the mouse
+    #[new(value = "(0., 0.)")]
     mouse_position: (f32, f32),
-}
-
-impl TextEditingMouseSystem {
-    /// Creates a new instance of this system
-    pub fn new(reader: ReaderId<Event>) -> Self {
-        Self {
-            reader,
-            left_mouse_button_pressed: false,
-            mouse_position: (0., 0.),
-        }
-    }
 }
 
 impl<'a> System<'a> for TextEditingMouseSystem {

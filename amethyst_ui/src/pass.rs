@@ -131,15 +131,8 @@ lazy_static::lazy_static! {
 }
 
 /// A UI drawing pass that draws UI elements and text in screen-space
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, new)]
 pub struct DrawUiDesc;
-
-impl DrawUiDesc {
-    /// Create new DrawUI pass description
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
 
 impl<B: Backend> RenderGroupDesc<B, World> for DrawUiDesc {
     fn build(

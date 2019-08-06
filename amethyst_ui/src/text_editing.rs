@@ -34,17 +34,10 @@ impl<'a, 'b> SystemDesc<'a, 'b, TextEditingInputSystem> for TextEditingInputSyst
 /// * Adds and removes text.
 /// * Moves selection cursor.
 /// * Grows and shrinks selected text zone.
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct TextEditingInputSystem {
     /// A reader for winit events.
     reader: ReaderId<Event>,
-}
-
-impl TextEditingInputSystem {
-    /// Creates a new instance of this system
-    pub fn new(reader: ReaderId<Event>) -> Self {
-        Self { reader }
-    }
 }
 
 impl<'a> System<'a> for TextEditingInputSystem {

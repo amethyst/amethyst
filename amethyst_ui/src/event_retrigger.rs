@@ -70,20 +70,12 @@ where
 /// to incoming events and calling `apply` on the respective `Retrigger`
 /// components.
 #[derive(Debug)]
+/// Constructs a default `EventRetriggerSystem`. Since the `event_reader`
+/// will automatically be fetched when the system is set up, this should
+/// always be used to construct `EventRetriggerSystem`s.
+#[derive(new)]
 pub struct EventRetriggerSystem<T: EventRetrigger> {
     event_reader: ReaderId<T::In>,
-}
-
-impl<T> EventRetriggerSystem<T>
-where
-    T: EventRetrigger,
-{
-    /// Constructs a default `EventRetriggerSystem`. Since the `event_reader`
-    /// will automatically be fetched when the system is set up, this should
-    /// always be used to construct `EventRetriggerSystem`s.
-    pub fn new(event_reader: ReaderId<T::In>) -> Self {
-        Self { event_reader }
-    }
 }
 
 impl<'s, T> System<'s> for EventRetriggerSystem<T>
