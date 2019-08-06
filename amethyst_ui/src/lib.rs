@@ -31,7 +31,7 @@ pub use self::{
     pass::{DrawUi, DrawUiDesc, RenderUi},
     prefab::{
         NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImagePrefab, UiLoader, UiLoaderSystem,
-        UiLoaderSystemDesc, UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
+        UiLoaderSystemDesc, UiPrefab, UiTextData, UiTransformData, UiWidget,
     },
     resize::{ResizeSystem, ResizeSystemDesc, UiResize},
     selection::{
