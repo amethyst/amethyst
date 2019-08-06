@@ -17,6 +17,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     #
     use amethyst::{
         prelude::*,
+    #   ecs::{World, WorldExt},
         utils::application_root_dir,
     };
     #
@@ -30,6 +31,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
         let assets_dir = app_root.join("assets");
 
         //..
+    #   let world = World::new();
     #   let game_data = GameDataBuilder::default();
 
         let mut game = Application::new(assets_dir, LoadingState, game_data)?;
@@ -54,6 +56,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     # extern crate amethyst;
     # use amethyst::{
     #     assets::{AssetStorage, Handle, Loader, ProgressCounter},
+    #     ecs::{World, WorldExt},
     #     prelude::*,
     #     renderer::{formats::texture::ImageFormat, Texture},
     #     utils::application_root_dir,

@@ -1,11 +1,11 @@
 use amethyst::{
     assets::{
-        Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter,
-        RonFormat,
+        Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystemDesc,
+        ProgressCounter, RonFormat,
     },
-    core::{Transform, TransformBundle},
-    derive::PrefabData,
-    ecs::{Entity, ReadExpect, ReadStorage, System, WriteStorage},
+    core::{SystemDesc, Transform, TransformBundle},
+    derive::{PrefabData, SystemDesc},
+    ecs::{Entity, ReadExpect, ReadStorage, System, SystemData, World, WorldExt, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
         Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
@@ -39,15 +39,18 @@ fn main() -> Result<(), Error> {
 
     let app_dir = amethyst::utils::application_dir("examples")?;
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
-    let assets_directory = app_dir.join("assets");
+    let assets_dir = app_dir.join("assets");
 
     let game_data = GameDataBuilder::new()
-        .with(PrefabLoaderSystem::<ScenePrefab>::default(), "prefab", &[])
-        .with(AutoFovSystem::default(), "auto_fov", &["prefab"]) // This makes the system adjust the camera right after it has been loaded (in the same frame), preventing any flickering
-        .with(ShowFovSystem, "show_fov", &["auto_fov"])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_system_desc(
+            PrefabLoaderSystemDesc::<ScenePrefab>::default(),
+            "prefab",
+            &[],
+        )
+        // This makes the system adjust the camera right after it has been loaded (in the same
+        // frame), preventing any flickering
+        .with(AutoFovSystem::new(), "auto_fov", &["prefab"])
+        .with(ShowFovSystem::new(), "show_fov", &["auto_fov"])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -55,9 +58,12 @@ fn main() -> Result<(), Error> {
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )?;
+        )?
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(UiBundle::<StringBindings>::new())?;
 
-    let mut game = Application::build(assets_directory, Loading::new())?.build(game_data)?;
+    let mut game = Application::build(assets_dir, Loading::new())?.build(game_data)?;
     game.run();
 
     Ok(())
@@ -157,7 +163,14 @@ impl SimpleState for Example {
     }
 }
 
+#[derive(SystemDesc)]
 struct ShowFovSystem;
+
+impl ShowFovSystem {
+    pub fn new() -> Self {
+        Self
+    }
+}
 
 impl<'a> System<'a> for ShowFovSystem {
     type SystemData = (

@@ -1,6 +1,5 @@
 use derivative::Derivative;
 use serde::de::DeserializeOwned;
-use shred_derive::SystemData;
 use std::{
     fmt::{Debug, Formatter},
     marker::PhantomData,
@@ -8,11 +7,14 @@ use std::{
 
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem,
-    Progress, ProgressCounter,
+    PrefabLoaderSystemDesc, Progress, ProgressCounter,
 };
 use amethyst_audio::Source as Audio;
 use amethyst_core::{
-    ecs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
+    ecs::{
+        prelude::{Entities, Entity, Read, ReadExpect, World, Write, WriteStorage},
+        shred::{ResourceId, SystemData},
+    },
     HiddenPropagate,
 };
 use amethyst_error::{format_err, Error, ResultExt};
@@ -1009,6 +1011,9 @@ where
         entity
     }
 }
+
+/// Builds a `UiLoaderSystem`.
+pub type UiLoaderSystemDesc<CD, W> = PrefabLoaderSystemDesc<UiPrefabData<CD, W>>;
 
 /// Prefab loader system for UI
 ///

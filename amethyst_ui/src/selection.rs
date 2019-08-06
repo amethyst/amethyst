@@ -1,16 +1,19 @@
+use std::marker::PhantomData;
+
+use derivative::Derivative;
+use derive_new::new;
+use serde::{Deserialize, Serialize};
+use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+
 use amethyst_core::{
     ecs::{
         Component, DenseVecStorage, Entities, FlaggedStorage, Join, Read, ReadStorage, ReaderId,
-        Resources, System, SystemData, Write, WriteStorage,
+        System, SystemData, World, Write, WriteStorage,
     },
     shrev::EventChannel,
+    SystemDesc,
 };
 use amethyst_input::{BindingTypes, InputHandler};
-use std::marker::PhantomData;
-use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-
-use derive_new::new;
-use serde::{Deserialize, Serialize};
 
 use crate::{CachedSelectionOrder, UiEvent, UiEventType};
 
@@ -52,15 +55,46 @@ impl Component for Selected {
     type Storage = DenseVecStorage<Self>;
 }
 
+/// Builds a `SelectionKeyboardSystem`.
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct SelectionKeyboardSystemDesc<G> {
+    marker: PhantomData<G>,
+}
+
+impl<'a, 'b, G> SystemDesc<'a, 'b, SelectionKeyboardSystem<G>> for SelectionKeyboardSystemDesc<G>
+where
+    G: Send + Sync + 'static + PartialEq,
+{
+    fn build(self, world: &mut World) -> SelectionKeyboardSystem<G> {
+        <SelectionKeyboardSystem<G> as System<'_>>::SystemData::setup(world);
+
+        let window_reader_id = world.fetch_mut::<EventChannel<Event>>().register_reader();
+
+        SelectionKeyboardSystem::new(window_reader_id)
+    }
+}
+
 /// System managing the selection of entities.
 /// Reacts to `UiEvent`.
 /// Reacts to Tab and Shift+Tab.
-#[derive(Debug, Default, new)]
+#[derive(Debug)]
 pub struct SelectionKeyboardSystem<G> {
-    #[new(default)]
-    window_reader_id: Option<ReaderId<Event>>,
-    #[new(default)]
+    window_reader_id: ReaderId<Event>,
     phantom: PhantomData<G>,
+}
+
+impl<G> SelectionKeyboardSystem<G>
+where
+    G: Send + Sync + 'static + PartialEq,
+{
+    /// Creates a new `SelectionKeyboardSystem`.
+    pub fn new(window_reader_id: ReaderId<Event>) -> Self {
+        Self {
+            window_reader_id,
+            phantom: PhantomData,
+        }
+    }
 }
 
 impl<'a, G> System<'a> for SelectionKeyboardSystem<G>
@@ -79,6 +113,8 @@ where
         (window_events, cached, mut selecteds, mut ui_events, entities): Self::SystemData,
     ) {
         /*
+        Algorithm in use:
+
         Add clicked elements + shift + ctrl status.
         If tab or shift-tab
             remove clicked buf
@@ -98,7 +134,7 @@ where
 
         // Checks if tab was pressed.
         // TODO: Controller support/Use InputEvent in addition to keys.
-        for event in window_events.read(self.window_reader_id.as_mut().unwrap()) {
+        for event in window_events.read(&mut self.window_reader_id) {
             if let Event::WindowEvent {
                 event:
                     WindowEvent::KeyboardInput {
@@ -156,20 +192,54 @@ where
             }
         }
     }
+}
 
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        self.window_reader_id = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+/// Builds a `SelectionMouseSystem`.
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct SelectionMouseSystemDesc<G, T>
+where
+    G: Send + Sync + 'static + PartialEq,
+    T: BindingTypes,
+{
+    marker: PhantomData<(G, T)>,
+}
+
+impl<'a, 'b, G, T> SystemDesc<'a, 'b, SelectionMouseSystem<G, T>> for SelectionMouseSystemDesc<G, T>
+where
+    G: Send + Sync + 'static + PartialEq,
+    T: BindingTypes,
+{
+    fn build(self, world: &mut World) -> SelectionMouseSystem<G, T> {
+        <SelectionMouseSystem<G, T> as System<'_>>::SystemData::setup(world);
+
+        let ui_reader_id = world.fetch_mut::<EventChannel<UiEvent>>().register_reader();
+
+        SelectionMouseSystem::new(ui_reader_id)
     }
 }
 
 /// System handling the clicks on ui entities and selecting them, if applicable.
-#[derive(Debug, Default, new)]
-pub struct SelectionMouseSystem<G, T: BindingTypes> {
-    #[new(default)]
-    ui_reader_id: Option<ReaderId<UiEvent>>,
-    #[new(default)]
+#[derive(Debug)]
+pub struct SelectionMouseSystem<G, T>
+where
+    T: BindingTypes,
+{
+    ui_reader_id: ReaderId<UiEvent>,
     phantom: PhantomData<(G, T)>,
+}
+
+impl<G, T: BindingTypes> SelectionMouseSystem<G, T>
+where
+    G: Send + Sync + 'static + PartialEq,
+{
+    /// Creates a new `SelectionMouseSystem`.
+    pub fn new(ui_reader_id: ReaderId<UiEvent>) -> Self {
+        Self {
+            ui_reader_id,
+            phantom: PhantomData,
+        }
+    }
 }
 
 impl<'a, G, T: BindingTypes> System<'a> for SelectionMouseSystem<G, T>
@@ -196,7 +266,7 @@ where
         let mut emitted: Vec<UiEvent> = Vec::new();
 
         // Add clicked elements to clicked buffer
-        for ev in ui_events.read(self.ui_reader_id.as_mut().unwrap()) {
+        for ev in ui_events.read(&mut self.ui_reader_id) {
             if let UiEventType::ClickStart = ev.event_type {
                 // Ignore events from elements removed between the event emission and now.
                 if selectables.get(ev.target).is_some() {
@@ -299,9 +369,5 @@ where
         }
 
         ui_events.iter_write(emitted.into_iter());
-    }
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        self.ui_reader_id = Some(res.fetch_mut::<EventChannel<UiEvent>>().register_reader());
     }
 }

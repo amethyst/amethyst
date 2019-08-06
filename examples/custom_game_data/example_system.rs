@@ -2,16 +2,20 @@ use super::DemoState;
 use amethyst::{
     core::{
         math::{UnitQuaternion, Vector3},
-        Time, Transform,
+        SystemDesc, Time, Transform,
     },
-    ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage},
+    derive::SystemDesc,
+    ecs::prelude::{
+        Entity, Join, Read, ReadStorage, System, SystemData, World, WriteExpect, WriteStorage,
+    },
     renderer::{camera::Camera, light::Light},
     ui::{UiFinder, UiText},
     utils::fps_counter::FpsCounter,
 };
 
-#[derive(Default)]
+#[derive(Default, SystemDesc)]
 pub struct ExampleSystem {
+    #[system_desc(skip)]
     fps_display: Option<Entity>,
 }
 

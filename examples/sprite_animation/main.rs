@@ -7,12 +7,12 @@ use amethyst::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
         AnimationSetPrefab, EndControl,
     },
-    assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat},
+    assets::{PrefabData, PrefabLoader, PrefabLoaderSystemDesc, ProgressCounter, RonFormat},
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
     ecs::{prelude::Entity, Entities, Join, ReadStorage, WriteStorage},
     error::Error,
-    prelude::{Builder, World},
+    prelude::{Builder, World, WorldExt},
     renderer::{
         camera::Camera,
         plugins::{RenderFlat2D, RenderToWindow},
@@ -133,12 +133,12 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/assets/");
     let display_config_path = app_root.join("examples/sprite_animation/config/display.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(
-            PrefabLoaderSystem::<MyPrefabData>::default(),
+        .with_system_desc(
+            PrefabLoaderSystemDesc::<MyPrefabData>::default(),
             "scene_loader",
             &[],
         )
@@ -159,7 +159,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::new(assets_directory, Example::default(), game_data)?;
+    let mut game = Application::new(assets_dir, Example::default(), game_data)?;
     game.run();
 
     Ok(())

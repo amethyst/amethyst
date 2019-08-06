@@ -1,33 +1,42 @@
 use std::marker::PhantomData;
 
-use amethyst::{core::bundle::SystemBundle, ecs::prelude::*, error::Error};
+use amethyst::{
+    core::{bundle::SystemBundle, SystemDesc},
+    ecs::prelude::*,
+    error::Error,
+};
 
 use derive_new::new;
 
 /// Adds a specified `System` to the dispatcher.
 #[derive(Debug, new)]
-pub(crate) struct SystemInjectionBundle<'a, Sys>
+pub(crate) struct SystemInjectionBundle<'a, 'b, SD, S>
 where
-    Sys: for<'s> System<'s> + Send,
+    SD: SystemDesc<'a, 'b, S>,
+    S: for<'s> System<'s> + Send,
 {
-    /// `System` to add to the dispatcher.
-    system: Sys,
+    /// Function to instantiate `System` to add to the dispatcher.
+    system_desc: SD,
     /// Name to register the system with.
     system_name: String,
     /// Names of the system dependencies.
     system_dependencies: Vec<String>,
-    /// Marker for `'a` lifetime.
-    #[new(default)]
-    system_marker: PhantomData<&'a Sys>,
+    /// Marker.
+    system_marker: PhantomData<(&'a SD, &'b S)>,
 }
 
-impl<'a, 'b, Sys> SystemBundle<'a, 'b> for SystemInjectionBundle<'a, Sys>
+impl<'a, 'b, SD, S> SystemBundle<'a, 'b> for SystemInjectionBundle<'a, 'b, SD, S>
 where
-    Sys: for<'s> System<'s> + Send + 'a,
+    SD: SystemDesc<'a, 'b, S>,
+    S: for<'s> System<'s> + Send + 'a,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add(
-            self.system,
+            self.system_desc.build(world),
             &self.system_name,
             &self
                 .system_dependencies

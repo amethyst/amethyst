@@ -19,8 +19,11 @@ impl EmptyState for Example {
     }
 }
 
-fn main() {
+fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
-    let mut game = Application::new("./", Example, ()).expect("Fatal error");
+    let assets_dir = "./";
+    let mut game = Application::new(assets_dir, Example, ())?;
     game.run();
+
+    Ok(())
 }

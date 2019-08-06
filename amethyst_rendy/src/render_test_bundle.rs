@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-use amethyst_core::{bundle::SystemBundle, ecs::DispatcherBuilder};
+use amethyst_core::{
+    bundle::SystemBundle,
+    ecs::{DispatcherBuilder, World},
+};
 use amethyst_error::Error;
 use derive_new::new;
 
@@ -19,7 +22,11 @@ impl<'a, 'b, B> SystemBundle<'a, 'b> for RenderTestBundle<B>
 where
     B: Backend,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         let mut bundle =
             RenderingBundle::<B>::new().with_plugin(crate::plugins::RenderFlat2D::default());
 
@@ -31,7 +38,7 @@ where
             },
         ));
 
-        bundle.build(builder)?;
+        bundle.build(world, builder)?;
         Ok(())
     }
 }
@@ -47,9 +54,13 @@ impl<'a, 'b, B> SystemBundle<'a, 'b> for RenderEmptyBundle<B>
 where
     B: Backend,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         let bundle = RenderingBundle::<B>::new();
-        bundle.build(builder)?;
+        bundle.build(world, builder)?;
         Ok(())
     }
 }

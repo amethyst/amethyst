@@ -1,13 +1,18 @@
 //! ECS rendering bundle
 
 use crate::{
-    BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem,
-    SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
-    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
-    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
+    BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystemDesc,
+    SelectionKeyboardSystemDesc, SelectionMouseSystemDesc, TextEditingInputSystemDesc,
+    TextEditingMouseSystemDesc, ToNativeWidget, UiButtonActionRetriggerSystemDesc,
+    UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem, UiSoundRetriggerSystemDesc,
+    UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
 };
 use amethyst_assets::Processor;
-use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
+use amethyst_core::{
+    bundle::SystemBundle,
+    ecs::prelude::{DispatcherBuilder, World},
+    SystemDesc,
+};
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
 use derive_new::new;
@@ -32,14 +37,18 @@ where
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add(
-            UiLoaderSystem::<<C as ToNativeWidget>::PrefabData, W>::default(),
+            UiLoaderSystemDesc::<<C as ToNativeWidget>::PrefabData, W>::default().build(world),
             "ui_loader",
             &[],
         );
         builder.add(
-            UiTransformSystem::default(),
+            UiTransformSystemDesc::default().build(world),
             "ui_transform",
             &["transform_system"],
         );
@@ -54,47 +63,55 @@ where
             &[],
         );
         builder.add(
-            SelectionMouseSystem::<G, T>::new(),
+            SelectionMouseSystemDesc::<G, T>::default().build(world),
             "ui_mouse_selection",
             &[],
         );
         builder.add(
-            SelectionKeyboardSystem::<G>::new(),
+            SelectionKeyboardSystemDesc::<G>::default().build(world),
             "ui_keyboard_selection",
             // Because when you press tab, you want to override the previously selected elements.
             &["ui_mouse_selection"],
         );
         builder.add(
-            TextEditingMouseSystem::new(),
+            TextEditingMouseSystemDesc::default().build(world),
             "ui_text_editing_mouse_system",
             &["ui_mouse_selection", "ui_keyboard_selection"],
         );
         builder.add(
-            TextEditingInputSystem::new(),
+            TextEditingInputSystemDesc::default().build(world),
             "ui_text_editing_input_system",
             // Hard requirement. The system assumes the text to edit is selected.
             &["ui_mouse_selection", "ui_keyboard_selection"],
         );
-        builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
+        builder.add(
+            ResizeSystemDesc::default().build(world),
+            "ui_resize_system",
+            &[],
+        );
         builder.add(
             UiMouseSystem::<T>::new(),
             "ui_mouse_system",
             &["ui_transform"],
         );
         builder.add(
-            UiButtonSystem::new(),
+            UiButtonSystemDesc::default().build(world),
             "ui_button_system",
             &["ui_mouse_system"],
         );
 
         builder.add(
-            UiButtonActionRetriggerSystem::new(),
+            UiButtonActionRetriggerSystemDesc::default().build(world),
             "ui_button_action_retrigger_system",
             &["ui_button_system"],
         );
-        builder.add(UiSoundSystem::new(), "ui_sound_system", &[]);
         builder.add(
-            UiSoundRetriggerSystem::new(),
+            UiSoundSystemDesc::default().build(world),
+            "ui_sound_system",
+            &[],
+        );
+        builder.add(
+            UiSoundRetriggerSystemDesc::default().build(world),
             "ui_sound_retrigger_system",
             &["ui_sound_system"],
         );

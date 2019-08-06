@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
 use serde::{Deserialize, Serialize};
-use shred_derive::SystemData;
 
 use amethyst_core::ecs::prelude::{
-    Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
+    Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, ResourceId, SystemData,
+    World, WriteStorage,
 };
 use amethyst_error::Error;
 
@@ -12,7 +12,7 @@ use crate::{
     Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter, SerializableFormat,
 };
 
-pub use self::system::PrefabLoaderSystem;
+pub use self::system::{PrefabLoaderSystem, PrefabLoaderSystemDesc};
 
 mod impls;
 mod system;
@@ -470,8 +470,8 @@ mod tests {
     use rayon::ThreadPoolBuilder;
 
     use amethyst_core::{
-        ecs::{Builder, RunNow, World},
-        Time, Transform,
+        ecs::{Builder, RunNow, World, WorldExt},
+        SystemDesc, Time, Transform,
     };
 
     use crate::Loader;
@@ -484,11 +484,11 @@ mod tests {
     fn test_prefab_load() {
         let mut world = World::new();
         let pool = Arc::new(ThreadPoolBuilder::default().build().unwrap());
-        world.add_resource(pool.clone());
-        world.add_resource(Loader::new(".", pool));
-        world.add_resource(Time::default());
-        let mut system = PrefabLoaderSystem::<MyPrefab>::default();
-        RunNow::setup(&mut system, &mut world.res);
+        world.insert(pool.clone());
+        world.insert(Loader::new(".", pool));
+        world.insert(Time::default());
+        let mut system = PrefabLoaderSystemDesc::<MyPrefab>::default().build(&mut world);
+        RunNow::setup(&mut system, &mut world);
 
         let prefab = Prefab::new_main(Transform::default());
 
@@ -498,7 +498,7 @@ mod tests {
             &world.read_resource::<AssetStorage<Prefab<MyPrefab>>>(),
         );
         let root_entity = world.create_entity().with(handle).build();
-        system.run_now(&world.res);
+        system.run_now(&world);
         assert_eq!(
             Some(&Transform::default()),
             world.read_storage().get(root_entity)

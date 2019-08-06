@@ -8,16 +8,16 @@ use std::{
 
 use crossbeam_queue::SegQueue;
 use derivative::Derivative;
-use hibitset::BitSet;
 use log::{debug, error, trace, warn};
 use rayon::ThreadPool;
 
 use amethyst_core::{
     ecs::{
-        prelude::{Component, Read, ReadExpect, System, VecStorage, Write},
+        hibitset::BitSet,
+        prelude::{Component, Read, ReadExpect, System, SystemData, VecStorage, World, Write},
         storage::UnprotectedStorage,
     },
-    Time,
+    SystemDesc, Time,
 };
 use amethyst_error::{Error, ResultExt};
 
@@ -513,6 +513,16 @@ impl<A> Processor<A> {
         Processor {
             marker: PhantomData,
         }
+    }
+}
+
+impl<'a, 'b, A> SystemDesc<'a, 'b, Processor<A>> for Processor<A>
+where
+    A: Asset + ProcessableAsset,
+{
+    fn build(self, world: &mut World) -> Processor<A> {
+        <Processor<A> as System<'_>>::SystemData::setup(world);
+        self
     }
 }
 

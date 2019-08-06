@@ -49,9 +49,6 @@
 extern crate amethyst_derive;
 
 #[macro_use]
-extern crate shred_derive;
-
-#[macro_use]
 mod macros;
 
 #[doc(inline)]
