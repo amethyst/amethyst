@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+[#1848]: https://github.com/amethyst/amethyst/pull/1848
+
 ## [0.12.0] - 2019-07-30
 
 ### Breaking changes
