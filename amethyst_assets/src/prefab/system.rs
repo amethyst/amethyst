@@ -44,30 +44,24 @@ where
 /// ### Type parameters:
 ///
 /// - `T`: `PrefabData`
-pub struct PrefabLoaderSystem<T> {
-    _m: PhantomData<T>,
-    entities: Vec<Entity>,
-    finished: Vec<Entity>,
-    to_process: BitSet,
-    insert_reader: ReaderId<ComponentEvent>,
-    next_tag: u64,
-}
-
-impl<'a, T> PrefabLoaderSystem<T>
-where
-    T: PrefabData<'a> + Send + Sync + 'static,
+#[derive(new)]
+pub struct PrefabLoaderSystem<T>
 {
-    /// Creates a new `PrefabLoaderSystem`.
-    pub fn new(insert_reader: ReaderId<ComponentEvent>) -> Self {
-        Self {
-            _m: PhantomData,
-            entities: Vec::default(),
-            finished: Vec::default(),
-            to_process: BitSet::default(),
-            insert_reader,
-            next_tag: 0,
-        }
-    }
+    _m: PhantomData<T>,
+
+    #[new(default)]
+    entities: Vec<Entity>,
+
+    #[new(default)]
+    finished: Vec<Entity>,
+
+    #[new(default)]
+    to_process: BitSet,
+
+    insert_reader: ReaderId<ComponentEvent>,
+    
+    #[new(default)]
+    next_tag: u64,
 }
 
 impl<'a, T> System<'a> for PrefabLoaderSystem<T>

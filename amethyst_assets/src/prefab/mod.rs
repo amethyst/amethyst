@@ -104,11 +104,16 @@ pub trait PrefabData<'a> {
 /// ### Type parameters:
 ///
 /// - `T`: `PrefabData`
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize, new)]
 pub struct Prefab<T> {
+    #[new(default)]
     #[serde(skip)]
     tag: Option<u64>,
+
+    #[new(value = "vec![PrefabEntity::default()]")]
     entities: Vec<PrefabEntity<T>>,
+
+    #[new(default)]
     #[serde(skip)]
     counter: Option<ProgressCounter>,
 }
@@ -118,7 +123,7 @@ pub struct Prefab<T> {
 /// ### Type parameters:
 ///
 /// - `T`: `PrefabData`
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, new)]
 #[serde(default)]
 pub struct PrefabEntity<T> {
     parent: Option<usize>,
@@ -132,11 +137,6 @@ impl<T> Default for PrefabEntity<T> {
 }
 
 impl<T> PrefabEntity<T> {
-    /// New prefab entity
-    pub fn new(parent: Option<usize>, data: Option<T>) -> Self {
-        PrefabEntity { parent, data }
-    }
-
     /// Set parent index
     pub fn set_parent(&mut self, parent: usize) {
         self.parent = Some(parent);
@@ -192,15 +192,6 @@ impl<T> PrefabEntity<T> {
 }
 
 impl<T> Prefab<T> {
-    /// Create new empty prefab
-    pub fn new() -> Self {
-        Prefab {
-            tag: None,
-            entities: vec![PrefabEntity::default()],
-            counter: None,
-        }
-    }
-
     /// Create a prefab with data for only the main `Entity`
     pub fn new_main(data: T) -> Self {
         Prefab {
@@ -311,20 +302,13 @@ impl<T> Prefab<T> {
 /// Tag placed on entities created by the prefab system.
 ///
 /// The tag value match the tag value of the `Prefab` the `Entity` was created from.
+#[derive(new)]
 pub struct PrefabTag<T> {
     tag: u64,
     _m: PhantomData<T>,
 }
 
 impl<T> PrefabTag<T> {
-    /// Create a new tag
-    pub fn new(tag: u64) -> Self {
-        PrefabTag {
-            tag,
-            _m: PhantomData,
-        }
-    }
-
     /// Get the tag
     pub fn tag(&self) -> u64 {
         self.tag

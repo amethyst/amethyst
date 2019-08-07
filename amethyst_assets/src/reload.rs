@@ -17,16 +17,9 @@ use crate::{Format, FormatValue, Loader, Source};
 
 /// This bundle activates hot reload for the `Loader`,
 /// adds a `HotReloadStrategy` and the `HotReloadSystem`.
-#[derive(Default)]
+#[derive(Default, new)]
 pub struct HotReloadBundle {
     strategy: HotReloadStrategy,
-}
-
-impl HotReloadBundle {
-    /// Creates a new bundle.
-    pub fn new(strategy: HotReloadStrategy) -> Self {
-        HotReloadBundle { strategy }
-    }
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
@@ -226,28 +219,12 @@ impl<D: 'static> Clone for Box<dyn Reload<D>> {
 
 /// An implementation of `Reload` which just stores the modification time
 /// and the path of the file.
+#[derive(new)]
 pub struct SingleFile<D> {
     format: Box<dyn Format<D>>,
     modified: u64,
     path: String,
     source: Arc<dyn Source>,
-}
-
-impl<D: 'static> SingleFile<D> {
-    /// Creates a new `SingleFile` reload object.
-    pub fn new(
-        format: Box<dyn Format<D>>,
-        modified: u64,
-        path: String,
-        source: Arc<dyn Source>,
-    ) -> Self {
-        SingleFile {
-            format,
-            modified,
-            path,
-            source,
-        }
-    }
 }
 
 impl<D: 'static> Clone for SingleFile<D> {

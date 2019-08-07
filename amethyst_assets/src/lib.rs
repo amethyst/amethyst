@@ -9,6 +9,13 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
+#[macro_use]
+extern crate derive_new;
+
+#[allow(unused_imports)]
+#[macro_use]
+extern crate getset;
+
 #[cfg(feature = "json")]
 pub use crate::formats::JsonFormat;
 pub use crate::{

@@ -43,20 +43,22 @@ impl Progress for () {
 
 /// A progress tracker which is passed to the `Loader`
 /// in order to check how many assets are loaded.
-#[derive(Default)]
+#[derive(Default, new)]
 pub struct ProgressCounter {
+    #[new(default)]
     errors: Arc<Mutex<Vec<AssetErrorMeta>>>,
+    
+    #[new(default)]
     num_assets: usize,
+    
+    #[new(default)]
     num_failed: Arc<AtomicUsize>,
+    
+    #[new(default)]
     num_loading: Arc<AtomicUsize>,
 }
 
 impl ProgressCounter {
-    /// Creates a new `Progress` struct.
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Removes all errors and returns them.
     pub fn errors(&self) -> Vec<AssetErrorMeta> {
         let mut lock = self.errors.lock();

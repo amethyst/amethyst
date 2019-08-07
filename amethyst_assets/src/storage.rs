@@ -46,13 +46,27 @@ impl Allocator {
 
 /// An asset storage, storing the actual assets and allocating
 /// handles to them.
+#[derive(new)]
 pub struct AssetStorage<A: Asset> {
+    #[new(default)]
     assets: VecStorage<(A, u32)>,
+
+    #[new(default)]
     bitset: BitSet,
+
+    #[new(default)]
     handles: Vec<Handle<A>>,
+
+    #[new(default)]
     handle_alloc: Allocator,
+
+    #[new(value = "Arc::new(SegQueue::new())")]
     pub(crate) processed: Arc<SegQueue<Processed<A>>>,
+
+    #[new(default)]
     reloads: Vec<(WeakHandle<A>, Box<dyn Reload<A::Data>>)>,
+
+    #[new(value = "SegQueue::new()")]
     unused_handles: SegQueue<Handle<A>>,
 }
 
@@ -68,11 +82,6 @@ where
 }
 
 impl<A: Asset> AssetStorage<A> {
-    /// Creates a new asset storage.
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Allocate a new handle.
     pub(crate) fn allocate(&self) -> Handle<A> {
         self.unused_handles
@@ -501,19 +510,9 @@ impl<A: Asset> Drop for AssetStorage<A> {
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
-#[derive(Default)]
+#[derive(Default, new)]
 pub struct Processor<A> {
     marker: PhantomData<A>,
-}
-
-impl<A> Processor<A> {
-    /// Creates a new asset processor for
-    /// assets of type `A`.
-    pub fn new() -> Self {
-        Processor {
-            marker: PhantomData,
-        }
-    }
 }
 
 impl<'a, 'b, A> SystemDesc<'a, 'b, Processor<A>> for Processor<A>

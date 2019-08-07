@@ -7,9 +7,10 @@ use crate::{Handle, WeakHandle};
 
 /// A simple cache for asset handles of type `A`.
 /// This stores `WeakHandle`, so it doesn't keep the assets alive.
-#[derive(Derivative)]
+#[derive(Derivative, new)]
 #[derivative(Default(bound = ""))]
 pub struct Cache<A> {
+    #[new(default)]
     map: FnvHashMap<String, WeakHandle<A>>,
 }
 
@@ -17,11 +18,6 @@ impl<A> Cache<A>
 where
     A: Clone,
 {
-    /// Creates a new `Cache` and initializes it with the default values.
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Inserts an asset with a given `key` and returns the old value (if any).
     pub fn insert<K: Into<String>>(&mut self, key: K, asset: &Handle<A>) -> Option<WeakHandle<A>> {
         self.map.insert(key.into(), asset.downgrade())
