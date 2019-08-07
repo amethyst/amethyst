@@ -5,15 +5,19 @@
 
 use amethyst::{
     assets::{
-        Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystem,
+        Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystemDesc,
         ProgressCounter, RonFormat,
     },
     core::{
         math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
+        SystemDesc,
     },
-    ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage},
+    derive::SystemDesc,
+    ecs::prelude::{
+        Entity, Join, Read, ReadStorage, System, SystemData, World, WorldExt, Write, WriteStorage,
+    },
     input::{
         get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
         VirtualKeyCode,
@@ -187,7 +191,7 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_directory = app_root.join("examples").join("assets");
+    let assets_dir = app_root.join("examples").join("assets");
 
     let display_config_path = app_root
         .join("examples")
@@ -196,13 +200,8 @@ fn main() -> Result<(), Error> {
         .join("display.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with(ExampleSystem::default(), "example_system", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -211,8 +210,13 @@ fn main() -> Result<(), Error> {
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )?;
-    let mut game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
+        )?
+        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(HotReloadBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
+        .with_bundle(InputBundle::<StringBindings>::new())?;
+    let mut game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
     game.run();
     Ok(())
 }
@@ -239,7 +243,7 @@ impl Default for DemoState {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, SystemDesc)]
 struct ExampleSystem {
     fps_display: Option<Entity>,
 }

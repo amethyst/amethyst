@@ -3,19 +3,23 @@ use amethyst_audio::{output::Output, Source, SourceHandle};
 use amethyst_core::{
     ecs::{
         prelude::{Component, DenseVecStorage},
-        Read, Resources, System, SystemData, Write,
+        Read, System, SystemData, World, Write,
     },
     shrev::{EventChannel, ReaderId},
+    SystemDesc,
 };
 
 use crate::{
     event::{UiEvent, UiEventType::*},
-    event_retrigger::{EventRetrigger, EventRetriggerSystem},
+    event_retrigger::{EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc},
     EventReceiver,
 };
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+/// Builds a `UiSoundRetriggerSystem`.
+pub type UiSoundRetriggerSystemDesc = EventRetriggerSystemDesc<UiSoundRetrigger>;
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvent`s
 /// and trigger `UiPlaySoundAction`s for entities with attached
@@ -66,19 +70,35 @@ impl EventRetrigger for UiSoundRetrigger {
     }
 }
 
+/// Builds a `UiSoundSystem`.
+#[derive(Default, Debug)]
+pub struct UiSoundSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, UiSoundSystem> for UiSoundSystemDesc {
+    fn build(self, world: &mut World) -> UiSoundSystem {
+        <UiSoundSystem as System<'_>>::SystemData::setup(world);
+
+        let event_reader = world
+            .fetch_mut::<EventChannel<UiPlaySoundAction>>()
+            .register_reader();
+
+        UiSoundSystem::new(event_reader)
+    }
+}
+
 /// Handles any dispatches `UiPlaySoundAction`s and plays the received
 /// sounds through the set `Output`.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct UiSoundSystem {
-    event_reader: Option<ReaderId<UiPlaySoundAction>>,
+    event_reader: ReaderId<UiPlaySoundAction>,
 }
 
 impl UiSoundSystem {
     /// Constructs a default `UiSoundSystem`. Since the `event_reader`
     /// will automatically be fetched when the system is set up, this should
     /// always be used to construct the `UiSoundSystem`.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(event_reader: ReaderId<UiPlaySoundAction>) -> Self {
+        Self { event_reader }
     }
 }
 
@@ -89,22 +109,11 @@ impl<'s> System<'s> for UiSoundSystem {
         Option<Read<'s, Output>>,
     );
 
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        self.event_reader = Some(
-            res.fetch_mut::<EventChannel<UiPlaySoundAction>>()
-                .register_reader(),
-        );
-    }
-
     fn run(&mut self, (sound_events, audio_storage, audio_output): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("ui_sound_system");
 
-        let event_reader = self
-            .event_reader
-            .as_mut()
-            .expect("`UiSoundSystem::setup` was not called before `UiSoundSystem::run`");
+        let event_reader = &mut self.event_reader;
 
         for event in sound_events.read(event_reader) {
             if let Some(output) = audio_output.as_ref() {

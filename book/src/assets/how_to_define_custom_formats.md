@@ -79,7 +79,7 @@ If you are defining a new format that may be useful to others, [please send us a
     #         Asset, AssetStorage, Handle, Loader, Processor, ProgressCounter,
     #         ProcessingState, Format,
     #     },
-    #     ecs::VecStorage,
+    #     ecs::{VecStorage, World, WorldExt},
     #     prelude::*,
     #     utils::application_root_dir,
     # };

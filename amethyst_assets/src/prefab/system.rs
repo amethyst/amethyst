@@ -1,13 +1,14 @@
 use std::{collections::HashMap, marker::PhantomData, ops::Deref};
 
+use derivative::Derivative;
 use log::error;
 
 use amethyst_core::{
     ecs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-        ReaderId, Resources, System, Write, WriteStorage,
+        ReaderId, System, SystemData, World, Write, WriteStorage,
     },
-    ArcThreadPool, Parent, Time,
+    ArcThreadPool, Parent, SystemDesc, Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -17,6 +18,26 @@ use thread_profiler::profile_scope;
 use crate::{AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState};
 
 use super::{Prefab, PrefabData, PrefabTag};
+
+/// Builds a `PrefabLoaderSystem`.
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct PrefabLoaderSystemDesc<T> {
+    marker: PhantomData<T>,
+}
+
+impl<'a, 'b, T> SystemDesc<'a, 'b, PrefabLoaderSystem<T>> for PrefabLoaderSystemDesc<T>
+where
+    T: PrefabData<'a> + Send + Sync + 'static,
+{
+    fn build(self, world: &mut World) -> PrefabLoaderSystem<T> {
+        <PrefabLoaderSystem<T> as System<'_>>::SystemData::setup(world);
+
+        let insert_reader = WriteStorage::<Handle<Prefab<T>>>::fetch(&world).register_reader();
+
+        PrefabLoaderSystem::new(insert_reader)
+    }
+}
 
 /// System that load `Prefab`s for `PrefabData` `T`.
 ///
@@ -28,18 +49,22 @@ pub struct PrefabLoaderSystem<T> {
     entities: Vec<Entity>,
     finished: Vec<Entity>,
     to_process: BitSet,
-    insert_reader: Option<ReaderId<ComponentEvent>>,
+    insert_reader: ReaderId<ComponentEvent>,
     next_tag: u64,
 }
 
-impl<T> Default for PrefabLoaderSystem<T> {
-    fn default() -> Self {
-        PrefabLoaderSystem {
+impl<'a, T> PrefabLoaderSystem<T>
+where
+    T: PrefabData<'a> + Send + Sync + 'static,
+{
+    /// Creates a new `PrefabLoaderSystem`.
+    pub fn new(insert_reader: ReaderId<ComponentEvent>) -> Self {
+        Self {
             _m: PhantomData,
             entities: Vec::default(),
             finished: Vec::default(),
             to_process: BitSet::default(),
-            insert_reader: None,
+            insert_reader,
             next_tag: 0,
         }
     }
@@ -104,9 +129,7 @@ where
         );
         prefab_handles
             .channel()
-            .read(self.insert_reader.as_mut().expect(
-                "`PrefabLoaderSystem::setup` was not called before `PrefabLoaderSystem::run`",
-            ))
+            .read(&mut self.insert_reader)
             .for_each(|event| {
                 if let ComponentEvent::Inserted(id) = event {
                     self.to_process.add(*id);
@@ -171,11 +194,5 @@ where
         for entity in &self.finished {
             self.to_process.remove(entity.id());
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        self.insert_reader = Some(WriteStorage::<Handle<Prefab<T>>>::fetch(&res).register_reader());
     }
 }

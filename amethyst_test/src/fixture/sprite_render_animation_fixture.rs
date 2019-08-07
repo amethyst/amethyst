@@ -72,7 +72,7 @@ impl SpriteRenderAnimationFixture {
                 &world.read_resource(),
             )
         };
-        world.add_resource(EffectReturn(animation_handle));
+        world.insert(EffectReturn(animation_handle));
     }
 
     /// Asserts that the sprite render animation is present in the `World`.
