@@ -1,7 +1,7 @@
 use laminar::Config;
 use std::net::SocketAddr;
 
-#[derive(Clone)]
+#[derive(Clone, new)]
 /// The configuration used for the networking system.
 #[allow(missing_debug_implementations)] // TODO: revisit this. Laminar is missing Debug on a lot of things
 pub struct ServerConfig {
@@ -17,23 +17,6 @@ pub struct ServerConfig {
     pub create_net_connection_on_connect: bool,
     /// Allows you to configure laminar its behaviour.
     pub laminar_config: Config,
-}
-
-impl ServerConfig {
-    /// Construct the config with the specified configuration options.
-    pub fn new(
-        ip: SocketAddr,
-        max_throughput: u16,
-        create_net_connection_on_connect: bool,
-        laminar_config: Config,
-    ) -> ServerConfig {
-        ServerConfig {
-            udp_socket_addr: ip,
-            max_throughput,
-            create_net_connection_on_connect,
-            laminar_config,
-        }
-    }
 }
 
 impl Default for ServerConfig {

@@ -21,3 +21,5 @@ travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
 backtrace = "0.3.13"
+derive-new = "0.5.7"
+getset = "0.0.7"

@@ -131,8 +131,12 @@ impl Default for DeliveryGuarantee {
 /// You are able to send packets with any the above guarantees.
 ///
 /// For more information please have a look at: https://amethyst.github.io/laminar/docs/reliability/reliability.html
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Getters, MutGetters)]
 pub struct NetPacket<T> {
+    /// Returns a immutable reference to the content.
+    #[get = "pub"] 
+    /// Returns a mutable reference to the content.
+    #[get_mut = "pub"]
     content: T,
     #[serde(skip)]
     ordering_guarantee: OrderingGuarantee,
@@ -277,16 +281,6 @@ impl<T> NetPacket<T> {
     /// Return if this event is neither ordered or sequenced.
     pub fn is_unordered(&self) -> bool {
         self.ordering_guarantee == OrderingGuarantee::None
-    }
-
-    /// Returns a immutable reference to the content.
-    pub fn content(&self) -> &T {
-        &self.content
-    }
-
-    /// Returns a immutable reference to the content.
-    pub fn content_mut(&mut self) -> &mut T {
-        &mut self.content
     }
 
     /// Returns the ordering guarantee
