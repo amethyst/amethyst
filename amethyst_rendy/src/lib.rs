@@ -55,9 +55,6 @@ extern crate derive_new;
 extern crate getset;
 
 #[macro_use]
-extern crate shred_derive;
-
-#[macro_use]
 mod macros;
 
 #[doc(inline)]
