@@ -14,20 +14,20 @@ use crate::{source::Source, DecoderError};
 /// TODO: This should get a proper Debug impl parsing the sinks and sound queue
 #[allow(missing_debug_implementations)]
 #[derive(Default)]
+/// Creates a new AudioEmitter component initialized to the given positions.
+/// These positions will stay synced with Transform if the Transform component is available
+/// on this entity.
+#[derive(new)]
 pub struct AudioEmitter {
+    #[new(default)]
     pub(crate) sinks: SmallVec<[(SpatialSink, Arc<AtomicBool>); 4]>,
+    #[new(default)]
     pub(crate) sound_queue: SmallVec<[Decoder<Cursor<Source>>; 4]>,
+    #[new(default)]
     pub(crate) picker: Option<Box<dyn FnMut(&mut AudioEmitter) -> bool + Send + Sync>>,
 }
 
 impl AudioEmitter {
-    /// Creates a new AudioEmitter component initialized to the given positions.
-    /// These positions will stay synced with Transform if the Transform component is available
-    /// on this entity.
-    pub fn new() -> AudioEmitter {
-        Default::default()
-    }
-
     /// Plays an audio source from this emitter.
     pub fn play(&mut self, source: &Source) -> Result<(), DecoderError> {
         self.sound_queue

@@ -8,6 +8,13 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[macro_use]
+extern crate derive_new;
+
+#[allow(unused_imports)]
+#[macro_use]
+extern crate getset;
+
 pub use self::{
     bundle::AudioBundle,
     components::*,

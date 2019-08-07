@@ -29,6 +29,7 @@ log = "0.4.6"
 rodio = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
+getset = "0.0.7"
 
 [dev-dependencies]
 amethyst_utils = { path = "../amethyst_utils", version = "0.7.0"}
