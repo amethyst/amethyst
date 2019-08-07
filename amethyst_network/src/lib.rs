@@ -9,6 +9,12 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[macro_use]
+extern crate derive_new;
+
+#[macro_use]
+extern crate getset;
+
 pub use crate::{
     bundle::NetworkBundle,
     connection::{ConnectionState, NetConnection, NetIdentity},

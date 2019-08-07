@@ -10,6 +10,14 @@
 )]
 #![warn(clippy::all)]
 
+#[allow(unused_imports)]
+#[macro_use]
+extern crate derive_new;
+
+#[allow(unused_imports)]
+#[macro_use]
+extern crate getset;
+
 use amethyst_assets::{Asset, Format, Handle};
 use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::Error;

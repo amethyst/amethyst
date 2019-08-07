@@ -9,6 +9,12 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[macro_use]
+extern crate derive_new;
+
+#[macro_use]
+extern crate getset;
+
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{
     AssetStorage, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem, PrefabLoaderSystemDesc,

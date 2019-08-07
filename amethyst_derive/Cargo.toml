@@ -21,6 +21,8 @@ syn = { version = "0.15", features = ["visit"] }
 quote = "0.6"
 proc-macro2 = "0.4"
 proc_macro_roids = "0.3.0"
+derive-new = "0.5.7"
+getset = "0.0.7"
 
 [dev-dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.7.0" }
