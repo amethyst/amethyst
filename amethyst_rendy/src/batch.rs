@@ -175,6 +175,7 @@ where
     old_sk_list: Vec<(SK, Range<u32>)>,
     pk_list: Vec<(PK, u32)>,
     sk_list: Vec<(SK, Range<u32>)>,
+    /// Raw storage data of this batch container
     #[get = "pub"]
     data: Vec<D>,
 }
@@ -323,6 +324,7 @@ where
 {
     old_keys: Vec<(PK, u32)>,
     keys_list: Vec<(PK, u32)>,
+    /// Raw storage data for this batch container
     #[get = "pub"]
     data: Vec<D>,
 }
