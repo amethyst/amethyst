@@ -46,6 +46,8 @@ where
 /// Will read `winit::Event` from `EventHandler<winit::Event>`, process them with `InputHandler`,
 /// and push the results in `EventHandler<InputEvent>`.
 #[derive(Debug)]
+/// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
+#[derive(new)]
 pub struct InputSystem<T>
 where
     T: BindingTypes,
@@ -55,11 +57,6 @@ where
 }
 
 impl<T: BindingTypes> InputSystem<T> {
-    /// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
-    pub fn new(reader: ReaderId<Event>, bindings: Option<Bindings<T>>) -> Self {
-        InputSystem { reader, bindings }
-    }
-
     fn process_event(
         event: &Event,
         handler: &mut InputHandler<T>,

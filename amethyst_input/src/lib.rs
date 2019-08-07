@@ -9,6 +9,13 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[macro_use]
+extern crate derive_new;
+
+#[allow(unused_imports)]
+#[macro_use]
+extern crate getset;
+
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::{
@@ -46,15 +53,11 @@ mod util;
 #[cfg(feature = "sdl_controller")]
 mod sdl_events_system;
 
+#[derive(new)]
 struct KeyThenCode {
     value: (VirtualKeyCode, u32),
+    #[new(default)]
     index: u8,
-}
-
-impl KeyThenCode {
-    pub fn new(value: (VirtualKeyCode, u32)) -> KeyThenCode {
-        KeyThenCode { value, index: 0 }
-    }
 }
 
 impl Iterator for KeyThenCode {

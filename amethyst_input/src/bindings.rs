@@ -107,7 +107,11 @@ impl BindingTypes for StringBindings {
 /// )
 /// ```
 #[derive(Derivative, Serialize, Deserialize)]
-#[derivative(Debug(bound = ""), Default(bound = ""), Clone(bound = ""))]
+#[derivative(
+    Debug(bound = ""),
+    Default(bound = "", new = "true"),
+    Clone(bound = "")
+)]
 #[serde(bound(
     serialize = "T::Axis: Serialize, T::Action: Serialize",
     deserialize = "T::Axis: Deserialize<'de>, T::Action: Deserialize<'de>",
@@ -245,13 +249,6 @@ impl Display for ActionRemovedError {
 }
 
 impl Error for ActionRemovedError {}
-
-impl<T: BindingTypes> Bindings<T> {
-    /// Creates a new empty Bindings structure
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
 
 impl<T: BindingTypes> Bindings<T> {
     /// Assign an axis to an ID value

@@ -20,7 +20,7 @@ use winit::{
 /// For example, if a key is pressed on the keyboard, this struct will record
 /// that the key is pressed until it is released again.
 #[derive(Derivative)]
-#[derivative(Default(bound = ""), Debug(bound = ""))]
+#[derivative(Default(bound = "", new = "true"), Debug(bound = ""))]
 pub struct InputHandler<T>
 where
     T: BindingTypes,
@@ -46,11 +46,6 @@ impl<T> InputHandler<T>
 where
     T: BindingTypes,
 {
-    /// Creates a new input handler.
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Updates the input handler with a new engine event.
     ///
     /// The Amethyst game engine will automatically call this if the InputHandler is attached to

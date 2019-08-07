@@ -29,7 +29,7 @@ use crate::sdl_events_system::ControllerMappings;
 /// No errors returned from this bundle.
 ///
 #[derive(Debug, Derivative)]
-#[derivative(Default(bound = ""))]
+#[derivative(Default(bound = "", new = "true"))]
 pub struct InputBundle<T: BindingTypes> {
     bindings: Option<Bindings<T>>,
     #[cfg(feature = "sdl_controller")]
@@ -37,11 +37,6 @@ pub struct InputBundle<T: BindingTypes> {
 }
 
 impl<T: BindingTypes> InputBundle<T> {
-    /// Create a new input bundle with no bindings
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Use the provided bindings with the `InputHandler`
     pub fn with_bindings(mut self, bindings: Bindings<T>) -> Self {
         self.bindings = Some(bindings);
