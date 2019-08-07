@@ -47,13 +47,13 @@ impl Progress for () {
 pub struct ProgressCounter {
     #[new(default)]
     errors: Arc<Mutex<Vec<AssetErrorMeta>>>,
-    
+
     #[new(default)]
     num_assets: usize,
-    
+
     #[new(default)]
     num_failed: Arc<AtomicUsize>,
-    
+
     #[new(default)]
     num_loading: Arc<AtomicUsize>,
 }

@@ -45,8 +45,7 @@ where
 ///
 /// - `T`: `PrefabData`
 #[derive(new)]
-pub struct PrefabLoaderSystem<T>
-{
+pub struct PrefabLoaderSystem<T> {
     _m: PhantomData<T>,
 
     #[new(default)]
@@ -59,7 +58,7 @@ pub struct PrefabLoaderSystem<T>
     to_process: BitSet,
 
     insert_reader: ReaderId<ComponentEvent>,
-    
+
     #[new(default)]
     next_tag: u64,
 }
