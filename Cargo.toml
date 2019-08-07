@@ -130,6 +130,8 @@ sentry = { version = "0.15.4", optional = true }
 winit = { version = "0.19", features = ["serde", "icon_loading"] }
 serde = { version = "1.0", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
+derive-new = "0.5.7"
+getset = "0.0.7"
 
 thread_profiler = { version = "0.3", optional = true }
 

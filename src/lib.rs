@@ -63,6 +63,13 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[macro_use]
+extern crate derive_new;
+
+#[allow(unused_imports)]
+#[macro_use]
+extern crate getset;
+
 #[cfg(feature = "animation")]
 pub use amethyst_animation as animation;
 pub use amethyst_assets as assets;

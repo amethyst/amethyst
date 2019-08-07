@@ -30,21 +30,12 @@ impl Display for StateError {
 
 /// State data encapsulates the data sent to all state functions from the application main loop.
 #[allow(missing_debug_implementations)]
+#[derive(new)]
 pub struct StateData<'a, T> {
     /// Main `World`
     pub world: &'a mut World,
     /// User defined game data
     pub data: &'a mut T,
-}
-
-impl<'a, T> StateData<'a, T>
-where
-    T: 'a,
-{
-    /// Create a new state data
-    pub fn new(world: &'a mut World, data: &'a mut T) -> Self {
-        StateData { world, data }
-    }
 }
 
 /// Types of state transitions.
