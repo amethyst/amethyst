@@ -134,7 +134,7 @@ impl Default for DeliveryGuarantee {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Getters, MutGetters)]
 pub struct NetPacket<T> {
     /// Returns a immutable reference to the content.
-    #[get = "pub"] 
+    #[get = "pub"]
     /// Returns a mutable reference to the content.
     #[get_mut = "pub"]
     content: T,
