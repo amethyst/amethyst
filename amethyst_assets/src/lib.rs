@@ -12,7 +12,6 @@
 #[macro_use]
 extern crate derive_new;
 
-#[allow(unused_imports)]
 #[macro_use]
 extern crate getset;
 

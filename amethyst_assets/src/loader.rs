@@ -15,7 +15,14 @@ use crate::{
 };
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
+#[derive(Setters)]
 pub struct Loader {
+    /// If set to `true`, this `Loader` will ask formats to
+    /// generate "reload instructions" which *allow* reloading.
+    /// Calling `set_hot_reload(true)` does not actually enable
+    /// hot reloading; this is controlled by the `HotReloadStrategy`
+    /// resource.
+    #[set = "pub"]
     hot_reload: bool,
     pool: Arc<ThreadPool>,
     sources: FnvHashMap<String, Arc<dyn Source>>,
@@ -62,15 +69,6 @@ impl Loader {
         S: Source,
     {
         self.add_source(String::new(), source);
-    }
-
-    /// If set to `true`, this `Loader` will ask formats to
-    /// generate "reload instructions" which *allow* reloading.
-    /// Calling `set_hot_reload(true)` does not actually enable
-    /// hot reloading; this is controlled by the `HotReloadStrategy`
-    /// resource.
-    pub fn set_hot_reload(&mut self, value: bool) {
-        self.hot_reload = value;
     }
 
     /// Loads an asset with a given format from the default (directory) source.
