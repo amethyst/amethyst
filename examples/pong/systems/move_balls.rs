@@ -1,11 +1,13 @@
 use crate::Ball;
 use amethyst::{
-    core::{timing::Time, transform::Transform},
-    ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
+    core::{timing::Time, transform::Transform, SystemDesc},
+    derive::SystemDesc,
+    ecs::prelude::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage},
 };
 
 /// This system is responsible for moving all balls according to their speed
 /// and the time passed.
+#[derive(SystemDesc)]
 pub struct MoveBallsSystem;
 
 impl<'s> System<'s> for MoveBallsSystem {

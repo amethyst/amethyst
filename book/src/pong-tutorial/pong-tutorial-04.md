@@ -158,11 +158,14 @@ We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 use amethyst::{
     core::timing::Time,
     core::transform::Transform,
-    ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
+    core::SystemDesc,
+    derive::SystemDesc,
+    ecs::prelude::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage},
 };
 
 use crate::pong::Ball;
 
+#[derive(SystemDesc)]
 pub struct MoveBallsSystem;
 
 impl<'s> System<'s> for MoveBallsSystem {
@@ -237,12 +240,14 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 # }
 #
 use amethyst::{
-    core::Transform,
-    ecs::prelude::{Join, ReadStorage, System, WriteStorage},
+    core::{Transform, SystemDesc},
+    derive::SystemDesc,
+    ecs::prelude::{Join, ReadStorage, System, SystemData, World, WriteStorage},
 };
 
 use crate::pong::{Ball, Side, Paddle, ARENA_HEIGHT};
 
+# #[derive(SystemDesc)]
 pub struct BounceSystem;
 
 impl<'s> System<'s> for BounceSystem {
@@ -320,20 +325,26 @@ as well as adding our new systems to the game data:
 # use amethyst::window::DisplayConfig;
 # use amethyst::input::StringBindings;
 # fn main() -> amethyst::Result<()> {
-# let path = "./resources/display_config.ron";
+# let path = "./config/display.ron";
 # let config = DisplayConfig::load(&path);
 # mod systems {
 # use amethyst;
+# use amethyst::core::ecs::{System, SystemData, World};
+# use amethyst::core::SystemDesc;
+# use amethyst::derive::SystemDesc;
+# #[derive(SystemDesc)]
 # pub struct PaddleSystem;
 # impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 # type SystemData = ();
 # fn run(&mut self, _: Self::SystemData) { }
 # }
+# #[derive(SystemDesc)]
 # pub struct MoveBallsSystem;
 # impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
 # type SystemData = ();
 # fn run(&mut self, _: Self::SystemData) { }
 # }
+# #[derive(SystemDesc)]
 # pub struct BounceSystem;
 # impl<'a> amethyst::ecs::System<'a> for BounceSystem {
 # type SystemData = ();
@@ -341,6 +352,7 @@ as well as adding our new systems to the game data:
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+let mut world = World::new();
 let game_data = GameDataBuilder::default()
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
@@ -422,13 +434,17 @@ default empty state. Now let's use that inside our `Application` creation code i
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::prelude::*;
+# use amethyst::{
+#     ecs::{World, WorldExt},
+#     prelude::*,
+# };
 #
 # #[derive(Default)] struct Pong;
 # impl SimpleState for Pong { }
 # fn main() -> amethyst::Result<()> {
 #   let game_data = GameDataBuilder::default();
 #   let assets_dir = "/";
+#   let world = World::new();
 let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
 #   Ok(())
 # }
@@ -480,7 +496,7 @@ impl SimpleState for Pong {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
             // If the timer isn't expired yet, subtract the time that passed since the last update.
             {
-                let time = data.world.res.fetch::<Time>();
+                let time = data.world.fetch::<Time>();
                 timer -= time.delta_seconds();
             }
             if timer <= 0.0 {

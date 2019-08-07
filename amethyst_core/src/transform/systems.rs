@@ -1,28 +1,57 @@
 //! Scene graph system and types
 
-use crate::ecs::prelude::{
-    ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
-    WriteStorage,
+use crate::{
+    ecs::{
+        hibitset::BitSet,
+        prelude::{
+            ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, System, SystemData,
+            World, WriteStorage,
+        },
+    },
+    SystemDesc,
 };
-use hibitset::BitSet;
 
 use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-/// Handles updating `global_matrix` field from `Transform` components.
+/// Builds a `TransformSystem`.
 #[derive(Default, Debug)]
+pub struct TransformSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, TransformSystem> for TransformSystemDesc {
+    fn build(self, world: &mut World) -> TransformSystem {
+        <TransformSystem as System<'_>>::SystemData::setup(world);
+
+        let mut hierarchy = world.fetch_mut::<ParentHierarchy>();
+        let mut locals = WriteStorage::<Transform>::fetch(&world);
+        let parent_events_id = hierarchy.track();
+        let locals_events_id = locals.register_reader();
+
+        TransformSystem::new(locals_events_id, parent_events_id)
+    }
+}
+
+/// Handles updating `global_matrix` field from `Transform` components.
+#[derive(Debug)]
 pub struct TransformSystem {
     local_modified: BitSet,
-    locals_events_id: Option<ReaderId<ComponentEvent>>,
-    parent_events_id: Option<ReaderId<HierarchyEvent>>,
+    locals_events_id: ReaderId<ComponentEvent>,
+    parent_events_id: ReaderId<HierarchyEvent>,
 }
 
 impl TransformSystem {
     /// Creates a new transform processor.
-    pub fn new() -> TransformSystem {
-        TransformSystem::default()
+    pub fn new(
+        locals_events_id: ReaderId<ComponentEvent>,
+        parent_events_id: ReaderId<HierarchyEvent>,
+    ) -> TransformSystem {
+        TransformSystem {
+            local_modified: BitSet::default(),
+            locals_events_id,
+            parent_events_id,
+        }
     }
 }
 
@@ -41,11 +70,7 @@ impl<'a> System<'a> for TransformSystem {
 
         locals
             .channel()
-            .read(
-                self.locals_events_id.as_mut().expect(
-                    "`TransformSystem::setup` was not called before `TransformSystem::run`",
-                ),
-            )
+            .read(&mut self.locals_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.local_modified.add(*id);
@@ -53,11 +78,7 @@ impl<'a> System<'a> for TransformSystem {
                 ComponentEvent::Removed(_id) => {}
             });
 
-        for event in hierarchy.changed().read(
-            self.parent_events_id
-                .as_mut()
-                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
-        ) {
+        for event in hierarchy.changed().read(&mut self.parent_events_id) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     // Sometimes the user may have already deleted the entity.
@@ -115,31 +136,22 @@ impl<'a> System<'a> for TransformSystem {
         }
 
         // Clear the local event reader.
-        locals
-            .channel()
-            .read(self.locals_events_id.as_mut().expect("unreachable"));
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use crate::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
-        let mut locals = WriteStorage::<Transform>::fetch(res);
-        self.parent_events_id = Some(hierarchy.track());
-        self.locals_events_id = Some(locals.register_reader());
+        locals.channel().read(&mut self.locals_events_id);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        ecs::prelude::{Builder, World},
+        ecs::{
+            prelude::{Builder, World, WorldExt},
+            shred::RunNow,
+        },
         math::{Matrix4, Quaternion, Unit, Vector3},
+        transform::{Parent, Transform, TransformSystem, TransformSystemDesc},
+        SystemDesc,
     };
-    use shred::RunNow;
     use specs_hierarchy::{Hierarchy, HierarchySystem};
-
-    use crate::transform::{Parent, Transform, TransformSystem};
 
     // If this works, then all other tests should work.
     #[test]
@@ -158,10 +170,10 @@ mod tests {
 
     fn transform_world() -> (World, HierarchySystem<Parent>, TransformSystem) {
         let mut world = World::new();
-        let mut hs = HierarchySystem::<Parent>::new();
-        let mut ts = TransformSystem::new();
-        hs.setup(&mut world.res);
-        ts.setup(&mut world.res);
+        let mut hs = HierarchySystem::<Parent>::new(&mut world);
+        let mut ts = TransformSystemDesc::default().build(&mut world);
+        hs.setup(&mut world);
+        ts.setup(&mut world);
 
         (world, hs, ts)
     }
@@ -179,8 +191,8 @@ mod tests {
 
         let e1 = world.create_entity().with(transform).build();
 
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
 
         let transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
         // let a1: [[f32; 4]; 4] = transform.global_matrix().into();
@@ -204,8 +216,8 @@ mod tests {
 
         let e1 = world.create_entity().with(local.clone()).build();
 
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
 
         let transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
         let a1 = transform.global_matrix();
@@ -244,8 +256,8 @@ mod tests {
             .with(Parent { entity: e2 })
             .build();
 
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
 
         let e1_transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
         let a1 = e1_transform.global_matrix();
@@ -317,8 +329,8 @@ mod tests {
             parents.insert(e3, Parent { entity: e2 }).unwrap();
         }
 
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
 
         let global_matrix1 = {
             let e1_transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
@@ -361,8 +373,8 @@ mod tests {
 
         world.create_entity().with(local.clone()).build();
 
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
     }
 
     #[test]
@@ -376,8 +388,8 @@ mod tests {
         local.set_translation_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
         world.create_entity().with(local.clone()).build();
 
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
     }
 
     #[test]
@@ -405,14 +417,14 @@ mod tests {
             .with(Transform::default())
             .with(Parent { entity: e4 })
             .build();
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
         world.maintain();
         println!("{:?}", world.read_resource::<Hierarchy<Parent>>().all());
 
         let _ = world.delete_entity(e1);
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
         world.maintain();
         println!("{:?}", world.read_resource::<Hierarchy<Parent>>().all());
 
@@ -420,11 +432,11 @@ mod tests {
         assert_eq!(world.is_alive(e2), false);
 
         let _ = world.delete_entity(e3);
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
         world.maintain();
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
         world.maintain();
 
         assert_eq!(world.is_alive(e3), false);
@@ -455,8 +467,8 @@ mod tests {
             transforms.register_reader()
         };
 
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
         world.maintain();
 
         {
@@ -464,8 +476,8 @@ mod tests {
             for _component_event in transforms.channel().read(&mut transform_reader) {}
         }
 
-        hs.run_now(&world.res);
-        system.run_now(&world.res);
+        hs.run_now(&world);
+        system.run_now(&world);
         world.maintain();
         {
             let transforms = world.write_storage::<Transform>();

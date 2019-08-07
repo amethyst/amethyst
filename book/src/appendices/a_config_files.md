@@ -18,12 +18,12 @@ const ARENA_WIDTH: f32 = 100.0;
 const PADDLE_HEIGHT: f32 = 15.0;
 const PADDLE_WIDTH: f32 = 2.5;
 const PADDLE_VELOCITY: f32 = 75.0;
-const PADDLE_COLOUR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
+const PADDLE_COLOR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
 const BALL_VELOCITY_X: f32 = 75.0;
 const BALL_VELOCITY_Y: f32 = 50.0;
 const BALL_RADIUS: f32 = 2.5;
-const BALL_COLOUR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+const BALL_COLOR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 ```
 
 to specify the look of the game. We want to replace this with something more flexible in the form of a config 
@@ -36,8 +36,8 @@ use std::path::Path;
 use amethyst::config::Config;
 ```
 
-For this project, we'll be placing a `config.ron` file in the same location as the `display_config.ron` and 
-`input.ron` files (likely the `resources/` folder).
+For this project, we'll be placing a `config.ron` file in the same location as the `display.ron` and 
+`input.ron` files (likely the `config/` folder).
 
 ## Chapters
 

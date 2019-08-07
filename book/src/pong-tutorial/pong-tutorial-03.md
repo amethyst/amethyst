@@ -22,8 +22,8 @@ Let's get started.
 ## Capturing user input
 
 To capture user input, we'll need to introduce a few more files to our game.
-Let's start by creating a resource file under the `resources` directory of our
-project, called `bindings_config.ron`, which will contain a RON representation
+Let's start by creating a config file under the `config` directory of our
+project, called `bindings.ron`, which will contain a RON representation
 of the [amethyst_input::Bindings][doc_bindings] struct:
 
 ```ron,ignore
@@ -61,16 +61,17 @@ axes we defined. Let's make the following changes to `main.rs`.
 use amethyst::input::{InputBundle, StringBindings};
 
 # let app_root = application_root_dir()?;
-let binding_path = app_root.join("resources").join("bindings_config.ron");
+let binding_path = app_root.join("config").join("bindings.ron");
 
 let input_bundle = InputBundle::<StringBindings>::new()
     .with_bindings_from_file(binding_path)?;
 
-# let path = "./resources/display_config.ron";
+# let path = "./config/display.ron";
 # let config = DisplayConfig::load(&path);
 # let assets_dir = "assets";
 # struct Pong;
 # impl SimpleState for Pong { }
+let mut world = World::new();
 let game_data = GameDataBuilder::default()
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?
@@ -82,8 +83,8 @@ game.run();
 # }
 ```
 
-For `InputBundle<StringBundle>`, the parameter type determines how `axes` and `actions`
-are identified in the `bindings_config.ron` file
+For `InputBundle<StringBindings>`, the parameter type determines how `axes` and `actions`
+are identified in the `bindings.ron` file
 (in this example, `String`s are used; e.g. `"left_paddle"`).
 
 At this point, we're ready to write a system that reads input from the
@@ -121,13 +122,15 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 #     pub const PADDLE_HEIGHT: f32 = 16.0;
 # }
 #
-use amethyst::core::Transform;
-use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
+use amethyst::core::{Transform, SystemDesc};
+use amethyst::derive::SystemDesc;
+use amethyst::ecs::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage};
 use amethyst::input::{InputHandler, StringBindings};
 
 // You'll have to mark PADDLE_HEIGHT as public in pong.rs
 use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
+#[derive(SystemDesc)]
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
@@ -161,12 +164,19 @@ impl<'s> System<'s> for PaddleSystem {
 
 Alright, there's quite a bit going on here!
 
-We create a unit struct `PaddleSystem`, and implement the `System` trait for it
-with the lifetime of the components on which it operates.
-Inside the implementation, we define the data the system operates on in the
-`SystemData` tuple: `WriteStorage`, `ReadStorage`, and `Read`. More
-specifically, the generic types we've used here tell us that the `PaddleSystem`
-mutates `Transform` components, `WriteStorage<'s, Transform>`, it
+We create a unit struct `PaddleSystem`, and with the `SystemDesc` derive. This
+is short for **System Descriptor**. In Amethyst, systems may need to access
+resources from the `World` in order to be instantiated. For each `System`, an
+implementation of the `SystemDesc` trait must be provided to specify the logic
+to instantiate the `System`. For `System`s that do not require special
+instantiation logic, the `SystemDesc` derive automatically implements the
+`SystemDesc` trait on the system type itself.
+
+Next, we implement the `System` trait for it with the lifetime of the components
+on which it operates. Inside the implementation, we define the data the system
+operates on in the `SystemData` tuple: `WriteStorage`, `ReadStorage`, and
+`Read`. More specifically, the generic types we've used here tell us that the
+`PaddleSystem` mutates `Transform` components, `WriteStorage<'s, Transform>`, it
 reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
 `InputHandler<StringBindings>` resource we created earlier, using the `Read`
 structure.
@@ -198,15 +208,22 @@ mod systems; // Import the module
 
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::{core::transform::TransformBundle, input::StringBindings};
+# use amethyst::core::transform::TransformBundle;
+# use amethyst::input::StringBindings;
 # use amethyst::window::DisplayConfig;
 fn main() -> amethyst::Result<()> {
 // --snip--
 
-# let path = "./resources/display_config.ron";
+# let path = "./config/display.ron";
 # let config = DisplayConfig::load(&path);
 # mod systems {
+#
+# use amethyst::core::ecs::{System, SystemData, World};
+# use amethyst::core::SystemDesc;
+# use amethyst::derive::SystemDesc;
+#
 # use amethyst;
+# #[derive(SystemDesc)]
 # pub struct PaddleSystem;
 # impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 # type SystemData = ();
@@ -214,12 +231,14 @@ fn main() -> amethyst::Result<()> {
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-  let game_data = GameDataBuilder::default()
-      .with_bundle(TransformBundle::new())?
-      .with_bundle(input_bundle)?
-      .with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
-      // ...
-#     ;
+let mut world = World::new();
+let game_data = GameDataBuilder::default()
+    // ...
+    .with_bundle(TransformBundle::new())?
+    .with_bundle(input_bundle)?
+    .with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
+    // ...
+#   ;
 # let assets_dir = "/";
 # struct Pong;
 # impl SimpleState for Pong { }
@@ -243,7 +262,9 @@ component of the transform's translation.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::core::Transform;
-# use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
+# use amethyst::core::SystemDesc;
+# use amethyst::derive::SystemDesc;
+# use amethyst::ecs::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage};
 # use amethyst::input::{InputHandler, StringBindings};
 # enum Side {
 #   Left,
@@ -255,6 +276,7 @@ component of the transform's translation.
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
+# #[derive(SystemDesc)]
 # pub struct PaddleSystem;
 # impl<'s> System<'s> for PaddleSystem {
 #  type SystemData = (
@@ -299,7 +321,9 @@ Our run function should now look something like this:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::core::Transform;
-# use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
+# use amethyst::core::SystemDesc;
+# use amethyst::derive::SystemDesc;
+# use amethyst::ecs::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage};
 # use amethyst::input::{InputHandler, StringBindings};
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
@@ -315,6 +339,7 @@ Our run function should now look something like this:
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
+# #[derive(SystemDesc)]
 # pub struct PaddleSystem;
 # impl<'s> System<'s> for PaddleSystem {
 #  type SystemData = (

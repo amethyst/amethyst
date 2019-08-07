@@ -176,6 +176,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # use amethyst::{
     #     error::Error,
     #     assets::{AssetStorage, Loader, ProcessingState, ProgressCounter, RonFormat},
+    #     ecs::{World, WorldExt},
     #     prelude::*,
     #     utils::application_root_dir,
     # };

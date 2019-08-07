@@ -3,7 +3,7 @@ use winit::Event;
 
 use crate::{
     core::{
-        ecs::{Read, Resources, SystemData},
+        ecs::{Read, SystemData, World},
         shrev::{EventChannel, ReaderId},
         EventReader,
     },

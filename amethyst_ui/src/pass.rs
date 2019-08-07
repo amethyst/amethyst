@@ -1,14 +1,19 @@
 use crate::{
     glyphs::{UiGlyphs, UiGlyphsResource},
-    Selected, TextEditing, UiImage, UiTransform,
+    Selected, TextEditing, UiGlyphsSystemDesc, UiImage, UiTransform,
 };
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
-    ecs::{Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
-    Hidden, HiddenPropagate,
+    ecs::{
+        hibitset::BitSet, DispatcherBuilder, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+        SystemData, World,
+    },
+    Hidden, HiddenPropagate, SystemDesc,
 };
+use amethyst_error::Error;
 use amethyst_rendy::{
     batch::OrderedOneLevelBatch,
+    bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
     palette,
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     rendy::{
@@ -32,16 +37,57 @@ use amethyst_rendy::{
     simple_shader_set,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
     types::{Backend, Texture},
-    ChangeDetection,
+    ChangeDetection, SpriteSheet,
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use glsl_layout::{vec2, vec4, AsStd140};
-use hibitset::BitSet;
 use std::cmp::Ordering;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+/// A [RenderPlugin] for rendering UI elements.
+#[derive(Debug, Default)]
+pub struct RenderUi {
+    target: Target,
+}
+
+impl RenderUi {
+    /// Select render target on which UI should be rendered.
+    pub fn with_target(mut self, target: Target) -> Self {
+        self.target = target;
+        self
+    }
+}
+
+impl<B: Backend> RenderPlugin<B> for RenderUi {
+    fn on_build<'a, 'b>(
+        &mut self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
+        builder.add(
+            UiGlyphsSystemDesc::<B>::default().build(world),
+            "ui_glyphs_system",
+            &[],
+        );
+        Ok(())
+    }
+
+    fn on_plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        _factory: &mut Factory<B>,
+        _world: &World,
+    ) -> Result<(), Error> {
+        plan.extend_target(self.target, |ctx| {
+            ctx.add(RenderOrder::Overlay, DrawUiDesc::new().builder())?;
+            Ok(())
+        });
+        Ok(())
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
@@ -95,19 +141,19 @@ impl DrawUiDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
+impl<B: Backend> RenderGroupDesc<B, World> for DrawUiDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        resources: &Resources,
+        resources: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -166,14 +212,14 @@ struct CachedDrawOrder {
     pub cache: Vec<(f32, Entity)>,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
+impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
@@ -405,7 +451,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &Resources,
+        _resources: &World,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -424,7 +470,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -488,7 +534,7 @@ fn mul_blend(a: &[f32; 4], b: &[f32; 4]) -> [f32; 4] {
 
 fn render_image<B: Backend>(
     factory: &Factory<B>,
-    resources: &Resources,
+    resources: &World,
     transform: &UiTransform,
     raw_image: &UiImage,
     tint: &Option<[f32; 4]>,
@@ -503,10 +549,23 @@ fn render_image<B: Backend>(
         (_, None) => [1., 1., 1., 1.],
     };
 
+    let tex_coords = match raw_image {
+        UiImage::Sprite(sprite_renderer) => {
+            let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
+            if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
+                (&sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords).into()
+            } else {
+                [0.0_f32, 0., 1., 1.]
+            }
+        }
+        UiImage::PartialTexture(_, tex_coord) => tex_coord.into(),
+        _ => [0.0_f32, 0., 1., 1.],
+    };
+
     let args = UiArgs {
         coords: [transform.pixel_x(), transform.pixel_y()].into(),
         dimensions: [transform.pixel_width, transform.pixel_height].into(),
-        tex_coord_bounds: [0., 0., 1., 1.].into(),
+        tex_coord_bounds: tex_coords.into(),
         color: color.into(),
         color_bias: [0., 0., 0., 0.].into(),
     };
@@ -521,6 +580,37 @@ fn render_image<B: Backend>(
             ) {
                 batches.insert(tex_id, Some(args));
                 this_changed
+            } else {
+                false
+            }
+        }
+        UiImage::PartialTexture(tex, _) => {
+            if let Some((tex_id, this_changed)) = textures.insert(
+                factory,
+                resources,
+                tex,
+                hal::image::Layout::ShaderReadOnlyOptimal,
+            ) {
+                batches.insert(tex_id, Some(args));
+                this_changed
+            } else {
+                false
+            }
+        }
+        UiImage::Sprite(sprite_renderer) => {
+            let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
+            if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
+                if let Some((tex_id, this_changed)) = textures.insert(
+                    factory,
+                    resources,
+                    &sprite_sheet.texture,
+                    hal::image::Layout::ShaderReadOnlyOptimal,
+                ) {
+                    batches.insert(tex_id, Some(args));
+                    this_changed
+                } else {
+                    false
+                }
             } else {
                 false
             }

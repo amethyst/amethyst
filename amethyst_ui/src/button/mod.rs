@@ -1,8 +1,10 @@
 pub use self::{
     actions::{UiButtonAction, UiButtonActionType},
     builder::{UiButtonBuilder, UiButtonBuilderResources},
-    retrigger::{UiButtonActionRetrigger, UiButtonActionRetriggerSystem},
-    system::UiButtonSystem,
+    retrigger::{
+        UiButtonActionRetrigger, UiButtonActionRetriggerSystem, UiButtonActionRetriggerSystemDesc,
+    },
+    system::{UiButtonSystem, UiButtonSystemDesc},
 };
 use crate::{define_widget, Interactable, UiSoundRetrigger, UiText, UiTransform};
 use amethyst_assets::Handle;

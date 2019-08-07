@@ -26,7 +26,8 @@
 //! # struct GameState;
 //! # impl SimpleState for GameState {}
 //! # fn main() -> amethyst::Result<()> {
-//! let mut game = Application::build("./", GameState)?
+//! let assets_dir = "./";
+//! let mut game = Application::build(assets_dir, GameState)?
 //!     .with_frame_limit(
 //!         FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
 //!         144,
@@ -118,7 +119,7 @@ impl Default for FrameRateLimitStrategy {
 /// use amethyst::prelude::*;
 /// use amethyst::core::frame_limiter::FrameRateLimitConfig;
 ///
-/// let config = FrameRateLimitConfig::load("./resources/frame_limiter.ron");
+/// let config = FrameRateLimitConfig::load("./config/frame_limiter.ron");
 /// ```
 ///
 /// [`FrameLimiter`]: ./struct.FrameLimiter.html

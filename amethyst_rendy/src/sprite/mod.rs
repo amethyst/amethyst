@@ -177,6 +177,12 @@ impl From<[f32; 4]> for TextureCoordinates {
     }
 }
 
+impl From<&TextureCoordinates> for [f32; 4] {
+    fn from(item: &TextureCoordinates) -> Self {
+        [item.left, item.right, item.bottom, item.top]
+    }
+}
+
 /// Information for rendering a sprite.
 ///
 /// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
@@ -410,6 +416,7 @@ impl SpriteGrid {
 ///
 /// Example:
 /// ```text,ignore
+/// #![enable(implicit_some)]
 /// (
 ///     // Width of the texture
 ///     texture_width: 48,
@@ -441,11 +448,12 @@ impl SpriteGrid {
 ///
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
 /// ```rust,no_run
+/// # use amethyst_core::ecs::{World, WorldExt};
 /// # use amethyst_assets::{Loader, AssetStorage};
 /// # use amethyst_rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
 /// #
 /// # fn load_sprite_sheet() {
-/// #   let world = amethyst_core::ecs::World::new(); // Normally, you would use Amethyst's world
+/// #   let world = World::new(); // Normally, you would use Amethyst's world
 /// #   let loader = world.read_resource::<Loader>();
 /// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
 /// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();

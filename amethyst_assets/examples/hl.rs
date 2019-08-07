@@ -9,12 +9,9 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
 use amethyst_core::{
-    ecs::{
-        common::Errors,
-        prelude::{
-            Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World,
-            Write,
-        },
+    ecs::prelude::{
+        Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World,
+        WorldExt, Write,
     },
     Time,
 };
@@ -35,12 +32,11 @@ impl App {
 
         world.register::<MeshHandle>();
 
-        world.add_resource(Errors::new());
-        world.add_resource(AssetStorage::<MeshAsset>::new());
-        world.add_resource(Loader::new(path, pool.clone()));
-        world.add_resource(Time::default());
-        world.add_resource(pool);
-        world.add_resource(Time::default());
+        world.insert(AssetStorage::<MeshAsset>::new());
+        world.insert(Loader::new(path, pool.clone()));
+        world.insert(Time::default());
+        world.insert(pool);
+        world.insert(Time::default());
 
         App {
             dispatcher,
@@ -50,10 +46,8 @@ impl App {
     }
 
     fn update(&mut self) {
-        self.dispatcher.dispatch(&self.world.res);
+        self.dispatcher.dispatch(&self.world);
         self.world.maintain();
-        let mut errors = self.world.write_resource::<Errors>();
-        errors.print_and_exit();
     }
 
     fn run(&mut self) {

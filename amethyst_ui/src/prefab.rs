@@ -1,6 +1,5 @@
 use derivative::Derivative;
 use serde::de::DeserializeOwned;
-use shred_derive::SystemData;
 use std::{
     fmt::{Debug, Formatter},
     marker::PhantomData,
@@ -8,11 +7,14 @@ use std::{
 
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem,
-    Progress, ProgressCounter,
+    PrefabLoaderSystemDesc, Progress, ProgressCounter,
 };
 use amethyst_audio::Source as Audio;
 use amethyst_core::{
-    ecs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
+    ecs::{
+        prelude::{Entities, Entity, Read, ReadExpect, World, Write, WriteStorage},
+        shred::{ResourceId, SystemData},
+    },
     HiddenPropagate,
 };
 use amethyst_error::{format_err, Error, ResultExt};
@@ -337,6 +339,8 @@ pub struct UiImagePrefab(UiImageLoadPrefab);
 pub enum UiImageLoadPrefab {
     /// A textured image
     Texture(TexturePrefab),
+    /// A partial textured image
+    PartialTexture(TexturePrefab, f32, f32, f32, f32),
     /// Solid color image
     SolidColor(f32, f32, f32, f32),
 }
@@ -384,6 +388,12 @@ impl<'a> PrefabData<'a> for UiImageLoadPrefab {
             UiImageLoadPrefab::Texture(tex) => {
                 UiImage::Texture(tex.add_to_entity(entity, textures, entities, children)?)
             }
+            UiImageLoadPrefab::PartialTexture(tex, left, right, bottom, top) => {
+                UiImage::PartialTexture(
+                    tex.add_to_entity(entity, textures, entities, children)?,
+                    [*left, *right, *bottom, *top].into(),
+                )
+            }
             UiImageLoadPrefab::SolidColor(r, g, b, a) => UiImage::SolidColor([*r, *g, *b, *a]),
         };
         Ok(image)
@@ -396,6 +406,7 @@ impl<'a> PrefabData<'a> for UiImageLoadPrefab {
     ) -> Result<bool, Error> {
         match self {
             UiImageLoadPrefab::Texture(tex) => tex.load_sub_assets(progress, textures),
+            UiImageLoadPrefab::PartialTexture(tex, ..) => tex.load_sub_assets(progress, textures),
             UiImageLoadPrefab::SolidColor(..) => Ok(false),
         }
     }
@@ -1000,6 +1011,9 @@ where
         entity
     }
 }
+
+/// Builds a `UiLoaderSystem`.
+pub type UiLoaderSystemDesc<CD, W> = PrefabLoaderSystemDesc<UiPrefabData<CD, W>>;
 
 /// Prefab loader system for UI
 ///

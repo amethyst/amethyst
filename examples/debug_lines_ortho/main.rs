@@ -3,28 +3,32 @@
 use amethyst::{
     core::{
         transform::{Transform, TransformBundle},
-        Time,
+        SystemDesc, Time,
     },
-    ecs::{Read, ReadExpect, Resources, System, SystemData, Write},
+    derive::SystemDesc,
+    ecs::{Read, ReadExpect, System, SystemData, World, WorldExt, Write},
     prelude::*,
     renderer::{
         camera::Camera,
         debug_drawing::{DebugLines, DebugLinesComponent, DebugLinesParams},
         palette::Srgba,
-        pass::DrawDebugLinesDesc,
-        rendy::{
-            graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
-        },
+        plugins::{RenderDebugLines, RenderToWindow},
         types::DefaultBackend,
-        Backend, Factory, Format, GraphBuilder, GraphCreator, Kind, RenderGroupDesc,
-        RenderingSystem, SubpassBuilder,
+        RenderingBundle,
     },
     utils::application_root_dir,
-    window::{ScreenDimensions, Window, WindowBundle},
+    window::ScreenDimensions,
 };
 
+#[derive(SystemDesc)]
 struct ExampleLinesSystem;
+
+impl ExampleLinesSystem {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
 impl<'s> System<'s> for ExampleLinesSystem {
     type SystemData = (
         ReadExpect<'s, ScreenDimensions>,
@@ -52,10 +56,9 @@ struct ExampleState;
 impl SimpleState for ExampleState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         // Setup debug lines as a resource
-        data.world.add_resource(DebugLines::new());
+        data.world.insert(DebugLines::new());
         // Configure width of lines. Optional step
-        data.world
-            .add_resource(DebugLinesParams { line_width: 2.0 });
+        data.world.insert(DebugLinesParams { line_width: 2.0 });
 
         // Setup debug lines as a component and add lines to render axis&grid
         let mut debug_lines_component = DebugLinesComponent::new();
@@ -108,80 +111,22 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/debug_lines_ortho/resources/display.ron");
-    let resources = app_root.join("examples/assets/");
+    let display_config_path = app_root.join("examples/debug_lines_ortho/config/display.ron");
+    let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with_bundle(TransformBundle::new())?
-        .with(ExampleLinesSystem, "example_lines_system", &["window"])
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+        .with(ExampleLinesSystem::new(), "example_lines_system", &[])
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                )
+                .with_plugin(RenderDebugLines::default()),
+        )?
+        .with_bundle(TransformBundle::new())?;
 
-    let mut game = Application::new(resources, ExampleState, game_data)?;
+    let mut game = Application::new(assets_dir, ExampleState, game_data)?;
     game.run();
     Ok(())
-}
-
-#[derive(Default)]
-struct ExampleGraph {
-    dimensions: Option<ScreenDimensions>,
-    dirty: bool,
-}
-
-#[allow(clippy::map_clone)]
-impl<B: Backend> GraphCreator<B> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
-            return false;
-        }
-        self.dirty
-    }
-
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
-        self.dirty = false;
-
-        // Retrieve a reference to the target window, which is created by the WindowBundle
-        let window = <ReadExpect<'_, Window>>::fetch(res);
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        // Create a new drawing surface in our window
-        let surface = factory.create_surface(&window);
-        let surface_format = factory.get_surface_format(&surface);
-
-        let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            surface_format,
-            Some(ClearValue::Color([0.0, 0.0, 0.0, 1.0].into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
-        let pass = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawDebugLinesDesc::new().builder())
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
-
-        graph_builder
-    }
 }

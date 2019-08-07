@@ -49,9 +49,6 @@
 extern crate amethyst_derive;
 
 #[macro_use]
-extern crate shred_derive;
-
-#[macro_use]
 mod macros;
 
 #[doc(inline)]
@@ -62,6 +59,7 @@ pub use rendy;
 pub mod pass;
 
 pub mod batch;
+pub mod bundle;
 pub mod camera;
 pub mod debug_drawing;
 pub mod error;
@@ -69,6 +67,7 @@ pub mod formats;
 pub mod light;
 pub mod mtl;
 pub mod pipeline;
+pub mod plugins;
 pub mod resources;
 pub mod serde_shim;
 pub mod shape;
@@ -89,12 +88,14 @@ mod render_test_bundle;
 
 #[doc(inline)]
 pub use crate::{
+    bundle::{RenderPlugin, RenderingBundle},
     camera::{ActiveCamera, Camera},
     formats::{
         mesh::MeshPrefab,
         texture::{ImageFormat, TexturePrefab},
     },
     mtl::{Material, MaterialDefaults},
+    plugins::*,
     sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
     system::{GraphCreator, RenderingSystem},
     transparent::Transparent,

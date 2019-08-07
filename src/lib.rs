@@ -45,10 +45,11 @@
 //!     }
 //! }
 //!
-//! fn main() {
-//!     let mut game = Application::new("assets/", GameState, GameDataBuilder::default())
-//!         .expect("Fatal error");
+//! fn main() -> amethyst::Result<()> {
+//!     let assets_dir = "assets/";
+//!     let mut game = Application::new(assets_dir, GameState, GameDataBuilder::default())?;
 //!     game.run();
+//!     Ok(())
 //! }
 //! ```
 

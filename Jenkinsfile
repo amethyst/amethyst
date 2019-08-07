@@ -38,12 +38,11 @@ pipeline {
                         }
                     }
                     steps {
-                        // Make sure static_assertion fails
-                        echo 'Confirming static assertion...'
-                        sh 'cargo check --all --all-targets || exit 0'
-
+                        sh 'cargo update'
                         // Perform actual check
                         sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload"'
+                        echo 'Running Cargo clippy...'
+                        sh 'cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload"'
                     }
                 }
                 stage("nightly") {
@@ -57,30 +56,12 @@ pipeline {
                         }
                     }
                     steps {
-                        // Make sure static_assertion fails
-                        echo 'Confirming static assertion...'
-                        sh 'cargo check --all --all-targets || exit 0'
-
+                        sh 'cargo update'
                         // Perform actual check
                         echo 'Running Cargo check...'
                         sh 'cargo check --all --all-targets --features "nightly vulkan sdl_controller json saveload"'
                     }
                 }
-            }
-        }
-        stage('Cargo Clippy') {
-            environment {
-                RUSTFLAGS = "-D warnings"
-            }
-            agent {
-                docker {
-                    image 'amethystrs/builder-linux:nightly'
-                    label 'docker'
-                }
-            }
-            steps {
-                echo 'Running Cargo clippy...'
-                sh 'cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload"'
             }
         }
         // Separate stage for coverage to prevent race condition with the linux test stage (repo lock contention).
@@ -113,6 +94,7 @@ pipeline {
                         label 'windows'
                     }
                     steps {
+                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo update'
                         echo 'Beginning tests...'
                         bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan json saveload"'
                         echo 'Tests done!'
@@ -142,7 +124,7 @@ pipeline {
                 //     }
                 //     steps {
                 //         echo 'Beginning tests...'
-                //         sh '/Users/jenkins/.cargo/bin/cargo test --all --features "empty"'
+                //         sh '/Users/jenkins/.cargo/bin/cargo test --all --features "metal"'
                 //         echo 'Tests done!'
                 //     }
                 // }

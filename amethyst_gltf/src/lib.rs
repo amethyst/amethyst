@@ -11,7 +11,8 @@
 
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{
-    AssetStorage, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter,
+    AssetStorage, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem, PrefabLoaderSystemDesc,
+    ProgressCounter,
 };
 use amethyst_core::{
     ecs::prelude::{Entity, Read, ReadExpect, Write, WriteStorage},
@@ -31,6 +32,9 @@ pub use crate::format::GltfSceneFormat;
 
 mod error;
 mod format;
+
+/// Builds a `GltfSceneLoaderSystem`.
+pub type GltfSceneLoaderSystemDesc = PrefabLoaderSystemDesc<GltfPrefab>;
 
 /// Load `GltfSceneAsset`s
 pub type GltfSceneLoaderSystem = PrefabLoaderSystem<GltfPrefab>;

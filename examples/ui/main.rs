@@ -1,33 +1,25 @@
 //! Displays a shaded sphere to the user.
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
+    assets::{PrefabLoader, PrefabLoaderSystemDesc, Processor, RonFormat},
     audio::{output::init_output, Source},
-    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
-    ecs::prelude::{Entity, ReadExpect, Resources, System, SystemData, Write},
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, SystemDesc, Time},
+    ecs::prelude::{Entity, System, SystemData, World, WorldExt, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{format::Format, image},
-            mesh::{Normal, Position, TexCoord},
-        },
+        plugins::RenderToWindow,
+        rendy::mesh::{Normal, Position, TexCoord},
         types::DefaultBackend,
-        GraphCreator, RenderingSystem,
+        RenderingBundle,
     },
     shrev::{EventChannel, ReaderId},
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiEvent, UiFinder, UiText},
+    ui::{RenderUi, UiBundle, UiCreator, UiEvent, UiFinder, UiText},
     utils::{
         application_root_dir,
         fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
-    window::{ScreenDimensions, Window, WindowBundle},
     winit::VirtualKeyCode,
 };
 use log::info;
@@ -42,13 +34,13 @@ struct Example {
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let StateData { world, .. } = data;
+        let StateData { mut world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         let handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, ())
         });
         world.create_entity().with(handle).build();
-        init_output(&mut world.res);
+        init_output(&mut world);
         world.exec(|mut creator: UiCreator<'_>| {
             creator.create("ui/example.ron", ());
         });
@@ -132,23 +124,27 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/ui/resources/display.ron");
-    let resources = app_root.join("examples/assets");
+    let display_config_path = app_root.join("examples/ui/config/display.ron");
+    let assets_dir = app_root.join("examples/assets");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                .with_plugin(RenderUi::default()),
+        )?
         .with_bundle(TransformBundle::new())?
-        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(UiBundle::<StringBindings>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
-        .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
+        .with_system_desc(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
         .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+        .with_bundle(InputBundle::<StringBindings>::new())?;
 
-    let mut game = Application::build(resources, Example::default())?
+    let mut game = Application::build(assets_dir, Example::default())?
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;
@@ -156,102 +152,38 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
+/// Builds a `UiEventHandlerSystem`.
+#[derive(Default, Debug)]
+pub struct UiEventHandlerSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, UiEventHandlerSystem> for UiEventHandlerSystemDesc {
+    fn build(self, world: &mut World) -> UiEventHandlerSystem {
+        <UiEventHandlerSystem as System<'_>>::SystemData::setup(world);
+
+        let reader_id = Write::<'_, EventChannel<UiEvent>>::fetch(world).register_reader();
+
+        UiEventHandlerSystem::new(reader_id)
+    }
+}
+
 /// This shows how to handle UI events.
-#[derive(Default)]
 pub struct UiEventHandlerSystem {
-    reader_id: Option<ReaderId<UiEvent>>,
+    reader_id: ReaderId<UiEvent>,
 }
 
 impl UiEventHandlerSystem {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
+        Self { reader_id }
     }
 }
 
 impl<'a> System<'a> for UiEventHandlerSystem {
     type SystemData = Write<'a, EventChannel<UiEvent>>;
 
-    fn run(&mut self, mut events: Self::SystemData) {
-        let reader_id = self
-            .reader_id
-            .get_or_insert_with(|| events.register_reader());
-
+    fn run(&mut self, events: Self::SystemData) {
         // Reader id was just initialized above if empty
-        for ev in events.read(reader_id) {
+        for ev in events.read(&mut self.reader_id) {
             info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);
         }
-    }
-}
-
-#[derive(Default)]
-struct ExampleGraph {
-    dimensions: Option<ScreenDimensions>,
-    surface_format: Option<Format>,
-    dirty: bool,
-}
-
-#[allow(clippy::map_clone)]
-impl GraphCreator<DefaultBackend> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
-            return false;
-        }
-        self.dirty
-    }
-
-    fn builder(
-        &mut self,
-        factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
-        use amethyst::renderer::rendy::{
-            graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
-        };
-
-        self.dirty = false;
-
-        let window = <ReadExpect<'_, Window>>::fetch(res);
-        let surface = factory.create_surface(&window);
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
-        let ui = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawUiDesc::new().builder())
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(ui));
-
-        graph_builder
     }
 }

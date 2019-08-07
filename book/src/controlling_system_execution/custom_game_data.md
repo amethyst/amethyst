@@ -40,9 +40,9 @@ impl<'a, 'b> CustomGameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World, running: bool) {
         if running {
-            self.running_dispatcher.dispatch(&world.res);
+            self.running_dispatcher.dispatch(&world);
         }
-        self.core_dispatcher.dispatch(&world.res);
+        self.core_dispatcher.dispatch(&world);
     }
 }
 ```
@@ -54,7 +54,7 @@ a builder that implements `DataInit`. This is the only requirement placed on the
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 #
-# use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
+# use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt};
 # use amethyst::core::SystemBundle;
 # use amethyst::{Error, DataInit};
 #
@@ -84,11 +84,11 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         }
     }
 
-    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
+    pub fn with_base_bundle<B>(mut self, world: &mut World, bundle: B) -> Result<Self, Error>
     where
         B: SystemBundle<'a, 'b>,
     {
-        bundle.build(&mut self.core)?;
+        bundle.build(world, &mut self.core)?;
         Ok(self)
     }
 
@@ -104,12 +104,12 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
 impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         // Get a handle to the `ThreadPool`.
-        let pool = world.read_resource::<ArcThreadPool>().clone();
+        let pool = (*world.read_resource::<ArcThreadPool>()).clone();
 
         let mut core_dispatcher = self.core.with_pool(pool.clone()).build();
         let mut running_dispatcher = self.running.with_pool(pool.clone()).build();
-        core_dispatcher.setup(&mut world.res);
-        running_dispatcher.setup(&mut world.res);
+        core_dispatcher.setup(world);
+        running_dispatcher.setup(world);
 
         CustomGameData { core_dispatcher, running_dispatcher }
     }
@@ -119,7 +119,7 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> 
 We can now use `CustomGameData` in place of the provided `GameData` when building
 our `Application`, but first we should create some `State`s.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
 # use amethyst::ecs::prelude::{Dispatcher, World};
@@ -135,9 +135,9 @@ our `Application`, but first we should create some `State`s.
 #     /// Update game data
 #     pub fn update(&mut self, world: &World, running: bool) {
 #         if running {
-#             self.running_dispatcher.dispatch(&world.res);
+#             self.running_dispatcher.dispatch(&world);
 #         }
-#         self.core_dispatcher.dispatch(&world.res);
+#         self.core_dispatcher.dispatch(&world);
 #     }
 # }
 #
@@ -212,15 +212,86 @@ The only thing that remains now is to use our `CustomGameDataBuilder` when build
 `Application`.
 
 ```rust,ignore
+# extern crate amethyst;
+#
+# use amethyst::{
+#     core::{transform::TransformBundle, SystemBundle},
+#     ecs::{Dispatcher, DispatcherBuilder, World, WorldExt},
+#     input::{InputBundle, StringBindings},
+#     prelude::*,
+#     renderer::{
+#         plugins::{RenderFlat2D, RenderToWindow},
+#         types::DefaultBackend,
+#         RenderingBundle,
+#     },
+#     ui::{RenderUi, UiBundle},
+#     utils::application_root_dir,
+#     DataInit, Error,
+# };
+#
+# pub struct CustomGameData<'a, 'b> {
+#     core_dispatcher: Dispatcher<'a, 'b>,
+#     running_dispatcher: Dispatcher<'a, 'b>,
+# }
+#
+# pub struct CustomGameDataBuilder<'a, 'b> {
+#     pub core: DispatcherBuilder<'a, 'b>,
+#     pub running: DispatcherBuilder<'a, 'b>,
+# }
+#
+# impl<'a, 'b> Default for CustomGameDataBuilder<'a, 'b> {
+#     fn default() -> Self { unimplemented!() }
+# }
+#
+# impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
+#     pub fn new() -> Self { unimplemented!() }
+#     pub fn with_base_bundle<B>(mut self, world: &mut World, bundle: B) -> Result<Self, Error>
+#     where
+#         B: SystemBundle<'a, 'b>,
+#     {
+#         unimplemented!()
+#     }
+#
+#     pub fn with_running<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
+#     where
+#         for<'c> S: System<'c> + Send + 'a,
+#     {
+#         unimplemented!()
+#     }
+# }
+#
+# impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
+#     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> { unimplemented!() }
+# }
+#
+# fn main() -> amethyst::Result<()> {
+#
+let mut world = World::new();
 let game_data = CustomGameDataBuilder::default()
     .with_running(ExampleSystem, "example_system", &[])
-    .with_base_bundle(TransformBundle::new())?
-    .with_base_bundle(UiBundle::<String, String>::new())?
-    .with_base_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
-    .with_base_bundle(InputBundle::<String, String>::new())?;
+    .with_base_bundle(
+        &mut world,
+        RenderingBundle::<DefaultBackend>::new()
+            // The RenderToWindow plugin provides all the scaffolding for opening a window and
+            // drawing on it
+            .with_plugin(
+                RenderToWindow::from_config_path(display_config_path)
+                    .with_clear([0.34, 0.36, 0.52, 1.0]),
+            )
+            .with_plugin(RenderFlat2D::default())
+            .with_plugin(RenderUi::default()),
+    )?
+    .with_base_bundle(&mut world, TransformBundle::new())?
+    .with_base_bundle(&mut world, UiBundle::<StringBindings>::new())?
+    .with_base_bundle(
+        &mut world,
+        InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
+    )?;
 
-let mut game = Application::new(resources_directory, Main, game_data)?;
+let mut game = Application::new(assets_directory, Main, game_data)?;
 game.run();
+#
+# }
 ```
 
 Those are the basics of creating a custom `GameData` structure. Now get out there and

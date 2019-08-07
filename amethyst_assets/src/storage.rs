@@ -6,18 +6,18 @@ use std::{
     },
 };
 
-use crossbeam::queue::MsQueue;
+use crossbeam_queue::SegQueue;
 use derivative::Derivative;
-use hibitset::BitSet;
 use log::{debug, error, trace, warn};
 use rayon::ThreadPool;
 
 use amethyst_core::{
     ecs::{
-        prelude::{Component, Read, ReadExpect, System, VecStorage, Write},
+        hibitset::BitSet,
+        prelude::{Component, Read, ReadExpect, System, SystemData, VecStorage, World, Write},
         storage::UnprotectedStorage,
     },
-    Time,
+    SystemDesc, Time,
 };
 use amethyst_error::{Error, ResultExt};
 
@@ -51,9 +51,9 @@ pub struct AssetStorage<A: Asset> {
     bitset: BitSet,
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
-    pub(crate) processed: Arc<MsQueue<Processed<A>>>,
+    pub(crate) processed: Arc<SegQueue<Processed<A>>>,
     reloads: Vec<(WeakHandle<A>, Box<dyn Reload<A::Data>>)>,
-    unused_handles: MsQueue<Handle<A>>,
+    unused_handles: SegQueue<Handle<A>>,
 }
 
 /// Returned by processor systems, describes the loading state of the asset.
@@ -76,8 +76,8 @@ impl<A: Asset> AssetStorage<A> {
     /// Allocate a new handle.
     pub(crate) fn allocate(&self) -> Handle<A> {
         self.unused_handles
-            .try_pop()
-            .unwrap_or_else(|| self.allocate_new())
+            .pop()
+            .unwrap_or_else(|_| self.allocate_new())
     }
 
     fn allocate_new(&self) -> Handle<A> {
@@ -244,7 +244,7 @@ impl<A: Asset> AssetStorage<A> {
     {
         {
             let mut requeue = Vec::new();
-            while let Some(processed) = self.processed.try_pop() {
+            while let Ok(processed) = self.processed.pop() {
                 let assets = &mut self.assets;
                 let bitset = &mut self.bitset;
                 let handles = &mut self.handles;
@@ -481,9 +481,9 @@ impl<A: Asset> Default for AssetStorage<A> {
             bitset: Default::default(),
             handles: Default::default(),
             handle_alloc: Default::default(),
-            processed: Arc::new(MsQueue::new()),
+            processed: Arc::new(SegQueue::new()),
             reloads: Default::default(),
-            unused_handles: MsQueue::new(),
+            unused_handles: SegQueue::new(),
         }
     }
 }
@@ -518,6 +518,16 @@ impl<A> Processor<A> {
         Processor {
             marker: PhantomData,
         }
+    }
+}
+
+impl<'a, 'b, A> SystemDesc<'a, 'b, Processor<A>> for Processor<A>
+where
+    A: Asset + ProcessableAsset,
+{
+    fn build(self, world: &mut World) -> Processor<A> {
+        <Processor<A> as System<'_>>::SystemData::setup(world);
+        self
     }
 }
 

@@ -10,21 +10,43 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 
-## Breaking changes
+### Major breaking changes
 
-* `Float` newtype removed, moved back to `f32` primitive for all values ([#1747])
+* Systems needing initialization with world resources must go through a `SystemDesc` intermediate builder. ([#1780])
 
 ### Added
 
+* `SystemDesc` proc macro derive to simplify defining `SystemDesc`s. ([#1780])
+
+### Changed
+
+### Fixed
+
+[#1780]: https://github.com/amethyst/amethyst/pull/1780
+
+## [0.12.0] - 2019-07-30
+
+### Breaking changes
+
+* `Float` newtype removed, moved back to `f32` primitive for all values ([#1747])
+* `TextureProcessor` and `MeshProcessor` systems are now separated from `RenderingSystem` ([#1772])
+
+### Added
+
+* Add a feature flag `sentry` to disable the sentry dependency. ([#1804]) ([#1825])
 * Fixes and renames regression from ([#1442]) added back `position_from_world` as `screen_to_world`. Also added
 `world_to_screen`. Also adds `Transform::copy_local_to_global()' for `debug_assertion` builds ([#1733])
 * Add `add_rectangle`, `add_rotated_rectangle`, `add_box`, `add_rotated_box`, `add_circle`, `add_rotated_circle`,
 `add_cylinder`, `add_rotated_cylinder` and `add_sphere` functions to `DebugLinesComponent`
 and the corresponding draw functions to `DebugLines`, to draw simple shapes with debug lines. ([#1766])
 * `InputEvent::AxisMoved` is sent upon button press / release. ([#1512], [#1797])
+* `UiImage` is updated to allow for partial textures and sprites. ([#1809],[#1811])
+* Added `RenderingBundle` with a rendering plugin system, making rendering setup easier ([#1772])
+* Documentation for `Tint` component. ([#1802])
 
 ### Changed
 
+* Splitted the `/resources` directory of amethyst projects into `/assets` and `/config`. ([#1806])
 * Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
 * Add Tint component support for sprites. ([#1756])
 * Remove remaining <N: RealField> type parameter on GameDataBuilder, add Debug derive to LoggerConfig ([#1758])
@@ -32,26 +54,40 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Add `load_from_data_async` to Asset Loader. ([#1753])
 * Add `SerializableFormat` marker trait which is now needed to be implemented for all the formats that are supposed to be serialized. ([#1720])
 * Make the GltfSceneOptions field of GltfSceneFormat public. ([#1791])
+* Updated fluent to version 0.6. ([#1800])
  `InputEvent<T>` now takes in the `BindingTypes` as a type parameter. ([#1797])
+* Use `crossbeam-queue` crate directly. ([#1822]) 
 
 ### Fixed
 
 * Fix stack overflow on serializing `Box<dyn Format<_>>`. ([#1720])
+* Fix the steps for enabling the nightly flag in the pong tutorial. ([#1805])
 * Fix animation unwrap on missing animated component. ([#1773])
+* Fix tangent generation in procedural shapes. ([#1807])
 
 [#1512]: https://github.com/amethyst/amethyst/issues/1512
-[#1791]: https://github.com/amethyst/amethyst/pull/1791
-[#1766]: https://github.com/amethyst/amethyst/pull/1766
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
-[#1747]: https://github.com/amethyst/amethyst/pull/1747
-[#1767]: https://github.com/amethyst/amethyst/pull/1719
-[#1756]: https://github.com/amethyst/amethyst/pull/1756
-[#1733]: https://github.com/amethyst/amethyst/pull/1733
-[#1758]: https://github.com/amethyst/amethyst/pull/1758
-[#1773]: https://github.com/amethyst/amethyst/pull/1773
-[#1753]: https://github.com/amethyst/amethyst/pull/1753
 [#1720]: https://github.com/amethyst/amethyst/pull/1720
+[#1733]: https://github.com/amethyst/amethyst/pull/1733
+[#1747]: https://github.com/amethyst/amethyst/pull/1747
+[#1753]: https://github.com/amethyst/amethyst/pull/1753
+[#1756]: https://github.com/amethyst/amethyst/pull/1756
+[#1758]: https://github.com/amethyst/amethyst/pull/1758
+[#1766]: https://github.com/amethyst/amethyst/pull/1766
+[#1767]: https://github.com/amethyst/amethyst/pull/1719
+[#1772]: https://github.com/amethyst/amethyst/pull/1772
+[#1773]: https://github.com/amethyst/amethyst/pull/1773
+[#1791]: https://github.com/amethyst/amethyst/pull/1791
 [#1797]: https://github.com/amethyst/amethyst/pull/1797
+[#1800]: https://github.com/amethyst/amethyst/pull/1800
+[#1802]: https://github.com/amethyst/amethyst/pull/1802
+[#1804]: https://github.com/amethyst/amethyst/pull/1804
+[#1805]: https://github.com/amethyst/amethyst/pull/1805
+[#1807]: https://github.com/amethyst/amethyst/pull/1807
+[#1809]: https://github.com/amethyst/amethyst/issues/1809
+[#1811]: https://github.com/amethyst/amethyst/pull/1811
+[#1822]: https://github.com/amethyst/amethyst/pull/1822
+[#1825]: https://github.com/amethyst/amethyst/pull/1825
 
 ## [0.11.0] - 2019-06
 
