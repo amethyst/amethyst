@@ -16,6 +16,7 @@
     * [Moving the Paddles](./pong-tutorial/pong-tutorial-03.md)
     * [Making a Ball Move and Bounce](./pong-tutorial/pong-tutorial-04.md)
     * [Winning Rounds and Keeping Score](./pong-tutorial/pong-tutorial-05.md)
+    * [Adding audio](./pong-tutorial/pong-tutorial-06.md)
     * [Call for Contribution](./pong-tutorial/contribution.md)
 * [Math](./math.md)
 * [Input](./input.md)
