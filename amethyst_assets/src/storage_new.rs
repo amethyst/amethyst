@@ -1,5 +1,5 @@
 use atelier_loader::LoadHandle;
-use crossbeam::queue::SegQueue;
+use crossbeam_queue::SegQueue;
 use std::collections::HashMap;
 
 use crate::handle_new::AssetHandle;
@@ -128,7 +128,7 @@ impl<A> AssetStorage<A> {
     where
         D: FnMut(A),
     {
-        while let Some(asset) = self.to_drop.try_pop() {
+        while let Ok(asset) = self.to_drop.pop() {
             drop_fn(asset);
         }
     }

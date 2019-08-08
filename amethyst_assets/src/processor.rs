@@ -4,7 +4,7 @@ use std::{
 };
 
 use atelier_loader::AssetLoadOp;
-use crossbeam::queue::SegQueue;
+use crossbeam_queue::SegQueue;
 
 use amethyst_core::ecs::prelude::{System, Write};
 
@@ -108,7 +108,7 @@ impl<T> ProcessingQueue<T> {
                 .requeue
                 .get_mut()
                 .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
-            while let Some(processed) = self.processed.try_pop() {
+            while let Ok(processed) = self.processed.pop() {
                 let f = &mut f;
                 match processed {
                     Processed {

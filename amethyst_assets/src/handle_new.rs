@@ -7,7 +7,7 @@ use amethyst_core::ecs::{
 };
 use atelier_loader::{self, LoaderInfoProvider};
 use ccl::dhashmap::DHashMap;
-use crossbeam::channel::{unbounded, Sender};
+use crossbeam_channel::{unbounded, Sender};
 use derivative::Derivative;
 use serde::{
     de::{self, Deserialize, Visitor},
@@ -165,6 +165,8 @@ inventory::submit!(atelier_importer::ImporterContextRegistration {
     Debug(bound = "")
 )]
 pub struct Handle<T: ?Sized> {
+    #[derivative(PartialEq="ignore")]
+    #[derivative(Hash="ignore")]
     chan: Arc<Sender<RefOp>>,
     id: LoadHandle,
     marker: PhantomData<T>,
@@ -182,7 +184,7 @@ impl<T> Handle<T> {
 
 impl<T: ?Sized> Drop for Handle<T> {
     fn drop(&mut self) {
-        self.chan.send(RefOp::Decrease(self.id))
+        let _ = self.chan.send(RefOp::Decrease(self.id));
     }
 }
 
@@ -229,7 +231,7 @@ fn add_uuid_handle_ref(uuid: AssetUuid) -> (LoadHandle, Arc<Sender<RefOp>>) {
     SerdeContext::with_active(|loader, sender| {
         let sender = sender
             .expect("no Sender<RefOp> set when deserializing handle").clone();
-        sender.send(RefOp::Increase(uuid));
+        let _ = sender.send(RefOp::Increase(uuid));
         let handle = loader
             .expect("no loader set in TLS when deserializing handle")
             .add_ref(uuid);
@@ -320,13 +322,10 @@ impl<'de> Visitor<'de> for AssetUuidVisitor {
 ///
 /// This is returned by `Loader::load_asset_generic` for assets loaded by UUID.
 #[derive(Derivative)]
-#[derivative(
-    Eq(bound = ""),
-    Hash(bound = ""),
-    PartialEq(bound = ""),
-    Debug(bound = "")
-)]
+#[derivative(Eq, Hash, PartialEq, Debug)]
 pub struct GenericHandle {
+    #[derivative(PartialEq="ignore")]
+    #[derivative(Hash="ignore")]
     chan: Arc<Sender<RefOp>>,
     id: LoadHandle,
 }
@@ -339,7 +338,7 @@ impl GenericHandle {
 
 impl Drop for GenericHandle {
     fn drop(&mut self) {
-        self.chan.send(RefOp::Decrease(self.id))
+        let _ = self.chan.send(RefOp::Decrease(self.id));
     }
 }
 

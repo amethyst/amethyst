@@ -7,8 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{Format, experimental::*};
 use amethyst_core::ecs::{
-    common::Errors,
-    prelude::{Dispatcher, DispatcherBuilder, System, World, Write},
+    prelude::{Dispatcher, DispatcherBuilder, System, World, Write, WorldExt},
 };
 use amethyst_error::{format_err, Error, ResultExt};
 use type_uuid::*;
@@ -16,9 +15,10 @@ use type_uuid::*;
 #[derive(Debug, TypeUuid)]
 #[uuid = "28d51c52-be81-4d99-8cdc-20b26eb12448"]
 pub struct MeshAsset {
-    /// Left out for simplicity
-    /// This would for example be the gfx handle
-    buffer: (),
+    // Just example fields
+    buffer: Vec<[f32; 3]>,
+    handle: GenericHandle,
+    vec_handle_test: Vec<Handle<MeshAsset>>,
 }
 
 #[derive(Serialize, Deserialize, TypeUuid)]
@@ -26,6 +26,8 @@ pub struct MeshAsset {
 pub struct VertexData {
     positions: Vec<[f32; 3]>,
     tex_coords: Vec<[f32; 2]>,
+    handle: GenericHandle,
+    vec_handle_test: Vec<Handle<MeshAsset>>,
 }
 // Registers the asset type which automatically prepares AssetStorage & ProcessingQueue
 amethyst_assets::register_asset_type!(VertexData => MeshAsset; ProcessingSystem);
@@ -41,7 +43,7 @@ impl Format<VertexData> for Ron {
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<VertexData, Error> {
         let s = std::str::from_utf8(&bytes)?;
-        ron::de::from_str(s).with_context(|_| format_err!("Failed to decode mesh file"))
+        ron::de::from_str(s).with_context(|e| format_err!("Failed to decode mesh file: {}", e))
     }
 }
 // Associates the .ron file extension with the Ron Format implementation
@@ -60,11 +62,10 @@ impl App {
 
         let mut world = World::new();
 
-        world.add_resource(Errors::new());
         let mut loader = DefaultLoader::default();
-        loader.init_world(&mut world.res);
+        loader.init_world(&mut world);
         loader.init_dispatcher(&mut disp_builder);
-        world.add_resource(loader);
+        world.insert(loader);
 
         App {
             dispatcher: disp_builder.build(),
@@ -74,12 +75,10 @@ impl App {
     }
 
     fn update(&mut self) {
-        self.dispatcher.dispatch(&mut self.world.res);
+        self.dispatcher.dispatch(&mut self.world);
         self.world.maintain();
         let mut loader = self.world.write_resource::<DefaultLoader>();
-        loader.process(&self.world.res).unwrap(); // TODO unwrap
-        let mut errors = self.world.write_resource::<Errors>();
-        errors.print_and_exit();
+        loader.process(&self.world).unwrap(); // TODO unwrap
     }
 
     fn run(&mut self) {
@@ -104,8 +103,8 @@ impl<'a> System<'a> for ProcessingSystem {
     );
 
     fn run(&mut self, (mut processing_queue, mut storage): Self::SystemData) {
-        processing_queue.process(&mut *storage, |_vertex_data| {
-            Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
+        processing_queue.process(&mut *storage, |vertex_data| {
+            Ok(ProcessingState::Loaded(MeshAsset { buffer: vertex_data.positions, handle: vertex_data.handle, vec_handle_test: vertex_data.vec_handle_test }))
         });
     }
 }
