@@ -24,13 +24,13 @@ use thread_profiler::profile_scope;
 #[serde(default)]
 pub struct AutoFov {
     /// The horizontal FOV value at the aspect ratio in the field `base_aspect_ratio`
-    #[new(default)]
+    #[new(value = "1.861_684_6")]
     base_fovx: f32,
 
     /// Sets `fovx_growth_rate` to the given value
     #[set = "pub"]
     /// The factor determining how sensitive the FOV change should be
-    #[new(default)]
+    #[new(value = "1.0")]
     fovx_growth_rate: f32,
 
     /// If the FOV grow rate specified in the field `fovx_growth_rate` should be applied as-is
@@ -38,15 +38,15 @@ pub struct AutoFov {
     fixed_growth_rate: bool,
 
     /// The aspect ratio when the camera's horizontal FOV is identical to `base_fovx`
-    #[new(default)]
+    #[new(value = "(16, 9)")]
     base_aspect_ratio: (usize, usize),
 
     /// The minimum value the horizontal FOV can have
-    #[new(default)]
+    #[new(value = "0.1")]
     min_fovx: f32,
 
     /// The maximum value the horizontal FOV can have
-    #[new(default)]
+    #[new(value = "std::f32::consts::PI")]
     max_fovx: f32,
 }
 
