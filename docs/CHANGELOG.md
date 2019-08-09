@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * `SystemDesc` proc macro derive to simplify defining `SystemDesc`s. ([#1780])
 * `UiButtonData` is now exported from `amethyst_ui` and can be used for custom widgets. ([#1859])
+* Add an audio subchapter to the pong chapter. ([#1842])
 
 ### Changed
 
@@ -27,6 +28,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 [#1780]: https://github.com/amethyst/amethyst/pull/1780
 [#1859]: https://github.com/amethyst/amethyst/pull/1859
+[#1842]: https://github.com/amethyst/amethyst/pull/1842
 
 ## [0.12.0] - 2019-07-30
 
