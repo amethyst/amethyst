@@ -52,7 +52,7 @@ impl MaterialAnimationFixture {
 
             loader.load_from_data::<Animation<Material>, ()>(animation, (), &world.read_resource())
         };
-        world.add_resource(EffectReturn(animation_handle));
+        world.insert(EffectReturn(animation_handle));
     }
 
     /// Asserts that the material animation is present in the `World`.

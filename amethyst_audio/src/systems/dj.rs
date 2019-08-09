@@ -1,15 +1,15 @@
 use std::marker::PhantomData;
 
+use derive_new::new;
+use log::error;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    ecs::{
-        common::Errors,
-        prelude::{Read, System, WriteExpect},
-    },
-    shred::{Resource, Resources},
+    ecs::prelude::{Read, System, SystemData, World, WriteExpect},
+    shred::Resource,
+    SystemDesc,
 };
 
 use crate::{
@@ -18,24 +18,35 @@ use crate::{
     source::{Source, SourceHandle},
 };
 
-/// Calls a closure if the `AudioSink` is empty.
-#[derive(Debug)]
-pub struct DjSystem<F, R> {
+/// Creates a new `DjSystem` with the music picker being `f`.
+///
+/// The closure takes a parameter, which needs to be a reference to a resource type,
+/// e.g. `&MusicLibrary`. This resource will be fetched by the system and passed to the picker.
+#[derive(Debug, new)]
+pub struct DjSystemDesc<F, R> {
     f: F,
     marker: PhantomData<R>,
 }
 
-impl<F, R> DjSystem<F, R> {
-    /// Creates a new `DjSystem` with the music picker being `f`.
-    /// The closure takes a parameter, which needs to be a reference to
-    /// a resource type, e.g. `&MusicLibrary`. This resource will be fetched
-    /// by the system and passed to the picker.
-    pub fn new(f: F) -> Self {
-        DjSystem {
-            f,
-            marker: PhantomData,
-        }
+impl<'a, 'b, F, R> SystemDesc<'a, 'b, DjSystem<F, R>> for DjSystemDesc<F, R>
+where
+    F: FnMut(&mut R) -> Option<SourceHandle>,
+    R: Resource,
+{
+    fn build(self, world: &mut World) -> DjSystem<F, R> {
+        <DjSystem<F, R> as System<'_>>::SystemData::setup(world);
+
+        init_output(world);
+
+        DjSystem::new(self.f)
     }
+}
+
+/// Calls a closure if the `AudioSink` is empty.
+#[derive(Debug, new)]
+pub struct DjSystem<F, R> {
+    f: F,
+    marker: PhantomData<R>,
 }
 
 impl<'a, F, R> System<'a> for DjSystem<F, R>
@@ -45,27 +56,22 @@ where
 {
     type SystemData = (
         Read<'a, AssetStorage<Source>>,
-        Read<'a, Errors>,
         Option<Read<'a, AudioSink>>,
         WriteExpect<'a, R>,
     );
 
-    fn run(&mut self, (storage, errors, sink, mut res): Self::SystemData) {
+    fn run(&mut self, (storage, sink, mut res): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("dj_system");
 
         if let Some(ref sink) = sink {
             if sink.empty() {
                 if let Some(source) = (&mut self.f)(&mut res).and_then(|h| storage.get(&h)) {
-                    errors.execute(|| sink.append(source));
+                    if let Err(e) = sink.append(source) {
+                        error!("DJ Cannot append source to sink. {}", e);
+                    }
                 }
             }
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        init_output(res);
     }
 }

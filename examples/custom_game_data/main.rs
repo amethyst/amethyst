@@ -6,12 +6,13 @@ use crate::{
 };
 use amethyst::{
     assets::{
-        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
+        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystemDesc, ProgressCounter,
+        RonFormat,
     },
     core::transform::TransformBundle,
     ecs::{
         prelude::{Component, Entity},
-        NullStorage,
+        NullStorage, WorldExt,
     },
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
@@ -75,7 +76,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
             data.world
                 .exec(|loader: UiLoader<'_>| loader.load("ui/paused.ron", &mut self.progress)),
         );
-        data.world.add_resource::<DemoState>(DemoState {
+        data.world.insert::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: Srgb::new(1.0, 1.0, 1.0),
             camera_angle: 0.0,
@@ -198,17 +199,13 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let asset_dir = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
     let display_config_path = app_root.join("examples/custom_game_data/config/display.ron");
 
     let game_data = CustomGameDataBuilder::default()
-        .with_base(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_running::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
-        .with_base_bundle(TransformBundle::new())?
-        .with_base_bundle(UiBundle::<StringBindings>::new())?
-        .with_base_bundle(FpsCounterBundle::default())?
-        .with_base_bundle(InputBundle::<StringBindings>::new())?
+        .with_base(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_running(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -217,9 +214,13 @@ fn main() -> Result<(), Error> {
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )?;
+        )
+        .with_base_bundle(TransformBundle::new())
+        .with_base_bundle(UiBundle::<StringBindings>::new())
+        .with_base_bundle(FpsCounterBundle::default())
+        .with_base_bundle(InputBundle::<StringBindings>::new());
 
-    let mut game = Application::build(asset_dir, Loading::default())?.build(game_data)?;
+    let mut game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
     game.run();
 
     Ok(())

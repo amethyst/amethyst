@@ -15,7 +15,7 @@ use crate::{
     util::{self, TapCountIter},
 };
 use amethyst_core::{
-    ecs::{Join, ReadStorage, Resources, SystemData},
+    ecs::{Join, ReadStorage, SystemData, World},
     math::{convert, Vector3},
     transform::Transform,
 };
@@ -65,7 +65,7 @@ impl<B: Backend> EnvironmentSub<B> {
     }
 
     /// Performs any re-allocation and GPU memory writing required for this environment set.
-    pub fn process(&mut self, factory: &Factory<B>, index: usize, res: &Resources) -> bool {
+    pub fn process(&mut self, factory: &Factory<B>, index: usize, world: &World) -> bool {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
 
@@ -76,7 +76,7 @@ impl<B: Backend> EnvironmentSub<B> {
             }
             &mut self.per_image[index]
         };
-        this_image.process(factory, res)
+        this_image.process(factory, world)
     }
 
     /// Binds this environment set for all images.
@@ -117,7 +117,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         }
     }
 
-    fn process(&mut self, factory: &Factory<B>, res: &Resources) -> bool {
+    fn process(&mut self, factory: &Factory<B>, world: &World) -> bool {
         let align = factory
             .physical()
             .limits()
@@ -171,14 +171,14 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             let CameraGatherer {
                 camera_position,
                 projview,
-            } = CameraGatherer::gather(res);
+            } = CameraGatherer::gather(world);
 
             let mut mapped = buffer.map(factory, whole_range.clone()).unwrap();
             let mut writer = unsafe { mapped.write::<u8>(factory, whole_range.clone()).unwrap() };
             let dst_slice = unsafe { writer.slice() };
 
             let mut env = pod::Environment {
-                ambient_color: AmbientGatherer::gather(res),
+                ambient_color: AmbientGatherer::gather(world),
                 camera_position,
                 point_light_count: 0,
                 directional_light_count: 0,
@@ -187,7 +187,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             .std140();
 
             let (lights, transforms) =
-                <(ReadStorage<'_, Light>, ReadStorage<'_, Transform>)>::fetch(res);
+                <(ReadStorage<'_, Light>, ReadStorage<'_, Transform>)>::fetch(world);
 
             let point_lights = (&lights, &transforms)
                 .join()

@@ -14,6 +14,7 @@ Defining a custom type for the `InputBundle` is done by implementing the `Bindin
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# extern crate serde;
 use std::fmt::{self, Display};
 
 use amethyst::input::{BindingTypes, Bindings};
@@ -42,6 +43,7 @@ impl Display for ActionBinding {
     }
 }
 
+#[derive(Debug)]
 struct MovementBindingTypes;
 
 impl BindingTypes for MovementBindingTypes {
@@ -101,12 +103,18 @@ With the config file we can create an `InputBundle` like in the previous section
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::input::StringBindings as MovementBindingTypes;
-# let bindings_config = "";
 use amethyst::input::InputBundle;
 
+# fn main() -> amethyst::Result<()> {
+#
+# let input_config = "input.ron";
+#
 let input_bundle = 
     InputBundle::<MovementBindingTypes>::new()
-        .with_bindings_from_file(bindings_config)?;
+        .with_bindings_from_file(input_config)?;
+#
+# Ok(())
+# }
 ```
 
 And add the `InputBundle` to the game data just like before.
@@ -115,12 +123,19 @@ And add the `InputBundle` to the game data just like before.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::input::{InputBundle, StringBindings};
+#
+# fn main() -> amethyst::Result<()> {
 # let input_bundle = InputBundle::<StringBindings>::default();
+#
+let mut world = World::new();
 let game_data = GameDataBuilder::default()
     //..
     .with_bundle(input_bundle)?
     //..
 #   ;
+#
+# Ok(())
+# }
 ```
 
 ## Using the `InputHandler` with a Custom `BindingTypes`
@@ -130,8 +145,9 @@ Now that we have added an `InputBundle` with a custom `BindingTypes`, we can use
 ```rust,edition2018,no_run,noplaypen,ignore
 # extern crate amethyst;
 use amethyst::{
-    core::Transform,
-    ecs::{Component, DenseVecStorage, Join, Read, ReadStorage, System, WriteStorage},
+    core::{Transform, SystemDesc},
+    derive::SystemDesc,
+    ecs::{Component, DenseVecStorage, Join, Read, ReadStorage, System, SystemData, World, WriteStorage},
     input::{AxisBinding, InputHandler},
 };
 
@@ -149,6 +165,7 @@ impl Component for Player {
     type Storage = DenseVecStorage<Self>;
 }
 
+#[derive(SystemDesc)]
 struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {
@@ -186,7 +203,11 @@ And don't forget to add the `MovementSystem` to the game data.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::prelude::*; use amethyst::ecs::*;
+# use amethyst::prelude::*;
+# use amethyst::ecs::*;
+# use amethyst::core::SystemDesc;
+# use amethyst::derive::SystemDesc;
+# #[derive(SystemDesc)]
 # struct MovementSystem;
 # impl<'a> System<'a> for MovementSystem {type SystemData=(); fn run(&mut self, _: ()) {}}
 let game_data = GameDataBuilder::default()

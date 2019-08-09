@@ -71,7 +71,7 @@ impl Default for CameraOrthoWorldCoordinates {
 /// # Example
 ///
 /// ```rust
-/// # use amethyst_core::ecs::{Builder, World};
+/// # use amethyst_core::ecs::{Builder, World, WorldExt};
 /// # use amethyst_core::Transform;
 /// # use amethyst_rendy::camera::Camera;
 /// # use amethyst_utils::ortho_camera::*;

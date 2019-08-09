@@ -1,7 +1,10 @@
 //! Displays spheres with physically based materials.
 use amethyst::{
     assets::AssetLoaderSystemData,
-    core::{ecs::Builder, Transform, TransformBundle},
+    core::{
+        ecs::{Builder, WorldExt},
+        Transform, TransformBundle,
+    },
     renderer::{
         camera::Camera,
         light::{Light, PointLight},
@@ -145,10 +148,9 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/material/config/display.ron");
-    let assets_directory = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -156,9 +158,10 @@ fn main() -> amethyst::Result<()> {
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
                 .with_plugin(RenderPbr3D::default()),
-        )?;
+        )?
+        .with_bundle(TransformBundle::new())?;
 
-    let mut game = Application::new(&assets_directory, Example, game_data)?;
+    let mut game = Application::new(assets_dir, Example, game_data)?;
     game.run();
     Ok(())
 }
