@@ -153,8 +153,8 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
             layout: set_layout! {
-                factory, 
-                [1] UniformBuffer hal::pso::ShaderStageFlags::FRAGMENT, 
+                factory,
+                [1] UniformBuffer hal::pso::ShaderStageFlags::FRAGMENT,
                 [T::len()] CombinedImageSampler hal::pso::ShaderStageFlags::FRAGMENT
             },
             lookup: util::LookupBuilder::new(),

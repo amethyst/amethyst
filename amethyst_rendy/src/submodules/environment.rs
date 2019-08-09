@@ -47,12 +47,12 @@ struct PerImageEnvironmentSub<B: Backend> {
 }
 
 impl<B: Backend> EnvironmentSub<B> {
-    /// Create and allocate a new `EnvironmentSub` with the provided rendy `Factory` 
+    /// Create and allocate a new `EnvironmentSub` with the provided rendy `Factory`
     /// Allocate to the supplied shader.
     pub fn new(
         factory: &Factory<B>,
         flags: [hal::pso::ShaderStageFlags; 2],
-        ) -> Result<Self, failure::Error> {
+    ) -> Result<Self, failure::Error> {
         Ok(Self {
             layout: set_layout! {factory, [1] UniformBuffer flags[0], [4] UniformBuffer flags[1]},
             per_image: Vec::new(),

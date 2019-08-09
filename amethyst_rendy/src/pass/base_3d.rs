@@ -431,7 +431,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTrans
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-
     ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         let env = EnvironmentSub::new(
             factory,
