@@ -117,7 +117,7 @@
         )?;
     ```
 
-* Renderpasses can be integrated into amethyst by using the newly introduced `RenderPlugin` trait, for example:
+* Render passes can be integrated into amethyst by using the newly introduced `RenderPlugin` trait, for example:
     ```rust,ignore
     pub struct RenderCustom {
         target: Target,
@@ -137,7 +137,7 @@
             &mut self,
             builder: &mut DispatcherBuilder<'a, 'b>,
         ) -> Result<(), Error> {
-            /// You can add systems that ere needed by your renderpass here
+            // You can add systems that are needed by your renderpass here
             Ok(())
         }
 
