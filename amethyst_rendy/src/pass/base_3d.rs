@@ -112,7 +112,13 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<
     ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         profile_scope_impl!("build");
 
-        let env = EnvironmentSub::new(factory)?;
+        let env = EnvironmentSub::new(
+            factory,
+            [
+                hal::pso::ShaderStageFlags::VERTEX,
+                hal::pso::ShaderStageFlags::FRAGMENT,
+            ],
+        )?;
         let materials = MaterialSub::new(factory)?;
         let skinning = SkinningSub::new(factory)?;
 
@@ -426,7 +432,14 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTrans
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
-        let env = EnvironmentSub::new(factory)?;
+        let env = EnvironmentSub::new(
+            factory,
+            [
+                hal::pso::ShaderStageFlags::VERTEX,
+                hal::pso::ShaderStageFlags::FRAGMENT,
+            ],
+        )?;
+
         let materials = MaterialSub::new(factory)?;
         let skinning = SkinningSub::new(factory)?;
 

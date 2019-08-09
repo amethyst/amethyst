@@ -12,7 +12,7 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    ui::{RenderUi, ToNativeWidget, UiBundle, UiCreator, UiTransformBuilder, UiWidget},
+    ui::{RenderUi, ToNativeWidget, UiBundle, UiCreator, UiTransformData, UiWidget},
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
 
@@ -51,7 +51,7 @@ impl ToNativeWidget for CustomUi {
                     .map(|widget| {
                         let widget = UiWidget::Container {
                             background: None,
-                            transform: UiTransformBuilder::default()
+                            transform: UiTransformData::default()
                                 .with_position(pos.0, pos.1, pos.2),
                             children: vec![widget],
                         };
