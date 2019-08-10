@@ -594,6 +594,17 @@ fn main() -> amethyst::Result<()> {
     )?;
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderSwitchable3D::default())
+                .with_plugin(RenderFlat2D::default())
+                .with_plugin(RenderDebugLines::default())
+                .with_plugin(RenderSkybox::with_colors(
+                    Srgb::new(0.82, 0.51, 0.50),
+                    Srgb::new(0.18, 0.11, 0.85),
+                )),
+        )?
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
@@ -640,18 +651,7 @@ fn main() -> amethyst::Result<()> {
             "transform_system",
             "animation_control",
             "sampler_interpolation",
-        ]))?
-        .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path))
-                .with_plugin(RenderSwitchable3D::default())
-                .with_plugin(RenderFlat2D::default())
-                .with_plugin(RenderDebugLines::default())
-                .with_plugin(RenderSkybox::with_colors(
-                    Srgb::new(0.82, 0.51, 0.50),
-                    Srgb::new(0.18, 0.11, 0.85),
-                )),
-        )?;
+        ]))?;
 
     let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     game.run();
