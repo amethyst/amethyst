@@ -13,13 +13,13 @@ use amethyst::{
     core::{
         ecs::{
             Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
-            ReadExpect, ReadStorage, System, SystemData, World, Write, WriteStorage,
+            ReadStorage, System, SystemData, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
-        SystemDesc, Time, Transform, TransformBundle,
+        Time, Transform, TransformBundle,
     },
     error::Error,
-    gltf::GltfSceneLoaderSystem,
+    gltf::GltfSceneLoaderSystemDesc,
     input::{
         is_close_requested, is_key_down, is_key_up, Axis, Bindings, Button, InputBundle,
         StringBindings,
@@ -597,13 +597,13 @@ fn main() -> amethyst::Result<()> {
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
-        .with(
-            PrefabLoaderSystemDesc::<ScenePrefabData>::default().build(&mut world),
+        .with_system_desc(
+            PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
             "scene_loader",
             &[],
         )
-        .with(
-            GltfSceneLoaderSystem::new(&mut world),
+        .with_system_desc(
+            GltfSceneLoaderSystemDesc::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
@@ -653,12 +653,7 @@ fn main() -> amethyst::Result<()> {
                 )),
         )?;
 
-    let mut game = Application::new(
-        assets_dir & assets_directory,
-        Example::new(),
-        game_data,
-        world,
-    )?;
+    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     game.run();
     Ok(())
 }
