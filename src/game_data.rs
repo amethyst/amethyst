@@ -1,11 +1,13 @@
 use std::marker::PhantomData;
 
-use derivative::Derivative;
-
 use crate::{
     core::{
-        ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt},
-        ArcThreadPool, SystemBundle, SystemDesc,
+        deferred_dispatcher_operation::{
+            AddBarrier, AddBundle, AddSystem, AddSystemDesc, AddThreadLocal, AddThreadLocalDesc,
+            DispatcherOperation,
+        },
+        ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World, WorldExt},
+        ArcThreadPool, RunNowDesc, SystemBundle, SystemDesc,
     },
     error::Error,
 };
@@ -320,7 +322,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// ~~~
     pub fn with_thread_local<S>(mut self, system: S) -> Self
     where
-        S: for<'c> System<'c> + 'static,
+        S: for<'c> RunNow<'c> + 'static,
     {
         self.dispatcher_operations
             .push(Box::new(AddThreadLocal { system }));
@@ -370,8 +372,8 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// ~~~
     pub fn with_thread_local_desc<SD, S>(mut self, system_desc: SD) -> Self
     where
-        SD: SystemDesc<'a, 'b, S> + 'b + 'static,
-        S: for<'c> System<'c> + 'static,
+        SD: RunNowDesc<'a, 'b, S> + 'b + 'static,
+        S: for<'c> RunNow<'c> + 'static,
     {
         self.dispatcher_operations
             .push(Box::new(AddThreadLocalDesc {
@@ -474,143 +476,4 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
 
 impl DataInit<()> for () {
     fn build(self, _: &mut World) {}
-}
-
-/// Trait to capture deferred dispatcher builder operations.
-trait DispatcherOperation<'a, 'b> {
-    /// Executes the dispatcher builder instruction.
-    fn exec(
-        self: Box<Self>,
-        world: &mut World,
-        dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error>;
-}
-
-#[derive(Debug)]
-struct AddBarrier;
-
-impl<'a, 'b> DispatcherOperation<'a, 'b> for AddBarrier {
-    fn exec(
-        self: Box<Self>,
-        _world: &mut World,
-        dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        dispatcher_builder.add_barrier();
-        Ok(())
-    }
-}
-
-#[derive(Derivative)]
-#[derivative(Debug)]
-struct AddSystem<S> {
-    #[derivative(Debug = "ignore")]
-    system: S,
-    name: &'static str,
-    dependencies: &'static [&'static str],
-}
-
-impl<'a, 'b, S> DispatcherOperation<'a, 'b> for AddSystem<S>
-where
-    S: for<'s> System<'s> + Send + 'a,
-{
-    fn exec(
-        self: Box<Self>,
-        _world: &mut World,
-        dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        dispatcher_builder.add(self.system, self.name, self.dependencies);
-        Ok(())
-    }
-}
-
-#[derive(Derivative)]
-#[derivative(Debug)]
-struct AddSystemDesc<SD, S> {
-    #[derivative(Debug = "ignore")]
-    system_desc: SD,
-    name: &'static str,
-    dependencies: &'static [&'static str],
-    marker: PhantomData<S>,
-}
-
-impl<'a, 'b, SD, S> DispatcherOperation<'a, 'b> for AddSystemDesc<SD, S>
-where
-    SD: SystemDesc<'a, 'b, S>,
-    S: for<'s> System<'s> + Send + 'a,
-{
-    fn exec(
-        self: Box<Self>,
-        world: &mut World,
-        dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        let system = self.system_desc.build(world);
-        dispatcher_builder.add(system, self.name, self.dependencies);
-        Ok(())
-    }
-}
-
-#[derive(Derivative)]
-#[derivative(Debug)]
-struct AddThreadLocal<S> {
-    #[derivative(Debug = "ignore")]
-    system: S,
-}
-
-impl<'a, 'b, S> DispatcherOperation<'a, 'b> for AddThreadLocal<S>
-where
-    S: for<'c> System<'c> + 'b,
-{
-    fn exec(
-        self: Box<Self>,
-        _world: &mut World,
-        dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        dispatcher_builder.add_thread_local(self.system);
-        Ok(())
-    }
-}
-
-#[derive(Derivative)]
-#[derivative(Debug)]
-struct AddThreadLocalDesc<SD, S> {
-    #[derivative(Debug = "ignore")]
-    system_desc: SD,
-    marker: PhantomData<S>,
-}
-
-impl<'a, 'b, SD, S> DispatcherOperation<'a, 'b> for AddThreadLocalDesc<SD, S>
-where
-    SD: SystemDesc<'a, 'b, S>,
-    S: for<'c> System<'c> + 'b,
-{
-    fn exec(
-        self: Box<Self>,
-        world: &mut World,
-        dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        let system = self.system_desc.build(world);
-        dispatcher_builder.add_thread_local(system);
-        Ok(())
-    }
-}
-
-#[derive(Derivative)]
-#[derivative(Debug)]
-struct AddBundle<B> {
-    #[derivative(Debug = "ignore")]
-    bundle: B,
-}
-
-impl<'a, 'b, B> DispatcherOperation<'a, 'b> for AddBundle<B>
-where
-    B: SystemBundle<'a, 'b>,
-{
-    fn exec(
-        self: Box<Self>,
-        world: &mut World,
-        dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        self.bundle.build(world, dispatcher_builder)?;
-        Ok(())
-    }
 }
