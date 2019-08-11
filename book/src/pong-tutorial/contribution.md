@@ -8,16 +8,21 @@ Next up in this book we will explain how Amethyst does Math, Input, Assets and s
 
 ## Other tutorials or examples
 
-[Amethyst Quickstarter](https://github.com/amethyst/amethyst-starter-2d)
+#### [Amethyst Quickstarter](https://github.com/amethyst/amethyst-starter-2d)
+  
 Seed project for 2D games. This project template will get you from 0 to drawing something on the screen in no time.
 
-Showcase Game: [Evoli](https://github.com/amethyst/evoli)
+#### Showcase Game: [Evoli](https://github.com/amethyst/evoli)
+  
 An ecosystem-simulation game, 3D
-
-Showcase Game: [Space Menace](https://github.com/amethyst/space-menace/)
+  
+#### Showcase Game: [Space Menace](https://github.com/amethyst/space-menace/)
+  
 An action 2D platformer
-
-Showcase Game: [Survivor](https://github.com/jaynus/survival) (unannounced, 2D)
+  
+#### Showcase Game: [Survivor](https://github.com/jaynus/survival) 
+  
+(unannounced, 2D)
 
 For more examples from the community you can check out this list of [Games made with Amethyst](https://community.amethyst.rs/t/games-made-with-amethyst/134).
 
