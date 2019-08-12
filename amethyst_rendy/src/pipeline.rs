@@ -220,7 +220,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
     /// Set to use the provided `DepthTest`
     pub fn set_depth_test(&mut self, depth_test: DepthTest) {
-        self.depth_stencil.depth = depth_test;
+        self.depth_stencil.depth = Some(depth_test);
     }
 
     /// Build with the provided `Face` culling.

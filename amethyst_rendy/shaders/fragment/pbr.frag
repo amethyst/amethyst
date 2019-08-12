@@ -56,7 +56,7 @@ layout(std140, set = 1, binding = 0) uniform Material {
 
 layout(set = 1, binding = 1) uniform sampler2D albedo;
 layout(set = 1, binding = 2) uniform sampler2D emission;
-layout(set = 1, binding = 3) uniform sampler2D normal;
+layout(set = 1, binding = 3) uniform sampler2D qweqkfhaiufhiu;
 layout(set = 1, binding = 4) uniform sampler2D metallic_roughness;
 layout(set = 1, binding = 5) uniform sampler2D ambient_occlusion;
 layout(set = 1, binding = 6) uniform sampler2D cavity;
@@ -146,7 +146,7 @@ void main() {
 
     vec3 albedo             = albedo_alpha.rgb;
     vec3 emission           = texture(emission, final_tex_coords).rgb;
-    vec3 normal             = texture(normal, final_tex_coords).rgb;
+    vec3 normal             = texture(qweqkfhaiufhiu, final_tex_coords).rgb;
     vec2 metallic_roughness = texture(metallic_roughness, final_tex_coords).bg;
     float ambient_occlusion = texture(ambient_occlusion, final_tex_coords).r;
     // TODO: Use cavity

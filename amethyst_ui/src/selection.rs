@@ -7,7 +7,7 @@ use amethyst_core::{
 };
 use amethyst_input::{BindingTypes, InputHandler};
 use std::marker::PhantomData;
-use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use derive_new::new;
 use serde::{Deserialize, Serialize};
@@ -58,7 +58,7 @@ impl Component for Selected {
 #[derive(Debug, Default, new)]
 pub struct SelectionKeyboardSystem<G> {
     #[new(default)]
-    window_reader_id: Option<ReaderId<Event>>,
+    window_reader_id: Option<ReaderId<Event<()>>>,
     #[new(default)]
     phantom: PhantomData<G>,
 }
@@ -68,7 +68,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     type SystemData = (
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         Read<'a, CachedSelectionOrder>,
         WriteStorage<'a, Selected>,
         Write<'a, EventChannel<UiEvent>>,
@@ -159,7 +159,7 @@ where
 
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
-        self.window_reader_id = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        self.window_reader_id = Some(res.fetch_mut::<EventChannel<Event<()>>>().register_reader());
     }
 }
 

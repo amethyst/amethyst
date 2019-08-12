@@ -8,7 +8,7 @@ use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
-use winit::Event;
+use winit::event::Event;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
@@ -17,10 +17,11 @@ use crate::{
     assets::{Loader, Source},
     callback_queue::CallbackQueue,
     core::{
+        EventLoopRes,
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
-        ArcThreadPool, EventReader, Named,
+        /*ArcThreadPool, */EventReader, Named,
     },
     ecs::{
         common::Errors,
@@ -46,7 +47,7 @@ use crate::{
 /// - `R`: `EventReader` implementation for the given event type `E`
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader>
+pub struct CoreApplication<T, E = StateEvent, R = StateEventReader>
 where
     T: DataDispose + 'static,
     E: 'static,
@@ -58,12 +59,13 @@ where
     reader: R,
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
-    event_reader_id: ReaderId<Event>,
+    event_reader_id: ReaderId<Event<()>>,
     #[derivative(Debug = "ignore")]
     trans_reader_id: ReaderId<TransEvent<T, E>>,
-    states: StateMachine<'a, T, E>,
+    states: StateMachine<'static, T, E>,
     ignore_window_close: bool,
     data: T,
+    event_loop: Option<winit::event_loop::EventLoop<()>>,
 }
 
 /// An Application is the root object of the game engine. It binds the OS
@@ -130,9 +132,9 @@ where
 /// ```
 ///
 /// [log]: https://crates.io/crates/log
-pub type Application<'a, T> = CoreApplication<'a, T, StateEvent, StateEventReader>;
+pub type Application<T> = CoreApplication<T, StateEvent, StateEventReader>;
 
-impl<'a, T, E, R> CoreApplication<'a, T, E, R>
+impl<T, E, R> CoreApplication<T, E, R>
 where
     T: DataDispose + 'static,
     E: Clone + Send + Sync + 'static,
@@ -188,7 +190,7 @@ where
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self, Error>
     where
         P: AsRef<Path>,
-        S: State<T, E> + 'a,
+        S: State<T, E> + 'static,
         I: DataInit<T>,
         for<'b> R: EventReader<'b, Event = E>,
         R: Default,
@@ -203,7 +205,7 @@ where
     pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, T, E, R>, Error>
     where
         P: AsRef<Path>,
-        S: State<T, E> + 'a,
+        S: State<T, E>,
         for<'b> R: EventReader<'b, Event = E>,
     {
         ApplicationBuilder::new(path, initial_state)
@@ -218,9 +220,9 @@ where
     ///
     /// See the example supplied in the
     /// [`new`](struct.Application.html#examples) method.
-    pub fn run(&mut self)
+    pub fn run(mut self) -> !
     where
-        for<'b> R: EventReader<'b, Event = E>,
+        for<'b> R: EventReader<'b, Event = E> + 'static,
     {
         #[cfg(feature = "sentry")]
         let _sentry_guard = if let Some(dsn) = option_env!("SENTRY_DSN") {
@@ -232,26 +234,53 @@ where
         };
 
         self.initialize();
-        self.world.write_resource::<Stopwatch>().start();
-        while self.states.is_running() {
-            self.advance_frame();
-            {
-                #[cfg(feature = "profiler")]
-                profile_scope!("frame_limiter wait");
-                self.world.write_resource::<FrameLimiter>().wait();
-            }
-            {
-                let elapsed = self.world.read_resource::<Stopwatch>().elapsed();
-                let mut time = self.world.write_resource::<Time>();
-                time.increment_frame_number();
-                time.set_delta_time(elapsed);
-            }
-            let mut stopwatch = self.world.write_resource::<Stopwatch>();
-            stopwatch.stop();
-            stopwatch.restart();
-        }
+        // self.world.write_resource::<Stopwatch>().start();
 
-        self.shutdown();
+        let el = self.event_loop.take().unwrap();
+        el.run(move |event, _, flow| {
+            if !self.states.is_running() {
+                self.shutdown();
+                *flow = winit::event_loop::ControlFlow::Exit;
+                return;
+            }
+
+            match event {
+                #[cfg(not(target_arch = "wasm32"))]
+                winit::event::Event::EventsCleared => {
+                    let window = self.world.read_resource::<amethyst_core::WindowRes>();
+                    window.request_redraw();
+                }
+                #[cfg(target_arch = "wasm32")]
+                winit::event::Event::NewEvents(winit::event::StartCause::Init) => {
+                    let window = self.world.read_resource::<amethyst_core::WindowRes>();
+                    window.request_redraw();
+                }
+                winit::event::Event::WindowEvent { event: winit::event::WindowEvent::RedrawRequested, .. } =>
+                {
+                    self.advance_frame();
+                    // {
+                    //     #[cfg(feature = "profiler")]
+                    //     profile_scope!("frame_limiter wait");
+                    //     self.world.write_resource::<FrameLimiter>().wait();
+                    // }
+                    {
+                        // let elapsed = self.world.read_resource::<Stopwatch>().elapsed();
+                        let mut time = self.world.write_resource::<Time>();
+                        time.increment_frame_number();
+                        time.set_delta_time(std::time::Duration::new(0, 16_666_666));
+                    }
+                    // let mut stopwatch = self.world.write_resource::<Stopwatch>();
+                    // stopwatch.stop();
+                    // stopwatch.restart();
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        let window = self.world.read_resource::<amethyst_core::WindowRes>();
+                        window.request_redraw();
+                    }
+                }
+                _ => {}
+            }
+        })
     }
 
     /// Sets up the application.
@@ -268,10 +297,10 @@ where
         if self.ignore_window_close {
             false
         } else {
-            use crate::winit::WindowEvent;
+            use crate::winit::event::WindowEvent;
             let world = &mut self.world;
             let reader_id = &mut self.event_reader_id;
-            world.exec(|ev: Read<'_, EventChannel<Event>>| {
+            world.exec(|ev: Read<'_, EventChannel<Event<()>>>| {
                 ev.read(reader_id).any(|e| {
                     if cfg!(target_os = "ios") {
                         if let Event::WindowEvent {
@@ -304,6 +333,7 @@ where
     {
         trace!("Advancing frame (`Application::advance_frame`)");
         if self.should_close() {
+            info!("Should close");
             let world = &mut self.world;
             let states = &mut self.states;
             states.stop(StateData::new(world, &mut self.data));
@@ -392,7 +422,7 @@ where
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, T, E, R> Drop for CoreApplication<'a, T, E, R>
+impl<T, E, R> Drop for CoreApplication<T, E, R>
 where
     T: DataDispose,
 {
@@ -511,44 +541,49 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
-        let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
-            .as_ref()
-            .map(|s| {
-                s.as_str()
-                    .parse()
-                    .expect("AMETHYST_NUM_THREADS was provided but is not a valid number!")
-            })
-            .ok();
+        // let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
+        //     .as_ref()
+        //     .map(|s| {
+        //         s.as_str()
+        //             .parse()
+        //             .expect("AMETHYST_NUM_THREADS was provided but is not a valid number!")
+        //     })
+        //     .ok();
 
         let mut world = World::new();
 
-        let thread_pool_builder = ThreadPoolBuilder::new();
-        #[cfg(feature = "profiler")]
-        let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
-            register_thread_with_profiler();
-        });
-        let pool: ArcThreadPool;
-        if let Some(thread_count) = thread_count {
-            debug!("Running Amethyst with fixed thread pool: {}", thread_count);
-            pool = thread_pool_builder
-                .num_threads(thread_count)
-                .build()
-                .map(Arc::new)?;
-        } else {
-            pool = thread_pool_builder.build().map(Arc::new)?;
-        }
-        world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
-        world.add_resource(pool);
-        world.add_resource(EventChannel::<Event>::with_capacity(2000));
+        // let thread_pool_builder = ThreadPoolBuilder::new();
+        // #[cfg(feature = "profiler")]
+        // let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
+        //     register_thread_with_profiler();
+        // });
+        // let pool: ArcThreadPool;
+        // if let Some(thread_count) = thread_count {
+        //     debug!("Running Amethyst with fixed thread pool: {}", thread_count);
+        //     pool = thread_pool_builder
+        //         .num_threads(thread_count)
+        //         .build()
+        //         .map(Arc::new)?;
+        // } else {
+        //     debug!("Running Amethyst with non-fixed thread pool");
+        //     pool = thread_pool_builder.build().map(Arc::new)?;
+        // }
+
+        trace!("Add resources");
+        world.add_resource(Loader::new(path.as_ref().to_owned()/*, pool.clone()*/));
+        // world.add_resource(pool);
+        world.add_resource(EventChannel::<Event<()>>::with_capacity(2000));
         world.add_resource(EventChannel::<UiEvent>::with_capacity(40));
         world.add_resource(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         world.add_resource(Errors::default());
-        world.add_resource(FrameLimiter::default());
-        world.add_resource(Stopwatch::default());
+        // world.add_resource(FrameLimiter::default());
+        // world.add_resource(Stopwatch::default());
         world.add_resource(Time::default());
         world.add_resource(CallbackQueue::default());
 
         world.register::<Named>();
+
+        trace!("Application builder complete");
 
         Ok(Self {
             initial_state,
@@ -862,15 +897,18 @@ where
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build<'a, I>(mut self, init: I) -> Result<CoreApplication<'a, T, E, X>, Error>
+    pub fn build<I>(mut self, init: I) -> Result<CoreApplication<T, E, X>, Error>
     where
-        S: State<T, E> + 'a,
+        S: State<T, E> + 'static,
         I: DataInit<T>,
         E: Clone + Send + Sync + 'static,
         X: Default,
         for<'b> X: EventReader<'b, Event = E>,
     {
         trace!("Entering `ApplicationBuilder::build`");
+        
+        let event_loop = winit::event_loop::EventLoop::new();
+        self.world.add_resource(Some(EventLoopRes::new(event_loop)));
 
         #[cfg(feature = "profiler")]
         register_thread_with_profiler();
@@ -882,13 +920,15 @@ where
         let data = init.build(&mut self.world);
         let event_reader_id = self
             .world
-            .exec(|mut ev: Write<'_, EventChannel<Event>>| ev.register_reader());
+            .exec(|mut ev: Write<'_, EventChannel<Event<()>>>| ev.register_reader());
 
         let trans_reader_id = self
             .world
             .exec(|mut ev: Write<'_, EventChannel<TransEvent<T, E>>>| ev.register_reader());
 
+        let el = EventLoopRes::into_inner(self.world.write_resource::<Option<EventLoopRes>>().take().unwrap());
         Ok(CoreApplication {
+            event_loop: Some(el),
             world: self.world,
             states: StateMachine::new(self.initial_state),
             reader,

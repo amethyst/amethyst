@@ -19,17 +19,18 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
-default = ["animation", "audio", "locale", "network", "renderer", "sentry"]
+default = ["animation", "locale", "renderer"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
+gl = ["amethyst_rendy/gl"]
 
 animation = [
     "amethyst_animation"
 ]
 audio = [
-    "amethyst_audio"
+    # "amethyst_audio"
 ]
 gltf = [
     "amethyst_gltf",
@@ -39,7 +40,7 @@ locale = [
     "amethyst_locale"
 ]
 network = [
-    "amethyst_network"
+    # "amethyst_network"
 ]
 
 renderer = [
@@ -51,7 +52,7 @@ profiler = [
     "thread_profiler/thread_profiler",
     "amethyst_animation/profiler",
     "amethyst_assets/profiler",
-    "amethyst_audio/profiler",
+    # "amethyst_audio/profiler",
     "amethyst_config/profiler",
     "amethyst_core/profiler",
     "amethyst_controls/profiler",
@@ -64,11 +65,11 @@ profiler = [
 nightly = [
     "amethyst_animation/nightly",
     "amethyst_assets/nightly",
-    "amethyst_audio/nightly",
+    # "amethyst_audio/nightly",
     "amethyst_config/nightly",
     "amethyst_core/nightly",
     "amethyst_controls/nightly",
-    "amethyst_network/nightly",
+    # "amethyst_network/nightly",
     "amethyst_rendy/nightly",
     "amethyst_input/nightly",
     "amethyst_ui/nightly",
@@ -106,14 +107,14 @@ members = [
 [dependencies]
 amethyst_animation = { path = "amethyst_animation", version = "0.7.0", optional = true }
 amethyst_assets = { path = "amethyst_assets", version = "0.8.0" }
-amethyst_audio = { path = "amethyst_audio", version = "0.7.0", optional = true }
+# amethyst_audio = { path = "amethyst_audio", version = "0.7.0", optional = true }
 amethyst_config = { path = "amethyst_config", version = "0.11.0" }
 amethyst_core = { path = "amethyst_core", version = "0.7.0" }
 amethyst_error = { path = "amethyst_error", version = "0.2.0" }
 amethyst_controls = { path = "amethyst_controls", version = "0.6.0" }
 amethyst_derive = { path = "amethyst_derive", version = "0.5.0" }
 amethyst_gltf = { path = "amethyst_gltf", version = "0.7.0", optional = true }
-amethyst_network = { path = "amethyst_network", version = "0.5.0", optional = true }
+# amethyst_network = { path = "amethyst_network", version = "0.5.0", optional = true }
 amethyst_locale = { path = "amethyst_locale", version = "0.6.0", optional = true }
 amethyst_rendy = { path = "amethyst_rendy", version = "0.2.0", features = ["window"], optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.8.0" }
@@ -127,7 +128,7 @@ log = { version = "0.4.6", features = ["serde"] }
 rayon = "1.1.0"
 rustc_version_runtime = "0.1"
 sentry = { version = "0.15.4", optional = true }
-winit = { version = "0.19", features = ["serde", "icon_loading"] }
+winit = { version = "0.20.0-alpha2", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
 
@@ -140,8 +141,13 @@ genmesh = "0.6"
 ron = "0.5"
 specs-derive = "0.4"
 
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+console_log = "0.1"
+console_error_panic_hook = "0.1"
+wasm-bindgen = "0.2"
+
 [build-dependencies]
-dirs = "1.0.5"
+dirs = "2.0"
 vergen = "3.0"
 
 [[example]]
@@ -313,3 +319,17 @@ required-features = ["animation", "gltf"]
 
 [package.metadata.docs.rs]
 features = ["animation", "audio", "gltf", "json", "locale", "network", "sdl_controller", "vulkan"]
+
+[profile.release]
+lto = true
+
+[patch.crates-io]
+gfx-backend-dx12 = { git = "https://github.com/omni-viral/gfx", rev = "8a81717ce157e659bda04d740c1eaabee0d3a66e" }
+gfx-backend-empty = { git = "https://github.com/omni-viral/gfx", rev = "8a81717ce157e659bda04d740c1eaabee0d3a66e" }
+gfx-backend-gl = { git = "https://github.com/omni-viral/gfx", rev = "8a81717ce157e659bda04d740c1eaabee0d3a66e" }
+gfx-backend-metal = { git = "https://github.com/omni-viral/gfx", rev = "8a81717ce157e659bda04d740c1eaabee0d3a66e" }
+gfx-backend-vulkan = { git = "https://github.com/omni-viral/gfx", rev = "8a81717ce157e659bda04d740c1eaabee0d3a66e" }
+gfx-hal = { git = "https://github.com/omni-viral/gfx", rev = "8a81717ce157e659bda04d740c1eaabee0d3a66e" }
+winit = { git = "https://github.com/omni-viral/winit", rev = "e9b72797e0d57d64cabd5a92d0ec310fda3817e8" }
+spirv_cross = { git = "https://github.com/omni-viral/spirv_cross", rev = "b27d886dad4dd9f00c0f7e8434ecfc7620b702be" }
+rendy = { git = "https://github.com/omni-viral/rendy", rev = "d15cc1bf360cf0ef9962972a8c829e81e196fc39" }

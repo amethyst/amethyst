@@ -476,7 +476,7 @@ impl TargetImage {
 }
 
 /// Set of options required to create an image node in render graph.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct ImageOptions {
     /// Image kind and size
     pub kind: hal::image::Kind,
@@ -494,7 +494,7 @@ pub enum OutputColor<B: Backend> {
     /// Render to image with specified options
     Image(ImageOptions),
     /// Render directly to a window surface.
-    Surface(Surface<B>, Option<hal::command::ClearValue>),
+    Surface(Surface<B>, hal::window::Extent2D, Option<hal::command::ClearValue>),
 }
 
 /// Definition for set of outputs for a given render target.
@@ -537,7 +537,7 @@ impl<B: Backend> TargetPlan<B> {
 
                 for color in colors {
                     match color {
-                        OutputColor::Surface(surface, _) => {
+                        OutputColor::Surface(surface, _, _) => {
                             if let Some(extent) = surface.extent(physical_device) {
                                 framebuffer_width = min(framebuffer_width, extent.width);
                                 framebuffer_height = min(framebuffer_height, extent.height);
@@ -630,9 +630,9 @@ impl<B: Backend> TargetPlan<B> {
 
         for (i, color) in outputs.colors.drain(..).enumerate() {
             match color {
-                OutputColor::Surface(surface, clear) => {
+                OutputColor::Surface(surface, extent, clear) => {
                     subpass.add_color_surface();
-                    pass.add_surface(surface, clear);
+                    pass.add_surface(surface, extent, clear);
                 }
                 OutputColor::Image(opts) => {
                     let node = ctx.create_image(opts);
@@ -875,9 +875,9 @@ mod tests {
     #[test]
     #[ignore] // CI can't run tests requiring actual backend
     fn main_pass_surface_plan() {
-        use winit::{EventsLoop, WindowBuilder};
+        use winit::{EventLoop, WindowBuilder};
 
-        let ev_loop = EventsLoop::new();
+        let ev_loop = EventLoop::new();
         let mut window_builder = WindowBuilder::new();
         window_builder.window.visible = false;
         let window = window_builder.build(&ev_loop).unwrap();

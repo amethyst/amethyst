@@ -48,7 +48,12 @@ use amethyst::{
         fps_counter::FpsCounterBundle,
         tag::TagFinder,
     },
+    window::DisplayConfig,
 };
+
+#[cfg(target_arch = "wasm32")]
+pub use wasm_bindgen::prelude::*;
+
 use std::path::Path;
 
 use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
@@ -340,15 +345,15 @@ impl SimpleState for Example {
         profile_scope!("example handle_event");
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
-            if is_key_down(&event, winit::VirtualKeyCode::LShift) {
+            if is_key_down(&event, winit::event::VirtualKeyCode::LShift) {
                 self.bullet_time = true;
-            } else if is_key_up(&event, winit::VirtualKeyCode::LShift) {
+            } else if is_key_up(&event, winit::event::VirtualKeyCode::LShift) {
                 self.bullet_time = false;
             }
 
-            if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
+            if is_close_requested(&event) || is_key_down(&event, winit::event::VirtualKeyCode::Escape) {
                 Trans::Quit
-            } else if is_key_down(&event, winit::VirtualKeyCode::Space) {
+            } else if is_key_down(&event, winit::event::VirtualKeyCode::Space) {
                 toggle_or_cycle_animation(
                     self.entity,
                     &mut world.write_resource(),
@@ -356,7 +361,7 @@ impl SimpleState for Example {
                     &mut world.write_storage(),
                 );
                 Trans::None
-            } else if is_key_down(&event, winit::VirtualKeyCode::E) {
+            } else if is_key_down(&event, winit::event::VirtualKeyCode::E) {
                 let mut mode = world.write_resource::<RenderMode>();
                 *mode = match *mode {
                     RenderMode::Flat => RenderMode::Shaded,
@@ -400,7 +405,7 @@ impl SimpleState for Example {
 
                 Some(Completion::Failed) => {
                     println!("Error: {:?}", self.progress.as_ref().unwrap().errors());
-                    return Trans::Quit;
+                    return Trans::None;
                 }
             };
             if remove {
@@ -544,11 +549,22 @@ fn toggle_or_cycle_animation(
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn wasm_main() {
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    console_log::init_with_level(log::Level::Debug).unwrap();
+    main().unwrap();
+}
+
 fn main() -> amethyst::Result<()> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
-        stdout: amethyst::StdoutLog::Off,
+        stdout: amethyst::StdoutLog::Colored,
         log_file: Some("rendy_example.log".into()),
-        level_filter: log::LevelFilter::Error,
+        // log_file: None,
+        level_filter: log::LevelFilter::Info,
         ..Default::default()
     })
     // .level_for("amethyst_utils::fps_counter", log::LevelFilter::Debug)
@@ -558,38 +574,40 @@ fn main() -> amethyst::Result<()> {
     // .level_for("rendy_graph", log::LevelFilter::Trace)
     // .level_for("rendy_node", log::LevelFilter::Trace)
     // .level_for("amethyst_rendy", log::LevelFilter::Trace)
-    // .level_for("gfx_backend_metal", log::LevelFilter::Trace)
+    // .level_for("gfx_backend_gl", log::LevelFilter::Trace)
     .start();
+    }
 
+
+    let display_config = DisplayConfig::default();
+
+    #[cfg(not(target_arch = "wasm32"))]
     let app_root = application_root_dir()?;
-
-    let display_config_path = app_root
-        .join("examples")
-        .join("rendy")
-        .join("config")
-        .join("display.ron");
+    #[cfg(not(target_arch = "wasm32"))]
     let assets_directory = app_root.join("examples").join("assets");
+    #[cfg(target_arch = "wasm32")]
+    let assets_directory = "";
 
     let mut bindings = Bindings::new();
     bindings.insert_axis(
         "vertical",
         Axis::Emulated {
-            pos: Button::Key(winit::VirtualKeyCode::S),
-            neg: Button::Key(winit::VirtualKeyCode::W),
+            pos: Button::Key(winit::event::VirtualKeyCode::S),
+            neg: Button::Key(winit::event::VirtualKeyCode::W),
         },
     )?;
     bindings.insert_axis(
         "horizontal",
         Axis::Emulated {
-            pos: Button::Key(winit::VirtualKeyCode::D),
-            neg: Button::Key(winit::VirtualKeyCode::A),
+            pos: Button::Key(winit::event::VirtualKeyCode::D),
+            neg: Button::Key(winit::event::VirtualKeyCode::A),
         },
     )?;
     bindings.insert_axis(
         "horizontal",
         Axis::Emulated {
-            pos: Button::Key(winit::VirtualKeyCode::D),
-            neg: Button::Key(winit::VirtualKeyCode::A),
+            pos: Button::Key(winit::event::VirtualKeyCode::D),
+            neg: Button::Key(winit::event::VirtualKeyCode::A),
         },
     )?;
 
@@ -643,10 +661,10 @@ fn main() -> amethyst::Result<()> {
         ]))?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderToWindow::from_config(display_config))
                 .with_plugin(RenderSwitchable3D::default())
-                .with_plugin(RenderFlat2D::default())
-                .with_plugin(RenderDebugLines::default())
+                // .with_plugin(RenderFlat2D::default())
+                // .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::with_colors(
                     Srgb::new(0.82, 0.51, 0.50),
                     Srgb::new(0.18, 0.11, 0.85),

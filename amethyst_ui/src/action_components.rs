@@ -1,4 +1,4 @@
-use amethyst_audio::SourceHandle;
+// use amethyst_audio::SourceHandle;
 use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
 use amethyst_rendy::TextureHandle;
 
@@ -33,33 +33,33 @@ impl Component for OnUiActionImage {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// When this component is added to a UI element
-/// it will play sounds based on mouse interaction.
-/// Requires `MouseReactive`.
-pub struct OnUiActionSound {
-    /// Sound made when this button is hovered over
-    pub(crate) hover_sound: Option<SourceHandle>,
-    /// Sound made when this button is pressed.
-    pub(crate) press_sound: Option<SourceHandle>,
-    /// Sound made when this button is released.
-    pub(crate) release_sound: Option<SourceHandle>,
-}
+// /// When this component is added to a UI element
+// /// it will play sounds based on mouse interaction.
+// /// Requires `MouseReactive`.
+// pub struct OnUiActionSound {
+//     /// Sound made when this button is hovered over
+//     pub(crate) hover_sound: Option<SourceHandle>,
+//     /// Sound made when this button is pressed.
+//     pub(crate) press_sound: Option<SourceHandle>,
+//     /// Sound made when this button is released.
+//     pub(crate) release_sound: Option<SourceHandle>,
+// }
 
-impl OnUiActionSound {
-    /// A constructor for this component
-    pub fn new(
-        hover_sound: Option<SourceHandle>,
-        press_sound: Option<SourceHandle>,
-        release_sound: Option<SourceHandle>,
-    ) -> Self {
-        Self {
-            hover_sound,
-            press_sound,
-            release_sound,
-        }
-    }
-}
+// impl OnUiActionSound {
+//     /// A constructor for this component
+//     pub fn new(
+//         hover_sound: Option<SourceHandle>,
+//         press_sound: Option<SourceHandle>,
+//         release_sound: Option<SourceHandle>,
+//     ) -> Self {
+//         Self {
+//             hover_sound,
+//             press_sound,
+//             release_sound,
+//         }
+//     }
+// }
 
-impl Component for OnUiActionSound {
-    type Storage = DenseVecStorage<Self>;
-}
+// impl Component for OnUiActionSound {
+//     type Storage = DenseVecStorage<Self>;
+// }

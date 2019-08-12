@@ -4,7 +4,7 @@ pub use self::{
     retrigger::{UiButtonActionRetrigger, UiButtonActionRetriggerSystem},
     system::UiButtonSystem,
 };
-use crate::{define_widget, Interactable, UiSoundRetrigger, UiText, UiTransform};
+use crate::{define_widget, Interactable, /*UiSoundRetrigger,*/ UiText, UiTransform};
 use amethyst_assets::Handle;
 use amethyst_core::Parent;
 use amethyst_rendy::Texture;
@@ -25,6 +25,6 @@ define_widget!(UiButton =>
 
         (maybe_has Parent as parent on image_entity),
         (maybe_has UiButtonActionRetrigger as action_retrigger on image_entity),
-        (maybe_has UiSoundRetrigger as sound_retrigger on image_entity)
+        // (maybe_has UiSoundRetrigger as sound_retrigger on image_entity)
     ]
 );

@@ -2,9 +2,9 @@ use std::path::PathBuf;
 
 use log::error;
 use serde::{Deserialize, Serialize};
-use winit::{Icon, WindowAttributes, WindowBuilder};
+use winit::{event_loop::EventLoop, window::{Icon, WindowAttributes, WindowBuilder}};
 
-use crate::monitor::{MonitorIdent, MonitorsAccess};
+use crate::monitor::MonitorIdent;
 
 /// Configuration for a window display.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -122,11 +122,11 @@ impl DisplayConfig {
     /// Creates a `winit::WindowBuilder` using the values set in the `DisplayConfig`.
     ///
     /// The `MonitorsAccess` is needed to configure a fullscreen window.
-    pub fn into_window_builder(self, monitors: &impl MonitorsAccess) -> WindowBuilder {
+    pub fn into_window_builder<T: 'static>(self, event_loop: &EventLoop<T>) -> WindowBuilder {
         let attrs = WindowAttributes {
-            dimensions: self.dimensions.map(Into::into),
-            max_dimensions: self.max_dimensions.map(Into::into),
-            min_dimensions: self.min_dimensions.map(Into::into),
+            inner_size: self.dimensions.map(Into::into),
+            min_inner_size: self.max_dimensions.map(Into::into),
+            max_inner_size: self.min_dimensions.map(Into::into),
             title: self.title,
             maximized: self.maximized,
             visible: self.visibility,
@@ -134,9 +134,9 @@ impl DisplayConfig {
             decorations: self.decorations,
             always_on_top: self.always_on_top,
             window_icon: None,
-            fullscreen: self.fullscreen.map(|ident| ident.monitor_id(monitors)),
+            fullscreen: self.fullscreen.map(|ident| ident.monitor(event_loop)),
             resizable: self.resizable,
-            multitouch: self.multitouch,
+            // multitouch: self.multitouch,
         };
 
         let mut builder = WindowBuilder::new();
@@ -144,21 +144,21 @@ impl DisplayConfig {
 
         if self.loaded_icon.is_some() {
             builder = builder.with_window_icon(self.loaded_icon);
-        } else if let Some(icon) = self.icon {
-            let icon = match Icon::from_path(&icon) {
-                Ok(x) => Some(x),
-                Err(e) => {
-                    error!(
-                        "Failed to load window icon from `{}`: {}",
-                        icon.display(),
-                        e
-                    );
+        // } else if let Some(icon) = self.icon {
+        //     let icon = match Icon::from_path(&icon) {
+        //         Ok(x) => Some(x),
+        //         Err(e) => {
+        //             error!(
+        //                 "Failed to load window icon from `{}`: {}",
+        //                 icon.display(),
+        //                 e
+        //             );
 
-                    None
-                }
-            };
+        //             None
+        //         }
+        //     };
 
-            builder = builder.with_window_icon(icon);
+        //     builder = builder.with_window_icon(icon);
         }
 
         builder

@@ -17,7 +17,9 @@ use rendy::{
         GraphContext, NodeBuffer, NodeImage,
     },
     hal::{self, device::Device, pso},
-    mesh::AsVertex,
+    memory::Data,
+    mesh::{AsVertex, VertexFormat},
+    resource::{Buffer, Escape, BufferInfo},
     shader::Shader,
 };
 
@@ -79,6 +81,10 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
             framebuffer_height: framebuffer_height as f32,
             lines: Vec::new(),
             change: Default::default(),
+            dummy: factory.create_buffer(BufferInfo {
+                size: 4,
+                usage: hal::buffer::Usage::VERTEX,
+            }, Data)?
         }))
     }
 }
@@ -95,6 +101,7 @@ pub struct DrawDebugLines<B: Backend> {
     framebuffer_height: f32,
     lines: Vec<DebugLine>,
     change: util::ChangeDetection,
+    dummy: Escape<Buffer<B>>,
 }
 
 impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
@@ -174,6 +181,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         self.env.bind(index, layout, 0, &mut encoder);
         self.args.bind(index, layout, 1, &mut encoder);
         self.vertex.bind(index, 0, 0, &mut encoder);
+        unsafe { encoder.bind_vertex_buffers(1, Some((self.dummy.raw(), 0))); }
         unsafe {
             encoder.draw(0..4, 0..self.lines.len() as u32);
         }
@@ -208,7 +216,7 @@ fn build_lines_pipeline<B: Backend>(
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(DebugLine::vertex(), pso::VertexInputRate::Instance(1))])
+                .with_vertex_desc(&[(DebugLine::vertex(), pso::VertexInputRate::Instance(1)), (VertexFormat::with_stride(((hal::format::Format::R32Sfloat, "_"),), 0), pso::VertexInputRate::Vertex)])
                 .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
@@ -217,11 +225,11 @@ fn build_lines_pipeline<B: Backend>(
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
-                .with_blend_targets(vec![pso::ColorBlendDesc(
-                    pso::ColorMask::ALL,
-                    pso::BlendState::ALPHA,
-                )])
-                .with_depth_test(pso::DepthTest::On {
+                .with_blend_targets(vec![pso::ColorBlendDesc {
+                    mask: pso::ColorMask::ALL,
+                    blend: Some(pso::BlendState::ALPHA),
+                }])
+                .with_depth_test(pso::DepthTest {
                     fun: pso::Comparison::LessEqual,
                     write: true,
                 }),

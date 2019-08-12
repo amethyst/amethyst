@@ -29,7 +29,7 @@ gfx = "0.17"
 hibitset = { version = "0.5.1", features = ["parallel"] }
 itertools = "0.7"
 log = "0.4.6"
-mikktspace = { version = "0.1" }
+mikktspace = { version = "0.1", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 
 thread_profiler = { version = "0.3", optional = true }

@@ -4,7 +4,8 @@ use crate::{
     BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem,
     SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
     ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
-    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
+    // UiSoundRetriggerSystem, UiSoundSystem,
+    UiTransformSystem, WidgetId,
 };
 use amethyst_assets::Processor;
 use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
@@ -92,12 +93,12 @@ where
             "ui_button_action_retrigger_system",
             &["ui_button_system"],
         );
-        builder.add(UiSoundSystem::new(), "ui_sound_system", &[]);
-        builder.add(
-            UiSoundRetriggerSystem::new(),
-            "ui_sound_retrigger_system",
-            &["ui_sound_system"],
-        );
+        // builder.add(UiSoundSystem::new(), "ui_sound_system", &[]);
+        // builder.add(
+        //     UiSoundRetriggerSystem::new(),
+        //     "ui_sound_retrigger_system",
+        //     &["ui_sound_system"],
+        // );
 
         // Required for text editing. You want the cursor image to blink.
         builder.add(BlinkSystem, "blink_system", &[]);

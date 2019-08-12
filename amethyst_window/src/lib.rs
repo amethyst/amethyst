@@ -21,8 +21,8 @@ pub use crate::bundle::{SCREEN_HEIGHT, SCREEN_WIDTH};
 pub use crate::{
     bundle::WindowBundle,
     config::DisplayConfig,
-    monitor::{MonitorIdent, MonitorsAccess},
+    monitor::MonitorIdent,
     resources::ScreenDimensions,
-    system::{EventsLoopSystem, WindowSystem},
+    system::WindowSystem,
 };
-pub use winit::{Icon, Window};
+pub use winit::window::{Icon, Window};

@@ -13,6 +13,7 @@ layout(location = 3) in vec2 u_offset;
 layout(location = 4) in vec2 v_offset;
 layout(location = 5) in float depth;
 layout(location = 6) in vec4 color;
+layout(location = 7) in float dummy;
 
 layout(location = 0) out VertexData {
     vec2 tex_uv;

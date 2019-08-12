@@ -29,12 +29,13 @@ palette = { version = "0.4", features = ["serde"] }
 rendy = { version = "^0.3.2", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1"] }
 ron = "0.5"
 serde = { version = "1", features = ["serde_derive"] }
-shred = { version = "0.7"  }
+shred = { version = "0.7", default-features = false }
 shred-derive = { version = "0.5" }
 fnv = "1"
 derivative = "1.0"
 smallvec = "0.6.9"
 static_assertions = "0.3"
+winit = "0.20.0-alpha2"
 
 thread_profiler = { version = "0.3", optional = true }
 approx = "0.3.2"
@@ -43,13 +44,13 @@ approx = "0.3.2"
 rayon = "1.1.0"
 more-asserts = "0.2.1"
 criterion = "0.2.11"
-winit = "0.19"
 approx = "0.3"
 
 [features]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
 empty = ["rendy/empty"]
+gl = ["rendy/gl"]
 profiler = [ "thread_profiler/thread_profiler", "rendy/profiler" ]
 nightly = [ "amethyst_core/nightly", "shred/nightly" ]
 no-slow-safety-checks = ["rendy/no-slow-safety-checks"]

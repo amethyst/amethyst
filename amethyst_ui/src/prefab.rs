@@ -10,7 +10,7 @@ use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem,
     Progress, ProgressCounter,
 };
-use amethyst_audio::Source as Audio;
+// use amethyst_audio::Source as Audio;
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
     HiddenPropagate,
@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     get_default_font, Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, TextEditing,
     UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiImage,
-    UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
+    /*UiPlaySoundAction, UiSoundRetrigger,*/ UiText, UiTransform, WidgetId, Widgets,
 };
 
 /// Loadable `UiTransform` data.
@@ -440,12 +440,12 @@ pub struct UiButtonBuilder<W: WidgetId = u32> {
     pub press_image: Option<UiImageLoadPrefab>,
     /// Text color used when this button is pressed
     pub press_text_color: Option<[f32; 4]>,
-    /// Sound made when this button is hovered over
-    pub hover_sound: Option<AssetPrefab<Audio>>,
-    /// Sound made when this button is pressed.
-    pub press_sound: Option<AssetPrefab<Audio>>,
-    /// Sound made when this button is released.
-    pub release_sound: Option<AssetPrefab<Audio>>,
+    // /// Sound made when this button is hovered over
+    // pub hover_sound: Option<AssetPrefab<Audio>>,
+    // /// Sound made when this button is pressed.
+    // pub press_sound: Option<AssetPrefab<Audio>>,
+    // /// Sound made when this button is released.
+    // pub release_sound: Option<AssetPrefab<Audio>>,
 }
 
 impl<W: WidgetId + Debug> Debug for UiButtonBuilder<W> {
@@ -468,9 +468,9 @@ impl<W: WidgetId + Debug> Debug for UiButtonBuilder<W> {
             .field("hover_image", &self.hover_image)
             .field("press_image", &self.press_image)
             .field("press_text_color", &self.press_text_color)
-            .field("hover_sound", &self.hover_sound)
-            .field("press_sound", &self.press_sound)
-            .field("release_sound", &self.release_sound)
+            // .field("hover_sound", &self.hover_sound)
+            // .field("press_sound", &self.press_sound)
+            // .field("release_sound", &self.release_sound)
             .finish()
     }
 }
@@ -480,11 +480,11 @@ where
     W: WidgetId,
 {
     type SystemData = (
-        WriteStorage<'a, UiSoundRetrigger>,
+        // WriteStorage<'a, UiSoundRetrigger>,
         WriteStorage<'a, UiButtonActionRetrigger>,
         Write<'a, Widgets<UiButton, W>>,
         <UiImageLoadPrefab as PrefabData<'a>>::SystemData,
-        <AssetPrefab<Audio> as PrefabData<'a>>::SystemData,
+        // <AssetPrefab<Audio> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
 
@@ -496,11 +496,11 @@ where
         children: &[Entity],
     ) -> Result<(), Error> {
         let (
-            ref mut sound_retrigger,
+            // ref mut sound_retrigger,
             ref mut button_action_retrigger,
             ref mut widgets,
             ref mut images,
-            ref mut sounds,
+            // ref mut sounds,
         ) = system_data;
 
         let text_entity = children.get(0).expect("Invalid: Should have text child");
@@ -521,15 +521,15 @@ where
             .press_image
             .add_to_entity(entity, images, entity_set, children)?;
 
-        let hover_sound = self
-            .hover_sound
-            .add_to_entity(entity, sounds, entity_set, children)?;
-        let press_sound = self
-            .press_sound
-            .add_to_entity(entity, sounds, entity_set, children)?;
-        let release_sound = self
-            .release_sound
-            .add_to_entity(entity, sounds, entity_set, children)?;
+        // let hover_sound = self
+        //     .hover_sound
+        //     .add_to_entity(entity, sounds, entity_set, children)?;
+        // let press_sound = self
+        //     .press_sound
+        //     .add_to_entity(entity, sounds, entity_set, children)?;
+        // let release_sound = self
+        //     .release_sound
+        //     .add_to_entity(entity, sounds, entity_set, children)?;
 
         let mut on_click_start = Vec::new();
         let mut on_click_stop = Vec::new();
@@ -599,16 +599,16 @@ where
             button_action_retrigger.insert(entity, retrigger)?;
         }
 
-        if hover_sound.is_some() || press_sound.is_some() || release_sound.is_some() {
-            let retrigger = UiSoundRetrigger {
-                on_click_start: press_sound.map(UiPlaySoundAction),
-                on_click_stop: release_sound.map(UiPlaySoundAction),
-                on_hover_start: hover_sound.map(UiPlaySoundAction),
-                on_hover_stop: None,
-            };
+        // if hover_sound.is_some() || press_sound.is_some() || release_sound.is_some() {
+        //     let retrigger = UiSoundRetrigger {
+        //         on_click_start: press_sound.map(UiPlaySoundAction),
+        //         on_click_stop: release_sound.map(UiPlaySoundAction),
+        //         on_hover_start: hover_sound.map(UiPlaySoundAction),
+        //         on_hover_stop: None,
+        //     };
 
-            sound_retrigger.insert(entity, retrigger)?;
-        }
+        //     sound_retrigger.insert(entity, retrigger)?;
+        // }
 
         Ok(())
     }
@@ -618,13 +618,14 @@ where
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let (_, _, _, ref mut images, ref mut sounds) = system_data;
+        let (/*_,*/ _, _, ref mut images/*, ref mut sounds*/) = system_data;
         self.normal_image.load_sub_assets(progress, images)?;
         self.hover_image.load_sub_assets(progress, images)?;
         self.press_image.load_sub_assets(progress, images)?;
-        self.press_sound.load_sub_assets(progress, sounds)?;
-        self.hover_sound.load_sub_assets(progress, sounds)?;
-        self.release_sound.load_sub_assets(progress, sounds)
+        // self.press_sound.load_sub_assets(progress, sounds)?;
+        // self.hover_sound.load_sub_assets(progress, sounds)?;
+        // self.release_sound.load_sub_assets(progress, sounds)
+        Ok(true)
     }
 }
 

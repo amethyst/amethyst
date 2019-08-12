@@ -6,7 +6,7 @@ use amethyst_core::{
     shrev::{EventChannel, ReaderId},
 };
 use amethyst_window::ScreenDimensions;
-use winit::Event;
+use winit::event::Event;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -17,7 +17,7 @@ use thread_profiler::profile_scope;
 /// and push the results in `EventHandler<InputEvent>`.
 #[derive(Debug)]
 pub struct InputSystem<T: BindingTypes> {
-    reader: Option<ReaderId<Event>>,
+    reader: Option<ReaderId<Event<()>>>,
     bindings: Option<Bindings<T>>,
 }
 
@@ -31,7 +31,7 @@ impl<T: BindingTypes> InputSystem<T> {
     }
 
     fn process_event(
-        event: &Event,
+        event: &Event<()>,
         handler: &mut InputHandler<T>,
         output: &mut EventChannel<InputEvent<T>>,
         hidpi: f32,
@@ -42,7 +42,7 @@ impl<T: BindingTypes> InputSystem<T> {
 
 impl<'a, T: BindingTypes> System<'a> for InputSystem<T> {
     type SystemData = (
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         Write<'a, InputHandler<T>>,
         Write<'a, EventChannel<InputEvent<T>>>,
         ReadExpect<'a, ScreenDimensions>,
@@ -71,7 +71,7 @@ impl<'a, T: BindingTypes> System<'a> for InputSystem<T> {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        self.reader = Some(res.fetch_mut::<EventChannel<Event<()>>>().register_reader());
         if let Some(ref bindings) = self.bindings {
             res.fetch_mut::<InputHandler<T>>().bindings = bindings.clone();
         }

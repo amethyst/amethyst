@@ -1,10 +1,12 @@
 # This Makefile is meant for shader compilation only.
 # Use cargo to compile the rust part of the project.
 
-GLSLC = $(shell ./find_glslc.sh)
-ifeq "$(GLSLC)" ""
-	break;
-endif
+# GLSLC = $(shell ./find_glslc.sh)
+# ifeq "$(GLSLC)" ""
+# 	break;
+# endif
+
+GLSLC = ./glslc
 
 FLAGS = -c -g
 
@@ -19,7 +21,7 @@ all: $(COMP_SHADERS) $(COMP_DISASMS) $(COMP_SHADERS_UI) $(COMP_DISASMS_UI)
 
 amethyst_rendy/compiled/%.spv: amethyst_rendy/shaders/%
 	mkdir -p $(dir $@)
-	$(GLSLC) -MD -c -O -o $@ $<
+	$(GLSLC) -MD -c -g -O -o $@ $<
 
 amethyst_rendy/compiled/%.spvasm: amethyst_rendy/shaders/%
 	mkdir -p $(dir $@)
@@ -27,7 +29,7 @@ amethyst_rendy/compiled/%.spvasm: amethyst_rendy/shaders/%
 
 amethyst_ui/compiled/%.spv: amethyst_ui/shaders/%
 	mkdir -p $(dir $@)
-	$(GLSLC) -MD -c -O -o $@ $<
+	$(GLSLC) -MD -c -g -O -o $@ $<
 
 amethyst_ui/compiled/%.spvasm: amethyst_ui/shaders/%
 	mkdir -p $(dir $@)

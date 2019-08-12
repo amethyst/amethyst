@@ -13,7 +13,7 @@ impl Component for Hidden {
 }
 
 /// Like [Hidden](struct.Hidden.html), but can propagate through children when the [HideHierarchySystem](struct.HideHierarchySystem.html)
-/// is enabled in the [RenderBundle](struct.RenderBundle.html).
+/// is enabled in the [RenderingBundle](struct.RenderingBundle.html).
 #[derive(Clone, Debug, Default)]
 pub struct HiddenPropagate;
 

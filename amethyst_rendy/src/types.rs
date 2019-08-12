@@ -116,6 +116,7 @@ impl_backends!(
     Metal, "metal", rendy::metal::Backend;
     Vulkan, "vulkan", rendy::vulkan::Backend;
     Empty, "empty", rendy::empty::Backend;
+    Gl, "gl", rendy::gl::Backend;
 );
 
 impl Asset for Mesh {

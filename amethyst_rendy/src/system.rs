@@ -11,7 +11,7 @@ use crate::{
     types::{Backend, Mesh, Texture},
     visibility::Visibility,
 };
-use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
+use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState/*, ThreadPool*/};
 use amethyst_core::{
     components::Transform,
     ecs::{
@@ -51,7 +51,6 @@ where
     G: GraphCreator<B>,
 {
     graph: Option<Graph<B, Resources>>,
-    families: Option<Families<B>>,
     graph_creator: G,
 }
 
@@ -64,7 +63,6 @@ where
     pub fn new(graph_creator: G) -> Self {
         Self {
             graph: None,
-            families: None,
             graph_creator,
         }
     }
@@ -98,6 +96,7 @@ where
         profile_scope!("rebuild_graph");
 
         let mut factory = res.fetch_mut::<Factory<B>>();
+        let mut families = res.fetch_mut::<Families<B>>();
 
         if let Some(graph) = self.graph.take() {
             #[cfg(feature = "profiler")]
@@ -115,7 +114,7 @@ where
             #[cfg(feature = "profiler")]
             profile_scope!("build_graph");
             builder
-                .build(&mut factory, self.families.as_mut().unwrap(), res)
+                .build(&mut factory, &mut families, res)
                 .unwrap()
         };
 
@@ -124,11 +123,12 @@ where
 
     fn run_graph(&mut self, res: &Resources) {
         let mut factory = res.fetch_mut::<Factory<B>>();
-        factory.maintain(self.families.as_mut().unwrap());
+        let mut families = res.fetch_mut::<Families<B>>();
+        factory.maintain(&mut families);
         self.graph
             .as_mut()
             .unwrap()
-            .run(&mut factory, self.families.as_mut().unwrap(), res)
+            .run(&mut factory, &mut families, res)
     }
 }
 
@@ -147,15 +147,14 @@ where
 
     fn setup(&mut self, res: &mut Resources) {
         let config: rendy::factory::Config = Default::default();
-        let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
+        let families = res.fetch::<Families<B>>();
 
         let queue_id = QueueId {
             family: families.family_by_index(0).id(),
             index: 0,
         };
 
-        self.families = Some(families);
-        res.insert(factory);
+        drop(families);
         res.insert(queue_id);
 
         SetupData::setup(res);
@@ -180,7 +179,6 @@ where
         }
 
         log::debug!("Drop families");
-        drop(self.families);
     }
 }
 
@@ -193,14 +191,14 @@ impl<'a, B: Backend> System<'a> for MeshProcessor<B> {
         Write<'a, AssetStorage<Mesh>>,
         ReadExpect<'a, QueueId>,
         Read<'a, Time>,
-        ReadExpect<'a, Arc<ThreadPool>>,
+        // ReadExpect<'a, Arc<ThreadPool>>,
         Option<Read<'a, HotReloadStrategy>>,
         ReadExpect<'a, Factory<B>>,
     );
 
     fn run(
         &mut self,
-        (mut mesh_storage, queue_id, time, pool, strategy, factory): Self::SystemData,
+        (mut mesh_storage, queue_id, time, /*pool, */strategy, factory): Self::SystemData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("mesh_processor");
@@ -217,7 +215,7 @@ impl<'a, B: Backend> System<'a> for MeshProcessor<B> {
                     .map_err(|e| e.compat().into())
             },
             time.frame_number(),
-            &**pool,
+            // &**pool,
             strategy.as_ref().map(Deref::deref),
         );
     }
@@ -232,14 +230,14 @@ impl<'a, B: Backend> System<'a> for TextureProcessor<B> {
         Write<'a, AssetStorage<Texture>>,
         ReadExpect<'a, QueueId>,
         Read<'a, Time>,
-        ReadExpect<'a, Arc<ThreadPool>>,
+        // ReadExpect<'a, Arc<ThreadPool>>,
         Option<Read<'a, HotReloadStrategy>>,
         WriteExpect<'a, Factory<B>>,
     );
 
     fn run(
         &mut self,
-        (mut texture_storage, queue_id, time, pool, strategy, mut factory): Self::SystemData,
+        (mut texture_storage, queue_id, time, /*pool, */strategy, mut factory): Self::SystemData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("texture_processor");
@@ -265,7 +263,7 @@ impl<'a, B: Backend> System<'a> for TextureProcessor<B> {
                 .map_err(|e| e.compat().into())
             },
             time.frame_number(),
-            &**pool,
+            // &**pool,
             strategy.as_ref().map(Deref::deref),
         );
     }

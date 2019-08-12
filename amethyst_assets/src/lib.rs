@@ -21,11 +21,16 @@ pub use crate::{
     prefab::{AssetPrefab, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem},
     progress::{Completion, Progress, ProgressCounter, Tracker},
     reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
-    source::{Directory, Source},
+    source::Source,
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
+#[cfg(not(target_arch = "wasm32"))]
+pub use crate::source::Directory;
 
-pub use rayon::ThreadPool;
+// #[cfg(target_arch = "wasm32")]
+pub use crate::source::Inline;
+
+// pub use rayon::ThreadPool;
 
 mod asset;
 mod cache;

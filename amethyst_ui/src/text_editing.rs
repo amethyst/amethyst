@@ -4,7 +4,7 @@ use clipboard::{ClipboardContext, ClipboardProvider};
 use log::error;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
-use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
+use winit::event::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
 
 use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
@@ -20,7 +20,7 @@ use amethyst_core::{
 #[derive(Default, Debug)]
 pub struct TextEditingInputSystem {
     /// A reader for winit events.
-    reader: Option<ReaderId<Event>>,
+    reader: Option<ReaderId<Event<()>>>,
 }
 
 impl TextEditingInputSystem {
@@ -36,7 +36,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, Selected>,
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         Write<'a, EventChannel<UiEvent>>,
     );
 
@@ -336,7 +336,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        self.reader = Some(res.fetch_mut::<EventChannel<Event<()>>>().register_reader());
     }
 }
 

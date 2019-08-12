@@ -13,6 +13,7 @@ layout(location = 0) in vec3 position_a;
 layout(location = 1) in vec4 color_a;
 layout(location = 2) in vec3 position_b;
 layout(location = 3) in vec4 color_b;
+layout(location = 4) in float dummy;
 
 layout(location = 0) out VertexData {
     vec4 color;

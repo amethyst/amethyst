@@ -1,17 +1,21 @@
 use std::fs;
 
+#[cfg(not(target_arch = "wasm32"))]
 use font_kit::handle::Handle as FontKitHandle;
+#[cfg(not(target_arch = "wasm32"))]
+use super::systemfont::default_system_font;
+
 use log::{error, warn};
 
 use amethyst_assets::{AssetStorage, Format, Loader};
 
 use crate::{
-    font::systemfont::default_system_font,
     format::{FontAsset, FontHandle, TtfFormat},
 };
 
 /// Get the system default fonts.
 /// If unable to, gets the local square.ttf font.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> FontHandle {
     let system_font = default_system_font();
 
@@ -59,6 +63,17 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
         ),
     }
 
+    loader.load_from_data(
+        TtfFormat
+            .import_simple(include_bytes!("./square.ttf").to_vec())
+            .expect("Unable to import fallback font './square.ttf'"),
+        (),
+        storage,
+    )
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> FontHandle {
     loader.load_from_data(
         TtfFormat
             .import_simple(include_bytes!("./square.ttf").to_vec())

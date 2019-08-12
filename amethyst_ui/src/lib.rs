@@ -20,7 +20,6 @@ pub use self::{
     event_retrigger::{EventReceiver, EventRetriggerSystem},
     font::{
         default::get_default_font,
-        systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
     },
     format::{FontAsset, FontHandle, TtfFormat},
     glyphs::UiGlyphsSystem,
@@ -35,12 +34,15 @@ pub use self::{
     resize::{ResizeSystem, UiResize},
     selection::{Selectable, Selected, SelectionKeyboardSystem, SelectionMouseSystem},
     selection_order_cache::{CacheSelectionOrderSystem, CachedSelectionOrder},
-    sound::{UiPlaySoundAction, UiSoundRetrigger, UiSoundRetriggerSystem, UiSoundSystem},
+    // sound::{UiPlaySoundAction, UiSoundRetrigger, UiSoundRetriggerSystem, UiSoundSystem},
     text::{LineMode, TextEditing, TextEditingMouseSystem, UiText},
     text_editing::TextEditingInputSystem,
     transform::{UiFinder, UiTransform},
     widgets::{Widget, WidgetId, Widgets},
 };
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use crate::font::systemfont::{default_system_font, get_all_font_handles, list_system_font_families};
 
 pub(crate) use amethyst_core::ecs::prelude::Entity;
 pub(crate) use paste;
@@ -61,7 +63,7 @@ mod prefab;
 mod resize;
 mod selection;
 mod selection_order_cache;
-mod sound;
+// mod sound;
 mod text;
 mod text_editing;
 mod transform;

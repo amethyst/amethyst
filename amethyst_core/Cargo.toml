@@ -27,12 +27,13 @@ log = "0.4.6"
 num-traits = "0.2.0"
 rayon = "1.1.0"
 serde = { version = "1", features = ["derive"] }
-shred = { version = "0.7" }
-specs = { version = "0.14", features = ["common"] }
-specs-hierarchy = { version = "0.3" }
+shred = { version = "0.7", default-features = false }
+specs = { version = "0.14", features = ["common"], default-features = false }
+specs-hierarchy = { version = "0.3", default-features = false }
 shrev = "1.0"
 getset = "0.0.7"
 derive-new = "0.5.6"
+winit = { version = "0.20.0-alpha2" }
 
 thread_profiler = { version = "0.3", optional = true }
 

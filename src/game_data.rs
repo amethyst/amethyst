@@ -1,7 +1,7 @@
 use crate::{
     core::{
         ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
-        ArcThreadPool, SystemBundle,
+        /*ArcThreadPool, */SystemBundle,
     },
     error::Error,
 };
@@ -265,7 +265,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     // {
     //     use crate::{
     //         config::Config,
-    //         renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
+    //         renderer::{DisplayConfig, Pipeline, RenderingBundle, Stage},
     //         ui::DrawUi,
     //     };
     //     let config = DisplayConfig::load(path);
@@ -276,26 +276,20 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     //                 .with_pass(pass)
     //                 .with_pass(DrawUi::new()),
     //         );
-    //         self.with_bundle(RenderBundle::new(pipe, Some(config)))
+    //         self.with_bundle(RenderingBundle::new(pipe, Some(config)))
     //     } else {
     //         let pipe = Pipeline::build().with_stage(
     //             Stage::with_backbuffer()
     //                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
     //                 .with_pass(pass),
     //         );
-    //         self.with_bundle(RenderBundle::new(pipe, Some(config)))
+    //         self.with_bundle(RenderingBundle::new(pipe, Some(config)))
     //     }
     // }
 }
 
 impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> GameData<'a, 'b> {
-        #[cfg(not(no_threading))]
-        let pool = world.read_resource::<ArcThreadPool>().clone();
-
-        #[cfg(not(no_threading))]
-        let mut dispatcher = self.disp_builder.with_pool(pool).build();
-        #[cfg(no_threading)]
         let mut dispatcher = self.disp_builder.build();
         dispatcher.setup(&mut world.res);
         GameData::new(dispatcher)

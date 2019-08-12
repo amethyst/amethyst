@@ -3,6 +3,7 @@ use crate::{
     resources::{HideCursor, WindowFocus},
 };
 use amethyst_core::{
+    WindowRes,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write, WriteStorage},
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
@@ -10,7 +11,7 @@ use amethyst_core::{
     transform::Transform,
 };
 use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
-use winit::{DeviceEvent, Event, Window, WindowEvent};
+use winit::{event::{DeviceEvent, Event, WindowEvent}, window::Window};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -128,7 +129,7 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 pub struct FreeRotationSystem {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    event_reader: Option<ReaderId<Event>>,
+    event_reader: Option<ReaderId<Event<()>>>,
 }
 
 impl FreeRotationSystem {
@@ -144,7 +145,7 @@ impl FreeRotationSystem {
 
 impl<'a> System<'a> for FreeRotationSystem {
     type SystemData = (
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
         Read<'a, WindowFocus>,
@@ -182,14 +183,14 @@ impl<'a> System<'a> for FreeRotationSystem {
         use amethyst_core::ecs::prelude::SystemData;
 
         Self::SystemData::setup(res);
-        self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        self.event_reader = Some(res.fetch_mut::<EventChannel<Event<()>>>().register_reader());
     }
 }
 
 /// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
 #[derive(Debug, Default)]
 pub struct MouseFocusUpdateSystem {
-    event_reader: Option<ReaderId<Event>>,
+    event_reader: Option<ReaderId<Event<()>>>,
 }
 
 impl MouseFocusUpdateSystem {
@@ -200,7 +201,7 @@ impl MouseFocusUpdateSystem {
 }
 
 impl<'a> System<'a> for MouseFocusUpdateSystem {
-    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
+    type SystemData = (Read<'a, EventChannel<Event<()>>>, Write<'a, WindowFocus>);
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
         #[cfg(feature = "profiler")]
@@ -220,7 +221,7 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        self.event_reader = Some(res.fetch_mut::<EventChannel<Event<()>>>().register_reader());
     }
 }
 
@@ -240,7 +241,7 @@ impl CursorHideSystem {
 
 impl<'a> System<'a> for CursorHideSystem {
     type SystemData = (
-        ReadExpect<'a, Window>,
+        ReadExpect<'a, WindowRes>,
         Read<'a, HideCursor>,
         Read<'a, WindowFocus>,
     );
@@ -251,16 +252,16 @@ impl<'a> System<'a> for CursorHideSystem {
 
         let should_be_hidden = focus.is_focused && hide.hide;
         if !self.is_hidden && should_be_hidden {
-            if let Err(err) = win.grab_cursor(true) {
+            if let Err(err) = win.set_cursor_grab(true) {
                 log::error!("Unable to grab the cursor. Error: {:?}", err);
             }
-            win.hide_cursor(true);
+            win.set_cursor_visible(false);
             self.is_hidden = true;
         } else if self.is_hidden && !should_be_hidden {
-            if let Err(err) = win.grab_cursor(false) {
+            if let Err(err) = win.set_cursor_grab(false) {
                 log::error!("Unable to release the cursor. Error: {:?}", err);
             }
-            win.hide_cursor(false);
+            win.set_cursor_visible(true);
             self.is_hidden = false;
         }
     }

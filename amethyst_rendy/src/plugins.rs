@@ -7,7 +7,7 @@ use crate::{
     visibility::VisibilitySortingSystem,
     Backend, Factory,
 };
-use amethyst_core::ecs::{DispatcherBuilder, Resources};
+use amethyst_core::{WindowRes, ecs::{DispatcherBuilder, Resources}};
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
@@ -24,26 +24,29 @@ mod window {
     };
     use amethyst_config::Config;
     use amethyst_core::{
+        EventLoopRes,
         ecs::{ReadExpect, SystemData},
         SystemBundle,
     };
     use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
-    use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
+    use rendy::hal::{command::{ClearColor, ClearDepthStencil, ClearValue}, window::Extent2D};
     use std::path::Path;
 
     /// A [RenderPlugin] for opening a window and displaying a render target to it.
     ///
     /// When you provide [`DisplayConfig`], it opens a window for you using [`WindowBundle`].
-    #[derive(Default, Debug)]
-    pub struct RenderToWindow {
+    #[derive(derivative::Derivative)]
+    #[derivative(Debug, Default)]
+    pub struct RenderToWindow<B> {
         target: Target,
         config: Option<DisplayConfig>,
         dimensions: Option<ScreenDimensions>,
         dirty: bool,
         clear: Option<ClearColor>,
+        marker: std::marker::PhantomData<fn() -> B>,
     }
 
-    impl RenderToWindow {
+    impl<B> RenderToWindow<B> {
         /// Create RenderToWindow plugin with [`WindowBundle`] using specified config path.
         pub fn from_config_path(path: impl AsRef<Path>) -> Self {
             Self::from_config(DisplayConfig::load(path))
@@ -70,15 +73,24 @@ mod window {
         }
     }
 
-    impl<B: Backend> RenderPlugin<B> for RenderToWindow {
+    impl<B: Backend> RenderPlugin<B> for RenderToWindow<B> {
         fn on_build<'a, 'b>(
             &mut self,
             builder: &mut DispatcherBuilder<'a, 'b>,
         ) -> Result<(), Error> {
-            if let Some(config) = self.config.take() {
-                WindowBundle::from_config(config).build(builder)?;
-            }
-
+            let config = self.config.take().unwrap();
+            WindowBundle::from_closure(move |res: &mut Resources| {
+                let elf = res.fetch::<Option<EventLoopRes>>();
+                let el = elf.as_ref().unwrap();
+                let wb = config.into_window_builder(&el);
+                let config: rendy::factory::Config = Default::default();
+                let rendy = rendy::init::WindowedRendy::<B>::init(config, wb, &el).unwrap();
+                drop(elf);
+                res.insert(rendy.factory);
+                res.insert(rendy.families);
+                res.insert(WindowRes::new(rendy.window));
+                res.insert(Some(rendy.surface));
+            }).build(builder)?;
             Ok(())
         }
 
@@ -102,8 +114,7 @@ mod window {
         ) -> Result<(), Error> {
             self.dirty = false;
 
-            let window = <ReadExpect<'_, Window>>::fetch(res);
-            let surface = factory.create_surface(&window);
+            let surface = res.fetch_mut::<Option<rendy::wsi::Surface<B>>>().take().unwrap();
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
@@ -111,7 +122,7 @@ mod window {
                 kind: window_kind,
                 levels: 1,
                 format: Format::D32Sfloat,
-                clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+                clear: Some(ClearValue { depth_stencil: ClearDepthStencil { depth: 1.0, stencil: 0 } }),
             };
 
             plan.add_root(Target::Main);
@@ -120,7 +131,11 @@ mod window {
                 crate::bundle::TargetPlanOutputs {
                     colors: vec![OutputColor::Surface(
                         surface,
-                        self.clear.map(ClearValue::Color),
+                        Extent2D {
+                            width: dimensions.width() as _,
+                            height: dimensions.height() as _,
+                        },
+                        self.clear.map(|color| ClearValue { color }),
                     )],
                     depth: Some(depth_options),
                 },

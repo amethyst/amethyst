@@ -3,7 +3,7 @@
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
-use winit::{ElementState, Event, MouseButton, WindowEvent};
+use winit::event::{ElementState, Event, MouseButton, WindowEvent};
 
 use amethyst_core::{
     ecs::prelude::{
@@ -138,7 +138,7 @@ impl Component for TextEditing {
 #[derive(Debug, Default)]
 pub struct TextEditingMouseSystem {
     /// A reader for winit events.
-    reader: Option<ReaderId<Event>>,
+    reader: Option<ReaderId<Event<()>>>,
     /// This is set to true while the left mouse button is pressed.
     left_mouse_button_pressed: bool,
     /// The screen coordinates of the mouse
@@ -161,7 +161,7 @@ impl<'a> System<'a> for TextEditingMouseSystem {
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, Selected>,
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         ReadExpect<'a, ScreenDimensions>,
         Read<'a, Time>,
     );
@@ -268,7 +268,7 @@ impl<'a> System<'a> for TextEditingMouseSystem {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        self.reader = Some(res.fetch_mut::<EventChannel<Event<()>>>().register_reader());
     }
 }
 

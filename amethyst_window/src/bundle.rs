@@ -1,8 +1,7 @@
-use crate::{DisplayConfig, EventsLoopSystem, WindowSystem};
+use crate::{DisplayConfig, WindowSystem};
 use amethyst_config::Config;
-use amethyst_core::{bundle::SystemBundle, shred::DispatcherBuilder};
+use amethyst_core::{WindowRes, bundle::SystemBundle, shred::DispatcherBuilder, ecs::Resources, EventLoopRes};
 use amethyst_error::Error;
-use winit::EventsLoop;
 
 /// Screen width used in predefined display configuration.
 #[cfg(feature = "test-support")]
@@ -13,15 +12,28 @@ pub const SCREEN_HEIGHT: u32 = 600;
 
 /// Bundle providing easy initializing of the appopriate `Window`, `WindowSystem` `EventLoop` and
 /// `EventLoopSystem` constructs used for creating the rendering window of amethyst with `winit`
-#[derive(Debug)]
 pub struct WindowBundle {
-    config: DisplayConfig,
+    create: Box<dyn FnOnce(&mut Resources) + Send + Sync>,
 }
 
 impl WindowBundle {
+    /// Builds a new window bundle from window creation closure.
+    pub fn from_closure(create: impl FnOnce(&mut Resources) + Send + Sync + 'static) -> Self {
+        WindowBundle { create: Box::new(create) }
+    }
+
     /// Builds a new window bundle from a loaded `DisplayConfig`.
     pub fn from_config(config: DisplayConfig) -> Self {
-        WindowBundle { config }
+        WindowBundle { create: Box::new(move |res| {
+            let elf = res.fetch::<Option<EventLoopRes>>();
+            let el = elf.as_ref().unwrap();
+            let window = config
+                .into_window_builder(&**el)
+                .build(&el)
+                .unwrap();
+            drop(elf);
+            res.insert(WindowRes::new(window));
+        }) }
     }
 
     /// Builds a new window bundle by loading the `DisplayConfig` from `path`.
@@ -49,13 +61,11 @@ impl WindowBundle {
 
 impl<'a, 'b> SystemBundle<'a, 'b> for WindowBundle {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        let event_loop = EventsLoop::new();
         builder.add(
-            WindowSystem::from_config(&event_loop, self.config),
+            WindowSystem::from_closure(self.create),
             "window",
             &[],
         );
-        builder.add_thread_local(EventsLoopSystem::new(event_loop));
         Ok(())
     }
 }

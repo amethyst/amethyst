@@ -23,7 +23,10 @@ use rendy::{
         render::{PrepareResult, RenderGroup, RenderGroupDesc},
         GraphContext, NodeBuffer, NodeImage,
     },
-    hal::{self, device::Device, pso},
+    memory::Data,
+    mesh::VertexFormat,
+    resource::{Escape, Buffer, BufferInfo},
+    hal::{self, device::Device, pso, buffer},
     mesh::AsVertex,
     shader::Shader,
 };
@@ -79,6 +82,10 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
             textures,
             vertex,
             sprites: Default::default(),
+            dummy: factory.create_buffer(BufferInfo {
+                size: 4,
+                usage: hal::buffer::Usage::VERTEX,
+            }, Data)?,
         }))
     }
 }
@@ -92,6 +99,7 @@ pub struct DrawFlat2D<B: Backend> {
     textures: TextureSub<B>,
     vertex: DynamicVertexBuffer<B, SpriteArgs>,
     sprites: OneLevelBatch<TextureId, SpriteArgs>,
+    dummy: Escape<Buffer<B>>,
 }
 
 impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
@@ -197,6 +205,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, 0, &mut encoder);
+        unsafe { encoder.bind_vertex_buffers(1, Some((self.dummy.raw(), 0))); }
         for (&tex, range) in self.sprites.iter() {
             if self.textures.loaded(tex) {
                 self.textures.bind(layout, 1, tex, &mut encoder);
@@ -265,6 +274,10 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
             vertex,
             sprites: Default::default(),
             change: Default::default(),
+            dummy: factory.create_buffer(BufferInfo {
+                size: 4,
+                usage: hal::buffer::Usage::VERTEX,
+            }, Data)?
         }))
     }
 }
@@ -279,6 +292,7 @@ pub struct DrawFlat2DTransparent<B: Backend> {
     vertex: DynamicVertexBuffer<B, SpriteArgs>,
     sprites: OrderedOneLevelBatch<TextureId, SpriteArgs>,
     change: util::ChangeDetection,
+    dummy: Escape<Buffer<B>>,
 }
 
 impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
@@ -372,6 +386,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, 0, &mut encoder);
+        unsafe { encoder.bind_vertex_buffers(1, Some((self.dummy.raw(), 0))); }
         for (&tex, range) in self.sprites.iter() {
             if self.textures.loaded(tex) {
                 self.textures.bind(layout, 1, tex, &mut encoder);
@@ -412,7 +427,7 @@ fn build_sprite_pipeline<B: Backend>(
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(SpriteArgs::vertex(), pso::VertexInputRate::Instance(1))])
+                .with_vertex_desc(&[(SpriteArgs::vertex(), pso::VertexInputRate::Instance(1)), (VertexFormat::with_stride(((hal::format::Format::R32Sfloat, "_"),), 0), pso::VertexInputRate::Vertex)])
                 .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
@@ -421,15 +436,15 @@ fn build_sprite_pipeline<B: Backend>(
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
-                .with_blend_targets(vec![pso::ColorBlendDesc(
-                    pso::ColorMask::ALL,
-                    if transparent {
-                        pso::BlendState::PREMULTIPLIED_ALPHA
+                .with_blend_targets(vec![pso::ColorBlendDesc {
+                    mask: pso::ColorMask::ALL,
+                    blend: if transparent {
+                        Some(pso::BlendState::PREMULTIPLIED_ALPHA)
                     } else {
-                        pso::BlendState::Off
+                        None
                     },
-                )])
-                .with_depth_test(pso::DepthTest::On {
+                }])
+                .with_depth_test(pso::DepthTest {
                     fun: pso::Comparison::Less,
                     write: !transparent,
                 }),

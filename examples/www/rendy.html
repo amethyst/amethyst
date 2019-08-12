@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+    <script src="./spirv_cross_wrapper_glsl.js"></script>
+    <script type="module">
+      import init from './generated/rendy.js';
+      window.addEventListener("load", () => {
+        const module = window.sc_internal_wrapper().then(module => {
+          window.sc_internal = module;
+          init('./generated/rendy_bg.wasm')
+        });
+      });
+    </script>
+  </body>
+</html>

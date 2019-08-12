@@ -2,7 +2,7 @@ use std::{borrow::Borrow, hash::Hash, path::PathBuf, sync::Arc};
 
 use fnv::FnvHashMap;
 use log::debug;
-use rayon::ThreadPool;
+// use rayon::ThreadPool;
 
 use amethyst_error::ResultExt;
 #[cfg(feature = "profiler")]
@@ -11,34 +11,43 @@ use thread_profiler::profile_scope;
 use crate::{
     error::Error,
     storage::{AssetStorage, Handle, Processed},
-    Asset, Directory, Format, FormatValue, Progress, Source,
+    Asset, Format, FormatValue, Progress, Source,
 };
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {
     hot_reload: bool,
-    pool: Arc<ThreadPool>,
+    // pool: Arc<ThreadPool>,
     sources: FnvHashMap<String, Arc<dyn Source>>,
 }
 
 impl Loader {
     /// Creates a new asset loader, initializing the directory store with the
     /// given path.
-    pub fn new<P>(directory: P, pool: Arc<ThreadPool>) -> Self
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn new<P>(directory: P/*, pool: Arc<ThreadPool>*/) -> Self
     where
         P: Into<PathBuf>,
     {
-        Self::with_default_source(Directory::new(directory), pool)
+        Self::with_default_source(crate::Directory::new(directory)/*, pool*/)
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn new<P>(_directory: P/*, pool: Arc<ThreadPool>*/) -> Self
+    where
+        P: Into<PathBuf>,
+    {
+        Self::with_default_source(crate::Inline::new()/*, pool*/)
     }
 
     /// Creates a new asset loader, using the provided source
-    pub fn with_default_source<S>(source: S, pool: Arc<ThreadPool>) -> Self
+    pub fn with_default_source<S>(source: S/*, pool: Arc<ThreadPool>*/) -> Self
     where
         S: Source,
     {
         let mut loader = Loader {
             hot_reload: true,
-            pool,
+            // pool,
             sources: Default::default(),
         };
 
@@ -161,7 +170,7 @@ impl Loader {
             None
         };
 
-        let cl = move || {
+        (move || {
             #[cfg(feature = "profiler")]
             profile_scope!("load_asset_from_worker");
             let data = format
@@ -175,8 +184,8 @@ impl Loader {
                 name,
                 tracker,
             });
-        };
-        self.pool.spawn(cl);
+        })();
+        // self.pool.spawn(cl);
 
         handle_clone
     }
@@ -224,17 +233,17 @@ impl Loader {
         let handle = storage.allocate();
         let processed = storage.processed.clone();
 
-        self.pool.spawn({
+        {
             let handle = handle.clone();
-            move || {
+            (move || {
                 processed.push(Processed::NewAsset {
                     data: Ok(FormatValue::data(data())),
                     handle: handle.clone(),
                     name: "<Data>".into(),
                     tracker,
                 });
-            }
-        });
+            })();
+        }
 
         handle
     }

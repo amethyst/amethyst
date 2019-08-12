@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use rayon::{ThreadPool, ThreadPoolBuilder};
+// use rayon::{ThreadPool, ThreadPoolBuilder};
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
@@ -106,7 +106,7 @@ impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
         Write<'a, AssetStorage<MeshAsset>>,
         Read<'a, Time>,
-        ReadExpect<'a, Arc<ThreadPool>>,
+        // ReadExpect<'a, Arc<ThreadPool>>,
         Option<Read<'a, HotReloadStrategy>>,
         /* texture storage, transforms, .. */
     );

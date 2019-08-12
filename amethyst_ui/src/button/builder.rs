@@ -3,7 +3,7 @@ use shred_derive::SystemData;
 use smallvec::{smallvec, SmallVec};
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
-use amethyst_audio::SourceHandle;
+// use amethyst_audio::SourceHandle;
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
     Parent,
@@ -15,7 +15,7 @@ use crate::{
     Anchor, FontAsset, FontHandle, Interactable, Selectable, Stretch, UiButton, UiButtonAction,
     UiButtonActionRetrigger,
     UiButtonActionType::{self, *},
-    UiImage, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
+    UiImage, /*UiPlaySoundAction, UiSoundRetrigger,*/ UiText, UiTransform, WidgetId, Widgets,
 };
 
 use std::marker::PhantomData;
@@ -41,7 +41,7 @@ pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I:
     text: WriteStorage<'a, UiText>,
     transform: WriteStorage<'a, UiTransform>,
     button_widgets: WriteExpect<'a, Widgets<UiButton, I>>,
-    sound_retrigger: WriteStorage<'a, UiSoundRetrigger>,
+    // sound_retrigger: WriteStorage<'a, UiSoundRetrigger>,
     button_action_retrigger: WriteStorage<'a, UiButtonActionRetrigger>,
     selectables: WriteStorage<'a, Selectable<G>>,
 }
@@ -64,9 +64,9 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     font_size: f32,
     image: Option<Handle<Texture>>,
     parent: Option<Entity>,
-    on_click_start_sound: Option<UiPlaySoundAction>,
-    on_click_stop_sound: Option<UiPlaySoundAction>,
-    on_hover_sound: Option<UiPlaySoundAction>,
+    // on_click_start_sound: Option<UiPlaySoundAction>,
+    // on_click_stop_sound: Option<UiPlaySoundAction>,
+    // on_hover_sound: Option<UiPlaySoundAction>,
     // SetTextColor and SetImage can occur on click/hover start,
     // Unset for both on click/hover stop, so we only need 2 max.
     on_click_start: SmallVec<[UiButtonActionType; 2]>,
@@ -97,9 +97,9 @@ where
             font_size: 32.,
             image: None,
             parent: None,
-            on_click_start_sound: None,
-            on_click_stop_sound: None,
-            on_hover_sound: None,
+            // on_click_start_sound: None,
+            // on_click_stop_sound: None,
+            // on_hover_sound: None,
             on_click_start: smallvec![],
             on_click_stop: smallvec![],
             on_hover_start: smallvec![],
@@ -239,23 +239,23 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         self
     }
 
-    /// Sound emitted when this button is hovered over
-    pub fn with_hover_sound(mut self, sound: SourceHandle) -> Self {
-        self.on_hover_sound = Some(UiPlaySoundAction(sound));
-        self
-    }
+    // /// Sound emitted when this button is hovered over
+    // pub fn with_hover_sound(mut self, sound: SourceHandle) -> Self {
+    //     self.on_hover_sound = Some(UiPlaySoundAction(sound));
+    //     self
+    // }
 
-    /// Sound emitted when this button is pressed
-    pub fn with_press_sound(mut self, sound: SourceHandle) -> Self {
-        self.on_click_start_sound = Some(UiPlaySoundAction(sound));
-        self
-    }
+    // /// Sound emitted when this button is pressed
+    // pub fn with_press_sound(mut self, sound: SourceHandle) -> Self {
+    //     self.on_click_start_sound = Some(UiPlaySoundAction(sound));
+    //     self
+    // }
 
-    /// Sound emitted when this button is released
-    pub fn with_release_sound(mut self, sound: SourceHandle) -> Self {
-        self.on_click_stop_sound = Some(UiPlaySoundAction(sound));
-        self
-    }
+    // /// Sound emitted when this button is released
+    // pub fn with_release_sound(mut self, sound: SourceHandle) -> Self {
+    //     self.on_click_stop_sound = Some(UiPlaySoundAction(sound));
+    //     self
+    // }
 
     /// Build this with the `UiButtonBuilderResources`.
     pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I>) -> (I, UiButton) {
@@ -304,21 +304,21 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 .expect("Unreachable: Inserting newly created entity");
         }
 
-        if self.on_click_start_sound.is_some()
-            || self.on_click_stop_sound.is_some()
-            || self.on_hover_sound.is_some()
-        {
-            let retrigger = UiSoundRetrigger {
-                on_click_start: self.on_click_start_sound,
-                on_click_stop: self.on_click_stop_sound,
-                on_hover_start: self.on_hover_sound,
-                on_hover_stop: None,
-            };
+        // if self.on_click_start_sound.is_some()
+        //     || self.on_click_stop_sound.is_some()
+        //     || self.on_hover_sound.is_some()
+        // {
+        //     let retrigger = UiSoundRetrigger {
+        //         on_click_start: self.on_click_start_sound,
+        //         on_click_stop: self.on_click_stop_sound,
+        //         on_hover_start: self.on_hover_sound,
+        //         on_hover_stop: None,
+        //     };
 
-            res.sound_retrigger
-                .insert(image_entity, retrigger)
-                .expect("Unreachable: Inserting newly created entity");
-        }
+        //     res.sound_retrigger
+        //         .insert(image_entity, retrigger)
+        //         .expect("Unreachable: Inserting newly created entity");
+        // }
 
         res.transform
             .insert(

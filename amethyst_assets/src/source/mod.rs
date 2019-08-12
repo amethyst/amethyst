@@ -1,11 +1,19 @@
 use amethyst_error::Error;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub use self::dir::Directory;
+
+// #[cfg(target_arch = "wasm32")]
+pub use self::inline::Inline;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
+#[cfg(not(target_arch = "wasm32"))]
 mod dir;
+
+// #[cfg(target_arch = "wasm32")]
+mod inline;
 
 /// A trait for asset sources, which provides
 /// methods for loading bytes.

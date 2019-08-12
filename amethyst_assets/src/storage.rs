@@ -10,7 +10,7 @@ use crossbeam_queue::SegQueue;
 use derivative::Derivative;
 use hibitset::BitSet;
 use log::{debug, error, trace, warn};
-use rayon::ThreadPool;
+// use rayon::ThreadPool;
 
 use amethyst_core::{
     ecs::{
@@ -221,12 +221,12 @@ impl<A: Asset> AssetStorage<A> {
         &mut self,
         f: F,
         frame_number: u64,
-        pool: &ThreadPool,
+        // pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
         F: FnMut(A::Data) -> Result<ProcessingState<A>, Error>,
     {
-        self.process_custom_drop(f, |_| {}, frame_number, pool, strategy);
+        self.process_custom_drop(f, |_| {}, frame_number/*, pool*/, strategy);
     }
 
     /// Process finished asset data and maintain the storage.
@@ -236,7 +236,7 @@ impl<A: Asset> AssetStorage<A> {
         mut f: F,
         mut drop_fn: D,
         frame_number: u64,
-        pool: &ThreadPool,
+        // pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
         D: FnMut(A),
@@ -430,11 +430,11 @@ impl<A: Asset> AssetStorage<A> {
             .unwrap_or(false)
         {
             trace!("{:?}: Testing for asset reloads..", A::NAME);
-            self.hot_reload(pool);
+            self.hot_reload(/*pool*/);
         }
     }
 
-    fn hot_reload(&mut self, pool: &ThreadPool) {
+    fn hot_reload(&mut self/*, pool: &ThreadPool*/) {
         self.reloads.retain(|&(ref handle, _)| !handle.is_dead());
         while let Some(p) = self
             .reloads
@@ -457,7 +457,7 @@ impl<A: Asset> AssetStorage<A> {
 
             if let Some(handle) = handle {
                 let processed = self.processed.clone();
-                pool.spawn(move || {
+                (move || {
                     let old_reload = rel.clone();
                     let data = rel.reload().with_context(|_| error::Error::Format(format));
 
@@ -468,7 +468,7 @@ impl<A: Asset> AssetStorage<A> {
                         old_reload,
                     };
                     processed.push(p);
-                });
+                })();
             }
         }
     }
@@ -522,12 +522,12 @@ where
 {
     type SystemData = (
         Write<'a, AssetStorage<A>>,
-        ReadExpect<'a, Arc<ThreadPool>>,
+        // ReadExpect<'a, Arc<ThreadPool>>,
         Read<'a, Time>,
         Option<Read<'a, HotReloadStrategy>>,
     );
 
-    fn run(&mut self, (mut storage, pool, time, strategy): Self::SystemData) {
+    fn run(&mut self, (mut storage, /*pool, */time, strategy): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("processor_system");
 
@@ -536,7 +536,7 @@ where
         storage.process(
             ProcessableAsset::process,
             time.frame_number(),
-            &**pool,
+            // &**pool,
             strategy.as_ref().map(Deref::deref),
         );
     }

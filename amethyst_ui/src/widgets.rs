@@ -182,8 +182,8 @@ macro_rules! define_widget_component_fn_impl {
 #[macro_export]
 macro_rules! define_widget {
     ($t:ident =>
-        entities: [$($field:tt),*]
-        components: [$($component:tt),*]
+        entities: [$($field:tt),* $(,)?]
+        components: [$($component:tt),* $(,)?]
     ) => {
         /// A $t widget, containing references to its associated entities.
         #[derive(Debug, Clone)]

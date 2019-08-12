@@ -465,7 +465,10 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 Trans::Pop => self.pop(data),
                 Trans::Push(state) => self.push(state, data),
                 Trans::Switch(state) => self.switch(state, data),
-                Trans::Quit => self.stop(data),
+                Trans::Quit => {
+                    panic!("{:?}", amethyst_error::Error::from_string("Stop machine"));
+                    self.stop(data)
+                }
             }
         }
     }
@@ -522,6 +525,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     /// Shuts the state machine down.
     pub(crate) fn stop(&mut self, data: StateData<'_, T>) {
         if self.running {
+            panic!("Stop machine");
             let StateData { world, data } = data;
             while let Some(mut state) = self.state_stack.pop() {
                 state.on_stop(StateData { world, data });

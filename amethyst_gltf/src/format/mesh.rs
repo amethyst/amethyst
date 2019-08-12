@@ -196,6 +196,7 @@ fn calculate_normals(positions: &[Position], indices: &Indices) -> Vec<Normal> {
         .collect::<Vec<_>>()
 }
 
+#[cfg(feature = "mikktspace")]
 fn calculate_tangents(
     positions: &[Position],
     normals: &[Normal],
@@ -215,6 +216,19 @@ fn calculate_tangents(
             tangents[indices.map(face, vert)] = Tangent([x, y, z, -w]);
         },
     );
+    tangents
+}
+
+
+
+#[cfg(not(feature = "mikktspace"))]
+fn calculate_tangents(
+    positions: &[Position],
+    normals: &[Normal],
+    tex_coords: &[TexCoord],
+    indices: &Indices,
+) -> Vec<Tangent> {
+    let mut tangents = vec![Tangent([0.0, 0.0, 0.0, 0.0]); positions.len()];
     tangents
 }
 

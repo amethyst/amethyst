@@ -32,7 +32,7 @@ parking_lot = "0.6"
 rayon = "1.1.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }
-shred = { version = "0.7" }
+shred = { version = "0.7", default-features = false }
 shred-derive = { version = "0.5" }
 ron = "0.5"
 thread_profiler = { version = "0.3", optional = true }
