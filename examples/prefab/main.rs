@@ -40,6 +40,7 @@ fn main() -> Result<(), Error> {
 
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -47,8 +48,7 @@ fn main() -> Result<(), Error> {
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
                 .with_plugin(RenderShaded3D::default()),
-        )?
-        .with_bundle(TransformBundle::new())?;
+        )?;
 
     let mut game = Application::new(assets_dir, AssetsExample, game_data)?;
     game.run();

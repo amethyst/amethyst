@@ -129,6 +129,12 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with(Processor::<Source>::new(), "source_processor", &[])
+        .with_system_desc(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
+        .with_bundle(FpsCounterBundle::default())?
+        .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -136,13 +142,7 @@ fn main() -> amethyst::Result<()> {
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
                 .with_plugin(RenderUi::default()),
-        )?
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with(Processor::<Source>::new(), "source_processor", &[])
-        .with_system_desc(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
-        .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new())?;
+        )?;
 
     let mut game = Application::build(assets_dir, Example::default())?
         // Unlimited FPS

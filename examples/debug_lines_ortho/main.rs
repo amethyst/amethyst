@@ -116,6 +116,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(ExampleLinesSystem::new(), "example_lines_system", &[])
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -123,8 +124,7 @@ fn main() -> amethyst::Result<()> {
                         .with_clear([0.0, 0.0, 0.0, 1.0]),
                 )
                 .with_plugin(RenderDebugLines::default()),
-        )?
-        .with_bundle(TransformBundle::new())?;
+        )?;
 
     let mut game = Application::new(assets_dir, ExampleState, game_data)?;
     game.run();

@@ -206,6 +206,10 @@ fn main() -> Result<(), Error> {
     let game_data = CustomGameDataBuilder::default()
         .with_base(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_running(ExampleSystem::default(), "example_system", &[])
+        .with_base_bundle(TransformBundle::new())
+        .with_base_bundle(UiBundle::<StringBindings>::new())
+        .with_base_bundle(FpsCounterBundle::default())
+        .with_base_bundle(InputBundle::<StringBindings>::new())
         .with_base_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -214,11 +218,7 @@ fn main() -> Result<(), Error> {
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )
-        .with_base_bundle(TransformBundle::new())
-        .with_base_bundle(UiBundle::<StringBindings>::new())
-        .with_base_bundle(FpsCounterBundle::default())
-        .with_base_bundle(InputBundle::<StringBindings>::new());
+        );
 
     let mut game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
     game.run();

@@ -10,12 +10,9 @@ use amethyst::{
         ProgressCounter, RonFormat,
     },
     controls::{ControlTagPrefab, FlyControlBundle},
-    core::{
-        transform::{Transform, TransformBundle},
-        SystemDesc,
-    },
+    core::transform::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{Entity, ReadStorage, World, Write, WriteStorage},
+    ecs::{Entity, ReadStorage, Write, WriteStorage},
     input::{is_close_requested, is_key_down, StringBindings, VirtualKeyCode},
     prelude::*,
     renderer::{
@@ -32,7 +29,7 @@ use amethyst::{
     },
     Error,
 };
-use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem};
+use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystemDesc};
 
 use serde::{Deserialize, Serialize};
 
@@ -197,17 +194,6 @@ fn main() -> Result<(), amethyst::Error> {
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
-        // `VisibilitySortingSystem` (part of `RenderPbr3D`) should depend on:
-        // &["fly_movement", "transform_system", "auto_fov"]
-        //
-        // There is currently no way to pass the dependencies to that system. However, since that
-        // system is thread local as part of rendering, it runs after all of the systems anyway.
-        .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path))
-                .with_plugin(RenderPbr3D::default().with_skinning())
-                .with_plugin(RenderSkybox::default()),
-        )?
         .with_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
@@ -226,7 +212,18 @@ fn main() -> Result<(), amethyst::Error> {
             "transform_system",
             "animation_control",
             "sampler_interpolation",
-        ]))?;
+        ]))?
+        // `VisibilitySortingSystem` (part of `RenderPbr3D`) should depend on:
+        // &["fly_movement", "transform_system", "auto_fov"]
+        //
+        // There is currently no way to pass the dependencies to that system. However, since that
+        // system is thread local as part of rendering, it runs after all of the systems anyway.
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderPbr3D::default().with_skinning())
+                .with_plugin(RenderSkybox::default()),
+        )?;
 
     let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
