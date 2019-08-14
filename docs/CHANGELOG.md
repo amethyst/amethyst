@@ -28,10 +28,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+* `RenderingBundle` is registered last in all examples. ([#1881])
+
 [#1780]: https://github.com/amethyst/amethyst/pull/1780
 [#1859]: https://github.com/amethyst/amethyst/pull/1859
 [#1842]: https://github.com/amethyst/amethyst/pull/1842
 [#1870]: https://github.com/amethyst/amethyst/pull/1870
+[#1881]: https://github.com/amethyst/amethyst/pull/1881
 
 ## [0.12.0] - 2019-07-30
 
