@@ -23,7 +23,7 @@ amethyst_rendy = { path = "../amethyst_rendy", version = "0.2.0" }
 err-derive = "0.1"
 base64 = "0.10"
 fnv = "1"
-gltf = "0.12"
+gltf = "0.13"
 gfx = "0.17"
 hibitset = { version = "0.5.1", features = ["parallel"] }
 itertools = "0.7"
