@@ -230,13 +230,6 @@ impl<'a, 'b> SystemDesc<'a, 'b, CursorHideSystem> for CursorHideSystemDesc {
     fn build(self, world: &mut World) -> CursorHideSystem {
         <CursorHideSystem as System<'_>>::SystemData::setup(world);
 
-        let win = world.fetch::<Window>();
-
-        if let Err(err) = win.grab_cursor(true) {
-            log::error!("Unable to grab the cursor. Error: {:?}", err);
-        }
-        win.hide_cursor(true);
-
         CursorHideSystem::new()
     }
 }
