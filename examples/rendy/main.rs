@@ -544,6 +544,18 @@ fn toggle_or_cycle_animation(
     }
 }
 
+// This is required because rustc does not recognize .ctor segments when considering which symbols
+// to include when linking static libraries, so we need to reference a symbol in each module that
+// registers an importer since it uses inventory::submit and the .ctor linkage hack.
+fn init_modules() {
+    {
+        use amethyst::assets::{Format, Prefab};
+        let _w = amethyst::audio::output::outputs();
+        let _p = Prefab::<()>::new();
+        let _name = ImageFormat::default().name();
+    }
+}
+
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
         stdout: amethyst::StdoutLog::Off,
@@ -560,6 +572,8 @@ fn main() -> amethyst::Result<()> {
     // .level_for("amethyst_rendy", log::LevelFilter::Trace)
     // .level_for("gfx_backend_metal", log::LevelFilter::Trace)
     .start();
+
+    init_modules();
 
     let app_root = application_root_dir()?;
 
