@@ -4,21 +4,21 @@ use derive_new::new;
 
 /// Adds a specified `System` to the dispatcher.
 #[derive(Debug, new)]
-pub(crate) struct SystemInjectionBundle<Sys>
+pub(crate) struct SystemInjectionBundle<S>
 where
-    Sys: for<'s> System<'s> + Send,
+    S: for<'s> System<'s> + Send,
 {
     /// Function to instantiate `System` to add to the dispatcher.
-    system: Sys,
+    system: S,
     /// Name to register the system with.
     system_name: &'static str,
     /// Names of the system dependencies.
     system_dependencies: &'static [&'static str],
 }
 
-impl<'a, 'b, Sys> SystemBundle<'a, 'b> for SystemInjectionBundle<Sys>
+impl<'a, 'b, S> SystemBundle<'a, 'b> for SystemInjectionBundle<S>
 where
-    Sys: for<'s> System<'s> + Send + 'a,
+    S: for<'s> System<'s> + Send + 'a,
 {
     fn build(
         self,

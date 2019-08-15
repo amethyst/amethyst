@@ -396,14 +396,14 @@ where
     /// * `system`: `System` to run.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system<Sys>(
+    pub fn with_system<S>(
         self,
-        system: Sys,
+        system: S,
         name: &'static str,
         deps: &'static [&'static str],
     ) -> Self
     where
-        Sys: for<'sys_local> System<'sys_local> + Send + 'static,
+        S: for<'sys_local> System<'sys_local> + Send + 'static,
     {
         self.with_bundle_fn(move || SystemInjectionBundle::new(system, name, deps))
     }
@@ -451,14 +451,14 @@ where
     /// * `system`: `System` to run.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system_single<Sys>(
+    pub fn with_system_single<S>(
         self,
-        system: Sys,
+        system: S,
         name: &'static str,
         deps: &'static [&'static str],
     ) -> Self
     where
-        Sys: for<'sys_local> System<'sys_local> + Send + Sync + 'static,
+        S: for<'sys_local> System<'sys_local> + Send + Sync + 'static,
     {
         self.with_state(move || {
             CustomDispatcherStateBuilder::new()
