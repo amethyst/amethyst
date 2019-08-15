@@ -101,8 +101,9 @@ Now, modify the `run()` function, from
 ```rust,ignore
 let arena_config = ArenaConfig::load(&config);
 [..]
-    .with_resource(arena_config)
     .with_bundle(PongBundle::default())?
+[..]
+    .with_resource(arena_config)
 ```
 
 to
@@ -110,9 +111,10 @@ to
 ```rust,ignore
 let pong_config = PongConfig::load(&config);
 [..]
+    .with_bundle(PongBundle::default())?
+[..]
     .with_resource(pong_config.arena)
     .with_resource(pong_config.ball)
-    .with_bundle(PongBundle::default())?
 ```
 
 ## Adding the BallConfig to `config.ron`
