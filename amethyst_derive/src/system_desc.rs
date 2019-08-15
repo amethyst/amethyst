@@ -19,12 +19,18 @@ pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
     let system_desc_name = system_desc_name.unwrap_or_else(|| system_name.clone());
 
     let (system_desc_fields, is_default) = if is_self {
-        (None, false)
+        (SystemDescFields::default(), false)
     } else {
         let system_desc_fields = system_desc_fields(&ast);
-        let is_default = system_desc_fields.iter().all(FieldExt::is_phantom_data);
 
-        (Some(system_desc_fields), is_default)
+        // Don't have to worry about fields to compute -- those are computed in the `build`
+        // function.
+        let is_default = system_desc_fields
+            .fields_to_copy
+            .iter()
+            .all(|&field| FieldExt::is_phantom_data(field));
+
+        (system_desc_fields, is_default)
     };
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
@@ -104,16 +110,14 @@ fn system_desc_struct(context: &Context<'_>) -> TokenStream {
         ..
     } = context;
 
-    let system_desc_fields = system_desc_fields
-        .as_ref()
-        .expect("Expected `system_desc_fields` to exist.");
-    let struct_declaration = match system_desc_fields {
+    let fields = &system_desc_fields.fields;
+    let struct_declaration = match fields {
         Fields::Unit => quote!(struct #system_desc_name;),
         Fields::Unnamed(..) => quote! {
-            struct #system_desc_name #ty_generics #system_desc_fields #where_clause;
+            struct #system_desc_name #ty_generics #fields #where_clause;
         },
         Fields::Named(..) => quote! {
-            struct #system_desc_name #ty_generics #where_clause #system_desc_fields
+            struct #system_desc_name #ty_generics #where_clause #fields
         },
     };
 
@@ -125,23 +129,38 @@ fn system_desc_struct(context: &Context<'_>) -> TokenStream {
     }
 }
 
-fn system_desc_fields(ast: &DeriveInput) -> Fields {
+fn system_desc_fields<'ast>(ast: &'ast DeriveInput) -> SystemDescFields<'ast> {
     // This includes any `PhantomData` fields to avoid unused type parameters.
-    let fields_to_copy = ast
-        .fields()
+    let fields = ast.fields();
+    let fields_to_compute = fields
         .iter()
+        .filter(|field| field.contains_tag("system_desc", "reader_id"))
+        .map(|field| FieldToCompute::ReaderId(field))
+        .collect::<Vec<FieldToCompute<'_>>>();
+    let fields_to_copy = fields
+        .iter()
+        .filter(|field| !field.contains_tag("system_desc", "reader_id"))
         .filter(|field| !field.contains_tag("system_desc", "skip"))
         .collect::<Vec<&Field>>();
 
-    if fields_to_copy.is_empty() {
-        Fields::Unit
-    } else if ast.is_named() {
-        let fields_named: FieldsNamed = parse_quote!({ #(#fields_to_copy,)* });
-        Fields::from(fields_named)
-    } else {
-        // Tuple struct
-        let fields_unnamed: FieldsUnnamed = parse_quote!((#(#fields_to_copy,)*));
-        Fields::from(fields_unnamed)
+    let fields = {
+        let fields_to_copy = &fields_to_copy;
+        if fields_to_copy.is_empty() {
+            Fields::Unit
+        } else if ast.is_named() {
+            let fields_named: FieldsNamed = parse_quote!({ #(#fields_to_copy,)* });
+            Fields::from(fields_named)
+        } else {
+            // Tuple struct
+            let fields_unnamed: FieldsUnnamed = parse_quote!((#(#fields_to_copy,)*));
+            Fields::from(fields_unnamed)
+        }
+    };
+
+    SystemDescFields {
+        fields_to_compute,
+        fields_to_copy,
+        fields,
     }
 }
 
@@ -190,10 +209,8 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
         ..
     } = context;
 
-    let system_desc_fields = system_desc_fields
-        .as_ref()
-        .expect("Expected `system_desc_fields` to exist.");
-    match system_desc_fields {
+    let fields = &system_desc_fields.fields;
+    match fields {
         Fields::Unit => quote!(#system_desc_name),
         Fields::Unnamed(fields_unnamed) => {
             let field_initializers = fields_unnamed
@@ -247,10 +264,8 @@ fn impl_constructor_parameters(context: &Context<'_>) -> TokenStream {
         ..
     } = context;
 
-    let system_desc_fields = system_desc_fields
-        .as_ref()
-        .expect("Expected `system_desc_fields` to exist.");
-    match system_desc_fields {
+    let fields = &system_desc_fields.fields;
+    match fields {
         Fields::Unit => quote!(),
         Fields::Unnamed(fields_unnamed) => {
             let constructor_parameters = fields_unnamed
@@ -298,10 +313,8 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
         ..
     } = context;
 
-    let system_desc_fields = system_desc_fields
-        .as_ref()
-        .expect("Expected `system_desc_fields` to exist.");
-    match system_desc_fields {
+    let fields = &system_desc_fields.fields;
+    match fields {
         Fields::Unit => quote!(#system_name::default()),
         Fields::Unnamed(fields_unnamed) => {
             let field_initializers = fields_unnamed
@@ -507,10 +520,37 @@ fn resource_insertion_expressions(ast: &DeriveInput) -> TokenStream {
 struct Context<'c> {
     system_name: &'c Ident,
     system_desc_name: Ident,
-    system_desc_fields: Option<Fields>,
+    system_desc_fields: SystemDescFields<'c>,
     impl_generics: ImplGenerics<'c>,
     ty_generics: TypeGenerics<'c>,
     where_clause: Option<&'c WhereClause>,
     is_default: bool,
     is_self: bool,
+}
+
+/// Disambiguation of fields from the `System`.
+#[derive(Debug)]
+struct SystemDescFields<'f> {
+    /// Fields to compute from the world,
+    fields_to_compute: Vec<FieldToCompute<'f>>,
+    /// Fields to copy across from the `System` struct.
+    fields_to_copy: Vec<&'f Field>,
+    /// Fields to copy across from the `System` struct, re-quoted and parsed.
+    fields: Fields,
+}
+
+impl<'f> Default for SystemDescFields<'f> {
+    fn default() -> Self {
+        SystemDescFields {
+            fields_to_compute: Vec::new(),
+            fields_to_copy: Vec::new(),
+            fields: Fields::Unit,
+        }
+    }
+}
+
+#[derive(Debug)]
+enum FieldToCompute<'f> {
+    /// `ReaderId` from registering as a reader for an `EventChannel` in the `World`.
+    ReaderId(&'f Field),
 }
