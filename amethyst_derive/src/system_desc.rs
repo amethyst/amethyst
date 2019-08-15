@@ -5,9 +5,10 @@ use proc_macro2::{Literal, Span, TokenStream};
 use proc_macro_roids::{DeriveInputStructExt, FieldExt};
 use quote::quote;
 use syn::{
-    parse_quote, Attribute, DeriveInput, Expr, Field, Fields, FieldsNamed, FieldsUnnamed,
-    GenericParam, Ident, ImplGenerics, LifetimeDef, Lit, Meta, MetaList, NestedMeta, TypeGenerics,
-    WhereClause,
+    parse_quote, punctuated::Pair, AngleBracketedGenericArguments, Attribute, DeriveInput, Expr,
+    Field, Fields, FieldsNamed, FieldsUnnamed, GenericArgument, GenericParam, Ident, ImplGenerics,
+    LifetimeDef, Lit, Meta, MetaList, NestedMeta, Path, PathArguments, Type, TypeGenerics,
+    TypePath, WhereClause,
 };
 
 pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
@@ -26,9 +27,16 @@ pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
         // Don't have to worry about fields to compute -- those are computed in the `build`
         // function.
         let is_default = system_desc_fields
-            .fields_to_copy
+            .field_mappings
             .iter()
-            .all(|&field| FieldExt::is_phantom_data(field));
+            .find(|&field_mapping| {
+                if let FieldVariant::Passthrough { .. } = field_mapping.field_variant {
+                    true
+                } else {
+                    false
+                }
+            })
+            .is_none();
 
         (system_desc_fields, is_default)
     };
@@ -55,6 +63,7 @@ pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
         )
     };
     let resource_insertion_expressions = resource_insertion_expressions(&ast);
+    let field_computation_expressions = field_computation_expressions(&context.system_desc_fields);
 
     let Context {
         system_name,
@@ -94,6 +103,8 @@ pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
 
                 #resource_insertion_expressions
 
+                #field_computation_expressions
+
                 #call_system_constructor
             }
         }
@@ -132,19 +143,59 @@ fn system_desc_struct(context: &Context<'_>) -> TokenStream {
 fn system_desc_fields<'ast>(ast: &'ast DeriveInput) -> SystemDescFields<'ast> {
     // This includes any `PhantomData` fields to avoid unused type parameters.
     let fields = ast.fields();
-    let fields_to_compute = fields
-        .iter()
-        .filter(|field| field.contains_tag("system_desc", "reader_id"))
-        .map(|field| FieldToCompute::ReaderId(field))
-        .collect::<Vec<FieldToCompute<'_>>>();
-    let fields_to_copy = fields
-        .iter()
-        .filter(|field| !field.contains_tag("system_desc", "reader_id"))
-        .filter(|field| !field.contains_tag("system_desc", "skip"))
-        .collect::<Vec<&Field>>();
+
+    let mut system_desc_field_index = 0;
+    let field_mappings = fields.iter().enumerate().fold(
+        Vec::new(),
+        |mut field_mappings, (system_field_index, field)| {
+            if field.contains_tag("system_desc", "skip") {
+                // do nothing
+            } else if field.contains_tag("system_desc", "event_channel_reader") {
+                let field_variant = FieldVariant::Compute(FieldToCompute::ReaderId(field));
+                let field_mapping = FieldMapping {
+                    system_field_index,
+                    field_variant,
+                };
+                field_mappings.push(field_mapping);
+            } else if field.is_phantom_data() {
+                let field_variant = FieldVariant::PhantomData {
+                    system_desc_field_index,
+                    field,
+                };
+                let field_mapping = FieldMapping {
+                    system_field_index,
+                    field_variant,
+                };
+                field_mappings.push(field_mapping);
+
+                system_desc_field_index += 1;
+            } else {
+                let field_variant = FieldVariant::Passthrough {
+                    system_desc_field_index,
+                    field,
+                };
+                let field_mapping = FieldMapping {
+                    system_field_index,
+                    field_variant,
+                };
+                field_mappings.push(field_mapping);
+
+                system_desc_field_index += 1;
+            };
+
+            field_mappings
+        },
+    );
 
     let fields = {
-        let fields_to_copy = &fields_to_copy;
+        let fields_to_copy = field_mappings
+            .iter()
+            .filter_map(|field_mapping| match &field_mapping.field_variant {
+                FieldVariant::Compute(..) => None,
+                FieldVariant::PhantomData { field, .. }
+                | FieldVariant::Passthrough { field, .. } => Some(*field),
+            })
+            .collect::<Vec<&Field>>();
         if fields_to_copy.is_empty() {
             Fields::Unit
         } else if ast.is_named() {
@@ -158,8 +209,7 @@ fn system_desc_fields<'ast>(ast: &'ast DeriveInput) -> SystemDescFields<'ast> {
     };
 
     SystemDescFields {
-        fields_to_compute,
-        fields_to_copy,
+        field_mappings,
         fields,
     }
 }
@@ -220,8 +270,7 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
                     if field.is_phantom_data() {
                         quote!(std::marker::PhantomData::default())
                     } else {
-                        let type_name_snake = field.type_name().to_string().to_snake_case();
-                        let type_name_snake = Ident::new(&type_name_snake, Span::call_site());
+                        let type_name_snake = snake_case(field);
                         quote!(#type_name_snake)
                     }
                 })
@@ -273,8 +322,7 @@ fn impl_constructor_parameters(context: &Context<'_>) -> TokenStream {
                 .iter()
                 .filter(|field| !field.is_phantom_data())
                 .map(|field| {
-                    let type_name_snake = field.type_name().to_string().to_snake_case();
-                    let type_name_snake = Ident::new(&type_name_snake, Span::call_site());
+                    let type_name_snake = snake_case(field);
                     let field_type = &field.ty;
                     quote!(#type_name_snake: #field_type)
                 })
@@ -314,18 +362,25 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
     } = context;
 
     let fields = &system_desc_fields.fields;
+    let field_mappings = &system_desc_fields.field_mappings;
     match fields {
         Fields::Unit => quote!(#system_name::default()),
-        Fields::Unnamed(fields_unnamed) => {
-            let field_initializers = fields_unnamed
-                .unnamed
+        Fields::Unnamed(..) => {
+            let field_initializers = field_mappings
                 .iter()
-                .enumerate()
-                // Only pass through non-`PhantomData` fields.
-                .filter(|(_, field)| !field.is_phantom_data())
-                .map(|(index, _)| {
-                    let index = Literal::usize_unsuffixed(index);
-                    quote!(self.#index)
+                .filter_map(|field_mapping| match &field_mapping.field_variant {
+                    FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
+                        let field_name = snake_case(field);
+                        Some(quote!(#field_name))
+                    }
+                    FieldVariant::PhantomData { .. } => None,
+                    FieldVariant::Passthrough {
+                        system_desc_field_index,
+                        ..
+                    } => {
+                        let index = Literal::usize_unsuffixed(*system_desc_field_index);
+                        Some(quote!(self.#index))
+                    }
                 })
                 .collect::<Vec<TokenStream>>();
 
@@ -333,19 +388,25 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                 #system_name::new(#(#field_initializers,)*)
             }
         }
-        Fields::Named(fields_named) => {
-            let field_initializers = fields_named
-                .named
+        Fields::Named(..) => {
+            let field_initializers = field_mappings
                 .iter()
-                // Only pass through non-`PhantomData` fields.
-                .filter(|field| !field.is_phantom_data())
-                .map(|field| {
-                    let field_name = field
-                        .ident
-                        .as_ref()
-                        .expect("Expected named field to have an ident.");
-
-                    quote!(self.#field_name)
+                .filter_map(|field_mapping| match &field_mapping.field_variant {
+                    FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
+                        let field_name = field
+                            .ident
+                            .as_ref()
+                            .expect("Expected named field to have an ident.");
+                        Some(quote!(self.#field_name))
+                    }
+                    FieldVariant::PhantomData { .. } => None,
+                    FieldVariant::Passthrough { field, .. } => {
+                        let field_name = field
+                            .ident
+                            .as_ref()
+                            .expect("Expected named field to have an ident.");
+                        Some(quote!(self.#field_name))
+                    }
                 })
                 .collect::<Vec<TokenStream>>();
 
@@ -516,6 +577,67 @@ fn resource_insertion_expressions(ast: &DeriveInput) -> TokenStream {
         })
 }
 
+/// Computes resources from the `World`.
+fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> TokenStream {
+    system_desc_fields.field_mappings.iter().fold(
+        TokenStream::new(),
+        |mut token_stream, field_mapping| {
+            if let FieldMapping {
+                field_variant: FieldVariant::Compute(FieldToCompute::ReaderId(field)),
+                ..
+            } = field_mapping
+            {
+                let field_name = field.ident.clone().unwrap_or_else(|| snake_case(field));
+                let event_type_path = if let Type::Path(TypePath {
+                    path: Path { segments, .. },
+                    ..
+                }) = &field.ty
+                {
+                    if let Some(Pair::End(path_segment)) = segments.last() {
+                        if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                            args,
+                            ..
+                        }) = &path_segment.arguments
+                        {
+                            if let Some(Pair::End(GenericArgument::Type(Type::Path(TypePath {
+                                path,
+                                ..
+                            })))) = args.first()
+                            {
+                                path
+                            } else {
+                                panic!(
+                                    "Expected `{}` first generic parameter to be a type.",
+                                    &field_name
+                                )
+                            }
+                        } else {
+                            panic!("Expected `{}` field to have type parameters.", &field_name)
+                        }
+                    } else {
+                        panic!("Expected `{}` field last segment to exist.", &field_name)
+                    }
+                } else {
+                    panic!("Expected `{}` field type to be `Type::Path`.", &field_name)
+                };
+                let tokens = quote! {
+                    let #field_name = world
+                        .fetch_mut::<EventChannel<#event_type_path>>()
+                        .register_reader();
+                };
+                token_stream.extend(tokens);
+            }
+
+            token_stream
+        },
+    )
+}
+
+fn snake_case(field: &Field) -> Ident {
+    let type_name_snake = field.type_name().to_string().to_snake_case();
+    Ident::new(&type_name_snake, Span::call_site())
+}
+
 #[derive(Debug)]
 struct Context<'c> {
     system_name: &'c Ident,
@@ -531,10 +653,8 @@ struct Context<'c> {
 /// Disambiguation of fields from the `System`.
 #[derive(Debug)]
 struct SystemDescFields<'f> {
-    /// Fields to compute from the world,
-    fields_to_compute: Vec<FieldToCompute<'f>>,
-    /// Fields to copy across from the `System` struct.
-    fields_to_copy: Vec<&'f Field>,
+    /// Fields from `System`, with contextual information.
+    field_mappings: Vec<FieldMapping<'f>>,
     /// Fields to copy across from the `System` struct, re-quoted and parsed.
     fields: Fields,
 }
@@ -542,14 +662,48 @@ struct SystemDescFields<'f> {
 impl<'f> Default for SystemDescFields<'f> {
     fn default() -> Self {
         SystemDescFields {
-            fields_to_compute: Vec::new(),
-            fields_to_copy: Vec::new(),
+            field_mappings: Vec::new(),
             fields: Fields::Unit,
         }
     }
 }
 
-#[derive(Debug)]
+/// Exists to track the index of the field on the `System` struct.
+///
+/// This allows the `SystemDesc` type to have different fields, but we retain the position
+/// information to map from the `SystemDesc` struct to the `System`.
+#[derive(Debug, PartialEq)]
+struct FieldMapping<'f> {
+    /// Position of the field on the `System` type.
+    system_field_index: usize,
+    /// `FieldVariant` of the `System` struct.
+    field_variant: FieldVariant<'f>,
+}
+
+#[derive(Debug, PartialEq)]
+enum FieldVariant<'f> {
+    /// The field is to be computed from the `World`.
+    Compute(FieldToCompute<'f>),
+    /// Field is phantom data.
+    ///
+    /// This appears in both the `SystemDesc` and `System` structs, but are instantiated
+    /// independently and not passed through.
+    PhantomData {
+        /// Position of the field on the `SystemDesc` type.
+        system_desc_field_index: usize,
+        /// `Field` information from the `System`.
+        field: &'f Field,
+    },
+    /// Field is a parameter to pass through.
+    Passthrough {
+        /// Position of the field on the `SystemDesc` type.
+        system_desc_field_index: usize,
+        /// `Field` information from the `System`.
+        field: &'f Field,
+    },
+}
+
+#[derive(Debug, PartialEq)]
 enum FieldToCompute<'f> {
     /// `ReaderId` from registering as a reader for an `EventChannel` in the `World`.
     ReaderId(&'f Field),
