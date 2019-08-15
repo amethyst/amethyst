@@ -20,11 +20,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `UiButtonData` is now exported from `amethyst_ui` and can be used for custom widgets. ([#1859])
 * Add an audio subchapter to the pong chapter. ([#1842])
 * Add `DispatcherOperation` to store dispatcher build logic, which can be executed lazily. ([#1870])
-
+* `AmethystApplication` takes in `SystemDesc`s through `with_system_desc`. ([#1882])
+* `AmethystApplication::with_thread_local_desc` takes in `RunNowDesc`. ([#1882])
 
 ### Changed
 
 * All `-Builder` structs in amethyst_ui/prefab.rs are now called `-Data`. ([#1859])
+* `AmethystApplication` takes in a `System` instead of a closure for `with_system`. ([#1882])
+* `AmethystApplication::with_thread_local` constraint relaxed to `RunNow` (previously `System`). ([#1882])
 
 ### Fixed
 
@@ -35,6 +38,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1842]: https://github.com/amethyst/amethyst/pull/1842
 [#1870]: https://github.com/amethyst/amethyst/pull/1870
 [#1881]: https://github.com/amethyst/amethyst/pull/1881
+[#1882]: https://github.com/amethyst/amethyst/pull/1882
 
 ## [0.12.0] - 2019-07-30
 
