@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use amethyst::{
-    core::{bundle::SystemBundle, SystemDesc},
+    core::{bundle::SystemBundle, RunNowDesc},
     ecs::prelude::*,
     error::Error,
 };
@@ -9,31 +9,29 @@ use derive_new::new;
 
 /// Adds a specified thread local `System` to the dispatcher.
 #[derive(Debug, new)]
-pub struct ThreadLocalInjectionBundle<'a, 'b, SD, S>
+pub struct ThreadLocalInjectionBundle<'a, 'b, RNDesc, RN>
 where
-    SD: SystemDesc<'a, 'b, S>,
-    S: for<'s> System<'s>,
-    // S: for<'s> RunNow<'s>,
+    RNDesc: RunNowDesc<'a, 'b, RN>,
+    RN: for<'s> RunNow<'s>,
 {
     /// Function to instantiate `System` to add to the dispatcher.
-    system_desc: SD,
-    /// Marker for `'a` lifetime.
+    run_now_desc: RNDesc,
+    /// Marker.
     #[new(default)]
-    system_marker: PhantomData<(&'a SD, &'b S)>,
+    system_marker: PhantomData<(&'a RNDesc, &'b RN)>,
 }
 
-impl<'a, 'b, SD, S> SystemBundle<'a, 'b> for ThreadLocalInjectionBundle<'a, 'b, SD, S>
+impl<'a, 'b, RNDesc, RN> SystemBundle<'a, 'b> for ThreadLocalInjectionBundle<'a, 'b, RNDesc, RN>
 where
-    SD: SystemDesc<'a, 'b, S>,
-    S: for<'s> System<'s>,
-    // S: for<'s> RunNow<'s> + 'b,
+    RNDesc: RunNowDesc<'a, 'b, RN>,
+    RN: for<'s> RunNow<'s> + 'b,
 {
     fn build(
         self,
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        let system = self.system_desc.build(world);
+        let system = self.run_now_desc.build(world);
         builder.add_thread_local(system);
         Ok(())
     }
