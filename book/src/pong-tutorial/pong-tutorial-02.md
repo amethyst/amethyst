@@ -48,9 +48,6 @@ initialization code from the Pong code.
     use crate::pong::Pong;
     ```
 
-4. Run `cargo build` to get the Rust compiler to complain about unused
-imports in `main.rs`, and delete these.
-
 ## Get around the World
 
 First, in `pong.rs`, let's add a new method to our `State` implementation: `on_start`.
@@ -159,7 +156,7 @@ Now that our camera is set up, it's time to add the paddles.
 
 ## Our first Component
 
-In this section, you will create the `Paddle` component. The code in this section should go into `pong.rs`.
+Now, we will create the `Paddle` component, all in `pong.rs`.
 
 1. Define constants for the paddle width and height.
 
@@ -517,6 +514,12 @@ are on the sheet. Let's create, right next to it, a file called
     ],
 )
 ```
+
+> **Note:** Make sure to pay attention to the kind of parentheses in the ron file.
+> Especially, if you are used to writing JSON or similar format files, you might
+> be tempted to use curly braces there; that will however lead to very 
+> hard-to-debug errors, especially since amethyst will not warn you about that 
+> when compiling.
 
 Finally, we load the file containing the position of each sprite on the sheet.
 
