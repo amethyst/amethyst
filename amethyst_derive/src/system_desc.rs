@@ -151,7 +151,9 @@ fn system_desc_fields(ast: &DeriveInput) -> SystemDescFields<'_> {
             let field_variant = if field.contains_tag("system_desc", "skip") {
                 FieldVariant::Skipped(field)
             } else if field.contains_tag("system_desc", "event_channel_reader") {
-                FieldVariant::Compute(FieldToCompute::ReaderId(field))
+                FieldVariant::Compute(FieldToCompute::EventChannelReader(field))
+            } else if field.contains_tag("system_desc", "flagged_storage_reader") {
+                FieldVariant::Compute(FieldToCompute::FlaggedStorageReader(field))
             } else if field.is_phantom_data() {
                 let field_variant = FieldVariant::PhantomData {
                     system_desc_field_index,
@@ -378,11 +380,14 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                         .iter()
                         .filter_map(|field_mapping| match &field_mapping.field_variant {
                             FieldVariant::Skipped(..) => None,
-                            FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                                let field_name =
-                                    field.ident.clone().unwrap_or_else(|| snake_case(field));
-                                Some(quote!(#field_name))
-                            }
+                            FieldVariant::Compute(field_to_compute) => match field_to_compute {
+                                FieldToCompute::EventChannelReader(field)
+                                | FieldToCompute::FlaggedStorageReader(field) => {
+                                    let field_name =
+                                        field.ident.clone().unwrap_or_else(|| snake_case(field));
+                                    Some(quote!(#field_name))
+                                }
+                            },
                             FieldVariant::PhantomData { .. } => {
                                 unreachable!(
                                     "`SystemDesc` will not have `Unit` fields \
@@ -419,10 +424,13 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                     .iter()
                     .filter_map(|field_mapping| match &field_mapping.field_variant {
                         FieldVariant::Skipped(..) => None,
-                        FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                            let field_name = snake_case(field);
-                            Some(quote!(#field_name))
-                        }
+                        FieldVariant::Compute(field_to_compute) => match field_to_compute {
+                            FieldToCompute::EventChannelReader(field)
+                            | FieldToCompute::FlaggedStorageReader(field) => {
+                                let field_name = snake_case(field);
+                                Some(quote!(#field_name))
+                            }
+                        },
                         FieldVariant::PhantomData { .. } => None,
                         FieldVariant::Passthrough {
                             system_desc_field_index,
@@ -462,13 +470,16 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                         .iter()
                         .filter_map(|field_mapping| match &field_mapping.field_variant {
                             FieldVariant::Skipped(..) => None,
-                            FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                                let field_name = field
-                                    .ident
-                                    .as_ref()
-                                    .expect("Expected named field to have an ident.");
-                                Some(quote!(#field_name))
-                            }
+                            FieldVariant::Compute(field_to_compute) => match field_to_compute {
+                                FieldToCompute::EventChannelReader(field)
+                                | FieldToCompute::FlaggedStorageReader(field) => {
+                                    let field_name = field
+                                        .ident
+                                        .as_ref()
+                                        .expect("Expected named field to have an ident.");
+                                    Some(quote!(#field_name))
+                                }
+                            },
                             FieldVariant::PhantomData { .. } => None,
                             FieldVariant::Passthrough { field, .. } => {
                                 let field_name = field
@@ -488,13 +499,16 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                         .iter()
                         .filter_map(|field_mapping| match &field_mapping.field_variant {
                             FieldVariant::Skipped(..) => None,
-                            FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                                let field_name = field
-                                    .ident
-                                    .as_ref()
-                                    .expect("Expected named field to have an ident.");
-                                Some(quote!(#field_name))
-                            }
+                            FieldVariant::Compute(field_to_compute) => match field_to_compute {
+                                FieldToCompute::EventChannelReader(field)
+                                | FieldToCompute::FlaggedStorageReader(field) => {
+                                    let field_name = field
+                                        .ident
+                                        .as_ref()
+                                        .expect("Expected named field to have an ident.");
+                                    Some(quote!(#field_name))
+                                }
+                            },
                             FieldVariant::PhantomData { .. } => None,
                             FieldVariant::Passthrough { field, .. } => {
                                 let field_name = field
@@ -689,7 +703,7 @@ fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> T
         TokenStream::new(),
         |mut token_stream, field_mapping| {
             if let FieldMapping {
-                field_variant: FieldVariant::Compute(FieldToCompute::ReaderId(field)),
+                field_variant: FieldVariant::Compute(FieldToCompute::EventChannelReader(field)),
                 ..
             } = field_mapping
             {
@@ -813,6 +827,8 @@ enum FieldVariant<'f> {
 
 #[derive(Debug, PartialEq)]
 enum FieldToCompute<'f> {
-    /// `ReaderId` from registering as a reader for an `EventChannel` in the `World`.
-    ReaderId(&'f Field),
+    /// `ReaderId` from registering a reader for an `EventChannel` in the `World`.
+    EventChannelReader(&'f Field),
+    /// `ReaderId` from registering a reader for a `FlaggedStorage`.
+    FlaggedStorageReader(&'f Field),
 }
