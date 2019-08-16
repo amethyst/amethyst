@@ -199,7 +199,13 @@ Then we call `.run()` on `game` which starts the game loop. The game will
 continue to run until our `SimpleState` returns `Trans::Quit`, or when all states
 have been popped off the state machine's stack.
 
-Try compiling the code now. You should be able to see the application start, but nothing
+Now, try compiling the code.
+
+> **Note:** Please note that when compiling the game for the first time, it may
+> take upwards an half an hour. Be assured, though, that subsequent builds of
+> the project will be faster.
+
+You should be able to see the application start, but nothing
 will happen and your terminal will hang until you kill the process. This means that the
 core game loop is running in circles, and is awaiting tasks. Let's give it something
 to do by adding a renderer!
@@ -254,8 +260,8 @@ Those plugins will equip our renderer with the ability to open a window and draw
 
 In this configuration, our window will have a black background.
 If you want to use a different color, you can tweak the RGBA
-values inside `with_clear`. Values range from `0.0` to `1.0`, to get that cool green color
-you can try `[0.00196, 0.23726, 0.21765, 1.0]`.
+values inside `with_clear`. Values range from `0.0` to `1.0`, try using for
+instance `[0.00196, 0.23726, 0.21765, 1.0]` to get a nice cyan-colored window.
 
 > **Note:** This setup code is using Amethyst's `RenderPlugin` trait based system that
 > uses `rendy` crate to define the rendering. If you plan to go beyond the rendering
