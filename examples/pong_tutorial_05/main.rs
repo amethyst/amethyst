@@ -28,18 +28,6 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                // The RenderToWindow plugin provides all the scaffolding for opening a window and
-                // drawing on it
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)
-                        .with_clear([0.0, 0.0, 0.0, 1.0]),
-                )
-                // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
-                .with_plugin(RenderFlat2D::default())
-                .with_plugin(RenderUi::default()),
-        )?
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
         .with_bundle(
@@ -56,7 +44,19 @@ fn main() -> amethyst::Result<()> {
             "collision_system",
             &["paddle_system", "ball_system"],
         )
-        .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
+        .with(systems::WinnerSystem, "winner_system", &["ball_system"])
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                // The RenderToWindow plugin provides all the scaffolding for opening a window and
+                // drawing on it
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                )
+                // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
+                .with_plugin(RenderFlat2D::default())
+                .with_plugin(RenderUi::default()),
+        )?;
 
     let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
     game.run();

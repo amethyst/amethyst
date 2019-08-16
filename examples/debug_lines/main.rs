@@ -182,17 +182,17 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path))
-                .with_plugin(RenderDebugLines::default())
-                .with_plugin(RenderSkybox::default()),
-        )?
-        .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?
-        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?;
+        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderDebugLines::default())
+                .with_plugin(RenderSkybox::default()),
+        )?;
 
     let mut game = Application::new(assets_dir, ExampleState, game_data)?;
     game.run();

@@ -51,6 +51,9 @@ fn main() -> Result<(), Error> {
         // frame), preventing any flickering
         .with(AutoFovSystem::new(), "auto_fov", &["prefab"])
         .with(ShowFovSystem::new(), "show_fov", &["auto_fov"])
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -58,10 +61,7 @@ fn main() -> Result<(), Error> {
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )?
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?;
+        )?;
 
     let mut game = Application::build(assets_dir, Loading::new())?.build(game_data)?;
     game.run();

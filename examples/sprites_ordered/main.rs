@@ -368,6 +368,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -375,8 +376,7 @@ fn main() -> amethyst::Result<()> {
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
                 .with_plugin(RenderFlat2D::default()),
-        )?
-        .with_bundle(TransformBundle::new())?;
+        )?;
 
     let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     game.run();

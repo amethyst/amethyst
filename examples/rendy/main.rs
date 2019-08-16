@@ -13,13 +13,13 @@ use amethyst::{
     core::{
         ecs::{
             Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
-            ReadExpect, ReadStorage, System, SystemData, World, Write, WriteStorage,
+            ReadStorage, System, SystemData, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
-        SystemDesc, Time, Transform, TransformBundle,
+        Time, Transform, TransformBundle,
     },
     error::Error,
-    gltf::GltfSceneLoaderSystem,
+    gltf::GltfSceneLoaderSystemDesc,
     input::{
         is_close_requested, is_key_down, is_key_up, Axis, Bindings, Button, InputBundle,
         StringBindings,
@@ -544,6 +544,18 @@ fn toggle_or_cycle_animation(
     }
 }
 
+// This is required because rustc does not recognize .ctor segments when considering which symbols
+// to include when linking static libraries, so we need to reference a symbol in each module that
+// registers an importer since it uses inventory::submit and the .ctor linkage hack.
+fn init_modules() {
+    {
+        use amethyst::assets::{Format, Prefab};
+        let _w = amethyst::audio::output::outputs();
+        let _p = Prefab::<()>::new();
+        let _name = ImageFormat::default().name();
+    }
+}
+
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
         stdout: amethyst::StdoutLog::Off,
@@ -560,6 +572,8 @@ fn main() -> amethyst::Result<()> {
     // .level_for("amethyst_rendy", log::LevelFilter::Trace)
     // .level_for("gfx_backend_metal", log::LevelFilter::Trace)
     .start();
+
+    init_modules();
 
     let app_root = application_root_dir()?;
 
@@ -597,13 +611,13 @@ fn main() -> amethyst::Result<()> {
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
-        .with(
-            PrefabLoaderSystemDesc::<ScenePrefabData>::default().build(&mut world),
+        .with_system_desc(
+            PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
             "scene_loader",
             &[],
         )
-        .with(
-            GltfSceneLoaderSystem::new(&mut world),
+        .with_system_desc(
+            GltfSceneLoaderSystemDesc::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
@@ -653,12 +667,7 @@ fn main() -> amethyst::Result<()> {
                 )),
         )?;
 
-    let mut game = Application::new(
-        assets_dir & assets_directory,
-        Example::new(),
-        game_data,
-        world,
-    )?;
+    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     game.run();
     Ok(())
 }

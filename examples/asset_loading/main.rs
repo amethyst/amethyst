@@ -123,6 +123,8 @@ fn main() -> Result<(), Error> {
     let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
@@ -131,9 +133,7 @@ fn main() -> Result<(), Error> {
                     Srgb::new(0.82, 0.51, 0.50),
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
-        )?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(TransformBundle::new())?;
+        )?;
     let mut game = Application::new(assets_dir, AssetsExample, game_data)?;
     game.run();
     Ok(())

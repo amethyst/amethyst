@@ -15,10 +15,12 @@ mod audio;
 Create a file called `audio.rs`:
 
 ```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+#
 use amethyst::{
     assets::Loader,
     audio::{OggFormat, SourceHandle},
-    ecs::prelude::World,
+    ecs::{World, WorldExt},
 };
 
 const BOUNCE_SOUND: &str = "audio/bounce.ogg";
@@ -51,13 +53,13 @@ pub fn initialise_audio(world: &mut World) {
 
     // Add sound effects to the world. We have to do this in another scope because
     // world won't let us insert new resources as long as `Loader` is borrowed.
-    world.add_resource(sound_effects);
+    world.insert(sound_effects);
 }
 ```
 
 Then, we'll need to add the Sounds Resource to our World. Update `pong.rs`:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
 use crate::audio::initialise_audio;
 
 impl SimpleState for Pong {
@@ -72,6 +74,9 @@ impl SimpleState for Pong {
 Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 
 ```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+#
+# use amethyst::GameDataBuilder;
 use amethyst::audio::AudioBundle;
 
 fn main() -> amethyst::Result<()> {
@@ -84,6 +89,7 @@ fn main() -> amethyst::Result<()> {
     ;
 
     // --snip--
+# Ok(())
 }
 ```
 
@@ -92,11 +98,18 @@ fn main() -> amethyst::Result<()> {
 Let's start by creating a function to play the bounce sound. In `audio.rs`, add:
 
 ```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+#
 use amethyst::{
     assets::AssetStorage,
-    audio::{output::Output, Source},
+    audio::{output::Output, Source, SourceHandle},
 };
-
+#
+# pub struct Sounds {
+#     pub score_sfx: SourceHandle,
+#     pub bounce_sfx: SourceHandle,
+# }
+#
 pub fn play_bounce_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
     if let Some(ref output) = output.as_ref() {
         if let Some(sound) = storage.get(&sounds.bounce_sfx) {
@@ -108,14 +121,16 @@ pub fn play_bounce_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output
 
 Then, we'll update the Bounce System to play the sound whenever the ball bounces. Update `systems/bounce.rs`:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
+use std::ops::Deref;
+
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
     ecs::{Read, ReadExpect},
 };
+
 use crate::audio::{play_bounce_sound, Sounds};
-use std::ops::Deref;
 
 impl<'s> System<'s> for BounceSystem {
     type SystemData = (
@@ -169,6 +184,18 @@ Now try running your game (`cargo run`). Don't forget to turn up your volume!
 Just as we did for the bounce sound, let's create a function to play the score sound. Update `audio.rs`:
 
 ```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+#
+# use amethyst::{
+#     audio::{output::Output, Source, SourceHandle},
+#     assets::AssetStorage,
+# };
+#
+# pub struct Sounds {
+#     pub score_sfx: SourceHandle,
+#     pub bounce_sfx: SourceHandle,
+# }
+#
 pub fn play_score_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
     if let Some(ref output) = output.as_ref() {
         if let Some(sound) = storage.get(&sounds.score_sfx) {
@@ -180,7 +207,7 @@ pub fn play_score_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output:
 
 Then, we'll update our Winner System to play the score sound whenever a player scores. Update `systems/winner.rs`:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
@@ -254,7 +281,11 @@ const MUSIC_TRACKS: &[&str] = &[
 Then, create a Music Resource:
 
 ```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+#
 use std::{iter::Cycle, vec::IntoIter};
+#
+# use amethyst::audio::SourceHandle;
 
 pub struct Music {
     pub music: Cycle<IntoIter<SourceHandle>>,
@@ -266,7 +297,36 @@ Since we only have two music tracks, we use a `Cycle` to infinitely alternate be
 Next, we need to add the Music Resource to our World. Update `initialise_audio`:
 
 ```rust,edition2018,no_run,noplaypen
-use amethyst::audio::AudioSink;
+# extern crate amethyst;
+#
+# use std::{iter::Cycle, vec::IntoIter};
+#
+use amethyst::{
+    audio::{AudioSink, SourceHandle},
+    assets::Loader,
+    ecs::{World, WorldExt},
+};
+#
+# const BOUNCE_SOUND: &str = "audio/bounce.ogg";
+# const SCORE_SOUND: &str = "audio/score.ogg";
+#
+# const MUSIC_TRACKS: &[&str] = &[
+#     "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
+#     "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
+# ];
+#
+# fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
+#     unimplemented!()
+# }
+#
+# pub struct Music {
+#     pub music: Cycle<IntoIter<SourceHandle>>,
+# }
+#
+# pub struct Sounds {
+#     pub score_sfx: SourceHandle,
+#     pub bounce_sfx: SourceHandle,
+# }
 
 pub fn initialise_audio(world: &mut World) {
     let (sound_effects, music) = {
@@ -293,14 +353,14 @@ pub fn initialise_audio(world: &mut World) {
 
     // Add sound effects and music to the world. We have to do this in another scope because
     // world won't let us insert new resources as long as `Loader` is borrowed.
-    world.add_resource(sound_effects);
-    world.add_resource(music);
+    world.insert(sound_effects);
+    world.insert(music);
 }
 ```
 
 Finally, let's add a DJ System to our game to play the music. In `main.rs`:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
 use amethyst::audio::DjSystem;
 use crate::audio::Music;
 
@@ -318,6 +378,7 @@ fn main() -> amethyst::Result<()> {
         ;
 
     // --snip--
+# Ok(())
 }
 ```
 
