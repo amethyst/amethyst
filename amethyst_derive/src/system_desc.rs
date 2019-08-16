@@ -261,7 +261,7 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
                 .iter()
                 .map(|field| {
                     if field.is_phantom_data() {
-                        quote!(std::marker::PhantomData::default())
+                        quote!(std::marker::PhantomData)
                     } else {
                         let type_name_snake = snake_case(field);
                         quote!(#type_name_snake)
@@ -284,7 +284,7 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
                         .expect("Expected named field to have an ident.");
 
                     if field.is_phantom_data() {
-                        quote!(#field_name: std::marker::PhantomData::default())
+                        quote!(#field_name: std::marker::PhantomData)
                     } else {
                         quote!(#field_name)
                     }
