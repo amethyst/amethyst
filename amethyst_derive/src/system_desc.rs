@@ -512,13 +512,11 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                         }
                     }
                 }
+            } else if has_fields_skipped_or_phantom {
+                quote!(#system_name::default())
             } else {
-                if has_fields_skipped_or_phantom {
-                    quote!(#system_name::default())
-                } else {
-                    quote! {
-                        #system_name {}
-                    }
+                quote! {
+                    #system_name {}
                 }
             }
         }
