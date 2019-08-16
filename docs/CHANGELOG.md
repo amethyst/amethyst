@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * All `-Builder` structs in amethyst_ui/prefab.rs are now called `-Data`. ([#1859])
 * `AmethystApplication` takes in a `System` instead of a closure for `with_system`. ([#1882])
 * `AmethystApplication::with_thread_local` constraint relaxed to `RunNow` (previously `System`). ([#1882])
+* `SystemDesc` proc macro supports `#[system_desc(event_reader_id)]` to register event reader. ([#1883])
 
 ### Fixed
 
@@ -39,6 +40,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1870]: https://github.com/amethyst/amethyst/pull/1870
 [#1881]: https://github.com/amethyst/amethyst/pull/1881
 [#1882]: https://github.com/amethyst/amethyst/pull/1882
+[#1883]: https://github.com/amethyst/amethyst/pull/1883
 
 ## [0.12.0] - 2019-07-30
 
