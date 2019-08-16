@@ -148,40 +148,33 @@ fn system_desc_fields<'ast>(ast: &'ast DeriveInput) -> SystemDescFields<'ast> {
     let field_mappings = fields.iter().enumerate().fold(
         Vec::new(),
         |mut field_mappings, (system_field_index, field)| {
-            if field.contains_tag("system_desc", "skip") {
-                // do nothing
+            let field_variant = if field.contains_tag("system_desc", "skip") {
+                FieldVariant::Skipped(field)
             } else if field.contains_tag("system_desc", "event_channel_reader") {
-                let field_variant = FieldVariant::Compute(FieldToCompute::ReaderId(field));
-                let field_mapping = FieldMapping {
-                    system_field_index,
-                    field_variant,
-                };
-                field_mappings.push(field_mapping);
+                FieldVariant::Compute(FieldToCompute::ReaderId(field))
             } else if field.is_phantom_data() {
                 let field_variant = FieldVariant::PhantomData {
                     system_desc_field_index,
                     field,
                 };
-                let field_mapping = FieldMapping {
-                    system_field_index,
-                    field_variant,
-                };
-                field_mappings.push(field_mapping);
-
                 system_desc_field_index += 1;
+
+                field_variant
             } else {
                 let field_variant = FieldVariant::Passthrough {
                     system_desc_field_index,
                     field,
                 };
-                let field_mapping = FieldMapping {
-                    system_field_index,
-                    field_variant,
-                };
-                field_mappings.push(field_mapping);
-
                 system_desc_field_index += 1;
+
+                field_variant
             };
+
+            let field_mapping = FieldMapping {
+                system_field_index,
+                field_variant,
+            };
+            field_mappings.push(field_mapping);
 
             field_mappings
         },
@@ -191,7 +184,7 @@ fn system_desc_fields<'ast>(ast: &'ast DeriveInput) -> SystemDescFields<'ast> {
         let fields_to_copy = field_mappings
             .iter()
             .filter_map(|field_mapping| match &field_mapping.field_variant {
-                FieldVariant::Compute(..) => None,
+                FieldVariant::Skipped(..) | FieldVariant::Compute(..) => None,
                 FieldVariant::PhantomData { field, .. }
                 | FieldVariant::Passthrough { field, .. } => Some(*field),
             })
@@ -364,34 +357,94 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
     let fields = &system_desc_fields.fields;
     let field_mappings = &system_desc_fields.field_mappings;
     match fields {
-        Fields::Unit => quote!(#system_name::default()),
-        Fields::Unnamed(..) => {
-            let field_initializers = field_mappings
-                .iter()
-                .filter_map(|field_mapping| match &field_mapping.field_variant {
-                    FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                        let field_name = snake_case(field);
-                        Some(quote!(#field_name))
-                    }
-                    FieldVariant::PhantomData { .. } => None,
-                    FieldVariant::Passthrough {
-                        system_desc_field_index,
-                        ..
-                    } => {
-                        let index = Literal::usize_unsuffixed(*system_desc_field_index);
-                        Some(quote!(self.#index))
-                    }
-                })
-                .collect::<Vec<TokenStream>>();
+        Fields::Unit => {
+            // `SystemDesc` has no fields, but the `System` might.
+            // If there are no fields to compute, then we call the `System` unit constructor.
+            // If there are fields to compute, we call `System::new(..)`.
+            // If there are skipped fields but no fields to compute, we call `System::default()`.
 
-            quote! {
-                #system_name::new(#(#field_initializers,)*)
+            if field_mappings.is_empty() {
+                quote!(#system_name)
+            } else {
+                let has_fields_to_compute = field_mappings.iter().any(|field_mapping| {
+                    if let FieldVariant::Compute(..) = &field_mapping.field_variant {
+                        true
+                    } else {
+                        false
+                    }
+                });
+                if has_fields_to_compute {
+                    let field_initializers = field_mappings
+                        .iter()
+                        .filter_map(|field_mapping| match &field_mapping.field_variant {
+                            FieldVariant::Skipped(..) => None,
+                            FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
+                                let field_name = snake_case(field);
+                                Some(quote!(#field_name))
+                            }
+                            FieldVariant::PhantomData { .. } => {
+                                unreachable!(
+                                    "`SystemDesc` will not have `Unit` fields \
+                                     when a `PhantomData` field exists."
+                                );
+                            }
+                            FieldVariant::Passthrough { .. } => {
+                                unreachable!(
+                                    "`SystemDesc` will not have `Unit` fields \
+                                     when a `Passthrough` field exists."
+                                );
+                            }
+                        })
+                        .collect::<Vec<TokenStream>>();
+
+                    quote! {
+                        #system_name::new(#(#field_initializers,)*)
+                    }
+                } else {
+                    quote!(#system_name::default())
+                }
+            }
+        }
+        Fields::Unnamed(..) => {
+            let has_fields_to_compute = field_mappings.iter().any(|field_mapping| {
+                if let FieldVariant::Compute(..) = &field_mapping.field_variant {
+                    true
+                } else {
+                    false
+                }
+            });
+            if has_fields_to_compute {
+                let field_initializers = field_mappings
+                    .iter()
+                    .filter_map(|field_mapping| match &field_mapping.field_variant {
+                        FieldVariant::Skipped(..) => None,
+                        FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
+                            let field_name = snake_case(field);
+                            Some(quote!(#field_name))
+                        }
+                        FieldVariant::PhantomData { .. } => None,
+                        FieldVariant::Passthrough {
+                            system_desc_field_index,
+                            ..
+                        } => {
+                            let index = Literal::usize_unsuffixed(*system_desc_field_index);
+                            Some(quote!(self.#index))
+                        }
+                    })
+                    .collect::<Vec<TokenStream>>();
+
+                quote! {
+                    #system_name::new(#(#field_initializers,)*)
+                }
+            } else {
+                quote!(#system_name::default())
             }
         }
         Fields::Named(..) => {
             let field_initializers = field_mappings
                 .iter()
                 .filter_map(|field_mapping| match &field_mapping.field_variant {
+                    FieldVariant::Skipped(..) => None,
                     FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
                         let field_name = field
                             .ident
@@ -682,6 +735,8 @@ struct FieldMapping<'f> {
 
 #[derive(Debug, PartialEq)]
 enum FieldVariant<'f> {
+    /// The field is skipped.
+    Skipped(&'f Field),
     /// The field is to be computed from the `World`.
     Compute(FieldToCompute<'f>),
     /// Field is phantom data.
