@@ -177,3 +177,159 @@ fn struct_tuple_complex() -> Result<(), Error> {
 
     Ok(())
 }
+
+#[test]
+fn struct_named_with_phantom() -> Result<(), Error> {
+    // Expects `System` to `impl Default`
+    #[derive(Debug, SystemDesc)]
+    #[system_desc(name(SystemNamedPhantomDesc))]
+    struct SystemNamedPhantom<T> {
+        marker: PhantomData<T>,
+    }
+    impl<T> Default for SystemNamedPhantom<T> {
+        fn default() -> Self {
+            SystemNamedPhantom {
+                marker: PhantomData,
+            }
+        }
+    }
+
+    impl<'s, T> System<'s> for SystemNamedPhantom<T> {
+        type SystemData = ();
+        fn run(&mut self, _: Self::SystemData) {}
+    }
+
+    let mut world = World::new();
+
+    SystemNamedPhantomDesc::<()>::default().build(&mut world);
+
+    Ok(())
+}
+
+#[test]
+fn struct_named_with_skip() -> Result<(), Error> {
+    // Expects `System` to `impl Default`
+    #[derive(Debug, Default, SystemDesc)]
+    #[system_desc(name(SystemNamedSkipDesc))]
+    struct SystemNamedSkip {
+        #[system_desc(skip)]
+        a: u32,
+    }
+
+    impl<'s> System<'s> for SystemNamedSkip {
+        type SystemData = ();
+        fn run(&mut self, _: Self::SystemData) {}
+    }
+
+    let mut world = World::new();
+
+    SystemNamedSkipDesc::default().build(&mut world);
+
+    Ok(())
+}
+
+#[test]
+fn struct_named_with_passthrough() -> Result<(), Error> {
+    #[derive(Debug, Default, SystemDesc)]
+    #[system_desc(name(SystemNamedPassthroughDesc))]
+    struct SystemNamedPassthrough {
+        a: u32,
+    }
+
+    impl<'s> System<'s> for SystemNamedPassthrough {
+        type SystemData = ();
+        fn run(&mut self, _: Self::SystemData) {}
+    }
+
+    let mut world = World::new();
+
+    SystemNamedPassthroughDesc::new(123).build(&mut world);
+
+    Ok(())
+}
+
+#[test]
+fn struct_named_with_event_channel_reader() -> Result<(), Error> {
+    // Expects `System` to have a `new` constructor.
+    #[derive(Debug, SystemDesc)]
+    #[system_desc(name(SystemNamedEventChannelDesc))]
+    struct SystemNamedEventChannel {
+        #[system_desc(event_channel_reader)]
+        u32_reader: ReaderId<u32>,
+    }
+    impl SystemNamedEventChannel {
+        fn new(u32_reader: ReaderId<u32>) -> Self {
+            Self { u32_reader }
+        }
+    }
+
+    impl<'s> System<'s> for SystemNamedEventChannel {
+        type SystemData = ();
+        fn run(&mut self, _: Self::SystemData) {}
+    }
+
+    let mut world = World::new();
+    world.insert(EventChannel::<u32>::new());
+
+    SystemNamedEventChannelDesc::default().build(&mut world);
+
+    Ok(())
+}
+
+#[test]
+fn struct_named_complex() -> Result<(), Error> {
+    // Expects `System` to have a `new` constructor.
+    pub trait Magic {}
+    impl Magic for i8 {}
+    impl Magic for i16 {}
+
+    #[derive(Debug, SystemDesc)]
+    #[system_desc(name(SystemNamedComplexDesc))]
+    struct SystemNamedComplex<'x, T1, T2>
+    where
+        T1: Magic,
+        T2: Magic,
+    {
+        a: u8,
+        marker1: PhantomData<&'x T1>,
+        #[system_desc(event_channel_reader)]
+        u32_reader: ReaderId<u32>,
+        #[system_desc(skip)]
+        c: i32,
+        marker2: PhantomData<T2>,
+        d: u32,
+    }
+
+    impl<'x, T1, T2> SystemNamedComplex<'x, T1, T2>
+    where
+        T1: Magic,
+        T2: Magic,
+    {
+        fn new(a: u8, u32_reader: ReaderId<u32>, d: u32) -> Self {
+            Self {
+                a,
+                marker1: PhantomData,
+                u32_reader,
+                c: 999,
+                marker2: PhantomData,
+                d,
+            }
+        }
+    }
+
+    impl<'s, 'x, T1, T2> System<'s> for SystemNamedComplex<'x, T1, T2>
+    where
+        T1: Magic,
+        T2: Magic,
+    {
+        type SystemData = ();
+        fn run(&mut self, _: Self::SystemData) {}
+    }
+
+    let mut world = World::new();
+    world.insert(EventChannel::<u32>::new());
+
+    SystemNamedComplexDesc::<'_, i8, i16>::new(1u8, 4u32).build(&mut world);
+
+    Ok(())
+}

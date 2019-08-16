@@ -379,7 +379,8 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                         .filter_map(|field_mapping| match &field_mapping.field_variant {
                             FieldVariant::Skipped(..) => None,
                             FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                                let field_name = snake_case(field);
+                                let field_name =
+                                    field.ident.clone().unwrap_or_else(|| snake_case(field));
                                 Some(quote!(#field_name))
                             }
                             FieldVariant::PhantomData { .. } => {
@@ -441,30 +442,84 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
             }
         }
         Fields::Named(..) => {
-            let field_initializers = field_mappings
-                .iter()
-                .filter_map(|field_mapping| match &field_mapping.field_variant {
-                    FieldVariant::Skipped(..) => None,
-                    FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                        let field_name = field
-                            .ident
-                            .as_ref()
-                            .expect("Expected named field to have an ident.");
-                        Some(quote!(self.#field_name))
-                    }
-                    FieldVariant::PhantomData { .. } => None,
-                    FieldVariant::Passthrough { field, .. } => {
-                        let field_name = field
-                            .ident
-                            .as_ref()
-                            .expect("Expected named field to have an ident.");
-                        Some(quote!(self.#field_name))
-                    }
-                })
-                .collect::<Vec<TokenStream>>();
+            let has_fields_to_compute_or_passthrough =
+                field_mappings
+                    .iter()
+                    .any(|field_mapping| match &field_mapping.field_variant {
+                        FieldVariant::Compute(..) | FieldVariant::Passthrough { .. } => true,
+                        _ => false,
+                    });
+            let has_fields_skipped_or_phantom =
+                field_mappings
+                    .iter()
+                    .any(|field_mapping| match &field_mapping.field_variant {
+                        FieldVariant::Skipped(..) | FieldVariant::PhantomData { .. } => true,
+                        _ => false,
+                    });
+            if has_fields_to_compute_or_passthrough {
+                if has_fields_skipped_or_phantom {
+                    let field_initializers = field_mappings
+                        .iter()
+                        .filter_map(|field_mapping| match &field_mapping.field_variant {
+                            FieldVariant::Skipped(..) => None,
+                            FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
+                                let field_name = field
+                                    .ident
+                                    .as_ref()
+                                    .expect("Expected named field to have an ident.");
+                                Some(quote!(#field_name))
+                            }
+                            FieldVariant::PhantomData { .. } => None,
+                            FieldVariant::Passthrough { field, .. } => {
+                                let field_name = field
+                                    .ident
+                                    .as_ref()
+                                    .expect("Expected named field to have an ident.");
+                                Some(quote!(self.#field_name))
+                            }
+                        })
+                        .collect::<Vec<TokenStream>>();
 
-            quote! {
-                #system_name::new(#(#field_initializers,)*)
+                    quote! {
+                        #system_name::new(#(#field_initializers,)*)
+                    }
+                } else {
+                    let field_initializers = field_mappings
+                        .iter()
+                        .filter_map(|field_mapping| match &field_mapping.field_variant {
+                            FieldVariant::Skipped(..) => None,
+                            FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
+                                let field_name = field
+                                    .ident
+                                    .as_ref()
+                                    .expect("Expected named field to have an ident.");
+                                Some(quote!(#field_name))
+                            }
+                            FieldVariant::PhantomData { .. } => None,
+                            FieldVariant::Passthrough { field, .. } => {
+                                let field_name = field
+                                    .ident
+                                    .as_ref()
+                                    .expect("Expected named field to have an ident.");
+                                Some(quote!(#field_name: self.#field_name))
+                            }
+                        })
+                        .collect::<Vec<TokenStream>>();
+
+                    quote! {
+                        #system_name {
+                            #(#field_initializers,)*
+                        }
+                    }
+                }
+            } else {
+                if has_fields_skipped_or_phantom {
+                    quote!(#system_name::default())
+                } else {
+                    quote! {
+                        #system_name {}
+                    }
+                }
             }
         }
     }
