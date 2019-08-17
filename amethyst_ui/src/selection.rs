@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use derivative::Derivative;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use amethyst_core::{
     ecs::{
@@ -69,7 +69,9 @@ where
     fn build(self, world: &mut World) -> SelectionKeyboardSystem<G> {
         <SelectionKeyboardSystem<G> as System<'_>>::SystemData::setup(world);
 
-        let window_reader_id = world.fetch_mut::<EventChannel<Event>>().register_reader();
+        let window_reader_id = world
+            .fetch_mut::<EventChannel<Event<()>>>()
+            .register_reader();
 
         SelectionKeyboardSystem::new(window_reader_id)
     }
@@ -80,7 +82,7 @@ where
 /// Reacts to Tab and Shift+Tab.
 #[derive(Debug)]
 pub struct SelectionKeyboardSystem<G> {
-    window_reader_id: ReaderId<Event>,
+    window_reader_id: ReaderId<Event<()>>,
     phantom: PhantomData<G>,
 }
 
@@ -89,7 +91,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     /// Creates a new `SelectionKeyboardSystem`.
-    pub fn new(window_reader_id: ReaderId<Event>) -> Self {
+    pub fn new(window_reader_id: ReaderId<Event<()>>) -> Self {
         Self {
             window_reader_id,
             phantom: PhantomData,
@@ -102,7 +104,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     type SystemData = (
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         Read<'a, CachedSelectionOrder>,
         WriteStorage<'a, Selected>,
         Write<'a, EventChannel<UiEvent>>,

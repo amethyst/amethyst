@@ -14,7 +14,7 @@ use amethyst::{
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
-    winit::{ElementState, VirtualKeyCode},
+    winit::event::{ElementState, VirtualKeyCode},
 };
 use serde::{Deserialize, Serialize};
 

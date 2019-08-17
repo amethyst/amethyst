@@ -4,7 +4,9 @@ use clipboard::{ClipboardContext, ClipboardProvider};
 use log::error;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
-use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
+use winit::event::{
+    ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent,
+};
 
 use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
@@ -23,7 +25,9 @@ impl<'a, 'b> SystemDesc<'a, 'b, TextEditingInputSystem> for TextEditingInputSyst
     fn build(self, world: &mut World) -> TextEditingInputSystem {
         <TextEditingInputSystem as System<'_>>::SystemData::setup(world);
 
-        let reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
+        let reader = world
+            .fetch_mut::<EventChannel<Event<()>>>()
+            .register_reader();
 
         TextEditingInputSystem::new(reader)
     }
@@ -37,12 +41,12 @@ impl<'a, 'b> SystemDesc<'a, 'b, TextEditingInputSystem> for TextEditingInputSyst
 #[derive(Debug)]
 pub struct TextEditingInputSystem {
     /// A reader for winit events.
-    reader: ReaderId<Event>,
+    reader: ReaderId<Event<()>>,
 }
 
 impl TextEditingInputSystem {
     /// Creates a new instance of this system
-    pub fn new(reader: ReaderId<Event>) -> Self {
+    pub fn new(reader: ReaderId<Event<()>>) -> Self {
         Self { reader }
     }
 }
@@ -53,7 +57,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, Selected>,
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         Write<'a, EventChannel<UiEvent>>,
     );
 

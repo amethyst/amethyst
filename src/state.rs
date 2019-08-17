@@ -152,7 +152,7 @@ pub trait EmptyState {
     /// Executed on every frame before updating, for use in reacting to events.
     fn handle_event(&mut self, _data: StateData<'_, ()>, event: StateEvent) -> EmptyTrans {
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) {
+            if is_close_requested(event) {
                 Trans::Quit
             } else {
                 Trans::None
@@ -259,7 +259,7 @@ pub trait SimpleState {
         event: StateEvent,
     ) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) {
+            if is_close_requested(event) {
                 Trans::Quit
             } else {
                 Trans::None

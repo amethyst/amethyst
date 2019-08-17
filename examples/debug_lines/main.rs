@@ -20,7 +20,7 @@ use amethyst::{
         RenderingBundle,
     },
     utils::application_root_dir,
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
 };
 
 #[derive(SystemDesc)]

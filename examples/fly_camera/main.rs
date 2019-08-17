@@ -14,7 +14,7 @@ use amethyst::{
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
-    winit::{MouseButton, VirtualKeyCode},
+    winit::event::{MouseButton, VirtualKeyCode},
     Error,
 };
 

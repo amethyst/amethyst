@@ -177,9 +177,11 @@ impl SimpleState for Example {
     ) -> SimpleTrans {
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
+            if is_close_requested(&event)
+                || is_key_down(&event, winit::event::VirtualKeyCode::Escape)
+            {
                 Trans::Quit
-            } else if is_key_down(&event, winit::VirtualKeyCode::Space) {
+            } else if is_key_down(&event, winit::event::VirtualKeyCode::Space) {
                 world.exec(
                     |(named, transforms): (ReadStorage<Named>, ReadStorage<Transform>)| {
                         for (name, transform) in (&named, &transforms).join() {

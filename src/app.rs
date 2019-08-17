@@ -8,7 +8,7 @@ use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
-use winit::Event;
+use winit::event::Event;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
@@ -55,7 +55,7 @@ where
     reader: R,
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
-    event_reader_id: ReaderId<Event>,
+    event_reader_id: ReaderId<Event<()>>,
     #[derivative(Debug = "ignore")]
     trans_reader_id: ReaderId<TransEvent<T, E>>,
     states: StateMachine<'a, T, E>,
@@ -273,10 +273,10 @@ where
         if self.ignore_window_close {
             false
         } else {
-            use crate::winit::WindowEvent;
+            use crate::winit::event::WindowEvent;
             let world = &mut self.world;
             let reader_id = &mut self.event_reader_id;
-            world.exec(|ev: Read<'_, EventChannel<Event>>| {
+            world.exec(|ev: Read<'_, EventChannel<Event<()>>>| {
                 ev.read(reader_id).any(|e| {
                     if cfg!(target_os = "ios") {
                         if let Event::WindowEvent {
@@ -543,7 +543,7 @@ where
         }
         world.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.insert(pool);
-        world.insert(EventChannel::<Event>::with_capacity(2000));
+        world.insert(EventChannel::<Event<()>>::with_capacity(2000));
         world.insert(EventChannel::<UiEvent>::with_capacity(40));
         world.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         world.insert(FrameLimiter::default());
@@ -894,7 +894,7 @@ where
         let data = init.build(&mut self.world);
         let event_reader_id = self
             .world
-            .exec(|mut ev: Write<'_, EventChannel<Event>>| ev.register_reader());
+            .exec(|mut ev: Write<'_, EventChannel<Event<()>>>| ev.register_reader());
 
         let trans_reader_id = self
             .world

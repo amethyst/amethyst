@@ -3,7 +3,7 @@
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
-use winit::{ElementState, Event, MouseButton, WindowEvent};
+use winit::event::{ElementState, Event, MouseButton, WindowEvent};
 
 use amethyst_core::{
     ecs::prelude::{
@@ -143,7 +143,9 @@ impl<'a, 'b> SystemDesc<'a, 'b, TextEditingMouseSystem> for TextEditingMouseSyst
     fn build(self, world: &mut World) -> TextEditingMouseSystem {
         <TextEditingMouseSystem as System<'_>>::SystemData::setup(world);
 
-        let reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
+        let reader = world
+            .fetch_mut::<EventChannel<Event<()>>>()
+            .register_reader();
 
         TextEditingMouseSystem::new(reader)
     }
@@ -153,7 +155,7 @@ impl<'a, 'b> SystemDesc<'a, 'b, TextEditingMouseSystem> for TextEditingMouseSyst
 #[derive(Debug)]
 pub struct TextEditingMouseSystem {
     /// A reader for winit events.
-    reader: ReaderId<Event>,
+    reader: ReaderId<Event<()>>,
     /// This is set to true while the left mouse button is pressed.
     left_mouse_button_pressed: bool,
     /// The screen coordinates of the mouse
@@ -162,7 +164,7 @@ pub struct TextEditingMouseSystem {
 
 impl TextEditingMouseSystem {
     /// Creates a new instance of this system
-    pub fn new(reader: ReaderId<Event>) -> Self {
+    pub fn new(reader: ReaderId<Event<()>>) -> Self {
         Self {
             reader,
             left_mouse_button_pressed: false,
@@ -176,7 +178,7 @@ impl<'a> System<'a> for TextEditingMouseSystem {
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, Selected>,
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         ReadExpect<'a, ScreenDimensions>,
         Read<'a, Time>,
     );

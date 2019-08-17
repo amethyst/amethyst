@@ -26,7 +26,7 @@ use amethyst::{
         tag::{Tag, TagFinder},
     },
     window::ScreenDimensions,
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
     Error,
 };
 use log::{error, info};

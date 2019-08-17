@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * Systems needing initialization with world resources must go through a `SystemDesc` intermediate builder. ([#1780])
 
+### Breaking changes
+
+* `amethyst::winit` is now winit 0.20.0
+* `CoreApplication` now creates an `EventChannel<Event<()>>`
+
 ### Added
 
 * `SystemDesc` proc macro derive to simplify defining `SystemDesc`s. ([#1780])

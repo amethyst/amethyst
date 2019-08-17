@@ -20,7 +20,7 @@ use amethyst::{
         fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
 };
 use log::info;
 

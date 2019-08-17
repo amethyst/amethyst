@@ -25,7 +25,7 @@ use amethyst::{
     },
     ui::{RenderUi, UiBundle, UiCreator, UiLoader, UiPrefab},
     utils::{application_root_dir, fps_counter::FpsCounterBundle, scene::BasicScenePrefab},
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
     Error,
 };
 
