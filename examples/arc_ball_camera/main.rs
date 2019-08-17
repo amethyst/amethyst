@@ -8,6 +8,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         SystemDesc,
     },
+    derive::SystemDesc,
     ecs::prelude::{Join, Read, ReadStorage, System, SystemData, World, WorldExt, WriteStorage},
     input::{
         is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings, VirtualKeyCode,
@@ -53,23 +54,10 @@ impl SimpleState for ExampleState {
     }
 }
 
-/// Builds a `CameraDistanceSystem`.
-#[derive(Default, Debug)]
-pub struct CameraDistanceSystemDesc;
-
-impl<'a, 'b> SystemDesc<'a, 'b, CameraDistanceSystem> for CameraDistanceSystemDesc {
-    fn build(self, world: &mut World) -> CameraDistanceSystem {
-        <CameraDistanceSystem as System<'_>>::SystemData::setup(world);
-
-        let event_reader = world
-            .fetch_mut::<EventChannel<InputEvent<StringBindings>>>()
-            .register_reader();
-
-        CameraDistanceSystem::new(event_reader)
-    }
-}
-
+#[derive(SystemDesc)]
+#[system_desc(name(CameraDistanceSystemDesc))]
 struct CameraDistanceSystem {
+    #[system_desc(event_channel_reader)]
     event_reader: ReaderId<InputEvent<StringBindings>>,
 }
 

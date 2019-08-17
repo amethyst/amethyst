@@ -14,6 +14,7 @@ use amethyst_core::{
     timing::Time,
     SystemDesc,
 };
+use amethyst_derive::SystemDesc;
 use amethyst_window::ScreenDimensions;
 
 use super::*;
@@ -135,28 +136,18 @@ impl Component for TextEditing {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// Builds a `TextEditingMouseSystem`.
-#[derive(Default, Debug)]
-pub struct TextEditingMouseSystemDesc;
-
-impl<'a, 'b> SystemDesc<'a, 'b, TextEditingMouseSystem> for TextEditingMouseSystemDesc {
-    fn build(self, world: &mut World) -> TextEditingMouseSystem {
-        <TextEditingMouseSystem as System<'_>>::SystemData::setup(world);
-
-        let reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
-
-        TextEditingMouseSystem::new(reader)
-    }
-}
-
 /// This system processes the underlying UI data as needed.
-#[derive(Debug)]
+#[derive(Debug, SystemDesc)]
+#[system_desc(name(TextEditingMouseSystemDesc))]
 pub struct TextEditingMouseSystem {
     /// A reader for winit events.
+    #[system_desc(event_channel_reader)]
     reader: ReaderId<Event>,
     /// This is set to true while the left mouse button is pressed.
+    #[system_desc(skip)]
     left_mouse_button_pressed: bool,
     /// The screen coordinates of the mouse
+    #[system_desc(skip)]
     mouse_position: (f32, f32),
 }
 
