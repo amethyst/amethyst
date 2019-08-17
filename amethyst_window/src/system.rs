@@ -1,44 +1,20 @@
-use crate::{config::DisplayConfig, resources::ScreenDimensions};
-use amethyst_config::Config;
+use crate::resources::ScreenDimensions;
 use amethyst_core::{
-    ecs::{ReadExpect, RunNow, System, SystemData, World, Write, WriteExpect},
+    ecs::{ReadExpect, System, World, WriteExpect},
     shrev::EventChannel,
 };
-use std::path::Path;
-use winit::{Event, EventsLoop, Window};
+use std::sync::mpsc::{Receiver, TryRecvError};
+use winit::{event::Event, window::Window};
 
 /// System for opening and managing the window.
 #[derive(Debug)]
 pub struct WindowSystem;
 
 impl WindowSystem {
-    /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
-    /// sources. Returns a new `WindowSystem`
-    pub fn from_config_path(
-        world: &mut World,
-        events_loop: &EventsLoop,
-        path: impl AsRef<Path>,
-    ) -> Self {
-        Self::from_config(world, events_loop, DisplayConfig::load(path.as_ref()))
-    }
-
-    /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
-    /// sources. Returns a new `WindowSystem`
-    pub fn from_config(world: &mut World, events_loop: &EventsLoop, config: DisplayConfig) -> Self {
-        let window = config
-            .into_window_builder(events_loop)
-            .build(events_loop)
-            .unwrap();
-        Self::new(world, window)
-    }
-
     /// Create a new `WindowSystem` wrapping the provided `Window`
     pub fn new(world: &mut World, window: Window) -> Self {
-        let (width, height) = window
-            .get_inner_size()
-            .expect("Window closed during initialization!")
-            .into();
-        let hidpi = window.get_hidpi_factor();
+        let (width, height) = window.inner_size().into();
+        let hidpi = window.hidpi_factor();
         world.insert(ScreenDimensions::new(width, height, hidpi));
         world.insert(window);
         Self
@@ -54,20 +30,20 @@ impl WindowSystem {
             screen_dimensions.dirty = false;
         }
 
-        let hidpi = window.get_hidpi_factor();
+        let hidpi = window.hidpi_factor();
 
-        if let Some(size) = window.get_inner_size() {
-            let (window_width, window_height): (f64, f64) = size.to_physical(hidpi).into();
+        let size = window.inner_size();
+        let (window_width, window_height): (f64, f64) = size.to_physical(hidpi).into();
 
-            // Send window size changes to the resource
-            if (window_width, window_height) != (width, height) {
-                screen_dimensions.update(window_width, window_height);
+        // Send window size changes to the resource
+        if (window_width, window_height) != (width, height) {
+            screen_dimensions.update(window_width, window_height);
 
-                // We don't need to send the updated size of the window back to the window itself,
-                // so set dirty to false.
-                screen_dimensions.dirty = false;
-            }
+            // We don't need to send the updated size of the window back to the window itself,
+            // so set dirty to false.
+            screen_dimensions.dirty = false;
         }
+
         screen_dimensions.update_hidpi_factor(hidpi);
     }
 }
@@ -88,33 +64,33 @@ impl<'a> System<'a> for WindowSystem {
 /// This system must be active for any `GameState` to receive
 /// any `StateEvent::Window` event into it's `handle_event` method.
 #[derive(Debug)]
-pub struct EventsLoopSystem {
-    events_loop: EventsLoop,
-    events: Vec<Event>,
+pub struct EventLoopSystem {
+    event_receiver: Receiver<Event<()>>,
+    events: Vec<Event<()>>,
 }
 
-impl EventsLoopSystem {
-    /// Creates a new `EventsLoopSystem` using the provided `EventsLoop`
-    pub fn new(events_loop: EventsLoop) -> Self {
+impl EventLoopSystem {
+    /// Creates a new `EventsLoopSystem` using the provided `Receiver<Event<()>>`
+    pub fn new(event_receiver: Receiver<Event<()>>) -> Self {
         Self {
-            events_loop,
+            event_receiver,
             events: Vec::with_capacity(128),
         }
     }
 }
 
-impl<'a> RunNow<'a> for EventsLoopSystem {
-    fn run_now(&mut self, world: &'a World) {
-        let mut event_handler = <Write<'a, EventChannel<Event>>>::fetch(world);
+impl<'a> System<'a> for EventLoopSystem {
+    type SystemData = (WriteExpect<'a, EventChannel<Event<()>>>);
 
+    fn run(&mut self, mut event_channel: Self::SystemData) {
         let events = &mut self.events;
-        self.events_loop.poll_events(|event| {
-            events.push(event);
-        });
-        event_handler.drain_vec_write(events);
-    }
-
-    fn setup(&mut self, world: &mut World) {
-        <Write<'a, EventChannel<Event>>>::setup(world);
+        loop {
+            match self.event_receiver.try_recv() {
+                Ok(event) => events.push(event),
+                Err(TryRecvError::Empty) => break,
+                Err(TryRecvError::Disconnected) => panic!("Event loop crashed"),
+            }
+        }
+        event_channel.drain_vec_write(events);
     }
 }

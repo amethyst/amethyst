@@ -1,8 +1,16 @@
-use crate::{DisplayConfig, EventsLoopSystem, WindowSystem};
+use crate::{DisplayConfig, EventLoopSystem, WindowSystem};
 use amethyst_config::Config;
 use amethyst_core::{bundle::SystemBundle, ecs::World, shred::DispatcherBuilder};
 use amethyst_error::Error;
-use winit::EventsLoop;
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        mpsc::{self, Receiver, Sender},
+        Arc, Mutex,
+    },
+    thread,
+};
+use winit::{event::Event, event_loop::EventLoop, window::Window};
 
 /// Screen width used in predefined display configuration.
 #[cfg(feature = "test-support")]
@@ -45,6 +53,43 @@ impl WindowBundle {
 
         WindowBundle::from_config(display_config)
     }
+
+    fn build_event_loop_and_window(self) -> (Receiver<Event<()>>, Window) {
+        let (sender, receiver) = mpsc::channel::<Event<()>>();
+
+        let window_return: Arc<Mutex<Option<Window>>> = Arc::new(Mutex::new(None));
+        let done = Arc::new(AtomicBool::from(false));
+
+        Self::spawn_event_loop(self.config, sender, window_return.clone(), done.clone());
+
+        while !done.load(Ordering::SeqCst) {}
+
+        let window = window_return.lock().unwrap().take().unwrap();
+
+        (receiver, window)
+    }
+
+    fn spawn_event_loop(
+        display_config: DisplayConfig,
+        sender: Sender<Event<()>>,
+        window_return: Arc<Mutex<Option<Window>>>,
+        done: Arc<AtomicBool>,
+    ) {
+        thread::spawn(move || {
+            let event_loop = EventLoop::new();
+            let window = display_config
+                .into_window_builder(&event_loop)
+                .build(&event_loop)
+                .unwrap();
+
+            *window_return.lock().unwrap() = Some(window);
+            done.store(true, Ordering::SeqCst);
+
+            event_loop.run(move |event, _, &mut _control_flow| {
+                sender.send(event).unwrap();
+            });
+        });
+    }
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for WindowBundle {
@@ -53,13 +98,9 @@ impl<'a, 'b> SystemBundle<'a, 'b> for WindowBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        let event_loop = EventsLoop::new();
-        builder.add(
-            WindowSystem::from_config(world, &event_loop, self.config),
-            "window",
-            &[],
-        );
-        builder.add_thread_local(EventsLoopSystem::new(event_loop));
+        let (receiver, window) = self.build_event_loop_and_window();
+        builder.add(WindowSystem::new(world, window), "window", &[]);
+        builder.add(EventLoopSystem::new(receiver), "event_loop", &[]);
         Ok(())
     }
 }

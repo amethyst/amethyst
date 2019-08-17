@@ -883,17 +883,14 @@ mod tests {
     #[test]
     #[ignore] // CI can't run tests requiring actual backend
     fn main_pass_surface_plan() {
-        use winit::{EventsLoop, WindowBuilder};
+        use winit::{event_loop::EventLoop, window::WindowBuilder};
 
-        let ev_loop = EventsLoop::new();
+        let ev_loop = EventLoop::new();
         let mut window_builder = WindowBuilder::new();
         window_builder.window.visible = false;
         let window = window_builder.build(&ev_loop).unwrap();
 
-        let size = window
-            .get_inner_size()
-            .unwrap()
-            .to_physical(window.get_hidpi_factor());
+        let size = window.inner_size().to_physical(window.hidpi_factor());
         let window_kind = crate::Kind::D2(size.width as u32, size.height as u32, 1, 1);
 
         let config: rendy::factory::Config = Default::default();

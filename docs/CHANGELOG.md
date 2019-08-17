@@ -34,6 +34,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AmethystApplication` takes in a `System` instead of a closure for `with_system`. ([#1882])
 * `AmethystApplication::with_thread_local` constraint relaxed to `RunNow` (previously `System`). ([#1882])
 
+### Removed
+* Remove methods creating a `WindowSystem` from a DisplayConfig
+* Remove multitouch option from DisplayConfig (now enabled by default)
+* Remove Icon loading
+
 ### Fixed
 
 * `RenderingBundle` is registered last in all examples. ([#1881])

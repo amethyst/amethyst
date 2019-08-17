@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use log::error;
+use log::warn;
 use serde::{Deserialize, Serialize};
-use winit::{Icon, WindowAttributes, WindowBuilder};
+use winit::window::{Fullscreen, Icon, WindowAttributes, WindowBuilder};
 
 use crate::monitor::{MonitorIdent, MonitorsAccess};
 
@@ -41,9 +41,6 @@ pub struct DisplayConfig {
     /// Whether the window should be maximized upon creation.
     #[serde(default)]
     pub maximized: bool,
-    /// Enable multitouch on iOS.
-    #[serde(default)]
-    pub multitouch: bool,
     /// Whether the window is resizable or not.
     #[serde(default = "default_resizable")]
     pub resizable: bool,
@@ -94,7 +91,6 @@ impl Default for DisplayConfig {
             always_on_top: false,
             decorations: default_decorations(),
             maximized: false,
-            multitouch: false,
             resizable: default_resizable(),
             transparent: false,
             loaded_icon: None,
@@ -124,9 +120,9 @@ impl DisplayConfig {
     /// The `MonitorsAccess` is needed to configure a fullscreen window.
     pub fn into_window_builder(self, monitors: &impl MonitorsAccess) -> WindowBuilder {
         let attrs = WindowAttributes {
-            dimensions: self.dimensions.map(Into::into),
-            max_dimensions: self.max_dimensions.map(Into::into),
-            min_dimensions: self.min_dimensions.map(Into::into),
+            inner_size: self.dimensions.map(Into::into),
+            max_inner_size: self.max_dimensions.map(Into::into),
+            min_inner_size: self.min_dimensions.map(Into::into),
             title: self.title,
             maximized: self.maximized,
             visible: self.visibility,
@@ -134,9 +130,10 @@ impl DisplayConfig {
             decorations: self.decorations,
             always_on_top: self.always_on_top,
             window_icon: None,
-            fullscreen: self.fullscreen.map(|ident| ident.monitor_id(monitors)),
+            fullscreen: self
+                .fullscreen
+                .map(|ident| Fullscreen::Borderless(ident.monitor_handle(monitors))),
             resizable: self.resizable,
-            multitouch: self.multitouch,
         };
 
         let mut builder = WindowBuilder::new();
@@ -144,21 +141,8 @@ impl DisplayConfig {
 
         if self.loaded_icon.is_some() {
             builder = builder.with_window_icon(self.loaded_icon);
-        } else if let Some(icon) = self.icon {
-            let icon = match Icon::from_path(&icon) {
-                Ok(x) => Some(x),
-                Err(e) => {
-                    error!(
-                        "Failed to load window icon from `{}`: {}",
-                        icon.display(),
-                        e
-                    );
-
-                    None
-                }
-            };
-
-            builder = builder.with_window_icon(icon);
+        } else if let Some(_) = self.icon {
+            warn!("DisplayConfig specified Icon, but Icon loading is currently not implemented.");
         }
 
         builder

@@ -23,6 +23,6 @@ pub use crate::{
     config::DisplayConfig,
     monitor::{MonitorIdent, MonitorsAccess},
     resources::ScreenDimensions,
-    system::{EventsLoopSystem, WindowSystem},
+    system::{EventLoopSystem, WindowSystem},
 };
-pub use winit::{Icon, Window};
+pub use winit::window::{Icon, Window};
