@@ -98,11 +98,8 @@ pub struct UiGlyphsSystem<B: Backend> {
     marker: PhantomData<B>,
 }
 
-impl<B: Backend> UiGlyphsSystem<B> {
-    /// Create new UI glyphs system
-    ///
-    /// This is not public as users should use the `UiGlyphsSystemDesc` system descriptor instead.
-    pub(crate) fn new() -> Self {
+impl<B: Backend> Default for UiGlyphsSystem<B> {
+    fn default() -> Self {
         Self {
             glyph_brush: GlyphBrushBuilder::using_fonts(vec![])
                 .initial_cache_size((512, 512))
