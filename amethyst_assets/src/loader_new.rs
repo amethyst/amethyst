@@ -134,7 +134,8 @@ pub type DefaultLoader = LoaderWithStorage<atelier_loader::rpc_loader::RpcLoader
 /// Operations on an asset reference.
 pub(crate) enum RefOp {
     Decrease(LoadHandle),
-    Increase(AssetUuid),
+    Increase(LoadHandle),
+    IncreaseUuid(AssetUuid),
 }
 
 /// Asset loader and storage.
@@ -188,7 +189,10 @@ impl<T: AtelierLoader + Send + Sync> Loader for LoaderWithStorage<T> {
                 Err(TryRecvError::Empty) => break,
                 Err(TryRecvError::Disconnected) => panic!("RefOp receiver disconnected"),
                 Ok(RefOp::Decrease(handle)) => self.loader.remove_ref(handle),
-                Ok(RefOp::Increase(uuid)) => {
+                Ok(RefOp::Increase(handle)) => {
+                    self.loader.get_load_info(handle).map(|info| self.loader.add_ref(info.asset_id));
+                }
+                Ok(RefOp::IncreaseUuid(uuid)) => {
                     self.loader.add_ref(uuid);
                 }
             }

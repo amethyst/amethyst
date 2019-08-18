@@ -406,7 +406,7 @@ fn get_handle_ref(uuid: AssetUuid) -> (LoadHandle, Arc<Sender<RefOp>>) {
         let sender = sender
             .expect("no Sender<RefOp> set when deserializing handle")
             .clone();
-        let _ = sender.send(RefOp::Increase(uuid));
+        let _ = sender.send(RefOp::IncreaseUuid(uuid));
         let handle = if uuid == AssetUuid::default() {
             LoadHandle(0)
         } else {
