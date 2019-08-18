@@ -78,13 +78,6 @@ impl<A> AssetStorage<A> {
         self.assets.get(&handle.load_handle()).map(|a| &a.asset)
     }
 
-    /// Get an asset mutably from a given asset handle.
-    pub fn get_mut<T: AssetHandle>(&mut self, handle: &T) -> Option<&mut A> {
-        self.assets
-            .get_mut(&handle.load_handle())
-            .map(|a| &mut a.asset)
-    }
-
     /// Returns the version of a loaded asset, or `None` if has not completed loading.
     ///
     /// # Parameters

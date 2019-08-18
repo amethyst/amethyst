@@ -106,29 +106,6 @@ pub trait Loader: Send + Sync {
             .unwrap_or(None)
     }
 
-    /// Returns a mutable reference to the asset if it is committed.
-    ///
-    /// # Parameters
-    ///
-    /// * `id`: UUID of the asset.
-    /// * `storage`: Asset storage.
-    ///
-    /// # Type Parameters
-    ///
-    /// * `T`: Asset `TypeUuid`.
-    fn get_asset_mut<'a, T: TypeUuid>(
-        &self,
-        id: AssetUuid,
-        storage: &'a mut AssetStorage<T>,
-    ) -> Option<&'a mut T> {
-        // TODO validate type for load
-        if let Some(h) = self.get_load(id).as_ref() {
-            storage.get_mut(h)
-        } else {
-            None
-        }
-    }
-
     /// Creates the `AssetTypeStorage`'s resources in the `World`.
     ///
     /// # Parameters

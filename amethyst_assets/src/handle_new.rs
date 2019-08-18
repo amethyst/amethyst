@@ -2,11 +2,8 @@ use crate::{
     loader_new::{Loader, RefOp},
     storage_new::AssetStorage,
 };
-use amethyst_core::ecs::{
-    prelude::{Component, DenseVecStorage},
-};
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
 use atelier_loader::{self, LoaderInfoProvider};
-use ccl::dhashmap::DHashMap;
 use crossbeam_channel::{unbounded, Sender};
 use derivative::Derivative;
 use serde::{
@@ -15,21 +12,200 @@ use serde::{
 };
 use std::{
     cell::RefCell,
+    collections::{HashMap, HashSet},
     marker::PhantomData,
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc,
-    },
+    rc::Rc,
+    sync::Arc,
 };
 
 pub(crate) use atelier_loader::LoadHandle;
 pub use atelier_loader::{AssetUuid, LoadStatus, TypeUuid};
+
+/// Keeps track of whether a handle ref is a strong, weak or "internal" ref
+#[derive(Debug)]
+enum HandleRefType {
+    /// Strong references decrement the count on drop
+    Strong(Arc<Sender<RefOp>>),
+    /// Weak references do nothing on drop.
+    Weak(Arc<Sender<RefOp>>),
+    /// Internal references do nothing on drop, but turn into Strong references on clone.
+    /// Should only be used for references stored in loaded assets to avoid self-referencing
+    Internal(Arc<Sender<RefOp>>),
+    /// Implementation detail, used when changing state in this enum
+    None,
+}
+
+#[derive(Derivative)]
+#[derivative(
+    Eq(bound = ""),
+    Hash(bound = ""),
+    PartialEq(bound = ""),
+    Debug(bound = "")
+)]
+struct HandleRef {
+    id: LoadHandle,
+    #[derivative(PartialEq = "ignore")]
+    #[derivative(Hash = "ignore")]
+    ref_type: HandleRefType,
+}
+
+impl Drop for HandleRef {
+    fn drop(&mut self) {
+        use HandleRefType::*;
+        self.ref_type = match std::mem::replace(&mut self.ref_type, None) {
+            Strong(sender) => {
+                let _ = sender.send(RefOp::Decrease(self.id));
+                Weak(sender)
+            }
+            r => r,
+        };
+    }
+}
+
+impl Clone for HandleRef {
+    fn clone(&self) -> Self {
+        use HandleRefType::*;
+        Self {
+            id: self.id,
+            ref_type: match &self.ref_type {
+                Internal(sender) => Strong(sender.clone()),
+                Strong(sender) => Strong(sender.clone()),
+                Weak(sender) => Weak(sender.clone()),
+                None => panic!("unexpected ref type in clone()"),
+            },
+        }
+    }
+}
+
+impl AssetHandle for HandleRef {
+    fn load_handle(&self) -> LoadHandle {
+        self.id
+    }
+}
+
+/// Handle to an asset.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Handle<T: ?Sized> {
+    handle_ref: HandleRef,
+    marker: PhantomData<T>,
+}
+
+impl<T> Handle<T> {
+    /// Creates a new handle with `HandleRefType::Strong`
+    pub(crate) fn new(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
+        Self {
+            handle_ref: HandleRef {
+                id: handle,
+                ref_type: HandleRefType::Strong(chan),
+            },
+            marker: PhantomData,
+        }
+    }
+
+    /// Creates a new handle with `HandleRefType::Internal`
+    pub(crate) fn new_internal(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
+        Self {
+            handle_ref: HandleRef {
+                id: handle,
+                ref_type: HandleRefType::Internal(chan),
+            },
+            marker: PhantomData,
+        }
+    }
+}
+
+impl<T> AssetHandle for Handle<T> {
+    fn load_handle(&self) -> LoadHandle {
+        self.handle_ref.load_handle()
+    }
+}
+
+/// Handle to an asset whose type is unknown during loading.
+///
+/// This is returned by `Loader::load_asset_generic` for assets loaded by UUID.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct GenericHandle {
+    handle_ref: HandleRef,
+}
+
+impl GenericHandle {
+    /// Creates a new handle with `HandleRefType::Strong`
+    pub(crate) fn new(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
+        Self {
+            handle_ref: HandleRef {
+                id: handle,
+                ref_type: HandleRefType::Strong(chan),
+            },
+        }
+    }
+
+    /// Creates a new handle with `HandleRefType::Internal`
+    pub(crate) fn new_internal(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
+        Self {
+            handle_ref: HandleRef {
+                id: handle,
+                ref_type: HandleRefType::Internal(chan),
+            },
+        }
+    }
+}
+
+impl AssetHandle for GenericHandle {
+    fn load_handle(&self) -> LoadHandle {
+        self.handle_ref.load_handle()
+    }
+}
+
+/// Handle to an asset that does not prevent the asset from being unloaded.
+///
+/// Weak handles are primarily used when you want to use something that is already loaded.
+///
+/// For example, a strong handle to an asset may be guaranteed to exist elsewhere in the program,
+/// and so you can simply get and use a weak handle to that asset in other parts of your code. This
+/// removes reference counting overhead, but also ensures that the system which uses the weak handle
+/// is not in control of when to unload the asset.
+#[derive(Derivative)]
+#[derivative(
+    Eq(bound = ""),
+    Hash(bound = ""),
+    PartialEq(bound = ""),
+    Debug(bound = "")
+)]
+pub struct WeakHandle {
+    id: LoadHandle,
+}
+
+impl WeakHandle {
+    pub(crate) fn new(handle: LoadHandle) -> Self {
+        WeakHandle { id: handle }
+    }
+}
+
+impl AssetHandle for WeakHandle {
+    fn load_handle(&self) -> LoadHandle {
+        self.id
+    }
+}
+
+impl<T: TypeUuid + Send + Sync + 'static> Component for Handle<T> {
+    type Storage = DenseVecStorage<Handle<T>>;
+}
+
+impl Component for GenericHandle {
+    type Storage = DenseVecStorage<GenericHandle>;
+}
+
+impl Component for WeakHandle {
+    type Storage = DenseVecStorage<WeakHandle>;
+}
 
 thread_local! {
     static LOADER: RefCell<Option<&'static dyn LoaderInfoProvider>> = RefCell::new(None);
     static REFOP_SENDER: RefCell<Option<Arc<Sender<RefOp>>>> = RefCell::new(None);
 }
 
+/// Used to make some limited Loader interactions available to `serde` Serialize/Deserialize
+/// implementations by using thread-local storage. Required to support Serialize/Deserialize of Handle.
 pub(crate) struct SerdeContext<'a> {
     loader: Option<&'static dyn LoaderInfoProvider>,
     sender: Option<Arc<Sender<RefOp>>>,
@@ -37,14 +213,16 @@ pub(crate) struct SerdeContext<'a> {
 }
 
 impl<'a> SerdeContext<'a> {
-    pub(crate) fn with_active<R>(f: impl FnOnce(Option<&&'static dyn LoaderInfoProvider>, Option<&Arc<Sender<RefOp>>>) -> R) -> R {
-        LOADER.with(|l| {
-            REFOP_SENDER.with(|r| {
-                f(l.borrow().as_ref(), r.borrow().as_ref())
-            })
-        })
+    pub(crate) fn with_active<R>(
+        f: impl FnOnce(Option<&&'static dyn LoaderInfoProvider>, Option<&Arc<Sender<RefOp>>>) -> R,
+    ) -> R {
+        LOADER.with(|l| REFOP_SENDER.with(|r| f(l.borrow().as_ref(), r.borrow().as_ref())))
     }
-    pub(crate) fn with<F, R>(loader: &'a dyn LoaderInfoProvider, sender: Arc<Sender<RefOp>>, f: F) -> R
+    pub(crate) fn with<F, R>(
+        loader: &'a dyn LoaderInfoProvider,
+        sender: Arc<Sender<RefOp>>,
+        f: F,
+    ) -> R
     where
         F: FnOnce() -> R,
     {
@@ -90,109 +268,103 @@ impl<'a> Drop for SerdeContext<'a> {
     }
 }
 
-/// This context can be used to maintain values through a serialize/deserialize cycle
+/// This context can be used to maintain AssetUuid references through a serialize/deserialize cycle
 /// even if the LoadHandles produced are invalid. This is useful when a loader is not
 /// present, such as when processing in the atelier-assets AssetDaemon.
 struct DummySerdeContext {
-    uuid_to_load: DHashMap<AssetUuid, LoadHandle>,
-    load_to_uuid: DHashMap<LoadHandle, AssetUuid>,
+    uuid_to_load: RefCell<HashMap<AssetUuid, LoadHandle>>,
+    load_to_uuid: RefCell<HashMap<LoadHandle, AssetUuid>>,
+    current_serde_dependencies: RefCell<HashSet<AssetUuid>>,
+    current_serde_asset: RefCell<Option<AssetUuid>>,
     ref_sender: Arc<Sender<RefOp>>,
-    handle_gen: AtomicU64,
+    handle_gen: RefCell<u64>,
 }
 
 impl DummySerdeContext {
     pub fn new() -> Self {
         let (tx, _) = unbounded();
         Self {
-            uuid_to_load: DHashMap::default(),
-            load_to_uuid: DHashMap::default(),
+            uuid_to_load: RefCell::new(HashMap::default()),
+            load_to_uuid: RefCell::new(HashMap::default()),
+            current_serde_dependencies: RefCell::new(HashSet::new()),
+            current_serde_asset: RefCell::new(None),
             ref_sender: Arc::new(tx),
-            handle_gen: AtomicU64::new(1),
+            handle_gen: RefCell::new(1),
         }
     }
 }
 
 impl LoaderInfoProvider for DummySerdeContext {
     fn get_load_handle(&self, id: AssetUuid) -> Option<LoadHandle> {
-        self.uuid_to_load.get(&id).map(|l| *l)
+        let mut uuid_to_load = self.uuid_to_load.borrow_mut();
+        let mut load_to_uuid = self.load_to_uuid.borrow_mut();
+        Some(*uuid_to_load.entry(id.clone()).or_insert_with(|| {
+            let mut handle_gen = self.handle_gen.borrow_mut();
+            let new_id = *handle_gen + 1;
+            *handle_gen += 1;
+            let handle = LoadHandle(new_id);
+            load_to_uuid.insert(handle, id.clone());
+            handle
+        }))
     }
     fn get_asset_id(&self, load: LoadHandle) -> Option<AssetUuid> {
-        self.load_to_uuid.get(&load).map(|l| *l)
-    }
-    fn add_ref(&self, id: AssetUuid) -> LoadHandle {
-        *self.uuid_to_load.get_or_insert_with(&id, || {
-            let handle = LoadHandle(self.handle_gen.fetch_add(1, Ordering::Relaxed));
-            self.load_to_uuid.insert(handle, id);
-            handle
-        })
+        let maybe_asset = self.load_to_uuid.borrow().get(&load).map(|l| *l);
+        if let Some(asset_id) = maybe_asset {
+            if let Some(current_serde_id) = &*self.current_serde_asset.borrow() {
+                if *current_serde_id != asset_id && asset_id != AssetUuid::default() {
+                    let mut dependencies = self.current_serde_dependencies.borrow_mut();
+                    dependencies.insert(asset_id);
+                }
+            }
+        }
+        maybe_asset
     }
 }
 struct DummySerdeContextHandle<'a> {
-    _dummy: Arc<DummySerdeContext>,
+    dummy: Rc<DummySerdeContext>,
     ctx: SerdeContext<'a>,
 }
 impl<'a> atelier_importer::ImporterContextHandle for DummySerdeContextHandle<'a> {
     fn exit(&mut self) {
         SerdeContext::exit(&mut self.ctx)
     }
+    /// Begin gathering dependencies for an asset
+    fn begin_serialize_asset(&mut self, asset: AssetUuid) {
+        let mut current = self.dummy.current_serde_asset.borrow_mut();
+        if let Some(_) = &*current {
+            panic!("begin_serialize_asset when current_serde_asset is already set");
+        }
+        *current = Some(asset);
+    }
+    /// Finish gathering dependencies for an asset
+    fn end_serialize_asset(&mut self, _asset: AssetUuid) -> Vec<AssetUuid> {
+        let mut current = self.dummy.current_serde_asset.borrow_mut();
+        if let None = &*current {
+            panic!("end_serialize_asset when current_serde_asset is not set");
+        }
+        *current = None;
+        let mut deps = self.dummy.current_serde_dependencies.borrow_mut();
+        use std::iter::FromIterator;
+        Vec::from_iter(deps.drain())
+    }
 }
 
-struct DummySerdeContextProvider(Arc<DummySerdeContext>);
+struct DummySerdeContextProvider;
 impl atelier_importer::ImporterContext for DummySerdeContextProvider {
     fn enter(&self) -> Box<dyn atelier_importer::ImporterContextHandle> {
-        let dummy = self.0.clone();
+        let dummy = Rc::new(DummySerdeContext::new());
         let dummy_ref: &dyn LoaderInfoProvider = &*dummy;
         // This should be an OwningRef
         let ctx = unsafe {
-            SerdeContext::enter(std::mem::transmute(dummy_ref), self.0.ref_sender.clone())
+            SerdeContext::enter(std::mem::transmute(dummy_ref), dummy.ref_sender.clone())
         };
-        Box::new(DummySerdeContextHandle { ctx, _dummy: dummy })
+        Box::new(DummySerdeContextHandle { ctx, dummy })
     }
 }
-
+// Register the DummySerdeContextProvider as an ImporterContext to be used in atelier-assets.
 inventory::submit!(atelier_importer::ImporterContextRegistration {
-    instantiator: || Box::new(DummySerdeContextProvider(
-        Arc::new(DummySerdeContext::new())
-    )),
+    instantiator: || Box::new(DummySerdeContextProvider),
 });
-
-/// Handle to an asset.
-#[derive(Derivative)]
-#[derivative(
-    Eq(bound = ""),
-    Hash(bound = ""),
-    PartialEq(bound = ""),
-    Debug(bound = "")
-)]
-pub struct Handle<T: ?Sized> {
-    #[derivative(PartialEq="ignore")]
-    #[derivative(Hash="ignore")]
-    chan: Arc<Sender<RefOp>>,
-    id: LoadHandle,
-    marker: PhantomData<T>,
-}
-
-impl<T> Handle<T> {
-    pub(crate) fn new(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
-        Self {
-            chan,
-            id: handle,
-            marker: PhantomData,
-        }
-    }
-}
-
-impl<T: ?Sized> Drop for Handle<T> {
-    fn drop(&mut self) {
-        let _ = self.chan.send(RefOp::Decrease(self.id));
-    }
-}
-
-impl<T> AssetHandle for Handle<T> {
-    fn load_handle(&self) -> LoadHandle {
-        self.id
-    }
-}
 
 fn serialize_handle<S>(load: LoadHandle, serializer: S) -> Result<S::Ok, S::Error>
 where
@@ -201,8 +373,7 @@ where
     SerdeContext::with_active(|loader, _| {
         let loader = loader.expect("expected loader when serializing handle");
         use ser::SerializeSeq;
-        let uuid: AssetUuid = loader.get_asset_id(load)
-            .unwrap_or(Default::default());
+        let uuid: AssetUuid = loader.get_asset_id(load).unwrap_or(Default::default());
         let mut seq = serializer.serialize_seq(Some(uuid.len()))?;
         for element in &uuid {
             seq.serialize_element(element)?;
@@ -215,7 +386,7 @@ impl<T> Serialize for Handle<T> {
     where
         S: Serializer,
     {
-        serialize_handle(self.id, serializer)
+        serialize_handle(self.handle_ref.id, serializer)
     }
 }
 impl Serialize for GenericHandle {
@@ -223,18 +394,23 @@ impl Serialize for GenericHandle {
     where
         S: Serializer,
     {
-        serialize_handle(self.id, serializer)
+        serialize_handle(self.handle_ref.id, serializer)
     }
 }
 
-fn add_uuid_handle_ref(uuid: AssetUuid) -> (LoadHandle, Arc<Sender<RefOp>>) {
+fn get_handle_ref(uuid: AssetUuid) -> (LoadHandle, Arc<Sender<RefOp>>) {
     SerdeContext::with_active(|loader, sender| {
         let sender = sender
-            .expect("no Sender<RefOp> set when deserializing handle").clone();
+            .expect("no Sender<RefOp> set when deserializing handle")
+            .clone();
         let _ = sender.send(RefOp::Increase(uuid));
-        let handle = loader
-            .expect("no loader set in TLS when deserializing handle")
-            .add_ref(uuid);
+        let handle = if uuid == AssetUuid::default() {
+            LoadHandle(0)
+        } else {
+            loader
+                .expect("no loader set in TLS when deserializing handle")
+                .get_load_handle(uuid).expect("Handle for AssetUuid was not present when deserializing a Handle. This indicates missing dependency metadata")
+        };
         (handle, sender)
     })
 }
@@ -245,8 +421,8 @@ impl<'de, T> Deserialize<'de> for Handle<T> {
         D: de::Deserializer<'de>,
     {
         let uuid = deserializer.deserialize_seq(AssetUuidVisitor)?;
-        let (handle, sender) = add_uuid_handle_ref(uuid);
-        Ok(Handle::new(sender, handle))
+        let (handle, sender) = get_handle_ref(uuid);
+        Ok(Handle::new_internal(sender, handle))
     }
 }
 
@@ -256,8 +432,8 @@ impl<'de> Deserialize<'de> for GenericHandle {
         D: de::Deserializer<'de>,
     {
         let uuid = deserializer.deserialize_seq(AssetUuidVisitor)?;
-        let (handle, sender) = add_uuid_handle_ref(uuid);
-        Ok(GenericHandle::new(sender, handle))
+        let (handle, sender) = get_handle_ref(uuid);
+        Ok(GenericHandle::new_internal(sender, handle))
     }
 }
 
@@ -318,71 +494,6 @@ impl<'de> Visitor<'de> for AssetUuidVisitor {
     }
 }
 
-/// Handle to an asset whose type is unknown during loading.
-///
-/// This is returned by `Loader::load_asset_generic` for assets loaded by UUID.
-#[derive(Derivative)]
-#[derivative(Eq, Hash, PartialEq, Debug)]
-pub struct GenericHandle {
-    #[derivative(PartialEq="ignore")]
-    #[derivative(Hash="ignore")]
-    chan: Arc<Sender<RefOp>>,
-    id: LoadHandle,
-}
-
-impl GenericHandle {
-    pub(crate) fn new(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
-        Self { chan, id: handle }
-    }
-}
-
-impl Drop for GenericHandle {
-    fn drop(&mut self) {
-        let _ = self.chan.send(RefOp::Decrease(self.id));
-    }
-}
-
-impl AssetHandle for GenericHandle {
-    fn load_handle(&self) -> LoadHandle {
-        self.id
-    }
-}
-
-/// Handle to an asset that does not prevent the asset from being unloaded.
-///
-/// Weak handles are primarily used when you want to use something that is already loaded.
-///
-/// For example, a strong handle to an asset may be guaranteed to exist elsewhere in the program,
-/// and so you can simply get and use a weak handle to that asset in other parts of your code. This
-/// removes reference counting overhead, but also ensures that the system which uses the weak handle
-/// is not in control of when to unload the asset.
-#[derive(Derivative)]
-#[derivative(
-    Eq(bound = ""),
-    Hash(bound = ""),
-    PartialEq(bound = ""),
-    Debug(bound = "")
-)]
-pub struct WeakHandle {
-    id: LoadHandle,
-}
-
-impl WeakHandle {
-    pub(crate) fn new(handle: LoadHandle) -> Self {
-        WeakHandle { id: handle }
-    }
-}
-
-impl AssetHandle for WeakHandle {
-    fn load_handle(&self) -> LoadHandle {
-        self.id
-    }
-}
-
-impl<T: TypeUuid + Send + Sync + 'static> Component for Handle<T> {
-    type Storage = DenseVecStorage<Handle<T>>;
-}
-
 /// The contract of an asset handle.
 ///
 /// There are two types of asset handles:
@@ -417,22 +528,6 @@ pub trait AssetHandle {
         Self: Sized,
     {
         storage.get(self)
-    }
-
-    /// Returns a mutable reference to the asset if it is committed.
-    ///
-    /// # Parameters
-    ///
-    /// * `storage`: Asset storage.
-    ///
-    /// # Type Parameters
-    ///
-    /// * `T`: Asset `TypeUuid`.
-    fn asset_mut<'a, T: TypeUuid>(&self, storage: &'a mut AssetStorage<T>) -> Option<&'a mut T>
-    where
-        Self: Sized,
-    {
-        storage.get_mut(self)
     }
 
     /// Returns the version of the asset if it is committed.

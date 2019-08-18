@@ -44,7 +44,6 @@ atelier-loader = { git = "https://github.com/amethyst/atelier-assets.git", optio
 atelier-importer = { git = "https://github.com/amethyst/atelier-assets.git", optional = true }
 uuid = { version = "0.7", optional = true }
 bincode = { version = "1.1", optional = true }
-ccl = { version = "4", optional = true }
 type-uuid = "0.1"
 
 [dev-dependencies]
@@ -58,4 +57,4 @@ profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
 json = [ "serde_json" ]
 float64 = ["amethyst_core/float64"]
-experimental-assets = ["atelier-importer", "atelier-loader", "bincode", "uuid", "ccl"]
+experimental-assets = ["atelier-importer", "atelier-loader", "bincode", "uuid"]
