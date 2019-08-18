@@ -40,10 +40,11 @@ pub use self::{
     hidden::{Hidden, HiddenPropagate},
     hide_system::HideHierarchySystem,
     named::{Named, WithNamed},
-    system_desc::SystemDesc,
+    system_desc::{RunNowDesc, SystemDesc},
 };
 
 pub mod bundle;
+pub mod deferred_dispatcher_operation;
 pub mod frame_limiter;
 pub mod timing;
 pub mod transform;

@@ -117,13 +117,12 @@
 //!
 //! ```rust,no_run
 //! # use amethyst::{
-//! #     core::{bundle::SystemBundle, SystemDesc},
-//! #     derive::SystemDesc,
+//! #     core::bundle::SystemBundle,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
 //! #
-//! # #[derive(Debug, SystemDesc)]
+//! # #[derive(Debug)]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
@@ -174,8 +173,7 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     core::{bundle::SystemBundle, SystemDesc},
-//! #     derive::SystemDesc,
+//! #     core::bundle::SystemBundle,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -183,8 +181,7 @@
 //! # #[derive(Debug)]
 //! # struct ApplicationResource;
 //! #
-//! # #[derive(Debug, SystemDesc)]
-//! # #[system_desc(insert(ApplicationResource))]
+//! # #[derive(Debug)]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
@@ -198,7 +195,8 @@
 //! # impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
 //! #     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>)
 //! #     -> amethyst::Result<()> {
-//! #         builder.add(MySystem.build(world), "my_system", &[]);
+//! #         world.insert(ApplicationResource);
+//! #         builder.add(MySystem, "my_system", &[]);
 //! #         Ok(())
 //! #     }
 //! # }
@@ -224,8 +222,6 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     core::SystemDesc,
-//! #     derive::SystemDesc,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -236,7 +232,7 @@
 //! #     type Storage = DenseVecStorage<Self>;
 //! # }
 //! #
-//! # #[derive(Debug, SystemDesc)]
+//! # #[derive(Debug)]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
@@ -285,8 +281,6 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     core::SystemDesc,
-//! #     derive::SystemDesc,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -294,7 +288,7 @@
 //! # // !Default
 //! # struct MyResource(pub i32);
 //! #
-//! # #[derive(Debug, SystemDesc)]
+//! # #[derive(Debug)]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
@@ -340,6 +334,7 @@ pub use crate::{
     },
 };
 pub(crate) use crate::{
+    system_desc_injection_bundle::SystemDescInjectionBundle,
     system_injection_bundle::SystemInjectionBundle,
     thread_local_injection_bundle::ThreadLocalInjectionBundle,
 };
@@ -350,5 +345,6 @@ mod fixture;
 mod game_update;
 pub mod prelude;
 mod state;
+mod system_desc_injection_bundle;
 mod system_injection_bundle;
 mod thread_local_injection_bundle;

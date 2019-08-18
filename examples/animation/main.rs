@@ -225,18 +225,18 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
+            "animation_control_system",
+            "sampler_interpolation_system",
+        ))?
+        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path).with_clear(CLEAR_COLOR),
                 )
                 .with_plugin(RenderPbr3D::default()),
-        )?
-        .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
-            "animation_control_system",
-            "sampler_interpolation_system",
-        ))?
-        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?;
+        )?;
     let state: Example = Default::default();
     let mut game = Application::new(assets_dir, state, game_data)?;
     game.run();

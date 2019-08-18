@@ -2,7 +2,7 @@ use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex};
 
 use amethyst::{
     self,
-    core::{transform::TransformBundle, EventReader, SystemBundle, SystemDesc},
+    core::{transform::TransformBundle, EventReader, RunNowDesc, SystemBundle, SystemDesc},
     ecs::prelude::*,
     error::Error,
     input::{BindingTypes, InputBundle},
@@ -17,8 +17,8 @@ use derivative::Derivative;
 use lazy_static::lazy_static;
 
 use crate::{
-    CustomDispatcherStateBuilder, FunctionState, GameUpdate, SequencerState, SystemInjectionBundle,
-    ThreadLocalInjectionBundle,
+    CustomDispatcherStateBuilder, FunctionState, GameUpdate, SequencerState,
+    SystemDescInjectionBundle, SystemInjectionBundle, ThreadLocalInjectionBundle,
 };
 
 type BundleAddFn = Box<
@@ -366,8 +366,8 @@ where
         self.resource_add_fns
             .push(Box::new(move |world: &mut World| {
                 let resource = resource_opt.take();
-                if resource.is_some() {
-                    world.insert(resource.unwrap());
+                if let Some(resource) = resource {
+                    world.insert(resource);
                 }
             }));
         self
@@ -393,37 +393,78 @@ where
     ///
     /// # Parameters
     ///
+    /// * `system`: `System` to run.
+    /// * `name`: Name to register the system with, used for dependency ordering.
+    /// * `deps`: Names of systems that must run before this system.
+    pub fn with_system<S>(
+        self,
+        system: S,
+        name: &'static str,
+        deps: &'static [&'static str],
+    ) -> Self
+    where
+        S: for<'sys_local> System<'sys_local> + Send + 'static,
+    {
+        self.with_bundle_fn(move || SystemInjectionBundle::new(system, name, deps))
+    }
+
+    /// Registers a `System` into this application's `GameData`.
+    ///
+    /// # Parameters
+    ///
     /// * `system_desc`: Descriptor to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system<N, SD, S>(self, system_desc: SD, name: N, deps: &[N]) -> Self
+    pub fn with_system_desc<SD, S>(
+        self,
+        system_desc: SD,
+        name: &'static str,
+        deps: &'static [&'static str],
+    ) -> Self
     where
-        N: Into<String> + Clone,
         SD: SystemDesc<'static, 'static, S> + Send + Sync + 'static,
         S: for<'sys_local> System<'sys_local> + Send + 'static,
     {
-        let name = name.into();
-        let deps = deps
-            .iter()
-            .map(|dep| dep.clone().into())
-            .collect::<Vec<String>>();
-        self.with_bundle_fn(move || SystemInjectionBundle::new(system_desc, name, deps))
+        self.with_bundle_fn(move || SystemDescInjectionBundle::new(system_desc, name, deps))
     }
 
     /// Registers a thread local `System` into this application's `GameData`.
     ///
     /// # Parameters
     ///
-    /// * `system_desc`: Descriptor to instantiate the thread local system.
-    pub fn with_thread_local<SD, S>(self, system_desc: SD) -> Self
+    /// * `run_now_desc`: Descriptor to instantiate the thread local system.
+    pub fn with_thread_local<RNDesc, RN>(self, run_now_desc: RNDesc) -> Self
     where
-        SD: SystemDesc<'static, 'static, S> + Send + Sync + 'static,
-        S: for<'sys_local> System<'sys_local> + Send + 'static,
-        // Ideally we can use the following lesser bound, but this would cause a duplication of
-        // traits and types which may not be worth it at this point in time.
-        // S: for<'sys_local> RunNow<'sys_local> + Send + 'static,
+        RNDesc: RunNowDesc<'static, 'static, RN> + Send + Sync + 'static,
+        RN: for<'sys_local> RunNow<'sys_local> + Send + 'static,
     {
-        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(system_desc))
+        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(run_now_desc))
+    }
+
+    /// Registers a `System` to run in a `CustomDispatcherState`.
+    ///
+    /// This will run the system once in a dedicated `State`, allowing you to inspect the effects of
+    /// the system after setting up the world to a desired state.
+    ///
+    /// # Parameters
+    ///
+    /// * `system`: `System` to run.
+    /// * `name`: Name to register the system with, used for dependency ordering.
+    /// * `deps`: Names of systems that must run before this system.
+    pub fn with_system_single<S>(
+        self,
+        system: S,
+        name: &'static str,
+        deps: &'static [&'static str],
+    ) -> Self
+    where
+        S: for<'sys_local> System<'sys_local> + Send + Sync + 'static,
+    {
+        self.with_state(move || {
+            CustomDispatcherStateBuilder::new()
+                .with_system(system, name, deps)
+                .build()
+        })
     }
 
     /// Registers a `System` to run in a `CustomDispatcherState`.
@@ -436,20 +477,19 @@ where
     /// * `system_desc`: Descriptor to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system_single<N, SD, S>(self, system_desc: SD, name: N, deps: &[N]) -> Self
+    pub fn with_system_desc_single<SD, S>(
+        self,
+        system_desc: SD,
+        name: &'static str,
+        deps: &'static [&'static str],
+    ) -> Self
     where
-        N: Into<String> + Clone,
         SD: SystemDesc<'static, 'static, S> + Send + Sync + 'static,
         S: for<'sys_local> System<'sys_local> + Send + Sync + 'static,
     {
-        let name = name.into();
-        let deps = deps
-            .iter()
-            .map(|dep| dep.clone().into())
-            .collect::<Vec<String>>();
         self.with_state(move || {
             CustomDispatcherStateBuilder::new()
-                .with(system_desc, name, deps)
+                .with_system_desc(system_desc, name, deps)
                 .build()
         })
     }

@@ -202,6 +202,11 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
+        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(HotReloadBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
+        .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -210,12 +215,7 @@ fn main() -> Result<(), Error> {
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )?
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new())?;
+        )?;
     let mut game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
     game.run();
     Ok(())

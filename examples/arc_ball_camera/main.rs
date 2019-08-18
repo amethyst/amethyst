@@ -119,15 +119,6 @@ fn main() -> Result<(), Error> {
 
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path))
-                .with_plugin(RenderShaded3D::default())
-                .with_plugin(RenderSkybox::with_colors(
-                    Srgb::new(0.82, 0.51, 0.50),
-                    Srgb::new(0.18, 0.11, 0.85),
-                )),
-        )?
         .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
@@ -137,7 +128,16 @@ fn main() -> Result<(), Error> {
             CameraDistanceSystemDesc::default(),
             "camera_distance_system",
             &["input_system"],
-        );
+        )
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderShaded3D::default())
+                .with_plugin(RenderSkybox::with_colors(
+                    Srgb::new(0.82, 0.51, 0.50),
+                    Srgb::new(0.18, 0.11, 0.85),
+                )),
+        )?;
 
     let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
     game.run();

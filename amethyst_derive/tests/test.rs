@@ -108,7 +108,7 @@ mod tests {
     macro_rules! assert_prefab {
         ($prefab_type:ident, $prefab:expr, $assertion:expr) => {
             assert!(AmethystApplication::blank()
-                .with_system(
+                .with_system_desc(
                     PrefabLoaderSystemDesc::<$prefab_type>::default(),
                     "test_loader",
                     &[]
