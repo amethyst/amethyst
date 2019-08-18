@@ -140,7 +140,7 @@ fn system_desc_struct(context: &Context<'_>) -> TokenStream {
     }
 }
 
-fn system_desc_fields<'ast>(ast: &'ast DeriveInput) -> SystemDescFields<'ast> {
+fn system_desc_fields(ast: &DeriveInput) -> SystemDescFields<'_> {
     // This includes any `PhantomData` fields to avoid unused type parameters.
     let fields = ast.fields();
 
