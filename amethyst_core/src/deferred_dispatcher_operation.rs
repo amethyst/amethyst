@@ -44,9 +44,9 @@ pub struct AddSystem<S> {
     #[derivative(Debug = "ignore")]
     pub system: S,
     /// System name
-    pub name: &'static str,
+    pub name: String,
     /// System dependencies list
-    pub dependencies: &'static [&'static str],
+    pub dependencies: Vec<String>,
 }
 
 impl<'a, 'b, S> DispatcherOperation<'a, 'b> for AddSystem<S>
@@ -58,7 +58,12 @@ where
         _world: &mut World,
         dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        dispatcher_builder.add(self.system, self.name, self.dependencies);
+        let dependencies = self
+            .dependencies
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<&str>>();
+        dispatcher_builder.add(self.system, &self.name, &dependencies);
         Ok(())
     }
 }
@@ -71,9 +76,9 @@ pub struct AddSystemDesc<SD, S> {
     #[derivative(Debug = "ignore")]
     pub system_desc: SD,
     /// System name
-    pub name: &'static str,
+    pub name: String,
     /// System dependencies
-    pub dependencies: &'static [&'static str],
+    pub dependencies: Vec<String>,
     /// Generic type holder
     pub marker: PhantomData<S>,
 }
@@ -89,7 +94,12 @@ where
         dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         let system = self.system_desc.build(world);
-        dispatcher_builder.add(system, self.name, self.dependencies);
+        let dependencies = self
+            .dependencies
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<&str>>();
+        dispatcher_builder.add(system, &self.name, &dependencies);
         Ok(())
     }
 }

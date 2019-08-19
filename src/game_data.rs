@@ -182,15 +182,17 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///     // It is legal to register a system with an empty name
     ///     .with(NopSystem, "", &[]);
     /// ~~~
-    pub fn with<S>(
-        mut self,
-        system: S,
-        name: &'static str,
-        dependencies: &'static [&'static str],
-    ) -> Self
+    pub fn with<S, N>(mut self, system: S, name: N, dependencies: &[N]) -> Self
     where
         S: for<'c> System<'c> + 'static + Send,
+        N: Into<String> + Clone,
     {
+        let name = Into::<String>::into(name);
+        let dependencies = dependencies
+            .iter()
+            .map(Clone::clone)
+            .map(Into::<String>::into)
+            .collect::<Vec<String>>();
         let dispatcher_operation = Box::new(AddSystem {
             system,
             name,
@@ -259,16 +261,23 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///     // It is legal to register a system with an empty name
     ///     .with_system_desc(NopSystem, "", &[]);
     /// ~~~
-    pub fn with_system_desc<SD, S>(
+    pub fn with_system_desc<SD, S, N>(
         mut self,
         system_desc: SD,
-        name: &'static str,
-        dependencies: &'static [&'static str],
+        name: N,
+        dependencies: &[N],
     ) -> Self
     where
         SD: SystemDesc<'a, 'b, S> + 'static,
         S: for<'c> System<'c> + 'static + Send,
+        N: Into<String> + Clone,
     {
+        let name = Into::<String>::into(name);
+        let dependencies = dependencies
+            .iter()
+            .map(Clone::clone)
+            .map(Into::<String>::into)
+            .collect::<Vec<String>>();
         let dispatcher_operation = Box::new(AddSystemDesc {
             system_desc,
             name,
