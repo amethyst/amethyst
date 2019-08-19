@@ -1,3 +1,10 @@
+use wasmer_runtime::{
+    instantiate,
+    Value,
+    imports,
+    error,
+};
+
 static WASM: &'static [u8] = &[
     // The module above compiled to bytecode goes here.
     0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x06, 0x01, 0x60,
@@ -8,32 +15,19 @@ static WASM: &'static [u8] = &[
     0x6f, 0x6e, 0x65, 0x02, 0x07, 0x01, 0x00, 0x01, 0x00, 0x02, 0x70, 0x30,
 ];
 
-use wasmer_runtime::{
-    instantiate,
-    Value,
-    imports,
-    error,
-};
-
-fn run() -> error::Result<()> {
-    // We're not importing anything, so make an empty import object.
+pub fn run() -> error::Result<()> {
     let import_object = imports! {};
-
-    let mut instance = instantiate(WASM, &import_object)?;
-
-    let values = instance
-        .func("add_one")?
-        .call(&[Value::I32(42)])?;
-
-    assert_eq!(values[0], Value::I32(43));
-
+    let instance = instantiate(WASM, &import_object)?;
+    let values = instance.call("add_one", &[Value::I32(42)])?;
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test() {
-        run();
+        assert_eq!(run(), Ok(()));
     }
 }
