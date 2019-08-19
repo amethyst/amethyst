@@ -116,6 +116,7 @@ amethyst_gltf = { path = "amethyst_gltf", version = "0.7.0", optional = true }
 amethyst_network = { path = "amethyst_network", version = "0.5.0", optional = true }
 amethyst_locale = { path = "amethyst_locale", version = "0.6.0", optional = true }
 amethyst_rendy = { path = "amethyst_rendy", version = "0.2.0", features = ["window"], optional = true }
+amethyst_scripting = { path = "amethyst_scripting", version = "0.1.0", optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.8.0" }
 amethyst_ui = { path = "amethyst_ui", version = "0.7.0" }
 amethyst_utils = { path = "amethyst_utils", version = "0.7.0" }
