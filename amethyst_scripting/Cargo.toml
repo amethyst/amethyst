@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 wasmer-runtime = "0.6.0"
+wabt = "0.9.1"
