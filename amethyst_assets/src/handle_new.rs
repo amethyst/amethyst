@@ -340,15 +340,14 @@ impl<'a> atelier_importer::ImporterContextHandle for DummySerdeContextHandle<'a>
         *current = Some(asset);
     }
     /// Finish gathering dependencies for an asset
-    fn end_serialize_asset(&mut self, _asset: AssetUuid) -> Vec<AssetUuid> {
+    fn end_serialize_asset(&mut self, _asset: AssetUuid) -> HashSet<AssetUuid> {
         let mut current = self.dummy.current_serde_asset.borrow_mut();
         if let None = &*current {
             panic!("end_serialize_asset when current_serde_asset is not set");
         }
         *current = None;
         let mut deps = self.dummy.current_serde_dependencies.borrow_mut();
-        use std::iter::FromIterator;
-        Vec::from_iter(deps.drain())
+        std::mem::replace(&mut *deps, HashSet::new())
     }
 }
 
