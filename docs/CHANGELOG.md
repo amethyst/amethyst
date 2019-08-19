@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AmethystApplication::with_thread_local` constraint relaxed to `RunNow` (previously `System`). ([#1882])
 * `SystemDesc` proc macro supports `#[system_desc(event_reader_id)]` to register event reader. ([#1883])
 * `SystemDesc` proc macro supports `#[system_desc(flagged_storage_reader(Component))]`. ([#1886])
+* `DispatcherOperation` stores system name and dependencies as `String`s. ([#1891])
 
 ### Fixed
 
@@ -43,6 +44,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1882]: https://github.com/amethyst/amethyst/pull/1882
 [#1883]: https://github.com/amethyst/amethyst/pull/1883
 [#1886]: https://github.com/amethyst/amethyst/pull/1886
+[#1891]: https://github.com/amethyst/amethyst/pull/1891
 
 ## [0.12.0] - 2019-07-30
 
