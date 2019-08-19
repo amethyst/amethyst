@@ -615,6 +615,90 @@ fn render_image<B: Backend>(
                 false
             }
         }
+        UiImage::NineSlice {x,y,width,height,left_dist,right_dist,top_dist, bottom_dist, texture,texture_dimensions} =>{
+            if let Some((tex_id, this_changed)) = textures.insert(
+                factory,
+                resources,
+                texture,
+                hal::image::Layout::ShaderReadOnlyOptimal,
+            ) {
+                let x_slices=
+                    [*x as f32 /texture_dimensions[0]as f32,
+                        (*x+*left_dist)as f32/texture_dimensions[0]as f32,
+                        (*x+*width-*right_dist)as f32/texture_dimensions[0]as f32,
+                        (*x+*width)as f32/texture_dimensions[0]as f32];
+                let y_slices=
+                    [*y as f32/texture_dimensions[1]as f32,
+                        (*y+*top_dist)as f32/texture_dimensions[1]as f32,
+                        (*y+*height-*bottom_dist)as f32/texture_dimensions[1]as f32,
+                        (*y+*height)as f32/texture_dimensions[1]as f32];
+
+
+                let mut top_left_args = args.clone();
+                top_left_args.tex_coord_bounds = [x_slices[0],y_slices[0],x_slices[1],y_slices[1]].into();
+                top_left_args.dimensions =  [*left_dist as f32,*top_dist as f32].into();
+                top_left_args.coords =  [transform.pixel_x()-((transform.pixel_width - *left_dist as f32) /2.0),transform.pixel_y()+((transform.pixel_height - *top_dist as f32)/2.0)].into();
+                batches.insert(tex_id, Some(top_left_args));
+
+                let mut top_middle_args = args.clone();
+                top_middle_args.tex_coord_bounds = [x_slices[1],y_slices[0],x_slices[2],y_slices[1]].into();
+                top_middle_args.dimensions =  [transform.pixel_width -( *right_dist+*left_dist)as f32,*top_dist as f32].into();
+                top_middle_args.coords =  [transform.pixel_x()+((*left_dist - *right_dist) as f32/2.0),transform.pixel_y()+((transform.pixel_height - *top_dist as f32)/2.0)].into();
+                batches.insert(tex_id, Some(top_middle_args));
+
+                let mut top_right_args = args.clone();
+                top_right_args.tex_coord_bounds = [x_slices[2],y_slices[0],x_slices[3],y_slices[1]].into();
+                top_right_args.dimensions =  [*right_dist as f32,*top_dist as f32].into();
+                top_right_args.coords =  [transform.pixel_x()+((transform.pixel_width - *right_dist as f32)/2.0),transform.pixel_y()+((transform.pixel_height - *top_dist as f32)/2.0)].into();
+                batches.insert(tex_id, Some(top_right_args));
+
+                let mut middle_left_args = args.clone();
+                middle_left_args.tex_coord_bounds = [x_slices[0],y_slices[1],x_slices[1],y_slices[2]].into();
+                middle_left_args.dimensions =  [*left_dist as f32,transform.pixel_height -( *top_dist+*right_dist)as f32].into();
+                middle_left_args.coords =  [transform.pixel_x()-((transform.pixel_width - *left_dist as f32) /2.0),transform.pixel_y()+((*bottom_dist- *top_dist) as f32)/2.0].into();
+                batches.insert(tex_id, Some(middle_left_args));
+
+                let mut middle_middle_args = args.clone();
+                middle_middle_args.tex_coord_bounds = [x_slices[1],y_slices[1],x_slices[2],y_slices[2]].into();
+                middle_middle_args.dimensions =  [transform.pixel_width -( *right_dist+*left_dist)as f32,transform.pixel_height -( *top_dist+*right_dist)as f32].into();
+                middle_middle_args.coords =  [transform.pixel_x()+((*left_dist - *right_dist) as f32/2.0),transform.pixel_y()+((*bottom_dist- *top_dist) as f32)/2.0].into();
+                batches.insert(tex_id, Some(middle_middle_args));
+
+                let mut middle_right_args = args.clone();
+                middle_middle_args.tex_coord_bounds = [x_slices[2],y_slices[1],x_slices[3],y_slices[2]].into();
+                middle_middle_args.dimensions =  [*right_dist as f32,transform.pixel_height -( *top_dist+*right_dist)as f32].into();
+                middle_middle_args.coords =  [transform.pixel_x()+((transform.pixel_width - *right_dist as f32)/2.0),transform.pixel_y()+((*bottom_dist- *top_dist) as f32)/2.0].into();
+                batches.insert(tex_id, Some(middle_middle_args));
+
+
+                let mut bottom_left_args = args.clone();
+                bottom_left_args.tex_coord_bounds = [x_slices[0],y_slices[2],x_slices[1],y_slices[3]].into();
+                bottom_left_args.dimensions =  [*left_dist as f32,*bottom_dist as f32].into();
+                bottom_left_args.coords =  [transform.pixel_x()-((transform.pixel_width - *left_dist as f32) /2.0),transform.pixel_y()-((transform.pixel_height - *bottom_dist as f32)/2.0)].into();
+                batches.insert(tex_id, Some(bottom_left_args));
+
+                let mut bottom_middle_args = args.clone();
+                bottom_middle_args.tex_coord_bounds = [x_slices[1],y_slices[2],x_slices[2],y_slices[3]].into();
+                bottom_middle_args.dimensions =  [transform.pixel_width -( *right_dist+*left_dist)as f32,*bottom_dist as f32].into();
+                bottom_middle_args.coords =  [transform.pixel_x()+((*left_dist - *right_dist) as f32/2.0),transform.pixel_y()-((transform.pixel_height - *bottom_dist as f32)/2.0)].into();
+                batches.insert(tex_id, Some(bottom_middle_args));
+
+                let mut bottom_right_args = args.clone();
+                bottom_right_args.tex_coord_bounds = [x_slices[2],y_slices[2],x_slices[3],y_slices[3]].into();
+                bottom_right_args.dimensions =  [*right_dist as f32,*bottom_dist as f32].into();
+                bottom_right_args.coords =  [transform.pixel_x()+((transform.pixel_width - *right_dist as f32) /2.0),transform.pixel_y()-((transform.pixel_height- *bottom_dist as f32)/2.0)].into();
+                batches.insert(tex_id, Some(bottom_right_args));
+
+
+                this_changed
+            } else {
+                false
+            }
+
+
+
+
+        }
         _ => {
             batches.insert(white_tex_id, Some(args));
             false

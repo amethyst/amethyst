@@ -12,6 +12,19 @@ pub enum UiImage {
     PartialTexture(Handle<Texture>, TextureCoordinates),
     /// An image backed by a Sprite
     Sprite(SpriteRender),
+    /// An Image backed by a 9-sliced texture
+    NineSlice{
+        x: i32,
+        y: i32,
+        width: i32,
+        height: i32,
+        left_dist: i32,
+        right_dist: i32,
+        top_dist: i32,
+        bottom_dist: i32,
+        texture: Handle<Texture>,
+        texture_dimensions: [i32;2]
+    },
     /// An image entirely covered by single solid color
     SolidColor([f32; 4]),
 }

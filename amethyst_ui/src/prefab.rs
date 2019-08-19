@@ -343,6 +343,19 @@ pub enum UiImageLoadPrefab {
     PartialTexture(TexturePrefab, f32, f32, f32, f32),
     /// Solid color image
     SolidColor(f32, f32, f32, f32),
+    /// 9-Slice image
+   NineSlice{
+        x: i32,
+        y: i32,
+        width: i32,
+        height: i32,
+        left_dist: i32,
+        right_dist: i32,
+        top_dist: i32,
+        bottom_dist: i32,
+        texture: TexturePrefab,
+        texture_dimensions: (i32,i32)
+    },
 }
 
 impl<'a> PrefabData<'a> for UiImagePrefab {
@@ -394,6 +407,9 @@ impl<'a> PrefabData<'a> for UiImageLoadPrefab {
                     [*left, *right, *bottom, *top].into(),
                 )
             }
+            UiImageLoadPrefab::NineSlice {x,y,height,width,left_dist,right_dist,top_dist, bottom_dist,texture,texture_dimensions} => {
+                UiImage::NineSlice {x:*x,y:*y,height: *height,width: *width,left_dist: *left_dist,right_dist:*right_dist,top_dist: *top_dist, bottom_dist: *bottom_dist,texture : texture.add_to_entity(entity, textures, entities, children)? , texture_dimensions: [texture_dimensions.0,texture_dimensions.1]}
+            }
             UiImageLoadPrefab::SolidColor(r, g, b, a) => UiImage::SolidColor([*r, *g, *b, *a]),
         };
         Ok(image)
@@ -407,6 +423,7 @@ impl<'a> PrefabData<'a> for UiImageLoadPrefab {
         match self {
             UiImageLoadPrefab::Texture(tex) => tex.load_sub_assets(progress, textures),
             UiImageLoadPrefab::PartialTexture(tex, ..) => tex.load_sub_assets(progress, textures),
+            UiImageLoadPrefab::NineSlice{texture, ..} => texture.load_sub_assets(progress, textures),
             UiImageLoadPrefab::SolidColor(..) => Ok(false),
         }
     }
