@@ -1,8 +1,9 @@
 //! Displays a shaded sphere to the user.
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     core::transform::TransformBundle,
+    ecs::prelude::WorldExt,
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
@@ -32,9 +33,10 @@ fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
 
     let display_config_path = app_root.join("examples/sphere/config/display.ron");
-    let assets_directory = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/assets/");
+
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
@@ -44,7 +46,7 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderShaded3D::default()),
         )?;
-    let mut game = Application::new(assets_directory, Example, game_data)?;
+    let mut game = Application::new(assets_dir, Example, game_data)?;
     game.run();
     Ok(())
 }

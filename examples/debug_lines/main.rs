@@ -5,9 +5,10 @@ use amethyst::{
     core::{
         math::{Point3, Vector3},
         transform::{Transform, TransformBundle},
-        Time,
+        SystemDesc, Time,
     },
-    ecs::{Read, System, Write},
+    derive::SystemDesc,
+    ecs::{Read, System, SystemData, World, WorldExt, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -22,7 +23,9 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 
+#[derive(SystemDesc)]
 struct ExampleLinesSystem;
+
 impl<'s> System<'s> for ExampleLinesSystem {
     type SystemData = (
         Write<'s, DebugLines>, // Request DebugLines resource
@@ -51,10 +54,9 @@ struct ExampleState;
 impl SimpleState for ExampleState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         // Setup debug lines as a resource
-        data.world.add_resource(DebugLines::new());
+        data.world.insert(DebugLines::new());
         // Configure width of lines. Optional step
-        data.world
-            .add_resource(DebugLinesParams { line_width: 2.0 });
+        data.world.insert(DebugLinesParams { line_width: 2.0 });
 
         // Setup debug lines as a component and add lines to render axis&grid
         let mut debug_lines_component = DebugLinesComponent::with_capacity(100);
@@ -169,7 +171,7 @@ fn main() -> amethyst::Result<()> {
 
     let display_config_path = app_root.join("examples/debug_lines/config/display.ron");
     let key_bindings_path = app_root.join("examples/debug_lines/config/input.ron");
-    let assets_directory = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/assets/");
 
     let fly_control_bundle = FlyControlBundle::<StringBindings>::new(
         Some(String::from("move_x")),
@@ -192,7 +194,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderSkybox::default()),
         )?;
 
-    let mut game = Application::new(assets_directory, ExampleState, game_data)?;
+    let mut game = Application::new(assets_dir, ExampleState, game_data)?;
     game.run();
     Ok(())
 }

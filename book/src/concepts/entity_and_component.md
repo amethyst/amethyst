@@ -91,9 +91,63 @@ There are a few storage strategies for different usage scenarios. The most commo
 * `VecStorage`: Elements are stored into a sparse array. The entity id is the same as the index of component. If your component is small (<= 16 bytes) or is carried by most entities, this is preferable over `DenseVecStorage`.
 * `FlaggedStorage`: Used to keep track of changes of a component. Useful for caching purposes.
 
-![DenseVecStorage](../images/concepts/component_and_entity_densevecstorage.svg)
+<!-- DenseVec Storage Diagram Table -->
+<div style="width: 100%">
+    <h4 style="text-align: center; font-weight: bold">DenseVecStorage ( <em>entity_id</em> maps to <em>data_id</em> )</h4>
+    <div style="display: flex">
+        <div style="margin-right: 3em">
+            <table style="text-align: center;">
+                <tr><td style="background-color: #D8E5FD; color: black;">data</td></tr>
+                <tr><td style="background-color: #D8E5FD; color: black;">data_id</td></tr>
+                <tr><td style="background-color: #D8E5FD; color: black;">entity_id</td></tr>
+            </table>
+        </div>
+        <div style="flex-grow: 1; text-align: center">
+            <table style="width: 100%">
+                <tr>
+                    <td>data</td>
+                    <td>data</td>
+                    <td>data</td>
+                    <td>data</td>
+                    <td>...</td>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>1</td>
+                    <td>...</td>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>5</td>
+                    <td>9</td>
+                    <td>...</td>
+                </tr>
+            </table>
+        </div>
+</div>
 
-![VecStorage](../images/concepts/component_and_entity_vecstorage.svg)
+<!-- VecStorage Diagram Table -->
+<div style="width: 100%">
+    <h4 style="text-align: center; font-weight: bold">VecStorage ( <em>entity_id</em> = data index, can be empty )</h4>
+    <div style="display: flex">
+        <div style="margin-right: 3em">
+            <table><tr><td style="background-color: #D8E5FD; color: black;">data</td></tr></table>
+        </div>
+        <div style="flex-grow: 1; text-align: center">
+            <table style="width: 100%">
+                <tr>
+                    <td>data</td>
+                    <td>data</td>
+                    <td style="background-color: #E22C2C99; color: black;">empty</td>
+                    <td>data</td>
+                    <td>...</td>
+                </tr>
+            </table>
+        </div>
+</div>
 
 For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html)
 and the ["Storages" section](https://slide-rs.github.io/specs/05_storages.html) of the specs book.

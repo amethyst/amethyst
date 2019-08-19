@@ -9,7 +9,7 @@ mod sprite_sheet_loader;
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     core::{Hidden, Transform, TransformBundle},
-    ecs::Entity,
+    ecs::{Entity, World, WorldExt},
     input::{get_key, is_close_requested, is_key_down, ElementState},
     prelude::*,
     renderer::{
@@ -365,7 +365,7 @@ fn main() -> amethyst::Result<()> {
 
     let display_config_path = app_root.join("examples/sprites_ordered/config/display.ron");
 
-    let assets_directory = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
@@ -378,7 +378,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::new(assets_directory, Example::new(), game_data)?;
+    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     game.run();
 
     Ok(())

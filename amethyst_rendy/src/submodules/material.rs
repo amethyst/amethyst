@@ -15,7 +15,7 @@ use crate::{
     util,
 };
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::ecs::{Read, Resources, SystemData};
+use amethyst_core::ecs::{Read, SystemData, World};
 use glsl_layout::*;
 
 #[cfg(feature = "profiler")]
@@ -152,7 +152,11 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Create a new `MaterialSub` using the provided rendy `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
-            layout: set_layout! {factory, [1] UniformBuffer FRAGMENT, [T::len()] CombinedImageSampler FRAGMENT},
+            layout: set_layout! {
+                factory,
+                [1] UniformBuffer hal::pso::ShaderStageFlags::FRAGMENT,
+                [T::len()] CombinedImageSampler hal::pso::ShaderStageFlags::FRAGMENT
+            },
             lookup: util::LookupBuilder::new(),
             allocator: SlotAllocator::new(1024),
             buffers: vec![Self::create_buffer(factory)?],
@@ -202,7 +206,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     fn try_insert(
         &mut self,
         factory: &Factory<B>,
-        res: &Resources,
+        world: &World,
         handle: &Handle<Material>,
     ) -> Option<MaterialState<B>> {
         #[cfg(feature = "profiler")]
@@ -212,7 +216,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         let (mat_storage, tex_storage) = <(
             Read<'_, AssetStorage<Material>>,
             Read<'_, AssetStorage<Texture>>,
-        )>::fetch(res);
+        )>::fetch(world);
 
         let mat = mat_storage.get(handle)?;
 
@@ -271,7 +275,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     pub fn insert(
         &mut self,
         factory: &Factory<B>,
-        res: &Resources,
+        world: &World,
         handle: &Handle<Material>,
     ) -> Option<(MaterialId, bool)> {
         #[cfg(feature = "profiler")]
@@ -291,7 +295,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
 
         debug_assert!(self.materials.len() >= id);
         let (new_state, loaded) = self
-            .try_insert(factory, res, handle)
+            .try_insert(factory, world, handle)
             .map(|s| (s, true))
             .unwrap_or_else(|| {
                 (

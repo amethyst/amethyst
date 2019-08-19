@@ -138,7 +138,7 @@ $ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 aw
 ### Fedora
 
 ```
-# dnf install pkgconfig gcc openssl-devel alsa-lib-devel cmake make gcc-c++ freetype-devel expat-devel libxcb-devel
+# dnf install pkgconfig gcc openssl-devel alsa-lib-devel cmake make gcc-c++ freetype-devel expat-devel libxcb-devel libX11-devel
 ```
 
 ### openSUSE

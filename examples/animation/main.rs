@@ -2,9 +2,9 @@
 
 use amethyst::{
     animation::*,
-    assets::{Loader, PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{Loader, PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     core::{Transform, TransformBundle},
-    ecs::prelude::Entity,
+    ecs::prelude::{Entity, World, WorldExt},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     renderer::{
@@ -221,10 +221,10 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/animation/config/display.ron");
-    let assets_directory = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
@@ -238,7 +238,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderPbr3D::default()),
         )?;
     let state: Example = Default::default();
-    let mut game = Application::new(assets_directory, state, game_data)?;
+    let mut game = Application::new(assets_dir, state, game_data)?;
     game.run();
 
     Ok(())

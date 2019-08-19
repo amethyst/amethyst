@@ -1,10 +1,12 @@
 use amethyst::{
-    core::transform::Transform,
-    ecs::prelude::{Join, ReadStorage, System, WriteStorage},
+    core::{transform::Transform, SystemDesc},
+    derive::SystemDesc,
+    ecs::prelude::{Join, ReadStorage, System, SystemData, World, WriteStorage},
 };
 
 use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
+#[derive(SystemDesc)]
 pub struct BounceSystem;
 
 impl<'s> System<'s> for BounceSystem {

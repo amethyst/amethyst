@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_error"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["John-John Tedro <udoprog@tedro.se>"]
 readme = "README.md"
 edition = "2018"
@@ -16,7 +16,6 @@ homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 [badges]
-appveyor = { repository = "amethyst/amethyst", branch = "master" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]

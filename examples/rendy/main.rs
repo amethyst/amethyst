@@ -1,5 +1,5 @@
 //! Displays spheres with physically based materials.
-//!
+
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
@@ -7,19 +7,19 @@ use amethyst::{
     },
     assets::{
         AssetLoaderSystemData, AssetStorage, Completion, Handle, Loader, PrefabLoader,
-        PrefabLoaderSystem, ProgressCounter, RonFormat,
+        PrefabLoaderSystemDesc, ProgressCounter, RonFormat,
     },
     controls::{FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
             Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
-            ReadStorage, Resources, System, SystemData, Write, WriteStorage,
+            ReadStorage, System, SystemData, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
     },
     error::Error,
-    gltf::GltfSceneLoaderSystem,
+    gltf::GltfSceneLoaderSystemDesc,
     input::{
         is_close_requested, is_key_down, is_key_up, Axis, Bindings, Button, InputBundle,
         StringBindings,
@@ -324,11 +324,11 @@ impl SimpleState for Example {
             .with(FlyControlTag)
             .build();
 
-        world.add_resource(ActiveCamera {
+        world.insert(ActiveCamera {
             entity: Some(camera),
         });
-        world.add_resource(RenderMode::default());
-        world.add_resource(DebugLines::new());
+        world.insert(RenderMode::default());
+        world.insert(DebugLines::new());
     }
 
     fn handle_event(
@@ -544,6 +544,18 @@ fn toggle_or_cycle_animation(
     }
 }
 
+// This is required because rustc does not recognize .ctor segments when considering which symbols
+// to include when linking static libraries, so we need to reference a symbol in each module that
+// registers an importer since it uses inventory::submit and the .ctor linkage hack.
+fn init_modules() {
+    {
+        use amethyst::assets::{Format, Prefab};
+        let _w = amethyst::audio::output::outputs();
+        let _p = Prefab::<()>::new();
+        let _name = ImageFormat::default().name();
+    }
+}
+
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
         stdout: amethyst::StdoutLog::Off,
@@ -561,6 +573,8 @@ fn main() -> amethyst::Result<()> {
     // .level_for("gfx_backend_metal", log::LevelFilter::Trace)
     .start();
 
+    init_modules();
+
     let app_root = application_root_dir()?;
 
     let display_config_path = app_root
@@ -568,7 +582,7 @@ fn main() -> amethyst::Result<()> {
         .join("rendy")
         .join("config")
         .join("display.ron");
-    let assets_directory = app_root.join("examples").join("assets");
+    let assets_dir = app_root.join("examples").join("assets");
 
     let mut bindings = Bindings::new();
     bindings.insert_axis(
@@ -597,13 +611,13 @@ fn main() -> amethyst::Result<()> {
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
-        .with(
-            PrefabLoaderSystem::<ScenePrefabData>::default(),
+        .with_system_desc(
+            PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
             "scene_loader",
             &[],
         )
-        .with(
-            GltfSceneLoaderSystem::default(),
+        .with_system_desc(
+            GltfSceneLoaderSystemDesc::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
@@ -653,7 +667,7 @@ fn main() -> amethyst::Result<()> {
                 )),
         )?;
 
-    let mut game = Application::new(&assets_directory, Example::new(), game_data)?;
+    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     game.run();
     Ok(())
 }
@@ -667,12 +681,16 @@ struct RenderSwitchable3D {
 }
 
 impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
-    fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        <RenderPbr3D as RenderPlugin<DefaultBackend>>::on_build(&mut self.pbr, builder)
+    fn on_build<'a, 'b>(
+        &mut self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
+        <RenderPbr3D as RenderPlugin<DefaultBackend>>::on_build(&mut self.pbr, world, builder)
     }
 
-    fn should_rebuild(&mut self, res: &Resources) -> bool {
-        let mode = *<Read<'_, RenderMode>>::fetch(res);
+    fn should_rebuild(&mut self, world: &World) -> bool {
+        let mode = *<Read<'_, RenderMode>>::fetch(world);
         self.last_mode != mode
     }
 
@@ -680,14 +698,14 @@ impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
         &mut self,
         plan: &mut RenderPlan<DefaultBackend>,
         factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
+        world: &World,
     ) -> Result<(), Error> {
-        let mode = *<Read<'_, RenderMode>>::fetch(res);
+        let mode = *<Read<'_, RenderMode>>::fetch(world);
         self.last_mode = mode;
         match mode {
-            RenderMode::Pbr => self.pbr.on_plan(plan, factory, res),
-            RenderMode::Shaded => self.shaded.on_plan(plan, factory, res),
-            RenderMode::Flat => self.flat.on_plan(plan, factory, res),
+            RenderMode::Pbr => self.pbr.on_plan(plan, factory, world),
+            RenderMode::Shaded => self.shaded.on_plan(plan, factory, world),
+            RenderMode::Flat => self.flat.on_plan(plan, factory, world),
         }
     }
 }

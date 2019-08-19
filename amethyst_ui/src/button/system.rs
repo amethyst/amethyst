@@ -1,7 +1,7 @@
 use amethyst_core::{
-    ecs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage},
+    ecs::{Entity, ReadExpect, System, SystemData, World, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
-    ParentHierarchy,
+    ParentHierarchy, SystemDesc,
 };
 use std::{collections::HashMap, fmt::Debug};
 
@@ -53,21 +53,41 @@ where
     }
 }
 
+/// Builds a `UiButtonSystem`.
+#[derive(Default, Debug)]
+pub struct UiButtonSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, UiButtonSystem> for UiButtonSystemDesc {
+    fn build(self, world: &mut World) -> UiButtonSystem {
+        <UiButtonSystem as System<'_>>::SystemData::setup(world);
+
+        let event_reader = world
+            .fetch_mut::<EventChannel<UiButtonAction>>()
+            .register_reader();
+
+        UiButtonSystem::new(event_reader)
+    }
+}
+
 /// This system manages button mouse events.  It changes images and text colors, as well as playing audio
 /// when necessary.
 ///
 /// It's automatically registered with the `UiBundle`.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct UiButtonSystem {
-    event_reader: Option<ReaderId<UiButtonAction>>,
+    event_reader: ReaderId<UiButtonAction>,
     set_images: HashMap<Entity, ActionChangeStack<UiImage>>,
     set_text_colors: HashMap<Entity, ActionChangeStack<[f32; 4]>>,
 }
 
 impl UiButtonSystem {
     /// Creates a new instance of this structure
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(event_reader: ReaderId<UiButtonAction>) -> Self {
+        Self {
+            event_reader,
+            set_images: Default::default(),
+            set_text_colors: Default::default(),
+        }
     }
 }
 
@@ -79,22 +99,11 @@ impl<'s> System<'s> for UiButtonSystem {
         Write<'s, EventChannel<UiButtonAction>>,
     );
 
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        self.event_reader = Some(
-            res.fetch_mut::<EventChannel<UiButtonAction>>()
-                .register_reader(),
-        );
-    }
-
     fn run(
         &mut self,
         (mut image_storage, mut text_storage, hierarchy, button_events): Self::SystemData,
     ) {
-        let event_reader = self
-            .event_reader
-            .as_mut()
-            .expect("`UiButtonSystem::setup` was not called before `UiButtonSystem::run`");
+        let event_reader = &mut self.event_reader;
 
         for event in button_events.read(event_reader) {
             match event.event_type {

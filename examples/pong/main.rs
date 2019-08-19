@@ -6,7 +6,7 @@ mod pong;
 mod systems;
 
 use amethyst::{
-    audio::{AudioBundle, DjSystem},
+    audio::{AudioBundle, DjSystemDesc},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
     ecs::{Component, DenseVecStorage},
     input::{InputBundle, StringBindings},
@@ -67,15 +67,16 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(PongBundle)?
         .with_bundle(AudioBundle::default())?
-        .with(
-            DjSystem::new(|music: &mut Music| music.music.next()),
+        .with_system_desc(
+            DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
-                // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
+                // The RenderToWindow plugin provides all the scaffolding for opening a window and
+                // drawing on it
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
                         .with_clear([0.34, 0.36, 0.52, 1.0]),

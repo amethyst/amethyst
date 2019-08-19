@@ -1,7 +1,7 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     core::TransformBundle,
     prelude::*,
     renderer::{
@@ -34,12 +34,12 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_directory = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
     let display_config_path = app_root.join("examples/prefab/config/display.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
@@ -50,7 +50,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         )?;
 
-    let mut game = Application::new(assets_directory, AssetsExample, game_data)?;
+    let mut game = Application::new(assets_dir, AssetsExample, game_data)?;
     game.run();
     Ok(())
 }

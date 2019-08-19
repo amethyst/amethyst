@@ -1,4 +1,13 @@
-use amethyst::{ecs::prelude::*, prelude::*};
+use std::marker::PhantomData;
+
+use amethyst::{
+    core::{
+        deferred_dispatcher_operation::{AddSystem, AddSystemDesc, DispatcherOperation},
+        SystemDesc,
+    },
+    ecs::prelude::*,
+    prelude::*,
+};
 
 use derivative::Derivative;
 use derive_new::new;
@@ -12,18 +21,18 @@ use crate::GameUpdate;
 #[derive(Derivative, Default)]
 #[derivative(Debug)]
 pub struct CustomDispatcherState<'a, 'b> {
-    /// State specific dispatcher builder.
+    /// Functions to instantiate state specific dispatcher systems.
     #[derivative(Debug = "ignore")]
-    dispatcher_builder: Option<DispatcherBuilder<'a, 'b>>,
+    dispatcher_operations: Option<Vec<Box<dyn DispatcherOperation<'a, 'b> + 'a>>>,
     /// State specific dispatcher.
     #[derivative(Debug = "ignore")]
     dispatcher: Option<Dispatcher<'a, 'b>>,
 }
 
 impl<'a, 'b> CustomDispatcherState<'a, 'b> {
-    fn new(dispatcher_builder: DispatcherBuilder<'a, 'b>) -> Self {
+    fn new(dispatcher_operations: Vec<Box<dyn DispatcherOperation<'a, 'b> + 'a>>) -> Self {
         CustomDispatcherState {
-            dispatcher_builder: Some(dispatcher_builder),
+            dispatcher_operations: Some(dispatcher_operations),
             dispatcher: None,
         }
     }
@@ -35,14 +44,21 @@ impl<'a, 'b> CustomDispatcherState<'a, 'b> {
     /// * `world`: `World` to operate on.
     fn initialize_dispatcher(&mut self, world: &mut World) {
         if self.dispatcher.is_none() {
-            let mut dispatcher = self
-                .dispatcher_builder
-                .take()
-                .expect(
-                    "Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.",
-                )
-                .build();
-            dispatcher.setup(&mut world.res);
+            let dispatcher_operations = self.dispatcher_operations.take().expect(
+                "Expected `dispatcher_operations` to exist when dispatcher is not yet built.",
+            );
+
+            let mut dispatcher_builder = DispatcherBuilder::new();
+            dispatcher_operations
+                .into_iter()
+                .for_each(|dispatcher_operation| {
+                    dispatcher_operation
+                        .exec(world, &mut dispatcher_builder)
+                        .expect("Failed to execute dispatcher operation.");
+                });
+
+            let mut dispatcher = dispatcher_builder.build();
+            dispatcher.setup(world);
             self.dispatcher = Some(dispatcher);
         }
     }
@@ -68,7 +84,7 @@ where
 
     fn update(&mut self, data: StateData<'_, T>) -> Trans<T, E> {
         data.data.update(&data.world);
-        self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
+        self.dispatcher.as_mut().unwrap().dispatch(&data.world);
 
         Trans::Pop
     }
@@ -80,30 +96,67 @@ where
 #[derive(Derivative, new)]
 #[derivative(Debug)]
 pub struct CustomDispatcherStateBuilder<'a, 'b> {
-    /// State specific dispatcher.
+    /// Functions to instantiate state specific dispatcher systems.
     #[derivative(Debug = "ignore")]
-    #[new(value = "DispatcherBuilder::new()")]
-    dispatcher_builder: DispatcherBuilder<'a, 'b>,
+    #[new(default)]
+    dispatcher_operations: Vec<Box<dyn DispatcherOperation<'a, 'b> + 'a>>,
 }
 
-impl<'a, 'b> CustomDispatcherStateBuilder<'a, 'b> {
+impl<'a, 'b: 'a> CustomDispatcherStateBuilder<'a, 'b> {
     /// Registers a `System` with the dispatcher builder.
     ///
     /// # Parameters
     ///
-    /// * `system`: `System` to register.
+    /// * `system`: Function to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with<Sys>(mut self, system: Sys, name: &str, deps: &[&str]) -> Self
+    pub fn with_system<S>(
+        mut self,
+        system: S,
+        name: &'static str,
+        dependencies: &'static [&'static str],
+    ) -> Self
     where
-        Sys: for<'c> System<'c> + Send + 'a,
+        S: for<'c> System<'c> + 'static + Send,
     {
-        self.dispatcher_builder.add(system, name, deps);
+        let dispatcher_operation = Box::new(AddSystem {
+            system,
+            name,
+            dependencies,
+        }) as Box<dyn DispatcherOperation<'a, 'b> + 'a>;
+        self.dispatcher_operations.push(dispatcher_operation);
+        self
+    }
+
+    /// Registers a `System` with the dispatcher builder.
+    ///
+    /// # Parameters
+    ///
+    /// * `system_desc`: Descriptor to instantiate the `System`.
+    /// * `name`: Name to register the system with, used for dependency ordering.
+    /// * `deps`: Names of systems that must run before this system.
+    pub fn with_system_desc<SD, S>(
+        mut self,
+        system_desc: SD,
+        name: &'static str,
+        dependencies: &'static [&'static str],
+    ) -> Self
+    where
+        SD: SystemDesc<'a, 'b, S> + 'a,
+        S: for<'c> System<'c> + 'a + Send,
+    {
+        let dispatcher_operation = Box::new(AddSystemDesc {
+            system_desc,
+            name,
+            dependencies,
+            marker: PhantomData::<S>,
+        }) as Box<dyn DispatcherOperation<'a, 'b> + 'a>;
+        self.dispatcher_operations.push(dispatcher_operation);
         self
     }
 
     /// Builds and returns the `CustomDispatcherState`.
     pub fn build(self) -> CustomDispatcherState<'a, 'b> {
-        CustomDispatcherState::new(self.dispatcher_builder)
+        CustomDispatcherState::new(self.dispatcher_operations)
     }
 }

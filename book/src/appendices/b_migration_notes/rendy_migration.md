@@ -61,6 +61,8 @@
     game_data.with_bundle(WindowBundle::from_config_file(display_config_path))?;
     ```
 
+    This system is loaded automatically by the `RenderToWindow` render plugin.
+
 ## Renderer
 
 * `amethyst::renderer::VirtualKeyCode` is now `amethyst::input::VirtualKeyCode`
@@ -92,131 +94,67 @@
         loader.load_from_data(TextureData::from(texture_builder), (), &texture_assets);
     ```
 
-* `RenderBundle` and `Pipeline` are gone, now you need to create a `RenderGraph`, for example:
+* `RenderBundle` and `Pipeline` are gone, now you need to use the `RenderingBundle`, for example:
 
     In `main.rs`:
 
     ```rust,ignore
     use amethyst::renderer::{types::DefaultBackend, RenderingSystem};
 
-    use crate::render_graph::RenderGraph;
-
-    mod render_graph;
-
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config(display_config))?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            RenderGraph::default(),
-        ));
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config)
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                .with_plugin(RenderShaded3D::default())
+                .with_plugin(RenderDebugLines::default())
+                .with_plugin(RenderSkybox::with_colors(
+                    Srgb::new(0.82, 0.51, 0.50),
+                    Srgb::new(0.18, 0.11, 0.85),
+                )),
+        )?;
     ```
 
-    In `render_graph.rs`:
-
-    ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    #
-    use amethyst::{
-        ecs::{ReadExpect, Resources, SystemData},
-        renderer::{
-            pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc},
-            rendy::{
-                factory::Factory,
-                graph::{
-                    present::PresentNode,
-                    render::{RenderGroupDesc, SubpassBuilder},
-                    GraphBuilder,
-                },
-                hal::{
-                    command::{ClearDepthStencil, ClearValue},
-                    format::Format,
-                    image::Kind,
-                },
-            },
-            types::DefaultBackend,
-            GraphCreator,
-        },
-        ui::DrawUiDesc,
-        window::{ScreenDimensions, Window},
-    };
-
-    #[derive(Default)]
-    pub struct RenderGraph {
-        dimensions: Option<ScreenDimensions>,
-        dirty: bool,
+* Render passes can be integrated into amethyst by using the newly introduced `RenderPlugin` trait, for example:
+    ```rust,ignore
+    pub struct RenderCustom {
+        target: Target,
     }
 
-    impl GraphCreator<DefaultBackend> for RenderGraph {
-        #[allow(clippy::map_clone)]
-        fn rebuild(&mut self, res: &Resources) -> bool {
-            // Rebuild when dimensions change, but wait until at least two frames have the same.
-            let new_dimensions = res.try_fetch::<ScreenDimensions>();
-            use std::ops::Deref;
-            if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-                self.dirty = true;
-                self.dimensions = new_dimensions.map(|d| d.clone());
-                return false;
-            }
-            self.dirty
+    impl RenderTerrain {
+        /// Set target to which 2d sprites will be rendered.
+        pub fn with_target(mut self, target: Target) -> Self {
+            self.target = target;
+            self
         }
+    }
 
-        fn builder(
+
+    impl<B: Backend> RenderPlugin<B> for RenderCustom {
+        fn on_build<'a, 'b>(
             &mut self,
-            factory: &mut Factory<DefaultBackend>,
-            res: &Resources,
-        ) -> GraphBuilder<DefaultBackend, Resources> {
-            self.dirty = false;
+            builder: &mut DispatcherBuilder<'a, 'b>,
+        ) -> Result<(), Error> {
+            // You can add systems that are needed by your renderpass here
+            Ok(())
+        }
 
-            let window = <ReadExpect<'_, Window>>::fetch(res);
-            let dimensions = self.dimensions.as_ref().unwrap();
-            let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-            let surface = factory.create_surface(&window);
-            let surface_format = factory.get_surface_format(&surface);
-
-            let mut graph_builder = GraphBuilder::new();
-            let color = graph_builder.create_image(
-                window_kind,
-                1,
-                surface_format,
-                // clear screen to black
-                Some(ClearValue::Color([0.0, 0.0, 0.0, 1.0].into())),
-            );
-
-            let depth = graph_builder.create_image(
-                window_kind,
-                1,
-                Format::D32Sfloat,
-                Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-            );
-
-            let sprite_pass = graph_builder.add_node(
-                SubpassBuilder::new()
-                    .with_group(DrawFlat2DDesc::new().builder())
-                    .with_group(DrawFlat2DTransparentDesc::new().builder())
-                    .with_color(color)
-                    .with_depth_stencil(depth)
-                    .into_pass(),
-            );
-            let ui_pass = graph_builder.add_node(
-                SubpassBuilder::new()
-                    .with_dependency(sprite_pass)
-                    .with_group(DrawUiDesc::new().builder())
-                    .with_color(color)
-                    .with_depth_stencil(depth)
-                    .into_pass(),
-            );
-
-            let _present = graph_builder.add_node(
-                PresentNode::builder(factory, surface, color)
-                    .with_dependency(sprite_pass)
-                    .with_dependency(ui_pass),
-            );
-
-            graph_builder
+        fn on_plan(
+            &mut self,
+            plan: &mut RenderPlan<B>,
+            _factory: &mut Factory<B>,
+            _res: &Resources,
+        ) -> Result<(), Error> {
+            plan.extend_target(self.target, |ctx| {
+                ctx.add(RenderOrder::Opaque, DrawCustomDesc::new().builder())?;
+                Ok(())
+            });
+            Ok(())
         }
     }
-
     ```
-
 * `RenderBundle::with_sprite_sheet_processor()` is replaced by:
 
     ```rust,ignore
@@ -226,6 +164,8 @@
         &[],
     );
     ```
+
+    This system is added automatically by each of the 3D render plugins (`RenderPbr3D`, `RenderShaded3D`, `RenderFlat3D`).
 
 * `RenderBundle::with_sprite_visibility_sorting()` is replaced by:
 
@@ -238,6 +178,8 @@
         &["transform_system"],
     );
     ```
+
+    This system is added automatically by the `RenderFlat2D` render plugin.
 
 * Sprite transparency is no longer a separate flag. Instead of `with_transparency`, you add a second render pass using `DrawFlat2DTransparent`. See the [`sprites_ordered` example](https://github.com/amethyst/amethyst/blob/7ed8432d8eef2b2727d0c4188b91e5823ae03548/examples/sprites_ordered/main.rs#L463-L482).
 

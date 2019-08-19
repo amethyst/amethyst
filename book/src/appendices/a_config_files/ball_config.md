@@ -13,7 +13,7 @@ use amethyst::core::math::Vector2;
 The `BallConfig` will replace the `BALL_VELOCITY_X`, `BALL_VELOCITY_Y`, `BALL_RADIUS`, and `BALL_COLOR`
 variables. We'll use a [`Vector2`][vec2] to store the velocity for simplicity and to demonstrate how to add
 a non-trivial data type to a RON file. The `BALL_COLOR` was originally an array, but [Serde][serde] and RON
-handle arrays as tuples, so it will read in a tuple and convert the colour values to an array if needed by a
+handle arrays as tuples, so it will read in a tuple and convert the color values to an array if needed by a
 particular function (e.g., in `pong.rs`).
 
 ```rust,ignore
@@ -21,7 +21,7 @@ particular function (e.g., in `pong.rs`).
 pub struct BallConfig {
     pub velocity: Vector2<f32>,
     pub radius: f32,
-    pub colour: (f32, f32, f32, f32),
+    pub color: (f32, f32, f32, f32),
 }
 ```
 
@@ -33,7 +33,7 @@ impl Default for BallConfig {
         BallConfig {
             velocity: Vector2::new(75.0, 50.0),
             radius: 2.5,
-            colour: (1.0, 0.0, 0.0, 1.0),
+            color: (1.0, 0.0, 0.0, 1.0),
         }
     }
 }
@@ -60,13 +60,13 @@ the `ArenaConfig`.
 In `pong.rs`, underneath our loading of the `ArenaConfig`, add the following lines
 
 ```rust,ignore
-let (velocity_x, velocity_y, radius, colour) = {
+let (velocity_x, velocity_y, radius, color) = {
     let config = world.read_resource::<BallConfig>();
     let c: [f32; 4] = [
-        config.colour.0,
-        config.colour.1,
-        config.colour.2,
-        config.colour.3,
+        config.color.0,
+        config.color.1,
+        config.color.2,
+        config.color.3,
     ];
     (config.velocity.x, config.velocity.y, config.radius, c)
 };
@@ -101,8 +101,9 @@ Now, modify the `run()` function, from
 ```rust,ignore
 let arena_config = ArenaConfig::load(&config);
 [..]
-    .with_resource(arena_config)
     .with_bundle(PongBundle::default())?
+[..]
+    .with_resource(arena_config)
 ```
 
 to
@@ -110,9 +111,10 @@ to
 ```rust,ignore
 let pong_config = PongConfig::load(&config);
 [..]
+    .with_bundle(PongBundle::default())?
+[..]
     .with_resource(pong_config.arena)
     .with_resource(pong_config.ball)
-    .with_bundle(PongBundle::default())?
 ```
 
 ## Adding the BallConfig to `config.ron`

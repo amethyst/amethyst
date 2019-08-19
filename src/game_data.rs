@@ -1,7 +1,13 @@
+use std::marker::PhantomData;
+
 use crate::{
     core::{
-        ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
-        ArcThreadPool, SystemBundle,
+        deferred_dispatcher_operation::{
+            AddBarrier, AddBundle, AddSystem, AddSystemDesc, AddThreadLocal, AddThreadLocalDesc,
+            DispatcherOperation,
+        },
+        ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World, WorldExt},
+        ArcThreadPool, RunNowDesc, SystemBundle, SystemDesc,
     },
     error::Error,
 };
@@ -38,14 +44,14 @@ impl<'a, 'b> GameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World) {
         if let Some(dispatcher) = &mut self.dispatcher {
-            dispatcher.dispatch(&world.res);
+            dispatcher.dispatch(&world);
         }
     }
 
     /// Dispose game data, dropping the dispatcher
-    pub fn dispose(&mut self, world: &mut World) {
+    pub fn dispose(&mut self, mut world: &mut World) {
         if let Some(dispatcher) = self.dispatcher.take() {
-            dispatcher.dispose(&mut world.res);
+            dispatcher.dispose(&mut world);
         }
     }
 }
@@ -63,6 +69,7 @@ impl DataDispose for GameData<'_, '_> {
 /// Builder for default game data
 #[allow(missing_debug_implementations)]
 pub struct GameDataBuilder<'a, 'b> {
+    dispatcher_operations: Vec<Box<dyn DispatcherOperation<'a, 'b>>>,
     disp_builder: DispatcherBuilder<'a, 'b>,
 }
 
@@ -76,6 +83,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// Create new builder
     pub fn new() -> Self {
         GameDataBuilder {
+            dispatcher_operations: Vec::new(),
             disp_builder: DispatcherBuilder::new(),
         }
     }
@@ -94,9 +102,12 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// # Examples
     ///
     /// ~~~no_run
+    /// use amethyst::derive::SystemDesc;
+    /// use amethyst::core::SystemDesc;
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
+    /// use amethyst::ecs::prelude::{System, SystemData, World};
     ///
+    /// #[derive(SystemDesc)]
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
     ///     type SystemData = ();
@@ -113,7 +124,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///     .with(NopSystem, "doggo", &[]);
     /// ~~~
     pub fn with_barrier(mut self) -> Self {
-        self.disp_builder.add_barrier();
+        self.dispatcher_operations.push(Box::new(AddBarrier));
         self
     }
 
@@ -150,9 +161,12 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// # Examples
     ///
     /// ~~~no_run
+    /// use amethyst::core::SystemDesc;
+    /// use amethyst::derive::SystemDesc;
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
+    /// use amethyst::ecs::prelude::{System, SystemData, World};
     ///
+    /// #[derive(SystemDesc)]
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
     ///     type SystemData = ();
@@ -168,11 +182,100 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///     // It is legal to register a system with an empty name
     ///     .with(NopSystem, "", &[]);
     /// ~~~
-    pub fn with<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
+    pub fn with<S>(
+        mut self,
+        system: S,
+        name: &'static str,
+        dependencies: &'static [&'static str],
+    ) -> Self
     where
-        for<'c> S: System<'c> + Send + 'a,
+        S: for<'c> System<'c> + 'static + Send,
     {
-        self.disp_builder.add(system, name, dependencies);
+        let dispatcher_operation = Box::new(AddSystem {
+            system,
+            name,
+            dependencies,
+        }) as Box<dyn DispatcherOperation<'a, 'b> + 'static>;
+        self.dispatcher_operations.push(dispatcher_operation);
+        self
+    }
+
+    /// Adds a system descriptor.
+    ///
+    /// This differs from the [`with`] System call by deferring instantiation of the `System` to
+    /// when the dispatcher is built. This allows system instatiation to access resources in the
+    /// `World` if necessary.
+    ///
+    /// __Note:__ all dependencies must be added before you add the system.
+    ///
+    /// # Parameters
+    ///
+    /// - `system_desc`: The system that is to be added to the game loop.
+    /// - `name`: A unique string to identify the system by. This is used for
+    ///         dependency tracking. This name may be empty `""` string in which
+    ///         case it cannot be referenced as a dependency.
+    /// - `dependencies`: A list of named system that _must_ have completed running
+    ///                 before this system is permitted to run.
+    ///                 This may be an empty list if there is no dependencies.
+    ///
+    /// # Returns
+    ///
+    /// This function returns GameDataBuilder after it has modified it.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `SD`: A type that implements the `SystemDesc` trait.
+    /// - `S`: A type that implements the `System` trait.
+    ///
+    /// # Panics
+    ///
+    /// If two system are added that share an identical name, this function will panic.
+    /// Empty names are permitted, and this function will not panic if more then two are added.
+    ///
+    /// If a dependency is referenced (by name), but has not previously been added this
+    /// function will panic.
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// use amethyst::core::SystemDesc;
+    /// use amethyst::derive::SystemDesc;
+    /// use amethyst::prelude::*;
+    /// use amethyst::ecs::prelude::{System, SystemData, World};
+    ///
+    /// #[derive(SystemDesc)]
+    /// struct NopSystem;
+    /// impl<'a> System<'a> for NopSystem {
+    ///     type SystemData = ();
+    ///     fn run(&mut self, _: Self::SystemData) {}
+    /// }
+    ///
+    /// GameDataBuilder::default()
+    ///     // This will add the "foo" system to the game loop, in this case
+    ///     // the "foo" system will not depend on any systems.
+    ///     .with_system_desc(NopSystem, "foo", &[])
+    ///     // The "bar" system will only run after the "foo" system has completed
+    ///     .with_system_desc(NopSystem, "bar", &["foo"])
+    ///     // It is legal to register a system with an empty name
+    ///     .with_system_desc(NopSystem, "", &[]);
+    /// ~~~
+    pub fn with_system_desc<SD, S>(
+        mut self,
+        system_desc: SD,
+        name: &'static str,
+        dependencies: &'static [&'static str],
+    ) -> Self
+    where
+        SD: SystemDesc<'a, 'b, S> + 'static,
+        S: for<'c> System<'c> + 'static + Send,
+    {
+        let dispatcher_operation = Box::new(AddSystemDesc {
+            system_desc,
+            name,
+            dependencies,
+            marker: PhantomData::<S>,
+        }) as Box<dyn DispatcherOperation<'a, 'b> + 'static>;
+        self.dispatcher_operations.push(dispatcher_operation);
         self
     }
 
@@ -201,9 +304,12 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// # Examples
     ///
     /// ~~~no_run
+    /// use amethyst::core::SystemDesc;
+    /// use amethyst::derive::SystemDesc;
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
+    /// use amethyst::ecs::prelude::{System, SystemData, World};
     ///
+    /// #[derive(SystemDesc)]
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
     ///     type SystemData = ();
@@ -216,9 +322,64 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// ~~~
     pub fn with_thread_local<S>(mut self, system: S) -> Self
     where
-        for<'c> S: RunNow<'c> + 'b,
+        S: for<'c> RunNow<'c> + 'static,
     {
-        self.disp_builder.add_thread_local(system);
+        self.dispatcher_operations
+            .push(Box::new(AddThreadLocal { system }));
+        self
+    }
+
+    /// Add a given thread-local system.
+    ///
+    /// A thread-local system is one that _must_ run on the main thread of the
+    /// game. A thread-local system would be necessary typically to work
+    /// around vendor APIs that have thread dependent designs; an example
+    /// being OpenGL which uses a thread-local state machine to function.
+    ///
+    /// All thread-local systems are executed sequentially after all
+    /// non-thread-local systems.
+    ///
+    /// # Parameters
+    ///
+    /// - `system`: The system that is to be added to the game loop.
+    ///
+    /// # Returns
+    ///
+    /// This function returns GameDataBuilder after it has modified it.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `S`: A type that implements the `System` trait.
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// use amethyst::core::SystemDesc;
+    /// use amethyst::derive::SystemDesc;
+    /// use amethyst::prelude::*;
+    /// use amethyst::ecs::prelude::{System, SystemData, World};
+    ///
+    /// #[derive(SystemDesc)]
+    /// struct NopSystem;
+    /// impl<'a> System<'a> for NopSystem {
+    ///     type SystemData = ();
+    ///     fn run(&mut self, _: Self::SystemData) {}
+    /// }
+    ///
+    /// GameDataBuilder::default()
+    ///     // the Nop system is registered here
+    ///     .with_thread_local(NopSystem);
+    /// ~~~
+    pub fn with_thread_local_desc<SD, S>(mut self, system_desc: SD) -> Self
+    where
+        SD: RunNowDesc<'a, 'b, S> + 'b + 'static,
+        S: for<'c> RunNow<'c> + 'static,
+    {
+        self.dispatcher_operations
+            .push(Box::new(AddThreadLocalDesc {
+                system_desc,
+                marker: PhantomData::<S>,
+            }));
         self
     }
 
@@ -228,7 +389,8 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///
     /// # Parameters
     ///
-    /// - `bundle`: The bundle to add
+    /// - `world`: The `World` that contains all resources.
+    /// - `bundle`: The bundle to add.
     ///
     /// # Returns
     ///
@@ -243,9 +405,10 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///
     pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
     where
-        B: SystemBundle<'a, 'b>,
+        B: SystemBundle<'a, 'b> + 'static,
     {
-        bundle.build(&mut self.disp_builder)?;
+        self.dispatcher_operations
+            .push(Box::new(AddBundle { bundle }));
         Ok(self)
     }
 
@@ -289,15 +452,24 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
-    fn build(self, world: &mut World) -> GameData<'a, 'b> {
+    fn build(self, mut world: &mut World) -> GameData<'a, 'b> {
         #[cfg(not(no_threading))]
-        let pool = world.read_resource::<ArcThreadPool>().clone();
+        let pool = (*world.read_resource::<ArcThreadPool>()).clone();
+
+        let mut dispatcher_builder = self.disp_builder;
+
+        self.dispatcher_operations
+            .into_iter()
+            .try_for_each(|dispatcher_operation| {
+                dispatcher_operation.exec(world, &mut dispatcher_builder)
+            })
+            .unwrap_or_else(|e| panic!("Failed to set up dispatcher: {}", e));
 
         #[cfg(not(no_threading))]
-        let mut dispatcher = self.disp_builder.with_pool(pool).build();
+        let mut dispatcher = dispatcher_builder.with_pool(pool).build();
         #[cfg(no_threading)]
-        let mut dispatcher = self.disp_builder.build();
-        dispatcher.setup(&mut world.res);
+        let mut dispatcher = dispatcher_builder.build();
+        dispatcher.setup(&mut world);
         GameData::new(dispatcher)
     }
 }

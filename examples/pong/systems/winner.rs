@@ -2,14 +2,18 @@ use crate::{audio::Sounds, Ball, ScoreBoard};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
-    core::Transform,
-    ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, WriteStorage},
+    core::{SystemDesc, Transform},
+    derive::SystemDesc,
+    ecs::prelude::{
+        Entity, Join, Read, ReadExpect, System, SystemData, World, Write, WriteStorage,
+    },
     ui::UiText,
 };
 
 /// This system is responsible for checking if a ball has moved into a left or
 /// a right edge. Points are distributed to the player on the other side, and
 /// the ball is reset.
+#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {

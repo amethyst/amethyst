@@ -4,6 +4,7 @@
 use amethyst::{
     assets::{Format as AssetFormat, Handle, Loader},
     core::{math::Vector3, Transform, TransformBundle},
+    ecs::{World, WorldExt},
     error::Error,
     input::{InputBundle, StringBindings},
     prelude::*,
@@ -67,7 +68,7 @@ struct AssetsExample;
 impl SimpleState for AssetsExample {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
-        world.add_resource(0usize);
+        world.insert(0usize);
 
         initialise_camera(world);
         initialise_lights(world);
@@ -117,7 +118,7 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_directory = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
     let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
@@ -133,7 +134,7 @@ fn main() -> Result<(), Error> {
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
         )?;
-    let mut game = Application::new(assets_directory, AssetsExample, game_data)?;
+    let mut game = Application::new(assets_dir, AssetsExample, game_data)?;
     game.run();
     Ok(())
 }

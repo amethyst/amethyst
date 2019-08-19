@@ -1,6 +1,5 @@
 use derivative::Derivative;
 use serde::de::DeserializeOwned;
-use shred_derive::SystemData;
 use std::{
     fmt::{Debug, Formatter},
     marker::PhantomData,
@@ -8,11 +7,14 @@ use std::{
 
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem,
-    Progress, ProgressCounter,
+    PrefabLoaderSystemDesc, Progress, ProgressCounter,
 };
 use amethyst_audio::Source as Audio;
 use amethyst_core::{
-    ecs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
+    ecs::{
+        prelude::{Entities, Entity, Read, ReadExpect, World, Write, WriteStorage},
+        shred::{ResourceId, SystemData},
+    },
     HiddenPropagate,
 };
 use amethyst_error::{format_err, Error, ResultExt};
@@ -31,7 +33,7 @@ use crate::{
 #[derive(Debug, Clone, Deserialize, Serialize, Derivative)]
 #[serde(default)]
 #[derivative(Default)]
-pub struct UiTransformBuilder<G> {
+pub struct UiTransformData<G> {
     /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
     pub id: String,
     /// X coordinate
@@ -77,7 +79,7 @@ pub struct UiTransformBuilder<G> {
     _phantom: PhantomData<G>,
 }
 
-impl<G> UiTransformBuilder<G> {
+impl<G> UiTransformData<G> {
     /// Set id
     pub fn with_id<S>(mut self, id: S) -> Self
     where
@@ -133,7 +135,7 @@ impl<G> UiTransformBuilder<G> {
     }
 }
 
-impl<'a, G> PrefabData<'a> for UiTransformBuilder<G>
+impl<'a, G> PrefabData<'a> for UiTransformData<G>
 where
     G: Send + Sync + 'static,
 {
@@ -195,7 +197,7 @@ where
 /// - `F`: `Format` used for loading `FontAsset`
 /// - `G`: Selection Group Type
 #[derive(Deserialize, Serialize, Clone)]
-pub struct UiTextBuilder {
+pub struct UiTextData {
     /// Text to display
     pub text: String,
     /// Font size
@@ -215,7 +217,7 @@ pub struct UiTextBuilder {
     #[serde(default)]
     pub editable: Option<TextEditingPrefab>,
 }
-impl Debug for UiTextBuilder {
+impl Debug for UiTextData {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let font = match self.font.as_ref() {
             Some(asset_prefab) => match asset_prefab {
@@ -225,7 +227,7 @@ impl Debug for UiTextBuilder {
             _ => "<Font>".to_string(),
         };
 
-        f.debug_struct("UiTextBuilder")
+        f.debug_struct("UiTextData")
             .field("text", &self.text)
             .field("font_size", &self.font_size)
             .field("font", &font)
@@ -263,7 +265,7 @@ impl Default for TextEditingPrefab {
     }
 }
 
-impl<'a> PrefabData<'a> for UiTextBuilder {
+impl<'a> PrefabData<'a> for UiTextData {
     type SystemData = (
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
@@ -416,7 +418,7 @@ impl<'a> PrefabData<'a> for UiImageLoadPrefab {
 ///
 /// - `W`: Type used for Widget IDs
 #[derive(Deserialize, Serialize, Clone)]
-pub struct UiButtonBuilder<W: WidgetId = u32> {
+pub struct UiButtonData<W: WidgetId = u32> {
     /// Id for the widget
     pub id: Option<W>,
     /// Text to display
@@ -448,7 +450,7 @@ pub struct UiButtonBuilder<W: WidgetId = u32> {
     pub release_sound: Option<AssetPrefab<Audio>>,
 }
 
-impl<W: WidgetId + Debug> Debug for UiButtonBuilder<W> {
+impl<W: WidgetId + Debug> Debug for UiButtonData<W> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let font = match self.font.as_ref() {
             Some(asset_prefab) => match asset_prefab {
@@ -458,7 +460,7 @@ impl<W: WidgetId + Debug> Debug for UiButtonBuilder<W> {
             _ => "<Font>".to_string(),
         };
 
-        f.debug_struct("UiTextBuilder")
+        f.debug_struct("UiTextData")
             .field("id", &self.id)
             .field("text", &self.text)
             .field("font_size", &self.font_size)
@@ -475,7 +477,7 @@ impl<W: WidgetId + Debug> Debug for UiButtonBuilder<W> {
     }
 }
 
-impl<'a, W> PrefabData<'a> for UiButtonBuilder<W>
+impl<'a, W> PrefabData<'a> for UiButtonData<W>
 where
     W: WidgetId,
 {
@@ -643,7 +645,7 @@ where
     /// Container widget
     Container {
         /// Spatial information for the container
-        transform: UiTransformBuilder<G>,
+        transform: UiTransformData<G>,
         /// Background image
         #[serde(default = "default_container_image")]
         background: Option<UiImagePrefab>,
@@ -653,23 +655,23 @@ where
     /// Image widget
     Image {
         /// Spatial information
-        transform: UiTransformBuilder<G>,
+        transform: UiTransformData<G>,
         /// Image
         image: UiImagePrefab,
     },
     /// Text widget
     Label {
         /// Spatial information
-        transform: UiTransformBuilder<G>,
+        transform: UiTransformData<G>,
         /// Text
-        text: UiTextBuilder,
+        text: UiTextData,
     },
     /// Button widget
     Button {
         /// Spatial information
-        transform: UiTransformBuilder<G>,
+        transform: UiTransformData<G>,
         /// Button
-        button: UiButtonBuilder<W>,
+        button: UiButtonData<W>,
     },
     /// Custom UI widget
     Custom(Box<C>),
@@ -680,8 +682,8 @@ where
     C: ToNativeWidget<W>,
     W: WidgetId,
 {
-    /// Convenience function to access widgets `UiTransformBuilder`
-    pub fn transform(&self) -> Option<&UiTransformBuilder<G>> {
+    /// Convenience function to access widgets `UiTransformData`
+    pub fn transform(&self) -> Option<&UiTransformData<G>> {
         match self {
             UiWidget::Container { ref transform, .. } => Some(transform),
             UiWidget::Image { ref transform, .. } => Some(transform),
@@ -691,8 +693,8 @@ where
         }
     }
 
-    /// Convenience function to access widgets `UiTransformBuilder`
-    pub fn transform_mut(&mut self) -> Option<&mut UiTransformBuilder<G>> {
+    /// Convenience function to access widgets `UiTransformData`
+    pub fn transform_mut(&mut self) -> Option<&mut UiTransformData<G>> {
         match self {
             UiWidget::Container {
                 ref mut transform, ..
@@ -769,10 +771,10 @@ fn default_container_image() -> Option<UiImagePrefab> {
 }
 
 type UiPrefabData<D = <NoCustomUi as ToNativeWidget>::PrefabData, W = u32, G = ()> = (
-    Option<UiTransformBuilder<G>>,
+    Option<UiTransformData<G>>,
     Option<UiImagePrefab>,
-    Option<UiTextBuilder>,
-    Option<UiButtonBuilder<W>>,
+    Option<UiTextData>,
+    Option<UiButtonData<W>>,
     D,
 );
 
@@ -870,7 +872,7 @@ fn walk_ui_tree<C, W>(
             mut button,
         } => {
             let id = transform.id.clone();
-            let text = UiTextBuilder {
+            let text = UiTextData {
                 color: button.normal_text_color,
                 editable: None,
                 font: button.font.clone(),
@@ -1010,6 +1012,9 @@ where
     }
 }
 
+/// Builds a `UiLoaderSystem`.
+pub type UiLoaderSystemDesc<CD, W> = PrefabLoaderSystemDesc<UiPrefabData<CD, W>>;
+
 /// Prefab loader system for UI
 ///
 /// ### Type parameters:
@@ -1018,9 +1023,9 @@ where
 /// - `W`: Type used for Widget IDs
 pub type UiLoaderSystem<CD, W> = PrefabLoaderSystem<UiPrefabData<CD, W>>;
 
-fn button_text_transform<G>(mut id: String) -> UiTransformBuilder<G> {
+fn button_text_transform<G>(mut id: String) -> UiTransformData<G> {
     id.push_str("_btn_txt");
-    UiTransformBuilder::default()
+    UiTransformData::default()
         .with_id(id)
         .with_position(0., 0., 1.)
         .with_anchor(Anchor::Middle)

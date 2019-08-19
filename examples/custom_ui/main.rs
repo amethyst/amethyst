@@ -1,8 +1,9 @@
 //! Custom UI example
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     core::transform::TransformBundle,
+    ecs::prelude::WorldExt,
     input::StringBindings,
     prelude::*,
     renderer::{
@@ -11,7 +12,7 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    ui::{RenderUi, ToNativeWidget, UiBundle, UiCreator, UiTransformBuilder, UiWidget},
+    ui::{RenderUi, ToNativeWidget, UiBundle, UiCreator, UiTransformData, UiWidget},
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
 
@@ -50,7 +51,7 @@ impl ToNativeWidget for CustomUi {
                     .map(|widget| {
                         let widget = UiWidget::Container {
                             background: None,
-                            transform: UiTransformBuilder::default()
+                            transform: UiTransformData::default()
                                 .with_position(pos.0, pos.1, pos.2),
                             children: vec![widget],
                         };
@@ -94,10 +95,10 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/custom_ui/config/display.ron");
-    let assets = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<StringBindings, CustomUi>::new())?
         .with_bundle(
@@ -109,7 +110,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::new(assets, Example, game_data)?;
+    let mut game = Application::new(assets_dir, Example, game_data)?;
     game.run();
     Ok(())
 }

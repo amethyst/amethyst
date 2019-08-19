@@ -35,7 +35,7 @@ impl<B: Backend> SkinningSub<B> {
     /// Create a new `SkinningSub`, allocating using the provided `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
-            layout: set_layout! {factory, [1] StorageBuffer VERTEX},
+            layout: set_layout! {factory, [1] StorageBuffer hal::pso::ShaderStageFlags::VERTEX},
             skin_offset_map: Default::default(),
             staging: Vec::new(),
             per_image: Vec::new(),

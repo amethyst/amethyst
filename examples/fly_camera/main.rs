@@ -1,9 +1,10 @@
 //! Demonstrates how to use the fly camera
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     controls::{FlyControlBundle, HideCursor},
     core::transform::TransformBundle,
+    ecs::WorldExt,
     input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -57,14 +58,14 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let assets_directory = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
     let display_config_path = app_root.join("examples/fly_camera/config/display.ron");
 
     let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
             FlyControlBundle::<StringBindings>::new(
                 Some(String::from("move_x")),
@@ -86,7 +87,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         )?;
 
-    let mut game = Application::build(assets_directory, ExampleState)?.build(game_data)?;
+    let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

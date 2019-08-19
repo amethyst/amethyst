@@ -6,7 +6,7 @@ use crate::{
     submodules::{gather::CameraGatherer, uniform::DynamicUniform},
     types::Backend,
 };
-use amethyst_core::ecs::Resources;
+use amethyst_core::ecs::World;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -33,10 +33,10 @@ impl<B: Backend> FlatEnvironmentSub<B> {
     }
 
     /// Performs any re-allocation and GPU memory writing required for this environment set.
-    pub fn process(&mut self, factory: &Factory<B>, index: usize, res: &Resources) {
+    pub fn process(&mut self, factory: &Factory<B>, index: usize, world: &World) {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
-        let projview = CameraGatherer::gather(res).projview;
+        let projview = CameraGatherer::gather(world).projview;
         self.uniform.write(factory, index, projview);
     }
 

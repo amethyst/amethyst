@@ -6,10 +6,10 @@ use thread_profiler::profile_scope;
 
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
+        BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, System, SystemData, World,
         WriteStorage,
     },
-    HierarchyEvent, Parent, ParentHierarchy,
+    HierarchyEvent, Parent, ParentHierarchy, SystemDesc,
 };
 use amethyst_window::ScreenDimensions;
 
@@ -124,18 +124,46 @@ pub enum Stretch {
     },
 }
 
+/// Builds a `UiTransformSystem`.
+#[derive(Default, Debug)]
+pub struct UiTransformSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, UiTransformSystem> for UiTransformSystemDesc {
+    fn build(self, world: &mut World) -> UiTransformSystem {
+        <UiTransformSystem as System<'_>>::SystemData::setup(world);
+
+        let parent_events_id = world.fetch_mut::<ParentHierarchy>().track();
+        let mut transforms = WriteStorage::<UiTransform>::fetch(&world);
+        let transform_events_id = transforms.register_reader();
+
+        UiTransformSystem::new(transform_events_id, parent_events_id)
+    }
+}
+
 /// Manages the `Parent` component on entities having `UiTransform`
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct UiTransformSystem {
     transform_modified: BitSet,
-
-    transform_events_id: Option<ReaderId<ComponentEvent>>,
-
-    parent_events_id: Option<ReaderId<HierarchyEvent>>,
-
+    transform_events_id: ReaderId<ComponentEvent>,
+    parent_events_id: ReaderId<HierarchyEvent>,
     screen_size: (f32, f32),
+}
+
+impl UiTransformSystem {
+    /// Creates a new `UiTransformSystem`.
+    pub fn new(
+        transform_events_id: ReaderId<ComponentEvent>,
+        parent_events_id: ReaderId<HierarchyEvent>,
+    ) -> Self {
+        Self {
+            transform_modified: BitSet::default(),
+            transform_events_id,
+            parent_events_id,
+            screen_size: (0.0, 0.0),
+        }
+    }
 }
 
 impl<'a> System<'a> for UiTransformSystem {
@@ -155,10 +183,7 @@ impl<'a> System<'a> for UiTransformSystem {
 
         let self_transform_modified = &mut self.transform_modified;
 
-        let self_transform_events_id = &mut self
-            .transform_events_id
-            .as_mut()
-            .expect("`UiTransformSystem::setup` was not called before `UiTransformSystem::run`");
+        let self_transform_events_id = &mut self.transform_events_id;
 
         transforms
             .channel()
@@ -170,13 +195,7 @@ impl<'a> System<'a> for UiTransformSystem {
                 ComponentEvent::Removed(_id) => {}
             });
 
-        for event in
-            hierarchy
-                .changed()
-                .read(&mut self.parent_events_id.as_mut().expect(
-                    "`UiTransformSystem::setup` was not called before `UiTransformSystem::run`",
-                ))
-        {
+        for event in hierarchy.changed().read(&mut self.parent_events_id) {
             if let HierarchyEvent::Modified(entity) = *event {
                 self_transform_modified.add(entity.id());
             }
@@ -316,14 +335,6 @@ impl<'a> System<'a> for UiTransformSystem {
                 }
                 ComponentEvent::Removed(_id) => {}
             });
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
-        let mut transforms = WriteStorage::<UiTransform>::fetch(res);
-        self.transform_events_id = Some(transforms.register_reader());
     }
 }
 

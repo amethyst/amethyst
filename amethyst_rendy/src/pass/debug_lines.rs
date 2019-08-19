@@ -6,7 +6,7 @@ use crate::{
     types::Backend,
     util,
 };
-use amethyst_core::ecs::{Join, Read, Resources, SystemData, Write, WriteStorage};
+use amethyst_core::ecs::{Join, Read, SystemData, World, Write, WriteStorage};
 use derivative::Derivative;
 use glsl_layout::*;
 use rendy::{
@@ -41,19 +41,19 @@ impl DrawDebugLinesDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
+impl<B: Backend> RenderGroupDesc<B, World> for DrawDebugLinesDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &Resources,
+        _aux: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -97,14 +97,14 @@ pub struct DrawDebugLines<B: Backend> {
     change: util::ChangeDetection,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
+impl<B: Backend> RenderGroup<B, World> for DrawDebugLines<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
@@ -160,7 +160,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &Resources,
+        _resources: &World,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -179,7 +179,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory

@@ -9,7 +9,7 @@ pub struct PaddleConfig {
     pub height: f32,
     pub width: f32,
     pub velocity: f32,
-    pub colour: (f32, f32, f32, f32),
+    pub color: (f32, f32, f32, f32),
 }
 
 impl Default for PaddleConfig {
@@ -24,7 +24,7 @@ impl Default for PaddleConfig {
 }
 ```
 
-Just like the `BallConfig`, we need to read in the colour as a tuple instead of an array.
+Just like the `BallConfig`, we need to read in the color as a tuple instead of an array.
 
 Now, to allow us to have two separate `PaddleConfig`s, we will wrap them in a bigger structure as follows:
 
@@ -73,24 +73,24 @@ let (
     left_height,
     left_width,
     left_velocity,
-    left_colour,
+    left_color,
     right_height,
     right_width,
     right_velocity,
-    right_colour,
+    right_color,
 ) = {
     let config = &world.read_resource::<PaddlesConfig>();
     let cl: [f32; 4] = [
-        config.left.colour.0,
-        config.left.colour.1,
-        config.left.colour.2,
-        config.left.colour.3,
+        config.left.color.0,
+        config.left.color.1,
+        config.left.color.2,
+        config.left.color.3,
     ];
     let cr: [f32; 4] = [
-        config.right.colour.0,
-        config.right.colour.1,
-        config.right.colour.2,
-        config.right.colour.3,
+        config.right.color.0,
+        config.right.color.1,
+        config.right.color.2,
+        config.right.color.3,
     ];
     (
         config.left.height,
@@ -119,8 +119,8 @@ let right_y = (arena_height - right_height) / 2.0;
 ```
 
 You will also need to repeat the calls to `create_mesh` and 
-`create_colour_material()` so that you have a left and right mesh and left
-and right colour.
+`create_color_material()` so that you have a left and right mesh and left
+and right color.
 
 Now, use the left- and right-specific values in  the `world.create_entity()` 
 calls.
@@ -162,7 +162,7 @@ keep the left paddle blue so the final `config.ron` file will be as follows:
 ```
 
 
-[add_resource]: https://docs.rs/specs/0.12.0/specs/struct.World.html#method.add_resource
-[add_with_id]: https://docs.rs/specs/0.12.0/specs/struct.World.html#method.add_resource_with_id
+[add_resource]: https://docs.rs/specs/0.12.0/specs/struct.World.html#method.insert
+[add_with_id]: https://docs.rs/specs/0.12.0/specs/struct.World.html#method.insert_with_id
 
 

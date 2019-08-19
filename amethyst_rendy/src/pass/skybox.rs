@@ -7,7 +7,7 @@ use crate::{
     types::Backend,
     util,
 };
-use amethyst_core::ecs::{Read, Resources, SystemData};
+use amethyst_core::ecs::{Read, SystemData, World};
 use derivative::Derivative;
 use glsl_layout::{vec3, AsStd140};
 use rendy::{
@@ -80,19 +80,19 @@ impl DrawSkyboxDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawSkyboxDesc {
+impl<B: Backend> RenderGroupDesc<B, World> for DrawSkyboxDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         queue: QueueId,
-        _resources: &Resources,
+        _resources: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -132,14 +132,14 @@ pub struct DrawSkybox<B: Backend> {
     default_settings: SkyboxSettings,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawSkybox<B> {
+impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
@@ -163,7 +163,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawSkybox<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &Resources,
+        _resources: &World,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -179,7 +179,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawSkybox<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory

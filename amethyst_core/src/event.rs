@@ -1,4 +1,4 @@
-use crate::ecs::{Resources, SystemData, World};
+use crate::ecs::{SystemData, World};
 
 /// Read events generically
 pub trait EventReader<'a> {
@@ -16,7 +16,7 @@ pub trait EventReader<'a> {
     }
 
     /// Setup event reader
-    fn setup(&mut self, res: &mut Resources) {
+    fn setup(&mut self, res: &mut World) {
         Self::SystemData::setup(res);
     }
 }
@@ -24,7 +24,7 @@ pub trait EventReader<'a> {
 #[cfg(test)]
 mod tests {
     use crate::ecs::Read;
-    use shrev::{EventChannel, ReaderId};
+    use crate::shrev::{EventChannel, ReaderId};
 
     use super::*;
 
