@@ -655,7 +655,7 @@ fn render_image<B: Backend>(
                 ];
                 let y_dimensions = [
                     *top_dist as f32,
-                    transform.pixel_height - (*top_dist + *right_dist) as f32,
+                    transform.pixel_height - (*top_dist + *bottom_dist) as f32,
                     *bottom_dist as f32,
                 ];
 

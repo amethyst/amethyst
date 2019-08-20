@@ -83,7 +83,7 @@ Container(
                     top_dist: 28,
                     bottom_dist: 20,
                     tex: File("texture/9_Slice_Example.png", ("IMAGE", ())),
-                    texture_dimensions: (50,50),
+                    texture_dimensions: (75,50),
                 ),
         ),
 
