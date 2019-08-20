@@ -616,35 +616,35 @@ fn render_image<B: Backend>(
             }
         }
         UiImage::NineSlice {
-            x,
-            y,
+            x_start,
+            y_start,
             width,
             height,
             left_dist,
             right_dist,
             top_dist,
             bottom_dist,
-            texture,
+            tex,
             texture_dimensions,
         } => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
                 resources,
-                texture,
+                tex,
                 hal::image::Layout::ShaderReadOnlyOptimal,
             ) {
                 //The texture locations of each slice
                 let x_tex_coord_bound = [
-                    *x as f32 / texture_dimensions[0] as f32,
-                    (*x + *left_dist) as f32 / texture_dimensions[0] as f32,
-                    (*x + *width - *right_dist) as f32 / texture_dimensions[0] as f32,
-                    (*x + *width) as f32 / texture_dimensions[0] as f32,
+                    *x_start as f32 / texture_dimensions[0] as f32,
+                    (*x_start + *left_dist) as f32 / texture_dimensions[0] as f32,
+                    (*x_start + *width - *right_dist) as f32 / texture_dimensions[0] as f32,
+                    (*x_start + *width) as f32 / texture_dimensions[0] as f32,
                 ];
                 let y_tex_coord_bound = [
-                    *y as f32 / texture_dimensions[1] as f32,
-                    (*y + *top_dist) as f32 / texture_dimensions[1] as f32,
-                    (*y + *height - *bottom_dist) as f32 / texture_dimensions[1] as f32,
-                    (*y + *height) as f32 / texture_dimensions[1] as f32,
+                    *y_start as f32 / texture_dimensions[1] as f32,
+                    (*y_start + *top_dist) as f32 / texture_dimensions[1] as f32,
+                    (*y_start + *height - *bottom_dist) as f32 / texture_dimensions[1] as f32,
+                    (*y_start + *height) as f32 / texture_dimensions[1] as f32,
                 ];
 
                 //The dimensions of each slice

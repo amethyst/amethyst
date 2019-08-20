@@ -14,15 +14,25 @@ pub enum UiImage {
     Sprite(SpriteRender),
     /// An Image backed by a 9-sliced texture
     NineSlice {
-        x: i32,
-        y: i32,
+        ///x starting position on the texture
+        x_start: i32,
+        ///y starting position on the texture
+        y_start: i32,
+        ///width of the image in the texture
         width: i32,
+        ///height of the image in the texture
         height: i32,
+        ///distance from the left edge of the image for a slice
         left_dist: i32,
+        ///distance from the right edge of the image for a slice
         right_dist: i32,
+        ///distance from the top edge of the image for a slice
         top_dist: i32,
+        ///distance from the bottom edge of the image for a slice
         bottom_dist: i32,
-        texture: Handle<Texture>,
+        ///texture handle
+        tex: Handle<Texture>,
+        ///dimensions of the entire texture
         texture_dimensions: [i32; 2],
     },
     /// An image entirely covered by single solid color
