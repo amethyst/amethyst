@@ -68,11 +68,10 @@ impl Clone for HandleRef {
         Self {
             id: self.id,
             ref_type: match &self.ref_type {
-                Internal(sender) => {
+                Internal(sender) | Strong(sender) => {
                     let _ = sender.send(RefOp::Increase(self.id));
                     Strong(sender.clone())
                 },
-                Strong(sender) => Strong(sender.clone()),
                 Weak(sender) => Weak(sender.clone()),
                 None => panic!("unexpected ref type in clone()"),
             },
