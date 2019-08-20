@@ -396,15 +396,17 @@ where
     /// * `system`: `System` to run.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system<S>(
-        self,
-        system: S,
-        name: &'static str,
-        deps: &'static [&'static str],
-    ) -> Self
+    pub fn with_system<S, N>(self, system: S, name: N, deps: &[N]) -> Self
     where
         S: for<'sys_local> System<'sys_local> + Send + 'static,
+        N: Into<String> + Clone,
     {
+        let name = Into::<String>::into(name);
+        let deps = deps
+            .iter()
+            .map(Clone::clone)
+            .map(Into::<String>::into)
+            .collect::<Vec<String>>();
         self.with_bundle_fn(move || SystemInjectionBundle::new(system, name, deps))
     }
 
@@ -415,16 +417,18 @@ where
     /// * `system_desc`: Descriptor to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system_desc<SD, S>(
-        self,
-        system_desc: SD,
-        name: &'static str,
-        deps: &'static [&'static str],
-    ) -> Self
+    pub fn with_system_desc<SD, S, N>(self, system_desc: SD, name: N, deps: &[N]) -> Self
     where
         SD: SystemDesc<'static, 'static, S> + Send + Sync + 'static,
         S: for<'sys_local> System<'sys_local> + Send + 'static,
+        N: Into<String> + Clone,
     {
+        let name = Into::<String>::into(name);
+        let deps = deps
+            .iter()
+            .map(Clone::clone)
+            .map(Into::<String>::into)
+            .collect::<Vec<String>>();
         self.with_bundle_fn(move || SystemDescInjectionBundle::new(system_desc, name, deps))
     }
 
@@ -451,15 +455,17 @@ where
     /// * `system`: `System` to run.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system_single<S>(
-        self,
-        system: S,
-        name: &'static str,
-        deps: &'static [&'static str],
-    ) -> Self
+    pub fn with_system_single<S, N>(self, system: S, name: N, deps: &[N]) -> Self
     where
         S: for<'sys_local> System<'sys_local> + Send + Sync + 'static,
+        N: Into<String> + Clone,
     {
+        let name = Into::<String>::into(name);
+        let deps = deps
+            .iter()
+            .map(Clone::clone)
+            .map(Into::<String>::into)
+            .collect::<Vec<String>>();
         self.with_state(move || {
             CustomDispatcherStateBuilder::new()
                 .with_system(system, name, deps)
@@ -477,16 +483,18 @@ where
     /// * `system_desc`: Descriptor to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system_desc_single<SD, S>(
-        self,
-        system_desc: SD,
-        name: &'static str,
-        deps: &'static [&'static str],
-    ) -> Self
+    pub fn with_system_desc_single<SD, S, N>(self, system_desc: SD, name: N, deps: &[N]) -> Self
     where
         SD: SystemDesc<'static, 'static, S> + Send + Sync + 'static,
         S: for<'sys_local> System<'sys_local> + Send + Sync + 'static,
+        N: Into<String> + Clone,
     {
+        let name = Into::<String>::into(name);
+        let deps = deps
+            .iter()
+            .map(Clone::clone)
+            .map(Into::<String>::into)
+            .collect::<Vec<String>>();
         self.with_state(move || {
             CustomDispatcherStateBuilder::new()
                 .with_system_desc(system_desc, name, deps)
