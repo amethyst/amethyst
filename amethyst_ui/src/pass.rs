@@ -674,7 +674,7 @@ fn render_image<B: Backend>(
                 // loop through left to right, the top to bottom and batch each slice to render
                 for x in 0..3 {
                     for y in 0..3 {
-                        let mut temp_args = args.clone();
+                        let mut temp_args = args;
                         temp_args.tex_coord_bounds = [
                             x_tex_coord_bound[x],
                             y_tex_coord_bound[y],
