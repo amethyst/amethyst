@@ -615,57 +615,75 @@ fn render_image<B: Backend>(
                 false
             }
         }
-        UiImage::NineSlice {x,y,width,height,left_dist,right_dist,top_dist, bottom_dist, texture,texture_dimensions} =>{
+        UiImage::NineSlice {
+            x,
+            y,
+            width,
+            height,
+            left_dist,
+            right_dist,
+            top_dist,
+            bottom_dist,
+            texture,
+            texture_dimensions,
+        } => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
                 resources,
                 texture,
                 hal::image::Layout::ShaderReadOnlyOptimal,
             ) {
-                let x_slices=
-                    [*x as f32 /texture_dimensions[0]as f32,
-                        (*x+*left_dist)as f32/texture_dimensions[0]as f32,
-                        (*x+*width-*right_dist)as f32/texture_dimensions[0]as f32,
-                        (*x+*width)as f32/texture_dimensions[0]as f32];
-                let y_slices=
-                    [*y as f32/texture_dimensions[1]as f32,
-                        (*y+*top_dist)as f32/texture_dimensions[1]as f32,
-                        (*y+*height-*bottom_dist)as f32/texture_dimensions[1]as f32,
-                        (*y+*height)as f32/texture_dimensions[1]as f32];
+                //The texture locations of each slice
+                let x_tex_coord_bound = [
+                    *x as f32 / texture_dimensions[0] as f32,
+                    (*x + *left_dist) as f32 / texture_dimensions[0] as f32,
+                    (*x + *width - *right_dist) as f32 / texture_dimensions[0] as f32,
+                    (*x + *width) as f32 / texture_dimensions[0] as f32,
+                ];
+                let y_tex_coord_bound = [
+                    *y as f32 / texture_dimensions[1] as f32,
+                    (*y + *top_dist) as f32 / texture_dimensions[1] as f32,
+                    (*y + *height - *bottom_dist) as f32 / texture_dimensions[1] as f32,
+                    (*y + *height) as f32 / texture_dimensions[1] as f32,
+                ];
 
-                let x_dimensions =
-                [
+                //The dimensions of each slice
+                let x_dimensions = [
                     *left_dist as f32,
-                    transform.pixel_width -( *right_dist+*left_dist)as f32,
-                    *right_dist as f32
+                    transform.pixel_width - (*right_dist + *left_dist) as f32,
+                    *right_dist as f32,
                 ];
-
-                let y_dimensions =
-                [
+                let y_dimensions = [
                     *top_dist as f32,
-                    transform.pixel_height -( *top_dist+*right_dist)as f32,
-                    *bottom_dist as f32
+                    transform.pixel_height - (*top_dist + *right_dist) as f32,
+                    *bottom_dist as f32,
                 ];
 
-                let x_coords =
-                [
-                    transform.pixel_x()-((transform.pixel_width - *left_dist as f32) /2.0),
-                    transform.pixel_x()+((*left_dist - *right_dist) as f32/2.0),
-                    transform.pixel_x()+((transform.pixel_width - *right_dist as f32)/2.0)
+                //The center location of each slice on the screen
+                let x_coords = [
+                    transform.pixel_x() - ((transform.pixel_width - *left_dist as f32) / 2.0),
+                    transform.pixel_x() + ((*left_dist - *right_dist) as f32 / 2.0),
+                    transform.pixel_x() + ((transform.pixel_width - *right_dist as f32) / 2.0),
                 ];
-                let y_coords =
-                [
-                    transform.pixel_y()+((transform.pixel_height - *top_dist as f32)/2.0),
-                    transform.pixel_y()+((*bottom_dist- *top_dist) as f32)/2.0,
-                    transform.pixel_y()-((transform.pixel_height - *bottom_dist as f32)/2.0)
+                let y_coords = [
+                    transform.pixel_y() + ((transform.pixel_height - *top_dist as f32) / 2.0),
+                    transform.pixel_y() + ((*bottom_dist - *top_dist) as f32) / 2.0,
+                    transform.pixel_y() - ((transform.pixel_height - *bottom_dist as f32) / 2.0),
                 ];
 
-                for x in 0..3{
-                    for y in 0..3{
+                // loop through left to right, the top to bottom and batch each slice to render
+                for x in 0..3 {
+                    for y in 0..3 {
                         let mut temp_args = args.clone();
-                        temp_args.tex_coord_bounds = [x_slices[x],y_slices[y],x_slices[x+1],y_slices[y+1]].into();
-                        temp_args.dimensions =  [x_dimensions[x],y_dimensions[y]].into();
-                        temp_args.coords =  [x_coords[x],y_coords[y]].into();
+                        temp_args.tex_coord_bounds = [
+                            x_tex_coord_bound[x],
+                            y_tex_coord_bound[y],
+                            x_tex_coord_bound[x + 1],
+                            y_tex_coord_bound[y + 1],
+                        ]
+                        .into();
+                        temp_args.dimensions = [x_dimensions[x], y_dimensions[y]].into();
+                        temp_args.coords = [x_coords[x], y_coords[y]].into();
                         batches.insert(tex_id, Some(temp_args));
                     }
                 }
@@ -674,10 +692,6 @@ fn render_image<B: Backend>(
             } else {
                 false
             }
-
-
-
-
         }
         _ => {
             batches.insert(white_tex_id, Some(args));

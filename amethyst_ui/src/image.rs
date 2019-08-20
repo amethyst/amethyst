@@ -13,7 +13,7 @@ pub enum UiImage {
     /// An image backed by a Sprite
     Sprite(SpriteRender),
     /// An Image backed by a 9-sliced texture
-    NineSlice{
+    NineSlice {
         x: i32,
         y: i32,
         width: i32,
@@ -23,7 +23,7 @@ pub enum UiImage {
         top_dist: i32,
         bottom_dist: i32,
         texture: Handle<Texture>,
-        texture_dimensions: [i32;2]
+        texture_dimensions: [i32; 2],
     },
     /// An image entirely covered by single solid color
     SolidColor([f32; 4]),
