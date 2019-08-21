@@ -78,7 +78,7 @@ impl App {
         self.dispatcher.dispatch(&mut self.world);
         self.world.maintain();
         let mut loader = self.world.write_resource::<DefaultLoader>();
-        loader.process(&self.world).unwrap(); // TODO unwrap
+        loader.process(&self.world).expect("Error in Loader processing"); // TODO unwrap
     }
 
     fn run(&mut self) {
