@@ -18,9 +18,9 @@ where
     /// Function to instantiate `System` to add to the dispatcher.
     system_desc: SD,
     /// Name to register the system with.
-    system_name: &'static str,
+    system_name: String,
     /// Names of the system dependencies.
-    system_dependencies: &'static [&'static str],
+    system_dependencies: Vec<String>,
     /// Marker.
     system_marker: PhantomData<(&'a SD, &'b S)>,
 }
@@ -35,10 +35,15 @@ where
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
+        let system_dependencies = self
+            .system_dependencies
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<&str>>();
         builder.add(
             self.system_desc.build(world),
-            self.system_name,
-            self.system_dependencies,
+            &self.system_name,
+            &system_dependencies,
         );
         Ok(())
     }

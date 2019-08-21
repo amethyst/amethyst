@@ -110,12 +110,7 @@ impl<'a, 'b: 'a> CustomDispatcherStateBuilder<'a, 'b> {
     /// * `system`: Function to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system<S>(
-        mut self,
-        system: S,
-        name: &'static str,
-        dependencies: &'static [&'static str],
-    ) -> Self
+    pub fn with_system<S>(mut self, system: S, name: String, dependencies: Vec<String>) -> Self
     where
         S: for<'c> System<'c> + 'static + Send,
     {
@@ -138,8 +133,8 @@ impl<'a, 'b: 'a> CustomDispatcherStateBuilder<'a, 'b> {
     pub fn with_system_desc<SD, S>(
         mut self,
         system_desc: SD,
-        name: &'static str,
-        dependencies: &'static [&'static str],
+        name: String,
+        dependencies: Vec<String>,
     ) -> Self
     where
         SD: SystemDesc<'a, 'b, S> + 'a,
