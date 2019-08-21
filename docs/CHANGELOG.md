@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add `DispatcherOperation` to store dispatcher build logic, which can be executed lazily. ([#1870])
 * `AmethystApplication` takes in `SystemDesc`s through `with_system_desc`. ([#1882])
 * `AmethystApplication::with_thread_local_desc` takes in `RunNowDesc`. ([#1882])
+* Add `NineSlice` support to `UiImage`. (TBD)
 
 ### Changed
 
