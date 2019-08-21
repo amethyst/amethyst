@@ -333,3 +333,36 @@ fn struct_named_complex() -> Result<(), Error> {
 
     Ok(())
 }
+
+#[test]
+fn system_with_flagged_storage_reader() -> Result<(), Error> {
+    use amethyst_core::{
+        ecs::{storage::ComponentEvent, WriteStorage},
+        transform::Transform,
+    };
+
+    // Expects `System` to have a `new` constructor.
+    #[derive(Debug, SystemDesc)]
+    #[system_desc(name(SystemWithFlaggedStorageReaderDesc))]
+    struct SystemWithFlaggedStorageReader {
+        #[system_desc(flagged_storage_reader(Transform))]
+        transform_events: ReaderId<ComponentEvent>,
+    }
+    impl SystemWithFlaggedStorageReader {
+        fn new(transform_events: ReaderId<ComponentEvent>) -> Self {
+            Self { transform_events }
+        }
+    }
+
+    impl<'s> System<'s> for SystemWithFlaggedStorageReader {
+        type SystemData = ();
+        fn run(&mut self, _: Self::SystemData) {}
+    }
+
+    let mut world = World::new();
+    world.register::<Transform>();
+
+    SystemWithFlaggedStorageReaderDesc::default().build(&mut world);
+
+    Ok(())
+}

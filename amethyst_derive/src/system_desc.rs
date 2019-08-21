@@ -2,7 +2,7 @@
 
 use heck::SnakeCase;
 use proc_macro2::{Literal, Span, TokenStream};
-use proc_macro_roids::{DeriveInputStructExt, FieldExt};
+use proc_macro_roids::{DeriveInputExt, DeriveInputStructExt, FieldExt};
 use quote::quote;
 use syn::{
     parse_quote, punctuated::Pair, AngleBracketedGenericArguments, Attribute, DeriveInput, Expr,
@@ -151,7 +151,9 @@ fn system_desc_fields(ast: &DeriveInput) -> SystemDescFields<'_> {
             let field_variant = if field.contains_tag("system_desc", "skip") {
                 FieldVariant::Skipped(field)
             } else if field.contains_tag("system_desc", "event_channel_reader") {
-                FieldVariant::Compute(FieldToCompute::ReaderId(field))
+                FieldVariant::Compute(FieldToCompute::EventChannelReader(field))
+            } else if field.contains_tag("system_desc", "flagged_storage_reader") {
+                FieldVariant::Compute(FieldToCompute::FlaggedStorageReader(field))
             } else if field.is_phantom_data() {
                 let field_variant = FieldVariant::PhantomData {
                     system_desc_field_index,
@@ -261,7 +263,7 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
                 .iter()
                 .map(|field| {
                     if field.is_phantom_data() {
-                        quote!(std::marker::PhantomData::default())
+                        quote!(std::marker::PhantomData)
                     } else {
                         let type_name_snake = snake_case(field);
                         quote!(#type_name_snake)
@@ -284,7 +286,7 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
                         .expect("Expected named field to have an ident.");
 
                     if field.is_phantom_data() {
-                        quote!(#field_name: std::marker::PhantomData::default())
+                        quote!(#field_name: std::marker::PhantomData)
                     } else {
                         quote!(#field_name)
                     }
@@ -378,11 +380,14 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                         .iter()
                         .filter_map(|field_mapping| match &field_mapping.field_variant {
                             FieldVariant::Skipped(..) => None,
-                            FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                                let field_name =
-                                    field.ident.clone().unwrap_or_else(|| snake_case(field));
-                                Some(quote!(#field_name))
-                            }
+                            FieldVariant::Compute(field_to_compute) => match field_to_compute {
+                                FieldToCompute::EventChannelReader(field)
+                                | FieldToCompute::FlaggedStorageReader(field) => {
+                                    let field_name =
+                                        field.ident.clone().unwrap_or_else(|| snake_case(field));
+                                    Some(quote!(#field_name))
+                                }
+                            },
                             FieldVariant::PhantomData { .. } => {
                                 unreachable!(
                                     "`SystemDesc` will not have `Unit` fields \
@@ -419,10 +424,13 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                     .iter()
                     .filter_map(|field_mapping| match &field_mapping.field_variant {
                         FieldVariant::Skipped(..) => None,
-                        FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                            let field_name = snake_case(field);
-                            Some(quote!(#field_name))
-                        }
+                        FieldVariant::Compute(field_to_compute) => match field_to_compute {
+                            FieldToCompute::EventChannelReader(field)
+                            | FieldToCompute::FlaggedStorageReader(field) => {
+                                let field_name = snake_case(field);
+                                Some(quote!(#field_name))
+                            }
+                        },
                         FieldVariant::PhantomData { .. } => None,
                         FieldVariant::Passthrough {
                             system_desc_field_index,
@@ -462,13 +470,16 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                         .iter()
                         .filter_map(|field_mapping| match &field_mapping.field_variant {
                             FieldVariant::Skipped(..) => None,
-                            FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                                let field_name = field
-                                    .ident
-                                    .as_ref()
-                                    .expect("Expected named field to have an ident.");
-                                Some(quote!(#field_name))
-                            }
+                            FieldVariant::Compute(field_to_compute) => match field_to_compute {
+                                FieldToCompute::EventChannelReader(field)
+                                | FieldToCompute::FlaggedStorageReader(field) => {
+                                    let field_name = field
+                                        .ident
+                                        .as_ref()
+                                        .expect("Expected named field to have an ident.");
+                                    Some(quote!(#field_name))
+                                }
+                            },
                             FieldVariant::PhantomData { .. } => None,
                             FieldVariant::Passthrough { field, .. } => {
                                 let field_name = field
@@ -488,13 +499,16 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                         .iter()
                         .filter_map(|field_mapping| match &field_mapping.field_variant {
                             FieldVariant::Skipped(..) => None,
-                            FieldVariant::Compute(FieldToCompute::ReaderId(field)) => {
-                                let field_name = field
-                                    .ident
-                                    .as_ref()
-                                    .expect("Expected named field to have an ident.");
-                                Some(quote!(#field_name))
-                            }
+                            FieldVariant::Compute(field_to_compute) => match field_to_compute {
+                                FieldToCompute::EventChannelReader(field)
+                                | FieldToCompute::FlaggedStorageReader(field) => {
+                                    let field_name = field
+                                        .ident
+                                        .as_ref()
+                                        .expect("Expected named field to have an ident.");
+                                    Some(quote!(#field_name))
+                                }
+                            },
                             FieldVariant::PhantomData { .. } => None,
                             FieldVariant::Passthrough { field, .. } => {
                                 let field_name = field
@@ -526,74 +540,13 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
 /// Extracts the name from the `#[system_desc(name(..))]` attribute.
 #[allow(clippy::let_and_return)] // Needed due to bug in clippy.
 fn system_desc_name(ast: &DeriveInput) -> Option<Ident> {
-    let meta_lists = ast
-        .attrs
-        .iter()
-        .map(Attribute::parse_meta)
-        .filter_map(Result::ok)
-        .filter(|meta| meta.name() == "system_desc")
-        .filter_map(|meta| {
-            if let Meta::List(meta_list) = meta {
-                Some(meta_list)
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<MetaList>>();
-
-    // Each `meta_list` is the `system_desc(..)` item.
-    let name = meta_lists
-        .iter()
-        .flat_map(|meta_list| {
-            meta_list
-                .nested
-                .iter()
-                .filter_map(|nested_meta| {
-                    if let NestedMeta::Meta(meta) = nested_meta {
-                        Some(meta)
-                    } else {
-                        None
-                    }
-                })
-                .filter(|meta| meta.name() == "name")
-        })
-        // `meta` is the `name(..)` item.
-        .filter_map(|meta| {
-            if let Meta::List(meta_list) = meta {
-                Some(meta_list)
-            } else {
-                None
-            }
-        })
-        // We want to insert a resource for each item in the list.
-        .map(|meta_list| {
-            if meta_list.nested.len() != 1 {
-                panic!(
-                    "Expected exactly one identifier for `#[system_desc(name(..))]`. `{:?}`.",
-                    &meta_list.nested
-                );
-            }
-
-            meta_list
-                .nested
-                .first()
-                .map(|pair| {
-                    let nested_meta = pair.value();
-                    if let NestedMeta::Meta(Meta::Word(ident)) = nested_meta {
-                        ident.clone()
-                    } else {
-                        panic!(
-                            "`{:?}` is an invalid value in this position.\n\
-                             Expected a single identifier.",
-                            nested_meta,
-                        );
-                    }
-                })
-                .expect("Expected one meta item to exist.")
-        })
-        .next();
-
-    name
+    ast.tag_parameter("system_desc", "name").map(|meta| {
+        if let Meta::Word(ident) = meta {
+            ident
+        } else {
+            panic!("Expected name parameter to be an `Ident`.")
+        }
+    })
 }
 
 /// Inserts resources specified inside the `#[system_desc(insert(..))]` attribute.
@@ -688,50 +641,70 @@ fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> T
     system_desc_fields.field_mappings.iter().fold(
         TokenStream::new(),
         |mut token_stream, field_mapping| {
-            if let FieldMapping {
-                field_variant: FieldVariant::Compute(FieldToCompute::ReaderId(field)),
-                ..
-            } = field_mapping
-            {
-                let field_name = field.ident.clone().unwrap_or_else(|| snake_case(field));
-                let event_type_path = if let Type::Path(TypePath {
-                    path: Path { segments, .. },
-                    ..
-                }) = &field.ty
-                {
-                    if let Some(Pair::End(path_segment)) = segments.last() {
-                        if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-                            args,
-                            ..
-                        }) = &path_segment.arguments
-                        {
-                            if let Some(Pair::End(GenericArgument::Type(Type::Path(TypePath {
-                                path,
+            match &field_mapping.field_variant {
+                FieldVariant::Compute(FieldToCompute::EventChannelReader(field)) => {
+                    let field_name = field.ident.clone().unwrap_or_else(|| snake_case(field));
+                    // For a `ReaderId<EventType>` type, this code figures out `EventType`.
+                    let event_type_path = if let Type::Path(TypePath {
+                        path: Path { segments, .. },
+                        ..
+                    }) = &field.ty
+                    {
+                        if let Some(Pair::End(path_segment)) = segments.last() {
+                            if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                                args,
                                 ..
-                            })))) = args.first()
+                            }) = &path_segment.arguments
                             {
-                                path
+                                if let Some(Pair::End(GenericArgument::Type(Type::Path(
+                                    TypePath { path, .. },
+                                )))) = args.first()
+                                {
+                                    path
+                                } else {
+                                    panic!(
+                                        "Expected `{}` first generic parameter to be a type.",
+                                        &field_name
+                                    )
+                                }
                             } else {
-                                panic!(
-                                    "Expected `{}` first generic parameter to be a type.",
-                                    &field_name
-                                )
+                                panic!("Expected `{}` field to have type parameters.", &field_name)
                             }
                         } else {
-                            panic!("Expected `{}` field to have type parameters.", &field_name)
+                            panic!("Expected `{}` field last segment to exist.", &field_name)
                         }
                     } else {
-                        panic!("Expected `{}` field last segment to exist.", &field_name)
-                    }
-                } else {
-                    panic!("Expected `{}` field type to be `Type::Path`.", &field_name)
-                };
-                let tokens = quote! {
-                    let #field_name = world
-                        .fetch_mut::<EventChannel<#event_type_path>>()
-                        .register_reader();
-                };
-                token_stream.extend(tokens);
+                        panic!("Expected `{}` field type to be `Type::Path`.", &field_name)
+                    };
+
+                    let tokens = quote! {
+                        let #field_name = world
+                            .fetch_mut::<EventChannel<#event_type_path>>()
+                            .register_reader();
+                    };
+                    token_stream.extend(tokens);
+                }
+                FieldVariant::Compute(FieldToCompute::FlaggedStorageReader(field)) => {
+                    let field_name = field.ident.clone().unwrap_or_else(|| snake_case(field));
+                    let component_path = {
+                        let meta = field.tag_parameter("system_desc", "flagged_storage_reader");
+                        if let Some(Meta::Word(ident)) = meta {
+                            ident
+                        } else {
+                            panic!(
+                                "Expected component type name for `flagged_storage_reader` \
+                                 parameter. Got: `{:?}`",
+                                &meta
+                            )
+                        }
+                    };
+                    let tokens = quote! {
+                        let #field_name = WriteStorage::<#component_path>::fetch(&world)
+                            .register_reader();
+                    };
+                    token_stream.extend(tokens);
+                }
+                _ => {}
             }
 
             token_stream
@@ -813,6 +786,8 @@ enum FieldVariant<'f> {
 
 #[derive(Debug, PartialEq)]
 enum FieldToCompute<'f> {
-    /// `ReaderId` from registering as a reader for an `EventChannel` in the `World`.
-    ReaderId(&'f Field),
+    /// `ReaderId` from registering a reader for an `EventChannel` in the `World`.
+    EventChannelReader(&'f Field),
+    /// `ReaderId` from registering a reader for a `FlaggedStorage`.
+    FlaggedStorageReader(&'f Field),
 }
