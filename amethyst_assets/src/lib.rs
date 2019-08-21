@@ -43,6 +43,10 @@ mod source;
 mod storage;
 
 #[cfg(feature = "experimental-assets")]
+mod bundle_new;
+#[cfg(feature = "experimental-assets")]
+mod handle_new;
+#[cfg(feature = "experimental-assets")]
 mod loader_new;
 #[cfg(feature = "experimental-assets")]
 mod processor;
@@ -51,21 +55,13 @@ mod simple_importer;
 #[cfg(feature = "experimental-assets")]
 mod storage_new;
 #[cfg(feature = "experimental-assets")]
-mod handle_new;
-#[cfg(feature = "experimental-assets")]
 /// Experimental module for testing new asset loading features
 pub mod experimental {
     pub use crate::{
-        loader_new::{
-            create_asset_type, AssetUuid, DefaultLoader,
-            LoadStatus, Loader,
-        },
-        handle_new::{
-            GenericHandle, Handle, AssetHandle, 
-        },
-        processor::{
-            ProcessingQueue, ProcessingState, Processor,
-        },
+        bundle_new::LoaderBundle,
+        handle_new::{AssetHandle, GenericHandle, Handle},
+        loader_new::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
+        processor::{ProcessingQueue, ProcessingState, Processor},
         simple_importer::{SimpleImporter, SourceFileImporter},
         storage_new::AssetStorage,
     };

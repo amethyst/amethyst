@@ -62,10 +62,9 @@ impl App {
 
         let mut world = World::new();
 
-        let mut loader = DefaultLoader::default();
-        loader.init_world(&mut world);
-        loader.init_dispatcher(&mut disp_builder);
-        world.insert(loader);
+        use amethyst_core::bundle::SystemBundle;
+        let bundle = LoaderBundle;
+        bundle.build(&mut world, &mut disp_builder).expect("Failed to build LoaderBundle");
 
         App {
             dispatcher: disp_builder.build(),
@@ -77,8 +76,6 @@ impl App {
     fn update(&mut self) {
         self.dispatcher.dispatch(&mut self.world);
         self.world.maintain();
-        let mut loader = self.world.write_resource::<DefaultLoader>();
-        loader.process(&self.world).expect("Error in Loader processing"); // TODO unwrap
     }
 
     fn run(&mut self) {
