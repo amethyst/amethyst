@@ -662,12 +662,12 @@ fn render_image<B: Backend>(
                 //The center location of each slice on the screen
                 let x_coords = [
                     transform.pixel_x() - ((transform.pixel_width - *left_dist as f32) / 2.0),
-                    transform.pixel_x() + (*left_dist as f32  - *right_dist as f32 ) / 2.0,
+                    transform.pixel_x() + (*left_dist as f32 - *right_dist as f32) / 2.0,
                     transform.pixel_x() + ((transform.pixel_width - *right_dist as f32) / 2.0),
                 ];
                 let y_coords = [
                     transform.pixel_y() + ((transform.pixel_height - *top_dist as f32) / 2.0),
-                    transform.pixel_y() + (*bottom_dist as f32  - *top_dist as f32) / 2.0,
+                    transform.pixel_y() + (*bottom_dist as f32 - *top_dist as f32) / 2.0,
                     transform.pixel_y() - ((transform.pixel_height - *bottom_dist as f32) / 2.0),
                 ];
 
