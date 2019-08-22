@@ -345,16 +345,16 @@ pub enum UiImageLoadPrefab {
     SolidColor(f32, f32, f32, f32),
     /// 9-Slice image
     NineSlice {
-        x_start: i32,
-        y_start: i32,
-        width: i32,
-        height: i32,
-        left_dist: i32,
-        right_dist: i32,
-        top_dist: i32,
-        bottom_dist: i32,
+        x_start: u32,
+        y_start: u32,
+        width: u32,
+        height: u32,
+        left_dist: u32,
+        right_dist: u32,
+        top_dist: u32,
+        bottom_dist: u32,
         tex: TexturePrefab,
-        texture_dimensions: (i32, i32),
+        texture_dimensions: (u32, u32),
     },
 }
 

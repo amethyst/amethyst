@@ -64,7 +64,7 @@ Container(
         //9-Slice
         Image(
             transform: (
-                id: "Partial Texture Logo",
+                id: "9 Slice",
                 x: -250.,
                 y: -40.,
                 width: 150.,
@@ -74,17 +74,17 @@ Container(
                 mouse_reactive: true,
             ),
             image: NineSlice(
-                    x_start:0,
-                    y_start:0,
-                    width:75,
-                    height:50,
-                    left_dist: 20,
-                    right_dist: 53,
-                    top_dist: 28,
-                    bottom_dist: 20,
-                    tex: File("texture/9_Slice_Example.png", ("IMAGE", ())),
-                    texture_dimensions: (75,50),
-                ),
+                x_start: 0,
+                y_start: 0,
+                width: 75,
+                height: 50,
+                left_dist: 20,
+                right_dist: 53,
+                top_dist: 28,
+                bottom_dist: 20,
+                tex: File("texture/9_Slice_Example.png", ("IMAGE", ())),
+                texture_dimensions: (75,50),
+            ),
         ),
 
         // Editable text single line.
