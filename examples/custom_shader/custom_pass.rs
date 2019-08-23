@@ -27,9 +27,9 @@ use amethyst::{
 			},
 
 			mesh::{AsAttribute, AsVertex, Color, TexCoord, VertexFormat},
-			shader::Shader,
+			shader::{PathBufShaderInfo, Shader, ShaderKind, SourceLanguage, SpirvShader},
 			texture::TextureBuilder,
-            hal::pso::ShaderStageFlags, shader::SpirvShader
+            hal::pso::ShaderStageFlags,
 		},
 		submodules::{DynamicIndexBuffer, DynamicVertexBuffer, TextureId, TextureSub,FlatEnvironmentSub},
 		types::{Backend, TextureData},
@@ -53,20 +53,38 @@ use std::{
 };
 use amethyst_error::Error;
 
+
 lazy_static::lazy_static! {
-    static ref SPRITE_VERTEX: SpirvShader = SpirvShader::new(
-        include_bytes!("../assets/shaders/compiled/vertex/custom.vert.spv").to_vec(),
-        ShaderStageFlags::VERTEX,
-        "main",
-    );
+	static ref VERTEX_SRC: SpirvShader = PathBufShaderInfo::new(
+		PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/shaders/vertex/custom.vert")),
+		ShaderKind::Vertex,
+		SourceLanguage::GLSL,
+		"main",
+	).precompile().unwrap();
 
-    static ref SPRITE_FRAGMENT: SpirvShader = SpirvShader::new(
-        include_bytes!("../assets/shaders/compiled/fragment/custom.frag.spv").to_vec(),
-        ShaderStageFlags::FRAGMENT,
-        "main",
-    );
+	static ref VERTEX: SpirvShader = SpirvShader::new(
+		(*VERTEX_SRC).spirv().unwrap().to_vec(),
+		(*VERTEX_SRC).stage(),
+		"main",
+	);
+
+	static ref FRAGMENT_SRC: SpirvShader = PathBufShaderInfo::new(
+		PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/shaders/fragment/custom.frag")),
+		ShaderKind::Fragment,
+		SourceLanguage::GLSL,
+		"main",
+	).precompile().unwrap();
+
+	static ref FRAGMENT: SpirvShader = SpirvShader::new(
+		(*FRAGMENT_SRC).spirv().unwrap().to_vec(),
+		(*FRAGMENT_SRC).stage(),
+		"main",
+	);
+
+//static ref SHADERS: ShaderSetBuilder = ShaderSetBuilder::default()
+//		.with_vertex(&*VERTEX).unwrap()
+//		.with_fragment(&*FRAGMENT).unwrap();
 }
-
 
 
 #[cfg(feature = "profiler")]
@@ -271,8 +289,8 @@ fn build_custom_pipeline<B: Backend>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    let shader_vertex = unsafe { SPRITE_VERTEX.module(factory).unwrap() };
-    let shader_fragment = unsafe { SPRITE_FRAGMENT.module(factory).unwrap() };
+    let shader_vertex = unsafe { VERTEX.module(factory).unwrap() };
+    let shader_fragment = unsafe { FRAGMENT.module(factory).unwrap() };
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
