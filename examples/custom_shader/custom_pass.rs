@@ -5,6 +5,7 @@ use amethyst::{
         transform::Transform,
         Hidden, HiddenPropagate,
 	},
+
 	renderer::{
         sprite_visibility::SpriteVisibilitySortingSystem,
 		batch::{OrderedOneLevelBatch,OneLevelBatch,GroupIterator},
@@ -142,7 +143,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
             pipeline_layout,
             env,
             vertex,
-            triangle_count: 0,
+            vertex_count: 0,
         }))
     }
 }
@@ -154,7 +155,7 @@ pub struct DrawCustom<B: Backend> {
     pipeline_layout: B::PipelineLayout,
     env: DynamicUniform<B, ViewArgs>,
     vertex: DynamicVertexBuffer<B, CustomArgs>,
-    triangle_count: usize,
+    vertex_count: usize,
 }
 
 impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
@@ -176,22 +177,27 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         let cam = CameraGatherer::gather(world);
         self.env.write(factory, index, cam.projview);
 
-        self.triangle_count =0;
+        self.vertex_count =0;
 
         {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_visibility");
 
             for triangle in triangles.join(){
-                self.triangle_count += 3;
+                self.vertex_count += 3;
             }
+            let mut vertex_data_iter : Vec<CustomArgs>= Vec::new();
 
             for triangle in triangles.join(){
-                println!("triangle");
-                self.vertex.write(factory,index,self.triangle_count as u64,Some(&triangle.get_args().iter()));
+                vertex_data_iter.extend(triangle.get_args().iter());
             }
+
+            println!("{:?}",vertex_data_iter);
+
+            self.vertex.write(factory,index,self.vertex_count as u64, Some(&vertex_data_iter.iter()));
         }
 
+        println!("triangle2");
 
         PrepareResult::DrawRecord
     }
@@ -206,7 +212,9 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("draw opaque");
 
-        if self.triangle_count == 0{
+        println!("triangle3");
+
+        if self.vertex_count == 0{
             return;
         }
 
@@ -215,10 +223,13 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, 0, &mut encoder);
 
+
+        println!("triangle4");
+
         unsafe {
-            println!("{}",self.triangle_count);
-            encoder.draw(0..3, (0 as u32)..(self.triangle_count) as u32);
+            encoder.draw(0..self.vertex_count as u32, 0..1);
         }
+        println!("triangle5");
 
     }
 
@@ -264,16 +275,15 @@ fn build_custom_pipeline<B: Backend>(
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
                 .with_blend_targets(vec![pso::ColorBlendDesc(
                     pso::ColorMask::ALL,
-
-                    pso::BlendState::PREMULTIPLIED_ALPHA
-
+                    pso::BlendState::ALPHA,
                 )])
                 .with_depth_test(pso::DepthTest::On {
-                    fun: pso::Comparison::Less,
+                    fun: pso::Comparison::LessEqual,
                     write: true,
                 }),
         )
         .build(factory, None);
+
 
     unsafe {
         factory.destroy_shader_module(shader_vertex);
@@ -324,7 +334,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
         _world: &World,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
-            ctx.add(RenderOrder::Opaque, DrawCustomDesc::new().builder())?;
+            ctx.add(RenderOrder::Transparent, DrawCustomDesc::new().builder())?;
             Ok(())
         });
         Ok(())
@@ -376,6 +386,7 @@ impl Component for Triangle {
 impl Triangle{
     pub fn get_args(&self) -> [CustomArgs;3]
     {
+        println!("{:?}",self.points);
         [
             CustomArgs{pos: self.points[0].into(), color: self.colors[0].into()},
             CustomArgs{pos: self.points[1].into(), color: self.colors[1].into()},
