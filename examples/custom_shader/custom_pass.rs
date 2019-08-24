@@ -122,8 +122,6 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("build");
 
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let vertex = DynamicVertexBuffer::new();
@@ -179,25 +177,16 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
 
         self.vertex_count =0;
 
-        {
-            #[cfg(feature = "profiler")]
-            profile_scope!("gather_visibility");
+        for triangle in triangles.join(){
+            self.vertex_count += 3;
+        }
+        let mut vertex_data_iter : Vec<CustomArgs>= Vec::new();
 
-            for triangle in triangles.join(){
-                self.vertex_count += 3;
-            }
-            let mut vertex_data_iter : Vec<CustomArgs>= Vec::new();
-
-            for triangle in triangles.join(){
-                vertex_data_iter.extend(triangle.get_args().iter());
-            }
-
-            println!("{:?}",vertex_data_iter);
-
-            self.vertex.write(factory,index,self.vertex_count as u64, Some(&vertex_data_iter.iter()));
+        for triangle in triangles.join(){
+            vertex_data_iter.extend(triangle.get_args().iter());
         }
 
-        println!("triangle2");
+        self.vertex.write(factory,index,self.vertex_count as u64, Some(&vertex_data_iter.iter()));
 
         PrepareResult::DrawRecord
     }
@@ -208,11 +197,9 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
         _world: &World,
-    ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("draw opaque");
+    ){
 
-        println!("triangle3");
+
 
         if self.vertex_count == 0{
             return;
@@ -224,13 +211,9 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         self.vertex.bind(index, 0, 0, &mut encoder);
 
 
-        println!("triangle4");
-
         unsafe {
             encoder.draw(0..self.vertex_count as u32, 0..1);
         }
-        println!("triangle5");
-
     }
 
     fn dispose(self: Box<Self>, factory: &mut Factory<B>, _world: &World) {
@@ -386,7 +369,6 @@ impl Component for Triangle {
 impl Triangle{
     pub fn get_args(&self) -> [CustomArgs;3]
     {
-        println!("{:?}",self.points);
         [
             CustomArgs{pos: self.points[0].into(), color: self.colors[0].into()},
             CustomArgs{pos: self.points[1].into(), color: self.colors[1].into()},
