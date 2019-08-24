@@ -264,7 +264,7 @@ fn build_custom_pipeline<B: Backend>(
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(CustomArgs::vertex(), pso::VertexInputRate::Instance(1))])
+                .with_vertex_desc(&[(CustomArgs::vertex(), pso::VertexInputRate::Vertex)])
                 .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
