@@ -343,6 +343,19 @@ pub enum UiImageLoadPrefab {
     PartialTexture(TexturePrefab, f32, f32, f32, f32),
     /// Solid color image
     SolidColor(f32, f32, f32, f32),
+    /// 9-Slice image
+    NineSlice {
+        x_start: u32,
+        y_start: u32,
+        width: u32,
+        height: u32,
+        left_dist: u32,
+        right_dist: u32,
+        top_dist: u32,
+        bottom_dist: u32,
+        tex: TexturePrefab,
+        texture_dimensions: (u32, u32),
+    },
 }
 
 impl<'a> PrefabData<'a> for UiImagePrefab {
@@ -394,6 +407,29 @@ impl<'a> PrefabData<'a> for UiImageLoadPrefab {
                     [*left, *right, *bottom, *top].into(),
                 )
             }
+            UiImageLoadPrefab::NineSlice {
+                x_start,
+                y_start,
+                height,
+                width,
+                left_dist,
+                right_dist,
+                top_dist,
+                bottom_dist,
+                tex,
+                texture_dimensions,
+            } => UiImage::NineSlice {
+                x_start: *x_start,
+                y_start: *y_start,
+                height: *height,
+                width: *width,
+                left_dist: *left_dist,
+                right_dist: *right_dist,
+                top_dist: *top_dist,
+                bottom_dist: *bottom_dist,
+                tex: tex.add_to_entity(entity, textures, entities, children)?,
+                texture_dimensions: [texture_dimensions.0, texture_dimensions.1],
+            },
             UiImageLoadPrefab::SolidColor(r, g, b, a) => UiImage::SolidColor([*r, *g, *b, *a]),
         };
         Ok(image)
@@ -407,6 +443,7 @@ impl<'a> PrefabData<'a> for UiImageLoadPrefab {
         match self {
             UiImageLoadPrefab::Texture(tex) => tex.load_sub_assets(progress, textures),
             UiImageLoadPrefab::PartialTexture(tex, ..) => tex.load_sub_assets(progress, textures),
+            UiImageLoadPrefab::NineSlice { tex, .. } => tex.load_sub_assets(progress, textures),
             UiImageLoadPrefab::SolidColor(..) => Ok(false),
         }
     }

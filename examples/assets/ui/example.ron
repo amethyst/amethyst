@@ -61,6 +61,31 @@ Container(
             ),
             image: PartialTexture(File("texture/test_texture.png", ("IMAGE", ())),0.34,0.0,1.0,0.333),
         ),
+        //9-Slice
+        Image(
+            transform: (
+                id: "9 Slice",
+                x: -250.,
+                y: -40.,
+                width: 150.,
+                height:  80.,
+                tab_order: 1,
+                anchor: TopRight,
+                mouse_reactive: true,
+            ),
+            image: NineSlice(
+                x_start: 0,
+                y_start: 0,
+                width: 75,
+                height: 50,
+                left_dist: 20,
+                right_dist: 53,
+                top_dist: 28,
+                bottom_dist: 20,
+                tex: File("texture/9_Slice_Example.png", ("IMAGE", ())),
+                texture_dimensions: (75,50),
+            ),
+        ),
 
         // Editable text single line.
         Container(

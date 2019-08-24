@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add `DispatcherOperation` to store dispatcher build logic, which can be executed lazily. ([#1870])
 * `AmethystApplication` takes in `SystemDesc`s through `with_system_desc`. ([#1882])
 * `AmethystApplication::with_thread_local_desc` takes in `RunNowDesc`. ([#1882])
+* Add `NineSlice` support to `UiImage`. ([#1896])
 
 ### Changed
 
@@ -45,6 +46,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1883]: https://github.com/amethyst/amethyst/pull/1883
 [#1886]: https://github.com/amethyst/amethyst/pull/1886
 [#1891]: https://github.com/amethyst/amethyst/pull/1891
+[#1896]: https://github.com/amethyst/amethyst/pull/1896
 
 ## [0.12.0] - 2019-07-30
 
