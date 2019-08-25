@@ -1,4 +1,4 @@
- //! Set of predefined implementations of `RenderPlugin` for use with `RenderingBundle`.
+//! Set of predefined implementations of `RenderPlugin` for use with `RenderingBundle`.
 
 use crate::{
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},

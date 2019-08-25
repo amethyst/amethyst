@@ -1,69 +1,60 @@
 use amethyst::{
-	core::ecs::{
-        Join, ReadStorage, SystemData, World, DispatcherBuilder,Component, DenseVecStorage,
-	},
-
-	renderer::{
-		pipeline::{PipelineDescBuilder, PipelinesBuilder},
-		rendy::{
-			command::{QueueId, RenderPassEncoder},
-			factory::Factory,
-			graph::{
-				render::{PrepareResult, RenderGroup, RenderGroupDesc},
-				GraphContext,
-				NodeBuffer,
-				NodeImage,
-			},
-			hal::{
-				self,
-				device::Device,
-				format::Format,
-				pso,
-			},
-			mesh::{ AsVertex, VertexFormat},
-			shader::{PathBufShaderInfo, Shader, ShaderKind, SourceLanguage, SpirvShader},
-		},
-		submodules::{DynamicVertexBuffer,DynamicUniform},
-		types::Backend,
-		util,
-        bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
+    core::ecs::{
+        Component, DenseVecStorage, DispatcherBuilder, Join, ReadStorage, SystemData, World,
     },
     prelude::*,
+    renderer::{
+        bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
+        pipeline::{PipelineDescBuilder, PipelinesBuilder},
+        rendy::{
+            command::{QueueId, RenderPassEncoder},
+            factory::Factory,
+            graph::{
+                render::{PrepareResult, RenderGroup, RenderGroupDesc},
+                GraphContext, NodeBuffer, NodeImage,
+            },
+            hal::{self, device::Device, format::Format, pso},
+            mesh::{AsVertex, VertexFormat},
+            shader::{PathBufShaderInfo, Shader, ShaderKind, SourceLanguage, SpirvShader},
+        },
+        submodules::{DynamicUniform, DynamicVertexBuffer},
+        types::Backend,
+        util,
+    },
 };
 
-use derivative::Derivative;
-use std::path::PathBuf;
 use amethyst_error::Error;
+use derivative::Derivative;
 use glsl_layout::*;
+use std::path::PathBuf;
 
 lazy_static::lazy_static! {
-	static ref VERTEX_SRC: SpirvShader = PathBufShaderInfo::new(
-		PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/shaders/vertex/custom.vert")),
-		ShaderKind::Vertex,
-		SourceLanguage::GLSL,
-		"main",
-	).precompile().unwrap();
+    static ref VERTEX_SRC: SpirvShader = PathBufShaderInfo::new(
+        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/shaders/vertex/custom.vert")),
+        ShaderKind::Vertex,
+        SourceLanguage::GLSL,
+        "main",
+    ).precompile().unwrap();
 
-	static ref VERTEX: SpirvShader = SpirvShader::new(
-		(*VERTEX_SRC).spirv().unwrap().to_vec(),
-		(*VERTEX_SRC).stage(),
-		"main",
-	);
+    static ref VERTEX: SpirvShader = SpirvShader::new(
+        (*VERTEX_SRC).spirv().unwrap().to_vec(),
+        (*VERTEX_SRC).stage(),
+        "main",
+    );
 
-	static ref FRAGMENT_SRC: SpirvShader = PathBufShaderInfo::new(
-		PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/shaders/fragment/custom.frag")),
-		ShaderKind::Fragment,
-		SourceLanguage::GLSL,
-		"main",
-	).precompile().unwrap();
+    static ref FRAGMENT_SRC: SpirvShader = PathBufShaderInfo::new(
+        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/shaders/fragment/custom.frag")),
+        ShaderKind::Fragment,
+        SourceLanguage::GLSL,
+        "main",
+    ).precompile().unwrap();
 
-	static ref FRAGMENT: SpirvShader = SpirvShader::new(
-		(*FRAGMENT_SRC).spirv().unwrap().to_vec(),
-		(*FRAGMENT_SRC).stage(),
-		"main",
-	);
-
-
+    static ref FRAGMENT: SpirvShader = SpirvShader::new(
+        (*FRAGMENT_SRC).spirv().unwrap().to_vec(),
+        (*FRAGMENT_SRC).stage(),
+        "main",
+    );
+}
 
 /// Draw triangles.
 #[derive(Clone, Debug, PartialEq, Derivative)]
@@ -90,7 +81,6 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
-
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let vertex = DynamicVertexBuffer::new();
 
@@ -131,29 +121,29 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         world: &World,
     ) -> PrepareResult {
-
-        let (
-            triangles,
-        ) = <(
-            ReadStorage<'_, Triangle>,
-        )>::fetch(world);
+        let (triangles,) = <(ReadStorage<'_, Triangle>,)>::fetch(world);
 
         //Get our scale value
         let scale = world.read_resource::<CustomUniformArgs>();
 
         self.env.write(factory, index, scale.std140());
-        self.vertex_count =0;
+        self.vertex_count = 0;
 
-        for _ in triangles.join(){
+        for _ in triangles.join() {
             self.vertex_count += 3;
         }
-        let mut vertex_data_iter : Vec<CustomArgs>= Vec::new();
+        let mut vertex_data_iter: Vec<CustomArgs> = Vec::new();
 
-        for triangle in triangles.join(){
+        for triangle in triangles.join() {
             vertex_data_iter.extend(triangle.get_args().iter());
         }
 
-        self.vertex.write(factory,index,self.vertex_count as u64, Some(&vertex_data_iter.iter()));
+        self.vertex.write(
+            factory,
+            index,
+            self.vertex_count as u64,
+            Some(&vertex_data_iter.iter()),
+        );
 
         PrepareResult::DrawRecord
     }
@@ -164,11 +154,8 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
         _world: &World,
-    ){
-
-
-
-        if self.vertex_count == 0{
+    ) {
+        if self.vertex_count == 0 {
             return;
         }
 
@@ -176,7 +163,6 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, 0, &mut encoder);
-
 
         unsafe {
             encoder.draw(0..self.vertex_count as u32, 0..1);
@@ -192,7 +178,6 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         }
     }
 }
-
 
 fn build_custom_pipeline<B: Backend>(
     factory: &Factory<B>,
@@ -233,7 +218,6 @@ fn build_custom_pipeline<B: Backend>(
         )
         .build(factory, None);
 
-
     unsafe {
         factory.destroy_shader_module(shader_vertex);
         factory.destroy_shader_module(shader_fragment);
@@ -250,7 +234,6 @@ fn build_custom_pipeline<B: Backend>(
     }
 }
 
-
 /// A [RenderPlugin] for our custom plugin
 #[derive(Default, Debug)]
 pub struct RenderCustom {
@@ -265,7 +248,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
     ) -> Result<(), Error> {
         //Add the required components to the world ECS
         world.register::<Triangle>();
-        world.insert(CustomUniformArgs{scale:1.0});
+        world.insert(CustomUniformArgs { scale: 1.0 });
         Ok(())
     }
 
@@ -324,29 +307,35 @@ pub struct CustomUniformArgs {
     pub scale: float,
 }
 
-
-
 /// Component for the triangles we wish to draw to the screen
 #[derive(Debug, Default)]
 pub struct Triangle {
     /// The points of the triangle
-    pub points: [[f32;2];3],
+    pub points: [[f32; 2]; 3],
     /// The colors for each point of the triangle
-    pub colors: [[f32;4];3],
+    pub colors: [[f32; 4]; 3],
 }
 
 impl Component for Triangle {
     type Storage = DenseVecStorage<Self>;
 }
 
-impl Triangle{
+impl Triangle {
     ///helper function to convert triangle into 3 vertices
-    pub fn get_args(&self) -> [CustomArgs;3]
-    {
+    pub fn get_args(&self) -> [CustomArgs; 3] {
         [
-            CustomArgs{pos: self.points[0].into(), color: self.colors[0].into()},
-            CustomArgs{pos: self.points[1].into(), color: self.colors[1].into()},
-            CustomArgs{pos: self.points[2].into(), color: self.colors[2].into()},
+            CustomArgs {
+                pos: self.points[0].into(),
+                color: self.colors[0].into(),
+            },
+            CustomArgs {
+                pos: self.points[1].into(),
+                color: self.colors[1].into(),
+            },
+            CustomArgs {
+                pos: self.points[2].into(),
+                color: self.colors[2].into(),
+            },
         ]
     }
 }
