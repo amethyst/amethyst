@@ -286,9 +286,9 @@ pub struct CustomArgs {
 impl AsVertex for CustomArgs {
     fn vertex() -> VertexFormat {
         VertexFormat::new((
-            /// vec2 pos;
+            // vec2 pos;
             (Format::Rg32Sfloat, "pos"),
-            /// vec4 color;
+            // vec4 color;
             (Format::Rgba32Sfloat, "color"),
         ))
     }
@@ -310,9 +310,9 @@ pub struct CustomUniformArgs {
 /// Component for the triangles we wish to draw to the screen
 #[derive(Debug, Default)]
 pub struct Triangle {
-    /// The points of the triangle
+    // The points of the triangle
     pub points: [[f32; 2]; 3],
-    /// The colors for each point of the triangle
+    // The colors for each point of the triangle
     pub colors: [[f32; 4]; 3],
 }
 
