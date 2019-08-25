@@ -63,22 +63,15 @@ lazy_static::lazy_static! {
 		"main",
 	);
 
-//static ref SHADERS: ShaderSetBuilder = ShaderSetBuilder::default()
-//		.with_vertex(&*VERTEX).unwrap()
-//		.with_fragment(&*FRAGMENT).unwrap();
-}
 
 
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
-/// Draw opaque sprites without lighting.
+/// Draw triangles.
 #[derive(Clone, Debug, PartialEq, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct DrawCustomDesc;
 
 impl DrawCustomDesc {
-    /// Create instance of `DrawFlat2D` render group
+    /// Create instance of `DrawCustomDesc` render group
     pub fn new() -> Self {
         Default::default()
     }
@@ -108,7 +101,6 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
             framebuffer_height,
             vec![env.raw_layout()],
         )?;
-        //aux.register::<Triangle>();
 
         Ok(Box::new(DrawCustom::<B> {
             pipeline,
@@ -120,7 +112,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
     }
 }
 
-/// Draws opaque 2D sprites to the screen without lighting.
+/// Draws triangles to the screen.
 #[derive(Debug)]
 pub struct DrawCustom<B: Backend> {
     pipeline: B::GraphicsPipeline,
@@ -259,8 +251,7 @@ fn build_custom_pipeline<B: Backend>(
 }
 
 
-/// A [RenderPlugin] for drawing 2d objects with flat shading.
-/// Required to display sprites defined with [SpriteRender] component.
+/// A [RenderPlugin] for our custom plugin
 #[derive(Default, Debug)]
 pub struct RenderCustom {
     target: Target,
@@ -272,6 +263,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
         world: &mut World,
         _builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
+        //Add the required components to the world ECS
         world.register::<Triangle>();
         world.insert(CustomUniformArgs{scale:1.0});
         Ok(())
@@ -291,56 +283,55 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
     }
 }
 
-/// Sprite Vertex Data
-/// ```glsl,ignore
-/// vec2 dir_x;
-/// vec2 dir_y;
-/// vec2 pos;
-/// vec2 u_offset;
-/// vec2 v_offset;
-/// float depth;
-/// vec4 tint;
-/// ```
+/// Vertex Arguments to pass into shader.
+/// VertexData in shader:
+/// layout(location = 0) out VertexData {
+///    vec2 pos;
+///    vec4 color;
+/// } vertex;
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
 pub struct CustomArgs {
-    /// Rotation of the sprite, X-axis
+    /// vec2 pos;
     pub pos: vec2,
-    /// Rotation of the sprite, Y-axis
+    /// vec4 color;
     pub color: vec4,
 }
 
+/// Required to send data into the shader.
+/// These names must match the shader.
 impl AsVertex for CustomArgs {
     fn vertex() -> VertexFormat {
         VertexFormat::new((
+            /// vec2 pos;
             (Format::Rg32Sfloat, "pos"),
+            /// vec4 color;
             (Format::Rgba32Sfloat, "color"),
         ))
     }
 }
 
-/// ViewArgs
-/// ```glsl,ignore
-/// uniform ViewArgs {
-///    uniform mat4 proj;
-///    uniform mat4 view;
+/// CustomUniformArgs
+/// A Uniform we pass into the shader containing the current scale.
+/// Uniform in shader:
+/// layout(std140, set = 0, binding = 0) uniform CustomUniformArgs {
+///    uniform float scale;
 /// };
-/// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
 #[repr(C, align(4))]
 pub struct CustomUniformArgs {
-    /// Projection matrix
+    /// The value each vertex is scaled by.
     pub scale: float,
 }
 
 
 
-/// Component that stores persistent debug lines to be rendered in DebugLinesPass draw pass.
-/// The vector can only be cleared manually.
+/// Component for the triangles we wish to draw to the screen
 #[derive(Debug, Default)]
 pub struct Triangle {
-    /// Lines to be rendered
+    /// The points of the triangle
     pub points: [[f32;2];3],
+    /// The colors for each point of the triangle
     pub colors: [[f32;4];3],
 }
 
@@ -349,6 +340,7 @@ impl Component for Triangle {
 }
 
 impl Triangle{
+    ///helper function to convert triangle into 3 vertices
     pub fn get_args(&self) -> [CustomArgs;3]
     {
         [
