@@ -151,7 +151,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
 pub struct DrawCustom<B: Backend> {
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
-    env: DynamicUniform<B, ViewArgs>,
+    env: DynamicUniform<B, CustomUniformArgs>,
     vertex: DynamicVertexBuffer<B, CustomArgs>,
     vertex_count: usize,
 }
@@ -172,9 +172,8 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
             ReadStorage<'_, Triangle>,
         )>::fetch(world);
 
-        let cam = CameraGatherer::gather(world);
-        self.env.write(factory, index, cam.projview);
 
+        self.env.write(factory, index, CustomUniformArgs{scale:0.5}.std140());
         self.vertex_count =0;
 
         for triangle in triangles.join(){
@@ -248,7 +247,7 @@ fn build_custom_pipeline<B: Backend>(
         .with_pipeline(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(CustomArgs::vertex(), pso::VertexInputRate::Vertex)])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
+                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleList))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),
@@ -351,6 +350,21 @@ impl AsVertex for CustomArgs {
         ))
     }
 }
+
+/// ViewArgs
+/// ```glsl,ignore
+/// uniform ViewArgs {
+///    uniform mat4 proj;
+///    uniform mat4 view;
+/// };
+/// ```
+#[derive(Clone, Copy, Debug, AsStd140)]
+#[repr(C, align(4))]
+pub struct CustomUniformArgs {
+    /// Projection matrix
+    pub scale: float,
+}
+
 
 
 /// Component that stores persistent debug lines to be rendered in DebugLinesPass draw pass.

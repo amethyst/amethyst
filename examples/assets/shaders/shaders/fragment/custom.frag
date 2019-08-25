@@ -12,5 +12,6 @@ void main() {
     if (color.a == 0.0) {
         discard;
     }
-    out_color = vec4(1.0,0.0,0.0,1.0);
+
+    out_color = color;
 }

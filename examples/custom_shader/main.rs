@@ -13,6 +13,7 @@ use amethyst::{
         RenderingBundle,
         Camera
     },
+    core::transform::Transform,
     utils::application_root_dir,
 };
 
@@ -22,20 +23,15 @@ impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
+
         // Create a left plank entity.
         world
             .create_entity()
-            .with(Triangle{
-                points: [[0.5,0.5],[0.,-0.5],[-0.5,0.0]],
-                colors: [[1.,0.,0.,1.],[0.,1.,0.,1.],[0.,0.,1.,1.]]
+            .with(Triangle {
+                points: [[0., 0.], [0., 1.], [1., 0.0]],
+                colors: [[1., 0., 0., 1.], [0., 1., 0., 1.], [0., 0., 1., 1.]]
             })
             .build();
-
-        world
-            .create_entity()
-            .with(Camera::standard_2d(1., 1.))
-            .build();
-
     }
 }
 
