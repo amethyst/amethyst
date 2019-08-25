@@ -1,14 +1,9 @@
 use amethyst::{
-	assets::{AssetStorage, Handle, Loader},
-	core::{
-        ecs::{Join, Read, ReadExpect, ReadStorage, SystemData, World, DispatcherBuilder,Component, DenseVecStorage},
-        transform::Transform,
-        Hidden, HiddenPropagate,
+	core::ecs::{
+        Join, ReadStorage, SystemData, World, DispatcherBuilder,Component, DenseVecStorage,
 	},
 
 	renderer::{
-        sprite_visibility::SpriteVisibilitySortingSystem,
-		batch::{OrderedOneLevelBatch,OneLevelBatch,GroupIterator},
 		pipeline::{PipelineDescBuilder, PipelinesBuilder},
 		rendy::{
 			command::{QueueId, RenderPassEncoder},
@@ -23,40 +18,21 @@ use amethyst::{
 				self,
 				device::Device,
 				format::Format,
-				image::{self, Anisotropic, Filter, PackedColor, SamplerInfo, WrapMode},
 				pso,
 			},
-
-
-
-			mesh::{AsAttribute, AsVertex, Color, TexCoord, VertexFormat},
+			mesh::{ AsVertex, VertexFormat},
 			shader::{PathBufShaderInfo, Shader, ShaderKind, SourceLanguage, SpirvShader},
-			texture::TextureBuilder,
-            hal::pso::ShaderStageFlags,
 		},
-        pod::ViewArgs,
-		submodules::{gather::CameraGatherer,DynamicIndexBuffer, DynamicVertexBuffer,DynamicUniform, TextureId, TextureSub,FlatEnvironmentSub},
-		types::{Backend, TextureData},
+		submodules::{DynamicVertexBuffer,DynamicUniform},
+		types::Backend,
 		util,
-		Texture,
         bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
-        pod::SpriteArgs,
-        resources::Tint,
-        sprite::{SpriteRender, SpriteSheet},
-        sprite_visibility::SpriteVisibility,
-
     },
-	shrev::{EventChannel, ReaderId},
-	window::Window,
-	winit::Event,prelude::*,
+    prelude::*,
 };
 
 use derivative::Derivative;
-use std::{
-	borrow::Cow,
-	path::PathBuf,
-	sync::{Arc, Mutex},
-};
+use std::path::PathBuf;
 use amethyst_error::Error;
 use glsl_layout::*;
 
@@ -95,7 +71,6 @@ lazy_static::lazy_static! {
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-use amethyst_rendy::bundle::IntoAction;
 
 /// Draw opaque sprites without lighting.
 #[derive(Clone, Debug, PartialEq, Derivative)]
@@ -115,7 +90,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        world: &World,
+        _world: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
@@ -131,7 +106,6 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
             subpass,
             framebuffer_width,
             framebuffer_height,
-            true,
             vec![env.raw_layout()],
         )?;
         //aux.register::<Triangle>();
@@ -178,7 +152,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         self.env.write(factory, index, scale.std140());
         self.vertex_count =0;
 
-        for triangle in triangles.join(){
+        for _ in triangles.join(){
             self.vertex_count += 3;
         }
         let mut vertex_data_iter : Vec<CustomArgs>= Vec::new();
@@ -233,7 +207,6 @@ fn build_custom_pipeline<B: Backend>(
     subpass: hal::pass::Subpass<'_, B>,
     framebuffer_width: u32,
     framebuffer_height: u32,
-    transparent: bool,
     layouts: Vec<&B::DescriptorSetLayout>,
 ) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
     let pipeline_layout = unsafe {
@@ -293,19 +266,11 @@ pub struct RenderCustom {
     target: Target,
 }
 
-impl RenderCustom {
-    /// Set target to which 2d sprites will be rendered.
-    pub fn with_target(mut self, target: Target) -> Self {
-        self.target = target;
-        self
-    }
-}
-
 impl<B: Backend> RenderPlugin<B> for RenderCustom {
     fn on_build<'a, 'b>(
         &mut self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        _builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         world.register::<Triangle>();
         world.insert(CustomUniformArgs{scale:1.0});
@@ -338,7 +303,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
-struct CustomArgs {
+pub struct CustomArgs {
     /// Rotation of the sprite, X-axis
     pub pos: vec2,
     /// Rotation of the sprite, Y-axis

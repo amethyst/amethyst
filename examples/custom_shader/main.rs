@@ -9,25 +9,23 @@ use crate::custom_pass::CustomUniformArgs;
 use amethyst::{
     prelude::*,
     renderer::{
-        plugins::{RenderFlat2D, RenderToWindow},
+        plugins::RenderToWindow,
         types::DefaultBackend,
         RenderingBundle,
-        Camera
     },
-    core::transform::Transform,
     utils::application_root_dir,
-    input::{is_close_requested, is_key_down, InputBundle, StringBindings,ScrollDirection,Button,InputEvent},
+    input::{is_close_requested, is_key_down, InputBundle, StringBindings,ScrollDirection,InputEvent},
     winit::VirtualKeyCode,
 };
 
-pub struct Pong;
+pub struct CustomShaderState;
 
-impl SimpleState for Pong {
+impl SimpleState for CustomShaderState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
 
-        // Create a left plank entity.
+        // add some triangles
         world
             .create_entity()
             .with(Triangle {
@@ -35,6 +33,29 @@ impl SimpleState for Pong {
                 colors: [[1., 0., 0., 1.], [0., 1., 0., 1.], [0., 0., 1., 1.]]
             })
             .build();
+        world
+            .create_entity()
+            .with(Triangle {
+                points: [[-1., -1.], [0., -1.], [-1., 1.0]],
+                colors: [[1., 1., 0., 1.], [0., 1., 1., 1.], [1., 0., 1., 1.]]
+            })
+            .build();
+        world
+            .create_entity()
+            .with(Triangle {
+                points: [[0.2, -0.7], [0.4, -0.1], [0.8, -1.5]],
+                colors: [[1., 0., 0., 1.], [0., 0., 0., 1.], [1., 1., 1., 1.]]
+            })
+            .build();
+
+        world
+            .create_entity()
+            .with(Triangle {
+                points: [[-0.2, 0.7], [-0.4, 0.1], [-0.8, 0.5]],
+                colors: [[0.337, 0.176, 0.835, 1.], [0.337, 0.176, 0.835, 1.], [0.337, 0.176, 0.835, 1.]]
+            })
+            .build();
+
     }
 
 
@@ -101,7 +122,7 @@ fn main() -> amethyst::Result<()> {
 
     )?;
 
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
+    let mut game = Application::new(assets_dir, CustomShaderState, game_data)?;
 
     game.run();
     Ok(())
