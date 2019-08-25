@@ -202,37 +202,44 @@ fn build_custom_pipeline<B: Backend>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
+    //Load the shaders
     let shader_vertex = unsafe { VERTEX.module(factory).unwrap() };
     let shader_fragment = unsafe { FRAGMENT.module(factory).unwrap() };
 
+    //Build the pipeline
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
+                // This Pipeline uses our custom vertex description and does not use instancing
                 .with_vertex_desc(&[(CustomArgs::vertex(), pso::VertexInputRate::Vertex)])
+                // We use the triangle list primative
                 .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleList))
+                // Add the shaders
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),
                 ))
+                // Add layout
                 .with_layout(&pipeline_layout)
+                // Add subpass
                 .with_subpass(subpass)
+                // Set Framebuffer size
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
+                // We are using alpha blending
                 .with_blend_targets(vec![pso::ColorBlendDesc(
                     pso::ColorMask::ALL,
                     pso::BlendState::ALPHA,
                 )])
-                .with_depth_test(pso::DepthTest::On {
-                    fun: pso::Comparison::LessEqual,
-                    write: true,
-                }),
         )
         .build(factory, None);
 
+    //Destoy the shaders once loaded
     unsafe {
         factory.destroy_shader_module(shader_vertex);
         factory.destroy_shader_module(shader_fragment);
     }
 
+    //Handle the Errors
     match pipes {
         Err(e) => {
             unsafe {
@@ -269,6 +276,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
         _world: &World,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
+            // Add our Description
             ctx.add(RenderOrder::Transparent, DrawCustomDesc::new().builder())?;
             Ok(())
         });
