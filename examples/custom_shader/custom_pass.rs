@@ -126,18 +126,21 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         //Get our scale value
         let scale = world.read_resource::<CustomUniformArgs>();
 
+        //Write to our DynamicUniform
         self.env.write(factory, index, scale.std140());
-        self.vertex_count = 0;
 
-        for _ in triangles.join() {
-            self.vertex_count += 3;
-        }
+        //Create and write our verteices to a vector
         let mut vertex_data_iter: Vec<CustomArgs> = Vec::new();
 
         for triangle in triangles.join() {
             vertex_data_iter.extend(triangle.get_args().iter());
         }
 
+        // Store number of vertices
+        self.vertex_count = vertex_data_iter.len();
+
+
+        //Write the vector to a Vertex buffer
         self.vertex.write(
             factory,
             index,
@@ -145,6 +148,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
             Some(&vertex_data_iter.iter()),
         );
 
+        // Return that we request to draw
         PrepareResult::DrawRecord
     }
 
@@ -155,15 +159,21 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _world: &World,
     ) {
+        // Don't worry about drawing if there are no vertices. Like before the state adds them to the screen.
         if self.vertex_count == 0 {
             return;
         }
 
-        let layout = &self.pipeline_layout;
+        // Bind the pipeline to the the encoder
         encoder.bind_graphics_pipeline(&self.pipeline);
-        self.env.bind(index, layout, 0, &mut encoder);
+
+        // Bind the Dynamic buffer with the scale to the encoder
+        self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
+
+        // Bind the vertex buffer to the encoder
         self.vertex.bind(index, 0, 0, &mut encoder);
 
+        // Draw the vertices
         unsafe {
             encoder.draw(0..self.vertex_count as u32, 0..1);
         }
