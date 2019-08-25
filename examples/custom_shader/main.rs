@@ -5,6 +5,7 @@ mod custom_pass;
 
 use crate::custom_pass::RenderCustom;
 use crate::custom_pass::Triangle;
+use crate::custom_pass::CustomUniformArgs;
 use amethyst::{
     prelude::*,
     renderer::{
@@ -15,6 +16,8 @@ use amethyst::{
     },
     core::transform::Transform,
     utils::application_root_dir,
+    input::{is_close_requested, is_key_down, InputBundle, StringBindings,ScrollDirection,Button,InputEvent},
+    winit::VirtualKeyCode,
 };
 
 pub struct Pong;
@@ -33,6 +36,41 @@ impl SimpleState for Pong {
             })
             .build();
     }
+
+
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        match &event {
+            StateEvent::Window(event) => {
+                if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                    Trans::Quit
+                } else {
+                    Trans::None
+                }
+            },
+            //Using the Mouse Wheel to control the scale
+            StateEvent::Input(input) => {
+                match input{
+                    InputEvent::MouseWheelMoved(dir) =>{
+                        let mut scale = data.world.write_resource::<CustomUniformArgs>();
+                        match dir {
+                            ScrollDirection::ScrollUp =>   (*scale).scale *= 1.1,
+                            ScrollDirection::ScrollDown => (*scale).scale /= 1.1,
+                            _ => {}
+                        }
+                    },
+                    _ => {},
+                }
+                Trans::None
+            },
+            _ => {
+                Trans::None
+            },
+        }
+    }
 }
 
 fn main() -> amethyst::Result<()> {
@@ -47,7 +85,10 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("examples/assets/");
 
-    let game_data = GameDataBuilder::default().with_bundle(
+    let game_data = GameDataBuilder::default()
+
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and
             // drawing on it

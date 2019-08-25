@@ -172,8 +172,10 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
             ReadStorage<'_, Triangle>,
         )>::fetch(world);
 
+        //Get our scale value
+        let scale = world.read_resource::<CustomUniformArgs>();
 
-        self.env.write(factory, index, CustomUniformArgs{scale:0.5}.std140());
+        self.env.write(factory, index, scale.std140());
         self.vertex_count =0;
 
         for triangle in triangles.join(){
@@ -306,6 +308,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         world.register::<Triangle>();
+        world.insert(CustomUniformArgs{scale:1.0});
         Ok(())
     }
 
