@@ -7,7 +7,7 @@ use amethyst::{
     utils::tag::Tag,
     Error,
 };
-use amethyst_rendy::{
+use amethyst::renderer::{
     camera::CameraPrefab,
     formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
     light::LightPrefab,
