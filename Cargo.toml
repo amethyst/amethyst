@@ -19,7 +19,7 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
-default = ["animation", "audio", "locale", "network", "renderer", "sentry"]
+default = ["animation", "audio", "locale", "network", "renderer", "sentry","shader-compiler"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
@@ -130,8 +130,10 @@ sentry = { version = "0.15.4", optional = true }
 winit = { version = "0.19", features = ["serde", "icon_loading"] }
 serde = { version = "1.0", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
-
+failure = "0.1"
 thread_profiler = { version = "0.3", optional = true }
+lazy_static = "1.3"
+glsl-layout = "0.3"
 
 [dev-dependencies]
 derive-new = "0.5"
@@ -186,6 +188,11 @@ required-features = ["animation", "gltf"]
 name = "ui"
 path = "examples/ui/main.rs"
 required-features = ["audio"]
+
+[[example]]
+name = "custom_shader"
+path = "examples/custom_shader/main.rs"
+required-features = ["shader-compiler"]
 
 [[example]]
 name = "custom_ui"
@@ -312,4 +319,4 @@ path = "examples/rendy/main.rs"
 required-features = ["animation", "gltf"]
 
 [package.metadata.docs.rs]
-features = ["animation", "audio", "gltf", "json", "locale", "network", "sdl_controller", "vulkan"]
+features = ["animation", "audio", "gltf", "json", "locale", "network", "sdl_controller", "vulkan","shader-compiler"]
