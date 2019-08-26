@@ -14,7 +14,6 @@ use amethyst_rendy::{
     },
 };
 
-// use gfx::texture::SamplerInfo;
 use gltf::{self, material::AlphaMode};
 use std::sync::Arc;
 
