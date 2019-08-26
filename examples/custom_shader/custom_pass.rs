@@ -30,7 +30,7 @@ use std::path::PathBuf;
 
 lazy_static::lazy_static! {
     static ref VERTEX_SRC: SpirvShader = PathBufShaderInfo::new(
-        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/shaders/vertex/custom.vert")),
+        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/vertex/custom.vert")),
         ShaderKind::Vertex,
         SourceLanguage::GLSL,
         "main",
@@ -43,7 +43,7 @@ lazy_static::lazy_static! {
     );
 
     static ref FRAGMENT_SRC: SpirvShader = PathBufShaderInfo::new(
-        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/shaders/fragment/custom.frag")),
+        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/fragment/custom.frag")),
         ShaderKind::Fragment,
         SourceLanguage::GLSL,
         "main",
