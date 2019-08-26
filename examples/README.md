@@ -7,6 +7,9 @@ cargo run --example name_of_an_example
 ```
 
 ---
+
+## Table of Contents
+
 1. Basic
    1. [Hello World](#hello-world)
    2. [Window](#window)
@@ -39,73 +42,73 @@ cargo run --example name_of_an_example
 
 ## Hello World
 
-Shows the basics of the state machine in Amethyst, and prints the following
+Basic state machine in Amethyst. Prints the following:
+
 ```
 Begin!
 Hello from Amethyst!
 End!
 ```
 
+---
+
 ## Window
 
-Opens a window and creates a render context. Additionally shows basic raw input handling.
+Opens a window and creates a render context. Additionally, shows basic raw input handling.
 
-![window example result](assets/img/window.png)
+![window example screenshot](assets/img/window.png)
 
-### Custom Game Data
+---
 
-Demonstrates how to use custom `GameData`, with three different states: `Loading`, `Main`, `Paused`.
+## Custom Game Data
 
-![game_data_example_result](custom_game_data/screenshot.png)
+Uses `GameData`, with three different states: `Loading`, `Main`, `Paused`.
 
-### Sphere
+![game data example screenshot](assets/img/custom-game-data.png)
 
-Render a basic 3D scene, with a camera, lights and a 3D object, a sphere in this scenario.
-This example use a single vertex buffer with all attributes interleaved.
+---
 
-![sphere example result](assets/img/sphere.png)
+## Sphere
 
-### Separate sphere
+Renders a basic sphere.
 
-Render a basic 3D scene, with a camera, lights and a 3D object, a sphere in this scenario.
-This example use vertex buffers per attribute.
+![sphere example screenshot](assets/img/sphere.png)
 
-![sphere example result](assets/img/sphere.png)
+---
 
-### Multisample sphere
+## Renderable
 
-Render a basic 3D scene, with a camera, lights and a 3D object, a sphere in this scenario.
-This example use vertex buffers per attribute.
-Only difference here is that multisampling is enabled in the options.
+Loads graphics objects from disk using the asset loader. Contains a custom system that moves the camera and scene.
 
-![sphere example result](assets/img/sphere.png)
+![renderable example screenshot](assets/img/renderable.png)
 
-### Renderable
+---
 
-Load graphics objects from disc using the asset loader.
-Also contains a custom system that move the camera and the scene.
+## Asset custom
 
-![renderable example result](assets/img/renderable.png)
+Loads a custom asset using a custom format.
 
-### Asset custom
+---
 
-Load a custom asset using a custom format.
+## Asset loading
 
-### Asset loading
+Creates a custom format and loads it using the asset loader.
 
-Create a custom format, and use the asset loader to load assets using the format.
+![asset loading example screenshot](assets/img/asset-loading.png)
 
-![asset loading example result](assets/img/asset_loading.png)
+---
 
-### Material
+## Material
 
-Render a sphere using a physically based material.
+Renders a sphere using a physically based material.
 
-![material example result](assets/img/material.png)
+![material example screenshot](assets/img/material.png)
 
-### Animation
+---
 
-Animate a sphere using a custom built animation sampler sequence. Keybindings:
+## Animation
+
+Animates a sphere using a custom-built animation sampler sequence. Keybindings:
 
 * `Space` - start/pause/unpause the currentanimation(default is translational animation)
 * `D` - demonstrate deferred start, translate will run first, then rotate when translate ends, and last scale animation
@@ -119,44 +122,56 @@ Animate a sphere using a custom built animation sampler sequence. Keybindings:
 * `Right` - step to the next animation keyframe
 * `Left` - step to the previous animation keyframe
 
-### Gltf
+![animation example screenshot](assets/img/animation.png)
 
-Load a GLTF asset, attach it to an entity, and animate the asset. Press `Space` to start/pause the animation.
+---
 
-![gltf example result](assets/img/gltf.png)
+## GLTF
 
-### UI
+Loads a GLTF asset, attaches it to an entity, and animates the asset. Press `Space` to start/pause the animation.
 
-Render a basic UI.
+![gltf example screenshot](assets/img/gltf.png)
 
-![ui example result](assets/img/ui.png)
+---
 
-### Pong
+## UI
 
-`Amethyst` based Pong clone. In addition to using most of the features used by the other examples it also demonstrates:
+Renders a basic UI.
+
+![ui example screenshot](assets/img/ui.png)
+
+---
+
+## Pong
+
+`Amethyst` based Pong clone. In addition to using most of the features used by the other examples, it also demonstrates:
 
 * Input handling using `InputHandler`
 * Background music and sound effects
 * A more interesting UI example
-* A bigger project with more than a single source file.
+* A larger, multi-file project
 
-![pong example result](assets/img/pong.png)
+![pong example screenshot](assets/img/pong.png)
 
-### Appendix A
+---
 
-From the book, it is a minor update to the Pong example that uses `Config` files instead of hardcoded constants.
+## Fly Camera
 
-![example screenshot](appendix_a/screenshot.png)
+Shows the Fly Camera. Captures and releases mouse input.
 
-### Fly Camera
+![Fly Camera example screenshot](assets/img/fly-camera.png)
 
-This example shows how to use the Fly Camera, how to release and capture back user mouse input, and show and hide mouse cursor.
+---
 
-### Arc ball Camera
+## Arc ball Camera
 
-This example shows how to use the Arc Ball Camera.
+Shows the Arc Ball Camera.
 
-### Sprites Ordered
+![Fly Camera example screenshot](assets/img/arc-ball-camera.png)
+
+---
+
+## Sprites Ordered
 
 Draws sprites ordered by Z coordinate. Entities with larger Z coordinates will have their sprites drawn in front of entities with smaller Z coordinates.
 
@@ -172,22 +187,34 @@ Keybindings:
 * `Right` - Increase the depth (Z distance) that the camera can see.
 * `Left` - Decrease the depth (Z distance) that the camera can see.
 
-### Prefab
+![Fly Camera example screenshot](assets/img/sprites-ordered.png)
 
-Shows how to load data using the `Prefab` system.
+---
 
-### Prefab Adapter
+## Prefab
 
-Shows how to create a `PrefabData` using the adapter pattern.
+Loads data using the `Prefab` system.
 
-### Prefab Basic
+---
 
-Shows how to create a trivial `PrefabData` and instantiate an entity using the `Prefab` system.
+## Prefab Adapter
 
-### Prefab Multi
+Creates a `PrefabData` using the adapter pattern.
 
-Shows how to create a `PrefabData` and instantiate an entity with multiple components using the `Prefab` system.
+---
 
-### Prefab Custom
+## Prefab Basic
 
-Shows how to create a `PrefabData` and instantiate multiple entities with different components using the `Prefab` system.
+Creates a trivial `PrefabData` and instantiates an entity using the `Prefab` system.
+
+---
+
+## Prefab Multi
+
+Creates a `PrefabData` and instantiates an entity with multiple components using the `Prefab` system.
+
+---
+
+## Prefab Custom
+
+Create a `PrefabData` and instantiates multiple entities with different components using the `Prefab` system.
