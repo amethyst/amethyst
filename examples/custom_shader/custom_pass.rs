@@ -139,7 +139,6 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         // Store number of vertices
         self.vertex_count = vertex_data_iter.len();
 
-
         //Write the vector to a Vertex buffer
         self.vertex.write(
             factory,
@@ -229,7 +228,7 @@ fn build_custom_pipeline<B: Backend>(
                 .with_blend_targets(vec![pso::ColorBlendDesc(
                     pso::ColorMask::ALL,
                     pso::BlendState::ALPHA,
-                )])
+                )]),
         )
         .build(factory, None);
 
