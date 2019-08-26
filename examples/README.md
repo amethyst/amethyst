@@ -1,26 +1,62 @@
 # Examples
 
-All these can be run with
+All examples can be run with the following command
+
 ```
 cargo run --example name_of_an_example
 ```
 
 ---
-### Hello world
+1. Basic
+   1. [Hello World](#hello-world)
+   2. [Window](#window)
+   3. [Custom Game Data](custom-game-data)
+2. Rendering
+   1. [Sphere](#sphere)
+   2. [Separate Sphere](#separate-sphere)
+   3. [Multisample Sphere](#multisample-sphere)
+   4. [Renderable](#renderable)
+3. Assets
+   1. [Asset Custom](#asset-custom)
+   2. [Asset Loading](#asset-loading)
+   3. [Material](#material)
+   4. [Animation](#animation)
+   5. [GLTF](#gltf)
+   6. Prefabs
+      1. [Prefab Adapter](#prefab-adapter)
+      2. [Prefab Basic](#prefab-basic)
+      3. [Prefab Multi](#prefab-multi)
+      4. [Prefab Custom](#prefab-custom)
+4. UI
+   1. [UI](#ui)
+5. Miscellaneous
+   1. [Fly Camera](#fly-camera)
+   2. [Arc ball Camera](#arc-ball-camera)
+   3. [Sprites Ordered](#sprites-ordered)
+6. Games
+   1. [Pong](#pong)
+   2. [Appendix A](#appendix-a)
 
-Shows the basics of the state machine in `amethyst`.
-This example just prints:
+## Hello World
+
+Shows the basics of the state machine in Amethyst, and prints the following
 ```
 Begin!
 Hello from Amethyst!
 End!
 ```
 
-### Window
+## Window
 
-Open a window, and create a render context. Also shows basic raw input handling.
+Opens a window and creates a render context. Additionally shows basic raw input handling.
 
 ![window example result](assets/img/window.png)
+
+### Custom Game Data
+
+Demonstrates how to use custom `GameData`, with three different states: `Loading`, `Main`, `Paused`.
+
+![game_data_example_result](custom_game_data/screenshot.png)
 
 ### Sphere
 
@@ -111,12 +147,6 @@ Render a basic UI.
 From the book, it is a minor update to the Pong example that uses `Config` files instead of hardcoded constants.
 
 ![example screenshot](appendix_a/screenshot.png)
-
-### Custom Game Data
-
-Demonstrates how to use custom `GameData`, with three different states: `Loading`, `Main`, `Paused`.
-
-![game_data_example_result](custom_game_data/screenshot.png)
 
 ### Fly Camera
 
