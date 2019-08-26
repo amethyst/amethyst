@@ -185,8 +185,8 @@ where
 /// Asset processing system for `Mesh` asset type.
 #[derive(Debug, derivative::Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct MeshProcessor<B: Backend>(PhantomData<B>);
-impl<'a, B: Backend> System<'a> for MeshProcessor<B> {
+pub struct MeshProcessorSystem<B: Backend>(PhantomData<B>);
+impl<'a, B: Backend> System<'a> for MeshProcessorSystem<B> {
     type SystemData = (
         Write<'a, AssetStorage<Mesh>>,
         ReadExpect<'a, QueueId>,
@@ -224,8 +224,8 @@ impl<'a, B: Backend> System<'a> for MeshProcessor<B> {
 /// Asset processing system for `Texture` asset type.
 #[derive(Debug, derivative::Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct TextureProcessor<B: Backend>(PhantomData<B>);
-impl<'a, B: Backend> System<'a> for TextureProcessor<B> {
+pub struct TextureProcessorSystem<B: Backend>(PhantomData<B>);
+impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
     type SystemData = (
         Write<'a, AssetStorage<Texture>>,
         ReadExpect<'a, QueueId>,

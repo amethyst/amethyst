@@ -97,7 +97,7 @@ pub use crate::{
     mtl::{Material, MaterialDefaults},
     plugins::*,
     sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
-    system::{GraphCreator, RenderingSystem},
+    system::{GraphCreator, MeshProcessorSystem, RenderingSystem, TextureProcessorSystem},
     transparent::Transparent,
     types::{Backend, Mesh, Texture},
     util::{simple_shader_set, ChangeDetection},
