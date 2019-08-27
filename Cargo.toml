@@ -19,7 +19,7 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
-default = ["animation", "audio", "locale", "network", "renderer", "sentry","shader-compiler"]
+default = ["animation", "audio", "locale", "network", "renderer", "sentry"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
@@ -192,7 +192,6 @@ required-features = ["audio"]
 [[example]]
 name = "custom_shader"
 path = "examples/custom_shader/main.rs"
-required-features = ["shader-compiler"]
 
 [[example]]
 name = "custom_ui"
@@ -319,4 +318,4 @@ path = "examples/rendy/main.rs"
 required-features = ["animation", "gltf"]
 
 [package.metadata.docs.rs]
-features = ["animation", "audio", "gltf", "json", "locale", "network", "sdl_controller", "vulkan","shader-compiler"]
+features = ["animation", "audio", "gltf", "json", "locale", "network", "sdl_controller", "vulkan"]

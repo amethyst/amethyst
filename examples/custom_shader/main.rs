@@ -19,7 +19,7 @@ impl SimpleState for CustomShaderState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
-        // add some triangles
+        // Add some triangles
         world
             .create_entity()
             .with(Triangle {
@@ -68,7 +68,7 @@ impl SimpleState for CustomShaderState {
                     Trans::None
                 }
             }
-            //Using the Mouse Wheel to control the scale
+            // Using the Mouse Wheel to control the scale
             StateEvent::Input(input) => {
                 if let InputEvent::MouseWheelMoved(dir) = input {
                     let mut scale = data.world.write_resource::<CustomUniformArgs>();

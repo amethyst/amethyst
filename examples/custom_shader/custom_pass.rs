@@ -15,7 +15,8 @@ use amethyst::{
             },
             hal::{self, device::Device, format::Format, pso},
             mesh::{AsVertex, VertexFormat},
-            shader::{PathBufShaderInfo, Shader, ShaderKind, SourceLanguage, SpirvShader},
+            shader::{ Shader, SpirvShader,},
+            hal::pso::ShaderStageFlags,
         },
         submodules::{DynamicUniform, DynamicVertexBuffer},
         types::Backend,
@@ -26,11 +27,13 @@ use amethyst::{
 use amethyst_error::Error;
 use derivative::Derivative;
 use glsl_layout::*;
-use std::path::PathBuf;
 
 lazy_static::lazy_static! {
+
+/*
+    This will compile the shaders during the compile.
     static ref VERTEX_SRC: SpirvShader = PathBufShaderInfo::new(
-        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/vertex/custom.vert")),
+        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/src/vertex/custom.vert")),
         ShaderKind::Vertex,
         SourceLanguage::GLSL,
         "main",
@@ -43,7 +46,7 @@ lazy_static::lazy_static! {
     );
 
     static ref FRAGMENT_SRC: SpirvShader = PathBufShaderInfo::new(
-        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/fragment/custom.frag")),
+        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/src/fragment/custom.frag")),
         ShaderKind::Fragment,
         SourceLanguage::GLSL,
         "main",
@@ -52,6 +55,21 @@ lazy_static::lazy_static! {
     static ref FRAGMENT: SpirvShader = SpirvShader::new(
         (*FRAGMENT_SRC).spirv().unwrap().to_vec(),
         (*FRAGMENT_SRC).stage(),
+        "main",
+    );
+}
+*/
+    // These uses the precompiled shaders.
+    // These can be obtained using glslc.exe in the vulkan sdk.
+    static ref VERTEX: SpirvShader = SpirvShader::new(
+        include_bytes!("../assets/shaders/compiled/vertex/custom.vert.spv").to_vec(),
+        ShaderStageFlags::VERTEX,
+        "main",
+    );
+
+    static ref FRAGMENT: SpirvShader = SpirvShader::new(
+        include_bytes!("../assets/shaders/compiled/fragment/custom.frag.spv").to_vec(),
+        ShaderStageFlags::FRAGMENT,
         "main",
     );
 }
@@ -123,13 +141,13 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
     ) -> PrepareResult {
         let (triangles,) = <(ReadStorage<'_, Triangle>,)>::fetch(world);
 
-        //Get our scale value
+        // Get our scale value
         let scale = world.read_resource::<CustomUniformArgs>();
 
-        //Write to our DynamicUniform
+        // Write to our DynamicUniform
         self.env.write(factory, index, scale.std140());
 
-        //Create and write our verteices to a vector
+        // Create and write our vertices to a vector
         let mut vertex_data_iter: Vec<CustomArgs> = Vec::new();
 
         for triangle in triangles.join() {
@@ -139,7 +157,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         // Store number of vertices
         self.vertex_count = vertex_data_iter.len();
 
-        //Write the vector to a Vertex buffer
+        // Write the vector to a Vertex buffer
         self.vertex.write(
             factory,
             index,
@@ -201,28 +219,24 @@ fn build_custom_pipeline<B: Backend>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    //Load the shaders
+    // Load the shaders
     let shader_vertex = unsafe { VERTEX.module(factory).unwrap() };
     let shader_fragment = unsafe { FRAGMENT.module(factory).unwrap() };
 
-    //Build the pipeline
+    // Build the pipeline
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
                 // This Pipeline uses our custom vertex description and does not use instancing
                 .with_vertex_desc(&[(CustomArgs::vertex(), pso::VertexInputRate::Vertex)])
-                // We use the triangle list primative
                 .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleList))
                 // Add the shaders
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),
                 ))
-                // Add layout
                 .with_layout(&pipeline_layout)
-                // Add subpass
                 .with_subpass(subpass)
-                // Set Framebuffer size
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
                 // We are using alpha blending
                 .with_blend_targets(vec![pso::ColorBlendDesc(
@@ -232,13 +246,13 @@ fn build_custom_pipeline<B: Backend>(
         )
         .build(factory, None);
 
-    //Destoy the shaders once loaded
+    // Destoy the shaders once loaded
     unsafe {
         factory.destroy_shader_module(shader_vertex);
         factory.destroy_shader_module(shader_fragment);
     }
 
-    //Handle the Errors
+    // Handle the Errors
     match pipes {
         Err(e) => {
             unsafe {
@@ -262,7 +276,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
         world: &mut World,
         _builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        //Add the required components to the world ECS
+        // Add the required components to the world ECS
         world.register::<Triangle>();
         world.insert(CustomUniformArgs { scale: 1.0 });
         Ok(())
@@ -338,7 +352,7 @@ impl Component for Triangle {
 }
 
 impl Triangle {
-    ///helper function to convert triangle into 3 vertices
+    /// Helper function to convert triangle into 3 vertices
     pub fn get_args(&self) -> [CustomArgs; 3] {
         [
             CustomArgs {
