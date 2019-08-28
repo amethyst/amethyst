@@ -1,7 +1,6 @@
 use amethyst_assets::Handle;
 use amethyst_core::ecs::{Component, DenseVecStorage};
-use amethyst_rendy::sprite::TextureCoordinates;
-use amethyst_rendy::{SpriteRender, Texture};
+use amethyst_rendy::{sprite::TextureCoordinates, SpriteRender, Texture};
 
 /// Image used UI widgets, often as background.
 #[derive(Debug, Clone, PartialEq)]

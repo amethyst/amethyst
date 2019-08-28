@@ -11,7 +11,7 @@ use crate::{
         hal,
         wsi::Surface,
     },
-    system::{GraphCreator, MeshProcessor, RenderingSystem, TextureProcessor},
+    system::{GraphCreator, MeshProcessorSystem, RenderingSystem, TextureProcessorSystem},
     types::Backend,
     SpriteSheet,
 };
@@ -28,6 +28,10 @@ use std::collections::HashMap;
 /// Provides a mechanism for registering rendering plugins.
 /// By itself doesn't render anything, you must use `with_plugin` method
 /// to define a set of functionalities you want to use.
+///
+/// If you need much more control, or you need to deal directly with the render pipeline,
+/// it's possible to define a `RenderGraphCreator` as show by the
+/// `renderable_custom` example.
 #[derive(Debug)]
 pub struct RenderingBundle<B: Backend> {
     plugins: Vec<Box<dyn RenderPlugin<B>>>,
@@ -55,8 +59,8 @@ impl<B: Backend> RenderingBundle<B> {
         self.plugins.push(Box::new(plugin));
     }
 
-    fn into_graph_creator(self) -> RenderingBundleGraphCreator<B> {
-        RenderingBundleGraphCreator {
+    fn into_graph_creator(self) -> PluggableRenderGraphCreator<B> {
+        PluggableRenderGraphCreator {
             plugins: self.plugins,
         }
     }
@@ -68,8 +72,12 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        builder.add(MeshProcessor::<B>::default(), "mesh_processor", &[]);
-        builder.add(TextureProcessor::<B>::default(), "texture_processor", &[]);
+        builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
+        builder.add(
+            TextureProcessorSystem::<B>::default(),
+            "texture_processor",
+            &[],
+        );
         builder.add(Processor::<Material>::new(), "material_processor", &[]);
         builder.add(
             Processor::<SpriteSheet>::new(),
@@ -89,11 +97,11 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
     }
 }
 
-struct RenderingBundleGraphCreator<B: Backend> {
+struct PluggableRenderGraphCreator<B: Backend> {
     plugins: Vec<Box<dyn RenderPlugin<B>>>,
 }
 
-impl<B: Backend> GraphCreator<B> for RenderingBundleGraphCreator<B> {
+impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
     fn rebuild(&mut self, world: &World) -> bool {
         let mut rebuild = false;
         for plugin in self.plugins.iter_mut() {

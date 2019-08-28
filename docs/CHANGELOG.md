@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AmethystApplication` takes in `SystemDesc`s through `with_system_desc`. ([#1882])
 * `AmethystApplication::with_thread_local_desc` takes in `RunNowDesc`. ([#1882])
 * Add `NineSlice` support to `UiImage`. ([#1896])
+* `RenderingBundle` for full manual control of the rendering pipeline via a custom `GraphCreator` ([#1839]).
 
 ### Changed
 
@@ -32,6 +33,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `SystemDesc` proc macro supports `#[system_desc(event_reader_id)]` to register event reader. ([#1883])
 * `SystemDesc` proc macro supports `#[system_desc(flagged_storage_reader(Component))]`. ([#1886])
 * `DispatcherOperation` stores system name and dependencies as `String`s. ([#1891])
+* `TextureProcessor` renamed to `TextureProcessorSystem` ([#1839]).
+* `MeshProcessor` renamed to `MeshProcessorSystem` ([#1839]).
 
 ### Fixed
 
@@ -47,6 +50,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1886]: https://github.com/amethyst/amethyst/pull/1886
 [#1891]: https://github.com/amethyst/amethyst/pull/1891
 [#1896]: https://github.com/amethyst/amethyst/pull/1896
+[#1839]: https://github.com/amethyst/amethyst/pull/1839
 
 ## [0.12.0] - 2019-07-30
 
