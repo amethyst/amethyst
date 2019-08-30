@@ -421,15 +421,15 @@ fn build_sprite_pipeline<B: Backend>(
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
-                .with_blend_targets(vec![pso::ColorBlendDesc(
-                    pso::ColorMask::ALL,
-                    if transparent {
-                        pso::BlendState::PREMULTIPLIED_ALPHA
+                .with_blend_targets(vec![pso::ColorBlendDesc {
+                    mask: pso::ColorMask::ALL,
+                    blend: if transparent {
+                        Some(pso::BlendState::PREMULTIPLIED_ALPHA)
                     } else {
-                        pso::BlendState::Off
+                        None
                     },
-                )])
-                .with_depth_test(pso::DepthTest::On {
+                }])
+                .with_depth_test(pso::DepthTest {
                     fun: pso::Comparison::Less,
                     write: !transparent,
                 }),
