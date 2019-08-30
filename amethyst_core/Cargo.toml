@@ -41,4 +41,3 @@ ron = "0.5.1"
 profiler = ["thread_profiler/thread_profiler"]
 nightly = ["specs/nightly"]
 saveload = ["specs/serde"]
-float64 = []

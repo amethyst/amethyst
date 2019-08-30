@@ -39,4 +39,3 @@ approx = "0.3"
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
 sdl_controller = ["sdl2"]
-float64 = ["amethyst_core/float64"]
