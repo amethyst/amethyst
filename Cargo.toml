@@ -74,7 +74,6 @@ nightly = [
     "amethyst_ui/nightly",
     "amethyst_utils/nightly",
 ]
-float64 = ["amethyst_core/float64"]
 sdl_controller = [
     "amethyst_input/sdl_controller",
 ]

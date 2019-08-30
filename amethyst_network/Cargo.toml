@@ -20,7 +20,6 @@ license = "MIT/Apache-2.0"
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
-float64 = ["amethyst_core/float64"]
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.7.0" }

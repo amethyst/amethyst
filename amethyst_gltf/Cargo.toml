@@ -37,4 +37,3 @@ derivative = "1.0"
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
-float64 = ["amethyst_core/float64"]
