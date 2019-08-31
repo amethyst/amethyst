@@ -147,23 +147,16 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         // Write to our DynamicUniform
         self.env.write(factory, index, scale.std140());
 
-        // Create and write our vertices to a vector
-        let mut vertex_data_iter: Vec<CustomArgs> = Vec::new();
 
-        for triangle in triangles.join() {
-            vertex_data_iter.extend(triangle.get_args().iter());
-        }
+        self.vertex_count =  triangles.join().count() *3;
 
-        // Store number of vertices
-        self.vertex_count = vertex_data_iter.len();
+        // Create an iterator over the Triangle vertices
+        let vertex_data_iter = triangles.join().flat_map(|triangle| triangle.get_args());
 
         // Write the vector to a Vertex buffer
-        self.vertex.write(
-            factory,
-            index,
-            self.vertex_count as u64,
-            Some(&vertex_data_iter.iter()),
-        );
+        self.vertex.write(factory,index,self.vertex_count as u64,Some(vertex_data_iter.collect::<Box<[CustomArgs]>>()));
+
+
 
         // Return that we request to draw
         PrepareResult::DrawRecord
@@ -353,20 +346,9 @@ impl Component for Triangle {
 
 impl Triangle {
     /// Helper function to convert triangle into 3 vertices
-    pub fn get_args(&self) -> [CustomArgs; 3] {
-        [
-            CustomArgs {
-                pos: self.points[0].into(),
-                color: self.colors[0].into(),
-            },
-            CustomArgs {
-                pos: self.points[1].into(),
-                color: self.colors[1].into(),
-            },
-            CustomArgs {
-                pos: self.points[2].into(),
-                color: self.colors[2].into(),
-            },
-        ]
+    pub fn get_args(&self) -> Vec<CustomArgs> {
+        let mut vec =Vec::new();
+        vec.extend((0..3).map(|i|CustomArgs { pos: self.points[i].into(), color: self.colors[i].into()}));
+        vec
     }
 }
