@@ -52,7 +52,7 @@ impl Default for LoggerConfig {
 ///     .level_for("gfx_device_gl", amethyst::LogLevelFilter::Warn)
 ///     .level_for("gfx_glyph", amethyst::LogLevelFilter::Error)
 ///     .start();
-/// 
+///
 /// amethyst::Logger::from_config_formatter(Default::default(), |out, message, record| {
 ///     out.finish(format_args!(
 ///         "[{level}][{target}] {message}",
@@ -83,7 +83,10 @@ impl Logger {
     /// Create a new Logger with a passed in formatter callback
     fn new_formatter<F>(formatter: F) -> Self
     where
-        F: Fn(fern::FormatCallback<'_>, &fmt::Arguments<'_>, &log::Record<'_>) + Sync + Send + 'static,
+        F: Fn(fern::FormatCallback<'_>, &fmt::Arguments<'_>, &log::Record<'_>)
+            + Sync
+            + Send
+            + 'static,
     {
         let dispatch = fern::Dispatch::new().format(formatter);
         Self { dispatch }
@@ -132,7 +135,10 @@ impl Logger {
     /// Create a new Logger from [`LoggerConfig`] and a formatter
     pub fn from_config_formatter<F>(config: LoggerConfig, formatter: F) -> Self
     where
-        F: Fn(fern::FormatCallback<'_>, &fmt::Arguments<'_>, &log::Record<'_>) + Sync + Send + 'static,
+        F: Fn(fern::FormatCallback<'_>, &fmt::Arguments<'_>, &log::Record<'_>)
+            + Sync
+            + Send
+            + 'static,
     {
         Logger::new_with_config(config, Logger::new_formatter(formatter))
     }
