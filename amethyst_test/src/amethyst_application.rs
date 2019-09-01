@@ -907,20 +907,6 @@ mod test {
     }
 
     #[test]
-    fn setup_can_be_invoked_after_with_state() -> Result<(), Error> {
-        AmethystApplication::blank()
-            .with_state(|| {
-                FunctionState::new(|world| {
-                    world.insert(ApplicationResource);
-                })
-            })
-            .with_setup(|world| {
-                world.read_resource::<ApplicationResource>();
-            })
-            .run()
-    }
-
-    #[test]
     fn with_state_invoked_after_with_resource_should_work() -> Result<(), Error> {
         AmethystApplication::blank()
             .with_resource(ApplicationResource)
