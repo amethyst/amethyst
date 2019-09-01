@@ -16,7 +16,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
 heck = "0.3.1"
-syn = { version = "0.15", features = ["visit"] }
+syn = { version = "0.15", features = ["full", "visit"] }
 quote = "0.6"
 proc-macro2 = "0.4"
 proc_macro_roids = "0.4"
