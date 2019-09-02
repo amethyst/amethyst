@@ -9,6 +9,7 @@ use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::camera::{Camera, Orthographic};
 use amethyst_window::ScreenDimensions;
+use derive_new::new;
 
 use serde::{Deserialize, Serialize};
 
@@ -86,7 +87,7 @@ impl Default for CameraOrthoWorldCoordinates {
 ///     .with(CameraOrtho::normalized(CameraNormalizeMode::Contain))
 ///     .build();
 /// ```
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, PrefabData)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, PrefabData, new)]
 #[prefab(Component)]
 pub struct CameraOrtho {
     /// How the camera's matrix is changed when the window's aspect ratio changes.
@@ -94,6 +95,7 @@ pub struct CameraOrtho {
     pub mode: CameraNormalizeMode,
     /// The world coordinates that this camera will keep visible as the window size changes
     pub world_coordinates: CameraOrthoWorldCoordinates,
+    #[new(default)]
     aspect_ratio_cache: f32,
 }
 
@@ -364,6 +366,19 @@ mod test {
         let aspect = 1.0;
         let cam = CameraOrtho::normalized(CameraNormalizeMode::Contain);
         assert_eq!((0.0, 1.0, 0.0, 1.0), cam.camera_offsets(aspect));
+    }
+
+    #[test]
+    fn custom_camera_large_contain() {
+        let aspect = 2.0 / 1.0;
+        let camera_ortho_world_coordinates = CameraOrthoWorldCoordinates {
+            left: 0.,
+            right: 800.,
+            bottom: 0.,
+            top: 600.,
+        };
+        let cam = CameraOrtho::new(CameraNormalizeMode::Contain, camera_ortho_world_coordinates);
+        assert_eq!((-200.0, 1000.0, 0.0, 600.0), cam.camera_offsets(aspect));
     }
 
     #[test]
