@@ -10,6 +10,7 @@ use amethyst_core::{
 use amethyst_error::Error;
 
 /// A ray structure providing a position and direction.
+#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Ray {
     /// The origin point of the ray
     pub origin: Point3<f32>,
@@ -469,15 +470,11 @@ impl Projection {
         use amethyst_core::math::Vector4;
 
         let ray = self.screen_ray(screen_position.xy(), screen_diagonal, camera_transform);
-
         let view: Matrix4<f32> = amethyst_core::math::convert(*camera_transform.global_matrix());
-        let view_space_direction =
-            view * Vector4::new(ray.direction.x, ray.direction.y, ray.direction.z, 0.0);
-        let ray_distance = (screen_position.z - self.near()).max(0.0) / view_space_direction.z;
 
-        let ret = ray.origin + (ray.direction * ray_distance);
-
-        ret
+        ray.origin
+            + (ray.direction * (screen_position.z - self.near()).max(0.0)
+                / (view * Vector4::new(ray.direction.x, ray.direction.y, ray.direction.z, 0.0)).z)
     }
 
     /// Translate from world coordinates to screen coordinates
@@ -487,12 +484,8 @@ impl Projection {
         screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
     ) -> Point2<f32> {
-        let render_matrix: Matrix4<f32> =
-            amethyst_core::math::convert(*camera_transform.global_matrix());
-
-        let f = render_matrix * self.as_matrix();
-
-        let screen_pos = f.transform_point(&world_position);
+        let view: Matrix4<f32> = amethyst_core::math::convert(*camera_transform.global_matrix());
+        let screen_pos = (view * self.as_matrix()).transform_point(&world_position);
 
         Point2::new(
             (screen_pos.x + 1.0) * screen_diagonal.x / 2.0,
