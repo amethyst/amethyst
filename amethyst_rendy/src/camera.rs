@@ -34,11 +34,21 @@ impl Orthographic {
     /// * `z_far` - The distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
     ///
     /// The projection matrix is right-handed and has a depth range of 0 to 1
+    ///
+    /// * panics if left equals right, bottom equals top or near equals right
     pub fn new(left: f32, right: f32, bottom: f32, top: f32, z_near: f32, z_far: f32) -> Self {
         if cfg!(debug_assertions) {
             assert!(
                 !approx::relative_eq!(z_far - z_near, 0.0),
                 "The near-plane and far-plane must not be superimposed."
+            );
+            assert!(
+                !approx::relative_eq!(left - right, 0.0),
+                "The left-plane and right-plane must not be superimposed."
+            );
+            assert!(
+                !approx::relative_eq!(top - bottom, 0.0),
+                "The top-plane and bottom-plane must not be superimposed."
             );
         }
 
@@ -55,7 +65,7 @@ impl Orthographic {
             matrix,
             inverse_matrix: matrix
                 .try_inverse()
-                .expect("Camera projection matrix is not invertible"),
+                .expect("Camera projection matrix is not invertible. This is normally due to having inverse values being superimposed (near=far, right=left)"),
         }
     }
 
@@ -177,6 +187,7 @@ impl Orthographic {
     }
 
     /// Returns a mutable reference to the inner matrix representation of this projection.
+    /// * panics when matrix is not invertible
     #[inline]
     pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
         self.matrix = matrix;
@@ -212,6 +223,8 @@ impl Perspective {
     /// * fov - Field of View represented in degrees
     /// * z_near - Near clip plane distance
     /// * z_far - Far clip plane distance
+    ///
+    /// * panics when matrix is not invertible
     pub fn new(aspect: f32, fov: f32, z_near: f32, z_far: f32) -> Self {
         if cfg!(debug_assertions) {
             assert!(
@@ -329,6 +342,7 @@ impl Perspective {
     }
 
     /// Returns a mutable reference to the inner matrix representation of this projection.
+    /// * panics when matrix is not invertible
     #[inline]
     pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
         self.matrix = matrix;
@@ -424,6 +438,7 @@ impl Projection {
     }
 
     /// Sets the matrix for this projection.
+    /// * panics when matrix is not invertible
     pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
         match *self {
             Projection::Orthographic(ref mut s) => s.set_matrix(matrix),
@@ -593,6 +608,7 @@ impl Camera {
     }
 
     /// Sets the matrix for this projection.
+    /// * panics when matrix is not invertible
     pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
         match self.inner {
             Projection::Orthographic(ref mut p) => p.set_matrix(matrix),

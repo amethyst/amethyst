@@ -65,3 +65,43 @@ impl Ray {
         self.origin + (self.direction * z)
     }
 }
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    use approx::assert_ulps_eq;
+
+    #[test]
+    fn ray_intersect_plane() {
+        let plane = Plane::with_z(0.0);
+        assert_ulps_eq!(
+            Ray {
+                origin: Point3::new(0.020277506, -0.03323653, 51.794),
+                direction: Vector3::new(0.17955951, -0.29431304, -0.93868965),
+            }
+            .intersect_plane(&plane),
+            Point3::new(9.927818, -16.272524, 0.0)
+        );
+
+        assert_ulps_eq!(
+            Ray {
+                origin: Point3::new(-0.003106177, 0.03407464, 0.79999995),
+                direction: Vector3::new(-0.02938905, 0.32239673, -0.9461483),
+            }
+            .intersect_plane(&plane),
+            Point3::new(-0.0279556, 0.30667183, 0.0)
+        );
+    }
+
+    #[test]
+    fn at_distance() {
+        assert_ulps_eq!(
+            Ray {
+                origin: Point3::new(0.020277506, -0.03323653, 51.794),
+                direction: Vector3::new(0.17955951, -0.29431304, -0.93868965),
+            }
+            .at_distance(5.0),
+            Point3::new(0.9180751, -1.5048018, 47.10055)
+        );
+    }
+}
