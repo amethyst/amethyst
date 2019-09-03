@@ -89,7 +89,7 @@ mod render_test_bundle;
 #[doc(inline)]
 pub use crate::{
     bundle::{RenderPlugin, RenderingBundle},
-    camera::{ActiveCamera, Camera, Ray},
+    camera::{ActiveCamera, Camera, Plane, Ray},
     formats::{
         mesh::MeshPrefab,
         texture::{ImageFormat, TexturePrefab},

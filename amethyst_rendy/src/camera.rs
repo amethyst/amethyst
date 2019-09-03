@@ -9,6 +9,21 @@ use amethyst_core::{
 
 use amethyst_error::Error;
 
+/// A plane which can be intersected by a ray.
+#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct Plane {
+    /// The forward normal of the plane.
+    pub normal: Vector3<f32>,
+    /// The origin/point of the plane.
+    pub position: Vector3<f32>,
+}
+impl Plane {
+    /// Create a new plane.
+    pub fn new(normal: Vector3<f32>, position: Vector3<f32>) -> Self {
+        Plane { normal, position }
+    }
+}
+
 /// A ray structure providing a position and direction.
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Ray {
@@ -19,14 +34,10 @@ pub struct Ray {
 }
 impl Ray {
     /// Returns where a ray line segment intersects the provided plane.
-    pub fn intersect_plane(
-        &self,
-        plane_normal: Vector3<f32>,
-        plane_point: Vector3<f32>,
-    ) -> Point3<f32> {
-        let diff = self.origin - plane_point;
-        let prod1 = diff.coords.dot(&plane_normal);
-        let prod2 = self.direction.dot(&plane_normal);
+    pub fn intersect_plane(&self, plane: &Plane) -> Point3<f32> {
+        let diff = self.origin - plane.position;
+        let prod1 = diff.coords.dot(&plane.normal);
+        let prod2 = self.direction.dot(&plane.normal);
         let prod3 = prod1 / prod2;
 
         Point3::from(self.origin.coords - self.direction.scale(prod3))
@@ -47,6 +58,7 @@ impl Ray {
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Orthographic {
     matrix: Matrix4<f32>,
+    inverse_matrix: Matrix4<f32>,
 }
 impl Orthographic {
     /// Create a new `Orthographic` projection with the provided parameters.
@@ -78,7 +90,12 @@ impl Orthographic {
         matrix[(1, 3)] = -(top + bottom) / (top - bottom);
         matrix[(2, 3)] = -z_near / (z_far - z_near);
 
-        Self { matrix }
+        Self {
+            matrix,
+            inverse_matrix: matrix
+                .try_inverse()
+                .expect("Camera projection matrix is not invertible"),
+        }
     }
 
     /// Returns the upper y-coordinate of the cuboid leftmost face parallel to the xz-plane.
@@ -200,8 +217,15 @@ impl Orthographic {
 
     /// Returns a mutable reference to the inner matrix representation of this projection.
     #[inline]
-    pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
-        &mut self.matrix
+    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
+        self.matrix = matrix;
+        self.inverse_matrix = matrix.try_inverse().expect("Matrix not invertible")
+    }
+
+    /// Returns a reference to the inner matrix representation of this projection.
+    #[inline]
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
+        &self.inverse_matrix
     }
 }
 
@@ -216,6 +240,7 @@ impl Orthographic {
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Perspective {
     matrix: Matrix4<f32>,
+    inverse_matrix: Matrix4<f32>,
 }
 impl Perspective {
     /// Creates a new `Perspective` projection with the provided arguments.
@@ -247,7 +272,12 @@ impl Perspective {
         matrix[(2, 3)] = -(z_far * z_near) / (z_far - z_near);
         matrix[(3, 2)] = -1.0;
 
-        Self { matrix }
+        Self {
+            matrix,
+            inverse_matrix: matrix
+                .try_inverse()
+                .expect("Camera projection matrix is not invertible"),
+        }
     }
 
     /// Returns the aspect ratio in radians
@@ -339,8 +369,15 @@ impl Perspective {
 
     /// Returns a mutable reference to the inner matrix representation of this projection.
     #[inline]
-    pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
-        &mut self.matrix
+    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
+        self.matrix = matrix;
+        self.inverse_matrix = matrix.try_inverse().expect("Matrix not invertible")
+    }
+
+    /// Returns a reference to the inner matrix representation of this projection.
+    #[inline]
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
+        &self.inverse_matrix
     }
 }
 
@@ -425,11 +462,19 @@ impl Projection {
         }
     }
 
-    /// Returns a mutable reference to the inner matrix represpentation of this projection.
-    pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
+    /// Sets the matrix for this projection.
+    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
         match *self {
-            Projection::Orthographic(ref mut s) => s.as_matrix_mut(),
-            Projection::Perspective(ref mut s) => s.as_matrix_mut(),
+            Projection::Orthographic(ref mut s) => s.set_matrix(matrix),
+            Projection::Perspective(ref mut s) => s.set_matrix(matrix),
+        }
+    }
+
+    /// Returns a reference to the inner inverse matrix represpentation of this projection.
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
+        match *self {
+            Projection::Orthographic(ref s) => s.as_inverse_matrix(),
+            Projection::Perspective(ref s) => s.as_inverse_matrix(),
         }
     }
 
@@ -460,11 +505,7 @@ impl Projection {
         let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
 
         let view: Matrix4<f32> = amethyst_core::math::convert(*camera_transform.global_matrix());
-        let projection = self.as_matrix();
-        let matrix = view
-            * projection
-                .try_inverse()
-                .expect("Camera projection matrix is not invertible");
+        let matrix = view * self.as_inverse_matrix();
 
         let near = Point3::new(screen_x, screen_y, 0.0);
         let far = Point3::new(screen_x, screen_y, 1.0);
@@ -480,7 +521,7 @@ impl Projection {
 
     /// Transforms the provided (X, Y, Z) screen coordinate into world coordinates.
     /// This method fires a ray from the camera in its view direction, and returns the Point at `screen_position.z`
-    /// distance from the ray origin.
+    /// distance from the camera origin.
     pub fn screen_to_world_point(
         &self,
         screen_position: Point3<f32>,
@@ -488,7 +529,7 @@ impl Projection {
         camera_transform: &Transform,
     ) -> Point3<f32> {
         self.screen_ray(screen_position.xy(), screen_diagonal, camera_transform)
-            .at_distance((screen_position.z - self.near()).max(0.0))
+            .at_distance(screen_position.z)
     }
 
     /// Translate from world coordinates to screen coordinates
@@ -591,11 +632,19 @@ impl Camera {
         }
     }
 
-    /// Returns a mutable reference to the inner `Projection` matrix of this camera.
-    pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
+    /// Sets the matrix for this projection.
+    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
         match self.inner {
-            Projection::Orthographic(ref mut p) => p.as_matrix_mut(),
-            Projection::Perspective(ref mut p) => p.as_matrix_mut(),
+            Projection::Orthographic(ref mut p) => p.set_matrix(matrix),
+            Projection::Perspective(ref mut p) => p.set_matrix(matrix),
+        }
+    }
+
+    /// Returns a reference to the inverted `Projection` matrix of this camera.
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
+        match self.inner {
+            Projection::Orthographic(ref p) => p.as_inverse_matrix(),
+            Projection::Perspective(ref p) => p.as_inverse_matrix(),
         }
     }
 
