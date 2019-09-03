@@ -65,21 +65,10 @@ impl<'a> System<'a> for SpammingSystem {
     }
 }
 
-/// Builds a `ReceivingSystem`.
-#[derive(Default, Debug)]
-pub struct ReceivingSystemDesc;
-
-impl<'a, 'b> SystemDesc<'a, 'b, ReceivingSystem> for ReceivingSystemDesc {
-    fn build(self, world: &mut World) -> ReceivingSystem {
-        <ReceivingSystem as System<'_>>::SystemData::setup(world);
-
-        let reader = world.fetch_mut::<EventChannel<MyEvent>>().register_reader();
-
-        ReceivingSystem::new(reader)
-    }
-}
-
+#[derive(SystemDesc)]
+#[system_desc(name(ReceivingSystemDesc))]
 struct ReceivingSystem {
+    #[system_desc(event_channel_reader)]
     reader: ReaderId<MyEvent>,
 }
 

@@ -6,6 +6,7 @@ use amethyst_core::{
     shrev::ReaderId,
     SystemDesc,
 };
+use amethyst_derive::SystemDesc;
 use amethyst_window::ScreenDimensions;
 
 #[cfg(feature = "profiler")]
@@ -40,27 +41,16 @@ impl Component for UiResize {
     type Storage = FlaggedStorage<Self>;
 }
 
-/// Builds a `ResizeSystem`.
-#[derive(Default, Debug)]
-pub struct ResizeSystemDesc;
-
-impl<'a, 'b> SystemDesc<'a, 'b, ResizeSystem> for ResizeSystemDesc {
-    fn build(self, world: &mut World) -> ResizeSystem {
-        <ResizeSystem as System<'_>>::SystemData::setup(world);
-
-        let mut resize = WriteStorage::<UiResize>::fetch(&world);
-        let resize_events_id = resize.register_reader();
-
-        ResizeSystem::new(resize_events_id)
-    }
-}
-
 /// This system rearranges UI elements whenever the screen is resized using their `UiResize`
 /// component.
-#[derive(Debug)]
+#[derive(Debug, SystemDesc)]
+#[system_desc(name(ResizeSystemDesc))]
 pub struct ResizeSystem {
+    #[system_desc(skip)]
     screen_size: (f32, f32),
+    #[system_desc(flagged_storage_reader(UiResize))]
     resize_events_id: ReaderId<ComponentEvent>,
+    #[system_desc(skip)]
     local_modified: BitSet,
 }
 

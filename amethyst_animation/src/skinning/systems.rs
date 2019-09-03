@@ -6,6 +6,7 @@ use amethyst_core::{
     math::{convert, Matrix4},
     SystemDesc, Transform,
 };
+use amethyst_derive::SystemDesc;
 use amethyst_rendy::skinning::JointTransforms;
 
 use log::error;
@@ -15,29 +16,19 @@ use thread_profiler::profile_scope;
 
 use super::resources::*;
 
-/// Builds a `VertexSkinningSystem`.
-#[derive(Default, Debug)]
-pub struct VertexSkinningSystemDesc;
-
-impl<'a, 'b> SystemDesc<'a, 'b, VertexSkinningSystem> for VertexSkinningSystemDesc {
-    fn build(self, world: &mut World) -> VertexSkinningSystem {
-        <VertexSkinningSystem as System<'_>>::SystemData::setup(world);
-        let mut transform = WriteStorage::<Transform>::fetch(&world);
-        let updated_id = transform.register_reader();
-
-        VertexSkinningSystem::new(updated_id)
-    }
-}
-
 /// System for performing vertex skinning.
 ///
 /// Needs to run after global transforms have been updated for the current frame.
-#[derive(Debug)]
+#[derive(Debug, SystemDesc)]
+#[system_desc(name(VertexSkinningSystemDesc))]
 pub struct VertexSkinningSystem {
     /// Also scratch space, used while determining which skins need to be updated.
+    #[system_desc(skip)]
     updated: BitSet,
+    #[system_desc(skip)]
     updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
+    #[system_desc(flagged_storage_reader(Transform))]
     updated_id: ReaderId<ComponentEvent>,
 }
 

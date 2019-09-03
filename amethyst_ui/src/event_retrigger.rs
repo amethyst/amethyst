@@ -46,6 +46,8 @@ pub trait EventRetrigger: Component {
         R: EventReceiver<Self::Out>;
 }
 
+// Unable to derive `SystemDesc` on `EventRetriggerSystem` because the proc macro doesn't yet
+// support creating a `PhantomData` for computed fields.
 /// Builds an `EventRetriggerSystem`.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
