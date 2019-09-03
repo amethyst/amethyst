@@ -3,11 +3,19 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
-    math::{Matrix4, Point2, Point3, Vector2},
+    math::{Matrix4, Point2, Point3, Vector2, Vector3},
     transform::components::Transform,
 };
 
 use amethyst_error::Error;
+
+/// A ray structure providing a position and direction.
+pub struct Ray {
+    /// The origin point of the ray
+    pub origin: Point3<f32>,
+    /// The normalized direction vector of the ray
+    pub direction: Vector3<f32>,
+}
 
 /// An appropriate orthographic projection for the coordinate space used by Amethyst.
 /// Because we use vulkan coordinates internally and within the rendering engine, normal nalgebra
@@ -404,28 +412,72 @@ impl Projection {
         }
     }
 
-    /// Transforms position from screen space to camera space
-    pub fn screen_to_world(
+    /// Returns the near-clip value of the current camera.
+    pub fn near(&self) -> f32 {
+        match *self {
+            Projection::Orthographic(ref s) => s.near(),
+            Projection::Perspective(ref s) => s.near(),
+        }
+    }
+
+    /// Returns the far-clip value of the current camera.
+    pub fn far(&self) -> f32 {
+        match *self {
+            Projection::Orthographic(ref s) => s.far(),
+            Projection::Perspective(ref s) => s.far(),
+        }
+    }
+
+    /// Returns a `Ray` structure for the provided screen position.
+    pub fn screen_ray(
         &self,
         screen_position: Point2<f32>,
         screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
-    ) -> Point3<f32> {
+    ) -> Ray {
         let screen_x = 2.0 * screen_position.x / screen_diagonal.x - 1.0;
         let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
-        let screen_point = Point3::new(screen_x, screen_y, 0.0).to_homogeneous();
 
-        let render_matrix: Matrix4<f32> =
-            amethyst_core::math::convert(*camera_transform.global_matrix());
-
-        let vector = render_matrix
-            * self
-                .as_matrix()
+        let view: Matrix4<f32> = amethyst_core::math::convert(*camera_transform.global_matrix());
+        let projection = self.as_matrix();
+        let matrix = view
+            * projection
                 .try_inverse()
-                .expect("Camera projection matrix is not invertible")
-            * screen_point;
+                .expect("Camera projection matrix is not invertible");
 
-        Point3::from_homogeneous(vector).expect("Vector is not homogeneous")
+        let near = Point3::new(screen_x, screen_y, 0.0);
+        let far = Point3::new(screen_x, screen_y, 1.0);
+
+        let near_t = matrix.transform_point(&near);
+        let far_t = matrix.transform_point(&far);
+
+        Ray {
+            origin: near_t,
+            direction: (far_t.coords - near_t.coords).normalize(),
+        }
+    }
+
+    /// Transforms the provided (X, Y, Z) screen coordinate into world coordinates.
+    /// This method fires a ray from the camera in its view direction, and returns the Point at `screen_position.z`
+    /// distance from the ray origin.
+    pub fn screen_to_world_point(
+        &self,
+        screen_position: Point3<f32>,
+        screen_diagonal: Vector2<f32>,
+        camera_transform: &Transform,
+    ) -> Point3<f32> {
+        use amethyst_core::math::Vector4;
+
+        let ray = self.screen_ray(screen_position.xy(), screen_diagonal, camera_transform);
+
+        let view: Matrix4<f32> = amethyst_core::math::convert(*camera_transform.global_matrix());
+        let view_space_direction =
+            view * Vector4::new(ray.direction.x, ray.direction.y, ray.direction.z, 0.0);
+        let ray_distance = (screen_position.z - self.near()).max(0.0) / view_space_direction.z;
+
+        let ret = ray.origin + (ray.direction * ray_distance);
+
+        ret
     }
 
     /// Translate from world coordinates to screen coordinates
