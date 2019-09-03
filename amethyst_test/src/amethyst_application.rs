@@ -39,6 +39,7 @@ type BundleAddFn = Box<
 //   in a scope greater than the `AmethystApplication`'s lifetime, which detracts from the
 //   ergonomics of this test harness.
 type FnResourceAdd = Box<dyn FnMut(&mut World) + Send>;
+type FnSetup = Box<dyn FnOnce(&mut World) + Send>;
 type FnState<T, E> = Box<dyn FnOnce() -> Box<dyn State<T, E>>>;
 
 /// Screen width used in predefined display configuration.
@@ -84,6 +85,9 @@ where
     /// segfault caused by mesa and the software GL renderer.
     #[derivative(Debug = "ignore")]
     resource_add_fns: Vec<FnResourceAdd>,
+    /// Setup functions to run, in user specified order.
+    #[derivative(Debug = "ignore")]
+    setup_fns: Vec<FnSetup>,
     /// States to run, in user specified order.
     #[derivative(Debug = "ignore")]
     state_fns: Vec<FnState<T, E>>,
@@ -98,6 +102,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
         AmethystApplication {
             bundle_add_fns: Vec::new(),
             resource_add_fns: Vec::new(),
+            setup_fns: Vec::new(),
             state_fns: Vec::new(),
             state_data: PhantomData,
         }
@@ -134,7 +139,12 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
+        let params = (
+            self.bundle_add_fns,
+            self.resource_add_fns,
+            self.setup_fns,
+            self.state_fns,
+        );
         Self::build_internal(params)
     }
 
@@ -147,9 +157,10 @@ where
     // parameters which causes a compilation failure.
     #[allow(unknown_lints, clippy::type_complexity)]
     fn build_internal(
-        (bundle_add_fns, resource_add_fns, state_fns): (
+        (bundle_add_fns, resource_add_fns, setup_fns, state_fns): (
             Vec<BundleAddFn>,
             Vec<FnResourceAdd>,
+            Vec<FnSetup>,
             Vec<FnState<GameData<'static, 'static>, E>>,
         ),
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
@@ -168,13 +179,19 @@ where
             .into_iter()
             .rev()
             .for_each(|state_fn| states.push(state_fn()));
-        Self::build_application(SequencerState::new(states), game_data, resource_add_fns)
+        Self::build_application(
+            SequencerState::new(states),
+            game_data,
+            resource_add_fns,
+            setup_fns,
+        )
     }
 
     fn build_application<S>(
         first_state: S,
         game_data: GameDataBuilder<'static, 'static>,
         resource_add_fns: Vec<FnResourceAdd>,
+        setup_fns: Vec<FnSetup>,
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         S: State<GameData<'static, 'static>, E> + 'static,
@@ -188,6 +205,9 @@ where
             for mut function in resource_add_fns {
                 function(world);
             }
+            for function in setup_fns {
+                function(world);
+            }
         }
         application_builder.build(game_data)
     }
@@ -197,7 +217,12 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
+        let params = (
+            self.bundle_add_fns,
+            self.resource_add_fns,
+            self.setup_fns,
+            self.state_fns,
+        );
 
         // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
         // recover from a panic.
@@ -281,6 +306,7 @@ where
         AmethystApplication {
             bundle_add_fns: self.bundle_add_fns,
             resource_add_fns: self.resource_add_fns,
+            setup_fns: self.setup_fns,
             state_fns: Vec::new(),
             state_data: PhantomData,
         }
@@ -521,11 +547,12 @@ where
     /// # Parameters
     ///
     /// * `setup_fn`: Function to execute.
-    pub fn with_setup<F>(self, setup_fn: F) -> Self
+    pub fn with_setup<F>(mut self, setup_fn: F) -> Self
     where
-        F: Fn(&mut World) + Send + Sync + 'static,
+        F: FnOnce(&mut World) + Send + 'static,
     {
-        self.with_fn(setup_fn)
+        self.setup_fns.push(Box::new(setup_fn));
+        self
     }
 
     /// Registers a function that executes a desired effect.
@@ -880,20 +907,6 @@ mod test {
     }
 
     #[test]
-    fn setup_can_be_invoked_after_with_state() -> Result<(), Error> {
-        AmethystApplication::blank()
-            .with_state(|| {
-                FunctionState::new(|world| {
-                    world.insert(ApplicationResource);
-                })
-            })
-            .with_setup(|world| {
-                world.read_resource::<ApplicationResource>();
-            })
-            .run()
-    }
-
-    #[test]
     fn with_state_invoked_after_with_resource_should_work() -> Result<(), Error> {
         AmethystApplication::blank()
             .with_resource(ApplicationResource)
@@ -902,6 +915,14 @@ mod test {
                     world.read_resource::<ApplicationResource>();
                 })
             })
+            .run()
+    }
+
+    #[test]
+    fn setup_runs_before_system() -> Result<(), Error> {
+        AmethystApplication::blank()
+            .with_setup(|world| world.insert(ApplicationResourceNonDefault))
+            .with_system(SystemNonDefault, "", &[])
             .run()
     }
 

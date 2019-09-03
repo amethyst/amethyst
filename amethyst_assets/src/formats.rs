@@ -2,7 +2,7 @@ use crate::Format;
 use amethyst_error::{format_err, Error, ResultExt};
 use serde::{Deserialize, Serialize};
 
-/// Format for loading from Ron files. Mostly useful for prefabs.
+/// Format for loading from RON files. Mostly useful for prefabs.
 /// This type cannot be used for tagged deserialization.
 /// It is meant to be used at top-level loading, manually specified to the loader.
 /// ```rust,ignore
@@ -32,7 +32,7 @@ where
     }
 }
 
-/// Format for loading from Ron files. Mostly useful for prefabs.
+/// Format for loading from JSON files. Mostly useful for prefabs.
 /// This type can only be used as manually specified to the loader.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct JsonFormat;
