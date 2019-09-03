@@ -17,6 +17,26 @@ pub struct Ray {
     /// The normalized direction vector of the ray
     pub direction: Vector3<f32>,
 }
+impl Ray {
+    /// Returns where a ray line segment intersects the provided plane.
+    pub fn intersect_plane(
+        &self,
+        plane_normal: Vector3<f32>,
+        plane_point: Vector3<f32>,
+    ) -> Point3<f32> {
+        let diff = self.origin - plane_point;
+        let prod1 = diff.coords.dot(&plane_normal);
+        let prod2 = self.direction.dot(&plane_normal);
+        let prod3 = prod1 / prod2;
+
+        Point3::from(self.origin.coords - self.direction.scale(prod3))
+    }
+
+    /// Returns the ray `Point` at the given distance
+    pub fn at_distance(&self, z: f32) -> Point3<f32> {
+        self.origin + (self.direction * z)
+    }
+}
 
 /// An appropriate orthographic projection for the coordinate space used by Amethyst.
 /// Because we use vulkan coordinates internally and within the rendering engine, normal nalgebra
@@ -467,14 +487,8 @@ impl Projection {
         screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
     ) -> Point3<f32> {
-        use amethyst_core::math::Vector4;
-
-        let ray = self.screen_ray(screen_position.xy(), screen_diagonal, camera_transform);
-        let view: Matrix4<f32> = amethyst_core::math::convert(*camera_transform.global_matrix());
-
-        ray.origin
-            + (ray.direction * (screen_position.z - self.near()).max(0.0)
-                / (view * Vector4::new(ray.direction.x, ray.direction.y, ray.direction.z, 0.0)).z)
+        self.screen_ray(screen_position.xy(), screen_diagonal, camera_transform)
+            .at_distance((screen_position.z - self.near()).max(0.0))
     }
 
     /// Translate from world coordinates to screen coordinates
