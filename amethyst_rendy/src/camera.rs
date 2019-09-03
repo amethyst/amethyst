@@ -3,51 +3,12 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
-    math::{Matrix4, Point2, Point3, Vector2, Vector3},
+    geometry::Ray,
+    math::{Matrix4, Point2, Point3, Vector2},
     transform::components::Transform,
 };
 
 use amethyst_error::Error;
-
-/// A plane which can be intersected by a ray.
-#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Plane {
-    /// The forward normal of the plane.
-    pub normal: Vector3<f32>,
-    /// The origin/point of the plane.
-    pub position: Vector3<f32>,
-}
-impl Plane {
-    /// Create a new plane.
-    pub fn new(normal: Vector3<f32>, position: Vector3<f32>) -> Self {
-        Plane { normal, position }
-    }
-}
-
-/// A ray structure providing a position and direction.
-#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Ray {
-    /// The origin point of the ray
-    pub origin: Point3<f32>,
-    /// The normalized direction vector of the ray
-    pub direction: Vector3<f32>,
-}
-impl Ray {
-    /// Returns where a ray line segment intersects the provided plane.
-    pub fn intersect_plane(&self, plane: &Plane) -> Point3<f32> {
-        let diff = self.origin - plane.position;
-        let prod1 = diff.coords.dot(&plane.normal);
-        let prod2 = self.direction.dot(&plane.normal);
-        let prod3 = prod1 / prod2;
-
-        Point3::from(self.origin.coords - self.direction.scale(prod3))
-    }
-
-    /// Returns the ray `Point` at the given distance
-    pub fn at_distance(&self, z: f32) -> Point3<f32> {
-        self.origin + (self.direction * z)
-    }
-}
 
 /// An appropriate orthographic projection for the coordinate space used by Amethyst.
 /// Because we use vulkan coordinates internally and within the rendering engine, normal nalgebra
@@ -504,8 +465,7 @@ impl Projection {
         let screen_x = 2.0 * screen_position.x / screen_diagonal.x - 1.0;
         let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
 
-        let view: Matrix4<f32> = amethyst_core::math::convert(*camera_transform.global_matrix());
-        let matrix = view * self.as_inverse_matrix();
+        let matrix = *camera_transform.global_matrix() * self.as_inverse_matrix();
 
         let near = Point3::new(screen_x, screen_y, 0.0);
         let far = Point3::new(screen_x, screen_y, 1.0);
@@ -539,8 +499,8 @@ impl Projection {
         screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
     ) -> Point2<f32> {
-        let view: Matrix4<f32> = amethyst_core::math::convert(*camera_transform.global_matrix());
-        let screen_pos = (view * self.as_matrix()).transform_point(&world_position);
+        let screen_pos =
+            (camera_transform.global_matrix() * self.as_matrix()).transform_point(&world_position);
 
         Point2::new(
             (screen_pos.x + 1.0) * screen_diagonal.x / 2.0,
