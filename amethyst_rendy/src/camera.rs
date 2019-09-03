@@ -723,34 +723,77 @@ mod tests {
     use more_asserts::{assert_ge, assert_gt, assert_le, assert_lt};
 
     #[test]
-    fn screen_to_world() {
+    fn screen_to_world_3d() {
         let diagonal = Vector2::new(1024.0, 768.0);
 
-        let ortho = Camera::standard_2d(diagonal.x, diagonal.y);
+        let camera = Camera::standard_3d(diagonal.x, diagonal.y);
         let mut transform = Transform::default();
 
-        let center_screen = Point2::new(diagonal.x / 2.0, diagonal.y / 2.0);
-        let top_left = Point2::new(0.0, 0.0);
-        let bottom_right = Point2::new(diagonal.x - 1.0, diagonal.y - 1.0);
+        let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
+        let top_left = Point3::new(0.0, 0.0, 0.0);
+        let bottom_right = Point3::new(diagonal.x - 1.0, diagonal.y - 1.0, 0.0);
 
         assert_ulps_eq!(
-            ortho
+            camera
                 .projection()
-                .screen_to_world(center_screen, diagonal, &transform),
+                .screen_to_world_point(center_screen, diagonal, &transform),
             Point3::new(0.0, 0.0, -0.1)
         );
 
         assert_ulps_eq!(
-            ortho
+            camera
                 .projection()
-                .screen_to_world(top_left, diagonal, &transform),
+                .screen_to_world_point(top_left, diagonal, &transform),
+            Point3::new(-0.07698004, 0.057735037, -0.1)
+        );
+
+        assert_ulps_eq!(
+            camera
+                .projection()
+                .screen_to_world_point(bottom_right, diagonal, &transform),
+            Point3::new(0.07682969, -0.05758469, -0.1)
+        );
+
+        transform.set_translation_x(100.0);
+        transform.set_translation_y(100.0);
+        transform.copy_local_to_global();
+        assert_ulps_eq!(
+            camera
+                .projection()
+                .screen_to_world_point(center_screen, diagonal, &transform),
+            Point3::new(100.0, 100.0, -0.1)
+        );
+    }
+
+    #[test]
+    fn screen_to_world_2d() {
+        let diagonal = Vector2::new(1024.0, 768.0);
+
+        let camera = Camera::standard_2d(diagonal.x, diagonal.y);
+        let mut transform = Transform::default();
+
+        let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
+        let top_left = Point3::new(0.0, 0.0, 0.0);
+        let bottom_right = Point3::new(diagonal.x - 1.0, diagonal.y - 1.0, 0.0);
+
+        assert_ulps_eq!(
+            camera
+                .projection()
+                .screen_to_world_point(center_screen, diagonal, &transform),
+            Point3::new(0.0, 0.0, -0.1)
+        );
+
+        assert_ulps_eq!(
+            camera
+                .projection()
+                .screen_to_world_point(top_left, diagonal, &transform),
             Point3::new(-512.0, 384.0, -0.1)
         );
 
         assert_ulps_eq!(
-            ortho
+            camera
                 .projection()
-                .screen_to_world(bottom_right, diagonal, &transform),
+                .screen_to_world_point(bottom_right, diagonal, &transform),
             Point3::new(511.0, -383.0, -0.1)
         );
 
@@ -758,9 +801,9 @@ mod tests {
         transform.set_translation_y(100.0);
         transform.copy_local_to_global();
         assert_ulps_eq!(
-            ortho
+            camera
                 .projection()
-                .screen_to_world(center_screen, diagonal, &transform),
+                .screen_to_world_point(center_screen, diagonal, &transform),
             Point3::new(100.0, 100.0, -0.1)
         );
     }
