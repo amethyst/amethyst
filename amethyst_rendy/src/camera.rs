@@ -744,14 +744,14 @@ mod tests {
             camera
                 .projection()
                 .screen_to_world_point(top_left, diagonal, &transform),
-            Point3::new(-0.07698004, 0.057735037, -0.1)
+            Point3::new(-0.076_980_04, 0.057_735_037, -0.1)
         );
 
         assert_ulps_eq!(
             camera
                 .projection()
                 .screen_to_world_point(bottom_right, diagonal, &transform),
-            Point3::new(0.07682969, -0.05758469, -0.1)
+            Point3::new(0.076_829_69, -0.057_584_69, -0.1)
         );
 
         transform.set_translation_x(100.0);
