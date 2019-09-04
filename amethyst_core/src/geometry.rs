@@ -1,67 +1,144 @@
 //!
 //! Geometry helper functionality.
-use nalgebra::{Point3, Vector3};
+use nalgebra::{one, zero, Point3, RealField, Vector3};
 
 /// A plane which can be intersected by a ray.
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Plane {
-    /// The forward normal of the plane.
-    pub normal: Vector3<f32>,
-    /// The origin/point of the plane.
-    pub position: Vector3<f32>,
+pub struct Plane<T>
+where
+    T: RealField,
+{
+    /// The plane described as x,y,z normal
+    normal: Vector3<T>,
+    /// dot product of the point and normal, representing the plane position
+    bias: T,
 }
-impl Plane {
-    /// Create a new plane.
-    pub fn new(normal: Vector3<f32>, position: Vector3<f32>) -> Self {
-        Plane { normal, position }
+impl<T> Plane<T>
+where
+    T: RealField,
+{
+    /// Create a new `Plane`.
+    pub fn new(normal: Vector3<T>, bias: T) -> Self {
+        Plane { normal, bias }
     }
 
-    /// Create a plane which is facing along the X-Axis at the provided coordinate.
-    pub fn with_x(x: f32) -> Self {
+    /// Create a new `Plane` from a point normal representation
+    pub fn from_point_normal(point: &Point3<T>, normal: &Vector3<T>) -> Self {
+        let normalized = normal.normalize();
         Self {
-            normal: Vector3::new(1.0, 0.0, 0.0),
-            position: Vector3::new(x, 0.0, 0.0),
+            normal: Vector3::new(normalized.x, normalized.y, normalized.z),
+            bias: point.coords.dot(&normalized),
         }
     }
 
-    /// Create a plane which is facing along the Y-Axis at the provided coordinate.
-    pub fn with_y(y: f32) -> Self {
+    /// Create a new `Plane` from a point normal representation
+    pub fn from_point_vectors(point: &Point3<T>, v1: &Vector3<T>, v2: &Vector3<T>) -> Self {
+        Self::from_point_normal(point, &v1.cross(&v2))
+    }
+
+    /// Create a `Plane` which is facing along the X-Axis at the provided coordinate.
+    pub fn with_x(x: T) -> Self {
+        Self::from_point_normal(
+            &Point3::new(x, zero(), zero()),
+            &Vector3::new(one(), zero(), zero()),
+        )
+    }
+
+    /// Create a `Plane` which is facing along the Y-Axis at the provided coordinate.
+    pub fn with_y(y: T) -> Self {
+        Self::from_point_normal(
+            &Point3::new(zero(), y, zero()),
+            &Vector3::new(zero(), one(), zero()),
+        )
+    }
+
+    /// Create a `Plane` which is facing along the Z-Axis at the provided coordinate.
+    pub fn with_z(z: T) -> Self {
+        Self::from_point_normal(
+            &Point3::new(zero(), zero(), z),
+            &Vector3::new(zero(), zero(), one()),
+        )
+    }
+
+    /// This `Plane` normal
+    pub fn normal(&self) -> &Vector3<T> {
+        &self.normal
+    }
+
+    /// Normalized representation of this `Plane`
+    pub fn normalize(&self) -> Self {
+        let distance = (self.normal.x * self.normal.x
+            + self.normal.y * self.normal.y
+            + self.normal.z * self.normal.z)
+            .sqrt();
         Self {
-            normal: Vector3::new(0.0, 1.0, 0.0),
-            position: Vector3::new(0.0, y, 0.0),
+            normal: Vector3::new(
+                self.normal.x / distance,
+                self.normal.y / distance,
+                self.normal.z / distance,
+            ),
+            bias: self.bias / distance,
         }
     }
 
-    /// Create a plane which is facing along the Z-Axis at the provided coordinate.
-    pub fn with_z(z: f32) -> Self {
-        Self {
-            normal: Vector3::new(0.0, 0.0, 1.0),
-            position: Vector3::new(0.0, 0.0, z),
+    /// Returns the dot product of this `Plane` and a provided `Point3`
+    pub fn dot_point(&self, point: &Point3<T>) -> T {
+        self.normal.x * point.x + self.normal.y * point.y + self.normal.z * point.z + self.bias
+    }
+
+    /// Returns the dot product of this `Plane` and a provided `Vector3`
+    pub fn dot(&self, point: &Vector3<T>) -> T {
+        self.normal.x * point.x + self.normal.y * point.y + self.normal.z * point.z
+    }
+
+    /// Returns the dot product of this `Plane` with another `Plane`
+    pub fn dot_plane(&self, plane: &Plane<T>) -> T {
+        self.normal.x * plane.normal.x
+            + self.normal.y * plane.normal.y
+            + self.normal.z * plane.normal.z
+            + self.bias * plane.bias
+    }
+
+    /// Returns the intersection point of the provided line given a point and direction, or `None` if none occurs.
+    pub fn intersect_line(&self, point: &Point3<T>, direction: &Vector3<T>) -> Option<Point3<T>> {
+        let fv = self.dot(direction);
+        if fv.abs() > T::min_value() {
+            Some(Point3::from(
+                point.coords - *direction * (self.dot_point(point) / fv),
+            ))
+        } else {
+            None
         }
+    }
+
+    /// Returns the intersection point of the provided `Ray`, or `None` if none occurs.
+    pub fn intersect_ray(&self, ray: &Ray<T>) -> Option<Point3<T>> {
+        self.intersect_line(&ray.origin, &ray.direction)
     }
 }
 
 /// A Ray represents and infinite half-line starting at `origin` and going in specified unit length `direction`.
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Ray {
+pub struct Ray<T>
+where
+    T: RealField,
+{
     /// The origin point of the ray
-    pub origin: Point3<f32>,
+    pub origin: Point3<T>,
     /// The normalized direction vector of the ray
-    pub direction: Vector3<f32>,
+    pub direction: Vector3<T>,
 }
-impl Ray {
+impl<T> Ray<T>
+where
+    T: RealField,
+{
     /// Returns where a ray line segment intersects the provided plane.
-    pub fn intersect_plane(&self, plane: &Plane) -> Point3<f32> {
-        let diff = self.origin - plane.position;
-        let prod1 = diff.coords.dot(&plane.normal);
-        let prod2 = self.direction.dot(&plane.normal);
-        let prod3 = prod1 / prod2;
-
-        Point3::from(self.origin.coords - self.direction.scale(prod3))
+    pub fn intersect_plane(&self, plane: &Plane<T>) -> Option<Point3<T>> {
+        plane.intersect_ray(self)
     }
 
     /// Returns a `Point` along the ray at a distance `t` from it's origin.
-    pub fn at_distance(&self, z: f32) -> Point3<f32> {
+    pub fn at_distance(&self, z: T) -> Point3<T> {
         self.origin + (self.direction * z)
     }
 }
@@ -69,18 +146,19 @@ impl Ray {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use approx::assert_ulps_eq;
+    use approx::{assert_ulps_eq, relative_eq};
 
     #[test]
     #[allow(clippy::mistyped_literal_suffixes)]
     fn ray_intersect_plane() {
-        let plane = Plane::with_z(0.0);
+        let plane = Plane::<f32>::with_z(0.0);
         assert_ulps_eq!(
             Ray {
                 origin: Point3::new(0.020_277_506, -0.033_236_53, 51.794),
                 direction: Vector3::new(0.179_559_51, -0.294_313_04, -0.938_689_65),
             }
-            .intersect_plane(&plane),
+            .intersect_plane(&plane)
+            .unwrap(),
             Point3::new(9.927_818, -16.272_524, 0.0)
         );
 
@@ -89,14 +167,15 @@ pub mod tests {
                 origin: Point3::new(-0.003_106_177, 0.034_074_64, 0.799_999_95),
                 direction: Vector3::new(-0.029_389_05, 0.322_396_73, -0.946_148_3),
             }
-            .intersect_plane(&plane),
+            .intersect_plane(&plane)
+            .unwrap(),
             Point3::new(-0.027_955_6, 0.306_671_83, 0.0)
         );
     }
 
     #[test]
     fn at_distance() {
-        assert_ulps_eq!(
+        relative_eq!(
             Ray {
                 origin: Point3::new(0.020_277_506, -0.033_236_53, 51.794),
                 direction: Vector3::new(0.179_559_51, -0.294_313_04, -0.938_689_65),

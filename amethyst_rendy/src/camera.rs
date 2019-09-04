@@ -7,8 +7,83 @@ use amethyst_core::{
     math::{Matrix4, Point2, Point3, Vector2},
     transform::components::Transform,
 };
-
 use amethyst_error::Error;
+use derivative::Derivative;
+
+/// Provide a custom matrix implementation for various experimental or custom needs. Note that multiple constraints
+/// must be met using this in order to be used within Amethyst. Currently, this matrix must be invertible to be used
+/// within the engine.
+///
+/// Note a closure must be provided to provide the clip plane values of near and far, as these are calculated based
+/// on the projection type.
+#[derive(Derivative, Clone)]
+#[derivative(Debug(bound = ""))]
+pub struct CustomMatrix {
+    matrix: Matrix4<f32>,
+    inverse: Matrix4<f32>,
+    #[derivative(Debug = "ignore")]
+    clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
+}
+impl CustomMatrix {
+    /// Create a new `CustomMatrix`
+    ///
+    /// * panics when matrix is not invertible
+    pub fn new(
+        matrix: Matrix4<f32>,
+        clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
+    ) -> Self {
+        Self {
+            inverse: matrix
+                .try_inverse()
+                .expect("Camera projection matrix is not invertible. This is normally due to having inverse values being superimposed (near=far, right=left)"),
+            matrix,
+            clip_fn,
+        }
+    }
+
+    /// Returns a reference to the inner `Projection` matrix of this camera.
+    pub fn as_matrix(&self) -> &Matrix4<f32> {
+        &self.matrix
+    }
+
+    /// Changes the internal matrix to the provided matrix and re-caches the inverted matrix.
+    ///
+    /// * panics when matrix is not invertible
+    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
+        self.matrix = matrix;
+        self.inverse = self.matrix
+            .try_inverse()
+            .expect("Camera projection matrix is not invertible. This is normally due to having inverse values being superimposed (near=far, right=left)");
+    }
+
+    /// Change the current closure used for providing near and far clip values.
+    pub fn set_clip_fn(
+        &mut self,
+        clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
+    ) {
+        self.clip_fn = clip_fn;
+    }
+
+    /// Returns a reference to the inverted `Projection` matrix of this custom matrix.
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
+        &self.inverse
+    }
+
+    /// Returns the near-clip value.
+    pub fn near(&self) -> f32 {
+        (self.clip_fn)(self).0
+    }
+
+    /// Returns the far-clip value.
+    pub fn far(&self) -> f32 {
+        (self.clip_fn)(self).1
+    }
+}
+impl PartialEq for CustomMatrix {
+    fn eq(&self, other: &Self) -> bool {
+        self.matrix == other.matrix
+    }
+}
 
 /// An appropriate orthographic projection for the coordinate space used by Amethyst.
 /// Because we use vulkan coordinates internally and within the rendering engine, normal nalgebra
@@ -16,10 +91,15 @@ use amethyst_error::Error;
 ///
 /// This implementation provides an interface with feature parity to nalgebra, but retaining
 /// the vulkan coordinate space.
-#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Orthographic {
     matrix: Matrix4<f32>,
     inverse_matrix: Matrix4<f32>,
+}
+impl PartialEq for Orthographic {
+    fn eq(&self, other: &Self) -> bool {
+        self.matrix == other.matrix
+    }
 }
 impl Orthographic {
     /// Create a new `Orthographic` projection with the provided parameters.
@@ -186,16 +266,6 @@ impl Orthographic {
         &self.matrix
     }
 
-    /// Returns a mutable reference to the inner matrix representation of this projection.
-    ///
-    /// * panics when the supplied matrix is not invertible. See `Orthographic` and `Perspective`
-    /// for inputs.
-    #[inline]
-    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
-        self.matrix = matrix;
-        self.inverse_matrix = matrix.try_inverse().expect("Matrix not invertible")
-    }
-
     /// Returns a reference to the inner matrix representation of this projection.
     #[inline]
     pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
@@ -211,10 +281,15 @@ impl Orthographic {
 /// the vulkan coordinate space.
 ///
 /// The projection matrix is right-handed and has a depth range of 0 to 1
-#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Perspective {
     matrix: Matrix4<f32>,
     inverse_matrix: Matrix4<f32>,
+}
+impl PartialEq for Perspective {
+    fn eq(&self, other: &Self) -> bool {
+        self.matrix == other.matrix
+    }
 }
 impl Perspective {
     /// Creates a new `Perspective` projection with the provided arguments.
@@ -343,14 +418,6 @@ impl Perspective {
         &self.matrix
     }
 
-    /// Returns a mutable reference to the inner matrix representation of this projection.
-    /// * panics when matrix is not invertible
-    #[inline]
-    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
-        self.matrix = matrix;
-        self.inverse_matrix = matrix.try_inverse().expect("Matrix not invertible")
-    }
-
     /// Returns a reference to the inner matrix representation of this projection.
     #[inline]
     pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
@@ -371,6 +438,10 @@ pub enum Projection {
     ///
     /// [pp]: https://en.wikipedia.org/wiki/Perspective_(graphical)
     Perspective(Perspective),
+
+    /// A custom matrix projected by the user.
+    #[serde(skip)]
+    CustomMatrix(CustomMatrix),
 }
 
 impl Projection {
@@ -393,6 +464,14 @@ impl Projection {
     /// The projection matrix is right-handed and has a depth range of 0 to 1
     pub fn perspective(aspect: f32, fov: f32, z_near: f32, z_far: f32) -> Projection {
         Projection::Perspective(Perspective::new(aspect, fov, z_near, z_far))
+    }
+
+    /// Creates a `Projection::CustomMatrix` with the matrix provided.
+    pub fn custom_matrix(
+        matrix: Matrix4<f32>,
+        clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
+    ) -> Projection {
+        Projection::CustomMatrix(CustomMatrix::new(matrix, clip_fn))
     }
 
     /// Returns a reference to this `Projection` as [Orthographic] if it is in fact an `Orthographic`
@@ -431,20 +510,30 @@ impl Projection {
         }
     }
 
+    /// Returns a reference to this `Projection` as [CustomMatrix] if it is in fact an `CustomMatrix`
+    /// projection. Otherwise, `None` is returned.
+    pub fn as_custom_matrix(&self) -> Option<&CustomMatrix> {
+        match *self {
+            Projection::CustomMatrix(ref s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Returns a reference to this `Projection` as [CustomMatrix] if it is in fact an `CustomMatrix`
+    /// projection. Otherwise, `None` is returned.
+    pub fn as_custom_matrix_mut(&mut self) -> Option<&mut CustomMatrix> {
+        match *self {
+            Projection::CustomMatrix(ref mut s) => Some(s),
+            _ => None,
+        }
+    }
+
     /// Returns a reference to the inner matrix represpentation of this projection.
     pub fn as_matrix(&self) -> &Matrix4<f32> {
         match *self {
             Projection::Orthographic(ref s) => s.as_matrix(),
             Projection::Perspective(ref s) => s.as_matrix(),
-        }
-    }
-
-    /// Sets the matrix for this projection.
-    /// * panics when matrix is not invertible
-    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
-        match *self {
-            Projection::Orthographic(ref mut s) => s.set_matrix(matrix),
-            Projection::Perspective(ref mut s) => s.set_matrix(matrix),
+            Projection::CustomMatrix(ref s) => s.as_matrix(),
         }
     }
 
@@ -453,6 +542,7 @@ impl Projection {
         match *self {
             Projection::Orthographic(ref s) => s.as_inverse_matrix(),
             Projection::Perspective(ref s) => s.as_inverse_matrix(),
+            Projection::CustomMatrix(ref s) => s.as_inverse_matrix(),
         }
     }
 
@@ -461,6 +551,7 @@ impl Projection {
         match *self {
             Projection::Orthographic(ref s) => s.near(),
             Projection::Perspective(ref s) => s.near(),
+            Projection::CustomMatrix(ref s) => s.near(),
         }
     }
 
@@ -469,6 +560,7 @@ impl Projection {
         match *self {
             Projection::Orthographic(ref s) => s.far(),
             Projection::Perspective(ref s) => s.far(),
+            Projection::CustomMatrix(ref s) => s.far(),
         }
     }
 
@@ -478,7 +570,7 @@ impl Projection {
         screen_position: Point2<f32>,
         screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
-    ) -> Ray {
+    ) -> Ray<f32> {
         let screen_x = 2.0 * screen_position.x / screen_diagonal.x - 1.0;
         let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
 
@@ -535,6 +627,12 @@ impl From<Orthographic> for Projection {
 impl From<Perspective> for Projection {
     fn from(proj: Perspective) -> Self {
         Projection::Perspective(proj)
+    }
+}
+
+impl From<CustomMatrix> for Projection {
+    fn from(proj: CustomMatrix) -> Self {
+        Projection::CustomMatrix(proj)
     }
 }
 
@@ -601,20 +699,20 @@ impl Camera {
         ))
     }
 
+    /// Creates a `Projection::CustomMatrix` with the matrix provided.
+    pub fn custom_matrix(
+        matrix: Matrix4<f32>,
+        clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
+    ) -> Self {
+        Self::from(Projection::CustomMatrix(CustomMatrix::new(matrix, clip_fn)))
+    }
+
     /// Returns a reference to the inner `Projection` matrix of this camera.
     pub fn as_matrix(&self) -> &Matrix4<f32> {
         match self.inner {
             Projection::Orthographic(ref p) => p.as_matrix(),
             Projection::Perspective(ref p) => p.as_matrix(),
-        }
-    }
-
-    /// Sets the matrix for this projection.
-    /// * panics when matrix is not invertible
-    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
-        match self.inner {
-            Projection::Orthographic(ref mut p) => p.set_matrix(matrix),
-            Projection::Perspective(ref mut p) => p.set_matrix(matrix),
+            Projection::CustomMatrix(ref p) => p.as_matrix(),
         }
     }
 
@@ -623,6 +721,7 @@ impl Camera {
         match self.inner {
             Projection::Orthographic(ref p) => p.as_inverse_matrix(),
             Projection::Perspective(ref p) => p.as_inverse_matrix(),
+            Projection::CustomMatrix(ref p) => p.as_inverse_matrix(),
         }
     }
 
