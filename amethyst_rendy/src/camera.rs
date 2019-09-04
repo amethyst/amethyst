@@ -35,7 +35,7 @@ impl Orthographic {
     ///
     /// The projection matrix is right-handed and has a depth range of 0 to 1
     ///
-    /// * panics if left equals right, bottom equals top or near equals right
+    /// * panics if `left` equals `right`, `bottom` equals `top` or `z_near` equals `z_far
     pub fn new(left: f32, right: f32, bottom: f32, top: f32, z_near: f32, z_far: f32) -> Self {
         if cfg!(debug_assertions) {
             assert!(
@@ -470,7 +470,7 @@ impl Projection {
         }
     }
 
-    /// Returns a `Ray` structure for the provided screen position.
+    /// Returns a `Ray` going out form the camera through provided screen position. The ray origin lies on camera near plane.
     pub fn screen_ray(
         &self,
         screen_position: Point2<f32>,
@@ -496,7 +496,7 @@ impl Projection {
 
     /// Transforms the provided (X, Y, Z) screen coordinate into world coordinates.
     /// This method fires a ray from the camera in its view direction, and returns the Point at `screen_position.z`
-    /// distance from the camera origin.
+    /// world space distance from the camera origin.
     pub fn screen_to_world_point(
         &self,
         screen_position: Point3<f32>,

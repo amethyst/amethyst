@@ -41,7 +41,7 @@ impl Plane {
     }
 }
 
-/// A ray structure providing a position and direction.
+    /// A Ray represents and infinite half-line starting at `origin` and going in specified unit length `direction`.
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Ray {
     /// The origin point of the ray
@@ -60,7 +60,7 @@ impl Ray {
         Point3::from(self.origin.coords - self.direction.scale(prod3))
     }
 
-    /// Returns the ray `Point` at the given distance
+    /// Returns a `Point` along the ray at a distance `t` from it's origin.
     pub fn at_distance(&self, z: f32) -> Point3<f32> {
         self.origin + (self.direction * z)
     }
