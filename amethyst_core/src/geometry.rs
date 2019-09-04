@@ -41,7 +41,7 @@ impl Plane {
     }
 }
 
-    /// A Ray represents and infinite half-line starting at `origin` and going in specified unit length `direction`.
+/// A Ray represents and infinite half-line starting at `origin` and going in specified unit length `direction`.
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Ray {
     /// The origin point of the ray
@@ -72,24 +72,25 @@ pub mod tests {
     use approx::assert_ulps_eq;
 
     #[test]
+    #[allow(clippy::mistyped_literal_suffixes)]
     fn ray_intersect_plane() {
         let plane = Plane::with_z(0.0);
         assert_ulps_eq!(
             Ray {
-                origin: Point3::new(0.020277506, -0.03323653, 51.794),
-                direction: Vector3::new(0.17955951, -0.29431304, -0.93868965),
+                origin: Point3::new(0.020_277_506, -0.033_236_53, 51.794),
+                direction: Vector3::new(0.179_559_51, -0.294_313_04, -0.938_689_65),
             }
             .intersect_plane(&plane),
-            Point3::new(9.927818, -16.272524, 0.0)
+            Point3::new(9.927_818, -16.272_524, 0.0)
         );
 
         assert_ulps_eq!(
             Ray {
-                origin: Point3::new(-0.003106177, 0.03407464, 0.79999995),
-                direction: Vector3::new(-0.02938905, 0.32239673, -0.9461483),
+                origin: Point3::new(-0.003_106_177, 0.034_074_64, 0.799_999_95),
+                direction: Vector3::new(-0.029_389_05, 0.322_396_73, -0.946_148_3),
             }
             .intersect_plane(&plane),
-            Point3::new(-0.0279556, 0.30667183, 0.0)
+            Point3::new(-0.027_955_6, 0.306_671_83, 0.0)
         );
     }
 
@@ -97,11 +98,11 @@ pub mod tests {
     fn at_distance() {
         assert_ulps_eq!(
             Ray {
-                origin: Point3::new(0.020277506, -0.03323653, 51.794),
-                direction: Vector3::new(0.17955951, -0.29431304, -0.93868965),
+                origin: Point3::new(0.020_277_506, -0.033_236_53, 51.794),
+                direction: Vector3::new(0.179_559_51, -0.294_313_04, -0.938_689_65),
             }
             .at_distance(5.0),
-            Point3::new(0.9180751, -1.5048018, 47.10055)
+            Point3::new(0.918_075_1, -1.504_801_8, 47.100_55)
         );
     }
 }

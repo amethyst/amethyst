@@ -35,7 +35,7 @@ impl Orthographic {
     ///
     /// The projection matrix is right-handed and has a depth range of 0 to 1
     ///
-    /// * panics if `left` equals `right`, `bottom` equals `top` or `z_near` equals `z_far
+    /// * panics if `left` equals `right`, `bottom` equals `top` or `z_near` equals `z_far`
     pub fn new(left: f32, right: f32, bottom: f32, top: f32, z_near: f32, z_far: f32) -> Self {
         if cfg!(debug_assertions) {
             assert!(
@@ -187,7 +187,9 @@ impl Orthographic {
     }
 
     /// Returns a mutable reference to the inner matrix representation of this projection.
-    /// * panics when matrix is not invertible
+    ///
+    /// * panics when the supplied matrix is not invertible. See `Orthographic` and `Perspective`
+    /// for inputs.
     #[inline]
     pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
         self.matrix = matrix;
