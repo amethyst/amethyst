@@ -23,7 +23,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AmethystApplication` takes in `SystemDesc`s through `with_system_desc`. ([#1882])
 * `AmethystApplication::with_thread_local_desc` takes in `RunNowDesc`. ([#1882])
 * Add `NineSlice` support to `UiImage`. ([#1896])
-* `RenderingBundle` for full manual control of the rendering pipeline via a custom `GraphCreator` ([#1839]).
+* `RenderingBundle` for full manual control of the rendering pipeline via a custom `GraphCreator`. ([#1839])
 * `CameraOrtho::new` takes in `CameraOrthoWorldCoordinates`, which can be set to custom dimensions. ([#1916])
 
 ### Changed
@@ -39,7 +39,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `MeshProcessor` renamed to `MeshProcessorSystem`. ([#1839])
 * `AmethystApplication::with_setup` now takes in `FnOnce(&mut World) + Send + 'static`. ([#1912])
 * `AmethystApplication::with_setup` runs the function before the dispatcher. ([#1912])
-* `UiImage:PartialTexture` texture coordinates are correct and is now a struct enum. ([#1906],[#1919])
+* `UiImage:PartialTexture` & `UiImage:Sprite` texture coordinates are correct. Clarified types. ([#1906],[#1919])
 
 ### Fixed
 

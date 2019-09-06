@@ -553,7 +553,13 @@ fn render_image<B: Backend>(
         UiImage::Sprite(sprite_renderer) => {
             let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
             if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
-                (&sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords).into()
+                let tex_coord = &sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords;
+                [
+                    tex_coord.left,
+                    tex_coord.top,
+                    tex_coord.right,
+                    tex_coord.bottom,
+                ]
             } else {
                 [0.0_f32, 0., 1., 1.]
             }
