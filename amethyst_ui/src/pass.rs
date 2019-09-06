@@ -558,7 +558,13 @@ fn render_image<B: Backend>(
                 [0.0_f32, 0., 1., 1.]
             }
         }
-        UiImage::PartialTexture(_, tex_coord) => tex_coord.into(),
+        UiImage::PartialTexture {
+            left,
+            right,
+            bottom,
+            top,
+            ..
+        } => [*left, *top, *right, *bottom],
         _ => [0.0_f32, 0., 1., 1.],
     };
 
@@ -584,7 +590,7 @@ fn render_image<B: Backend>(
                 false
             }
         }
-        UiImage::PartialTexture(tex, _) => {
+        UiImage::PartialTexture { tex, .. } => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
                 resources,
