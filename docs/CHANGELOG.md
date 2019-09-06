@@ -39,7 +39,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `MeshProcessor` renamed to `MeshProcessorSystem`. ([#1839])
 * `AmethystApplication::with_setup` now takes in `FnOnce(&mut World) + Send + 'static`. ([#1912])
 * `AmethystApplication::with_setup` runs the function before the dispatcher. ([#1912])
-* `UiImage:PartialTexture` texture coordinates are correct and is now a struct enum. ([#1906])
+* `UiImage:PartialTexture` texture coordinates are correct and is now a struct enum. ([#1906],[#1919])
 
 ### Fixed
 
@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1906]: https://github.com/amethyst/amethyst/issues/1906
 [#1912]: https://github.com/amethyst/amethyst/pull/1912
 [#1916]: https://github.com/amethyst/amethyst/pull/1916
+[#1919]: https://github.com/amethyst/amethyst/pull/1919
 
 ## [0.12.0] - 2019-07-30
 
