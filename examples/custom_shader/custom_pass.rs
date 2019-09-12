@@ -28,7 +28,6 @@ use amethyst_error::Error;
 use derivative::Derivative;
 use glsl_layout::*;
 
-
 lazy_static::lazy_static! {
     // These uses the precompiled shaders.
     // These can be obtained using glslc.exe in the vulkan sdk.
@@ -63,7 +62,6 @@ lazy_static::lazy_static! {
 ///     );
 /// }
 /// '''
-
 
 /// Draw triangles.
 #[derive(Clone, Debug, PartialEq, Derivative)]
