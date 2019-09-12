@@ -109,7 +109,14 @@ pipeline {
                     }
                     steps {
                         echo 'Beginning tests...'
+
+                        // Clean amethyst build artifacts so `mdbook test` does not fail on multiple
+                        // built libraries found.
+                        sh './scripts/book_library_clean.sh'
+
                         sh 'cargo test --all --features "vulkan sdl_controller json saveload"'
+                        sh 'mdbook test -L ./target/debug/deps book'
+
                         echo 'Tests done!'
                     }
                 }
