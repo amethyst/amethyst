@@ -28,37 +28,8 @@ use amethyst_error::Error;
 use derivative::Derivative;
 use glsl_layout::*;
 
+
 lazy_static::lazy_static! {
-
-/*
-    This will compile the shaders during the compile.
-    static ref VERTEX_SRC: SpirvShader = PathBufShaderInfo::new(
-        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/src/vertex/custom.vert")),
-        ShaderKind::Vertex,
-        SourceLanguage::GLSL,
-        "main",
-    ).precompile().unwrap();
-
-    static ref VERTEX: SpirvShader = SpirvShader::new(
-        (*VERTEX_SRC).spirv().unwrap().to_vec(),
-        (*VERTEX_SRC).stage(),
-        "main",
-    );
-
-    static ref FRAGMENT_SRC: SpirvShader = PathBufShaderInfo::new(
-        PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/src/fragment/custom.frag")),
-        ShaderKind::Fragment,
-        SourceLanguage::GLSL,
-        "main",
-    ).precompile().unwrap();
-
-    static ref FRAGMENT: SpirvShader = SpirvShader::new(
-        (*FRAGMENT_SRC).spirv().unwrap().to_vec(),
-        (*FRAGMENT_SRC).stage(),
-        "main",
-    );
-}
-*/
     // These uses the precompiled shaders.
     // These can be obtained using glslc.exe in the vulkan sdk.
     static ref VERTEX: SpirvShader = SpirvShader::new(
@@ -73,6 +44,26 @@ lazy_static::lazy_static! {
         "main",
     );
 }
+
+/// Example code of using a custom shader
+///
+/// ''' rust
+/// lazy_static::lazy_static! {
+///     static ref VERTEX_SRC: SpirvShader = PathBufShaderInfo::new(
+///         PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/src/vertex/custom.vert")),
+///         ShaderKind::Vertex,
+///         SourceLanguage::GLSL,
+///         "main",
+///     ).precompile().unwrap();
+///
+///     static ref VERTEX: SpirvShader = SpirvShader::new(
+///         (*VERTEX_SRC).spirv().unwrap().to_vec(),
+///         (*VERTEX_SRC).stage(),
+///         "main",
+///     );
+/// }
+/// '''
+
 
 /// Draw triangles.
 #[derive(Clone, Debug, PartialEq, Derivative)]
