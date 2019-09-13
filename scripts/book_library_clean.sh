@@ -19,8 +19,8 @@ crates_to_clean=$(
 
 for crate in $crates_to_clean
 do
-  echo Running rm -rf "target/debug/deps/lib${crate}-*" "target/debug/deps/${crate}-*"
-  rm -rf "target/debug/deps/lib${crate}-*" "target/debug/deps/${crate}-*"
+  echo Running \""rm -rf target/debug/deps/lib${crate}-* target/debug/deps/${crate}-*"\"
+  sh -c "rm -rf target/debug/deps/lib${crate}-* target/debug/deps/${crate}-*"
 done
 
 [ $changed ] && shopt -u nullglob; unset changed
