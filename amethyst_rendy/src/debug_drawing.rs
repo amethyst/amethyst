@@ -250,8 +250,8 @@ impl DebugLinesComponent {
             let a = std::f32::consts::PI * 2.0 / (points as f32) * (i as f32);
             let x = radius * a.cos();
             let y = radius * a.sin();
-            let point = Vector3::new(x, y, center[2]);
-            let point = Point3::from(rotation * point);
+            let point = Vector3::new(x, y, 0.0);
+            let point = center + rotation * point;
 
             if let Some(prev) = prev {
                 self.add_line(prev, point, color);
