@@ -131,7 +131,7 @@ where
 
     /// Returns a `Point` along the ray at a distance `t` from it's origin.
     pub fn at_distance(&self, z: T) -> Point3<T> {
-        self.origin + (self.direction * z)
+        self.origin - (self.direction * z)
     }
 }
 
@@ -144,25 +144,22 @@ pub mod tests {
     #[allow(clippy::mistyped_literal_suffixes)]
     fn ray_intersect_plane() {
         let plane = Plane::<f32>::with_z(0.0);
-        assert_ulps_eq!(
-            Ray {
-                origin: Point3::new(0.020_277_506, -0.033_236_53, 51.794),
-                direction: Vector3::new(0.179_559_51, -0.294_313_04, -0.938_689_65),
-            }
-            .intersect_plane(&plane)
-            .unwrap(),
-            Point3::new(9.927_818, -16.272_524, 0.0)
-        );
 
-        assert_ulps_eq!(
-            Ray {
-                origin: Point3::new(-0.003_106_177, 0.034_074_64, 0.799_999_95),
-                direction: Vector3::new(-0.029_389_05, 0.322_396_73, -0.946_148_3),
-            }
-            .intersect_plane(&plane)
-            .unwrap(),
-            Point3::new(-0.027_955_6, 0.306_671_83, 0.0)
-        );
+        let ray = Ray {
+            origin: Point3::new(0.020_277_506, -0.033_236_53, 51.794),
+            direction: Vector3::new(0.179_559_51, -0.294_313_04, -0.938_689_65),
+        };
+        let distance = ray.intersect_plane(&plane).unwrap();
+        let point = ray.at_distance(distance);
+        assert_ulps_eq!(point, Point3::new(9.927_818, -16.272_524, 0.0));
+
+        let ray = Ray {
+            origin: Point3::new(-0.003_106_177, 0.034_074_64, 0.799_999_95),
+            direction: Vector3::new(-0.029_389_05, 0.322_396_73, -0.946_148_3),
+        };
+        let distance = ray.intersect_plane(&plane).unwrap();
+        let point = ray.at_distance(distance);
+        assert_ulps_eq!(point, Point3::new(-0.027_955_6, 0.306_671_83, 0.0));
     }
 
     #[test]
