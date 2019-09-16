@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add `NineSlice` support to `UiImage`. ([#1896])
 * `RenderingBundle` for full manual control of the rendering pipeline via a custom `GraphCreator` ([#1839]).
 * `Camera::screen_ray` method added, returning an appropriate `Ray` structure ([#1918]).
+* `CameraOrtho::new` takes in `CameraOrthoWorldCoordinates`, which can be set to custom dimensions. ([#1916]).
 
 ### Changed
 
@@ -58,6 +59,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1896]: https://github.com/amethyst/amethyst/pull/1896
 [#1839]: https://github.com/amethyst/amethyst/pull/1839
 [#1912]: https://github.com/amethyst/amethyst/pull/1912
+[#1916]: https://github.com/amethyst/amethyst/pull/1916
 [#1918]: https://github.com/amethyst/amethyst/pull/1918
 
 ## [0.12.0] - 2019-07-30
