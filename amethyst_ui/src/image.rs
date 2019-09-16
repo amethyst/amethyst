@@ -1,6 +1,6 @@
 use amethyst_assets::Handle;
 use amethyst_core::ecs::{Component, DenseVecStorage};
-use amethyst_rendy::{sprite::TextureCoordinates, SpriteRender, Texture};
+use amethyst_rendy::{SpriteRender, Texture};
 
 /// Image used UI widgets, often as background.
 #[derive(Debug, Clone, PartialEq)]
@@ -8,7 +8,18 @@ pub enum UiImage {
     /// An image backed by texture handle
     Texture(Handle<Texture>),
     /// An image backed by a texture cropped to specified rectangle
-    PartialTexture(Handle<Texture>, TextureCoordinates),
+    PartialTexture {
+        /// Texture handle
+        tex: Handle<Texture>,
+        /// Left Texture Coordinate
+        left: f32,
+        /// Right Texture Coordinate
+        right: f32,
+        /// Bottom Texture Coordinate
+        bottom: f32,
+        /// Top Texture Coordinate
+        top: f32,
+    },
     /// An image backed by a Sprite
     Sprite(SpriteRender),
     /// An Image backed by a 9-sliced texture
