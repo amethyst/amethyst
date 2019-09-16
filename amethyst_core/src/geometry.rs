@@ -67,16 +67,9 @@ where
 
     /// Normalized representation of this `Plane`
     pub fn normalize(&self) -> Self {
-        let distance = (self.normal.x * self.normal.x
-            + self.normal.y * self.normal.y
-            + self.normal.z * self.normal.z)
-            .sqrt();
+        let distance = self.normal.magnitude();
         Self {
-            normal: Vector3::new(
-                self.normal.x / distance,
-                self.normal.y / distance,
-                self.normal.z / distance,
-            ),
+            normal: self.normal / distance,
             bias: self.bias / distance,
         }
     }
@@ -99,20 +92,19 @@ where
             + self.bias * plane.bias
     }
 
-    /// Returns the intersection point of the provided line given a point and direction, or `None` if none occurs.
-    pub fn intersect_line(&self, point: &Point3<T>, direction: &Vector3<T>) -> Option<Point3<T>> {
+    /// Returns the intersection distance of the provided line given a point and direction, or `None` if none occurs.
+    pub fn intersect_line(&self, point: &Point3<T>, direction: &Vector3<T>) -> Option<T> {
         let fv = self.dot(direction);
+        let distance = self.dot_point(point) / fv;
         if fv.abs() > T::min_value() {
-            Some(Point3::from(
-                point.coords - *direction * (self.dot_point(point) / fv),
-            ))
+            Some(distance)
         } else {
             None
         }
     }
 
-    /// Returns the intersection point of the provided `Ray`, or `None` if none occurs.
-    pub fn intersect_ray(&self, ray: &Ray<T>) -> Option<Point3<T>> {
+    /// Returns the intersection distance of the provided `Ray`, or `None` if none occurs.
+    pub fn intersect_ray(&self, ray: &Ray<T>) -> Option<T> {
         self.intersect_line(&ray.origin, &ray.direction)
     }
 }
@@ -132,8 +124,8 @@ impl<T> Ray<T>
 where
     T: RealField,
 {
-    /// Returns where a ray line segment intersects the provided plane.
-    pub fn intersect_plane(&self, plane: &Plane<T>) -> Option<Point3<T>> {
+    /// Returns the distance along the ray which intersects with the provided `Plane`1
+    pub fn intersect_plane(&self, plane: &Plane<T>) -> Option<T> {
         plane.intersect_ray(self)
     }
 

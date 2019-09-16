@@ -16,28 +16,21 @@ use derivative::Derivative;
 ///
 /// Note a closure must be provided to provide the clip plane values of near and far, as these are calculated based
 /// on the projection type.
-#[derive(Derivative, Clone)]
-#[derivative(Debug(bound = ""))]
+#[derive(Derivative, Debug, Clone)]
 pub struct CustomMatrix {
     matrix: Matrix4<f32>,
     inverse: Matrix4<f32>,
-    #[derivative(Debug = "ignore")]
-    clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
 }
 impl CustomMatrix {
     /// Create a new `CustomMatrix`
     ///
     /// * panics when matrix is not invertible
-    pub fn new(
-        matrix: Matrix4<f32>,
-        clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
-    ) -> Self {
+    pub fn new(matrix: Matrix4<f32>) -> Self {
         Self {
             inverse: matrix
                 .try_inverse()
                 .expect("Camera projection matrix is not invertible. This is normally due to having inverse values being superimposed (near=far, right=left)"),
             matrix,
-            clip_fn,
         }
     }
 
@@ -56,27 +49,9 @@ impl CustomMatrix {
             .expect("Camera projection matrix is not invertible. This is normally due to having inverse values being superimposed (near=far, right=left)");
     }
 
-    /// Change the current closure used for providing near and far clip values.
-    pub fn set_clip_fn(
-        &mut self,
-        clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
-    ) {
-        self.clip_fn = clip_fn;
-    }
-
     /// Returns a reference to the inverted `Projection` matrix of this custom matrix.
     pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
         &self.inverse
-    }
-
-    /// Returns the near-clip value.
-    pub fn near(&self) -> f32 {
-        (self.clip_fn)(self).0
-    }
-
-    /// Returns the far-clip value.
-    pub fn far(&self) -> f32 {
-        (self.clip_fn)(self).1
     }
 }
 impl PartialEq for CustomMatrix {
@@ -467,11 +442,8 @@ impl Projection {
     }
 
     /// Creates a `Projection::CustomMatrix` with the matrix provided.
-    pub fn custom_matrix(
-        matrix: Matrix4<f32>,
-        clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
-    ) -> Projection {
-        Projection::CustomMatrix(CustomMatrix::new(matrix, clip_fn))
+    pub fn custom_matrix(matrix: Matrix4<f32>) -> Projection {
+        Projection::CustomMatrix(CustomMatrix::new(matrix))
     }
 
     /// Returns a reference to this `Projection` as [Orthographic] if it is in fact an `Orthographic`
@@ -551,7 +523,9 @@ impl Projection {
         match *self {
             Projection::Orthographic(ref s) => s.near(),
             Projection::Perspective(ref s) => s.near(),
-            Projection::CustomMatrix(ref s) => s.near(),
+            Projection::CustomMatrix(ref s) => {
+                panic!("Custom Matrix does not support near and far field projection!")
+            }
         }
     }
 
@@ -560,7 +534,9 @@ impl Projection {
         match *self {
             Projection::Orthographic(ref s) => s.far(),
             Projection::Perspective(ref s) => s.far(),
-            Projection::CustomMatrix(ref s) => s.far(),
+            Projection::CustomMatrix(ref s) => {
+                panic!("Custom Matrix does not support near and far field projection!")
+            }
         }
     }
 
@@ -700,11 +676,8 @@ impl Camera {
     }
 
     /// Creates a `Projection::CustomMatrix` with the matrix provided.
-    pub fn custom_matrix(
-        matrix: Matrix4<f32>,
-        clip_fn: &'static (dyn Fn(&CustomMatrix) -> (f32, f32) + Send + Sync),
-    ) -> Self {
-        Self::from(Projection::CustomMatrix(CustomMatrix::new(matrix, clip_fn)))
+    pub fn custom_matrix(matrix: Matrix4<f32>) -> Self {
+        Self::from(Projection::CustomMatrix(CustomMatrix::new(matrix)))
     }
 
     /// Returns a reference to the inner `Projection` matrix of this camera.
