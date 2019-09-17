@@ -23,9 +23,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AmethystApplication` takes in `SystemDesc`s through `with_system_desc`. ([#1882])
 * `AmethystApplication::with_thread_local_desc` takes in `RunNowDesc`. ([#1882])
 * Add `NineSlice` support to `UiImage`. ([#1896])
-* `RenderingBundle` for full manual control of the rendering pipeline via a custom `GraphCreator` ([#1839]).
+* `RenderingBundle` for full manual control of the rendering pipeline via a custom `GraphCreator`. ([#1839])
+* `CameraOrtho::new` takes in `CameraOrthoWorldCoordinates`, which can be set to custom dimensions. ([#1916])
 * `Camera::screen_ray` method added, returning an appropriate `Ray` structure ([#1918]).
-* `CameraOrtho::new` takes in `CameraOrthoWorldCoordinates`, which can be set to custom dimensions. ([#1916]).
 
 ### Changed
 
@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `MeshProcessor` renamed to `MeshProcessorSystem`. ([#1839])
 * `AmethystApplication::with_setup` now takes in `FnOnce(&mut World) + Send + 'static`. ([#1912])
 * `AmethystApplication::with_setup` runs the function before the dispatcher. ([#1912])
+* `UiImage:PartialTexture` & `UiImage:Sprite` texture coordinates are correct. Clarified types. ([#1906],[#1919])
 * `Camera::screen_to_world` renamed `Camera::screen_to_world_point` and its API has changed to a Point3 ([#1918]).
 
 ### Fixed
@@ -58,8 +59,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1891]: https://github.com/amethyst/amethyst/pull/1891
 [#1896]: https://github.com/amethyst/amethyst/pull/1896
 [#1839]: https://github.com/amethyst/amethyst/pull/1839
+[#1906]: https://github.com/amethyst/amethyst/issues/1906
 [#1912]: https://github.com/amethyst/amethyst/pull/1912
 [#1916]: https://github.com/amethyst/amethyst/pull/1916
+[#1919]: https://github.com/amethyst/amethyst/pull/1919
 [#1918]: https://github.com/amethyst/amethyst/pull/1918
 
 ## [0.12.0] - 2019-07-30
