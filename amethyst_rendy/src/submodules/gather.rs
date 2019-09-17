@@ -5,7 +5,7 @@ use crate::{
     resources::AmbientColor,
 };
 use amethyst_core::{
-    ecs::{Join, Read, ReadStorage, SystemData, World},
+    ecs::{Entities, Entity, Join, Read, ReadStorage, SystemData, World},
     math::{convert, Matrix4, Vector3},
     transform::Transform,
 };
@@ -26,6 +26,33 @@ pub struct CameraGatherer {
 }
 
 impl CameraGatherer {
+    /// Collect just the entity which has the current `ActiveCamera`
+    pub fn gather_camera_entity(world: &World) -> Option<Entity> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("gather_camera (1st)");
+
+        let (active_camera, entities, cameras, transforms) = <(
+            Read<'_, ActiveCamera>,
+            Entities<'_>,
+            ReadStorage<'_, Camera>,
+            ReadStorage<'_, Transform>,
+        )>::fetch(world);
+
+        match active_camera.entity {
+            Some(entity) => {
+                if transforms.contains(entity) && cameras.contains(entity) {
+                    Some(entity)
+                } else {
+                    None
+                }
+            }
+            None => (&entities, &cameras, &transforms)
+                .join()
+                .next()
+                .map(|(entity, _, _)| entity),
+        }
+    }
+
     /// Collect `ActiveCamera` and `Camera` instances from the provided resource storage and selects
     /// the appropriate camera to use for projection, and returns the camera position and extracted
     /// projection matrix.
