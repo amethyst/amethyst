@@ -15,7 +15,7 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-nalgebra = { version = "0.18.0", features = ["serde-serialize", "mint"] }
+nalgebra = { version = "0.18.1", features = ["serde-serialize", "mint"] }
 alga = { version = "0.9.0", default-features = false }
 alga_derive = "0.9.0"
 approx = "0.3"
@@ -25,8 +25,8 @@ log = "0.4.6"
 num-traits = "0.2.0"
 rayon = "1.1.0"
 serde = { version = "1", features = ["derive"] }
-specs = { version = "0.15", features = ["shred-derive"] }
-specs-hierarchy = "0.5.1"
+specs = { version = "0.15", default-features = false, features = ["shred-derive"] }
+specs-hierarchy = { version = "0.5.1", default-features = false }
 getset = "0.0.7"
 derive-new = "0.5.6"
 derivative = "1.0"
@@ -38,6 +38,7 @@ amethyst = { path = "..", version = "0.12.0" }
 ron = "0.5.1"
 
 [features]
+default = ["specs/parallel", "specs-hierarchy/parallel"]
 profiler = ["thread_profiler/thread_profiler"]
 nightly = ["specs/nightly"]
 saveload = ["specs/serde"]

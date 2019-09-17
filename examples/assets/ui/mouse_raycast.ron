@@ -1,0 +1,47 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "background",
+        anchor: Middle,
+        stretch: XY( x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
+        width: 20.,
+        height: 20.,
+    ),
+    // background: SolidColor(1.0, 1.0, 1.0, 1.0),
+    children: [
+        Label(
+            transform: (
+                id: "mouse_position",
+                anchor: TopLeft,
+                x: 100.,
+                y: -25.,
+                width: 200.,
+                height: 50.,
+                transparent: true,
+            ),
+            text: (
+                text: "N/A",
+                font_size: 25.,
+                color: (1., 1., 1., 1.),
+                font: File("font/square.ttf", ("TTF", ())),
+            ),
+        ),
+        Label(
+            transform: (
+                id: "under_mouse",
+                anchor: TopLeft,
+                x: 100.,
+                y: -50.,
+                width: 200.,
+                height: 50.,
+                transparent: true,
+            ),
+            text: (
+                text: "UNDER MOUSE",
+                font_size: 25.,
+                color: (1., 1., 1., 1.),
+                font: File("font/square.ttf", ("TTF", ())),
+            ),
+        )
+    ]
+)
