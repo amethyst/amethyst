@@ -6,3 +6,4 @@ At times Amethyst goes through non-trivial changes which may impose additional e
 * [0.10 to 0.12](b_migration_notes/rendy_migration.html): Rendy migration guide
 * [0.10 to 0.11](b_migration_notes/transform_api_changes.html): Transform API Changes
 * [0.11 to 0.12] Float type removed. Search and replace with 'f32'
+* [0.12 to 0.13](b_migration_notes/specs_migration.html): `specs` upgraded to `0.15`.

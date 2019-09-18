@@ -328,10 +328,12 @@ pub use crate::{
     effect_return::EffectReturn,
     fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture},
     game_update::GameUpdate,
+    in_memory_source::{InMemorySource, IN_MEMORY_SOURCE_ID},
     state::{
         CustomDispatcherState, CustomDispatcherStateBuilder, FunctionState, PopState,
         SequencerState,
     },
+    wait_for_load::WaitForLoad,
 };
 pub(crate) use crate::{
     system_desc_injection_bundle::SystemDescInjectionBundle,
@@ -343,8 +345,10 @@ mod amethyst_application;
 mod effect_return;
 mod fixture;
 mod game_update;
+mod in_memory_source;
 pub mod prelude;
 mod state;
 mod system_desc_injection_bundle;
 mod system_injection_bundle;
 mod thread_local_injection_bundle;
+mod wait_for_load;

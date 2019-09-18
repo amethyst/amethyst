@@ -518,28 +518,6 @@ impl Projection {
         }
     }
 
-    /// Returns the near-clip value of the current camera.
-    pub fn near(&self) -> f32 {
-        match *self {
-            Projection::Orthographic(ref s) => s.near(),
-            Projection::Perspective(ref s) => s.near(),
-            Projection::CustomMatrix(ref s) => {
-                panic!("Custom Matrix does not support near and far field projection!")
-            }
-        }
-    }
-
-    /// Returns the far-clip value of the current camera.
-    pub fn far(&self) -> f32 {
-        match *self {
-            Projection::Orthographic(ref s) => s.far(),
-            Projection::Perspective(ref s) => s.far(),
-            Projection::CustomMatrix(ref s) => {
-                panic!("Custom Matrix does not support near and far field projection!")
-            }
-        }
-    }
-
     /// Returns a `Ray` going out form the camera through provided screen position. The ray origin lies on camera near plane.
     pub fn screen_ray(
         &self,
