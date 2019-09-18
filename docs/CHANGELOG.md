@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AmethystApplication::with_setup` runs the function before the dispatcher. ([#1912])
 * `UiImage:PartialTexture` & `UiImage:Sprite` texture coordinates are correct. Clarified types. ([#1906],[#1919])
 * `Camera::screen_to_world` renamed `Camera::screen_to_world_point` and its API has changed to a Point3 ([#1918]).
+* 'amethyst_tiles' crate added supporting 2d and 3d tile map rendering with sprites. ([#1820])
 
 ### Fixed
 
@@ -65,6 +66,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1919]: https://github.com/amethyst/amethyst/pull/1919
 [#1918]: https://github.com/amethyst/amethyst/pull/1918
 [#1933]: https://github.com/amethyst/amethyst/pull/1933
+[#1820]: https://github.com/amethyst/amethyst/pull/1820
 
 ## [0.12.0] - 2019-07-30
 

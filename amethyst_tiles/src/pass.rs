@@ -31,9 +31,7 @@ use amethyst_rendy::{
             pso::{self, ShaderStageFlags},
         },
         mesh::AsVertex,
-        shader::{
-            Shader, ShaderKind, ShaderSetBuilder, SourceLanguage, SourceShaderInfo, SpirvShader,
-        },
+        shader::{Shader, ShaderSetBuilder, SpirvShader},
     },
     resources::Tint as TintComponent,
     sprite::{SpriteRender, SpriteSheet},
@@ -178,6 +176,7 @@ pub struct DrawTiles2D<
 impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGroup<B, World>
     for DrawTiles2D<B, T, E, Z>
 {
+    #[allow(clippy::cast_precision_loss)]
     fn prepare(
         &mut self,
         factory: &Factory<B>,

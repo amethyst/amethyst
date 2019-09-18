@@ -1,3 +1,4 @@
+#![allow(clippy::default_trait_access)]
 //! GPU POD data types.
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::math::Point3;
@@ -12,7 +13,7 @@ use amethyst_rendy::{
 };
 use glsl_layout::*;
 
-/// TileMapArgs
+/// `TileMapArgs`
 /// ```glsl,ignore
 /// uniform TileMapArgs {
 ///    uniform mat4 proj;
@@ -71,6 +72,7 @@ impl AsVertex for TileArgs {
 }
 
 impl TileArgs {
+    #[allow(clippy::cast_precision_loss)]
     /// Extracts POD vertex data from the provided storages for a sprite.
     ///
     /// # Arguments
@@ -92,7 +94,7 @@ impl TileArgs {
         let sprite = &sprite_sheet.sprites[sprite_number];
 
         Some((
-            TileArgs {
+            Self {
                 u_offset: [sprite.tex_coords.left, sprite.tex_coords.right].into(),
                 v_offset: [sprite.tex_coords.top, sprite.tex_coords.bottom].into(),
                 tint: tint.map_or([1.0; 4].into(), |t| {
