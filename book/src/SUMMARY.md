@@ -48,7 +48,6 @@
 * [Sprites](./sprites.md)
     * [Set Up The Render Pass](./sprites/set_up_the_render_pass.md)
     * [Load The `Texture`](./sprites/load_the_texture.md)
-    * [Display The `Texture`](./sprites/display_the_texture.md)
     * [Define The `SpriteSheet`](./sprites/define_the_sprite_sheet.md)
     * [`SpriteRender` Component](./sprites/sprite_render_component.md)
     * [Modify The `Texture`](./sprites/modify_the_texture.md)
