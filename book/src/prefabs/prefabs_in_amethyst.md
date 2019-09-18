@@ -23,7 +23,6 @@ In its stored form, a prefab is a serialized list of entities and their componen
 # extern crate amethyst;
 # extern crate derivative;
 # extern crate serde;
-# extern crate specs_derive;
 #
 # use amethyst::{
 #     assets::{Prefab, PrefabData},
@@ -37,7 +36,6 @@ In its stored form, a prefab is a serialized list of entities and their componen
 # };
 # use derivative::Derivative;
 # use serde::{Deserialize, Serialize};
-# use specs_derive::Component;
 #
 #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
 #[prefab(Component)]
@@ -101,7 +99,6 @@ If there are multiple components to be attached to the entity, then we need a ty
 # extern crate amethyst;
 # extern crate derivative;
 # extern crate serde;
-# extern crate specs_derive;
 #
 # use amethyst::{
 #     assets::{Prefab, PrefabData, ProgressCounter},
@@ -116,7 +113,6 @@ If there are multiple components to be attached to the entity, then we need a ty
 # };
 # use derivative::Derivative;
 # use serde::{Deserialize, Serialize};
-# use specs_derive::Component;
 #
 # #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
 # #[prefab(Component)]
@@ -196,7 +192,6 @@ Could be implemented using an enum like this:
 # extern crate amethyst;
 # extern crate derivative;
 # extern crate serde;
-# extern crate specs_derive;
 #
 # use amethyst::{
 #     assets::{Prefab, PrefabData, ProgressCounter},
@@ -212,7 +207,6 @@ Could be implemented using an enum like this:
 # };
 # use derivative::Derivative;
 # use serde::{Deserialize, Serialize};
-# use specs_derive::Component;
 #
 # #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
 # #[prefab(Component)]
