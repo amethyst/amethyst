@@ -45,7 +45,7 @@ mod tests {
             .with_system(Processor::<TestAsset>::new(), "test_asset_processor", &[])
             .with_effect(|world| {
                 let mut in_memory_source = InMemorySource::new();
-                in_memory_source.insert(String::from("file.ron"), "(val: 123)".as_bytes().to_vec());
+                in_memory_source.insert(String::from("file.ron"), b"(val: 123)".to_vec());
 
                 let mut loader = world.write_resource::<Loader>();
                 loader.add_source(IN_MEMORY_SOURCE_ID, in_memory_source);
