@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `RenderingBundle` for full manual control of the rendering pipeline via a custom `GraphCreator`. ([#1839])
 * `CameraOrtho::new` takes in `CameraOrthoWorldCoordinates`, which can be set to custom dimensions. ([#1916])
 * `Camera::screen_ray` method added, returning an appropriate `Ray` structure ([#1918]).
+* `amethyst_test`: `InMemorySource` and `WaitForLoad` helpers ([#1933]).
 
 ### Changed
 
@@ -64,6 +65,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1916]: https://github.com/amethyst/amethyst/pull/1916
 [#1919]: https://github.com/amethyst/amethyst/pull/1919
 [#1918]: https://github.com/amethyst/amethyst/pull/1918
+[#1933]: https://github.com/amethyst/amethyst/pull/1933
 
 ## [0.12.0] - 2019-07-30
 
