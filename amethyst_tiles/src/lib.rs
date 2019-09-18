@@ -9,6 +9,7 @@ mod morton;
 mod pass;
 
 pub mod iters;
+pub mod pod;
 
 pub use map::{Map, MapStorage, Tile, TileMap};
 pub use pass::{

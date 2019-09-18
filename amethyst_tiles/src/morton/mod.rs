@@ -104,6 +104,12 @@ pub struct Encoder2D {
 }
 impl CoordinateEncoder for Encoder2D {
     fn from_dimensions(x: u32, y: u32, z: u32) -> Self {
+        //#[cfg(debug_assertions)]
+        //{
+        //    assert_eq!(x % 16, 0);
+        //    assert_eq!(x % 16, 0);
+        //}
+
         Self {
             dimensions: (x, y, z),
             len: x * y,
@@ -178,34 +184,6 @@ mod tests {
     use super::*;
     use more_asserts::*;
     use rayon::prelude::*;
-
-    #[test]
-    fn morton_noncubic_inbounds() -> Result<(), failure::Error> {
-        let max_x = 128;
-        let max_y = 128;
-        let max_z = 12;
-
-        let max = max_x * max_y * max_z;
-
-        let encoder = Encoder2D::from_dimensions(max_x, max_y, max_z);
-
-        for x in 0..max_x {
-            for y in 0..max_y {
-                for z in 0..max_z {
-                    let morton = encoder.encode(x, y, z).unwrap();
-                    println!("morton={}", morton);
-                    assert_lt!(morton, max);
-                    let (dx, dy, dz) = encoder.decode(morton).unwrap();
-                    println!("got: {},{},{} vs. {},{},{}", x, y, z, dx, dy, dz);
-                    assert_eq!(dx, x);
-                    assert_eq!(dy, y);
-                    assert_eq!(dz, z);
-                }
-            }
-        }
-
-        Ok(())
-    }
 
     #[test]
     fn morton_intr_decode_encode_match() {

@@ -1,12 +1,12 @@
 ; SPIR-V
 ; Version: 1.0
 ; Generator: Google Shaderc over Glslang; 7
-; Bound: 144
+; Bound: 184
 ; Schema: 0
                OpCapability Shader
           %1 = OpExtInstImport "GLSL.std.450"
                OpMemoryModel Logical GLSL450
-               OpEntryPoint Vertex %main "main" %gl_VertexIndex %vertex %u_offset %v_offset %color %pos %dir_x %dir_y %depth %_
+               OpEntryPoint Vertex %main "main" %gl_VertexIndex %tile_coordinate %vertex %u_offset %v_offset %color %__0
                OpSource GLSL 450
                OpSourceExtension "GL_GOOGLE_cpp_style_line_directive"
                OpSourceExtension "GL_GOOGLE_include_directive"
@@ -14,6 +14,14 @@
                OpName %gl_VertexIndex "gl_VertexIndex"
                OpName %indexable "indexable"
                OpName %indexable_0 "indexable"
+               OpName %TileMapArgs "TileMapArgs"
+               OpMemberName %TileMapArgs 0 "proj"
+               OpMemberName %TileMapArgs 1 "view"
+               OpMemberName %TileMapArgs 2 "map_coordinate_transform"
+               OpMemberName %TileMapArgs 3 "map_transform"
+               OpMemberName %TileMapArgs 4 "sprite_dimensions"
+               OpName %_ ""
+               OpName %tile_coordinate "tile_coordinate"
                OpName %VertexData "VertexData"
                OpMemberName %VertexData 0 "tex_uv"
                OpMemberName %VertexData 1 "color"
@@ -21,44 +29,40 @@
                OpName %u_offset "u_offset"
                OpName %v_offset "v_offset"
                OpName %color "color"
-               OpName %pos "pos"
-               OpName %dir_x "dir_x"
-               OpName %dir_y "dir_y"
-               OpName %depth "depth"
                OpName %gl_PerVertex "gl_PerVertex"
                OpMemberName %gl_PerVertex 0 "gl_Position"
                OpMemberName %gl_PerVertex 1 "gl_PointSize"
                OpMemberName %gl_PerVertex 2 "gl_ClipDistance"
                OpMemberName %gl_PerVertex 3 "gl_CullDistance"
-               OpName %_ ""
-               OpName %ViewArgs "ViewArgs"
-               OpMemberName %ViewArgs 0 "proj"
-               OpMemberName %ViewArgs 1 "view"
                OpName %__0 ""
                OpDecorate %gl_VertexIndex BuiltIn VertexIndex
+               OpMemberDecorate %TileMapArgs 0 ColMajor
+               OpMemberDecorate %TileMapArgs 0 Offset 0
+               OpMemberDecorate %TileMapArgs 0 MatrixStride 16
+               OpMemberDecorate %TileMapArgs 1 ColMajor
+               OpMemberDecorate %TileMapArgs 1 Offset 64
+               OpMemberDecorate %TileMapArgs 1 MatrixStride 16
+               OpMemberDecorate %TileMapArgs 2 ColMajor
+               OpMemberDecorate %TileMapArgs 2 Offset 128
+               OpMemberDecorate %TileMapArgs 2 MatrixStride 16
+               OpMemberDecorate %TileMapArgs 3 ColMajor
+               OpMemberDecorate %TileMapArgs 3 Offset 192
+               OpMemberDecorate %TileMapArgs 3 MatrixStride 16
+               OpMemberDecorate %TileMapArgs 4 Offset 256
+               OpDecorate %TileMapArgs Block
+               OpDecorate %_ DescriptorSet 0
+               OpDecorate %_ Binding 0
+               OpDecorate %tile_coordinate Location 3
                OpDecorate %VertexData Block
                OpDecorate %vertex Location 0
-               OpDecorate %u_offset Location 3
-               OpDecorate %v_offset Location 4
-               OpDecorate %color Location 6
-               OpDecorate %pos Location 2
-               OpDecorate %dir_x Location 0
-               OpDecorate %dir_y Location 1
-               OpDecorate %depth Location 5
+               OpDecorate %u_offset Location 0
+               OpDecorate %v_offset Location 1
+               OpDecorate %color Location 2
                OpMemberDecorate %gl_PerVertex 0 BuiltIn Position
                OpMemberDecorate %gl_PerVertex 1 BuiltIn PointSize
                OpMemberDecorate %gl_PerVertex 2 BuiltIn ClipDistance
                OpMemberDecorate %gl_PerVertex 3 BuiltIn CullDistance
                OpDecorate %gl_PerVertex Block
-               OpMemberDecorate %ViewArgs 0 ColMajor
-               OpMemberDecorate %ViewArgs 0 Offset 0
-               OpMemberDecorate %ViewArgs 0 MatrixStride 16
-               OpMemberDecorate %ViewArgs 1 ColMajor
-               OpMemberDecorate %ViewArgs 1 Offset 64
-               OpMemberDecorate %ViewArgs 1 MatrixStride 16
-               OpDecorate %ViewArgs Block
-               OpDecorate %__0 DescriptorSet 0
-               OpDecorate %__0 Binding 0
        %void = OpTypeVoid
           %3 = OpTypeFunction %void
       %float = OpTypeFloat 32
@@ -81,33 +85,38 @@
 %gl_VertexIndex = OpVariable %_ptr_Input_int Input
 %_ptr_Function__arr_v2float_uint_4 = OpTypePointer Function %_arr_v2float_uint_4
     %v4float = OpTypeVector %float 4
+%mat4v4float = OpTypeMatrix %v4float 4
+%TileMapArgs = OpTypeStruct %mat4v4float %mat4v4float %mat4v4float %mat4v4float %v2float
+%_ptr_Uniform_TileMapArgs = OpTypePointer Uniform %TileMapArgs
+          %_ = OpVariable %_ptr_Uniform_TileMapArgs Uniform
+      %int_3 = OpConstant %int 3
+      %int_0 = OpConstant %int 0
+%_ptr_Uniform_v4float = OpTypePointer Uniform %v4float
+      %int_4 = OpConstant %int 4
+%_ptr_Uniform_float = OpTypePointer Uniform %float
+      %int_1 = OpConstant %int 1
+    %v3float = OpTypeVector %float 3
+%_ptr_Input_v3float = OpTypePointer Input %v3float
+%tile_coordinate = OpVariable %_ptr_Input_v3float Input
+%_ptr_Input_float = OpTypePointer Input %float
+     %uint_2 = OpConstant %uint 2
+    %float_1 = OpConstant %float 1
+      %int_2 = OpConstant %int 2
+%_ptr_Uniform_mat4v4float = OpTypePointer Uniform %mat4v4float
  %VertexData = OpTypeStruct %v2float %v4float
 %_ptr_Output_VertexData = OpTypePointer Output %VertexData
      %vertex = OpVariable %_ptr_Output_VertexData Output
-      %int_0 = OpConstant %int 0
 %_ptr_Input_v2float = OpTypePointer Input %v2float
    %u_offset = OpVariable %_ptr_Input_v2float Input
    %v_offset = OpVariable %_ptr_Input_v2float Input
 %_ptr_Output_v2float = OpTypePointer Output %v2float
-      %int_1 = OpConstant %int 1
 %_ptr_Input_v4float = OpTypePointer Input %v4float
       %color = OpVariable %_ptr_Input_v4float Input
 %_ptr_Output_v4float = OpTypePointer Output %v4float
-        %pos = OpVariable %_ptr_Input_v2float Input
-      %dir_x = OpVariable %_ptr_Input_v2float Input
-      %dir_y = OpVariable %_ptr_Input_v2float Input
-%_ptr_Input_float = OpTypePointer Input %float
-      %depth = OpVariable %_ptr_Input_float Input
-    %float_1 = OpConstant %float 1
 %_arr_float_uint_1 = OpTypeArray %float %uint_1
 %gl_PerVertex = OpTypeStruct %v4float %float %_arr_float_uint_1 %_arr_float_uint_1
 %_ptr_Output_gl_PerVertex = OpTypePointer Output %gl_PerVertex
-          %_ = OpVariable %_ptr_Output_gl_PerVertex Output
-%mat4v4float = OpTypeMatrix %v4float 4
-   %ViewArgs = OpTypeStruct %mat4v4float %mat4v4float
-%_ptr_Uniform_ViewArgs = OpTypePointer Uniform %ViewArgs
-        %__0 = OpVariable %_ptr_Uniform_ViewArgs Uniform
-%_ptr_Uniform_mat4v4float = OpTypePointer Uniform %mat4v4float
+        %__0 = OpVariable %_ptr_Output_gl_PerVertex Output
        %main = OpFunction %void None %3
           %5 = OpLabel
   %indexable = OpVariable %_ptr_Function__arr_v2float_uint_4 Function
@@ -119,40 +128,65 @@
                OpStore %indexable_0 %47
          %59 = OpAccessChain %_ptr_Function_float %indexable_0 %51 %uint_1
          %60 = OpLoad %float %59
-         %74 = OpLoad %v2float %u_offset
-         %76 = OpLoad %v2float %v_offset
-        %128 = OpCompositeExtract %float %74 0
-        %130 = OpCompositeExtract %float %74 1
-        %133 = OpFAdd %float %55 %float_0_5
-        %134 = OpExtInst %float %1 FMix %128 %130 %133
-        %136 = OpCompositeExtract %float %76 0
-        %138 = OpCompositeExtract %float %76 1
-        %141 = OpFAdd %float %60 %float_0_5
-        %142 = OpExtInst %float %1 FMix %136 %138 %141
-        %143 = OpCompositeConstruct %v2float %134 %142
-         %79 = OpAccessChain %_ptr_Output_v2float %vertex %int_0
-               OpStore %79 %143
-         %83 = OpLoad %v4float %color
-         %85 = OpAccessChain %_ptr_Output_v4float %vertex %int_1
-               OpStore %85 %83
-         %88 = OpLoad %v2float %pos
-         %91 = OpLoad %v2float %dir_x
-         %92 = OpVectorTimesScalar %v2float %91 %55
-         %93 = OpFAdd %v2float %88 %92
-         %96 = OpLoad %v2float %dir_y
-         %97 = OpVectorTimesScalar %v2float %96 %60
-         %98 = OpFAdd %v2float %93 %97
-        %104 = OpLoad %float %depth
-        %106 = OpCompositeExtract %float %98 0
-        %107 = OpCompositeExtract %float %98 1
-        %108 = OpCompositeConstruct %v4float %106 %107 %104 %float_1
-        %118 = OpAccessChain %_ptr_Uniform_mat4v4float %__0 %int_0
-        %119 = OpLoad %mat4v4float %118
-        %120 = OpAccessChain %_ptr_Uniform_mat4v4float %__0 %int_1
-        %121 = OpLoad %mat4v4float %120
-        %122 = OpMatrixTimesMatrix %mat4v4float %119 %121
-        %124 = OpMatrixTimesVector %v4float %122 %108
-        %125 = OpAccessChain %_ptr_Output_v4float %_ %int_0
-               OpStore %125 %124
+         %70 = OpAccessChain %_ptr_Uniform_v4float %_ %int_3 %int_0
+         %71 = OpLoad %v4float %70
+         %74 = OpAccessChain %_ptr_Uniform_float %_ %int_4 %uint_0
+         %75 = OpLoad %float %74
+         %76 = OpVectorTimesScalar %v4float %71 %75
+         %77 = OpVectorShuffle %v2float %76 %76 0 1
+         %80 = OpAccessChain %_ptr_Uniform_v4float %_ %int_3 %int_1
+         %81 = OpLoad %v4float %80
+         %82 = OpAccessChain %_ptr_Uniform_float %_ %int_4 %uint_1
+         %83 = OpLoad %float %82
+         %84 = OpFNegate %float %83
+         %85 = OpVectorTimesScalar %v4float %81 %84
+         %86 = OpVectorShuffle %v2float %85 %85 0 1
+         %93 = OpAccessChain %_ptr_Input_float %tile_coordinate %uint_0
+         %94 = OpLoad %float %93
+         %95 = OpAccessChain %_ptr_Input_float %tile_coordinate %uint_1
+         %96 = OpLoad %float %95
+         %97 = OpFNegate %float %96
+         %99 = OpAccessChain %_ptr_Input_float %tile_coordinate %uint_2
+        %100 = OpLoad %float %99
+        %102 = OpCompositeConstruct %v4float %94 %97 %100 %float_1
+        %106 = OpAccessChain %_ptr_Uniform_mat4v4float %_ %int_2
+        %107 = OpLoad %mat4v4float %106
+        %109 = OpMatrixTimesVector %v4float %107 %102
+        %111 = OpAccessChain %_ptr_Uniform_mat4v4float %_ %int_3
+        %112 = OpLoad %mat4v4float %111
+        %113 = OpVectorTimesMatrix %v4float %109 %112
+        %125 = OpLoad %v2float %u_offset
+        %127 = OpLoad %v2float %v_offset
+        %168 = OpCompositeExtract %float %125 0
+        %170 = OpCompositeExtract %float %125 1
+        %173 = OpFAdd %float %55 %float_0_5
+        %174 = OpExtInst %float %1 FMix %168 %170 %173
+        %176 = OpCompositeExtract %float %127 0
+        %178 = OpCompositeExtract %float %127 1
+        %181 = OpFAdd %float %60 %float_0_5
+        %182 = OpExtInst %float %1 FMix %176 %178 %181
+        %183 = OpCompositeConstruct %v2float %174 %182
+        %130 = OpAccessChain %_ptr_Output_v2float %vertex %int_0
+               OpStore %130 %183
+        %133 = OpLoad %v4float %color
+        %135 = OpAccessChain %_ptr_Output_v4float %vertex %int_1
+               OpStore %135 %133
+        %138 = OpVectorShuffle %v2float %113 %113 0 1
+        %141 = OpVectorTimesScalar %v2float %77 %55
+        %142 = OpFAdd %v2float %138 %141
+        %145 = OpVectorTimesScalar %v2float %86 %60
+        %146 = OpFAdd %v2float %142 %145
+        %150 = OpCompositeExtract %float %113 2
+        %151 = OpCompositeExtract %float %146 0
+        %152 = OpCompositeExtract %float %146 1
+        %153 = OpCompositeConstruct %v4float %151 %152 %150 %float_1
+        %158 = OpAccessChain %_ptr_Uniform_mat4v4float %_ %int_0
+        %159 = OpLoad %mat4v4float %158
+        %160 = OpAccessChain %_ptr_Uniform_mat4v4float %_ %int_1
+        %161 = OpLoad %mat4v4float %160
+        %162 = OpMatrixTimesMatrix %mat4v4float %159 %161
+        %164 = OpMatrixTimesVector %v4float %162 %153
+        %165 = OpAccessChain %_ptr_Output_v4float %__0 %int_0
+               OpStore %165 %164
                OpReturn
                OpFunctionEnd

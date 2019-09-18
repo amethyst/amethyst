@@ -17,7 +17,7 @@ use amethyst_rendy::{
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
     camera::{ActiveCamera, Camera, Projection},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::{IntoPod, SpriteArgs},
+    pod::IntoPod,
     rendy::{
         command::{QueueId, RenderPassEncoder},
         factory::Factory,
@@ -31,23 +31,29 @@ use amethyst_rendy::{
             pso::{self, ShaderStageFlags},
         },
         mesh::AsVertex,
-        shader::{Shader, ShaderSetBuilder, SpirvShader},
+        shader::{
+            Shader, ShaderKind, ShaderSetBuilder, SourceLanguage, SourceShaderInfo, SpirvShader,
+        },
     },
+    resources::Tint as TintComponent,
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
     submodules::{
-        gather::CameraGatherer, DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub,
+        gather::CameraGatherer, DynamicUniform, DynamicVertexBuffer, FlatEnvironmentSub, TextureId,
+        TextureSub,
     },
     types::{Backend, Texture},
     util,
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
+use glsl_layout::AsStd140;
 use std::marker::PhantomData;
 
 use crate::{
     iters::Region,
     map::{Map, MapStorage, Tile, TileMap},
+    pod::{TileArgs, TileMapArgs},
     CoordinateEncoder, MortonEncoder2D,
 };
 
@@ -55,27 +61,40 @@ use crate::{
 use thread_profiler::profile_scope;
 
 lazy_static::lazy_static! {
-    static ref TILES_VERTEX: SpirvShader = SpirvShader::new(
+    static ref VERTEX: SpirvShader = SpirvShader::new(
         include_bytes!("../compiled/tiles.vert.spv").to_vec(),
         ShaderStageFlags::VERTEX,
         "main",
     );
 
-    static ref TILES_FRAGMENT: SpirvShader = SpirvShader::new(
+    static ref FRAGMENT: SpirvShader = SpirvShader::new(
         include_bytes!("../compiled/tiles.frag.spv").to_vec(),
         ShaderStageFlags::FRAGMENT,
         "main",
     );
 
     static ref SHADERS: ShaderSetBuilder = ShaderSetBuilder::default()
-        .with_vertex(&*TILES_VERTEX).unwrap()
-        .with_fragment(&*TILES_FRAGMENT).unwrap();
+        .with_vertex(&*VERTEX).unwrap()
+        .with_fragment(&*FRAGMENT).unwrap();
+
 }
 
 /// Trait to describe how rendering tiles may be culled for the tilemap to render
 pub trait DrawTiles2DBounds: 'static + std::fmt::Debug + Send + Sync {
     /// Returns the region to render the tiles
     fn bounds<T: Tile, E: CoordinateEncoder>(map: &TileMap<T, E>, world: &World) -> Region;
+}
+
+/// Default bounds that returns the entire tilemap
+#[derive(Default, Debug)]
+pub struct DrawTiles2DBoundsDefault;
+impl DrawTiles2DBounds for DrawTiles2DBoundsDefault {
+    fn bounds<T: Tile, E: CoordinateEncoder>(map: &TileMap<T, E>, world: &World) -> Region {
+        Region::new(
+            Point3::new(0, 0, 0),
+            Point3::from(*map.dimensions() - Vector3::new(1, 1, 1)),
+        )
+    }
 }
 
 /// Draw opaque sprites without lighting.
@@ -108,7 +127,8 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
-        let env = FlatEnvironmentSub::new(factory)?;
+        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
+
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertexBuffer::new();
 
@@ -123,9 +143,9 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         Ok(Box::new(DrawTiles2D::<B, T, E, Z> {
             pipeline,
             pipeline_layout,
-            env,
             textures,
             vertex,
+            env,
             sprites: Default::default(),
             _marker: PhantomData::default(),
             change: Default::default(),
@@ -144,11 +164,12 @@ pub struct DrawTiles2D<
 > {
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
-    env: FlatEnvironmentSub<B>,
     textures: TextureSub<B>,
-    vertex: DynamicVertexBuffer<B, SpriteArgs>,
-    sprites: OrderedOneLevelBatch<TextureId, SpriteArgs>,
+    vertex: DynamicVertexBuffer<B, TileArgs>,
+    sprites: OrderedOneLevelBatch<TextureId, TileArgs>,
     change: util::ChangeDetection,
+
+    env: DynamicUniform<B, TileMapArgs>,
 
     #[derivative(Debug = "ignore")]
     _marker: PhantomData<(T, E, Z)>,
@@ -169,70 +190,85 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         profile_scope!("prepare");
 
         let mut changed = false;
-        let (sprite_sheet_storage, tex_storage, hiddens, tile_maps) = <(
-            Read<'_, AssetStorage<SpriteSheet>>,
-            Read<'_, AssetStorage<Texture>>,
-            ReadStorage<'_, Hidden>,
-            ReadStorage<'_, TileMap<T, E>>,
-        )>::fetch(world);
+        let (sprite_sheet_storage, tex_storage, hiddens, tile_maps, transforms) =
+            <(
+                Read<'_, AssetStorage<SpriteSheet>>,
+                Read<'_, AssetStorage<Texture>>,
+                ReadStorage<'_, Hidden>,
+                ReadStorage<'_, TileMap<T, E>>,
+                ReadStorage<'_, Transform>,
+            )>::fetch(world);
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
 
         sprites_ref.swap_clear();
 
-        self.env.process(factory, index, world);
+        let CameraGatherer { projview, .. } = CameraGatherer::gather(world);
 
-        if let Some((tile_map, _)) = (&tile_maps, !&hiddens).join().next() {
-            Z::bounds(tile_map, world)
+        let mut tilemap_args = TileMapArgs {
+            proj: projview.proj,
+            view: projview.view,
+            map_coordinate_transform: Default::default(),
+            map_transform: Default::default(),
+            sprite_dimensions: Default::default(),
+        };
+
+        if let Some((tile_map, _, transform)) =
+            (&tile_maps, !&hiddens, transforms.maybe()).join().next()
+        {
+            let map_coordinate_transform: [[f32; 4]; 4] = (*tile_map.transform()).into();
+
+            let map_transform: [[f32; 4]; 4] = if let Some(transform) = transform {
+                (*transform.global_matrix()).into()
+            } else {
+                Matrix4::identity().into()
+            };
+
+            tilemap_args.map_coordinate_transform = map_coordinate_transform.into();
+            tilemap_args.map_transform = map_transform.into();
+            tilemap_args.sprite_dimensions = [
+                tile_map.tile_dimensions().x as f32,
+                tile_map.tile_dimensions().y as f32,
+            ]
+            .into();
+
+            let region = Z::bounds(tile_map, world);
+            region
                 .iter()
                 .filter_map(|coord| {
-                    let tile = tile_map.get(&coord)?;
-                    let sprite_number = tile.sprite(coord, world)?;
-                    let mut world_transform = Transform::default();
-                    world_transform.set_translation(tile_map.to_world(&coord));
+                    let tile = tile_map.get(&coord).unwrap();
+                    if let Some(sprite_number) = tile.sprite(coord, world) {
+                        let (batch_data, texture) = {
+                            let sprite_sheet = sprite_sheet_storage
+                                .get(tile_map.sprite_sheet.as_ref().unwrap())?;
+                            if !tex_storage.contains(&sprite_sheet.texture) {
+                                return None;
+                            }
 
-                    let (batch_data, texture) = {
-                        let sprite_sheet =
-                            sprite_sheet_storage.get(tile_map.sprite_sheet.as_ref().unwrap())?;
-                        if !tex_storage.contains(&sprite_sheet.texture) {
-                            return None;
-                        }
+                            let color = tile.tint(coord, world);
 
-                        let sprite = &sprite_sheet.sprites[sprite_number];
+                            TileArgs::from_data(
+                                &tex_storage,
+                                &sprite_sheet,
+                                sprite_number,
+                                Some(&TintComponent(tile.tint(coord, world))),
+                                &coord,
+                            )
+                        }?;
 
-                        let transform = world_transform.matrix();
-                        let dir_x = transform.column(0) * sprite.width;
-                        let dir_y = transform.column(1) * -sprite.height;
-                        let pos = transform
-                            * Vector4::new(-sprite.offsets[0], -sprite.offsets[1], 0.0, 1.0);
+                        let (tex_id, this_changed) = textures_ref.insert(
+                            factory,
+                            world,
+                            texture,
+                            hal::image::Layout::ShaderReadOnlyOptimal,
+                        )?;
+                        changed = changed || this_changed;
 
-                        let color = tile.tint(coord, world);
-                        let (r, g, b, a) = color.into_components();
-
-                        Some((
-                            SpriteArgs {
-                                dir_x: dir_x.xy().into_pod(),
-                                dir_y: dir_y.xy().into_pod(),
-                                pos: pos.xy().into_pod(),
-                                u_offset: [sprite.tex_coords.left, sprite.tex_coords.right].into(),
-                                v_offset: [sprite.tex_coords.top, sprite.tex_coords.bottom].into(),
-                                depth: pos.z,
-                                tint: [r, g, b, a].into(),
-                            },
-                            &sprite_sheet.texture,
-                        ))
-                    }?;
-
-                    let (tex_id, this_changed) = textures_ref.insert(
-                        factory,
-                        world,
-                        texture,
-                        hal::image::Layout::ShaderReadOnlyOptimal,
-                    )?;
-                    changed = changed || this_changed;
-
-                    Some((tex_id, batch_data))
+                        Some((tex_id, batch_data))
+                    } else {
+                        None
+                    }
                 })
                 .for_each_group(|tex_id, batch_data| {
                     sprites_ref.insert(tex_id, batch_data.drain(..))
@@ -251,6 +287,8 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 self.sprites.count() as u64,
                 Some(self.sprites.data()),
             );
+
+            self.env.write(factory, index, tilemap_args.std140());
         }
 
         self.change.prepare_result(index, changed)
@@ -269,6 +307,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
+
         self.vertex.bind(index, 0, 0, &mut encoder);
         for (&tex, range) in self.sprites.iter() {
             if self.textures.loaded(tex) {
@@ -304,18 +343,16 @@ fn build_tiles_pipeline<B: Backend>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    let shader_vertex = unsafe { TILES_VERTEX.module(factory).unwrap() };
-    let shader_fragment = unsafe { TILES_FRAGMENT.module(factory).unwrap() };
+    //let shader_vertex = unsafe { VERTEX.module(factory).unwrap() };
+    //let shader_fragment = unsafe { FRAGMENT.module(factory).unwrap() };
+    let mut shaders = SHADERS.build(factory, Default::default())?;
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(SpriteArgs::vertex(), pso::VertexInputRate::Instance(1))])
+                .with_vertex_desc(&[(TileArgs::vertex(), pso::VertexInputRate::Instance(1))])
                 .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
-                .with_shaders(util::simple_shader_set(
-                    &shader_vertex,
-                    Some(&shader_fragment),
-                ))
+                .with_shaders(shaders.raw()?)
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
@@ -330,10 +367,7 @@ fn build_tiles_pipeline<B: Backend>(
         )
         .build(factory, None);
 
-    unsafe {
-        factory.destroy_shader_module(shader_vertex);
-        factory.destroy_shader_module(shader_fragment);
-    }
+    shaders.dispose(factory);
 
     match pipes {
         Err(e) => {
@@ -343,16 +377,6 @@ fn build_tiles_pipeline<B: Backend>(
             Err(e)
         }
         Ok(mut pipes) => Ok((pipes.remove(0), pipeline_layout)),
-    }
-}
-
-/// Default bounds that returns the entire tilemap
-// TODO: This should at least return Z-perpendicular bounds for ortho
-#[derive(Default, Debug)]
-pub struct DrawTiles2DBoundsDefault;
-impl DrawTiles2DBounds for DrawTiles2DBoundsDefault {
-    fn bounds<T: Tile, E: CoordinateEncoder>(map: &TileMap<T, E>, world: &World) -> Region {
-        Region::new(Point3::new(0, 0, 0), Point3::from(*map.dimensions()))
     }
 }
 

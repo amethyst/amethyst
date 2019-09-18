@@ -150,7 +150,7 @@ impl Iterator for RegionLinearIter {
             return None;
         }
 
-        if self.track.x >= self.region.max.x - 1 {
+        if self.track.x >= self.region.max.x {
             self.track.y += 1;
             self.track.x = self.region.min.x;
         } else {

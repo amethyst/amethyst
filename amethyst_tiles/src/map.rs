@@ -49,6 +49,9 @@ pub trait Map {
     /// maps `origin` and `tile_dimensions` respectively.
     fn to_tile(&self, coord: &Vector3<f32>) -> Option<Point3<u32>>;
 
+    /// Returns the `Matrix4` transform which was created for transforming between world and tile coordinate spaces.
+    fn transform(&self) -> &Matrix4<f32>;
+
     /// Call the underlying coordinate encoder for this map instance, which should always reduce to a u32 integer.
     fn encode(&self, coord: &Point3<u32>) -> Option<u32>;
 
@@ -129,22 +132,9 @@ impl<T: Tile, E: CoordinateEncoder> TileMap<T, E> {
         let origin = Point3::new(0.0, 0.0, 0.0);
         let transform = create_transform(&dimensions, &tile_dimensions);
 
-        // TODO: this is currently required with mortons
-        // Some hilbert methods we can get around this
-        //assert!(dimensions.x == dimensions.y && dimensions.x == dimensions.z);
-
         let size = (dimensions.x * dimensions.y * dimensions.z) as usize;
         let mut data = Vec::with_capacity(size);
         data.resize_with(size, T::default);
-
-        /*let data = unsafe {
-            use std::alloc::{alloc_zeroed, Layout};
-
-            let layout = Layout::from_size_align(size * std::mem::size_of::<T>(), 1).unwrap();
-            let buffer = alloc_zeroed(layout);
-
-            Vec::<T>::from_raw_parts(buffer as *mut T, size, size)
-        };*/
 
         let encoder = E::from_dimensions(dimensions.x, dimensions.y, dimensions.z);
 
@@ -209,19 +199,28 @@ impl<T: Tile, E: CoordinateEncoder> Map for TileMap<T, E> {
         ret
     }
 
+    #[inline]
+    fn transform(&self) -> &Matrix4<f32> {
+        &self.transform
+    }
+
+    #[inline]
     fn encode(&self, coord: &Point3<u32>) -> Option<u32> {
         self.encode_raw(&(coord.x, coord.y, coord.z))
     }
 
+    #[inline]
     fn encode_raw(&self, coord: &(u32, u32, u32)) -> Option<u32> {
         self.encoder.encode(coord.0, coord.1, coord.2)
     }
 
+    #[inline]
     fn decode(&self, morton: u32) -> Option<Point3<u32>> {
         let coords = self.encoder.decode(morton)?;
         Some(Point3::new(coords.0, coords.1, coords.2))
     }
 
+    #[inline]
     fn decode_raw(&self, morton: u32) -> Option<(u32, u32, u32)> {
         self.encoder.decode(morton)
     }
@@ -266,7 +265,6 @@ impl<T: Tile, E: CoordinateEncoder> MapStorage<T> for TileMap<T, E> {
     }
 }
 
-#[inline]
 #[allow(clippy::cast_precision_loss)] // TODO
 fn create_transform(map_dimensions: &Vector3<u32>, tile_dimensions: &Vector3<u32>) -> Matrix4<f32> {
     let tile_dimensions = Vector3::new(
@@ -284,14 +282,12 @@ fn create_transform(map_dimensions: &Vector3<u32>, tile_dimensions: &Vector3<u32
     Matrix4::new_translation(&half_dimensions).append_nonuniform_scaling(&tile_dimensions)
 }
 
-#[inline]
-#[allow(clippy::cast_precision_loss)] // TODO
+#[allow(clippy::cast_precision_loss)]
 fn to_world(transform: &Matrix4<f32>, coord: &Point3<u32>) -> Vector3<f32> {
     let coord_f = Point3::new(coord.x as f32, -1.0 * coord.y as f32, coord.z as f32);
     transform.transform_point(&coord_f).coords
 }
 
-#[inline]
 fn to_tile(transform: &Matrix4<f32>, coord: &Vector3<f32>) -> Option<Point3<u32>> {
     let point = Point3::from(*coord);
 
@@ -342,7 +338,7 @@ mod tests {
 
     #[test]
     pub fn tilemap_coord_conversions() {
-        let transform = create_transform(&Point3::new(64, 64, 64), &Point3::new(10, 10, 1));
+        let transform = create_transform(&Vector3::new(64, 64, 64), &Vector3::new(10, 10, 1));
 
         test_coord(
             &transform,
