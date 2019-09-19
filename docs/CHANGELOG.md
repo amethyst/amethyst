@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `CameraOrtho::new` takes in `CameraOrthoWorldCoordinates`, which can be set to custom dimensions. ([#1916])
 * `Camera::screen_ray` method added, returning an appropriate `Ray` structure ([#1918]).
 * `amethyst_test`: `InMemorySource` and `WaitForLoad` helpers ([#1933]).
+* Animations are available with `UiTransform`s. ([#1935])
 
 ### Changed
 
