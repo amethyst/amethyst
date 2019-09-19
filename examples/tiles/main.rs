@@ -159,17 +159,17 @@ impl<'s> System<'s> for CameraSwitchSystem {
                 .and_then(|a| camera_join.get(a, &entities))
                 .or_else(|| camera_join.next())
                 .unwrap();
-            let old_camera_entity = old_camera_entity.clone();
+            let old_camera_entity = old_camera_entity;
 
-            let new_parent = old_parent.entity.clone();
+            let new_parent = old_parent.entity;
             let new_camera = match old_camera.projection() {
-                &Projection::Orthographic(_) => {
+                Projection::Orthographic(_) => {
                     Camera::standard_3d(dimensions.width(), dimensions.height())
                 }
-                &Projection::Perspective(_) => {
+                Projection::Perspective(_) => {
                     Camera::standard_2d(dimensions.width(), dimensions.height())
                 }
-                &Projection::CustomMatrix(_) => unimplemented!(),
+                Projection::CustomMatrix(_) => unimplemented!(),
             };
 
             lazy.exec_mut(move |w| {
@@ -245,7 +245,7 @@ fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Sprit
 // Initialize a sprite as a reference point at a fixed location
 fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
     let mut transform = Transform::default();
-    transform.set_translation_xyz(0.0, 0.0, 0.0);
+    transform.set_translation_xyz(0.0, 0.0, 0.1);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
