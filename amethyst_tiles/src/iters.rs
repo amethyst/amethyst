@@ -56,7 +56,7 @@ impl<T: AsRef<Region>> From<T> for MortonRegion {
 }
 
 /// 3D cubic region space of a 3D coordinate space,
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Region {
     /// The "lower-right" coordinate of this `Region`.
     pub min: Point3<u32>,
