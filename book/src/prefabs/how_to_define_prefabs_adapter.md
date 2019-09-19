@@ -82,14 +82,14 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
-        # extern crate serde;
+    # extern crate serde;
     #
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     ecs::{storage::DenseVecStorage, Component, Entity, WriteStorage},
     #     Error,
     # };
-        # use serde::{Deserialize, Serialize};
+    # use serde::{Deserialize, Serialize};
     #
     # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
     # pub struct Position(pub f32, pub f32, pub f32);

@@ -23,10 +23,10 @@ Component     | Serialized representation             | Example(s)            | 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-        #
+    #
     # use amethyst::ecs::{storage::DenseVecStorage, Component};
     # use serde::{Deserialize, Serialize};
-        #
+    #
     #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
     pub struct Position(pub f32, pub f32, pub f32);
     ```
@@ -40,10 +40,10 @@ Component     | Serialized representation             | Example(s)            | 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-        #
+    #
     # use amethyst::ecs::{storage::DenseVecStorage, Component};
     # use serde::{Deserialize, Serialize};
-        #
+    #
     # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
     # pub struct Position {
     #     pub x: f32,
@@ -77,13 +77,13 @@ Component     | Serialized representation             | Example(s)            | 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst_audio;
     # extern crate amethyst_core;
-        #
+    #
     # use amethyst_audio::output::Output;
     # use amethyst_core::{
     #     math::Point3,
     #     ecs::{storage::HashMapStorage, Component},
     # };
-        #
+    #
     #[derive(Debug, Component)]
     # #[storage(HashMapStorage)]
     pub struct AudioListener {

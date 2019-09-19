@@ -33,7 +33,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-        # use amethyst::{
+    # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
     #     derive::PrefabData,
@@ -45,7 +45,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     Error,
     # };
     # use serde::{Deserialize, Serialize};
-        #
+    #
     #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
     #[serde(deny_unknown_fields)]
@@ -66,7 +66,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-        # use amethyst::{
+    # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
     #     derive::PrefabData,
@@ -78,7 +78,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     Error,
     # };
     # use serde::{Deserialize, Serialize};
-        #
+    #
     #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
     #[serde(deny_unknown_fields)]
@@ -115,7 +115,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-        # use amethyst::{
+    # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
     #     derive::PrefabData,
@@ -153,7 +153,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-        # use amethyst::{
+    # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
     #     derive::PrefabData,

@@ -52,7 +52,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     # extern crate amethyst;
     # extern crate derivative;
     # extern crate serde;
-        #
+    #
     # use amethyst::{
     #     assets::{Prefab, PrefabData},
     #     derive::PrefabData,
@@ -65,7 +65,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     # };
     # use derivative::Derivative;
     # use serde::{Deserialize, Serialize};
-        #
+    #
     #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
     #[serde(deny_unknown_fields)]
