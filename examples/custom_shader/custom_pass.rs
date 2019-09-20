@@ -257,7 +257,6 @@ fn build_custom_pipeline<B: Backend>(
 /// A [RenderPlugin] for our custom plugin
 #[derive(Default, Debug)]
 pub struct RenderCustom {
-    target: Target,
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderCustom {
@@ -278,7 +277,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
         _factory: &mut Factory<B>,
         _world: &World,
     ) -> Result<(), Error> {
-        plan.extend_target(self.target, |ctx| {
+        plan.extend_target(Target::Main, |ctx| {
             // Add our Description
             ctx.add(RenderOrder::Transparent, DrawCustomDesc::new().builder())?;
             Ok(())
