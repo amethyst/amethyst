@@ -3,6 +3,7 @@
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::math::Point3;
 use amethyst_rendy::{
+    pod::IntoPod,
     rendy::{
         hal::format::Format,
         mesh::{AsVertex, VertexFormat},
@@ -97,10 +98,7 @@ impl TileArgs {
             Self {
                 u_offset: [sprite.tex_coords.left, sprite.tex_coords.right].into(),
                 v_offset: [sprite.tex_coords.top, sprite.tex_coords.bottom].into(),
-                tint: tint.map_or([1.0; 4].into(), |t| {
-                    let (r, g, b, a) = t.0.into_components();
-                    [r, g, b, a].into()
-                }),
+                tint: tint.map_or([1.0; 4].into(), |t| t.0.into_pod()),
                 tile_coordinate: [tile_coordinate.x, tile_coordinate.y, tile_coordinate.z].into(),
             },
             &sprite_sheet.texture,

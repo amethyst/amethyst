@@ -96,10 +96,7 @@ impl VertexArgs {
         let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*transform.global_matrix()).into();
         VertexArgs {
             model: model.into(),
-            tint: tint.map_or([1.0; 4].into(), |t| {
-                let (r, g, b, a) = t.0.into_components();
-                [r, g, b, a].into()
-            }),
+            tint: tint.map_or([1.0; 4].into(), |t| t.0.into_pod()),
         }
     }
 }
@@ -160,10 +157,7 @@ impl SkinnedVertexArgs {
         let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*transform.global_matrix()).into();
         SkinnedVertexArgs {
             model: model.into(),
-            tint: tint.map_or([1.0; 4].into(), |t| {
-                let (r, g, b, a) = t.0.into_components();
-                [r, g, b, a].into()
-            }),
+            tint: tint.map_or([1.0; 4].into(), |t| t.0.into_pod()),
             joints_offset,
         }
     }
