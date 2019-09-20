@@ -46,20 +46,26 @@ lazy_static::lazy_static! {
 
 /// Example code of using a custom shader
 ///
+/// Requires "shader-compiler" flag
+///
 /// ''' rust
-/// lazy_static::lazy_static! {
-///     static ref VERTEX_SRC: SpirvShader = PathBufShaderInfo::new(
+/// use std::path::PathBuf;
+/// use amethyst::renderer::rendy::shader::{PathBufShaderInfo, ShaderKind, SourceLanguage};
+///
+///  lazy_static::lazy_static! {
+///     static ref VERTEX: SpirvShader = PathBufShaderInfo::new(
 ///         PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/src/vertex/custom.vert")),
 ///         ShaderKind::Vertex,
 ///         SourceLanguage::GLSL,
-///         "main",
+///        "main",
 ///     ).precompile().unwrap();
 ///
-///     static ref VERTEX: SpirvShader = SpirvShader::new(
-///         (*VERTEX_SRC).spirv().unwrap().to_vec(),
-///         (*VERTEX_SRC).stage(),
+///     static ref FRAGMENT: SpirvShader = PathBufShaderInfo::new(
+///         PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/examples/assets/shaders/src/fragment/custom.frag")),
+///         ShaderKind::Fragment,
+///         SourceLanguage::GLSL,
 ///         "main",
-///     );
+///     ).precompile().unwrap();
 /// }
 /// '''
 
