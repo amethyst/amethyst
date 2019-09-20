@@ -24,7 +24,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
         Error,
     };
     use serde::{Deserialize, Serialize};
-        ```
+    ```
 
 3. Define the aggregate prefab data type.
 
