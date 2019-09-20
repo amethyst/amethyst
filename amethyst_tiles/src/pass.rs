@@ -241,21 +241,29 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                     let tile = tile_map.get(&coord).unwrap();
                     if let Some(sprite_number) = tile.sprite(coord, world) {
                         let (batch_data, texture) = {
-                            let sprite_sheet = sprite_sheet_storage
-                                .get(tile_map.sprite_sheet.as_ref().unwrap())?;
-                            if !tex_storage.contains(&sprite_sheet.texture) {
-                                return None;
+                            if let Some(sprite_sheet_handle) = tile_map.sprite_sheet.as_ref() {
+                                if let Some(sprite_sheet) =
+                                    sprite_sheet_storage.get(sprite_sheet_handle)
+                                {
+                                    if !tex_storage.contains(&sprite_sheet.texture) {
+                                        return None;
+                                    }
+
+                                    let color = tile.tint(coord, world);
+
+                                    TileArgs::from_data(
+                                        &tex_storage,
+                                        &sprite_sheet,
+                                        sprite_number,
+                                        Some(&TintComponent(tile.tint(coord, world))),
+                                        &coord,
+                                    )
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
                             }
-
-                            let color = tile.tint(coord, world);
-
-                            TileArgs::from_data(
-                                &tex_storage,
-                                &sprite_sheet,
-                                sprite_number,
-                                Some(&TintComponent(tile.tint(coord, world))),
-                                &coord,
-                            )
                         }?;
 
                         let (tex_id, this_changed) = textures_ref.insert(
@@ -266,10 +274,9 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                         )?;
                         changed = changed || this_changed;
 
-                        Some((tex_id, batch_data))
-                    } else {
-                        None
+                        return Some((tex_id, batch_data));
                     }
+                    None
                 })
                 .for_each_group(|tex_id, batch_data| {
                     sprites_ref.insert(tex_id, batch_data.drain(..))
@@ -361,7 +368,7 @@ fn build_tiles_pipeline<B: Backend>(
                 )])
                 .with_depth_test(pso::DepthTest::On {
                     fun: pso::Comparison::Less,
-                    write: true,
+                    write: false,
                 }),
         )
         .build(factory, None);

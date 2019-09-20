@@ -1,7 +1,7 @@
 #![allow(unused_variables)]
 
 use crate::CoordinateEncoder;
-use amethyst_assets::Handle;
+use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
     ecs::{Component, HashMapStorage, World},
     math::{Matrix4, Point3, Vector3},
@@ -111,6 +111,11 @@ pub struct TileMap<T: Tile, E: CoordinateEncoder = crate::MortonEncoder2D> {
 
     #[serde(skip)]
     pub(crate) encoder: E,
+}
+impl<T: Tile, E: CoordinateEncoder> Asset for TileMap<T, E> {
+    const NAME: &'static str = "tiles::map";
+    type Data = Self;
+    type HandleStorage = HashMapStorage<Handle<Self>>;
 }
 impl<T: Tile, E: CoordinateEncoder> Component for TileMap<T, E> {
     type Storage = HashMapStorage<Self>;
