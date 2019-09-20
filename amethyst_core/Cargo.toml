@@ -25,7 +25,7 @@ log = "0.4.6"
 num-traits = "0.2.0"
 rayon = "1.1.0"
 serde = { version = "1", features = ["derive"] }
-specs = { version = "0.15", default-features = false, features = ["shred-derive"] }
+specs = { version = "0.15.1", default-features = false, features = ["shred-derive", "specs-derive"] }
 specs-hierarchy = { version = "0.5.1", default-features = false }
 getset = "0.0.7"
 derive-new = "0.5.6"

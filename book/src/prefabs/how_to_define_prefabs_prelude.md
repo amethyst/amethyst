@@ -23,11 +23,9 @@ Component     | Serialized representation             | Example(s)            | 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-    # extern crate specs_derive;
     #
     # use amethyst::ecs::{storage::DenseVecStorage, Component};
     # use serde::{Deserialize, Serialize};
-    # use specs_derive::Component;
     #
     #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
     pub struct Position(pub f32, pub f32, pub f32);
@@ -42,11 +40,9 @@ Component     | Serialized representation             | Example(s)            | 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-    # extern crate specs_derive;
     #
     # use amethyst::ecs::{storage::DenseVecStorage, Component};
     # use serde::{Deserialize, Serialize};
-    # use specs_derive::Component;
     #
     # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
     # pub struct Position {
@@ -81,14 +77,12 @@ Component     | Serialized representation             | Example(s)            | 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst_audio;
     # extern crate amethyst_core;
-    # extern crate specs_derive;
     #
     # use amethyst_audio::output::Output;
     # use amethyst_core::{
     #     math::Point3,
-    #     ecs::{prelude::Component, storage::HashMapStorage},
+    #     ecs::{storage::HashMapStorage, Component},
     # };
-    # use specs_derive::Component;
     #
     #[derive(Debug, Component)]
     # #[storage(HashMapStorage)]
