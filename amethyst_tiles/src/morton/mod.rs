@@ -186,9 +186,6 @@ mod tests {
         let val1 = encode(123, 456, 789);
         let val2 = encode(200, 200, 200);
 
-        println!("val1={}", val1);
-        println!("val2={}", val2);
-
         assert_eq!(min(zero, one), zero);
         assert_eq!(min(val1, val2), val1);
         assert_eq!(min(one, val2), one);

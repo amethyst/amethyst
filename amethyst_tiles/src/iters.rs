@@ -4,7 +4,7 @@ use crate::morton;
 use amethyst_core::math::Point3;
 
 /// Axis aligned quantized region of space represented in tile coordinates of `u32`. This behaves
-/// like a bounding box volume with `min` and `max` coordinates for iteration. This iterators limits are *inclusive*,
+/// like a bounding box volume with `min` and `max` coordinates for iteration. This regions limits are *inclusive*,
 /// in that it includes the max values in its iteration.
 ///
 /// The values of this region are stored and computed as morton values instead of `Vector3` values, allowing for
@@ -23,10 +23,16 @@ impl MortonRegion {
     /// Check if this `MortonRegion` contains a given morton coordinate.
     #[inline]
     pub fn contains(self, morton: u32) -> bool {
-        let m1 = morton::min(self.min, morton) != morton;
-        let m2 = morton::max(self.max, morton) != morton;
+        let target = morton::decode(morton);
+        let min = morton::decode(self.min);
+        let max = morton::decode(self.max);
 
-        m1 && m2
+        target.0 >= min.0
+            && target.0 <= max.0
+            && target.1 >= min.1
+            && target.1 <= max.1
+            && target.2 >= min.2
+            && target.2 <= max.2
     }
 }
 impl PartialOrd for MortonRegion {
@@ -61,7 +67,7 @@ impl<T: AsRef<Region>> From<T> for MortonRegion {
 }
 
 /// Axis aligned quantized region of space represented in tile coordinates of `u32`. This behaves
-/// like a bounding box volume with `min` and `max` coordinates for iteration. This iterators limits are *inclusive*,
+/// like a bounding box volume with `min` and `max` coordinates for iteration. This regions limits are *inclusive*,
 /// in that it includes the max values in its iteration.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Region {
@@ -134,6 +140,7 @@ impl<T: AsRef<MortonRegion>> From<T> for Region {
 }
 
 /// Linear iterator across a 3D coordinate space.
+/// This iterator is inclusive of minimum and maximum coordinates.
 pub struct RegionLinearIter {
     track: Point3<u32>,
     region: Region,
@@ -179,6 +186,46 @@ impl Iterator for RegionLinearIter {
 #[allow(clippy::shadow_unrelated)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn morton_region_edge_cases() {
+        let region = Region::new(Point3::new(0, 0, 0), Point3::new(64, 64, 64));
+        let morton_region = MortonRegion::new(
+            morton::encode(region.min.x, region.min.y, region.min.z),
+            morton::encode(region.max.x, region.max.y, region.max.z),
+        );
+
+        // min/max corners
+        assert!(morton_region.contains(morton::encode(0, 0, 0)));
+        assert!(morton_region.contains(morton::encode(64, 64, 64)));
+
+        // edges
+        assert!(morton_region.contains(morton::encode(64, 0, 0)));
+        assert!(morton_region.contains(morton::encode(0, 64, 0)));
+        assert!(morton_region.contains(morton::encode(0, 0, 64)));
+
+        assert!(morton_region.contains(morton::encode(64, 64, 0)));
+        assert!(morton_region.contains(morton::encode(0, 64, 64)));
+        assert!(morton_region.contains(morton::encode(64, 0, 64)));
+    }
+
+    #[test]
+    fn region_edge_cases() {
+        let region = Region::new(Point3::new(0, 0, 0), Point3::new(64, 64, 64));
+
+        // min/max corners
+        assert!(region.contains(&Point3::new(0, 0, 0)));
+        assert!(region.contains(&Point3::new(64, 64, 64)));
+
+        // edges
+        assert!(region.contains(&Point3::new(64, 0, 0)));
+        assert!(region.contains(&Point3::new(0, 64, 0)));
+        assert!(region.contains(&Point3::new(0, 0, 64)));
+
+        assert!(region.contains(&Point3::new(64, 64, 0)));
+        assert!(region.contains(&Point3::new(0, 64, 64)));
+        assert!(region.contains(&Point3::new(64, 0, 64)));
+    }
 
     #[test]
     fn region_morton_match() {
