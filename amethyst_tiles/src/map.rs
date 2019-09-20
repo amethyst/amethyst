@@ -10,7 +10,7 @@ use amethyst_rendy::{palette::Srgba, SpriteSheet};
 
 /// Trait providing generic rendering functionality to all tiles. Using a tilemap requires you to provide a `Tile` type,
 /// which must implement this trait to provide the `RenderPass` with the appropriate sprite and tint values.
-pub trait Tile: 'static + Send + Sync + Default {
+pub trait Tile: 'static + Clone + Send + Sync + Default {
     /// Takes an immutable reference to world to process this sprite and return its sprite.
     fn sprite(&self, coordinates: Point3<u32>, world: &World) -> Option<usize> {
         None

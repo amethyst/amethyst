@@ -10,6 +10,7 @@ mod pass;
 
 pub mod iters;
 pub mod pod;
+pub mod prefab;
 
 pub use iters::{MortonRegion, Region};
 pub use map::{Map, MapStorage, Tile, TileMap};
