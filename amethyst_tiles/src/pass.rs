@@ -95,7 +95,7 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsDefault {
     }
 }
 
-/// Draw opaque sprites without lighting.
+/// Draw opaque tilemap without lighting.
 #[derive(Clone, PartialEq, Derivative)]
 #[derivative(Default(bound = ""), Debug(bound = ""))]
 pub struct DrawTiles2DDesc<
@@ -152,6 +152,10 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
 }
 
 /// `RenderGroup` providing culling, drawing and transparency functionality for 3D `TileMap` components.
+///
+/// Notes on use:
+/// - Due to the use of transparency and Z-order, the `TileMap` entity must be viewed from a Z-up perspective
+/// for  transparency to occur correctly. If viewed from "underneath", transparency ordering issues will occur.
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
 pub struct DrawTiles2D<
@@ -213,9 +217,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
             sprite_dimensions: Default::default(),
         };
 
-        if let Some((tile_map, _, transform)) =
-            (&tile_maps, !&hiddens, transforms.maybe()).join().next()
-        {
+        for (tile_map, _, transform) in (&tile_maps, !&hiddens, transforms.maybe()).join() {
             let map_coordinate_transform: [[f32; 4]; 4] = (*tile_map.transform()).into();
 
             let map_transform: [[f32; 4]; 4] = if let Some(transform) = transform {
@@ -342,8 +344,6 @@ fn build_tiles_pipeline<B: Backend>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    //let shader_vertex = unsafe { VERTEX.module(factory).unwrap() };
-    //let shader_fragment = unsafe { FRAGMENT.module(factory).unwrap() };
     let mut shaders = SHADERS.build(factory, Default::default())?;
 
     let pipes = PipelinesBuilder::new()

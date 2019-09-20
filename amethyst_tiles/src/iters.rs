@@ -3,14 +3,19 @@
 use crate::morton;
 use amethyst_core::math::Point3;
 
-/// Cubic region stored and handled as a Morton value.
+/// Axis aligned quantized region of space represented in tile coordinates of `u32`. This behaves
+/// like a bounding box volume with `min` and `max` coordinates for iteration. This iterators limits are *inclusive*,
+/// in that it includes the max values in its iteration.
+///
+/// The values of this region are stored and computed as morton values instead of `Vector3` values, allowing for
+/// fast BMI2 instrinsic use for iteration and comparison.
 #[derive(Copy, Clone, Default, Debug, Eq, PartialEq, Hash)]
 pub struct MortonRegion {
     min: u32,
     max: u32,
 }
 impl MortonRegion {
-    /// Create a new `MortonRegion` iterator.
+    /// Create a new `MortonRegion` region.
     pub fn new(min: u32, max: u32) -> Self {
         Self { min, max }
     }
@@ -55,7 +60,9 @@ impl<T: AsRef<Region>> From<T> for MortonRegion {
     }
 }
 
-/// 3D cubic region space of a 3D coordinate space,
+/// Axis aligned quantized region of space represented in tile coordinates of `u32`. This behaves
+/// like a bounding box volume with `min` and `max` coordinates for iteration. This iterators limits are *inclusive*,
+/// in that it includes the max values in its iteration.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Region {
     /// The "lower-right" coordinate of this `Region`.
@@ -86,12 +93,12 @@ impl Region {
     /// Check if this cube contains the provided coordinate.
     #[inline]
     pub fn contains(&self, target: &Point3<u32>) -> bool {
-        (target.x >= self.min.x
+        target.x >= self.min.x
             && target.x <= self.max.x
             && target.y >= self.min.y
             && target.y <= self.max.y
             && target.z >= self.min.z
-            && target.z <= self.max.z)
+            && target.z <= self.max.z
     }
 
     /// Check if this `Region` intersects with the provided `Region`

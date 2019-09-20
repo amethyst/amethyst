@@ -13,7 +13,7 @@ layout(std140, set = 0, binding = 0) uniform TileMapArgs {
 layout(location = 0) in vec2 u_offset;
 layout(location = 1) in vec2 v_offset;
 layout(location = 2) in vec4 color;
-layout(location = 3) in vec3 tile_coordinate;
+layout(location = 3) in uvec3 tile_coordinate;
 
 layout(location = 0) out VertexData {
     vec2 tex_uv;

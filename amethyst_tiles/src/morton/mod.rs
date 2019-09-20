@@ -1,6 +1,31 @@
 mod luts;
 use crate::CoordinateEncoder;
 use luts::*;
+use std::cmp::Ordering;
+
+#[inline]
+#[cfg(target_feature = "bmi2")]
+pub fn encode(x: u32, y: u32, z: u32) -> u32 {
+    morton_encode_intr_3d(x, y, z)
+}
+
+#[inline]
+#[cfg(target_feature = "bmi2")]
+pub fn decode(morton: u32) -> (u32, u32, u32) {
+    morton_decode_intr_3d(morton)
+}
+
+#[inline]
+#[cfg(not(target_feature = "bmi2"))]
+pub fn encode(x: u32, y: u32, z: u32) -> u32 {
+    morton_encode_lut(x, y, z)
+}
+
+#[inline]
+#[cfg(not(target_feature = "bmi2"))]
+pub fn decode(morton: u32) -> (u32, u32, u32) {
+    morton_decode_lut(morton)
+}
 
 #[inline]
 #[allow(clippy::cast_possible_truncation)]
@@ -54,26 +79,14 @@ pub fn morton_decode_intr_3d(morton: u32) -> (u32, u32, u32) {
     )
 }
 
-#[inline]
-#[cfg(target_feature = "bmi2")]
-pub fn encode(x: u32, y: u32, z: u32) -> u32 {
-    morton_encode_intr_3d(x, y, z)
-}
-
-#[inline]
-#[cfg(target_feature = "bmi2")]
-pub fn decode(morton: u32) -> (u32, u32, u32) {
-    morton_decode_intr_3d(morton)
-}
-
 /// 3D Morton (Z-Order) encoding implementation.
 /// This implementation uses the `bmi2` CPU intrinsic if it is available via the `bitintr` crate. If this instruction
 /// set is not available, it falls back on simpler computation methods. Using these CPU instruction optimizations requires
 /// `RUSTFLAGS=-C target-feature=+bmi2`. If this target feature is not provided, a LUT (Look Up Table) implementation
 /// of Morton encoding is used, considered extremely fast but still slightly slower than BMI2 intrinsics.
 #[derive(Default, Clone)]
-pub struct Encoder;
-impl CoordinateEncoder for Encoder {
+pub struct MortonEncoder;
+impl CoordinateEncoder for MortonEncoder {
     fn from_dimensions(_: u32, _: u32, _: u32) -> Self {
         Self {}
     }
@@ -88,7 +101,7 @@ impl CoordinateEncoder for Encoder {
     }
 }
 
-/// 3D Morton (Z-Order) encoding implementation.
+/// 2D Morton (Z-Order) Layered to 3D encoding implementation.
 /// This implementation uses the `bmi2` CPU intrinsic if it is available via the `bitintr` crate. If this instruction
 /// set is not available, it falls back on simpler computation methods. Using these CPU instruction optimizations requires
 /// `RUSTFLAGS=-C target-feature=+bmi2`. If this target feature is not provided, a LUT (Look Up Table) implementation
@@ -98,18 +111,12 @@ impl CoordinateEncoder for Encoder {
 /// flat-array multiplicative manner. This means that each Z-level is contiguous in memory, but its inner coordinates
 /// are still Z-order encoded for some spatial locality.
 #[derive(Default, Clone)]
-pub struct Encoder2D {
+pub struct MortonEncoder2D {
     dimensions: (u32, u32, u32),
     len: u32,
 }
-impl CoordinateEncoder for Encoder2D {
+impl CoordinateEncoder for MortonEncoder2D {
     fn from_dimensions(x: u32, y: u32, z: u32) -> Self {
-        //#[cfg(debug_assertions)]
-        //{
-        //    assert_eq!(x % 16, 0);
-        //    assert_eq!(x % 16, 0);
-        //}
-
         Self {
             dimensions: (x, y, z),
             len: x * y,
@@ -124,7 +131,9 @@ impl CoordinateEncoder for Encoder2D {
         {
             let check = u32::max_value() / 3;
             if x > check || y > check || z > check {
-                return None;
+                panic!(
+                    "These provided coordinates are outside of the encodable coordinate range for a u32"
+                )
             }
         }
 
@@ -144,38 +153,23 @@ impl CoordinateEncoder for Encoder2D {
 }
 
 #[inline]
-#[cfg(not(target_feature = "bmi2"))]
-pub fn encode(x: u32, y: u32, z: u32) -> u32 {
-    morton_encode_lut(x, y, z)
-}
-
-#[inline]
-#[cfg(not(target_feature = "bmi2"))]
-pub fn decode(morton: u32) -> (u32, u32, u32) {
-    morton_decode_lut(morton)
+pub fn cmp(morton1: u32, morton2: u32) -> Ordering {
+    decode(morton1).cmp(&decode(morton2))
 }
 
 #[inline]
 pub fn min(morton1: u32, morton2: u32) -> u32 {
-    let d1 = decode(morton1);
-    let d2 = decode(morton2);
-
-    if d1.0 > d2.0 || d1.1 > d2.1 || d1.2 > d2.2 {
-        morton2
-    } else {
-        morton1
+    match cmp(morton1, morton2) {
+        Ordering::Less => morton1,
+        Ordering::Greater | Ordering::Equal => morton2,
     }
 }
 
 #[inline]
 pub fn max(morton1: u32, morton2: u32) -> u32 {
-    let d1 = decode(morton1);
-    let d2 = decode(morton2);
-
-    if d1.0 < d2.0 || d1.1 < d2.1 || d1.2 < d2.2 {
-        morton2
-    } else {
-        morton1
+    match cmp(morton1, morton2) {
+        Ordering::Greater => morton1,
+        Ordering::Less | Ordering::Equal => morton2,
     }
 }
 
@@ -184,6 +178,25 @@ mod tests {
     use super::*;
     use more_asserts::*;
     use rayon::prelude::*;
+
+    #[test]
+    fn morton_minmax() {
+        let zero = encode(0, 0, 0);
+        let one = encode(1, 1, 1);
+        let val1 = encode(123, 456, 789);
+        let val2 = encode(200, 200, 200);
+
+        println!("val1={}", val1);
+        println!("val2={}", val2);
+
+        assert_eq!(min(zero, one), zero);
+        assert_eq!(min(val1, val2), val1);
+        assert_eq!(min(one, val2), one);
+
+        assert_eq!(max(zero, one), one);
+        assert_eq!(max(val1, val2), val2);
+        assert_eq!(max(one, val2), val2);
+    }
 
     #[test]
     fn morton_intr_decode_encode_match() {

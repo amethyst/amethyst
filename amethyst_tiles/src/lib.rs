@@ -16,7 +16,7 @@ pub use pass::{
     DrawTiles2D, DrawTiles2DBounds, DrawTiles2DBoundsDefault, DrawTiles2DDesc, RenderTiles2D,
 };
 
-pub use morton::{Encoder as MortonEncoder, Encoder2D as MortonEncoder2D};
+pub use morton::{MortonEncoder, MortonEncoder2D};
 
 /// Trait to provide generic access to various encoding schemas. All tile storages use this to encode their coordinates
 /// and provide different spatial encoding algorithms for efficiency.

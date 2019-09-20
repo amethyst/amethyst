@@ -43,7 +43,16 @@ impl CameraGatherer {
                 if transforms.contains(entity) && cameras.contains(entity) {
                     Some(entity)
                 } else {
-                    None
+                    log::error!(
+                        "The entity assigned to ActiveCamera is not a valid camera, which requires the \
+                        Transform and Camera components.");
+                    log::error!(
+                        "Falling back on the first available camera which meets these requirements"
+                    );
+                    (&entities, &cameras, &transforms)
+                        .join()
+                        .next()
+                        .map(|(entity, _, _)| entity)
                 }
             }
             None => (&entities, &cameras, &transforms)

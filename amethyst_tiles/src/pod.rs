@@ -57,7 +57,7 @@ pub struct TileArgs {
     /// Tint for this this sprite
     pub tint: vec4,
     /// Tile coordinate
-    pub tile_coordinate: vec3,
+    pub tile_coordinate: uvec3,
 }
 
 impl AsVertex for TileArgs {
@@ -101,12 +101,7 @@ impl TileArgs {
                     let (r, g, b, a) = t.0.into_components();
                     [r, g, b, a].into()
                 }),
-                tile_coordinate: [
-                    tile_coordinate.x as f32,
-                    tile_coordinate.y as f32,
-                    tile_coordinate.z as f32,
-                ]
-                .into(),
+                tile_coordinate: [tile_coordinate.x, tile_coordinate.y, tile_coordinate.z].into(),
             },
             &sprite_sheet.texture,
         ))
