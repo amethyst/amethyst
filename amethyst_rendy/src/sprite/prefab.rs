@@ -10,6 +10,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use derivative::Derivative;
+use derive_new::new;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
@@ -137,7 +138,7 @@ pub enum SpriteSheetReference {
 /// `SpriteSheetLoadedSet` by index during loading. Just like with `SpriteSheetPrefab` this means
 /// that this prefab should only be used as part of other prefabs or in specialised formats. Look at
 /// `SpriteScenePrefab` for an example.
-#[derive(Derivative, Clone, Debug, Deserialize, Serialize)]
+#[derive(new, Derivative, Clone, Debug, Deserialize, Serialize)]
 #[derivative(Default(bound = ""))]
 #[serde(bound = "")]
 pub struct SpriteRenderPrefab {
@@ -147,6 +148,7 @@ pub struct SpriteRenderPrefab {
     pub sprite_number: usize,
 
     #[serde(skip_deserializing, skip_serializing)]
+    #[new(default)]
     handle: Option<Handle<SpriteSheet>>,
 }
 
@@ -378,11 +380,7 @@ mod tests {
         let mut world = setup_sprite_world();
         let (sheet, handle) = add_sheet(&mut world);
         let entity = world.create_entity().build();
-        let mut prefab = SpriteRenderPrefab {
-            sheet: Some(sheet),
-            sprite_number: 0,
-            handle: None,
-        };
+        let mut prefab = SpriteRenderPrefab::new(Some(sheet), 0);
         prefab
             .load_sub_assets(&mut ProgressCounter::default(), &mut world.system_data())
             .unwrap();
