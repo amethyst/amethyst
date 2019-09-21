@@ -677,9 +677,14 @@ fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> T
                         panic!("Expected `{}` field type to be `Type::Path`.", &field_name)
                     };
 
+                    let event_channel_error = format!(
+                        "Expected `EventChannel<{}>` to exist.",
+                        quote!(event_type_path).to_string()
+                    );
                     let tokens = quote! {
                         let #field_name = world
-                            .fetch_mut::<EventChannel<#event_type_path>>()
+                            .get_mut::<EventChannel<#event_type_path>>()
+                            .expect(#event_channel_error)
                             .register_reader();
                     };
                     token_stream.extend(tokens);
