@@ -1,6 +1,7 @@
 /// Specification of the desired delivery guarantee on a message. All examples will use the
 /// following: 1, 2, 3, 4, 5, 6 sent from the server. 5, 1, 4, 2, 3 received by the client. Packet
 /// 6 was lost on initial send.
+
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq, Eq)]
 pub enum DeliveryRequirement {
     /// Messages may not be delivered.

@@ -5,7 +5,8 @@ use amethyst::{
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     network::simulation::{
         laminar::{LaminarNetworkBundle, LaminarSocket},
-        DeliveryRequirement, NetworkSimulationEvent, NetworkSimulationResource, UrgencyRequirement,
+        DeliveryRequirement, NetworkSimulationEvent, SimulationTransportResource,
+        UrgencyRequirement,
     },
     prelude::*,
     shrev::{EventChannel, ReaderId},
@@ -14,27 +15,25 @@ use amethyst::{
 };
 use log::info;
 
-// You'll likely want to use a type alias for any place you specify the `NetworkSimulationResource<T>` so
+// You'll likely want to use a type alias for any place you specify the `SimulationTransportResource<T>` so
 // that, if changed, it will only need to be changed in one place.
-type NetworkSimResourceImpl = NetworkSimulationResource<LaminarSocket>;
+type SimulationTransportResourceImpl = SimulationTransportResource<LaminarSocket>;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let socket = LaminarSocket::bind("0.0.0.0:3457").expect("Should bind");
 
-    // At some point, when we have a matchmaking solution, we probably want to rethink the trusted
-    // clients functionality.
-    let clients = ["127.0.0.1:3455".parse()?];
     let assets_dir = application_root_dir()?.join("./");
 
-    let mut net = NetworkSimulationResource::new_server().with_trusted_clients(&clients);
+    let mut net = SimulationTransportResource::new();
     net.set_socket(socket);
 
     // XXX: This is gross. We really need a handshake in laminar. Reliable delivery will not work
     // unless you send an unreliable message first and begin the client BEFORE the 5 second disconnect
     // timer.
     net.send_with_requirements(
+        "127.0.0.1:3455".parse().unwrap(),
         b"",
         DeliveryRequirement::Unreliable,
         UrgencyRequirement::OnTick,
@@ -103,7 +102,7 @@ impl SpamReceiveSystem {
 
 impl<'a> System<'a> for SpamReceiveSystem {
     type SystemData = (
-        Write<'a, NetworkSimResourceImpl>,
+        Write<'a, SimulationTransportResourceImpl>,
         Read<'a, EventChannel<NetworkSimulationEvent>>,
     );
 
@@ -116,7 +115,7 @@ impl<'a> System<'a> for SpamReceiveSystem {
                     // be exchanging messages at a constant rate. Laminar makes use of this by
                     // packaging message acks with the next sent message. Therefore, in order for
                     // reliability to work properly, we'll send a generic "ok" response.
-                    net.send(b"ok");
+                    net.send("127.0.0.1:3455".parse().unwrap(), b"ok");
                 }
                 NetworkSimulationEvent::Connect(addr) => info!("New client connection: {}", addr),
                 NetworkSimulationEvent::Disconnect(addr) => {

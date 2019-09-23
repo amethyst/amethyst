@@ -1,12 +1,13 @@
 //! Network systems implementation backed by the UDP network protocol.
+
 use crate::simulation::{
     events::NetworkSimulationEvent,
     requirements::DeliveryRequirement,
-    resource::NetworkSimulationResource,
     timing::{NetworkSimulationTime, NetworkSimulationTimeSystem},
     transport::{
-        run_network_recv_system, run_network_send_system, socket::Socket, NETWORK_RECV_SYSTEM_NAME,
-        NETWORK_SEND_SYSTEM_NAME, NETWORK_SIM_TIME_SYSTEM_NAME,
+        run_network_recv_system, run_network_send_system, socket::Socket,
+        SimulationTransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
+        NETWORK_SIM_TIME_SYSTEM_NAME,
     },
 };
 use amethyst_core::{
@@ -61,7 +62,7 @@ pub struct UdpNetworkSendSystem;
 
 impl<'s> System<'s> for UdpNetworkSendSystem {
     type SystemData = (
-        Write<'s, NetworkSimulationResource<UdpSocket>>,
+        Write<'s, SimulationTransportResource<UdpSocket>>,
         Read<'s, NetworkSimulationTime>,
     );
 
@@ -69,9 +70,9 @@ impl<'s> System<'s> for UdpNetworkSendSystem {
         run_network_send_system(
             net.deref_mut(),
             sim_time.deref(),
-            |socket, addr, message| match message.delivery {
+            |socket, message| match message.delivery {
                 DeliveryRequirement::Unreliable => {
-                    if let Err(e) = socket.send_to(&message.payload, addr) {
+                    if let Err(e) = socket.send_to(&message.payload, message.destination) {
                         error!("There was an error when attempting to send packet: {:?}", e);
                     }
                 }
@@ -98,7 +99,7 @@ impl UdpNetworkRecvSystem {
 
 impl<'s> System<'s> for UdpNetworkRecvSystem {
     type SystemData = (
-        Write<'s, NetworkSimulationResource<UdpSocket>>,
+        Write<'s, SimulationTransportResource<UdpSocket>>,
         Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 

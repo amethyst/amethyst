@@ -3,7 +3,7 @@ use amethyst::{
     ecs::{Read, System, Write},
     network::simulation::{
         laminar::{LaminarNetworkBundle, LaminarSocket},
-        NetworkSimulationResource, NetworkSimulationTime,
+        NetworkSimulationTime, SimulationTransportResource,
     },
     prelude::*,
     utils::application_root_dir,
@@ -14,17 +14,15 @@ use std::time::Duration;
 
 // You'll likely want to use a type alias for any place you specify the NetworkResource<T> so
 // that, if changed, it will only need to be changed in one place.
-type NetworkResourceImpl = NetworkSimulationResource<LaminarSocket>;
+type SimulationTransportResourceImpl = SimulationTransportResource<LaminarSocket>;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let socket = LaminarSocket::bind("0.0.0.0:3455").expect("Should bind");
-
-    let server_addr = "127.0.0.1:3457".parse()?;
     let assets_dir = application_root_dir()?.join("./");
 
-    let mut net = NetworkSimulationResource::new_client(server_addr);
+    let mut net = SimulationTransportResource::new();
     net.set_socket(socket);
 
     let game_data = GameDataBuilder::default()
@@ -58,13 +56,14 @@ impl<'a> System<'a> for SpamSystem {
     type SystemData = (
         Read<'a, NetworkSimulationTime>,
         Read<'a, Time>,
-        Write<'a, NetworkResourceImpl>,
+        Write<'a, SimulationTransportResourceImpl>,
     );
     fn run(&mut self, (sim_time, time, mut net): Self::SystemData) {
         // Use method `sim_time.sim_frames_to_run()` to determine if the system should send a
         // message this frame. If, for example, the ECS frame rate is slower than the simulation
         // frame rate, this code block will run until it catches up with the expected simulation
         // frame number.
+        let server_addr = "127.0.0.1:3457".parse().unwrap();
         for frame in sim_time.sim_frames_to_run() {
             info!("Sending message for sim frame {}.", frame);
             let payload = format!(
@@ -72,7 +71,7 @@ impl<'a> System<'a> for SpamSystem {
                 frame,
                 time.absolute_time_seconds()
             );
-            net.send(payload.as_bytes());
+            net.send(server_addr, payload.as_bytes());
         }
     }
 }

@@ -1,12 +1,13 @@
 //! Network systems implementation backed by the laminar network protocol.
+
 use crate::simulation::{
     events::NetworkSimulationEvent,
     requirements::DeliveryRequirement,
-    resource::NetworkSimulationResource,
     timing::{NetworkSimulationTime, NetworkSimulationTimeSystem},
     transport::{
-        run_network_recv_system, run_network_send_system, socket::Socket, NETWORK_POLL_SYSTEM_NAME,
-        NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME, NETWORK_SIM_TIME_SYSTEM_NAME,
+        run_network_recv_system, run_network_send_system, socket::Socket,
+        SimulationTransportResource, NETWORK_POLL_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME,
+        NETWORK_SEND_SYSTEM_NAME, NETWORK_SIM_TIME_SYSTEM_NAME,
     },
 };
 use amethyst_core::{
@@ -58,45 +59,49 @@ struct LaminarNetworkSendSystem;
 
 impl<'s> System<'s> for LaminarNetworkSendSystem {
     type SystemData = (
-        Write<'s, NetworkSimulationResource<LaminarSocket>>,
+        Write<'s, SimulationTransportResource<LaminarSocket>>,
         Read<'s, NetworkSimulationTime>,
     );
 
     fn run(&mut self, (mut net, sim_time): Self::SystemData) {
-        run_network_send_system(
-            net.deref_mut(),
-            sim_time.deref(),
-            |socket, addr, message| {
-                let packet = match message.delivery {
-                    DeliveryRequirement::Unreliable => {
-                        Packet::unreliable(addr, message.payload.to_vec())
-                    }
-                    DeliveryRequirement::UnreliableSequenced(stream_id) => {
-                        Packet::unreliable_sequenced(addr, message.payload.to_vec(), stream_id)
-                    }
-                    DeliveryRequirement::Reliable => {
-                        Packet::reliable_unordered(addr, message.payload.to_vec())
-                    }
-                    DeliveryRequirement::ReliableSequenced(stream_id) => {
-                        Packet::reliable_sequenced(addr, message.payload.to_vec(), stream_id)
-                    }
-                    DeliveryRequirement::ReliableOrdered(stream_id) => {
-                        Packet::reliable_ordered(addr, message.payload.to_vec(), stream_id)
-                    }
-                };
-
-                if let Err(e) = socket.send(packet) {
-                    error!("There was an error when attempting to send packet: {:?}", e);
+        run_network_send_system(net.deref_mut(), sim_time.deref(), |socket, message| {
+            let packet = match message.delivery {
+                DeliveryRequirement::Unreliable => {
+                    Packet::unreliable(message.destination, message.payload.to_vec())
                 }
-            },
-        );
+                DeliveryRequirement::UnreliableSequenced(stream_id) => {
+                    Packet::unreliable_sequenced(
+                        message.destination,
+                        message.payload.to_vec(),
+                        stream_id,
+                    )
+                }
+                DeliveryRequirement::Reliable => {
+                    Packet::reliable_unordered(message.destination, message.payload.to_vec())
+                }
+                DeliveryRequirement::ReliableSequenced(stream_id) => Packet::reliable_sequenced(
+                    message.destination,
+                    message.payload.to_vec(),
+                    stream_id,
+                ),
+                DeliveryRequirement::ReliableOrdered(stream_id) => Packet::reliable_ordered(
+                    message.destination,
+                    message.payload.to_vec(),
+                    stream_id,
+                ),
+            };
+
+            if let Err(e) = socket.send(packet) {
+                error!("There was an error when attempting to send packet: {:?}", e);
+            }
+        });
     }
 }
 
 struct LaminarNetworkPollSystem;
 
 impl<'s> System<'s> for LaminarNetworkPollSystem {
-    type SystemData = Write<'s, NetworkSimulationResource<LaminarSocket>>;
+    type SystemData = Write<'s, SimulationTransportResource<LaminarSocket>>;
 
     fn run(&mut self, mut net: Self::SystemData) {
         net.get_socket_mut()
@@ -108,7 +113,7 @@ struct LaminarNetworkRecvSystem;
 
 impl<'s> System<'s> for LaminarNetworkRecvSystem {
     type SystemData = (
-        Write<'s, NetworkSimulationResource<LaminarSocket>>,
+        Write<'s, SimulationTransportResource<LaminarSocket>>,
         Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
