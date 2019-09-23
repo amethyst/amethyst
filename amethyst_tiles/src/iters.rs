@@ -5,7 +5,7 @@ use amethyst_core::math::Point3;
 
 /// Axis aligned quantized region of space represented in tile coordinates of `u32`. This behaves
 /// like a bounding box volume with `min` and `max` coordinates for iteration. This regions limits are *inclusive*,
-/// in that it includes the max values in its iteration.
+/// in that it considers both min and max values as being inside the region.
 ///
 /// The values of this region are stored and computed as morton values instead of `Vector3` values, allowing for
 /// fast BMI2 instrinsic use for iteration and comparison.
@@ -51,14 +51,16 @@ impl Ord for MortonRegion {
         }
     }
 }
-impl AsRef<MortonRegion> for MortonRegion {
-    fn as_ref(&self) -> &Self {
-        self
+impl From<Region> for MortonRegion {
+    fn from(region: Region) -> Self {
+        Self {
+            min: morton::encode(region.min.x, region.min.y, region.min.z),
+            max: morton::encode(region.max.x, region.max.y, region.max.z),
+        }
     }
 }
-impl<T: AsRef<Region>> From<T> for MortonRegion {
-    fn from(region: T) -> Self {
-        let region = region.as_ref();
+impl<'a> From<&'a Region> for MortonRegion {
+    fn from(region: &'a Region) -> Self {
         Self {
             min: morton::encode(region.min.x, region.min.y, region.min.z),
             max: morton::encode(region.max.x, region.max.y, region.max.z),
@@ -68,7 +70,7 @@ impl<T: AsRef<Region>> From<T> for MortonRegion {
 
 /// Axis aligned quantized region of space represented in tile coordinates of `u32`. This behaves
 /// like a bounding box volume with `min` and `max` coordinates for iteration. This regions limits are *inclusive*,
-/// in that it includes the max values in its iteration.
+/// in that it considers both min and max values as being inside the region.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Region {
     /// The "lower-right" coordinate of this `Region`.
@@ -77,11 +79,6 @@ pub struct Region {
     pub max: Point3<u32>,
 }
 
-impl AsRef<Region> for Region {
-    fn as_ref(&self) -> &Self {
-        self
-    }
-}
 impl Region {
     /// Create a new `Region` with the given top-left and bottom-right cubic coordinates.
     pub fn new(min: Point3<u32>, max: Point3<u32>) -> Self {
@@ -109,7 +106,7 @@ impl Region {
 
     /// Check if this `Region` intersects with the provided `Region`
     #[inline]
-    pub fn intersect(&self, other: &Self) -> bool {
+    pub fn intersects(&self, other: &Self) -> bool {
         (self.min.x <= other.max.x && self.max.x >= other.min.x)
             && (self.min.y <= other.max.y && self.max.y >= other.min.y)
             && (self.min.z <= other.max.z && self.max.z >= other.min.z)
@@ -123,6 +120,15 @@ impl Region {
     /// Create a linear iterator across this region.
     pub fn iter(&self) -> RegionLinearIter {
         RegionLinearIter::new(*self)
+    }
+}
+
+impl<'a> IntoIterator for &'a Region {
+    type Item = Point3<u32>;
+    type IntoIter = RegionLinearIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 

@@ -193,6 +193,17 @@ mod tests {
         assert_eq!(max(zero, one), one);
         assert_eq!(max(val1, val2), val2);
         assert_eq!(max(one, val2), val2);
+
+        assert_eq!(min(zero, encode(1, 0, 0)), zero);
+        assert_eq!(min(zero, encode(1, 1, 0)), zero);
+        assert_eq!(min(zero, encode(1, 0, 1)), zero);
+        assert_eq!(min(zero, encode(1, 1, 1)), zero);
+        assert_eq!(min(zero, encode(0, 0, 0)), zero);
+
+        assert_eq!(min(one, encode(1, 0, 0)), encode(1, 0, 0));
+        assert_eq!(min(one, encode(1, 1, 0)), encode(1, 1, 0));
+        assert_eq!(min(one, encode(1, 0, 1)), encode(1, 0, 1));
+        assert_eq!(min(one, encode(1, 1, 1)), one);
     }
 
     #[test]

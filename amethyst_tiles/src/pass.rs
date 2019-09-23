@@ -6,7 +6,7 @@ use amethyst_core::{
         DispatcherBuilder, Entities, Join, Read, ReadExpect, ReadStorage, System, SystemData, World,
     },
     geometry::{Plane, Ray},
-    math::{self, convert, Matrix4, Point2, Point3, Vector2, Vector3, Vector4},
+    math::{self, clamp, convert, Matrix4, Point2, Point3, Vector2, Vector3, Vector4},
     transform::Transform,
     Hidden,
 };
@@ -234,36 +234,52 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
             ]
             .into();
 
-            let region = Z::bounds(tile_map, world);
+            let mut region = Z::bounds(tile_map, world);
+
+            let zero = Vector3::new(0, 0, 0);
+            let max_value = tile_map.dimensions() - Vector3::new(1, 1, 1);
+
+            region.min = Point3::new(
+                region.min.x.max(0).min(max_value.x),
+                region.min.y.max(0).min(max_value.y),
+                region.min.z.max(0).min(max_value.z),
+            );
+            region.max = Point3::new(
+                region.max.x.max(0).min(max_value.x),
+                region.max.y.max(0).min(max_value.y),
+                region.max.z.max(0).min(max_value.z),
+            );
+
             region
                 .iter()
                 .filter_map(|coord| {
                     let tile = tile_map.get(&coord).unwrap();
                     if let Some(sprite_number) = tile.sprite(coord, world) {
                         let (batch_data, texture) = {
-                            if let Some(sprite_sheet_handle) = tile_map.sprite_sheet.as_ref() {
-                                if let Some(sprite_sheet) =
-                                    sprite_sheet_storage.get(sprite_sheet_handle)
-                                {
-                                    if !tex_storage.contains(&sprite_sheet.texture) {
-                                        return None;
-                                    }
+                            let maybe_sheet = tile_map
+                                .sprite_sheet
+                                .as_ref()
+                                .map(|handle| sprite_sheet_storage.get(handle))
+                                .filter(|sheet| match sheet {
+                                    Some(sheet) => tex_storage.contains(&sheet.texture),
+                                    None => false,
+                                })
+                                .unwrap_or(None);
 
-                                    let color = tile.tint(coord, world);
+                            let sprite_sheet = match maybe_sheet {
+                                Some(sheet) => sheet,
+                                None => return None,
+                            };
 
-                                    TileArgs::from_data(
-                                        &tex_storage,
-                                        &sprite_sheet,
-                                        sprite_number,
-                                        Some(&TintComponent(tile.tint(coord, world))),
-                                        &coord,
-                                    )
-                                } else {
-                                    None
-                                }
-                            } else {
-                                None
-                            }
+                            let color = tile.tint(coord, world);
+
+                            TileArgs::from_data(
+                                &tex_storage,
+                                &sprite_sheet,
+                                sprite_number,
+                                Some(&TintComponent(tile.tint(coord, world))),
+                                &coord,
+                            )
                         }?;
 
                         let (tex_id, this_changed) = textures_ref.insert(

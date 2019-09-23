@@ -45,10 +45,8 @@ impl CameraGatherer {
                 } else {
                     log::error!(
                         "The entity assigned to ActiveCamera is not a valid camera, which requires the \
-                        Transform and Camera components.");
-                    log::error!(
-                        "Falling back on the first available camera which meets these requirements"
-                    );
+                        Transform and Camera components. Falling back on the first available camera which meets these requirements");
+
                     (&entities, &cameras, &transforms)
                         .join()
                         .next()
