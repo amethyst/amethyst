@@ -19,7 +19,7 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
-default = ["animation", "audio", "locale", "network", "renderer"]
+default = ["animation", "audio", "locale", "network", "renderer", "sentry"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
