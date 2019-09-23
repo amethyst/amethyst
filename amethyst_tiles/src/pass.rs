@@ -156,6 +156,8 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
 /// Notes on use:
 /// - Due to the use of transparency and Z-order, the `TileMap` entity must be viewed from a Z-up perspective
 /// for  transparency to occur correctly. If viewed from "underneath", transparency ordering issues will occur.
+///
+/// In shorter terms, this means that the camera must "Look Down" at the tiles.
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
 pub struct DrawTiles2D<

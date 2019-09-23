@@ -270,7 +270,7 @@ impl<T: Tile, E: CoordinateEncoder> MapStorage<T> for TileMap<T, E> {
     }
 }
 
-#[allow(clippy::cast_precision_loss)] // TODO
+#[allow(clippy::cast_precision_loss)]
 fn create_transform(map_dimensions: &Vector3<u32>, tile_dimensions: &Vector3<u32>) -> Matrix4<f32> {
     let tile_dimensions = Vector3::new(
         tile_dimensions.x as f32,
@@ -316,7 +316,7 @@ fn to_tile(transform: &Matrix4<f32>, coord: &Vector3<f32>) -> Option<Point3<u32>
         return None;
     }
 
-    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)] // TODO:
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     Some(Point3::new(
         inverse.x as u32,
         inverse.y as u32,

@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `Camera::screen_ray` method added, returning an appropriate `Ray` structure ([#1918]).
 * `amethyst_test`: `InMemorySource` and `WaitForLoad` helpers ([#1933]).
 
+### Changed
 
 * All `-Builder` structs in amethyst_ui/prefab.rs are now called `-Data`. ([#1859])
 * `AmethystApplication` takes in a `System` instead of a closure for `with_system`. ([#1882])

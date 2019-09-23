@@ -74,13 +74,14 @@ impl AsVertex for TileArgs {
 
 impl TileArgs {
     #[allow(clippy::cast_precision_loss)]
-    /// Extracts POD vertex data from the provided storages for a sprite.
+    /// Extracts POD vertex data from the provided storages for a tile.
     ///
     /// # Arguments
     /// * `tex_storage` - `Texture` Storage
-    /// * `sprite_storage` - `SpriteSheet` Storage
-    /// * `sprite_render` - `SpriteRender` component reference
-    /// * `transform` - 'Transform' component reference
+    /// * `sprite_sheet` - `SpriteSheet` Storage
+    /// * `sprite_number` - The number index of the sprite in the sprite sheet.
+    /// * `tint` - An optional `TintComponent` reference for tinting this tile, if applicable.
+    /// * `tile_coordinate` - The  Point3<u32> position of this tile (in Tile Coordinate Space)
     pub fn from_data<'a>(
         tex_storage: &AssetStorage<Texture>,
         sprite_sheet: &'a SpriteSheet,
