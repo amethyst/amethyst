@@ -218,6 +218,17 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         };
 
         for (tile_map, _, transform) in (&tile_maps, !&hiddens, transforms.maybe()).join() {
+            let maybe_sheet = tile_map
+                .sprite_sheet
+                .as_ref()
+                .and_then(|handle| sprite_sheet_storage.get(handle))
+                .filter(|sheet| tex_storage.contains(&sheet.texture));
+
+            let sprite_sheet = match maybe_sheet {
+                Some(sheet) => sheet,
+                None => continue,
+            };
+
             let map_coordinate_transform: [[f32; 4]; 4] = (*tile_map.transform()).into();
 
             let map_transform: [[f32; 4]; 4] = if let Some(transform) = transform {
@@ -255,32 +266,13 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 .filter_map(|coord| {
                     let tile = tile_map.get(&coord).unwrap();
                     if let Some(sprite_number) = tile.sprite(coord, world) {
-                        let (batch_data, texture) = {
-                            let maybe_sheet = tile_map
-                                .sprite_sheet
-                                .as_ref()
-                                .map(|handle| sprite_sheet_storage.get(handle))
-                                .filter(|sheet| match sheet {
-                                    Some(sheet) => tex_storage.contains(&sheet.texture),
-                                    None => false,
-                                })
-                                .unwrap_or(None);
-
-                            let sprite_sheet = match maybe_sheet {
-                                Some(sheet) => sheet,
-                                None => return None,
-                            };
-
-                            let color = tile.tint(coord, world);
-
-                            TileArgs::from_data(
-                                &tex_storage,
-                                &sprite_sheet,
-                                sprite_number,
-                                Some(&TintComponent(tile.tint(coord, world))),
-                                &coord,
-                            )
-                        }?;
+                        let (batch_data, texture) = TileArgs::from_data(
+                            &tex_storage,
+                            &sprite_sheet,
+                            sprite_number,
+                            Some(&TintComponent(tile.tint(coord, world))),
+                            &coord,
+                        )?;
 
                         let (tex_id, this_changed) = textures_ref.insert(
                             factory,
