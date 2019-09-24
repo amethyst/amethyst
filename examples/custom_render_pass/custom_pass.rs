@@ -20,7 +20,7 @@ use amethyst::{
         },
         submodules::{DynamicUniform, DynamicVertexBuffer},
         types::Backend,
-        util,
+        util, ChangeDetection,
     },
 };
 
@@ -111,6 +111,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
             env,
             vertex,
             vertex_count: 0,
+            change: Default::default(),
         }))
     }
 }
@@ -123,6 +124,7 @@ pub struct DrawCustom<B: Backend> {
     env: DynamicUniform<B, CustomUniformArgs>,
     vertex: DynamicVertexBuffer<B, CustomArgs>,
     vertex_count: usize,
+    change: ChangeDetection,
 }
 
 impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
@@ -155,8 +157,8 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
             Some(vertex_data_iter.collect::<Box<[CustomArgs]>>()),
         );
 
-        // Return that we request to draw
-        PrepareResult::DrawRecord
+        // Return with we can reuse the draw buffers using the utility struct ChangeDetection
+        self.change.prepare_result(self.vertex_count, false)
     }
 
     fn draw_inline(
