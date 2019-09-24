@@ -5,5 +5,5 @@
 
 (
   dimensions: Some((640, 480)),
-  title: "Custom Shader example",
+  title: "Custom Render Pass example",
 )

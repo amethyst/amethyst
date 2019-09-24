@@ -256,8 +256,7 @@ fn build_custom_pipeline<B: Backend>(
 
 /// A [RenderPlugin] for our custom plugin
 #[derive(Default, Debug)]
-pub struct RenderCustom {
-}
+pub struct RenderCustom {}
 
 impl<B: Backend> RenderPlugin<B> for RenderCustom {
     fn on_build<'a, 'b>(

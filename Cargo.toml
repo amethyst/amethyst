@@ -190,8 +190,8 @@ path = "examples/ui/main.rs"
 required-features = ["audio"]
 
 [[example]]
-name = "custom_shader"
-path = "examples/custom_shader/main.rs"
+name = "custom_render_pass"
+path = "examples/custom_render_pass/main.rs"
 
 [[example]]
 name = "custom_ui"

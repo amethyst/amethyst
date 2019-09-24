@@ -1,4 +1,4 @@
-//! Custom Shader example
+//! Custom Render Pass example
 
 mod custom_pass;
 
@@ -89,7 +89,7 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/custom_shader/config/display.ron");
+    let display_config_path = app_root.join("examples/custom_render_pass/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
