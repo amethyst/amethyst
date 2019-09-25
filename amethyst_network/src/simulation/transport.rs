@@ -61,7 +61,7 @@ mod tests {
     };
     use std::time::Duration;
 
-    // If there are no messages to send, the handle_send function shouldn't be invoked
+    // If there are no messages to send, the `handle_send` function shouldn't be invoked
     #[test]
     fn run_network_send_system_no_op() {
         let (mut net, sim_time) = setup_test();
