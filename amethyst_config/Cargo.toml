@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_config"
-version = "0.11.0"
+version = "0.12.0"
 authors = ["Aceeri <conmcclusk@gmail.com>"]
 edition = "2018"
 description = "Loading from .ron files into Rust structures with defaults to prevent hard errors."
