@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_controls"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Joël Lupien <jojolepromain@gmail.com>"]
 edition = "2018"
 description = "Amethyst controls"
@@ -15,11 +15,11 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.8.0" }
-amethyst_core = { path = "../amethyst_core", version = "0.7.0" }
-amethyst_derive = { path = "../amethyst_derive", version = "0.5.0" }
-amethyst_error = { path = "../amethyst_error", version = "0.2.0" }
-amethyst_input = { path = "../amethyst_input", version = "0.8.0" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.9.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.8.0" }
+amethyst_derive = { path = "../amethyst_derive", version = "0.6.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.3.0" }
+amethyst_input = { path = "../amethyst_input", version = "0.9.0" }
 derive-new = "0.5"
 serde = { version = "1.0", features = ["derive"] }
 winit = { version = "0.19", features = ["serde"] }
