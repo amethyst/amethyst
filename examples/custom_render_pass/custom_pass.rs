@@ -144,7 +144,10 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         // Write to our DynamicUniform
         self.env.write(factory, index, scale.std140());
 
+        //Update vertex count and see if it has changed
+        let old_vertex_count = self.vertex_count;
         self.vertex_count = triangles.join().count() * 3;
+        let changed = old_vertex_count != self.vertex_count;
 
         // Create an iterator over the Triangle vertices
         let vertex_data_iter = triangles.join().flat_map(|triangle| triangle.get_args());
@@ -158,7 +161,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         );
 
         // Return with we can reuse the draw buffers using the utility struct ChangeDetection
-        self.change.prepare_result(self.vertex_count, false)
+        self.change.prepare_result(self.vertex_count, changed)
     }
 
     fn draw_inline(
