@@ -38,7 +38,7 @@ pub use crate::{
 pub use self::{
     axis::{Axis2, Axis3},
     hidden::{Hidden, HiddenPropagate},
-    hide_system::HideHierarchySystem,
+    hide_system::{HideHierarchySystem, HideHierarchySystemDesc},
     named::{Named, WithNamed},
     system_desc::{RunNowDesc, SystemDesc},
 };

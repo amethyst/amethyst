@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Changed
 
 ### Fixed
+- Add missing re-export for HideHierarchySystemDesc
 
 ## [0.13.0] - 2019-09-25
 
