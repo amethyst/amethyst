@@ -356,7 +356,7 @@ mod tests {
     }
 
     #[test]
-    pub fn assymetric_maps() {
+    pub fn asymmetric_maps() {
         let test_dimensions = [
             Vector3::new(10, 58, 54),
             Vector3::new(66, 5, 200),
