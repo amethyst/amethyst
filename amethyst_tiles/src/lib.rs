@@ -19,6 +19,8 @@ pub use pass::{
     DrawTiles2D, DrawTiles2DBounds, DrawTiles2DBoundsDefault, DrawTiles2DDesc, RenderTiles2D,
 };
 
+use amethyst_core::math::Vector3;
+
 /// Trait to provide generic access to various encoding schemas. All tile storages use this to encode their coordinates
 /// and provide different spatial encoding algorithms for efficiency.
 pub trait CoordinateEncoder: 'static + Clone + Default + Send + Sync {
@@ -31,4 +33,48 @@ pub trait CoordinateEncoder: 'static + Clone + Default + Send + Sync {
 
     /// Decode the provided 1-dimensional array index into its associated 3-dimensional coordinates.
     fn decode(&self, morton: u32) -> Option<(u32, u32, u32)>;
+
+    /// This function transforms the provided dimensions, performing any extra allocation needed for
+    /// padding our indexing method.
+    fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32>;
+}
+
+/// The most basic encoder, which strictly flattens the 3d space into 1d coordinates in a linear fashion.
+/// This encoder is optimal for storage space, but not for traversal or iteration.
+#[derive(Clone)]
+pub struct FlatEncoder {
+    dimensions: Vector3<u32>,
+}
+impl Default for FlatEncoder {
+    fn default() -> Self {
+        Self {
+            dimensions: Vector3::new(0, 0, 0),
+        }
+    }
+}
+impl CoordinateEncoder for FlatEncoder {
+    fn from_dimensions(x: u32, y: u32, z: u32) -> Self {
+        Self {
+            dimensions: Vector3::new(x, y, z),
+        }
+    }
+
+    #[inline]
+    fn encode(&self, x: u32, y: u32, z: u32) -> Option<u32> {
+        Some((z * self.dimensions.x * self.dimensions.y) + (y * self.dimensions.x) + x)
+    }
+
+    #[inline]
+    fn decode(&self, idx: u32) -> Option<(u32, u32, u32)> {
+        let z = idx / (self.dimensions.x * self.dimensions.y);
+        let idx = idx - (z * self.dimensions.x * self.dimensions.y);
+        let y = idx / self.dimensions.x;
+        let x = idx % self.dimensions.x;
+
+        Some((x, y, z))
+    }
+
+    fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
+        dimensions
+    }
 }

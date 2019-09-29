@@ -10,6 +10,15 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 
+### Added 
+* `FlatEncoder` added to amethyst_tiles for flat linear encoding which is optimized for space. ([#1950])
+
+### Fixed 
+* `TileMap` was not allocating enough space for to compensate for morton encoding alignment. This means that 
+all tilemap allocation must occur on a 16-byte boundary ([#1950])
+
+[#1950]: https://github.com/amethyst/amethyst/pull/1950
+
 ### Major breaking changes
 
 * Systems needing initialization with world resources must go through a `SystemDesc` intermediate builder. ([#1780])

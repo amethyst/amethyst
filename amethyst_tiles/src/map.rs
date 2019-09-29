@@ -137,7 +137,9 @@ impl<T: Tile, E: CoordinateEncoder> TileMap<T, E> {
         let origin = Point3::new(0.0, 0.0, 0.0);
         let transform = create_transform(&dimensions, &tile_dimensions);
 
-        let size = (dimensions.x * dimensions.y * dimensions.z) as usize;
+        // Round the dimensions to the nearest multiplier for morton rounding
+        let encoder_dimensions = E::allocation_size(dimensions);
+        let size = (encoder_dimensions.x * encoder_dimensions.y * encoder_dimensions.z) as usize;
         let mut data = Vec::with_capacity(size);
         data.resize_with(size, T::default);
 

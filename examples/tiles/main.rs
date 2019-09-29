@@ -349,7 +349,7 @@ impl SimpleState for Example {
             .build();
 
         let map = TileMap::<ExampleTile>::new(
-            Vector3::new(32, 32, 1),
+            Vector3::new(48, 48, 1),
             Vector3::new(20, 20, 1),
             Some(map_sprite_sheet_handle),
         );

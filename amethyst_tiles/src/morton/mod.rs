@@ -1,7 +1,9 @@
-mod luts;
 use crate::CoordinateEncoder;
+use amethyst_core::math::Vector3;
 use luts::*;
 use std::cmp::Ordering;
+
+mod luts;
 
 #[inline]
 #[cfg(target_feature = "bmi2")]
@@ -79,6 +81,16 @@ pub fn morton_decode_intr_3d(morton: u32) -> (u32, u32, u32) {
     )
 }
 
+fn next_power_of_2(mut v: u32) -> u32 {
+    v = v - 1;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v + 1
+}
+
 /// 3D Morton (Z-Order) encoding implementation.
 /// This implementation uses the `bmi2` CPU intrinsic if it is available via the `bitintr` crate. If this instruction
 /// set is not available, it falls back on simpler computation methods. Using these CPU instruction optimizations requires
@@ -98,6 +110,14 @@ impl CoordinateEncoder for MortonEncoder {
     #[inline]
     fn decode(&self, morton: u32) -> Option<(u32, u32, u32)> {
         Some(decode(morton))
+    }
+
+    fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
+        Vector3::new(
+            next_power_of_2(dimensions.x),
+            next_power_of_2(dimensions.y),
+            next_power_of_2(dimensions.z),
+        )
     }
 }
 
@@ -149,6 +169,14 @@ impl CoordinateEncoder for MortonEncoder2D {
         morton -= z * self.len;
 
         Some((morton.pext(0x5555_5555), morton.pext(0xAAAA_AAAA), z))
+    }
+
+    fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
+        Vector3::new(
+            next_power_of_2(dimensions.x),
+            next_power_of_2(dimensions.y),
+            dimensions.z,
+        )
     }
 }
 
