@@ -96,6 +96,8 @@ fn next_power_of_2(mut v: u32) -> u32 {
 /// set is not available, it falls back on simpler computation methods. Using these CPU instruction optimizations requires
 /// `RUSTFLAGS=-C target-feature=+bmi2`. If this target feature is not provided, a LUT (Look Up Table) implementation
 /// of Morton encoding is used, considered extremely fast but still slightly slower than BMI2 intrinsics.
+///
+/// NOTE: This encoder requires allocation 2^n, equally in all dimensions.
 #[derive(Default, Clone)]
 pub struct MortonEncoder;
 impl CoordinateEncoder for MortonEncoder {
@@ -131,6 +133,8 @@ impl CoordinateEncoder for MortonEncoder {
 /// This implementation only performs 2D morton encoding on any given Z-level, while providing Z-levels ia a standard
 /// flat-array multiplicative manner. This means that each Z-level is contiguous in memory, but its inner coordinates
 /// are still Z-order encoded for some spatial locality.
+///
+/// NOTE: This encoder requires allocation 2^n, equally in the X-Y axis.
 #[derive(Default, Clone)]
 pub struct MortonEncoder2D {
     dimensions: (u32, u32, u32),
