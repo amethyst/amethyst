@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed 
 * `TileMap` was not allocating enough space for to compensate for morton encoding alignment. This means that 
-all tilemap allocation must occur on a 16-byte boundary ([#1950])
+all tilemap allocation must occur on 2^n boundary aligned on all axis (or x-y axis for Morton2D) ([#1950])
 
 [#1950]: https://github.com/amethyst/amethyst/pull/1950
 

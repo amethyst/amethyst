@@ -82,7 +82,7 @@ pub fn morton_decode_intr_3d(morton: u32) -> (u32, u32, u32) {
 }
 
 fn next_power_of_2(mut v: u32) -> u32 {
-    v = v - 1;
+    v -= 1;
     v |= v >> 1;
     v |= v >> 2;
     v |= v >> 4;
@@ -113,10 +113,11 @@ impl CoordinateEncoder for MortonEncoder {
     }
 
     fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
+        let max = dimensions.x.max(dimensions.y).max(dimensions.z);
         Vector3::new(
-            next_power_of_2(dimensions.x),
-            next_power_of_2(dimensions.y),
-            next_power_of_2(dimensions.z),
+            next_power_of_2(max),
+            next_power_of_2(max),
+            next_power_of_2(max),
         )
     }
 }
@@ -172,11 +173,8 @@ impl CoordinateEncoder for MortonEncoder2D {
     }
 
     fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
-        Vector3::new(
-            next_power_of_2(dimensions.x),
-            next_power_of_2(dimensions.y),
-            dimensions.z,
-        )
+        let max = dimensions.x.max(dimensions.y);
+        Vector3::new(next_power_of_2(max), next_power_of_2(max), dimensions.z)
     }
 }
 

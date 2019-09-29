@@ -329,7 +329,53 @@ fn to_tile(transform: &Matrix4<f32>, coord: &Vector3<f32>) -> Option<Point3<u32>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        morton::{MortonEncoder, MortonEncoder2D},
+        FlatEncoder,
+    };
     use amethyst_core::math::Point3;
+    use rayon::prelude::*;
+
+    #[derive(Default, Clone)]
+    struct TestTile;
+    impl Tile for TestTile {
+        fn sprite(&self, _: Point3<u32>, _: &World) -> Option<usize> {
+            None
+        }
+    }
+
+    pub fn test_single_map<E: CoordinateEncoder>(dimensions: Vector3<u32>) {
+        let map = TileMap::<TestTile, E>::new(dimensions, Vector3::new(10, 10, 1), None);
+        (0..dimensions.x).into_par_iter().for_each(|x| {
+            (0..dimensions.y).into_par_iter().for_each(|y| {
+                for z in 0..dimensions.z {
+                    let _ = map.get(&Point3::new(x, y, z)).unwrap();
+                }
+            });
+        });
+    }
+
+    #[test]
+    pub fn assymetric_maps() {
+        let test_dimensions = [
+            Vector3::new(10, 58, 54),
+            Vector3::new(66, 5, 200),
+            Vector3::new(199, 100, 1),
+            Vector3::new(5, 423, 6),
+            Vector3::new(15, 23, 1),
+            Vector3::new(20, 12, 12),
+            Vector3::new(48, 48, 12),
+            Vector3::new(12, 55, 12),
+            Vector3::new(26, 25, 1),
+            Vector3::new(1, 2, 5),
+        ];
+
+        test_dimensions.par_iter().for_each(|dimensions| {
+            test_single_map::<MortonEncoder>(*dimensions);
+            test_single_map::<MortonEncoder2D>(*dimensions);
+            test_single_map::<FlatEncoder>(*dimensions);
+        });
+    }
 
     pub fn test_coord(transform: &Matrix4<f32>, tile: Point3<u32>, world: Point3<f32>) {
         let world_result = to_world(transform, &tile);
