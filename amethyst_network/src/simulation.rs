@@ -12,4 +12,4 @@ pub use events::NetworkSimulationEvent;
 pub use message::Message;
 pub use requirements::{DeliveryRequirement, UrgencyRequirement};
 pub use timing::{NetworkSimulationTime, NetworkSimulationTimeSystem};
-pub use transport::{laminar, udp, SimulationTransportResource};
+pub use transport::{laminar, udp, TransportResource};

@@ -3,7 +3,7 @@ use amethyst::{
     ecs::{Read, System, Write},
     network::simulation::{
         laminar::{LaminarNetworkBundle, LaminarSocket},
-        NetworkSimulationTime, SimulationTransportResource,
+        NetworkSimulationTime, TransportResource,
     },
     prelude::*,
     utils::application_root_dir,
@@ -12,28 +12,21 @@ use amethyst::{
 use log::info;
 use std::time::Duration;
 
-// You'll likely want to use a type alias for any place you specify the NetworkResource<T> so
-// that, if changed, it will only need to be changed in one place.
-type SimulationTransportResourceImpl = SimulationTransportResource<LaminarSocket>;
-
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-    let socket = LaminarSocket::bind("0.0.0.0:3455").expect("Should bind");
+    let socket = LaminarSocket::bind("0.0.0.0:3455")?;
+
     let assets_dir = application_root_dir()?.join("./");
 
-    let mut net = SimulationTransportResource::new();
-    net.set_socket(socket);
-
     let game_data = GameDataBuilder::default()
-        .with_bundle(LaminarNetworkBundle)?
+        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with(SpamSystem::new(), "spam", &[]);
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
         )
-        .with_resource(net)
         .build(game_data)?;
     game.run();
     Ok(())
@@ -56,7 +49,7 @@ impl<'a> System<'a> for SpamSystem {
     type SystemData = (
         Read<'a, NetworkSimulationTime>,
         Read<'a, Time>,
-        Write<'a, SimulationTransportResourceImpl>,
+        Write<'a, TransportResource>,
     );
     fn run(&mut self, (sim_time, time, mut net): Self::SystemData) {
         // Use method `sim_time.sim_frames_to_run()` to determine if the system should send a

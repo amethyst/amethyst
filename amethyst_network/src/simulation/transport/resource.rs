@@ -1,43 +1,21 @@
 use crate::simulation::{
     message::Message,
     requirements::{DeliveryRequirement, UrgencyRequirement},
-    transport::socket::Socket,
 };
 use std::{collections::VecDeque, net::SocketAddr};
 
-/// Resource serving as the owner of the underlying socket and the queue of messages to be sent.
-pub struct SimulationTransportResource<S: Socket> {
-    socket: Option<S>,
+/// Resource serving as the owner of the queue of messages to be sent. This resource also serves
+/// as the interface for other systems to send messages
+pub struct TransportResource {
     messages: VecDeque<Message>,
 }
 
-impl<S: Socket> SimulationTransportResource<S> {
-    /// Create a new `SimulationTransportResource`
+impl TransportResource {
+    /// Create a new `TransportResource`
     pub fn new() -> Self {
         Self {
-            socket: None,
             messages: VecDeque::new(),
         }
-    }
-
-    /// Return a mutable reference to the socket if there is one configured.
-    pub fn get_socket_mut(&mut self) -> Option<&mut S> {
-        self.socket.as_mut()
-    }
-
-    /// Set the bound socket to the `SimulationTransportResource`
-    pub fn set_socket(&mut self, socket: S) {
-        self.socket = Some(socket);
-    }
-
-    /// Drops the socket from the `SimulationTransportResource`
-    pub fn drop_socket(&mut self) {
-        self.socket = None;
-    }
-
-    /// Returns whether or not the `SimulationTransportResource` has a bound socket
-    pub fn has_socket(&self) -> bool {
-        self.socket.is_some()
     }
 
     /// Create a `Message` with the default guarantees provided by the `Socket` implementation and
@@ -46,7 +24,7 @@ impl<S: Socket> SimulationTransportResource<S> {
         self.send_with_requirements(
             destination,
             payload,
-            S::default_requirement(),
+            DeliveryRequirement::Default,
             UrgencyRequirement::OnTick,
         );
     }
@@ -57,7 +35,7 @@ impl<S: Socket> SimulationTransportResource<S> {
         self.send_with_requirements(
             destination,
             payload,
-            S::default_requirement(),
+            DeliveryRequirement::Default,
             UrgencyRequirement::Immediate,
         );
     }
@@ -79,6 +57,17 @@ impl<S: Socket> SimulationTransportResource<S> {
         !self.messages.is_empty()
     }
 
+    /// Returns the messages to send by returning the immediate messages or anything adhering to
+    /// the given filter.
+    pub fn messages_to_send(
+        &mut self,
+        mut filter: impl FnMut(&mut Message) -> bool,
+    ) -> Vec<Message> {
+        self.drain_messages(|message| {
+            message.urgency == UrgencyRequirement::Immediate || filter(message)
+        })
+    }
+
     /// Drains the messages queue and returns the drained messages. The filter allows you to drain
     /// only messages that adhere to your filter. This might be useful in a scenario like draining
     /// messages with a particular urgency requirement.
@@ -98,19 +87,18 @@ impl<S: Socket> SimulationTransportResource<S> {
     }
 }
 
-impl<S: Socket> Default for SimulationTransportResource<S> {
+impl Default for TransportResource {
     fn default() -> Self {
-        panic!(
-            "The `SimulationTransportResource` resource MUST be created and added to the `Application` \
-             before use."
-        );
+        Self {
+            messages: VecDeque::new(),
+        }
     }
 }
 
+// TODO: Fix these. These are all broken now
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::simulation::transport::laminar::LaminarSocket;
 
     #[test]
     fn test_send() {
@@ -119,8 +107,7 @@ mod tests {
         net.send(addr, test_payload());
         assert_eq!(net.messages.len(), 1);
         let packet = &net.messages[0];
-        // Default guarantee specified by the Laminar impl
-        assert_eq!(packet.delivery, DeliveryRequirement::ReliableOrdered(None));
+        assert_eq!(packet.delivery, DeliveryRequirement::Default);
         assert_eq!(packet.urgency, UrgencyRequirement::OnTick);
     }
 
@@ -152,16 +139,16 @@ mod tests {
     #[test]
     fn test_has_socket_and_with_socket() {
         let mut net = create_test_resource();
-        assert!(!net.has_socket());
-        net.set_socket(LaminarSocket::bind_any().unwrap());
-        assert!(net.has_socket());
+        //        assert!(!net.has_socket());
+        //        net.set_socket(LaminarSocket::bind_any().unwrap());
+        //        assert!(net.has_socket());
     }
 
     fn test_payload() -> &'static [u8] {
         b"test"
     }
 
-    fn create_test_resource() -> SimulationTransportResource<LaminarSocket> {
-        <SimulationTransportResource<LaminarSocket>>::new()
+    fn create_test_resource() -> TransportResource {
+        TransportResource::new()
     }
 }

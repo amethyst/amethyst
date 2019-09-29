@@ -5,8 +5,7 @@ use crate::simulation::{
     requirements::DeliveryRequirement,
     timing::{NetworkSimulationTime, NetworkSimulationTimeSystem},
     transport::{
-        run_network_recv_system, run_network_send_system, socket::Socket,
-        SimulationTransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
+        TransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
         NETWORK_SIM_TIME_SYSTEM_NAME,
     },
 };
@@ -18,20 +17,18 @@ use amethyst_core::{
 use amethyst_error::Error;
 use bytes::Bytes;
 use log::error;
-use std::{
-    io,
-    net::UdpSocket,
-    ops::{Deref, DerefMut},
-};
+use std::{io, net::UdpSocket};
 
 /// Use this network bundle to add the various underlying UDP network systems to your game.
 pub struct UdpNetworkBundle {
+    socket: Option<UdpSocket>,
     recv_buffer_size_bytes: usize,
 }
 
 impl UdpNetworkBundle {
-    pub fn new(recv_buffer_size_bytes: usize) -> Self {
+    pub fn new(socket: Option<UdpSocket>, recv_buffer_size_bytes: usize) -> Self {
         Self {
+            socket,
             recv_buffer_size_bytes,
         }
     }
@@ -40,7 +37,7 @@ impl UdpNetworkBundle {
 impl<'a, 'b> SystemBundle<'a, 'b> for UdpNetworkBundle {
     fn build(
         self,
-        _world: &mut World,
+        world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
         builder.add(
@@ -48,12 +45,17 @@ impl<'a, 'b> SystemBundle<'a, 'b> for UdpNetworkBundle {
             NETWORK_SIM_TIME_SYSTEM_NAME,
             &[],
         );
-        builder.add(UdpNetworkSendSystem, NETWORK_SEND_SYSTEM_NAME, &[]);
+        builder.add(
+            UdpNetworkSendSystem,
+            NETWORK_SEND_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
         builder.add(
             UdpNetworkRecvSystem::with_buffer_capacity(self.recv_buffer_size_bytes),
             NETWORK_RECV_SYSTEM_NAME,
-            &[],
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
         );
+        world.insert(UdpSocketResource::new(self.socket));
         Ok(())
     }
 }
@@ -62,30 +64,33 @@ pub struct UdpNetworkSendSystem;
 
 impl<'s> System<'s> for UdpNetworkSendSystem {
     type SystemData = (
-        Write<'s, SimulationTransportResource<UdpSocket>>,
+        Write<'s, TransportResource>,
+        Write<'s, UdpSocketResource>,
         Read<'s, NetworkSimulationTime>,
     );
 
-    fn run(&mut self, (mut net, sim_time): Self::SystemData) {
-        run_network_send_system(
-            net.deref_mut(),
-            sim_time.deref(),
-            |socket, message| match message.delivery {
-                DeliveryRequirement::Unreliable => {
-                    if let Err(e) = socket.send_to(&message.payload, message.destination) {
-                        error!("There was an error when attempting to send packet: {:?}", e);
+    fn run(&mut self, (mut net, mut socket, sim_time): Self::SystemData) {
+        socket.get_mut().map(|socket| {
+            let messages = net.messages_to_send(|_| sim_time.should_send_messages());
+            for message in messages.iter() {
+                match message.delivery {
+                    DeliveryRequirement::Unreliable | DeliveryRequirement::Default => {
+                        if let Err(e) = socket.send_to(&message.payload, message.destination) {
+                            error!("There was an error when attempting to send packet: {:?}", e);
+                        }
                     }
+                    delivery => panic!(
+                        "{:?} is unsupported. UDP only supports Unreliable by design.",
+                        delivery
+                    ),
                 }
-                delivery => panic!(
-                    "{:?} is unsupported. UDP only supports Unreliable by design.",
-                    delivery
-                ),
-            },
-        );
+            }
+        });
     }
 }
 
 pub struct UdpNetworkRecvSystem {
+    // TODO: Probably should move this to the UdpSocketResource
     recv_buffer: Vec<u8>,
 }
 
@@ -99,12 +104,12 @@ impl UdpNetworkRecvSystem {
 
 impl<'s> System<'s> for UdpNetworkRecvSystem {
     type SystemData = (
-        Write<'s, SimulationTransportResource<UdpSocket>>,
+        Write<'s, UdpSocketResource>,
         Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
-    fn run(&mut self, (mut net, mut recv_channel): Self::SystemData) {
-        run_network_recv_system(net.deref_mut(), |socket| {
+    fn run(&mut self, (mut socket, mut recv_channel): Self::SystemData) {
+        socket.get_mut().map(|socket| {
             loop {
                 match socket.recv_from(&mut self.recv_buffer) {
                     Ok((recv_len, address)) => {
@@ -127,8 +132,35 @@ impl<'s> System<'s> for UdpNetworkRecvSystem {
     }
 }
 
-impl Socket for UdpSocket {
-    fn default_requirement() -> DeliveryRequirement {
-        DeliveryRequirement::Unreliable
+/// Resource to own the UDP socket.
+pub struct UdpSocketResource {
+    socket: Option<UdpSocket>,
+}
+
+impl Default for UdpSocketResource {
+    fn default() -> Self {
+        Self { socket: None }
+    }
+}
+
+impl UdpSocketResource {
+    /// Create a new instance of the `UdpSocketResource`
+    pub fn new(socket: Option<UdpSocket>) -> Self {
+        Self { socket }
+    }
+
+    /// Return a mutable reference to the socket if there is one configured.
+    pub fn get_mut(&mut self) -> Option<&mut UdpSocket> {
+        self.socket.as_mut()
+    }
+
+    /// Set the bound socket to the `UdpSocketResource`
+    pub fn set_socket(&mut self, socket: UdpSocket) {
+        self.socket = Some(socket);
+    }
+
+    /// Drops the socket from the `UdpSocketResource`
+    pub fn drop_socket(&mut self) {
+        self.socket = None;
     }
 }

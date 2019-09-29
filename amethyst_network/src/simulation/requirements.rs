@@ -23,6 +23,9 @@ pub enum DeliveryRequirement {
     /// where it wants to put the message.
     /// Client receives 1, 2, 3, 4, 5, 6
     ReliableOrdered(Option<u8>),
+    /// Defer to the underlying implementation to decide what "Default" means.
+    /// e.g. Udp will have a default delivery of "Unreliable"
+    Default,
 }
 
 /// Specification of urgency of the sending of a message. Typically we'll want to send messages

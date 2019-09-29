@@ -5,8 +5,7 @@ use amethyst::{
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     network::simulation::{
         laminar::{LaminarNetworkBundle, LaminarSocket},
-        DeliveryRequirement, NetworkSimulationEvent, SimulationTransportResource,
-        UrgencyRequirement,
+        DeliveryRequirement, NetworkSimulationEvent, TransportResource, UrgencyRequirement,
     },
     prelude::*,
     shrev::{EventChannel, ReaderId},
@@ -15,39 +14,31 @@ use amethyst::{
 };
 use log::info;
 
-// You'll likely want to use a type alias for any place you specify the `SimulationTransportResource<T>` so
-// that, if changed, it will only need to be changed in one place.
-type SimulationTransportResourceImpl = SimulationTransportResource<LaminarSocket>;
-
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-    let socket = LaminarSocket::bind("0.0.0.0:3457").expect("Should bind");
+    let socket = LaminarSocket::bind("0.0.0.0:3457")?;
 
     let assets_dir = application_root_dir()?.join("./");
-
-    let mut net = SimulationTransportResource::new();
-    net.set_socket(socket);
 
     // XXX: This is gross. We really need a handshake in laminar. Reliable delivery will not work
     // unless you send an unreliable message first and begin the client BEFORE the 5 second disconnect
     // timer.
-    net.send_with_requirements(
-        "127.0.0.1:3455".parse().unwrap(),
-        b"",
-        DeliveryRequirement::Unreliable,
-        UrgencyRequirement::OnTick,
-    );
+    //    net.send_with_requirements(
+    //        "127.0.0.1:3455".parse().unwrap(),
+    //        b"",
+    //        DeliveryRequirement::Unreliable,
+    //        UrgencyRequirement::Immediate,
+    //    );
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(LaminarNetworkBundle)?
+        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with_bundle(SpamReceiveBundle)?;
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             60,
         )
-        .with_resource(net)
         .build(game_data)?;
     game.run();
     Ok(())
@@ -102,7 +93,7 @@ impl SpamReceiveSystem {
 
 impl<'a> System<'a> for SpamReceiveSystem {
     type SystemData = (
-        Write<'a, SimulationTransportResourceImpl>,
+        Write<'a, TransportResource>,
         Read<'a, EventChannel<NetworkSimulationEvent>>,
     );
 
