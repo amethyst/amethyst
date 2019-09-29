@@ -81,16 +81,6 @@ pub fn morton_decode_intr_3d(morton: u32) -> (u32, u32, u32) {
     )
 }
 
-fn next_power_of_2(mut v: u32) -> u32 {
-    v -= 1;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    v + 1
-}
-
 /// 3D Morton (Z-Order) encoding implementation.
 /// This implementation uses the `bmi2` CPU intrinsic if it is available via the `bitintr` crate. If this instruction
 /// set is not available, it falls back on simpler computation methods. Using these CPU instruction optimizations requires
@@ -115,12 +105,12 @@ impl CoordinateEncoder for MortonEncoder {
     }
 
     fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
-        let max = dimensions.x.max(dimensions.y).max(dimensions.z);
-        Vector3::new(
-            next_power_of_2(max),
-            next_power_of_2(max),
-            next_power_of_2(max),
-        )
+        let max = dimensions
+            .x
+            .max(dimensions.y)
+            .max(dimensions.z)
+            .next_power_of_two();
+        Vector3::new(max, max, max)
     }
 }
 
@@ -177,8 +167,8 @@ impl CoordinateEncoder for MortonEncoder2D {
     }
 
     fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
-        let max = dimensions.x.max(dimensions.y);
-        Vector3::new(next_power_of_2(max), next_power_of_2(max), dimensions.z)
+        let max = dimensions.x.max(dimensions.y).next_power_of_two();
+        Vector3::new(max, max, dimensions.z)
     }
 }
 
