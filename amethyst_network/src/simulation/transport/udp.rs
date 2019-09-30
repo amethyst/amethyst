@@ -69,9 +69,9 @@ impl<'s> System<'s> for UdpNetworkSendSystem {
         Read<'s, NetworkSimulationTime>,
     );
 
-    fn run(&mut self, (mut net, mut socket, sim_time): Self::SystemData) {
+    fn run(&mut self, (mut transport, mut socket, sim_time): Self::SystemData) {
         socket.get_mut().map(|socket| {
-            let messages = net.messages_to_send(|_| sim_time.should_send_messages());
+            let messages = transport.messages_to_send(|_| sim_time.should_send_messages());
             for message in messages.iter() {
                 match message.delivery {
                     DeliveryRequirement::Unreliable | DeliveryRequirement::Default => {
@@ -108,7 +108,7 @@ impl<'s> System<'s> for UdpNetworkRecvSystem {
         Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
-    fn run(&mut self, (mut socket, mut recv_channel): Self::SystemData) {
+    fn run(&mut self, (mut socket, mut event_channel): Self::SystemData) {
         socket.get_mut().map(|socket| {
             loop {
                 match socket.recv_from(&mut self.recv_buffer) {
@@ -118,7 +118,7 @@ impl<'s> System<'s> for UdpNetworkRecvSystem {
                             Bytes::from(&self.recv_buffer[..recv_len]),
                         );
                         // TODO: Handle other types of events.
-                        recv_channel.single_write(event);
+                        event_channel.single_write(event);
                     }
                     Err(e) => {
                         if e.kind() != io::ErrorKind::WouldBlock {

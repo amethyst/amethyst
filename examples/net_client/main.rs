@@ -2,7 +2,8 @@ use amethyst::{
     core::{frame_limiter::FrameRateLimitStrategy, Time},
     ecs::{Read, System, Write},
     network::simulation::{
-        laminar::{LaminarNetworkBundle, LaminarSocket},
+//        laminar::{LaminarNetworkBundle, LaminarSocket},
+        tcp::TcpNetworkBundle,
         NetworkSimulationTime, TransportResource,
     },
     prelude::*,
@@ -11,16 +12,18 @@ use amethyst::{
 };
 use log::info;
 use std::time::Duration;
+use std::net::TcpListener;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-    let socket = LaminarSocket::bind("0.0.0.0:3455")?;
+//    let listener = TcpListener::bind("0.0.0.0:3455")?;
+//    listener.set_nonblocking(true)?;
 
     let assets_dir = application_root_dir()?.join("./");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
+        .with_bundle(TcpNetworkBundle::new(None, 1500))?
         .with(SpamSystem::new(), "spam", &[]);
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(

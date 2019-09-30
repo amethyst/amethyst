@@ -1,8 +1,13 @@
 //! Network systems implementation backed by the TCP network protocol.
 
 use crate::simulation::{
+    events::NetworkSimulationEvent,
+    requirements::DeliveryRequirement,
     timing::{NetworkSimulationTime, NetworkSimulationTimeSystem},
-    transport::{NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME, NETWORK_SIM_TIME_SYSTEM_NAME},
+    transport::{
+        TransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
+        NETWORK_SIM_TIME_SYSTEM_NAME
+    },
 };
 use amethyst_core::{
     bundle::SystemBundle,
@@ -10,16 +15,33 @@ use amethyst_core::{
     shrev::EventChannel,
 };
 use amethyst_error::Error;
+use bytes::Bytes;
+use log::error;
+use std::{
+    collections::HashMap,
+    io::{self, Read as IORead, Write as IOWrite},
+    ops::{Deref, DerefMut},
+    net::{SocketAddr, TcpListener, TcpStream}
+};
 
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "connection_listener";
 
 /// Use this network bundle to add the various underlying tcp network systems to your game.
-pub struct TcpNetworkBundle;
+pub struct TcpNetworkBundle {
+    listener: Option<TcpListener>,
+    recv_buffer_size_bytes: usize,
+}
+
+impl TcpNetworkBundle {
+    pub fn new(listener: Option<TcpListener>, recv_buffer_size_bytes: usize) -> Self {
+        Self { listener, recv_buffer_size_bytes }
+    }
+}
 
 impl<'a, 'b> SystemBundle<'a, 'b> for TcpNetworkBundle {
     fn build(
         self,
-        _world: &mut World,
+        world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
         builder.add(
@@ -42,6 +64,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for TcpNetworkBundle {
             NETWORK_RECV_SYSTEM_NAME,
             &[CONNECTION_LISTENER_SYSTEM_NAME],
         );
+        world.insert(TcpNetworkResource::new(self.listener, self.recv_buffer_size_bytes));
         Ok(())
     }
 }
@@ -53,33 +76,159 @@ impl<'s> System<'s> for TcpConnectionListenerSystem {
     type SystemData = (
         Write<'s, TcpNetworkResource>,
         Read<'s, NetworkSimulationTime>,
+        Write<'s, EventChannel<NetworkSimulationEvent>>
     );
 
-    fn run(&mut self, data: Self::SystemData) {}
+    fn run(&mut self, (mut net, sim_time, mut event_channel): Self::SystemData) {
+        let resource = net.deref_mut();
+        if let Some(ref listener) = resource.listener {
+            loop {
+                match listener.accept() {
+                    Ok((stream, addr)) => {
+                        stream.set_nonblocking(true).expect("Setting non-blocking mode");
+                        stream.set_nodelay(true).expect("Setting nodelay");
+                        resource.streams.insert(addr, stream);
+                        event_channel.single_write(NetworkSimulationEvent::Connect(addr));
+                    },
+                    Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                        break;
+                    }
+                    Err(e) => {
+                        error!("Error listening for connections: {}", e);
+                        break;
+                    }
+                };
+            }
+        }
+    }
 }
 
 /// System to send messages to a particular open `TcpStream`.
 pub struct TcpNetworkSendSystem;
 
 impl<'s> System<'s> for TcpNetworkSendSystem {
-    type SystemData = ();
+    type SystemData = (
+        Write<'s, TransportResource>,
+        Write<'s, TcpNetworkResource>,
+        Read<'s, NetworkSimulationTime>,
+    );
 
-    fn run(&mut self, data: Self::SystemData) {}
+    fn run(&mut self, (mut transport, mut net, sim_time): Self::SystemData) {
+        let messages = transport.messages_to_send(|_| sim_time.should_send_messages());
+        for message in messages.iter() {
+            match message.delivery {
+                DeliveryRequirement::ReliableOrdered(_) | DeliveryRequirement::Default => {
+                    let stream = net.get_or_create_stream(message.destination);
+                    if let Err(e) = stream.write(&message.payload) {
+                        error!("There was an error when attempting to send message: {:?}", e);
+                    }
+                }
+                delivery => panic!(
+                    "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
+                    delivery
+                ),
+            }
+        }
+    }
 }
 
 /// System to receive messages from all open `TcpStream`s.
 pub struct TcpNetworkRecvSystem;
 
 impl<'s> System<'s> for TcpNetworkRecvSystem {
-    type SystemData = ();
+    type SystemData = (
+        Write<'s, TcpNetworkResource>,
+        Write<'s, EventChannel<NetworkSimulationEvent>>,
+    );
 
-    fn run(&mut self, data: Self::SystemData) {}
+    fn run(&mut self, (mut net, mut event_channel): Self::SystemData) {
+        let resource = net.deref_mut();
+        for (_, stream) in resource.streams.iter_mut() {
+            let peer_addr = stream.peer_addr().unwrap();
+            loop {
+                match stream.read(&mut resource.recv_buffer) {
+                    Ok(recv_len) => {
+                        if recv_len > 0 {
+                            let event = NetworkSimulationEvent::Message(
+                                peer_addr,
+                                Bytes::from(&resource.recv_buffer[..recv_len]),
+                            );
+                            event_channel.single_write(event);
+                        } else {
+                            event_channel.single_write(NetworkSimulationEvent::Disconnect(peer_addr));
+//                            resource.drop_stream(peer_addr);
+                        }
+                    }
+                    Err(e) => {
+                        match e.kind() {
+                            io::ErrorKind::ConnectionReset => {
+                                event_channel.single_write(NetworkSimulationEvent::Disconnect(peer_addr));
+//                                resource.drop_stream(peer_addr);
+                            }
+                            io::ErrorKind::WouldBlock => {}
+                            _ => error!("Encountered an error receiving data: {:?}", e)
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
-pub struct TcpNetworkResource;
+pub struct TcpNetworkResource {
+    listener: Option<TcpListener>,
+    streams: HashMap<SocketAddr, TcpStream>,
+    recv_buffer: Vec<u8>,
+}
+
+impl TcpNetworkResource {
+    pub fn new(listener: Option<TcpListener>, recv_buffer_size_bytes: usize) -> Self {
+        Self {
+            listener,
+            streams: HashMap::new(),
+            recv_buffer: vec![0; recv_buffer_size_bytes]
+        }
+    }
+
+    /// Return a mutable reference to the listener if there is one configured.
+    pub fn get_mut(&mut self) -> Option<&mut TcpListener> {
+        self.listener.as_mut()
+    }
+
+    /// Set the bound listener to the `TcpNetworkResource`
+    pub fn set_listener(&mut self, listener: TcpListener) {
+        self.listener = Some(listener);
+    }
+
+    /// Drops the listener from the `TcpNetworkResource`
+    pub fn drop_listener(&mut self) {
+        self.listener = None;
+    }
+
+    /// Returns the stream associated with the `SocketAddr` or creates one if one doesn't exist.
+    pub fn get_or_create_stream(&mut self, addr: SocketAddr) -> &mut TcpStream {
+        self.streams.entry(addr).or_insert_with(|| {
+            let s = TcpStream::connect(addr).unwrap();
+            s.set_nonblocking(true).expect("Setting non-blocking mode");
+            s.set_nodelay(true).expect("Setting nodelay");
+            s
+        })
+    }
+
+    /// Drop the stream with the given `SocketAddr`. This will be called when a peer seems to have
+    /// been disconnected.
+    pub fn drop_stream(&mut self, addr: SocketAddr) -> Option<TcpStream> {
+        self.streams.remove(&addr)
+    }
+}
 
 impl Default for TcpNetworkResource {
     fn default() -> Self {
-        Self {}
+        Self {
+            listener: None,
+            streams: HashMap::new(),
+            recv_buffer: Vec::new()
+        }
     }
 }
