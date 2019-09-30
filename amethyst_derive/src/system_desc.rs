@@ -548,7 +548,7 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
 fn system_desc_name(ast: &DeriveInput) -> Option<Ident> {
     ast.tag_parameter(&parse_quote!(system_desc), &parse_quote!(name))
         .map(|meta| {
-            if let Meta::Path(path) = meta {
+            if let NestedMeta::Meta(Meta::Path(path)) = meta {
                 if let Some(ident) = path.get_ident() {
                     ident.clone()
                 } else {
@@ -562,56 +562,41 @@ fn system_desc_name(ast: &DeriveInput) -> Option<Ident> {
 
 /// Inserts resources specified inside the `#[system_desc(insert(..))]` attribute.
 fn resource_insertion_expressions(ast: &DeriveInput) -> TokenStream {
-    let meta_inserts = ast.tag_parameters(&parse_quote!(system_desc), &parse_quote!(insert));
-    meta_inserts
+    let nested_meta_inserts = ast.tag_parameters(&parse_quote!(system_desc), &parse_quote!(insert));
+    nested_meta_inserts
         .into_iter()
-        // `meta` is the `insert(..)` item.
-        .filter_map(|meta| {
-            if let Meta::List(meta_list) = meta {
-                Some(meta_list)
-            } else {
-                None
-            }
-        })
         // We want to insert a resource for each item in the list.
-        .flat_map(|meta_list| {
-            meta_list
-                .nested
-                .iter()
-                .map(|nested_meta| match nested_meta {
-                    NestedMeta::Meta(meta) => {
-                        if let Meta::Path(path) = meta {
-                            quote!(#path)
-                        } else {
-                            panic!(
-                                "`{:?}` is an invalid value in this position.\n\
-                                 Expected a literal string or path.",
-                                meta
-                            )
-                        }
-                    }
-                    NestedMeta::Lit(lit) => {
-                        if let Lit::Str(lit_str) = lit {
-                            // Turn the literal into tokens.
-                            // The literal must be a valid expression
-                            let expr = lit_str.parse::<Expr>().unwrap_or_else(|e| {
-                                panic!(
-                                    "Failed to parse `{:?}` as an expression. Error: {}",
-                                    lit_str, e,
-                                )
-                            });
-                            quote!(#expr)
-                        } else {
-                            panic!(
-                                "`{:?}` is an invalid value in this position.\n\
-                                 Expected a literal string or single word.",
-                                lit
-                            )
-                        }
-                    }
-                })
-                .collect::<Vec<TokenStream>>()
-                .into_iter()
+        .map(|nested_meta| match nested_meta {
+            NestedMeta::Meta(meta) => {
+                if let Meta::Path(path) = meta {
+                    quote!(#path)
+                } else {
+                    panic!(
+                        "`{:?}` is an invalid value in this position.\n\
+                         Expected a literal string or path.",
+                        meta
+                    )
+                }
+            }
+            NestedMeta::Lit(lit) => {
+                if let Lit::Str(lit_str) = lit {
+                    // Turn the literal into tokens.
+                    // The literal must be a valid expression
+                    let expr = lit_str.parse::<Expr>().unwrap_or_else(|e| {
+                        panic!(
+                            "Failed to parse `{:?}` as an expression. Error: {}",
+                            lit_str, e,
+                        )
+                    });
+                    quote!(#expr)
+                } else {
+                    panic!(
+                        "`{:?}` is an invalid value in this position.\n\
+                         Expected a literal string or single word.",
+                        lit
+                    )
+                }
+            }
         })
         .fold(TokenStream::new(), |mut accumulated_tokens, expr_tokens| {
             accumulated_tokens.extend(quote! {
@@ -682,7 +667,7 @@ fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> T
                             &parse_quote!(system_desc),
                             &parse_quote!(flagged_storage_reader),
                         );
-                        if let Some(Meta::Path(path)) = meta {
+                        if let Some(NestedMeta::Meta(Meta::Path(path))) = meta {
                             path
                         } else {
                             panic!(
