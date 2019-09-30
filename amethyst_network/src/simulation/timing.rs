@@ -145,4 +145,28 @@ mod tests {
         assert_eq!(time.per_frame_duration(), Duration::from_millis(50));
         assert_eq!(time.elapsed_duration(), Duration::from_millis(0));
     }
+
+    #[test]
+    fn test_message_send_rate_should_send_every_2_frames() {
+        let time = NetworkSimulationTime::default().with_message_send_rate(2);
+
+        for i in 1..100 {
+            // every second frame (even) should return true
+            if i % 2 == 0 {
+                assert_eq!(time.should_send_message(i), true);
+            } else {
+                assert_eq!(time.should_send_message(i), false);
+            }
+        }
+    }
+
+    #[test]
+    fn test_elapsed_duration_gets_updated() {
+        let mut time = NetworkSimulationTime::default();
+
+        let elapsed_time = Duration::from_millis(500);
+        time.update_elapsed(elapsed_time);
+
+        assert_eq!(time.elapsed_duration(), elapsed_time)
+    }
 }

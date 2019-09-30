@@ -95,26 +95,114 @@ impl Default for TransportResource {
     }
 }
 
-// TODO: Fix these. These are all broken now
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_send() {
-        let mut net = create_test_resource();
-        let addr = "127.0.0.1:3000".parse().unwrap();
-        net.send(addr, test_payload());
-        assert_eq!(net.messages.len(), 1);
-        let packet = &net.messages[0];
+    fn test_send_with_default_requirements() {
+        let mut resource = create_test_resource();
+
+        resource.send("127.0.0.1:3000".parse().unwrap(), test_payload());
+
+        let packet = &resource.messages[0];
+
+        assert_eq!(resource.messages.len(), 1);
         assert_eq!(packet.delivery, DeliveryRequirement::Default);
         assert_eq!(packet.urgency, UrgencyRequirement::OnTick);
     }
 
     #[test]
+    fn test_send_immediate_message() {
+        let mut resource = create_test_resource();
+
+        resource.send_immediate("127.0.0.1:3000".parse().unwrap(), test_payload());
+
+        let packet = &resource.messages[0];
+
+        assert_eq!(resource.messages.len(), 1);
+        assert_eq!(packet.delivery, DeliveryRequirement::Default);
+        assert_eq!(packet.urgency, UrgencyRequirement::Immediate);
+    }
+
+    #[test]
+    fn test_has_messages() {
+        let mut resource = create_test_resource();
+        assert_eq!(resource.has_messages(), false);
+        resource.send_immediate("127.0.0.1:3000".parse().unwrap(), test_payload());
+        assert_eq!(resource.has_messages(), true);
+    }
+
+    #[test]
+    fn test_drain_only_immediate_messages() {
+        let mut resource = create_test_resource();
+
+        let addr = "127.0.0.1:3000".parse().unwrap();
+        resource.send_immediate(addr, test_payload());
+        resource.send_immediate(addr, test_payload());
+        resource.send(addr, test_payload());
+        resource.send(addr, test_payload());
+        resource.send_immediate(addr, test_payload());
+
+        assert_eq!(resource.messages_to_send(|_| false).len(), 3);
+        assert_eq!(resource.messages_to_send(|_| false).len(), 0);
+    }
+
+    #[test]
+    fn test_drain_only_messages_with_specific_requirements() {
+        let mut resource = create_test_resource();
+
+        let addr = "127.0.0.1:3000".parse().unwrap();
+        resource.send_with_requirements(
+            addr,
+            test_payload(),
+            DeliveryRequirement::Unreliable,
+            UrgencyRequirement::OnTick,
+        );
+        resource.send_with_requirements(
+            addr,
+            test_payload(),
+            DeliveryRequirement::Reliable,
+            UrgencyRequirement::OnTick,
+        );
+        resource.send_with_requirements(
+            addr,
+            test_payload(),
+            DeliveryRequirement::ReliableOrdered(None),
+            UrgencyRequirement::OnTick,
+        );
+        resource.send_with_requirements(
+            addr,
+            test_payload(),
+            DeliveryRequirement::ReliableSequenced(None),
+            UrgencyRequirement::OnTick,
+        );
+        resource.send_with_requirements(
+            addr,
+            test_payload(),
+            DeliveryRequirement::Unreliable,
+            UrgencyRequirement::OnTick,
+        );
+
+        assert_eq!(
+            resource
+                .drain_messages(|message| message.delivery == DeliveryRequirement::Unreliable)
+                .len(),
+            2
+        );
+        // validate removal
+        assert_eq!(
+            resource
+                .drain_messages(|message| message.delivery == DeliveryRequirement::Unreliable)
+                .len(),
+            0
+        );
+    }
+
+    #[test]
     fn test_send_with_requirements() {
         use DeliveryRequirement::*;
-        let mut net = create_test_resource();
+        let mut resource = create_test_resource();
         let addr = "127.0.0.1:3000".parse().unwrap();
 
         let requirements = [
@@ -126,22 +214,14 @@ mod tests {
         ];
 
         for req in requirements.iter().cloned() {
-            net.send_with_requirements(addr, test_payload(), req, UrgencyRequirement::OnTick);
+            resource.send_with_requirements(addr, test_payload(), req, UrgencyRequirement::OnTick);
         }
 
-        assert_eq!(net.messages.len(), requirements.len());
+        assert_eq!(resource.messages.len(), requirements.len());
 
         for (i, req) in requirements.iter().enumerate() {
-            assert_eq!(net.messages[i].delivery, *req);
+            assert_eq!(resource.messages[i].delivery, *req);
         }
-    }
-
-    #[test]
-    fn test_has_socket_and_with_socket() {
-        let mut net = create_test_resource();
-        //        assert!(!net.has_socket());
-        //        net.set_socket(LaminarSocket::bind_any().unwrap());
-        //        assert!(net.has_socket());
     }
 
     fn test_payload() -> &'static [u8] {

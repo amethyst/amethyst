@@ -6,7 +6,7 @@ use crate::simulation::{
     timing::{NetworkSimulationTime, NetworkSimulationTimeSystem},
     transport::{
         TransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
-        NETWORK_SIM_TIME_SYSTEM_NAME
+        NETWORK_SIM_TIME_SYSTEM_NAME,
     },
 };
 use amethyst_core::{
@@ -20,8 +20,8 @@ use log::error;
 use std::{
     collections::HashMap,
     io::{self, Read as IORead, Write as IOWrite},
+    net::{SocketAddr, TcpListener, TcpStream},
     ops::{Deref, DerefMut},
-    net::{SocketAddr, TcpListener, TcpStream}
 };
 
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "connection_listener";
@@ -34,7 +34,10 @@ pub struct TcpNetworkBundle {
 
 impl TcpNetworkBundle {
     pub fn new(listener: Option<TcpListener>, recv_buffer_size_bytes: usize) -> Self {
-        Self { listener, recv_buffer_size_bytes }
+        Self {
+            listener,
+            recv_buffer_size_bytes,
+        }
     }
 }
 
@@ -64,7 +67,10 @@ impl<'a, 'b> SystemBundle<'a, 'b> for TcpNetworkBundle {
             NETWORK_RECV_SYSTEM_NAME,
             &[CONNECTION_LISTENER_SYSTEM_NAME],
         );
-        world.insert(TcpNetworkResource::new(self.listener, self.recv_buffer_size_bytes));
+        world.insert(TcpNetworkResource::new(
+            self.listener,
+            self.recv_buffer_size_bytes,
+        ));
         Ok(())
     }
 }
@@ -76,7 +82,7 @@ impl<'s> System<'s> for TcpConnectionListenerSystem {
     type SystemData = (
         Write<'s, TcpNetworkResource>,
         Read<'s, NetworkSimulationTime>,
-        Write<'s, EventChannel<NetworkSimulationEvent>>
+        Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
     fn run(&mut self, (mut net, sim_time, mut event_channel): Self::SystemData) {
@@ -85,11 +91,13 @@ impl<'s> System<'s> for TcpConnectionListenerSystem {
             loop {
                 match listener.accept() {
                     Ok((stream, addr)) => {
-                        stream.set_nonblocking(true).expect("Setting non-blocking mode");
+                        stream
+                            .set_nonblocking(true)
+                            .expect("Setting non-blocking mode");
                         stream.set_nodelay(true).expect("Setting nodelay");
                         resource.streams.insert(addr, stream);
                         event_channel.single_write(NetworkSimulationEvent::Connect(addr));
-                    },
+                    }
                     Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                         break;
                     }
@@ -120,7 +128,10 @@ impl<'s> System<'s> for TcpNetworkSendSystem {
                 DeliveryRequirement::ReliableOrdered(_) | DeliveryRequirement::Default => {
                     let stream = net.get_or_create_stream(message.destination);
                     if let Err(e) = stream.write(&message.payload) {
-                        error!("There was an error when attempting to send message: {:?}", e);
+                        error!(
+                            "There was an error when attempting to send message: {:?}",
+                            e
+                        );
                     }
                 }
                 delivery => panic!(
@@ -155,18 +166,20 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                             );
                             event_channel.single_write(event);
                         } else {
-                            event_channel.single_write(NetworkSimulationEvent::Disconnect(peer_addr));
-//                            resource.drop_stream(peer_addr);
+                            event_channel
+                                .single_write(NetworkSimulationEvent::Disconnect(peer_addr));
+                            //                            resource.drop_stream(peer_addr);
                         }
                     }
                     Err(e) => {
                         match e.kind() {
                             io::ErrorKind::ConnectionReset => {
-                                event_channel.single_write(NetworkSimulationEvent::Disconnect(peer_addr));
-//                                resource.drop_stream(peer_addr);
+                                event_channel
+                                    .single_write(NetworkSimulationEvent::Disconnect(peer_addr));
+                                //                                resource.drop_stream(peer_addr);
                             }
                             io::ErrorKind::WouldBlock => {}
-                            _ => error!("Encountered an error receiving data: {:?}", e)
+                            _ => error!("Encountered an error receiving data: {:?}", e),
                         }
                         break;
                     }
@@ -187,7 +200,7 @@ impl TcpNetworkResource {
         Self {
             listener,
             streams: HashMap::new(),
-            recv_buffer: vec![0; recv_buffer_size_bytes]
+            recv_buffer: vec![0; recv_buffer_size_bytes],
         }
     }
 
@@ -228,7 +241,7 @@ impl Default for TcpNetworkResource {
         Self {
             listener: None,
             streams: HashMap::new(),
-            recv_buffer: Vec::new()
+            recv_buffer: Vec::new(),
         }
     }
 }

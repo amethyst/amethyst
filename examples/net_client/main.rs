@@ -2,23 +2,24 @@ use amethyst::{
     core::{frame_limiter::FrameRateLimitStrategy, Time},
     ecs::{Read, System, Write},
     network::simulation::{
-//        laminar::{LaminarNetworkBundle, LaminarSocket},
+        //        laminar::{LaminarNetworkBundle, LaminarSocket},
         tcp::TcpNetworkBundle,
-        NetworkSimulationTime, TransportResource,
+        NetworkSimulationTime,
+        TransportResource,
     },
     prelude::*,
     utils::application_root_dir,
     Result,
 };
 use log::info;
-use std::time::Duration;
 use std::net::TcpListener;
+use std::time::Duration;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-//    let listener = TcpListener::bind("0.0.0.0:3455")?;
-//    listener.set_nonblocking(true)?;
+    //    let listener = TcpListener::bind("0.0.0.0:3455")?;
+    //    listener.set_nonblocking(true)?;
 
     let assets_dir = application_root_dir()?.join("./");
 
