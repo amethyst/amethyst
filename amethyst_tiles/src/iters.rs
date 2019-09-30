@@ -178,7 +178,7 @@ impl Iterator for RegionLinearIter {
             return Some(ret);
         }
 
-        if self.track.y >= self.region.max.y {
+        if self.track.y > self.region.max.y {
             self.track.z += 1;
 
             self.track.y = self.region.min.y;
