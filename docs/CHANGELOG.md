@@ -10,14 +10,21 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 
-### Added 
+### Added
+
 * `FlatEncoder` added to amethyst_tiles for flat linear encoding which is optimized for space. ([#1950])
 
-### Fixed 
+### Changed
+
+* Updated `syn`, `quote`, and `proc-macro2` to `1.0`. ([#1952])
+
+### Fixed
+
 * `TileMap` was not allocating enough space for to compensate for morton encoding alignment. This means that 
 all tilemap allocation must occur on 2^n boundary aligned on all axis (or x-y axis for Morton2D) ([#1950])
 
 [#1950]: https://github.com/amethyst/amethyst/pull/1950
+[#1952]: https://github.com/amethyst/amethyst/pull/1952
 
 ### Major breaking changes
 
