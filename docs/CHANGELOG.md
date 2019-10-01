@@ -22,18 +22,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * `TileMap` was not allocating enough space for to compensate for morton encoding alignment. This means that 
 all tilemap allocation must occur on 2^n boundary aligned on all axis (or x-y axis for Morton2D) ([#1950])
+* Add missing re-export for HideHierarchySystemDesc ([#1945])
 
+[#1945]: https://github.com/amethyst/amethyst/pull/1945
 [#1950]: https://github.com/amethyst/amethyst/pull/1950
 [#1952]: https://github.com/amethyst/amethyst/pull/1952
-
-### Major breaking changes
-
-### Added
-
-### Changed
-
-### Fixed
-- Add missing re-export for HideHierarchySystemDesc
 
 ## [0.13.0] - 2019-09-25
 
