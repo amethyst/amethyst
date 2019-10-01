@@ -28,7 +28,7 @@ derivative = "1.0"
 derive-new = "0.5"
 fnv = "1"
 log = "0.4.6"
-parking_lot = "0.6"
+parking_lot = "0.9"
 rayon = "1.1.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }

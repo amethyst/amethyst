@@ -35,7 +35,7 @@ bitintr = "0.3"
 glsl-layout = "0.3"
 
 [dev-dependencies]
-criterion = "0.2.11"
+criterion = "0.3"
 more-asserts = "0.2"
 approx = "0.3"
 

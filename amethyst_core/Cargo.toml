@@ -27,7 +27,7 @@ rayon = "1.1.0"
 serde = { version = "1", features = ["derive"] }
 specs = { version = "0.15.1", default-features = false, features = ["shred-derive", "specs-derive"] }
 specs-hierarchy = { version = "0.5.1", default-features = false }
-getset = "0.0.7"
+getset = "0.0.8"
 derive-new = "0.5.6"
 derivative = "1.0"
 
