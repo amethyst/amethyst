@@ -67,7 +67,7 @@ impl AsVertex for TileArgs {
             (Format::Rg32Sfloat, "u_offset"),
             (Format::Rg32Sfloat, "v_offset"),
             (Format::Rgba32Sfloat, "tint"),
-            (Format::Rgb32Sfloat, "tile_coordinate"),
+            (Format::Rgb32Uint, "tile_coordinate"),
         ))
     }
 }
