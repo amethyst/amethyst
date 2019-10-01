@@ -8,6 +8,7 @@ use crate::simulation::{
         TransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
         NETWORK_SIM_TIME_SYSTEM_NAME,
     },
+    Message,
 };
 use amethyst_core::{
     bundle::SystemBundle,
@@ -16,7 +17,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use bytes::Bytes;
-use log::error;
+use log::{error, warn};
 use std::{
     collections::HashMap,
     io::{self, Read as IORead, Write as IOWrite},
@@ -63,7 +64,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for TcpNetworkBundle {
             &[CONNECTION_LISTENER_SYSTEM_NAME],
         );
         builder.add(
-            TcpNetworkRecvSystem,
+            TcpNetworkRecvSystem::new(),
             NETWORK_RECV_SYSTEM_NAME,
             &[CONNECTION_LISTENER_SYSTEM_NAME],
         );
@@ -93,7 +94,7 @@ impl<'s> System<'s> for TcpConnectionListenerSystem {
                     Ok((stream, addr)) => {
                         stream
                             .set_nonblocking(true)
-                            .expect("Setting non-blocking mode");
+                            .expect("Setting nonblocking mode");
                         stream.set_nodelay(true).expect("Setting nodelay");
                         resource.streams.insert(addr, stream);
                         event_channel.single_write(NetworkSimulationEvent::Connect(addr));
@@ -125,14 +126,12 @@ impl<'s> System<'s> for TcpNetworkSendSystem {
         let messages = transport.messages_to_send(|_| sim_time.should_send_messages());
         for message in messages.iter() {
             match message.delivery {
+                DeliveryRequirement::ReliableOrdered(Some(_)) => {
+                    warn!("Streams are not supported by TCP and will be ignored.");
+                    write_message(message, &mut net);
+                }
                 DeliveryRequirement::ReliableOrdered(_) | DeliveryRequirement::Default => {
-                    let stream = net.get_or_create_stream(message.destination);
-                    if let Err(e) = stream.write(&message.payload) {
-                        error!(
-                            "There was an error when attempting to send message: {:?}",
-                            e
-                        );
-                    }
+                    write_message(message, &mut net);
                 }
                 delivery => panic!(
                     "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
@@ -143,8 +142,28 @@ impl<'s> System<'s> for TcpNetworkSendSystem {
     }
 }
 
+fn write_message(message: &Message, net: &mut TcpNetworkResource) {
+    let stream = net.get_or_create_stream(message.destination);
+    if let Err(e) = stream.write(&message.payload) {
+        error!(
+            "There was an error when attempting to send message: {:?}",
+            e
+        );
+    }
+}
+
 /// System to receive messages from all open `TcpStream`s.
-pub struct TcpNetworkRecvSystem;
+pub struct TcpNetworkRecvSystem {
+    streams_to_drop: Vec<SocketAddr>
+}
+
+impl TcpNetworkRecvSystem {
+    pub fn new() -> Self {
+        Self {
+            streams_to_drop: Vec::new()
+        }
+    }
+}
 
 impl<'s> System<'s> for TcpNetworkRecvSystem {
     type SystemData = (
@@ -155,7 +174,13 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
     fn run(&mut self, (mut net, mut event_channel): Self::SystemData) {
         let resource = net.deref_mut();
         for (_, stream) in resource.streams.iter_mut() {
-            let peer_addr = stream.peer_addr().unwrap();
+            let peer_addr = match stream.peer_addr() {
+                Ok(addr) => addr,
+                Err(e) => {
+                    error!("Encountered an error getting peer_addr: {:?}", e);
+                    continue;
+                }
+            };
             loop {
                 match stream.read(&mut resource.recv_buffer) {
                     Ok(recv_len) => {
@@ -168,7 +193,8 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                         } else {
                             event_channel
                                 .single_write(NetworkSimulationEvent::Disconnect(peer_addr));
-                            //                            resource.drop_stream(peer_addr);
+                            self.streams_to_drop.push(peer_addr);
+                            break;
                         }
                     }
                     Err(e) => {
@@ -176,7 +202,7 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                             io::ErrorKind::ConnectionReset => {
                                 event_channel
                                     .single_write(NetworkSimulationEvent::Disconnect(peer_addr));
-                                //                                resource.drop_stream(peer_addr);
+                                self.streams_to_drop.push(peer_addr);
                             }
                             io::ErrorKind::WouldBlock => {}
                             _ => error!("Encountered an error receiving data: {:?}", e),
@@ -186,6 +212,9 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                 }
             }
         }
+        self.streams_to_drop.drain(..).for_each(|peer_addr| {
+            resource.drop_stream(peer_addr);
+        })
     }
 }
 
