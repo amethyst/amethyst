@@ -13,15 +13,19 @@ pub fn impl_event_reader(ast: &DeriveInput) -> TokenStream {
         .iter()
         .filter(|attr| attr.path.segments[0].ident == "reader")
         .map(|attr| {
-            attr.interpret_meta()
+            attr.parse_meta()
                 .expect("reader attribute incorrectly defined")
         })
     {
         if let Meta::List(l) = meta {
             for nested_meta in l.nested.iter() {
-                match *nested_meta {
-                    NestedMeta::Meta(Meta::Word(ref word)) => {
-                        reader_name = Some(word.clone());
+                match nested_meta {
+                    NestedMeta::Meta(Meta::Path(path)) => {
+                        if let Some(ident) = path.get_ident() {
+                            reader_name = Some(ident.clone());
+                        } else {
+                            panic!("reader attribute does not contain a single name");
+                        }
                     }
                     _ => panic!("reader attribute does not contain a single name"),
                 }

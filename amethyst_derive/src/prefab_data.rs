@@ -298,7 +298,8 @@ fn gen_def_lt_tokens(generics: &Generics) -> TokenStream {
             if bounds.is_empty() {
                 quote! { #lt }
             } else {
-                quote! { #lt: #( #bounds )+* }
+                let bounds_iter = bounds.iter();
+                quote! { #lt: #( #bounds_iter )+* }
             }
         })
         .collect();
@@ -312,8 +313,9 @@ fn gen_def_ty_params(generics: &Generics) -> TokenStream {
         .map(|x| {
             let ty = &x.ident;
             let bounds = &x.bounds;
+            let bounds_iter = bounds.iter();
 
-            quote! { #ty: #( #bounds )+* }
+            quote! { #ty: #( #bounds_iter )+* }
         })
         .collect();
 
@@ -325,15 +327,15 @@ fn is_component_prefab(attrs: &[Attribute]) -> bool {
         .iter()
         .filter(|attr| attr.path.segments[0].ident == "prefab")
         .map(|attr| {
-            attr.interpret_meta()
+            attr.parse_meta()
                 .expect("prefab attribute incorrectly defined")
         })
     {
         if let Meta::List(l) = meta {
             for nested_meta in l.nested.iter() {
-                match *nested_meta {
-                    NestedMeta::Meta(Meta::Word(ref word)) => {
-                        if word == "Component" {
+                match nested_meta {
+                    NestedMeta::Meta(Meta::Path(path)) => {
+                        if let Some(true) = path.get_ident().map(|word| word == "Component") {
                             return true;
                         }
                     }
