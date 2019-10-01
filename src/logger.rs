@@ -110,6 +110,19 @@ impl Logger {
             StdoutLog::Off => {}
         }
 
+        logger.dispatch = logger
+            .dispatch
+            .level_for("gfx_backend_empty", LevelFilter::Warn)
+            .level_for("gfx_backend_vulkan", LevelFilter::Warn)
+            .level_for("gfx_backend_dx12", LevelFilter::Warn)
+            .level_for("gfx_backend_metal", LevelFilter::Warn)
+            .level_for("rendy_factory::factory", LevelFilter::Warn)
+            .level_for("rendy_memory::allocator::dynamic", LevelFilter::Warn)
+            .level_for("rendy_graph::node::render::pass", LevelFilter::Warn)
+            .level_for("rendy_graph::graph", LevelFilter::Warn)
+            .level_for("rendy_memory::allocator::linear", LevelFilter::Warn)
+            .level_for("rendy_wsi", LevelFilter::Warn);
+
         if let Some(log_gfx_device_level) = config.log_gfx_device_level {
             logger.dispatch = logger
                 .dispatch

@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Changed
 
 * Updated `syn`, `quote`, and `proc-macro2` to `1.0`. ([#1952])
+* Added less verbose default logging for rendy & gfx-backend
 
 ### Fixed
 
