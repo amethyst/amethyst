@@ -163,7 +163,7 @@ impl<'s> System<'s> for TcpNetworkSendSystem {
     );
 
     fn run(&mut self, (mut transport, mut net, sim_time): Self::SystemData) {
-        let messages = transport.drain_messages_to_send(|_| sim_time.should_send_messages());
+        let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
         for message in messages.iter() {
             match message.delivery {
                 DeliveryRequirement::ReliableOrdered(Some(_)) => {

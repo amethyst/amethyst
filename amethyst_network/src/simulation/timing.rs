@@ -49,7 +49,7 @@ impl NetworkSimulationTime {
 
     /// Determines whether or not to send a message in the current frame based on the
     /// `message_send_rate`
-    pub fn should_send_messages(&self) -> bool {
+    pub fn should_send_message_now(&self) -> bool {
         self.should_send_message(self.frame_number)
     }
 
@@ -78,6 +78,12 @@ impl NetworkSimulationTime {
     /// Returns the current simulation frame number
     pub fn frame_number(&self) -> u32 {
         self.frame_number
+    }
+
+    /// Sets the frame number to the given frame number. This is useful when synchronizing frames
+    /// with a server for example.
+    pub fn set_frame_number(&mut self, new_frame: u32) {
+        self.frame_number = new_frame;
     }
 
     /// Returns the total duration since the last simulation frame

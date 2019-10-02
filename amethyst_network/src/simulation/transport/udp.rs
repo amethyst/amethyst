@@ -67,7 +67,7 @@ impl<'s> System<'s> for UdpNetworkSendSystem {
 
     fn run(&mut self, (mut transport, mut socket, sim_time): Self::SystemData) {
         socket.get_mut().map(|socket| {
-            let messages = transport.drain_messages_to_send(|_| sim_time.should_send_messages());
+            let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
             for message in messages.iter() {
                 match message.delivery {
                     DeliveryRequirement::Unreliable | DeliveryRequirement::Default => {
