@@ -57,9 +57,14 @@ impl TransportResource {
         !self.messages.is_empty()
     }
 
+    /// Returns a reference to the owned messages.
+    pub fn get_messages(&self) -> &VecDeque<Message> {
+        &self.messages
+    }
+
     /// Returns the messages to send by returning the immediate messages or anything adhering to
     /// the given filter.
-    pub fn messages_to_send(
+    pub fn drain_messages_to_send(
         &mut self,
         mut filter: impl FnMut(&mut Message) -> bool,
     ) -> Vec<Message> {
@@ -144,8 +149,8 @@ mod tests {
         resource.send(addr, test_payload());
         resource.send_immediate(addr, test_payload());
 
-        assert_eq!(resource.messages_to_send(|_| false).len(), 3);
-        assert_eq!(resource.messages_to_send(|_| false).len(), 0);
+        assert_eq!(resource.drain_messages_to_send(|_| false).len(), 3);
+        assert_eq!(resource.drain_messages_to_send(|_| false).len(), 0);
     }
 
     #[test]

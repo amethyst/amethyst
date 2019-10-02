@@ -40,20 +40,16 @@ impl<'a, 'b> SystemBundle<'a, 'b> for UdpNetworkBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
-        builder.add(
-            NetworkSimulationTimeSystem,
-            NETWORK_SIM_TIME_SYSTEM_NAME,
-            &[],
-        );
-        builder.add(
-            UdpNetworkSendSystem,
-            NETWORK_SEND_SYSTEM_NAME,
-            &[NETWORK_SIM_TIME_SYSTEM_NAME],
-        );
+        builder.add(UdpNetworkSendSystem, NETWORK_SEND_SYSTEM_NAME, &[]);
         builder.add(
             UdpNetworkRecvSystem::with_buffer_capacity(self.recv_buffer_size_bytes),
             NETWORK_RECV_SYSTEM_NAME,
-            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+            &[],
+        );
+        builder.add(
+            NetworkSimulationTimeSystem,
+            NETWORK_SIM_TIME_SYSTEM_NAME,
+            &[NETWORK_SEND_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME],
         );
         world.insert(UdpSocketResource::new(self.socket));
         Ok(())
@@ -71,7 +67,7 @@ impl<'s> System<'s> for UdpNetworkSendSystem {
 
     fn run(&mut self, (mut transport, mut socket, sim_time): Self::SystemData) {
         socket.get_mut().map(|socket| {
-            let messages = transport.messages_to_send(|_| sim_time.should_send_messages());
+            let messages = transport.drain_messages_to_send(|_| sim_time.should_send_messages());
             for message in messages.iter() {
                 match message.delivery {
                     DeliveryRequirement::Unreliable | DeliveryRequirement::Default => {
