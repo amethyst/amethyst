@@ -19,7 +19,7 @@ use bytes::Bytes;
 use log::error;
 use std::{io, net::UdpSocket};
 
-/// Use this network bundle to add the various underlying UDP network systems to your game.
+/// Use this network bundle to add the UDP transport layer to your game.
 pub struct UdpNetworkBundle {
     socket: Option<UdpSocket>,
     recv_buffer_size_bytes: usize,
@@ -145,17 +145,17 @@ impl UdpSocketResource {
         Self { socket }
     }
 
-    /// Return a mutable reference to the socket if there is one configured.
+    /// Returns a mutable reference to the socket if there is one configured.
     pub fn get_mut(&mut self) -> Option<&mut UdpSocket> {
         self.socket.as_mut()
     }
 
-    /// Set the bound socket to the `UdpSocketResource`
+    /// Sets the bound socket to the `UdpSocketResource`.
     pub fn set_socket(&mut self, socket: UdpSocket) {
         self.socket = Some(socket);
     }
 
-    /// Drops the socket from the `UdpSocketResource`
+    /// Drops the socket from the `UdpSocketResource`.
     pub fn drop_socket(&mut self) {
         self.socket = None;
     }

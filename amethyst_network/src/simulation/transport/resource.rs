@@ -5,20 +5,20 @@ use crate::simulation::{
 use std::{collections::VecDeque, net::SocketAddr};
 
 /// Resource serving as the owner of the queue of messages to be sent. This resource also serves
-/// as the interface for other systems to send messages
+/// as the interface for other systems to send messages.
 pub struct TransportResource {
     messages: VecDeque<Message>,
 }
 
 impl TransportResource {
-    /// Create a new `TransportResource`
+    /// Creates a new `TransportResource`.
     pub fn new() -> Self {
         Self {
             messages: VecDeque::new(),
         }
     }
 
-    /// Create a `Message` with the default guarantees provided by the `Socket` implementation and
+    /// Creates a `Message` with the default guarantees provided by the `Socket` implementation and
     /// pushes it onto the messages queue to be sent on next sim tick.
     pub fn send(&mut self, destination: SocketAddr, payload: &[u8]) {
         self.send_with_requirements(
@@ -29,8 +29,8 @@ impl TransportResource {
         );
     }
 
-    /// Create a `Message` with the default guarantees provided by the `Socket` implementation and
-    /// pushes it onto the messages queue to be sent immediately.
+    /// Creates a `Message` with the default guarantees provided by the `Socket` implementation and
+    /// Pushes it onto the messages queue to be sent immediately.
     pub fn send_immediate(&mut self, destination: SocketAddr, payload: &[u8]) {
         self.send_with_requirements(
             destination,
@@ -40,7 +40,7 @@ impl TransportResource {
         );
     }
 
-    /// Create and queue a `Message` with the specified guarantee
+    /// Creates and queue a `Message` with the specified guarantee.
     pub fn send_with_requirements(
         &mut self,
         destination: SocketAddr,

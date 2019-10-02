@@ -91,20 +91,20 @@ impl NetworkSimulationTime {
         self.elapsed_duration
     }
 
-    /// The duration between each simulation frame. This number is calculated when a frame rate
+    /// Returns the duration between each simulation frame. This number is calculated when a frame rate
     /// is set
     pub fn per_frame_duration(&self) -> Duration {
         self.per_frame_duration
     }
 
-    /// The rate at which messages should be sent over the network.
-    /// i.e. 'Every N frames' where N is `message_send_rate`.
+    /// Returns the rate at which messages should be sent over the network.
+    /// i.e. 'every N frames' where N is `message_send_rate`.
     pub fn message_send_rate(&self) -> u8 {
         self.message_send_rate
     }
 
-    /// The number of frames behind the simulation is. This will usually be 0 or 1 if the ECS system
-    /// is keeping up
+    /// Returns the number of frames which the simulation is behind. This will usually be 0 or 1 if the ECS system
+    /// is keeping up.
     pub fn frame_lag(&self) -> u32 {
         self.frame_lag
     }

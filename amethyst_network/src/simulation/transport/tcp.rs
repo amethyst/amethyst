@@ -28,7 +28,7 @@ use std::{
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "connection_listener";
 const STREAM_MANAGEMENT_SYSTEM_NAME: &str = "stream_management";
 
-/// Use this network bundle to add the various underlying tcp network systems to your game.
+/// Use this network bundle to add the TCP transport layer to your game.
 pub struct TcpNetworkBundle {
     listener: Option<TcpListener>,
     recv_buffer_size_bytes: usize,
@@ -261,17 +261,17 @@ impl TcpNetworkResource {
         }
     }
 
-    /// Return a mutable reference to the listener if there is one configured.
+    /// Returns a mutable reference to the listener if there is one configured.
     pub fn get_mut(&mut self) -> Option<&mut TcpListener> {
         self.listener.as_mut()
     }
 
-    /// Set the bound listener to the `TcpNetworkResource`
+    /// Sets the bound listener to the `TcpNetworkResource`.
     pub fn set_listener(&mut self, listener: TcpListener) {
         self.listener = Some(listener);
     }
 
-    /// Drops the listener from the `TcpNetworkResource`
+    /// Drops the listener from the `TcpNetworkResource`.
     pub fn drop_listener(&mut self) {
         self.listener = None;
     }
@@ -281,7 +281,7 @@ impl TcpNetworkResource {
         self.streams.get_mut(&addr)
     }
 
-    /// Drop the stream with the given `SocketAddr`. This will be called when a peer seems to have
+    /// Drops the stream with the given `SocketAddr`. This will be called when a peer seems to have
     /// been disconnected
     pub fn drop_stream(&mut self, addr: SocketAddr) -> Option<(bool, TcpStream)> {
         self.streams.remove(&addr)

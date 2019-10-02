@@ -22,7 +22,7 @@ use bytes::Bytes;
 use log::error;
 use std::time::Instant;
 
-/// Use this network bundle to add the various underlying laminar network systems to your game.
+/// Use this network bundle to add the laminar transport layer to your game.
 pub struct LaminarNetworkBundle {
     socket: Option<LaminarSocket>,
 }
@@ -152,7 +152,7 @@ impl<'s> System<'s> for LaminarNetworkRecvSystem {
     }
 }
 
-/// Resource to own the Laminar socket.
+/// Resource that owns the Laminar socket.
 pub struct LaminarSocketResource {
     socket: Option<LaminarSocket>,
 }
@@ -164,22 +164,22 @@ impl Default for LaminarSocketResource {
 }
 
 impl LaminarSocketResource {
-    /// Create a new instance of the `UdpSocketResource`
+    /// Creates a new instance of the `UdpSocketResource`
     pub fn new(socket: Option<LaminarSocket>) -> Self {
         Self { socket }
     }
 
-    /// Return a mutable reference to the socket if there is one configured.
+    /// Returns a mutable reference to the socket if there is one configured.
     pub fn get_mut(&mut self) -> Option<&mut LaminarSocket> {
         self.socket.as_mut()
     }
 
-    /// Set the bound socket to the `LaminarSocketResource`
+    /// Sets the bound socket to the `LaminarSocketResource`.
     pub fn set_socket(&mut self, socket: LaminarSocket) {
         self.socket = Some(socket);
     }
 
-    /// Drops the socket from the `LaminarSocketResource`
+    /// Drops the socket from the `LaminarSocketResource`.
     pub fn drop_socket(&mut self) {
         self.socket = None;
     }
