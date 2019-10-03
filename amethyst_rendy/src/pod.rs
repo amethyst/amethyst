@@ -47,6 +47,7 @@ impl TextureOffset {
 /// uniform ViewArgs {
 ///    uniform mat4 proj;
 ///    uniform mat4 view;
+///    uniform mat4 proj_view;
 /// };
 /// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
@@ -56,6 +57,8 @@ pub struct ViewArgs {
     pub proj: mat4,
     /// View matrix
     pub view: mat4,
+    /// Premultiplied Proj-View matrix
+    pub proj_view: mat4,
 }
 
 /// Tint
