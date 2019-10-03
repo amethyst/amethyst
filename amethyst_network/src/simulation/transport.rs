@@ -22,6 +22,9 @@ use std::{collections::VecDeque, net::SocketAddr};
 /// as the interface for other systems to send messages.
 pub struct TransportResource {
     messages: VecDeque<Message>,
+    frame_budget_bytes: i32,
+    latency_nanos: i64,
+    packet_loss: f32
 }
 
 impl TransportResource {
@@ -29,7 +32,45 @@ impl TransportResource {
     pub fn new() -> Self {
         Self {
             messages: VecDeque::new(),
+            frame_budget_bytes: 0,
+            latency_nanos: 0,
+            packet_loss: 0.0
         }
+    }
+
+    /// Returns estimated number of bytes you can reliably send this frame.
+    pub fn frame_budget_bytes(&self) -> i32 {
+        self.frame_budget_bytes
+    }
+
+    /// Sets the frame budget in bytes. This should be called by a transport implementation.
+    pub fn set_frame_budget_bytes(&mut self, budget: i32) {
+        self.frame_budget_bytes = budget;
+    }
+
+    /// Returns the estimated microsecond round-trip latency for messages.
+    pub fn latency_micros(&mut self) -> i64 {
+        self.latency_nanos / 1000
+    }
+
+    /// Returns the estimated nanosecond round-trip latency for messages.
+    pub fn latency_nanos(&self) -> i64 {
+        self.latency_nanos
+    }
+
+    /// Sets the latency value. This should be called by a transport implementation.
+    pub fn set_latency_nanos(&mut self, latency: i64) {
+        self.latency_nanos = latency;
+    }
+
+    /// Returns the estimated loss percentage of packets in 0.0-1.0.
+    pub fn packet_loss(&self) -> f32 {
+        self.packet_loss
+    }
+
+    /// Sets the packet loss value. This should be called by a transport implementation.
+    pub fn set_packet_loss(&mut self, loss: f32) {
+        self.packet_loss = loss;
     }
 
     /// Creates a `Message` with the default guarantees provided by the `Socket` implementation and
@@ -110,6 +151,9 @@ impl Default for TransportResource {
     fn default() -> Self {
         Self {
             messages: VecDeque::new(),
+            frame_budget_bytes: 0,
+            latency_nanos: 0,
+            packet_loss: 0.0
         }
     }
 }
