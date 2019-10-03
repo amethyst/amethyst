@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_network"
-version = "0.6.0"
+version = "0.6.1"
 authors = [
 	"Joël Lupien (Jojolepro) <jojolepromain@gmail.com>",
 	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>",
@@ -22,7 +22,7 @@ profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.8.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.8.1" }
 amethyst_error = { path = "../amethyst_error", version = "0.3.0" }
 serde = { version = "1", features = ["derive"] }
 shrev = "1.0"

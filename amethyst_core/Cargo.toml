@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_core"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Simon Rönnberg <seamonr@gmail.com>"]
 edition = "2018"
 description = "Amethyst core"
@@ -34,7 +34,7 @@ derivative = "1.0"
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-amethyst = { path = "..", version = "0.13.0" }
+amethyst = { path = "..", version = "0.13.1" }
 ron = "0.5.1"
 
 [features]
