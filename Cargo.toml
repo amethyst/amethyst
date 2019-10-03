@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.13.0"
+version = "0.13.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Data-oriented game engine written in Rust"
@@ -108,23 +108,23 @@ members = [
 ]
 
 [dependencies]
-amethyst_animation = { path = "amethyst_animation", version = "0.8.0", optional = true }
-amethyst_assets = { path = "amethyst_assets", version = "0.9.0" }
+amethyst_animation = { path = "amethyst_animation", version = "0.8.1", optional = true }
+amethyst_assets = { path = "amethyst_assets", version = "0.9.1" }
 amethyst_audio = { path = "amethyst_audio", version = "0.8.0", optional = true }
 amethyst_config = { path = "amethyst_config", version = "0.12.0" }
-amethyst_core = { path = "amethyst_core", version = "0.8.0" }
+amethyst_core = { path = "amethyst_core", version = "0.8.1" }
 amethyst_error = { path = "amethyst_error", version = "0.3.0" }
 amethyst_controls = { path = "amethyst_controls", version = "0.7.0" }
-amethyst_derive = { path = "amethyst_derive", version = "0.6.0" }
-amethyst_gltf = { path = "amethyst_gltf", version = "0.8.0", optional = true }
-amethyst_network = { path = "amethyst_network", version = "0.6.0", optional = true }
-amethyst_locale = { path = "amethyst_locale", version = "0.7.0", optional = true }
+amethyst_derive = { path = "amethyst_derive", version = "0.6.1" }
+amethyst_gltf = { path = "amethyst_gltf", version = "0.8.1", optional = true }
+amethyst_network = { path = "amethyst_network", version = "0.6.1", optional = true }
+amethyst_locale = { path = "amethyst_locale", version = "0.7.1", optional = true }
 amethyst_rendy = { path = "amethyst_rendy", version = "0.3.0", features = ["window"], optional = true }
-amethyst_input = { path = "amethyst_input", version = "0.9.0" }
-amethyst_ui = { path = "amethyst_ui", version = "0.8.0" }
+amethyst_input = { path = "amethyst_input", version = "0.9.1" }
+amethyst_ui = { path = "amethyst_ui", version = "0.8.1" }
 amethyst_utils = { path = "amethyst_utils", version = "0.8.0" }
 amethyst_window = { path = "amethyst_window", version = "0.3.0" }
-amethyst_tiles = { path = "amethyst_tiles", version = "0.1.0", optional = true }
+amethyst_tiles = { path = "amethyst_tiles", version = "0.1.1", optional = true }
 crossbeam-channel = "0.3.9"
 derivative = "1.0"
 fern = { version = "0.5", features = ["colored"] }
