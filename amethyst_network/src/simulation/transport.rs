@@ -17,14 +17,13 @@ use crate::simulation::{
 };
 use std::{collections::VecDeque, net::SocketAddr};
 
-
 /// Resource serving as the owner of the queue of messages to be sent. This resource also serves
 /// as the interface for other systems to send messages.
 pub struct TransportResource {
     messages: VecDeque<Message>,
     frame_budget_bytes: i32,
     latency_nanos: i64,
-    packet_loss: f32
+    packet_loss: f32,
 }
 
 impl TransportResource {
@@ -34,7 +33,7 @@ impl TransportResource {
             messages: VecDeque::new(),
             frame_budget_bytes: 0,
             latency_nanos: 0,
-            packet_loss: 0.0
+            packet_loss: 0.0,
         }
     }
 
@@ -153,7 +152,7 @@ impl Default for TransportResource {
             messages: VecDeque::new(),
             frame_budget_bytes: 0,
             latency_nanos: 0,
-            packet_loss: 0.0
+            packet_loss: 0.0,
         }
     }
 }

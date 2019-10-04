@@ -110,15 +110,13 @@ impl NetworkSimulationTime {
     }
 
     /// Set the rate at which the network simulation progresses. Specified in hertz (frames/second).
-    pub fn with_sim_frame_rate(mut self, new_rate: u32) -> Self {
+    pub fn set_sim_frame_rate(&mut self, new_rate: u32) {
         self.per_frame_duration = Duration::from_secs(1) / new_rate;
-        self
     }
 
     /// Set the rate which messages are sent. Specified as "every N frames" where N is new_rate.
-    pub fn with_message_send_rate(mut self, new_rate: u8) -> Self {
+    pub fn set_message_send_rate(&mut self, new_rate: u8) {
         self.message_send_rate = new_rate;
-        self
     }
 }
 
@@ -144,7 +142,8 @@ mod tests {
 
     #[test]
     fn test_calculated_properties_and_getters() {
-        let time = NetworkSimulationTime::default().with_sim_frame_rate(20);
+        let mut time = NetworkSimulationTime::default();
+        time.set_sim_frame_rate(20);
         assert_eq!(time.frame_number(), 0);
         assert_eq!(time.frame_lag(), 1);
         assert_eq!(time.message_send_rate(), 1);
@@ -154,7 +153,8 @@ mod tests {
 
     #[test]
     fn test_message_send_rate_should_send_every_2_frames() {
-        let time = NetworkSimulationTime::default().with_message_send_rate(2);
+        let mut time = NetworkSimulationTime::default();
+        time.set_message_send_rate(2);
 
         for i in 1..100 {
             // every second frame (even) should return true
