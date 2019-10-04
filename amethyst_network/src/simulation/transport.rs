@@ -47,6 +47,11 @@ impl TransportResource {
         self.frame_budget_bytes = budget;
     }
 
+    /// Returns the estimated millisecond round-trip latency for messages.
+    pub fn latency_millis(&mut self) -> i64 {
+        self.latency_nanos / 1_000_000
+    }
+
     /// Returns the estimated microsecond round-trip latency for messages.
     pub fn latency_micros(&mut self) -> i64 {
         self.latency_nanos / 1000
