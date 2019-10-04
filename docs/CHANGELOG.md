@@ -22,6 +22,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Security
 
+## [0.13.2] - 2019-10-4
+
+### Fixed
+
+* Fix fluent and unic-langid alignment ([#1966])
+
+[#1966]: https://github.com/amethyst/amethyst/pull/1966
+
 ## [0.13.1] - 2019-10-3
 
 ### Added
@@ -1046,7 +1054,8 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 * Initial release
 
-[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.13.1...HEAD
+[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.13.2...HEAD
+[0.13.1]: https://github.com/amethyst/amethyst/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/amethyst/amethyst/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/amethyst/amethyst/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/amethyst/amethyst/compare/v0.11.0...v0.12.0
