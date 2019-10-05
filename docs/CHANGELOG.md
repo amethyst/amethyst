@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
  
 ### Added
 
+* Implement `Debug` for `ProgressCounter` and `ProgressCounterTracker`. ([#1973])
+
 ### Changed
 
 * Use a premultiplied view_proj matrix in vertex shaders. ([#1964])
