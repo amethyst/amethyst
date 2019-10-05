@@ -22,7 +22,7 @@
 
     - Find: `PrefabLoaderSystem::<([A-Za-z]+)>::default\(\)`,
     - Replace: `PrefabLoaderSystemDesc::<\1>::default()`
-    - don't forget to replace `with` with `with_system_desc` when adding to GameData.
+    - Don't forget to replace `with` with `with_system_desc` when adding to GameData.
 
 * `GltfSceneLoaderSystem` is initialized by `GltfSceneLoaderSystemDesc`.
 
@@ -30,7 +30,7 @@
 
     - Find: `GltfSceneLoaderSystem::<([A-Za-z]+)>::default\(\)`,
     - Replace: `GltfSceneLoaderSystemDesc::<\1>::default()`
-    - don't forget to replace `with` with `with_system_desc` when adding to GameData.
+    - Don't forget to replace `with` with `with_system_desc` when adding to GameData.
 
 * `AmethystApplication::with_setup` runs the function before the dispatcher.
 
