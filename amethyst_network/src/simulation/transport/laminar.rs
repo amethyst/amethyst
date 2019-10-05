@@ -70,7 +70,7 @@ impl<'s> System<'s> for LaminarNetworkSendSystem {
     );
 
     fn run(&mut self, (mut transport, mut socket, sim_time): Self::SystemData) {
-        socket.get_mut().map(|socket| {
+        if let Some(socket) = socket.get_mut() {
             let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
 
             for message in messages.iter() {
@@ -111,7 +111,7 @@ impl<'s> System<'s> for LaminarNetworkSendSystem {
                     error!("There was an error when attempting to send packet: {:?}", e);
                 }
             }
-        });
+        }
     }
 }
 
@@ -121,9 +121,9 @@ impl<'s> System<'s> for LaminarNetworkPollSystem {
     type SystemData = Write<'s, LaminarSocketResource>;
 
     fn run(&mut self, mut socket: Self::SystemData) {
-        socket
-            .get_mut()
-            .map(|socket| socket.manual_poll(Instant::now()));
+        if let Some(socket) = socket.get_mut() {
+            socket.manual_poll(Instant::now());
+        }
     }
 }
 
@@ -136,7 +136,7 @@ impl<'s> System<'s> for LaminarNetworkRecvSystem {
     );
 
     fn run(&mut self, (mut socket, mut event_channel): Self::SystemData) {
-        socket.get_mut().map(|socket| {
+        if let Some(socket) = socket.get_mut() {
             while let Some(event) = socket.recv() {
                 let event = match event {
                     SocketEvent::Packet(packet) => NetworkSimulationEvent::Message(
@@ -148,7 +148,7 @@ impl<'s> System<'s> for LaminarNetworkRecvSystem {
                 };
                 event_channel.single_write(event);
             }
-        });
+        }
     }
 }
 

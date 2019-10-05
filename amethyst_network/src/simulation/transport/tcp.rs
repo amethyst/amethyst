@@ -183,14 +183,14 @@ impl<'s> System<'s> for TcpNetworkSendSystem {
 }
 
 fn write_message(message: &Message, net: &mut TcpNetworkResource) {
-    net.get_stream(message.destination).map(|(_, stream)| {
+    if let Some((_, stream)) = net.get_stream(message.destination) {
         if let Err(e) = stream.write(&message.payload) {
             error!(
                 "There was an error when attempting to send message: {:?}",
                 e
             );
         }
-    });
+    }
 }
 
 /// System to receive messages from all open `TcpStream`s.

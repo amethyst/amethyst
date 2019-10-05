@@ -66,7 +66,7 @@ impl<'s> System<'s> for UdpNetworkSendSystem {
     );
 
     fn run(&mut self, (mut transport, mut socket, sim_time): Self::SystemData) {
-        socket.get_mut().map(|socket| {
+        if let Some(socket) = socket.get_mut() {
             let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
             for message in messages.iter() {
                 match message.delivery {
@@ -81,7 +81,7 @@ impl<'s> System<'s> for UdpNetworkSendSystem {
                     ),
                 }
             }
-        });
+        }
     }
 }
 
@@ -105,7 +105,7 @@ impl<'s> System<'s> for UdpNetworkRecvSystem {
     );
 
     fn run(&mut self, (mut socket, mut event_channel): Self::SystemData) {
-        socket.get_mut().map(|socket| {
+        if let Some(socket) = socket.get_mut() {
             loop {
                 match socket.recv_from(&mut self.recv_buffer) {
                     Ok((recv_len, address)) => {
@@ -124,7 +124,7 @@ impl<'s> System<'s> for UdpNetworkRecvSystem {
                     }
                 }
             }
-        });
+        }
     }
 }
 
