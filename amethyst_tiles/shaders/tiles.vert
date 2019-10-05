@@ -40,7 +40,7 @@ void main() {
     vec2 ddir_x = (map_transform[0] * sprite_dimensions.x).xy;
     vec2 ddir_y = (map_transform[1] * -sprite_dimensions.y).xy;
 
-    vec4 coord = vec4(tile_coordinate.x, -tile_coordinate.y, tile_coordinate.z, 1.0);
+    vec4 coord = vec4(float(tile_coordinate.x), -float(tile_coordinate.y), float(tile_coordinate.z), 1.0);
 
     vec4 world_coordinate = map_coordinate_transform * coord;
     world_coordinate = world_coordinate * map_transform;
