@@ -3,6 +3,7 @@
 layout(std140, set = 0, binding = 0) uniform ViewArgs {
     uniform mat4 proj;
     uniform mat4 view;
+    uniform mat4 proj_view;
 };
 
 layout(std430, set = 2, binding = 0) readonly buffer JointTransforms {
@@ -43,5 +44,5 @@ void main() {
     vertex.tang_handedness = tangent.w;
     vertex.tex_coord = tex_coord;
     vertex.color = tint;
-    gl_Position = proj * view * vertex_position;
+    gl_Position = proj_view * vertex_position;
 }

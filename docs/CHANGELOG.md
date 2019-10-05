@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+* Use a premultiplied view_proj matrix in vertex shaders. ([#1964])
+
 ### Deprecated
 
 ### Removed
@@ -21,6 +23,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Fixed
 
 ### Security
+
+[#1964]: https://github.com/amethyst/amethyst/pull/1964
+
 
 ## [0.13.3] - 2019-10-4
 
