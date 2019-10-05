@@ -24,8 +24,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Security
 
-
 [#1964]: https://github.com/amethyst/amethyst/pull/1964
+
+
+## [0.13.3] - 2019-10-4
+
+### Fixed
+
+* Fixed a silent shader error causing amethyst_tiles not to work. ([#1968])
+
+[#1966]: https://github.com/amethyst/amethyst/pull/1968
 
 ## [0.13.2] - 2019-10-4
 
