@@ -3,3 +3,4 @@
 //! modules. Soon, we will also provide an HTTP client library.
 
 pub mod simulation;
+pub use bytes::*;
