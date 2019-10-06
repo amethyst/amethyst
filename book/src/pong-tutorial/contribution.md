@@ -19,10 +19,6 @@ An ecosystem-simulation game, 3D
 #### Showcase Game: [Space Menace](https://github.com/amethyst/space-menace/)
   
 An action 2D platformer
-  
-#### Showcase Game: [Survivor](https://github.com/jaynus/survival) 
-  
-(unannounced, 2D)
 
 For more examples from the community you can check out this list of [Games made with Amethyst](https://community.amethyst.rs/t/games-made-with-amethyst/134).
 

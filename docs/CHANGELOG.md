@@ -20,11 +20,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Removed
 
+* Remove broken Survival link from the Call for Contribution chapter. ([#1977])
+
 ### Fixed
 
 ### Security
 
 [#1964]: https://github.com/amethyst/amethyst/pull/1964
+[#1977]: https://github.com/amethyst/amethyst/pull/1977
 
 
 ## [0.13.3] - 2019-10-4
