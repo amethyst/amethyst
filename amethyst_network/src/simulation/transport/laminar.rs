@@ -164,7 +164,7 @@ impl Default for LaminarSocketResource {
 }
 
 impl LaminarSocketResource {
-    /// Creates a new instance of the `UdpSocketResource`
+    /// Creates a new instance of the `UdpSocketResource`.
     pub fn new(socket: Option<LaminarSocket>) -> Self {
         Self { socket }
     }

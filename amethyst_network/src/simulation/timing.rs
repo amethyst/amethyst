@@ -70,7 +70,7 @@ impl NetworkSimulationTime {
         self.frame_lag = 0;
     }
 
-    /// Increase the `elapsed_duration` by the given duration
+    /// Increases the `elapsed_duration` by the given duration
     pub fn update_elapsed(&mut self, duration: Duration) {
         self.elapsed_duration += duration;
     }
@@ -109,12 +109,12 @@ impl NetworkSimulationTime {
         self.frame_lag
     }
 
-    /// Set the rate at which the network simulation progresses. Specified in hertz (frames/second).
+    /// Sets the rate at which the network simulation progresses. Specified in hertz (frames/second).
     pub fn set_sim_frame_rate(&mut self, new_rate: u32) {
         self.per_frame_duration = Duration::from_secs(1) / new_rate;
     }
 
-    /// Set the rate which messages are sent. Specified as "every N frames" where N is new_rate.
+    /// Set the rate which messages are sent. Specified as 'every N frames' where N is new_rate.
     pub fn set_message_send_rate(&mut self, new_rate: u8) {
         self.message_send_rate = new_rate;
     }
