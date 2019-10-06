@@ -11,18 +11,31 @@ use amethyst::{
     Result,
 };
 use log::info;
-use std::net::TcpListener;
+use std::net::{TcpListener, UdpSocket};
 use std::time::Duration;
+use amethyst_network::simulation::udp::UdpNetworkBundle;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let assets_dir = application_root_dir()?.join("./");
 
-    //    let socket = LaminarSocket::bind("0.0.0.0:3457").unwrap();
+//    // UDP
+//    let socket = UdpSocket::bind("0.0.0.0:3455")?;
+//    socket.set_nonblocking(true)?;
+
+//    // TCP: No listener needed for the client.
+
+//    // Laminar
+//    let socket = LaminarSocket::bind("0.0.0.0:3455")?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TcpNetworkBundle::new(None, 1500))?
+//        // UDP
+//        .with_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
+        // TCP
+        .with_bundle(TcpNetworkBundle::new(None, 2048))?
+//        // Laminar
+//        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with(SpamSystem::new(), "spam", &[]);
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(

@@ -4,8 +4,9 @@ use amethyst::{
     core::{bundle::SystemBundle, frame_limiter::FrameRateLimitStrategy, SystemDesc},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     network::simulation::{
-        //        laminar::{LaminarNetworkBundle, LaminarSocket},
+        laminar::{LaminarNetworkBundle, LaminarSocket},
         tcp::TcpNetworkBundle,
+        udp::UdpNetworkBundle,
         DeliveryRequirement,
         NetworkSimulationEvent,
         TransportResource,
@@ -17,28 +18,31 @@ use amethyst::{
     Result,
 };
 use log::info;
-use std::net::TcpListener;
+use std::net::{TcpListener, UdpSocket};
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
+//    // UDP
+//    let socket = UdpSocket::bind("0.0.0.0:3457")?;
+//    socket.set_nonblocking(true)?;
+
+    // TCP
     let listener = TcpListener::bind("0.0.0.0:3457")?;
-    listener.set_nonblocking(true);
+    listener.set_nonblocking(true)?;
+
+//    // Laminar
+//    let socket = LaminarSocket::bind("0.0.0.0:3457")?;
 
     let assets_dir = application_root_dir()?.join("./");
 
-    // XXX: This is gross. We really need a handshake in laminar. Reliable delivery will not work
-    // unless you send an unreliable message first and begin the client BEFORE the 5 second disconnect
-    // timer.
-    //    net.send_with_requirements(
-    //        "127.0.0.1:3455".parse().unwrap(),
-    //        b"",
-    //        DeliveryRequirement::Unreliable,
-    //        UrgencyRequirement::Immediate,
-    //    );
-
     let game_data = GameDataBuilder::default()
-        .with_bundle(TcpNetworkBundle::new(Some(listener), 1500))?
+//        // UDP
+//        .with_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
+        // TCP
+        .with_bundle(TcpNetworkBundle::new(Some(listener), 2048))?
+//        // Laminar
+//        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with_bundle(SpamReceiveBundle)?;
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(
