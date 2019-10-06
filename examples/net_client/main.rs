@@ -2,40 +2,40 @@ use amethyst::{
     core::{frame_limiter::FrameRateLimitStrategy, Time},
     ecs::{Read, System, Write},
     network::simulation::{
-        laminar::{LaminarNetworkBundle, LaminarSocket},
+        //        laminar::{LaminarNetworkBundle, LaminarSocket},
         tcp::TcpNetworkBundle,
-        NetworkSimulationTime, TransportResource,
+        //        udp::UdpNetworkBundle,
+        NetworkSimulationTime,
+        TransportResource,
     },
     prelude::*,
     utils::application_root_dir,
     Result,
 };
 use log::info;
-use std::net::{TcpListener, UdpSocket};
 use std::time::Duration;
-use amethyst_network::simulation::udp::UdpNetworkBundle;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let assets_dir = application_root_dir()?.join("./");
 
-//    // UDP
-//    let socket = UdpSocket::bind("0.0.0.0:3455")?;
-//    socket.set_nonblocking(true)?;
+    //    // UDP
+    //    let socket = UdpSocket::bind("0.0.0.0:3455")?;
+    //    socket.set_nonblocking(true)?;
 
-//    // TCP: No listener needed for the client.
+    //    // TCP: No listener needed for the client.
 
-//    // Laminar
-//    let socket = LaminarSocket::bind("0.0.0.0:3455")?;
+    //    // Laminar
+    //    let socket = LaminarSocket::bind("0.0.0.0:3455")?;
 
     let game_data = GameDataBuilder::default()
-//        // UDP
-//        .with_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
+        //        // UDP
+        //        .with_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
         // TCP
         .with_bundle(TcpNetworkBundle::new(None, 2048))?
-//        // Laminar
-//        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
+        //        // Laminar
+        //        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with(SpamSystem::new(), "spam", &[]);
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(

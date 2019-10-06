@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 * Use a premultiplied view_proj matrix in vertex shaders. ([#1964])
-* amethyst_network completely rewritten to provide a new baseline with which to build
+* amethyst_network completely rewritten to provide a new baseline with which to build. ([#1917])
 ### Deprecated
 
 ### Removed

@@ -4,13 +4,11 @@ use amethyst::{
     core::{bundle::SystemBundle, frame_limiter::FrameRateLimitStrategy, SystemDesc},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     network::simulation::{
-        laminar::{LaminarNetworkBundle, LaminarSocket},
+        //        laminar::{LaminarNetworkBundle, LaminarSocket},
         tcp::TcpNetworkBundle,
-        udp::UdpNetworkBundle,
-        DeliveryRequirement,
+        //        udp::UdpNetworkBundle,
         NetworkSimulationEvent,
         TransportResource,
-        UrgencyRequirement,
     },
     prelude::*,
     shrev::{EventChannel, ReaderId},
@@ -18,31 +16,31 @@ use amethyst::{
     Result,
 };
 use log::info;
-use std::net::{TcpListener, UdpSocket};
+use std::net::TcpListener;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-//    // UDP
-//    let socket = UdpSocket::bind("0.0.0.0:3457")?;
-//    socket.set_nonblocking(true)?;
+    //    // UDP
+    //    let socket = UdpSocket::bind("0.0.0.0:3457")?;
+    //    socket.set_nonblocking(true)?;
 
     // TCP
     let listener = TcpListener::bind("0.0.0.0:3457")?;
     listener.set_nonblocking(true)?;
 
-//    // Laminar
-//    let socket = LaminarSocket::bind("0.0.0.0:3457")?;
+    //    // Laminar
+    //    let socket = LaminarSocket::bind("0.0.0.0:3457")?;
 
     let assets_dir = application_root_dir()?.join("./");
 
     let game_data = GameDataBuilder::default()
-//        // UDP
-//        .with_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
+        //        // UDP
+        //        .with_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
         // TCP
         .with_bundle(TcpNetworkBundle::new(Some(listener), 2048))?
-//        // Laminar
-//        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
+        //        // Laminar
+        //        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with_bundle(SpamReceiveBundle)?;
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(

@@ -278,6 +278,7 @@ mod tests {
             Reliable,
             ReliableSequenced(None),
             ReliableOrdered(None),
+            Default,
         ];
 
         for req in requirements.iter().cloned() {
