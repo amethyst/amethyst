@@ -20,7 +20,6 @@ use amethyst::{
 use derivative::Derivative;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use specs_derive::Component;
 
 #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
 #[prefab(Component)]

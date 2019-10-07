@@ -3,6 +3,7 @@
 layout(std140, set = 0, binding = 0) uniform ViewArgs {
     uniform mat4 proj;
     uniform mat4 view;
+    uniform mat4 proj_view;
 };
 
 // Quad transform.
@@ -39,5 +40,5 @@ void main() {
     vertex.color = color;
     vec2 final_pos = pos + tex_u * dir_x + tex_v * dir_y;
     vec4 vertex = vec4(final_pos, depth, 1.0);
-    gl_Position = proj * view * vertex;
+    gl_Position = proj_view * vertex;
 }

@@ -71,6 +71,7 @@ pub use self::{
         AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
     },
     transform::TransformChannel,
+    ui_transform::UiTransformChannel,
     util::{get_animation_set, SamplerPrimitive},
 };
 
@@ -82,4 +83,5 @@ mod skinning;
 mod sprite;
 mod systems;
 mod transform;
+mod ui_transform;
 mod util;

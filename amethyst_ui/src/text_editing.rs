@@ -6,7 +6,6 @@ use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
 
-use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
     ecs::prelude::{
         Entities, Join, Read, ReadStorage, System, SystemData, World, Write, WriteStorage,
@@ -14,29 +13,20 @@ use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     SystemDesc,
 };
+use amethyst_derive::SystemDesc;
 
-/// Builds a `TextEditingInputSystem`.
-#[derive(Default, Debug)]
-pub struct TextEditingInputSystemDesc;
-
-impl<'a, 'b> SystemDesc<'a, 'b, TextEditingInputSystem> for TextEditingInputSystemDesc {
-    fn build(self, world: &mut World) -> TextEditingInputSystem {
-        <TextEditingInputSystem as System<'_>>::SystemData::setup(world);
-
-        let reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
-
-        TextEditingInputSystem::new(reader)
-    }
-}
+use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 
 /// System managing the keyboard inputs for the editable text fields.
 /// ## Features
 /// * Adds and removes text.
 /// * Moves selection cursor.
 /// * Grows and shrinks selected text zone.
-#[derive(Debug)]
+#[derive(Debug, SystemDesc)]
+#[system_desc(name(TextEditingInputSystemDesc))]
 pub struct TextEditingInputSystem {
     /// A reader for winit events.
+    #[system_desc(event_channel_reader)]
     reader: ReaderId<Event>,
 }
 

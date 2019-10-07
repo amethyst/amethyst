@@ -137,7 +137,6 @@ fn initialise_camera(world: &mut World, parent: Entity) -> Entity {
         let dim = world.read_resource::<ScreenDimensions>();
         (dim.width(), dim.height())
     };
-    //println!("Init camera with dimensions: {}x{}", width, height);
 
     let mut camera_transform = Transform::default();
     camera_transform.set_translation_z(5.0);
@@ -158,10 +157,13 @@ impl SimpleState for Example {
         let world = data.world;
         world.register::<Named>();
 
-        let circle_sprite_sheet_handle =
-            load_sprite_sheet(world, "Circle_Spritesheet.png", "Circle_Spritesheet.ron");
+        let circle_sprite_sheet_handle = load_sprite_sheet(
+            world,
+            "texture/Circle_Spritesheet.png",
+            "texture/Circle_Spritesheet.ron",
+        );
         let background_sprite_sheet_handle =
-            load_sprite_sheet(world, "Background.png", "Background.ron");
+            load_sprite_sheet(world, "texture/Background.png", "texture/Background.ron");
 
         let _background = init_background_sprite(world, &background_sprite_sheet_handle);
         let _reference = init_reference_sprite(world, &circle_sprite_sheet_handle);
@@ -203,8 +205,9 @@ fn main() -> amethyst::Result<()> {
         .start();
 
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("examples/sprite_camera_follow/assets");
-    let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
+    let assets_directory = app_root.join("examples/assets");
+    let display_config_path =
+        app_root.join("examples/sprite_camera_follow/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
@@ -223,7 +226,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Example)?.build(game_data)?;
+    let mut game = Application::build(assets_directory, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }

@@ -1,9 +1,11 @@
+use std::{collections::HashMap, fmt::Debug};
+
 use amethyst_core::{
     ecs::{Entity, ReadExpect, System, SystemData, World, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
     ParentHierarchy, SystemDesc,
 };
-use std::{collections::HashMap, fmt::Debug};
+use amethyst_derive::SystemDesc;
 
 use crate::{UiButtonAction, UiButtonActionType::*, UiImage, UiText};
 
@@ -53,30 +55,18 @@ where
     }
 }
 
-/// Builds a `UiButtonSystem`.
-#[derive(Default, Debug)]
-pub struct UiButtonSystemDesc;
-
-impl<'a, 'b> SystemDesc<'a, 'b, UiButtonSystem> for UiButtonSystemDesc {
-    fn build(self, world: &mut World) -> UiButtonSystem {
-        <UiButtonSystem as System<'_>>::SystemData::setup(world);
-
-        let event_reader = world
-            .fetch_mut::<EventChannel<UiButtonAction>>()
-            .register_reader();
-
-        UiButtonSystem::new(event_reader)
-    }
-}
-
 /// This system manages button mouse events.  It changes images and text colors, as well as playing audio
 /// when necessary.
 ///
 /// It's automatically registered with the `UiBundle`.
-#[derive(Debug)]
+#[derive(Debug, SystemDesc)]
+#[system_desc(name(UiButtonSystemDesc))]
 pub struct UiButtonSystem {
+    #[system_desc(event_channel_reader)]
     event_reader: ReaderId<UiButtonAction>,
+    #[system_desc(skip)]
     set_images: HashMap<Entity, ActionChangeStack<UiImage>>,
+    #[system_desc(skip)]
     set_text_colors: HashMap<Entity, ActionChangeStack<[f32; 4]>>,
 }
 

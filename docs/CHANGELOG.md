@@ -9,6 +9,63 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## [Unreleased]
+ 
+### Added
+
+### Changed
+
+* Use a premultiplied view_proj matrix in vertex shaders. ([#1964])
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+[#1964]: https://github.com/amethyst/amethyst/pull/1964
+
+
+## [0.13.3] - 2019-10-4
+
+### Fixed
+
+* Fixed a silent shader error causing amethyst_tiles not to work. ([#1968])
+
+[#1966]: https://github.com/amethyst/amethyst/pull/1968
+
+## [0.13.2] - 2019-10-4
+
+### Fixed
+
+* Fix fluent and unic-langid alignment ([#1966])
+
+[#1966]: https://github.com/amethyst/amethyst/pull/1966
+
+## [0.13.1] - 2019-10-3
+
+### Added
+
+* `FlatEncoder` added to amethyst_tiles for flat linear encoding which is optimized for space. ([#1950])
+
+### Changed
+
+* Updated `syn`, `quote`, and `proc-macro2` to `1.0`. ([#1952])
+
+### Fixed
+
+* `TileMap` was not allocating enough space for to compensate for morton encoding alignment. This means that 
+all tilemap allocation must occur on 2^n boundary aligned on all axis (or x-y axis for Morton2D) ([#1950])
+* Add missing re-export for HideHierarchySystemDesc ([#1945])
+* `TileArgs` POD had incorrect format for `tile_coordinate` argument, caused a crash on metal backend. ([#1957])
+
+[#1945]: https://github.com/amethyst/amethyst/pull/1945
+[#1950]: https://github.com/amethyst/amethyst/pull/1950
+[#1952]: https://github.com/amethyst/amethyst/pull/1952
+[#1957]: https://github.com/amethyst/amethyst/pull/1957
+
+## [0.13.0] - 2019-09-25
 
 ### Major breaking changes
 
@@ -23,6 +80,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AmethystApplication` takes in `SystemDesc`s through `with_system_desc`. ([#1882])
 * `AmethystApplication::with_thread_local_desc` takes in `RunNowDesc`. ([#1882])
 * Add `NineSlice` support to `UiImage`. ([#1896])
+* `RenderingBundle` for full manual control of the rendering pipeline via a custom `GraphCreator`. ([#1839])
+* `CameraOrtho::new` takes in `CameraOrthoWorldCoordinates`, which can be set to custom dimensions. ([#1916])
+* `Camera::screen_ray` method added, returning an appropriate `Ray` structure ([#1918]).
+* `amethyst_test`: `InMemorySource` and `WaitForLoad` helpers ([#1933]).
+* Animations are available with `UiTransform`s. ([#1935])
 
 ### Changed
 
@@ -31,7 +93,15 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AmethystApplication::with_thread_local` constraint relaxed to `RunNow` (previously `System`). ([#1882])
 * `SystemDesc` proc macro supports `#[system_desc(event_reader_id)]` to register event reader. ([#1883])
 * `SystemDesc` proc macro supports `#[system_desc(flagged_storage_reader(Component))]`. ([#1886])
+* Use `SystemDesc` derive to generate `SystemDesc` implementations for common case systems. ([#1887])
 * `DispatcherOperation` stores system name and dependencies as `String`s. ([#1891])
+* `TextureProcessor` renamed to `TextureProcessorSystem`. ([#1839])
+* `MeshProcessor` renamed to `MeshProcessorSystem`. ([#1839])
+* `AmethystApplication::with_setup` now takes in `FnOnce(&mut World) + Send + 'static`. ([#1912])
+* `AmethystApplication::with_setup` runs the function before the dispatcher. ([#1912])
+* `UiImage:PartialTexture` & `UiImage:Sprite` texture coordinates are correct. Clarified types. ([#1906],[#1919])
+* `Camera::screen_to_world` renamed `Camera::screen_to_world_point` and its API has changed to a Point3 ([#1918]).
+* 'amethyst_tiles' crate added supporting 2d and 3d tile map rendering with sprites. ([#1820])
 
 ### Fixed
 
@@ -45,8 +115,17 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1882]: https://github.com/amethyst/amethyst/pull/1882
 [#1883]: https://github.com/amethyst/amethyst/pull/1883
 [#1886]: https://github.com/amethyst/amethyst/pull/1886
+[#1887]: https://github.com/amethyst/amethyst/pull/1887
 [#1891]: https://github.com/amethyst/amethyst/pull/1891
 [#1896]: https://github.com/amethyst/amethyst/pull/1896
+[#1839]: https://github.com/amethyst/amethyst/pull/1839
+[#1906]: https://github.com/amethyst/amethyst/issues/1906
+[#1912]: https://github.com/amethyst/amethyst/pull/1912
+[#1916]: https://github.com/amethyst/amethyst/pull/1916
+[#1919]: https://github.com/amethyst/amethyst/pull/1919
+[#1918]: https://github.com/amethyst/amethyst/pull/1918
+[#1933]: https://github.com/amethyst/amethyst/pull/1933
+[#1820]: https://github.com/amethyst/amethyst/pull/1820
 
 ## [0.12.0] - 2019-07-30
 
@@ -988,7 +1067,11 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 * Initial release
 
-[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.13.2...HEAD
+[0.13.1]: https://github.com/amethyst/amethyst/compare/v0.13.1...v0.13.2
+[0.13.1]: https://github.com/amethyst/amethyst/compare/v0.13.0...v0.13.1
+[0.13.0]: https://github.com/amethyst/amethyst/compare/v0.12.0...v0.13.0
+[0.12.0]: https://github.com/amethyst/amethyst/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/amethyst/amethyst/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/amethyst/amethyst/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/amethyst/amethyst/compare/v0.8.0...v0.9.0

@@ -1,0 +1,8 @@
+/*!
+    @import /amethyst_window/src/config.rs#DisplayConfig
+    DisplayConfig
+*/
+
+(
+  title: "Renderable Example - With custom Render Graph",
+)

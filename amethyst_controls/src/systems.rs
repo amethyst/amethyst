@@ -119,25 +119,6 @@ impl<'a> System<'a> for ArcBallRotationSystem {
     }
 }
 
-/// Builds a `FreeRotationSystem`.
-#[derive(Default, Debug, new)]
-pub struct FreeRotationSystemDesc {
-    /// Sensitivity on the x axis.
-    pub sensitivity_x: f32,
-    /// Sensitivity on the y axis.
-    pub sensitivity_y: f32,
-}
-
-impl<'a, 'b> SystemDesc<'a, 'b, FreeRotationSystem> for FreeRotationSystemDesc {
-    fn build(self, world: &mut World) -> FreeRotationSystem {
-        <FreeRotationSystem as System<'_>>::SystemData::setup(world);
-
-        let event_reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
-
-        FreeRotationSystem::new(self.sensitivity_x, self.sensitivity_y, event_reader)
-    }
-}
-
 /// The system that manages the view rotation.
 ///
 /// Controlled by the mouse.
@@ -145,10 +126,12 @@ impl<'a, 'b> SystemDesc<'a, 'b, FreeRotationSystem> for FreeRotationSystemDesc {
 ///
 /// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
 /// `HideCursor.hide = false`
-#[derive(Debug, new)]
+#[derive(Debug, SystemDesc, new)]
+#[system_desc(name(FreeRotationSystemDesc))]
 pub struct FreeRotationSystem {
     sensitivity_x: f32,
     sensitivity_y: f32,
+    #[system_desc(event_channel_reader)]
     event_reader: ReaderId<Event>,
 }
 
@@ -185,23 +168,11 @@ impl<'a> System<'a> for FreeRotationSystem {
     }
 }
 
-/// Builds a `MouseFocusUpdateSystem`.
-#[derive(Default, Debug)]
-pub struct MouseFocusUpdateSystemDesc;
-
-impl<'a, 'b> SystemDesc<'a, 'b, MouseFocusUpdateSystem> for MouseFocusUpdateSystemDesc {
-    fn build(self, world: &mut World) -> MouseFocusUpdateSystem {
-        <MouseFocusUpdateSystem as System<'_>>::SystemData::setup(world);
-
-        let event_reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
-
-        MouseFocusUpdateSystem::new(event_reader)
-    }
-}
-
 /// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
-#[derive(Debug, new)]
+#[derive(Debug, SystemDesc, new)]
+#[system_desc(name(MouseFocusUpdateSystemDesc))]
 pub struct MouseFocusUpdateSystem {
+    #[system_desc(event_channel_reader)]
     event_reader: ReaderId<Event>,
 }
 
@@ -222,24 +193,20 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     }
 }
 
-/// Builds a `CursorHideSystem`.
-#[derive(Default, Debug)]
-pub struct CursorHideSystemDesc;
-
-impl<'a, 'b> SystemDesc<'a, 'b, CursorHideSystem> for CursorHideSystemDesc {
-    fn build(self, world: &mut World) -> CursorHideSystem {
-        <CursorHideSystem as System<'_>>::SystemData::setup(world);
-
-        CursorHideSystem::new()
-    }
-}
-
 /// System which hides the cursor when the window is focused.
 /// Requires the usage MouseFocusUpdateSystem at the same time.
-#[derive(Debug, new)]
+#[derive(Debug, SystemDesc, new)]
+#[system_desc(name(CursorHideSystemDesc))]
 pub struct CursorHideSystem {
     #[new(value = "true")]
+    #[system_desc(skip)]
     is_hidden: bool,
+}
+
+impl Default for CursorHideSystem {
+    fn default() -> Self {
+        CursorHideSystem::new()
+    }
 }
 
 impl<'a> System<'a> for CursorHideSystem {

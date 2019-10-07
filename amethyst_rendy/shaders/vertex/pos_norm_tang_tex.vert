@@ -3,6 +3,7 @@
 layout(std140, set = 0, binding = 0) uniform Projview {
     mat4 proj;
     mat4 view;
+    mat4 proj_view;
 };
 
 layout(location = 0) in vec3 position;
@@ -29,5 +30,5 @@ void main() {
     vertex.tang_handedness = tangent.w;
     vertex.tex_coord = tex_coord;
     vertex.color = tint;
-    gl_Position = proj * view * vertex_position;
+    gl_Position = proj_view * vertex_position;
 }

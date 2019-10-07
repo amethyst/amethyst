@@ -59,7 +59,12 @@ Container(
                 anchor: TopRight,
                 mouse_reactive: true,
             ),
-            image: PartialTexture(File("texture/test_texture.png", ("IMAGE", ())),0.34,0.0,1.0,0.333),
+            image: PartialTexture(
+                tex: File("texture/test_texture.png", ("IMAGE", ())),
+                left : 0.34,
+                right : 1.0,
+                bottom: 0.333,
+                top: 0.0),
         ),
         //9-Slice
         Image(

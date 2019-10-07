@@ -13,6 +13,7 @@ use amethyst_core::{
     shrev::EventChannel,
     SystemDesc,
 };
+use amethyst_derive::SystemDesc;
 use amethyst_input::{BindingTypes, InputHandler};
 
 use crate::{CachedSelectionOrder, UiEvent, UiEventType};
@@ -55,31 +56,16 @@ impl Component for Selected {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// Builds a `SelectionKeyboardSystem`.
-#[derive(Derivative, Debug)]
-#[derivative(Default(bound = ""))]
-pub struct SelectionKeyboardSystemDesc<G> {
-    marker: PhantomData<G>,
-}
-
-impl<'a, 'b, G> SystemDesc<'a, 'b, SelectionKeyboardSystem<G>> for SelectionKeyboardSystemDesc<G>
-where
-    G: Send + Sync + 'static + PartialEq,
-{
-    fn build(self, world: &mut World) -> SelectionKeyboardSystem<G> {
-        <SelectionKeyboardSystem<G> as System<'_>>::SystemData::setup(world);
-
-        let window_reader_id = world.fetch_mut::<EventChannel<Event>>().register_reader();
-
-        SelectionKeyboardSystem::new(window_reader_id)
-    }
-}
-
 /// System managing the selection of entities.
 /// Reacts to `UiEvent`.
 /// Reacts to Tab and Shift+Tab.
-#[derive(Debug)]
-pub struct SelectionKeyboardSystem<G> {
+#[derive(Debug, SystemDesc)]
+#[system_desc(name(SelectionKeyboardSystemDesc))]
+pub struct SelectionKeyboardSystem<G>
+where
+    G: Send + Sync + 'static + PartialEq,
+{
+    #[system_desc(event_channel_reader)]
     window_reader_id: ReaderId<Event>,
     phantom: PhantomData<G>,
 }

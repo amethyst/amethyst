@@ -1,0 +1,9 @@
+/*!
+    @import /amethyst_input/src/bindings.rs#Bindings, StringBindings
+    Bindings<StringBindings>
+*/
+
+(
+    axes: {},
+    actions: {},
+)

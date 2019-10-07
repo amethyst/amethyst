@@ -24,7 +24,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
         Error,
     };
     use serde::{Deserialize, Serialize};
-    use specs_derive::Component;
     ```
 
 3. Define the aggregate prefab data type.
@@ -34,7 +33,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-    # extern crate specs_derive;
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -47,13 +45,12 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     Error,
     # };
     # use serde::{Deserialize, Serialize};
-    # use specs_derive::Component;
     #
     #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
     #[serde(deny_unknown_fields)]
     pub struct Position(pub f32, pub f32, pub f32);
-    
+
     /// **Note:** All fields must be specified in the prefab. If a field is
     /// not specified, then the prefab will fail to load.
     #[derive(Deserialize, Serialize, PrefabData)]
@@ -69,7 +66,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-    # extern crate specs_derive;
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -82,7 +78,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     Error,
     # };
     # use serde::{Deserialize, Serialize};
-    # use specs_derive::Component;
     #
     #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
@@ -120,7 +115,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-    # extern crate specs_derive;
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -134,8 +128,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     Error,
     # };
     # use serde::{Deserialize, Serialize};
-    # use specs_derive::Component;
-
+    
     #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
     #[serde(deny_unknown_fields)]
@@ -160,7 +153,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
-    # extern crate specs_derive;
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -174,8 +166,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     Error,
     # };
     # use serde::{Deserialize, Serialize};
-    # use specs_derive::Component;
-
+    
     #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
     #[serde(deny_unknown_fields)]

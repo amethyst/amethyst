@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_network"
-version = "0.5.0"
+version = "0.6.1"
 authors = [
 	"Joël Lupien (Jojolepro) <jojolepromain@gmail.com>",
 	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>",
@@ -20,14 +20,13 @@ license = "MIT/Apache-2.0"
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
-float64 = ["amethyst_core/float64"]
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.7.0" }
-amethyst_error = { path = "../amethyst_error", version = "0.2.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.8.1" }
+amethyst_error = { path = "../amethyst_error", version = "0.3.0" }
 serde = { version = "1", features = ["derive"] }
 shrev = "1.0"
-shred = "0.7"
+shred = "0.9"
 bincode = "1.0"
 log = "0.4.6"
 uuid = { version = "0.7.1", features = ["v4","serde"] }

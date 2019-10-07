@@ -3,11 +3,62 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
+    geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
     transform::components::Transform,
 };
-
 use amethyst_error::Error;
+use derivative::Derivative;
+
+/// Provide a custom matrix implementation for various experimental or custom needs. Note that multiple constraints
+/// must be met using this in order to be used within Amethyst. Currently, this matrix must be invertible to be used
+/// within the engine.
+///
+/// Note a closure must be provided to provide the clip plane values of near and far, as these are calculated based
+/// on the projection type.
+#[derive(Derivative, Debug, Clone)]
+pub struct CustomMatrix {
+    matrix: Matrix4<f32>,
+    inverse: Matrix4<f32>,
+}
+impl CustomMatrix {
+    /// Create a new `CustomMatrix`
+    ///
+    /// * panics when matrix is not invertible
+    pub fn new(matrix: Matrix4<f32>) -> Self {
+        Self {
+            inverse: matrix
+                .try_inverse()
+                .expect("Camera projection matrix is not invertible. This is normally due to having inverse values being superimposed (near=far, right=left)"),
+            matrix,
+        }
+    }
+
+    /// Returns a reference to the inner `Projection` matrix of this camera.
+    pub fn as_matrix(&self) -> &Matrix4<f32> {
+        &self.matrix
+    }
+
+    /// Changes the internal matrix to the provided matrix and re-caches the inverted matrix.
+    ///
+    /// * panics when matrix is not invertible
+    pub fn set_matrix(&mut self, matrix: Matrix4<f32>) {
+        self.matrix = matrix;
+        self.inverse = self.matrix
+            .try_inverse()
+            .expect("Camera projection matrix is not invertible. This is normally due to having inverse values being superimposed (near=far, right=left)");
+    }
+
+    /// Returns a reference to the inverted `Projection` matrix of this custom matrix.
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
+        &self.inverse
+    }
+}
+impl PartialEq for CustomMatrix {
+    fn eq(&self, other: &Self) -> bool {
+        self.matrix == other.matrix
+    }
+}
 
 /// An appropriate orthographic projection for the coordinate space used by Amethyst.
 /// Because we use vulkan coordinates internally and within the rendering engine, normal nalgebra
@@ -15,9 +66,15 @@ use amethyst_error::Error;
 ///
 /// This implementation provides an interface with feature parity to nalgebra, but retaining
 /// the vulkan coordinate space.
-#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Orthographic {
     matrix: Matrix4<f32>,
+    inverse_matrix: Matrix4<f32>,
+}
+impl PartialEq for Orthographic {
+    fn eq(&self, other: &Self) -> bool {
+        self.matrix == other.matrix
+    }
 }
 impl Orthographic {
     /// Create a new `Orthographic` projection with the provided parameters.
@@ -32,11 +89,21 @@ impl Orthographic {
     /// * `z_far` - The distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
     ///
     /// The projection matrix is right-handed and has a depth range of 0 to 1
+    ///
+    /// * panics if `left` equals `right`, `bottom` equals `top` or `z_near` equals `z_far`
     pub fn new(left: f32, right: f32, bottom: f32, top: f32, z_near: f32, z_far: f32) -> Self {
         if cfg!(debug_assertions) {
             assert!(
                 !approx::relative_eq!(z_far - z_near, 0.0),
                 "The near-plane and far-plane must not be superimposed."
+            );
+            assert!(
+                !approx::relative_eq!(left - right, 0.0),
+                "The left-plane and right-plane must not be superimposed."
+            );
+            assert!(
+                !approx::relative_eq!(top - bottom, 0.0),
+                "The top-plane and bottom-plane must not be superimposed."
             );
         }
 
@@ -49,7 +116,12 @@ impl Orthographic {
         matrix[(1, 3)] = -(top + bottom) / (top - bottom);
         matrix[(2, 3)] = -z_near / (z_far - z_near);
 
-        Self { matrix }
+        Self {
+            matrix,
+            inverse_matrix: matrix
+                .try_inverse()
+                .expect("Camera projection matrix is not invertible. This is normally due to having inverse values being superimposed (near=far, right=left)"),
+        }
     }
 
     /// Returns the upper y-coordinate of the cuboid leftmost face parallel to the xz-plane.
@@ -169,10 +241,10 @@ impl Orthographic {
         &self.matrix
     }
 
-    /// Returns a mutable reference to the inner matrix representation of this projection.
+    /// Returns a reference to the inner matrix representation of this projection.
     #[inline]
-    pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
-        &mut self.matrix
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
+        &self.inverse_matrix
     }
 }
 
@@ -184,9 +256,15 @@ impl Orthographic {
 /// the vulkan coordinate space.
 ///
 /// The projection matrix is right-handed and has a depth range of 0 to 1
-#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Copy, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Perspective {
     matrix: Matrix4<f32>,
+    inverse_matrix: Matrix4<f32>,
+}
+impl PartialEq for Perspective {
+    fn eq(&self, other: &Self) -> bool {
+        self.matrix == other.matrix
+    }
 }
 impl Perspective {
     /// Creates a new `Perspective` projection with the provided arguments.
@@ -197,6 +275,8 @@ impl Perspective {
     /// * fov - Field of View represented in degrees
     /// * z_near - Near clip plane distance
     /// * z_far - Far clip plane distance
+    ///
+    /// * panics when matrix is not invertible
     pub fn new(aspect: f32, fov: f32, z_near: f32, z_far: f32) -> Self {
         if cfg!(debug_assertions) {
             assert!(
@@ -218,7 +298,12 @@ impl Perspective {
         matrix[(2, 3)] = -(z_far * z_near) / (z_far - z_near);
         matrix[(3, 2)] = -1.0;
 
-        Self { matrix }
+        Self {
+            matrix,
+            inverse_matrix: matrix
+                .try_inverse()
+                .expect("Camera projection matrix is not invertible"),
+        }
     }
 
     /// Returns the aspect ratio in radians
@@ -308,10 +393,10 @@ impl Perspective {
         &self.matrix
     }
 
-    /// Returns a mutable reference to the inner matrix representation of this projection.
+    /// Returns a reference to the inner matrix representation of this projection.
     #[inline]
-    pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
-        &mut self.matrix
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
+        &self.inverse_matrix
     }
 }
 
@@ -328,6 +413,10 @@ pub enum Projection {
     ///
     /// [pp]: https://en.wikipedia.org/wiki/Perspective_(graphical)
     Perspective(Perspective),
+
+    /// A custom matrix projected by the user.
+    #[serde(skip)]
+    CustomMatrix(CustomMatrix),
 }
 
 impl Projection {
@@ -350,6 +439,11 @@ impl Projection {
     /// The projection matrix is right-handed and has a depth range of 0 to 1
     pub fn perspective(aspect: f32, fov: f32, z_near: f32, z_far: f32) -> Projection {
         Projection::Perspective(Perspective::new(aspect, fov, z_near, z_far))
+    }
+
+    /// Creates a `Projection::CustomMatrix` with the matrix provided.
+    pub fn custom_matrix(matrix: Matrix4<f32>) -> Projection {
+        Projection::CustomMatrix(CustomMatrix::new(matrix))
     }
 
     /// Returns a reference to this `Projection` as [Orthographic] if it is in fact an `Orthographic`
@@ -388,44 +482,77 @@ impl Projection {
         }
     }
 
+    /// Returns a reference to this `Projection` as [CustomMatrix] if it is in fact an `CustomMatrix`
+    /// projection. Otherwise, `None` is returned.
+    pub fn as_custom_matrix(&self) -> Option<&CustomMatrix> {
+        match *self {
+            Projection::CustomMatrix(ref s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Returns a reference to this `Projection` as [CustomMatrix] if it is in fact an `CustomMatrix`
+    /// projection. Otherwise, `None` is returned.
+    pub fn as_custom_matrix_mut(&mut self) -> Option<&mut CustomMatrix> {
+        match *self {
+            Projection::CustomMatrix(ref mut s) => Some(s),
+            _ => None,
+        }
+    }
+
     /// Returns a reference to the inner matrix represpentation of this projection.
     pub fn as_matrix(&self) -> &Matrix4<f32> {
         match *self {
             Projection::Orthographic(ref s) => s.as_matrix(),
             Projection::Perspective(ref s) => s.as_matrix(),
+            Projection::CustomMatrix(ref s) => s.as_matrix(),
         }
     }
 
-    /// Returns a mutable reference to the inner matrix represpentation of this projection.
-    pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
+    /// Returns a reference to the inner inverse matrix represpentation of this projection.
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
         match *self {
-            Projection::Orthographic(ref mut s) => s.as_matrix_mut(),
-            Projection::Perspective(ref mut s) => s.as_matrix_mut(),
+            Projection::Orthographic(ref s) => s.as_inverse_matrix(),
+            Projection::Perspective(ref s) => s.as_inverse_matrix(),
+            Projection::CustomMatrix(ref s) => s.as_inverse_matrix(),
         }
     }
 
-    /// Transforms position from screen space to camera space
-    pub fn screen_to_world(
+    /// Returns a `Ray` going out form the camera through provided screen position. The ray origin lies on camera near plane.
+    pub fn screen_ray(
         &self,
         screen_position: Point2<f32>,
         screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
-    ) -> Point3<f32> {
+    ) -> Ray<f32> {
         let screen_x = 2.0 * screen_position.x / screen_diagonal.x - 1.0;
         let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
-        let screen_point = Point3::new(screen_x, screen_y, 0.0).to_homogeneous();
 
-        let render_matrix: Matrix4<f32> =
-            amethyst_core::math::convert(*camera_transform.global_matrix());
+        let matrix = *camera_transform.global_matrix() * self.as_inverse_matrix();
 
-        let vector = render_matrix
-            * self
-                .as_matrix()
-                .try_inverse()
-                .expect("Camera projection matrix is not invertible")
-            * screen_point;
+        let near = Point3::new(screen_x, screen_y, 0.0);
+        let far = Point3::new(screen_x, screen_y, 1.0);
 
-        Point3::from_homogeneous(vector).expect("Vector is not homogeneous")
+        let near_t = matrix.transform_point(&near);
+        let far_t = matrix.transform_point(&far);
+
+        Ray {
+            origin: near_t,
+            direction: (far_t.coords - near_t.coords).normalize(),
+        }
+    }
+
+    /// Transforms the provided (X, Y, Z) screen coordinate into world coordinates.
+    /// This method fires a ray from the camera in its view direction, and returns the Point at `screen_position.z`
+    /// world space distance from the camera origin.
+    pub fn screen_to_world_point(
+        &self,
+        screen_position: Point3<f32>,
+        screen_diagonal: Vector2<f32>,
+        camera_transform: &Transform,
+    ) -> Point3<f32> {
+        self.screen_ray(screen_position.xy(), screen_diagonal, camera_transform)
+            .at_distance(screen_position.z)
     }
 
     /// Translate from world coordinates to screen coordinates
@@ -435,12 +562,8 @@ impl Projection {
         screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
     ) -> Point2<f32> {
-        let render_matrix: Matrix4<f32> =
-            amethyst_core::math::convert(*camera_transform.global_matrix());
-
-        let f = render_matrix * self.as_matrix();
-
-        let screen_pos = f.transform_point(&world_position);
+        let screen_pos =
+            (camera_transform.global_matrix() * self.as_matrix()).transform_point(&world_position);
 
         Point2::new(
             (screen_pos.x + 1.0) * screen_diagonal.x / 2.0,
@@ -458,6 +581,12 @@ impl From<Orthographic> for Projection {
 impl From<Perspective> for Projection {
     fn from(proj: Perspective) -> Self {
         Projection::Perspective(proj)
+    }
+}
+
+impl From<CustomMatrix> for Projection {
+    fn from(proj: CustomMatrix) -> Self {
+        Projection::CustomMatrix(proj)
     }
 }
 
@@ -524,19 +653,26 @@ impl Camera {
         ))
     }
 
+    /// Creates a `Projection::CustomMatrix` with the matrix provided.
+    pub fn custom_matrix(matrix: Matrix4<f32>) -> Self {
+        Self::from(Projection::CustomMatrix(CustomMatrix::new(matrix)))
+    }
+
     /// Returns a reference to the inner `Projection` matrix of this camera.
     pub fn as_matrix(&self) -> &Matrix4<f32> {
         match self.inner {
             Projection::Orthographic(ref p) => p.as_matrix(),
             Projection::Perspective(ref p) => p.as_matrix(),
+            Projection::CustomMatrix(ref p) => p.as_matrix(),
         }
     }
 
-    /// Returns a mutable reference to the inner `Projection` matrix of this camera.
-    pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
+    /// Returns a reference to the inverted `Projection` matrix of this camera.
+    pub fn as_inverse_matrix(&self) -> &Matrix4<f32> {
         match self.inner {
-            Projection::Orthographic(ref mut p) => p.as_matrix_mut(),
-            Projection::Perspective(ref mut p) => p.as_matrix_mut(),
+            Projection::Orthographic(ref p) => p.as_inverse_matrix(),
+            Projection::Perspective(ref p) => p.as_inverse_matrix(),
+            Projection::CustomMatrix(ref p) => p.as_inverse_matrix(),
         }
     }
 
@@ -678,34 +814,77 @@ mod tests {
     use more_asserts::{assert_ge, assert_gt, assert_le, assert_lt};
 
     #[test]
-    fn screen_to_world() {
+    fn screen_to_world_3d() {
         let diagonal = Vector2::new(1024.0, 768.0);
 
-        let ortho = Camera::standard_2d(diagonal.x, diagonal.y);
+        let camera = Camera::standard_3d(diagonal.x, diagonal.y);
         let mut transform = Transform::default();
 
-        let center_screen = Point2::new(diagonal.x / 2.0, diagonal.y / 2.0);
-        let top_left = Point2::new(0.0, 0.0);
-        let bottom_right = Point2::new(diagonal.x - 1.0, diagonal.y - 1.0);
+        let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
+        let top_left = Point3::new(0.0, 0.0, 0.0);
+        let bottom_right = Point3::new(diagonal.x - 1.0, diagonal.y - 1.0, 0.0);
 
         assert_ulps_eq!(
-            ortho
+            camera
                 .projection()
-                .screen_to_world(center_screen, diagonal, &transform),
+                .screen_to_world_point(center_screen, diagonal, &transform),
             Point3::new(0.0, 0.0, -0.1)
         );
 
         assert_ulps_eq!(
-            ortho
+            camera
                 .projection()
-                .screen_to_world(top_left, diagonal, &transform),
+                .screen_to_world_point(top_left, diagonal, &transform),
+            Point3::new(-0.076_980_04, 0.057_735_037, -0.1)
+        );
+
+        assert_ulps_eq!(
+            camera
+                .projection()
+                .screen_to_world_point(bottom_right, diagonal, &transform),
+            Point3::new(0.076_829_69, -0.057_584_69, -0.1)
+        );
+
+        transform.set_translation_x(100.0);
+        transform.set_translation_y(100.0);
+        transform.copy_local_to_global();
+        assert_ulps_eq!(
+            camera
+                .projection()
+                .screen_to_world_point(center_screen, diagonal, &transform),
+            Point3::new(100.0, 100.0, -0.1)
+        );
+    }
+
+    #[test]
+    fn screen_to_world_2d() {
+        let diagonal = Vector2::new(1024.0, 768.0);
+
+        let camera = Camera::standard_2d(diagonal.x, diagonal.y);
+        let mut transform = Transform::default();
+
+        let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
+        let top_left = Point3::new(0.0, 0.0, 0.0);
+        let bottom_right = Point3::new(diagonal.x - 1.0, diagonal.y - 1.0, 0.0);
+
+        assert_ulps_eq!(
+            camera
+                .projection()
+                .screen_to_world_point(center_screen, diagonal, &transform),
+            Point3::new(0.0, 0.0, -0.1)
+        );
+
+        assert_ulps_eq!(
+            camera
+                .projection()
+                .screen_to_world_point(top_left, diagonal, &transform),
             Point3::new(-512.0, 384.0, -0.1)
         );
 
         assert_ulps_eq!(
-            ortho
+            camera
                 .projection()
-                .screen_to_world(bottom_right, diagonal, &transform),
+                .screen_to_world_point(bottom_right, diagonal, &transform),
             Point3::new(511.0, -383.0, -0.1)
         );
 
@@ -713,9 +892,9 @@ mod tests {
         transform.set_translation_y(100.0);
         transform.copy_local_to_global();
         assert_ulps_eq!(
-            ortho
+            camera
                 .projection()
-                .screen_to_world(center_screen, diagonal, &transform),
+                .screen_to_world_point(center_screen, diagonal, &transform),
             Point3::new(100.0, 100.0, -0.1)
         );
     }

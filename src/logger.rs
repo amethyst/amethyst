@@ -3,7 +3,7 @@ pub use log::LevelFilter;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use std::{env, io, path::PathBuf, str::FromStr};
+use std::{env, fmt, io, path::PathBuf, str::FromStr};
 
 /// An enum that contains options for logging to the terminal.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -43,8 +43,8 @@ impl Default for LoggerConfig {
     }
 }
 
-/// Allows the creation of a logger with a set of custom configurations. If no custom configuration
-/// is required [`start_logger`] can be used instead.
+/// Allows the creation of a custom logger with a set of custom configurations. If no custom
+/// formatting or configuration is required [`start_logger`] can be used instead.
 ///
 /// # Examples
 /// ```
@@ -52,6 +52,15 @@ impl Default for LoggerConfig {
 ///     .level_for("gfx_device_gl", amethyst::LogLevelFilter::Warn)
 ///     .level_for("gfx_glyph", amethyst::LogLevelFilter::Error)
 ///     .start();
+///
+/// amethyst::Logger::from_config_formatter(Default::default(), |out, message, record| {
+///     out.finish(format_args!(
+///         "[{level}][{target}] {message}",
+///         level = record.level(),
+///         target = record.target(),
+///         message = message,
+///     ))
+/// }).start();
 /// ```
 #[allow(missing_debug_implementations)]
 pub struct Logger {
@@ -71,13 +80,24 @@ impl Logger {
         Self { dispatch }
     }
 
-    /// Create a new Logger from [`LoggerConfig`]
-    pub fn from_config(mut config: LoggerConfig) -> Self {
+    /// Create a new Logger with a passed in formatter callback
+    fn new_formatter<F>(formatter: F) -> Self
+    where
+        F: Fn(fern::FormatCallback<'_>, &fmt::Arguments<'_>, &log::Record<'_>)
+            + Sync
+            + Send
+            + 'static,
+    {
+        let dispatch = fern::Dispatch::new().format(formatter);
+        Self { dispatch }
+    }
+
+    /// Create a new logger from [`LoggerConfig`] and the Logger it will be added to
+    fn new_with_config(mut config: LoggerConfig, mut logger: Self) -> Self {
         if config.allow_env_override {
             env_var_override(&mut config);
         }
 
-        let mut logger = Self::new();
         logger.dispatch = logger.dispatch.level(config.level_filter);
 
         match config.stdout {
@@ -107,6 +127,22 @@ impl Logger {
         logger
     }
 
+    /// Create a new Logger from [`LoggerConfig`]
+    pub fn from_config(config: LoggerConfig) -> Self {
+        Logger::new_with_config(config, Logger::new())
+    }
+
+    /// Create a new Logger from [`LoggerConfig`] and a formatter
+    pub fn from_config_formatter<F>(config: LoggerConfig, formatter: F) -> Self
+    where
+        F: Fn(fern::FormatCallback<'_>, &fmt::Arguments<'_>, &log::Record<'_>)
+            + Sync
+            + Send
+            + 'static,
+    {
+        Logger::new_with_config(config, Logger::new_formatter(formatter))
+    }
+
     /// Set individual log levels for modules.
     pub fn level_for<T: Into<std::borrow::Cow<'static, str>>>(
         mut self,
@@ -126,9 +162,6 @@ impl Logger {
 }
 
 /// Starts a basic logger outputting to stdout with color on supported platforms, and/or to file.
-///
-/// If you do not intend on using the logger builtin to Amethyst, it's highly recommended you
-/// initialise your own.
 ///
 /// Configuration of the logger can also be controlled via environment variables:
 /// * `AMETHYST_LOG_STDOUT` - determines the output to the terminal

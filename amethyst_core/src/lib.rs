@@ -38,7 +38,7 @@ pub use crate::{
 pub use self::{
     axis::{Axis2, Axis3},
     hidden::{Hidden, HiddenPropagate},
-    hide_system::HideHierarchySystem,
+    hide_system::{HideHierarchySystem, HideHierarchySystemDesc},
     named::{Named, WithNamed},
     system_desc::{RunNowDesc, SystemDesc},
 };
@@ -46,6 +46,7 @@ pub use self::{
 pub mod bundle;
 pub mod deferred_dispatcher_operation;
 pub mod frame_limiter;
+pub mod geometry;
 pub mod timing;
 pub mod transform;
 

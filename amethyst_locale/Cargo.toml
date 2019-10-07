@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_locale"
-version = "0.6.0"
+version = "0.7.2"
 authors = ["Joël Lupien <jojolepromain@gmail.com>"]
 readme = "README.md"
 edition = "2018"
@@ -20,15 +20,14 @@ repository = "https://github.com/amethyst/amethyst"
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.8.0" }
-amethyst_core = { path = "../amethyst_core", version = "0.7.0" }
-amethyst_error = { path = "../amethyst_error", version = "0.2.0" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.9.1" }
+amethyst_core = { path = "../amethyst_core", version = "0.8.1" }
+amethyst_error = { path = "../amethyst_error", version = "0.3.0" }
 serde = { version = "1.0", features = ["derive"] }
-fluent = "0.7.0"
-unic-langid = { version = "0.4", features = ["macros"] }
+fluent = "0.8"
+unic-langid = { version = "0.6", features = ["macros"] }
 
 thread_profiler = { version = "0.3", optional = true }
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
-float64 = ["amethyst_core/float64"]

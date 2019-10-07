@@ -17,7 +17,6 @@ use amethyst::{
 };
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use specs_derive::Component;
 
 #[derive(Clone, Copy, Component, Debug, Default)]
 pub struct Position(pub f32, pub f32, pub f32);

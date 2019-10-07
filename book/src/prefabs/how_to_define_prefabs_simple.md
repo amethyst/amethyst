@@ -5,11 +5,9 @@ This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. Th
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # extern crate serde;
-# extern crate specs_derive;
 #
 # use amethyst::ecs::{storage::DenseVecStorage, Component};
 # use serde::{Deserialize, Serialize};
-# use specs_derive::Component;
 #
 #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
 pub struct Position(pub f32, pub f32, pub f32);
@@ -54,7 +52,6 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     # extern crate amethyst;
     # extern crate derivative;
     # extern crate serde;
-    # extern crate specs_derive;
     #
     # use amethyst::{
     #     assets::{Prefab, PrefabData},
@@ -68,7 +65,6 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     # };
     # use derivative::Derivative;
     # use serde::{Deserialize, Serialize};
-    # use specs_derive::Component;
     #
     #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]

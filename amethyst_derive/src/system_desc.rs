@@ -5,10 +5,9 @@ use proc_macro2::{Literal, Span, TokenStream};
 use proc_macro_roids::{DeriveInputExt, DeriveInputStructExt, FieldExt};
 use quote::quote;
 use syn::{
-    parse_quote, punctuated::Pair, AngleBracketedGenericArguments, Attribute, DeriveInput, Expr,
-    Field, Fields, FieldsNamed, FieldsUnnamed, GenericArgument, GenericParam, Ident, ImplGenerics,
-    LifetimeDef, Lit, Meta, MetaList, NestedMeta, Path, PathArguments, Type, TypeGenerics,
-    TypePath, WhereClause,
+    parse_quote, AngleBracketedGenericArguments, DeriveInput, Expr, Field, Fields, FieldsNamed,
+    FieldsUnnamed, GenericArgument, GenericParam, Ident, ImplGenerics, LifetimeDef, Lit, Meta,
+    NestedMeta, Path, PathArguments, Type, TypeGenerics, TypePath, WhereClause,
 };
 
 pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
@@ -148,29 +147,36 @@ fn system_desc_fields(ast: &DeriveInput) -> SystemDescFields<'_> {
     let field_mappings = fields.iter().enumerate().fold(
         Vec::new(),
         |mut field_mappings, (system_field_index, field)| {
-            let field_variant = if field.contains_tag("system_desc", "skip") {
-                FieldVariant::Skipped(field)
-            } else if field.contains_tag("system_desc", "event_channel_reader") {
-                FieldVariant::Compute(FieldToCompute::EventChannelReader(field))
-            } else if field.contains_tag("system_desc", "flagged_storage_reader") {
-                FieldVariant::Compute(FieldToCompute::FlaggedStorageReader(field))
-            } else if field.is_phantom_data() {
-                let field_variant = FieldVariant::PhantomData {
-                    system_desc_field_index,
-                    field,
-                };
-                system_desc_field_index += 1;
+            let field_variant =
+                if field.contains_tag(&parse_quote!(system_desc), &parse_quote!(skip)) {
+                    FieldVariant::Skipped(field)
+                } else if field.contains_tag(
+                    &parse_quote!(system_desc),
+                    &parse_quote!(event_channel_reader),
+                ) {
+                    FieldVariant::Compute(FieldToCompute::EventChannelReader(field))
+                } else if field.contains_tag(
+                    &parse_quote!(system_desc),
+                    &parse_quote!(flagged_storage_reader),
+                ) {
+                    FieldVariant::Compute(FieldToCompute::FlaggedStorageReader(field))
+                } else if field.is_phantom_data() {
+                    let field_variant = FieldVariant::PhantomData {
+                        system_desc_field_index,
+                        field,
+                    };
+                    system_desc_field_index += 1;
 
-                field_variant
-            } else {
-                let field_variant = FieldVariant::Passthrough {
-                    system_desc_field_index,
-                    field,
-                };
-                system_desc_field_index += 1;
+                    field_variant
+                } else {
+                    let field_variant = FieldVariant::Passthrough {
+                        system_desc_field_index,
+                        field,
+                    };
+                    system_desc_field_index += 1;
 
-                field_variant
-            };
+                    field_variant
+                };
 
             let field_mapping = FieldMapping {
                 system_field_index,
@@ -540,93 +546,57 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
 /// Extracts the name from the `#[system_desc(name(..))]` attribute.
 #[allow(clippy::let_and_return)] // Needed due to bug in clippy.
 fn system_desc_name(ast: &DeriveInput) -> Option<Ident> {
-    ast.tag_parameter("system_desc", "name").map(|meta| {
-        if let Meta::Word(ident) = meta {
-            ident
-        } else {
-            panic!("Expected name parameter to be an `Ident`.")
-        }
-    })
+    ast.tag_parameter(&parse_quote!(system_desc), &parse_quote!(name))
+        .map(|meta| {
+            if let NestedMeta::Meta(Meta::Path(path)) = meta {
+                if let Some(ident) = path.get_ident() {
+                    ident.clone()
+                } else {
+                    panic!("Expected name parameter to be an `Ident`.")
+                }
+            } else {
+                panic!("Expected name parameter to be an `Ident`.")
+            }
+        })
 }
 
 /// Inserts resources specified inside the `#[system_desc(insert(..))]` attribute.
 fn resource_insertion_expressions(ast: &DeriveInput) -> TokenStream {
-    let meta_lists = ast
-        .attrs
-        .iter()
-        .map(Attribute::parse_meta)
-        .filter_map(Result::ok)
-        .filter(|meta| meta.name() == "system_desc")
-        .filter_map(|meta| {
-            if let Meta::List(meta_list) = meta {
-                Some(meta_list)
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<MetaList>>();
-
-    // Each `meta_list` is the `system_desc(..)` item.
-    meta_lists
-        .iter()
-        .flat_map(|meta_list| {
-            meta_list
-                .nested
-                .iter()
-                .filter_map(|nested_meta| {
-                    if let NestedMeta::Meta(meta) = nested_meta {
-                        Some(meta)
-                    } else {
-                        None
-                    }
-                })
-                .filter(|meta| meta.name() == "insert")
-        })
-        // `meta` is the `insert(..)` item.
-        .filter_map(|meta| {
-            if let Meta::List(meta_list) = meta {
-                Some(meta_list)
-            } else {
-                None
-            }
-        })
+    let nested_meta_inserts = ast.tag_parameters(&parse_quote!(system_desc), &parse_quote!(insert));
+    nested_meta_inserts
+        .into_iter()
         // We want to insert a resource for each item in the list.
-        .flat_map(|meta_list| {
-            meta_list
-                .nested
-                .iter()
-                .map(|nested_meta| match nested_meta {
-                    NestedMeta::Meta(meta) => {
-                        if let Meta::Word(ident) = meta {
-                            quote!(#ident)
-                        } else {
-                            panic!(
-                                "`{:?}` is an invalid value in this position.\n\
-                                 Expected a literal string or single word.",
-                                meta
-                            )
-                        }
-                    }
-                    NestedMeta::Literal(lit) => {
-                        if let Lit::Str(lit_str) = lit {
-                            // Turn the literal into tokens.
-                            // The literal must be a valid expression
-                            let expr = lit_str.parse::<Expr>().unwrap_or_else(|e| {
-                                panic!(
-                                    "Failed to parse `{:?}` as an expression. Error: {}",
-                                    lit_str, e,
-                                )
-                            });
-                            quote!(#expr)
-                        } else {
-                            panic!(
-                                "`{:?}` is an invalid value in this position.\n\
-                                 Expected a literal string or single word.",
-                                lit
-                            )
-                        }
-                    }
-                })
+        .map(|nested_meta| match nested_meta {
+            NestedMeta::Meta(meta) => {
+                if let Meta::Path(path) = meta {
+                    quote!(#path)
+                } else {
+                    panic!(
+                        "`{:?}` is an invalid value in this position.\n\
+                         Expected a literal string or path.",
+                        meta
+                    )
+                }
+            }
+            NestedMeta::Lit(lit) => {
+                if let Lit::Str(lit_str) = lit {
+                    // Turn the literal into tokens.
+                    // The literal must be a valid expression
+                    let expr = lit_str.parse::<Expr>().unwrap_or_else(|e| {
+                        panic!(
+                            "Failed to parse `{:?}` as an expression. Error: {}",
+                            lit_str, e,
+                        )
+                    });
+                    quote!(#expr)
+                } else {
+                    panic!(
+                        "`{:?}` is an invalid value in this position.\n\
+                         Expected a literal string or single word.",
+                        lit
+                    )
+                }
+            }
         })
         .fold(TokenStream::new(), |mut accumulated_tokens, expr_tokens| {
             accumulated_tokens.extend(quote! {
@@ -650,15 +620,16 @@ fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> T
                         ..
                     }) = &field.ty
                     {
-                        if let Some(Pair::End(path_segment)) = segments.last() {
+                        if let Some(path_segment) = segments.last() {
                             if let PathArguments::AngleBracketed(AngleBracketedGenericArguments {
                                 args,
                                 ..
                             }) = &path_segment.arguments
                             {
-                                if let Some(Pair::End(GenericArgument::Type(Type::Path(
-                                    TypePath { path, .. },
-                                )))) = args.first()
+                                if let Some(GenericArgument::Type(Type::Path(TypePath {
+                                    path,
+                                    ..
+                                }))) = args.first()
                                 {
                                     path
                                 } else {
@@ -677,9 +648,14 @@ fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> T
                         panic!("Expected `{}` field type to be `Type::Path`.", &field_name)
                     };
 
+                    let event_channel_error = format!(
+                        "Expected `EventChannel<{}>` to exist.",
+                        quote!(event_type_path).to_string()
+                    );
                     let tokens = quote! {
                         let #field_name = world
-                            .fetch_mut::<EventChannel<#event_type_path>>()
+                            .get_mut::<EventChannel<#event_type_path>>()
+                            .expect(#event_channel_error)
                             .register_reader();
                     };
                     token_stream.extend(tokens);
@@ -687,9 +663,12 @@ fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> T
                 FieldVariant::Compute(FieldToCompute::FlaggedStorageReader(field)) => {
                     let field_name = field.ident.clone().unwrap_or_else(|| snake_case(field));
                     let component_path = {
-                        let meta = field.tag_parameter("system_desc", "flagged_storage_reader");
-                        if let Some(Meta::Word(ident)) = meta {
-                            ident
+                        let meta = field.tag_parameter(
+                            &parse_quote!(system_desc),
+                            &parse_quote!(flagged_storage_reader),
+                        );
+                        if let Some(NestedMeta::Meta(Meta::Path(path))) = meta {
+                            path
                         } else {
                             panic!(
                                 "Expected component type name for `flagged_storage_reader` \
