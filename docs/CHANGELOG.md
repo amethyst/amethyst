@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Changed
 
 * Use a premultiplied view_proj matrix in vertex shaders. ([#1964])
+* Cleaned up tiles example. Added rotation and translation tests, fixed raycast debug box. Added default zoom to PROJECT
+  perspective projection since no one knew to zoom out. ([#1974]) 
 
 ### Deprecated
 
@@ -24,11 +26,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+* Tilemap rotation was incorrect and not transposed. Fixed and uses component rotation. ([#1974]) 
+
+
 ### Security
 
 [#1964]: https://github.com/amethyst/amethyst/pull/1964
 [#1964]: https://github.com/amethyst/amethyst/pull/1904
-
+[#1974]: https://github.com/amethyst/amethyst/pull/1974
 
 ## [0.13.3] - 2019-10-4
 

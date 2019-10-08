@@ -1,9 +1,8 @@
 use amethyst::{
     assets::{AssetStorage, Loader},
     core::{
-        geometry::Plane,
         math::{Point3, Vector2, Vector3},
-        Named, Parent, Transform, TransformBundle,
+        Named, Parent, Time, Transform, TransformBundle,
     },
     ecs::{
         Component, Entities, Entity, Join, LazyUpdate, NullStorage, Read, ReadExpect, ReadStorage,
@@ -83,33 +82,19 @@ impl<'s> System<'s> for DrawSelectionSystem {
                             camera_transform.translation().z,
                         );
 
-                        let start_world = camera.projection().screen_to_world_point(
+                        let mut start_world = camera.projection().screen_to_world_point(
                             self.start_coordinate.expect("Wut?"),
                             screen_dimensions,
                             camera_transform,
                         );
-                        let end_world = camera.projection().screen_to_world_point(
+                        let mut end_world = camera.projection().screen_to_world_point(
                             end_coordinate,
                             screen_dimensions,
                             camera_transform,
                         );
-                        println!("screen_to_world_point = {:?}, {:?}", start_world, end_world);
-                        let plane = Plane::with_z(0.0);
-                        let start_world_plane = camera
-                            .projection()
-                            .screen_ray(
-                                self.start_coordinate.expect("Wut?").xy(),
-                                screen_dimensions,
-                                camera_transform,
-                            )
-                            .intersect_plane(&plane);
-                        let end_world_plane = camera
-                            .projection()
-                            .screen_ray(end_coordinate.xy(), screen_dimensions, camera_transform)
-                            .intersect_plane(&plane);
-                        println!("intersect = {:?}, {:?}", start_world_plane, end_world_plane);
+                        start_world.z = 0.9;
+                        end_world.z = 0.9;
 
-                        println!("Drawing box @ {:?} -> {:?}", start_world, end_world);
                         lines.add_box(start_world, end_world, Srgba::new(0.5, 0.05, 0.65, 1.0));
                     } else if !action_down && self.start_coordinate.is_some() {
                         // End drag, remove
@@ -149,7 +134,6 @@ impl<'s> System<'s> for CameraSwitchSystem {
             self.pressed = true;
         }
         if self.pressed && !input.action_is_down("camera_switch").unwrap() {
-            println!("Switch camera released");
             self.pressed = false;
 
             // Lazily delete the old camera
@@ -162,24 +146,21 @@ impl<'s> System<'s> for CameraSwitchSystem {
             let old_camera_entity = old_camera_entity;
 
             let new_parent = old_parent.entity;
-            let new_camera = match old_camera.projection() {
-                Projection::Orthographic(_) => {
-                    Camera::standard_3d(dimensions.width(), dimensions.height())
-                }
-                Projection::Perspective(_) => {
-                    Camera::standard_2d(dimensions.width(), dimensions.height())
-                }
+            let (new_camera, new_position) = match old_camera.projection() {
+                Projection::Orthographic(_) => (
+                    Camera::standard_3d(dimensions.width(), dimensions.height()),
+                    Vector3::new(0.0, 0.0, 500.1),
+                ),
+                Projection::Perspective(_) => (
+                    Camera::standard_2d(dimensions.width(), dimensions.height()),
+                    Vector3::new(0.0, 0.0, 1.1),
+                ),
                 Projection::CustomMatrix(_) => unimplemented!(),
             };
 
             lazy.exec_mut(move |w| {
-                println!("Lazily switched cameras");
-                let new_camera = init_camera(
-                    w,
-                    new_parent,
-                    Transform::from(Vector3::new(0.0, 0.0, 1.1)),
-                    new_camera,
-                );
+                let new_camera =
+                    init_camera(w, new_parent, Transform::from(new_position), new_camera);
 
                 w.fetch_mut::<ActiveCamera>().entity = Some(new_camera);
 
@@ -221,6 +202,53 @@ impl<'s> System<'s> for CameraMovementSystem {
                 let scale = camera_transform.scale();
                 let scale = Vector3::new(scale.x + z_scale, scale.y + z_scale, scale.z + z_scale);
                 camera_transform.set_scale(scale);
+            }
+        }
+    }
+}
+
+struct MapMovementSystem {
+    rotate: bool,
+    translate: bool,
+    vector: Vector3<f32>,
+}
+impl Default for MapMovementSystem {
+    fn default() -> Self {
+        Self {
+            rotate: false,
+            translate: false,
+            vector: Vector3::new(100.0, 0.0, 0.0),
+        }
+    }
+}
+impl<'s> System<'s> for MapMovementSystem {
+    type SystemData = (
+        Read<'s, Time>,
+        WriteStorage<'s, Transform>,
+        ReadStorage<'s, TileMap<ExampleTile>>,
+        Read<'s, InputHandler<StringBindings>>,
+    );
+
+    fn run(&mut self, (time, mut transforms, tilemaps, input): Self::SystemData) {
+        if input.action_is_down("toggle_rotation").unwrap() {
+            self.rotate ^= true;
+        }
+        if input.action_is_down("toggle_translation").unwrap() {
+            self.translate ^= true;
+        }
+        if self.rotate {
+            for (_, transform) in (&tilemaps, &mut transforms).join() {
+                transform.rotate_2d(time.delta_seconds());
+            }
+        }
+        if self.translate {
+            for (_, transform) in (&tilemaps, &mut transforms).join() {
+                transform.prepend_translation(self.vector * time.delta_seconds());
+                if transform.translation().x > 500.0 {
+                    self.vector = Vector3::new(-100.0, 0.0, 0.0);
+                } else if transform.translation().x < -500.0 {
+                    self.vector = Vector3::new(100.0, 0.0, 0.0);
+                }
             }
         }
     }
@@ -366,19 +394,10 @@ impl SimpleState for Example {
         data: StateData<'_, GameData<'_, '_>>,
         event: StateEvent,
     ) -> SimpleTrans {
-        let StateData { world, .. } = data;
+        let StateData { .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
                 Trans::Quit
-            } else if is_key_down(&event, winit::VirtualKeyCode::Space) {
-                world.exec(
-                    |(named, transforms): (ReadStorage<Named>, ReadStorage<Transform>)| {
-                        for (name, transform) in (&named, &transforms).join() {
-                            println!("{} => {:?}", name.name, transform.translation());
-                        }
-                    },
-                );
-                Trans::None
             } else {
                 Trans::None
             }
@@ -404,6 +423,11 @@ fn main() -> amethyst::Result<()> {
                 .with_bindings_from_file("examples/tiles/resources/input.ron")?,
         )?
         .with(
+            MapMovementSystem::default(),
+            "MapMovementSystem",
+            &["input_system"],
+        )
+        .with(
             CameraSwitchSystem::default(),
             "camera_switch",
             &["input_system"],
@@ -424,9 +448,9 @@ fn main() -> amethyst::Result<()> {
                     RenderToWindow::from_config_path(display_config_path)
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
+                .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderFlat2D::default())
-                .with_plugin(RenderTiles2D::<ExampleTile>::default())
-                .with_plugin(RenderDebugLines::default()),
+                .with_plugin(RenderTiles2D::<ExampleTile>::default()),
         )?;
 
     let mut game = Application::build(assets_directory, Example)?.build(game_data)?;

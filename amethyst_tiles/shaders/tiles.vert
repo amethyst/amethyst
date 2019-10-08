@@ -43,7 +43,7 @@ void main() {
     vec4 coord = vec4(float(tile_coordinate.x), -float(tile_coordinate.y), float(tile_coordinate.z), 1.0);
 
     vec4 world_coordinate = map_coordinate_transform * coord;
-    world_coordinate = world_coordinate * map_transform;
+    world_coordinate = world_coordinate * transpose(map_transform);
 
     vertex.tex_uv = texture_coords(vec2(tex_u, tex_v), u_offset, v_offset);
     vertex.color = color;
