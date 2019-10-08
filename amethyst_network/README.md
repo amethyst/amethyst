@@ -13,25 +13,27 @@
 [s5]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
 [l5]: https://discord.gg/GnP5Whs
 
-The networking crate for the `amethyst` game engine. This crate provides the API and functionality which application developers will normally use to develop multiplayer games. The main engine can be found at https://amethyst.rs.
+This is the networking crate for the `amethyst` game engine. This crate provides the building blocks which
+application developers can use to develop online multiplayer games. The main engine can be found at https://amethyst.rs.
 
-This project is still at an early stage. We are currently designing and implementing a fast/robust networking system on top of specs. To exercise our implementation, we are creating a small test game which we will make public when we feel it's in a good place. Eventually, as we gain more confidence in our solution, we will move stable functionality over from that game to amethyst network.
+This project is still at an early stage. We are currently designing and implementing a robust networking system on
+top of specs. To exercise our implementation, we are creating a small test game which we will make public when we feel
+it's in a good place. Eventually, as we gain more confidence in our solution, we will move stable functionality over
+from that game to amethyst network.
 
 Currently, amethyst network supports:
-- Reliable (ordered, sequenced) UDP.
-- Unreliable (sequenced) UDP.
-- Connect/Disconnect events from clients.
-- Automatic creation of `NetConnection` on client connect.
-- Automatic Fragmentation of big packets
-
-We use [laminar](https://github.com/amethyst/laminar) as the application layer communication protocol.
+- `NetworkSimulationTime` resource to decouple simulation frame rate from ECS frame rate
+- An API abstraction for various transport layer network systems
+- Implementations of the [laminar](https://github.com/amethyst/laminar) and UDP transport layers
+- Connection lifecycle management
 
 ## Contribution
 
-Unless you explicitly state otherwise, any Contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
-additional terms or conditions.
+Unless you explicitly state otherwise, any Contribution intentionally submitted for inclusion in the work by you, as
+defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
-For more information or help, please come find us on the amethyst discord server's `#net` channel. We are working on architecture, design, and roadmaps and can definitely use some helping hands, don't hesitate :). 
+For more information or help, please come find us on the amethyst discord server's `#net` channel. We are working on
+architecture, design, and roadmaps and can definitely use some helping hands, don't hesitate :).
 
 ## License
 
