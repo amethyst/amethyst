@@ -100,6 +100,8 @@ test-support = [
 ]
 experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 
+legion-ecs = ["amethyst_core/legion-ecs"]
+
 [workspace]
 members = [
   "amethyst_test",
@@ -320,6 +322,11 @@ required-features = ["animation", "gltf"]
 name = "tiles"
 path = "examples/tiles/main.rs"
 required-features = [ "tiles" ]
+
+[[example]]
+name = "legion"
+path = "examples/legion/main.rs"
+required-features = ["legion-ecs", "animation", "gltf"]
 
 [package.metadata.docs.rs]
 features = ["animation", "audio", "gltf", "tiles", "json", "locale", "network", "sdl_controller", "vulkan"]

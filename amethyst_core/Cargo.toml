@@ -30,6 +30,8 @@ specs-hierarchy = { version = "0.5.1", default-features = false }
 getset = "0.0.8"
 derive-new = "0.5.6"
 derivative = "1.0"
+legion = { path = "../../legion", optional = true }
+bimap = { version = "0.4.0", optional = true }
 
 thread_profiler = { version = "0.3", optional = true }
 
@@ -42,3 +44,4 @@ default = ["specs/parallel", "specs-hierarchy/parallel"]
 profiler = ["thread_profiler/thread_profiler"]
 nightly = ["specs/nightly"]
 saveload = ["specs/serde"]
+legion-ecs = ["legion", "bimap"]

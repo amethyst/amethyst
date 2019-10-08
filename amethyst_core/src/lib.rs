@@ -7,6 +7,7 @@
 )]
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
+#![feature(core_intrinsics)]
 
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
@@ -49,6 +50,9 @@ pub mod frame_limiter;
 pub mod geometry;
 pub mod timing;
 pub mod transform;
+
+#[cfg(feature = "legion-ecs")]
+pub mod legion;
 
 mod axis;
 mod event;
