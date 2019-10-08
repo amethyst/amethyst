@@ -161,7 +161,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         );
 
         // Return with we can reuse the draw buffers using the utility struct ChangeDetection
-        self.change.prepare_result(self.vertex_count, changed)
+        self.change.prepare_result(index, changed)
     }
 
     fn draw_inline(
