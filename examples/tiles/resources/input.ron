@@ -20,5 +20,7 @@
     actions: {
         "camera_switch": [[Key(Space)]],
         "select": [[Mouse(Left)]],
+        "toggle_rotation": [[Key(Y)]],
+        "toggle_translation": [[Key(T)]],
     },
 )
