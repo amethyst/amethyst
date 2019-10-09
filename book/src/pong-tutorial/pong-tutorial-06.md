@@ -4,7 +4,7 @@ Now that we have a functional pong game, let's spice things up by adding some au
 
 ## Adding the Sounds Resource
 
-Let's get started by creating an `audio` subdirectory under `assets`. Then download [the bounce sound][bounce] and [the score sound][score] and put them in `audio/assets`.
+Let's get started by creating an `audio` subdirectory under `assets`. Then download [the bounce sound][bounce] and [the score sound][score] and put them in `assets/audio`.
 
 Next, we'll create a Resource to store our sound effects in. In `main.rs`, add:
 
