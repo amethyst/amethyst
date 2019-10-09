@@ -1,11 +1,14 @@
 use crate::{transform::Transform, SystemDesc};
 use bimap::BiMap;
 use legion::{command::CommandBuffer, event::ListenerId};
+use shrinkwraprs::Shrinkwrap;
+use smallvec::SmallVec;
 use specs::{
     shrev::ReaderId,
     storage::{ComponentEvent, GenericWriteStorage},
-    Component, DenseVecStorage, Entities, FlaggedStorage, Join, NullStorage, Read, ReadExpect,
-    ReadStorage, RunNow, System, SystemData, WorldExt, Write, WriteExpect, WriteStorage,
+    Builder, Component, DenseVecStorage, Entities, FlaggedStorage, Join, LazyUpdate, NullStorage,
+    Read, ReadExpect, ReadStorage, RunNow, System, SystemData, WorldExt, Write, WriteExpect,
+    WriteStorage,
 };
 use std::{
     marker::PhantomData,
@@ -13,10 +16,14 @@ use std::{
 };
 
 pub struct LegionWorld {
-    universe: legion::world::Universe,
-    world: legion::world::World,
-    resources: legion::resource::Resources,
+    pub universe: legion::world::Universe,
+    pub world: legion::world::World,
+    pub resources: legion::resource::Resources,
 }
+
+#[derive(Shrinkwrap)]
+#[shrinkwrap(mutable)]
+pub struct LegionSystems(pub Vec<Box<dyn legion::system::Schedulable>>);
 
 #[derive(Default)]
 pub struct LegionSyncFlagComponent;
@@ -28,8 +35,14 @@ impl Component for LegionSyncFlagComponent {
 pub struct SpecsEntityComponent {
     specs_entity: specs::Entity,
 }
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Default, Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct SpecsTag;
+
+#[derive(Default, Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub struct LegionTag;
+impl Component for LegionTag {
+    type Storage = NullStorage<Self>;
+}
 
 pub trait LegionSystemDesc {
     fn build(&mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable>;
@@ -133,18 +146,20 @@ where
 
 pub struct LegionSyncEntitySystem {
     pub legion_listener_id: ListenerId,
+    new_entities: SmallVec<[legion::entity::Entity; 128]>,
 }
 
 impl<'a> System<'a> for LegionSyncEntitySystem {
     type SystemData = (
         Entities<'a>,
+        Read<'a, LazyUpdate>,
         WriteExpect<'a, LegionWorld>,
         WriteExpect<'a, EntitiesBimapRef>,
         Write<'a, CommandBuffer>,
     );
     fn run(
         &mut self,
-        (entities, mut legion_world, mut entity_bimap, mut command_buffer): Self::SystemData,
+        (entities, lazy, mut legion_world, mut entity_bimap, mut command_buffer): Self::SystemData,
     ) {
         let specs_entities = {
             let mut map = entity_bimap.read().unwrap();
@@ -173,7 +188,7 @@ impl<'a> System<'a> for LegionSyncEntitySystem {
                 .enumerate()
                 .for_each(|(i, legion_entity)| {
                     log::trace!(
-                        "{} - Entity [l={:?},s={:?} created in legion, inserting to map",
+                        "{} - legion:[{:?}] = specs:[{:?}]",
                         i,
                         legion_entity,
                         specs_entities[i].0.specs_entity
@@ -182,11 +197,31 @@ impl<'a> System<'a> for LegionSyncEntitySystem {
                 });
         }
 
-        while let Ok(_) = legion_world
+        while let Ok(event) = legion_world
             .world
             .entity_channel()
             .read(self.legion_listener_id)
-        {}
+        {
+            let mut map = entity_bimap.read().unwrap();
+            match event {
+                legion::event::EntityEvent::Created(e) => {
+                    if !map.contains_left(&e) {
+                        self.new_entities.push(e);
+                    }
+                }
+                legion::event::EntityEvent::Deleted(e) => if map.contains_left(&e) {},
+            }
+        }
+
+        if !self.new_entities.is_empty() {
+            let mut map = entity_bimap.write().unwrap();
+            self.new_entities.iter().for_each(|e| {
+                let specs_entity = lazy.create_entity(&entities).with(LegionTag).build();
+                map.insert(*e, specs_entity);
+            });
+
+            self.new_entities.clear();
+        }
 
         // Flush the command buffer for modifications
         command_buffer.write(&mut legion_world.world);
@@ -219,18 +254,18 @@ impl<'a, 'b> SystemDesc<'a, 'b, LegionSyncEntitySystem> for LegionSyncEntitySyst
             world: legion_world,
             resources: legion_resources,
         });
-        world.insert(vec![sync_system]);
+        world.insert(LegionSystems(vec![sync_system]));
 
-        LegionSyncEntitySystem { legion_listener_id }
+        LegionSyncEntitySystem {
+            legion_listener_id,
+            new_entities: SmallVec::default(),
+        }
     }
 }
 
 pub struct LegionDispatcherSystem {}
 impl<'a> System<'a> for LegionDispatcherSystem {
-    type SystemData = (
-        WriteExpect<'a, Vec<Box<dyn legion::system::Schedulable>>>,
-        ReadExpect<'a, LegionWorld>,
-    );
+    type SystemData = (WriteExpect<'a, LegionSystems>, ReadExpect<'a, LegionWorld>);
     fn run(&mut self, (mut legion_systems, legion_world): Self::SystemData) {
         let resources = &legion_world.resources;
         let world = &legion_world.world;
