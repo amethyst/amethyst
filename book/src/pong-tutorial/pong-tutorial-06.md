@@ -361,7 +361,7 @@ pub fn initialise_audio(world: &mut World) {
 Finally, let's add a DJ System to our game to play the music. In `main.rs`:
 
 ```rust,ignore
-use amethyst::audio::DjSystem;
+use amethyst::audio::DjSystemDesc;
 use crate::audio::Music;
 
 fn main() -> amethyst::Result<()> {
@@ -370,7 +370,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         // ... bundles
         .with(
-            DjSystem::new(|music: &mut Music| music.music.next()),
+            DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )
