@@ -655,9 +655,7 @@ fn main() -> amethyst::Result<()> {
         // Legion stuff
         .with_bundle(
             amethyst::core::legion::bundle::LegionBundle::default()
-                .with_sync::<Time>()
-                .with_sync::<DebugLines>()
-                .with_component_sync::<Transform>()
+                .with_resource_sync::<DebugLines>()
                 .with_component_sync::<Orbit>()
                 .with_system(OrbitSystemDesc::default()),
         )?

@@ -22,6 +22,15 @@ pub struct LegionWorld {
     pub resources: legion::resource::Resources,
     pub syncers: Vec<Box<dyn SyncerTrait>>,
 }
+impl LegionWorld {
+    pub fn add_resource_sync<T: legion::resource::Resource>(&mut self) {
+        self.syncers.push(Box::new(ResourceSyncer::<T>::default()));
+    }
+
+    pub fn add_component_sync<T: Clone + legion::storage::Component + specs::Component>(&mut self) {
+        self.syncers.push(Box::new(ComponentSyncer::<T>::default()));
+    }
+}
 
 #[derive(Shrinkwrap, Default)]
 #[shrinkwrap(mutable)]

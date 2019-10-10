@@ -54,6 +54,7 @@ shader-compiler =  ["rendy/shader-compiler"]
 test-support =  []
 experimental-spirv-reflection = ["rendy/spirv-reflection"]
 window = ["rendy/wsi-winit", "amethyst_window"]
+legion-ecs = []
 
 [[bench]]
 name = "camera"
