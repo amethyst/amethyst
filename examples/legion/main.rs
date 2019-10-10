@@ -15,9 +15,9 @@ use amethyst::{
             Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
             ReadStorage, System, SystemData, World, Write, WriteStorage,
         },
-        legion::sync::{
-            ComponentSyncSystem, LegionDispatcherSystemDesc, LegionSyncEntitySystemDesc,
-            SyncDirection,
+        legion::{
+            sync::{LegionSyncEntitySystemDesc, SyncDirection},
+            LegionSystemDesc,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -80,6 +80,7 @@ impl Example {
     }
 }
 
+#[derive(Clone)]
 struct Orbit {
     axis: Unit<Vector3<f32>>,
     time_scale: f32,
@@ -117,6 +118,38 @@ impl<'a> System<'a> for OrbitSystem {
     }
 }
 
+#[derive(Default)]
+pub struct OrbitSystemDesc;
+impl LegionSystemDesc for OrbitSystemDesc {
+    fn build(
+        &self,
+        world: &mut amethyst::core::legion::world::World,
+    ) -> Box<dyn amethyst::core::legion::system::Schedulable> {
+        use amethyst::core::legion::{system::SystemBuilder, IntoQuery, Query, Read, Write};
+
+        SystemBuilder::<()>::new("OrbitSystem")
+            .with_query(<(Write<Transform>, Read<Orbit>)>::query())
+            .read_resource::<Time>()
+            .write_resource::<DebugLines>()
+            .build(move |commands, world, (time, debug), query| {
+                query
+                    .iter_entities()
+                    .for_each(|(entity, (mut transform, orbit))| {
+                        let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
+                        let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
+                        let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
+                        let final_pos = (rot * cross) + orbit.center;
+                        debug.draw_line(
+                            orbit.center.into(),
+                            final_pos.into(),
+                            Srgba::new(0.0, 0.5, 1.0, 1.0),
+                        );
+                        transform.set_translation(final_pos);
+                    });
+            })
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum RenderMode {
     Flat,
@@ -135,6 +168,10 @@ impl SimpleState for Example {
         #[cfg(feature = "profiler")]
         profile_scope!("example on_start");
         let StateData { world, .. } = data;
+
+        // Registration for components that arnt synced need to happen here.
+        // This a sync issue because specs requires setups, while legion doesnt
+        world.register::<Orbit>();
 
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
 
@@ -377,6 +414,8 @@ impl SimpleState for Example {
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        use amethyst::core::legion::sync::{self, SyncDirection};
+
         #[cfg(feature = "profiler")]
         profile_scope!("example update");
 
@@ -384,6 +423,8 @@ impl SimpleState for Example {
             let mut time = data.world.write_resource::<Time>();
             time.set_time_scale(if self.bullet_time { 0.2 } else { 1.0 });
         }
+
+        sync::dispatch_legion(data.world);
 
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
@@ -611,7 +652,15 @@ fn main() -> amethyst::Result<()> {
     )?;
 
     let game_data = GameDataBuilder::default()
-        .with(OrbitSystem, "orbit", &[])
+        // Legion stuff
+        .with_bundle(
+            amethyst::core::legion::bundle::LegionBundle::default()
+                .with_sync::<Time>()
+                .with_sync::<DebugLines>()
+                .with_component_sync::<Transform>()
+                .with_component_sync::<Orbit>()
+                .with_system(OrbitSystemDesc::default()),
+        )?
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
         .with_system_desc(
@@ -651,7 +700,6 @@ fn main() -> amethyst::Result<()> {
             "sprite_animation_control",
             "sprite_sampler_interpolation",
             "fly_movement",
-            "orbit",
         ]))?
         .with_bundle(VertexSkinningBundle::new().with_dep(&[
             "transform_system",
@@ -668,24 +716,7 @@ fn main() -> amethyst::Result<()> {
                     Srgb::new(0.82, 0.51, 0.50),
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
-        )?
-        // Legion stuff
-        .with_system_desc(
-            LegionSyncEntitySystemDesc::default(),
-            "LegionSyncEntitySystem",
-            &[],
-        )
-        .with(
-            ComponentSyncSystem::<Transform>::new(SyncDirection::SpecsToLegion),
-            "ComponentSync::Transform",
-            &["transform_system"],
-        )
-        .with_barrier()
-        .with_system_desc(
-            LegionDispatcherSystemDesc::default(),
-            "LegionDispatcherSystem",
-            &[],
-        );
+        )?;
 
     let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     game.run();

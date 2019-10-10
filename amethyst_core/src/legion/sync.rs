@@ -1,5 +1,6 @@
-use crate::{transform::Transform, SystemDesc};
+use crate::{legion::LegionSystemDesc, transform::Transform, SystemDesc};
 use bimap::BiMap;
+use derivative::Derivative;
 use legion::{command::CommandBuffer, event::ListenerId};
 use shrinkwraprs::Shrinkwrap;
 use smallvec::SmallVec;
@@ -19,9 +20,10 @@ pub struct LegionWorld {
     pub universe: legion::world::Universe,
     pub world: legion::world::World,
     pub resources: legion::resource::Resources,
+    pub syncers: Vec<Box<dyn SyncerTrait>>,
 }
 
-#[derive(Shrinkwrap)]
+#[derive(Shrinkwrap, Default)]
 #[shrinkwrap(mutable)]
 pub struct LegionSystems(pub Vec<Box<dyn legion::system::Schedulable>>);
 
@@ -42,10 +44,6 @@ pub struct SpecsTag;
 pub struct LegionTag;
 impl Component for LegionTag {
     type Storage = NullStorage<Self>;
-}
-
-pub trait LegionSystemDesc {
-    fn build(&mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable>;
 }
 
 type EntitiesBimapRef = Arc<RwLock<BiMap<legion::entity::Entity, specs::Entity>>>;
@@ -92,7 +90,7 @@ where
                         if let Some(specs_component) = storage.get_mut(*specs_entity) {
                             *specs_component = (*component).clone();
                         } else {
-                            storage.insert(*specs_entity, (*component).clone());
+                            storage.insert(*specs_entity, (*component).clone()).unwrap();
                         }
                     }
                 }
@@ -102,39 +100,29 @@ where
 }
 impl<T> Syncable<T> for T where T: Clone + legion::storage::Component + specs::Component {}
 
-pub struct ComponentSyncSystem<T> {
-    _marker: PhantomData<T>,
-    direction: SyncDirection,
-}
-impl<T> ComponentSyncSystem<T>
-where
-    T: Clone + legion::storage::Component + specs::Component,
-{
-    pub fn new(direction: SyncDirection) -> Self {
-        Self {
-            direction,
-            _marker: Default::default(),
-        }
-    }
+pub trait SyncerTrait: 'static + Send + Sync {
+    fn sync(&self, world: &mut specs::World, direction: SyncDirection);
 }
 
-impl<'a, T> System<'a> for ComponentSyncSystem<T>
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct ComponentSyncer<T>(PhantomData<T>);
+impl<T> SyncerTrait for ComponentSyncer<T>
 where
     T: Clone + legion::storage::Component + specs::Component,
 {
-    type SystemData = (
-        Read<'a, EntitiesBimapRef>,
-        Entities<'a>,
-        WriteStorage<'a, T>,
-        ReadExpect<'a, LegionWorld>,
-        Write<'a, CommandBuffer>,
-    );
-    fn run(
-        &mut self,
-        (bimap, entities, mut storage, legion_world, mut command_buffer): Self::SystemData,
-    ) {
+    fn sync(&self, world: &mut specs::World, direction: SyncDirection) {
+        let (bimap, entities, mut storage, legion_world, mut command_buffer) =
+            <(
+                Read<'_, EntitiesBimapRef>,
+                Entities<'_>,
+                WriteStorage<'_, T>,
+                ReadExpect<'_, LegionWorld>,
+                Write<'_, CommandBuffer>,
+            )>::fetch(world);
+
         T::sync(
-            self.direction,
+            direction,
             bimap.clone(),
             &entities,
             &mut storage,
@@ -142,6 +130,69 @@ where
             &mut command_buffer,
         );
     }
+}
+
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct ResourceSyncer<T>(PhantomData<T>);
+impl<T> SyncerTrait for ResourceSyncer<T>
+where
+    T: legion::resource::Resource,
+{
+    fn sync(&self, world: &mut specs::World, direction: SyncDirection) {
+        move_resource::<T>(world, direction);
+    }
+}
+
+pub fn move_resource<T: legion::resource::Resource>(
+    world: &mut specs::World,
+    direction: SyncDirection,
+) {
+    match direction {
+        SyncDirection::SpecsToLegion => {
+            let resource = world.remove::<T>().unwrap();
+            world.fetch_mut::<LegionWorld>().resources.insert(resource);
+        }
+        SyncDirection::LegionToSpecs => {
+            let resource = world
+                .fetch_mut::<LegionWorld>()
+                .resources
+                .remove::<T>()
+                .unwrap();
+            world.insert(resource);
+        }
+    }
+}
+
+pub fn dispatch_legion(specs_world: &mut specs::World) {
+    let syncers = specs_world
+        .fetch_mut::<LegionWorld>()
+        .syncers
+        .drain(..)
+        .collect::<Vec<_>>();
+
+    syncers
+        .iter()
+        .for_each(|s| s.sync(specs_world, SyncDirection::SpecsToLegion));
+
+    {
+        let (mut legion_systems, legion_world) =
+            <(WriteExpect<'_, LegionSystems>, ReadExpect<'_, LegionWorld>)>::fetch(specs_world);
+        let resources = &legion_world.resources;
+        let world = &legion_world.world;
+
+        let mut stage =
+            legion::system::StageExecutor::new(&mut legion_systems).execute(resources, world);
+    }
+
+    syncers
+        .iter()
+        .for_each(|s| s.sync(specs_world, SyncDirection::LegionToSpecs));
+
+    specs_world
+        .fetch_mut::<LegionWorld>()
+        .syncers
+        .extend(syncers.into_iter());
 }
 
 pub struct LegionSyncEntitySystem {
@@ -239,22 +290,15 @@ impl<'a, 'b> SystemDesc<'a, 'b, LegionSyncEntitySystem> for LegionSyncEntitySyst
         ));
         world.insert(entity_map.clone());
 
-        // Create the legion world
-        let universe = legion::world::Universe::new();
-        let mut legion_world = universe.create_world();
-        let mut legion_resources = legion::resource::Resources::default();
-        legion_resources.insert(entity_map.clone());
+        let (mut legion_world, mut legion_systems) =
+            <(WriteExpect<'_, LegionWorld>, WriteExpect<'_, LegionSystems>)>::fetch(world);
 
-        let sync_system = SyncSystemLegionDesc::default().build(&mut legion_world);
+        legion_world.resources.insert(entity_map.clone());
 
-        let legion_listener_id = legion_world.entity_channel().bind_listener(1024);
+        //let sync_system = SyncSystemLegionDesc::default().build(&mut legion_world.world);
+        //legion_systems.push(sync_system);
 
-        world.insert(LegionWorld {
-            universe,
-            world: legion_world,
-            resources: legion_resources,
-        });
-        world.insert(LegionSystems(vec![sync_system]));
+        let legion_listener_id = legion_world.world.entity_channel().bind_listener(1024);
 
         LegionSyncEntitySystem {
             legion_listener_id,
@@ -263,32 +307,10 @@ impl<'a, 'b> SystemDesc<'a, 'b, LegionSyncEntitySystem> for LegionSyncEntitySyst
     }
 }
 
-pub struct LegionDispatcherSystem {}
-impl<'a> System<'a> for LegionDispatcherSystem {
-    type SystemData = (WriteExpect<'a, LegionSystems>, ReadExpect<'a, LegionWorld>);
-    fn run(&mut self, (mut legion_systems, legion_world): Self::SystemData) {
-        let resources = &legion_world.resources;
-        let world = &legion_world.world;
-
-        let mut stage =
-            legion::system::StageExecutor::new(&mut legion_systems).execute(resources, world);
-    }
-}
-
-#[derive(Default)]
-pub struct LegionDispatcherSystemDesc;
-impl<'a, 'b> SystemDesc<'a, 'b, LegionDispatcherSystem> for LegionDispatcherSystemDesc {
-    fn build(self, world: &mut specs::World) -> LegionDispatcherSystem {
-        <LegionDispatcherSystem as System<'_>>::SystemData::setup(world);
-
-        LegionDispatcherSystem {}
-    }
-}
-
 #[derive(Default)]
 pub struct SyncSystemLegionDesc;
 impl LegionSystemDesc for SyncSystemLegionDesc {
-    fn build(&mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
+    fn build(&self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
         use legion::prelude::*;
 
         SystemBuilder::<()>::new("Test")
