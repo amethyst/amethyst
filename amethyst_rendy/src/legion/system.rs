@@ -210,7 +210,7 @@ impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
         world: &mut legion::world::World,
         _res: &mut legion::resource::Resources,
     ) -> Box<dyn legion::system::Schedulable> {
-        SystemBuilder::<()>::new("OrbitSystem")
+        SystemBuilder::<()>::new("MeshProcessorSystem")
             .write_resource::<AssetStorage<Mesh>>()
             .read_resource::<QueueId>()
             .read_resource::<Time>()
@@ -235,58 +235,61 @@ impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
                         },
                         time.frame_number(),
                         &**pool,
-                        None,
+                        None, // TODO: Fix strategy optional
                     )
                 },
             )
     }
 }
 
-/// Asset processing system for `Texture` asset type.
+/// Asset processing system for `Mesh` asset type.
 #[derive(Debug, derivative::Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct TextureProcessorSystem<B: Backend>(PhantomData<B>);
-impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
-    type SystemData = (
-        Write<'a, AssetStorage<Texture>>,
-        ReadExpect<'a, QueueId>,
-        Read<'a, Time>,
-        ReadExpect<'a, Arc<ThreadPool>>,
-        Option<Read<'a, HotReloadStrategy>>,
-        WriteExpect<'a, Factory<B>>,
-    );
+pub struct TextureProcessorSystemDesc<B: Backend>(PhantomData<B>);
+impl<B: Backend> SystemDesc for TextureProcessorSystemDesc<B> {
+    fn build(
+        &self,
+        world: &mut legion::world::World,
+        _res: &mut legion::resource::Resources,
+    ) -> Box<dyn legion::system::Schedulable> {
+        SystemBuilder::<()>::new("TextureProcessorSystem")
+            .write_resource::<AssetStorage<Texture>>()
+            .read_resource::<QueueId>()
+            .read_resource::<Time>()
+            .read_resource::<amethyst_core::ArcThreadPool>()
+            // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
+            .write_resource::<Factory<B>>()
+            .build(
+                move |commands, world, (texture_storage, queue_id, time, pool, factory), _| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("texture_processor");
 
-    fn run(
-        &mut self,
-        (mut texture_storage, queue_id, time, pool, strategy, mut factory): Self::SystemData,
-    ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("texture_processor");
+                    use std::ops::Deref;
+                    texture_storage.process(
+                        |b| {
+                            #[cfg(feature = "profiler")]
+                            profile_scope!("process_texture");
 
-        use std::ops::Deref;
-        texture_storage.process(
-            |b| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("process_texture");
-
-                b.0.build(
-                    ImageState {
-                        queue: *queue_id,
-                        stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
-                            | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
-                        access: rendy::hal::image::Access::SHADER_READ,
-                        layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
-                    },
-                    &mut factory,
-                )
-                .map(B::wrap_texture)
-                .map(ProcessingState::Loaded)
-                .map_err(|e| e.compat().into())
-            },
-            time.frame_number(),
-            &**pool,
-            strategy.as_ref().map(Deref::deref),
-        );
+                            b.0.build(
+                                ImageState {
+                                    queue: **queue_id,
+                                    stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
+                                        | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
+                                    access: rendy::hal::image::Access::SHADER_READ,
+                                    layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
+                                },
+                                &mut *factory,
+                            )
+                            .map(B::wrap_texture)
+                            .map(ProcessingState::Loaded)
+                            .map_err(|e| e.compat().into())
+                        },
+                        time.frame_number(),
+                        &**pool,
+                        None, // TODO: Fix strategy optional
+                    );
+                },
+            )
     }
 }
 

@@ -37,6 +37,8 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderLegionBundle<B> {
 
         world.add_resource_sync::<AssetStorage<crate::mtl::Material>>();
         world.add_resource_sync::<AssetStorage<crate::Mesh>>();
+        world.add_resource_sync::<AssetStorage<crate::Texture>>();
+
         world.add_resource_sync::<amethyst_assets::HotReloadStrategy>();
         world.add_resource_sync::<rendy::command::QueueId>();
 

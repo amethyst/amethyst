@@ -1,6 +1,6 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
-use crate::legion::system::{GraphCreator, MeshProcessorSystemDesc};
+use crate::legion::system::{GraphCreator, MeshProcessorSystemDesc, TextureProcessorSystemDesc};
 
 use crate::{
     mtl::Material,
@@ -69,7 +69,9 @@ impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
         systems
             .game
             .push(MeshProcessorSystemDesc::<B>::default().build(world, resources));
-
+        systems
+            .game
+            .push(TextureProcessorSystemDesc::<B>::default().build(world, resources));
         /*
         builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
         builder.add(

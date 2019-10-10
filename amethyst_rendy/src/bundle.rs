@@ -74,11 +74,6 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
     ) -> Result<(), Error> {
         #[cfg(feature = "legion-ecs")]
         {
-            builder.add(
-                TextureProcessorSystem::<B>::default(),
-                "texture_processor",
-                &[],
-            );
             builder.add(Processor::<Material>::new(), "material_processor", &[]);
             builder.add(
                 Processor::<SpriteSheet>::new(),
