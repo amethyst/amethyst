@@ -83,6 +83,9 @@ pub mod visibility;
 pub mod pod;
 pub mod util;
 
+#[cfg(feature = "legion-ecs")]
+pub mod legion;
+
 #[cfg(feature = "test-support")]
 mod render_test_bundle;
 

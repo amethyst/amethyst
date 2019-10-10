@@ -42,7 +42,7 @@ impl Default for DebugLinesParams {
 
 /// Component that stores persistent debug lines to be rendered in DebugLinesPass draw pass.
 /// The vector can only be cleared manually.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct DebugLinesComponent {
     /// Lines to be rendered
     lines: Vec<DebugLine>,

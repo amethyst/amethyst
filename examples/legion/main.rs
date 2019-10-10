@@ -16,8 +16,9 @@ use amethyst::{
             ReadStorage, System, SystemData, World, Write, WriteStorage,
         },
         legion::{
+            self,
             sync::{LegionSyncEntitySystemDesc, SyncDirection},
-            LegionSystemDesc,
+            SystemDesc,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -120,10 +121,11 @@ impl<'a> System<'a> for OrbitSystem {
 
 #[derive(Default)]
 pub struct OrbitSystemDesc;
-impl LegionSystemDesc for OrbitSystemDesc {
+impl SystemDesc for OrbitSystemDesc {
     fn build(
         &self,
         world: &mut amethyst::core::legion::world::World,
+        _res: &mut amethyst::core::legion::resource::Resources,
     ) -> Box<dyn amethyst::core::legion::system::Schedulable> {
         use amethyst::core::legion::{system::SystemBuilder, IntoQuery, Query, Read, Write};
 
@@ -657,8 +659,14 @@ fn main() -> amethyst::Result<()> {
             amethyst::core::legion::bundle::LegionBundle::default()
                 .with_resource_sync::<DebugLines>()
                 .with_component_sync::<Orbit>()
-                .with_system(OrbitSystemDesc::default()),
+                .with_system(OrbitSystemDesc::default())
+                .with_bundle(amethyst::renderer::legion::bundle::RenderingBundle::<
+                    DefaultBackend,
+                >::default()),
         )?
+        .with_bundle(amethyst::renderer::legion::RenderLegionBundle::<
+            DefaultBackend,
+        >::default())?
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
         .with_system_desc(

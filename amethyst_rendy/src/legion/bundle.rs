@@ -1,5 +1,7 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
+use crate::legion::system::{GraphCreator, MeshProcessorSystemDesc};
+
 use crate::{
     mtl::Material,
     rendy::{
@@ -11,16 +13,13 @@ use crate::{
         hal,
         wsi::Surface,
     },
-    system::{GraphCreator, MeshProcessorSystem, RenderingSystem, TextureProcessorSystem},
     types::Backend,
     SpriteSheet,
 };
 use amethyst_assets::Processor;
-use amethyst_core::{
-    ecs::{DispatcherBuilder, World},
-    SystemBundle,
-};
+use amethyst_core::legion::{LegionWorld, Resources, SystemBundle, Systems, World};
 use amethyst_error::{format_err, Error};
+use derivative::Derivative;
 use std::collections::HashMap;
 
 /// A bundle of systems used for rendering using `Rendy` render graph.
@@ -32,20 +31,13 @@ use std::collections::HashMap;
 /// If you need much more control, or you need to deal directly with the render pipeline,
 /// it's possible to define a `RenderGraphCreator` as show by the
 /// `renderable_custom` example.
-#[derive(Debug)]
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
 pub struct RenderingBundle<B: Backend> {
     plugins: Vec<Box<dyn RenderPlugin<B>>>,
 }
 
 impl<B: Backend> RenderingBundle<B> {
-    /// Create empty `RenderingBundle`. You must register a plugin using
-    /// [`with_plugin`] in order to actually display anything.
-    pub fn new() -> Self {
-        Self {
-            plugins: Vec::new(),
-        }
-    }
-
     /// Register a [`RenderPlugin`].
     ///
     /// If you want the non-consuming version of this method, see [`add_plugin`].
@@ -66,59 +58,41 @@ impl<B: Backend> RenderingBundle<B> {
     }
 }
 
-impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
+impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
     fn build(
-        mut self,
+        &self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        resources: &mut Resources,
+        systems: &mut Systems,
     ) -> Result<(), Error> {
-        #[cfg(feature = "legion-ecs")]
-        {
-            builder.add(
-                TextureProcessorSystem::<B>::default(),
-                "texture_processor",
-                &[],
-            );
-            builder.add(Processor::<Material>::new(), "material_processor", &[]);
-            builder.add(
-                Processor::<SpriteSheet>::new(),
-                "sprite_sheet_processor",
-                &[],
-            );
+        use amethyst_core::legion::SystemDesc;
+        systems
+            .game
+            .push(MeshProcessorSystemDesc::<B>::default().build(world, resources));
 
-            // make sure that all renderer-specific systems run after game code
-            builder.add_barrier();
+        /*
+        builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
+        builder.add(
+            TextureProcessorSystem::<B>::default(),
+            "texture_processor",
+            &[],
+        );
+        builder.add(Processor::<Material>::new(), "material_processor", &[]);
+        builder.add(
+            Processor::<SpriteSheet>::new(),
+            "sprite_sheet_processor",
+            &[],
+        );
 
-            for plugin in &mut self.plugins {
-                plugin.on_build(world, builder)?;
-            }
+        // make sure that all renderer-specific systems run after game code
+        builder.add_barrier();
 
-            builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
+        for plugin in &mut self.plugins {
+            plugin.on_build(world, builder)?;
         }
-        #[cfg(not(feature = "legion-ecs"))]
-        {
-            builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
-            builder.add(
-                TextureProcessorSystem::<B>::default(),
-                "texture_processor",
-                &[],
-            );
-            builder.add(Processor::<Material>::new(), "material_processor", &[]);
-            builder.add(
-                Processor::<SpriteSheet>::new(),
-                "sprite_sheet_processor",
-                &[],
-            );
 
-            // make sure that all renderer-specific systems run after game code
-            builder.add_barrier();
-
-            for plugin in &mut self.plugins {
-                plugin.on_build(world, builder)?;
-            }
-
-            builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
-        }
+        builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
+        */
         Ok(())
     }
 }
@@ -128,7 +102,7 @@ struct PluggableRenderGraphCreator<B: Backend> {
 }
 
 impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
-    fn rebuild(&mut self, world: &World) -> bool {
+    fn rebuild(&mut self, world: &LegionWorld) -> bool {
         let mut rebuild = false;
         for plugin in self.plugins.iter_mut() {
             rebuild = plugin.should_rebuild(world) || rebuild;
@@ -136,7 +110,11 @@ impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
         rebuild
     }
 
-    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World> {
+    fn builder(
+        &mut self,
+        factory: &mut Factory<B>,
+        world: &LegionWorld,
+    ) -> GraphBuilder<B, LegionWorld> {
         if self.plugins.is_empty() {
             log::warn!("RenderingBundle is configured to display nothing. Use `with_plugin` to add functionality.");
         }
@@ -156,16 +134,12 @@ impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
 /// and signalling when the graph has to be rebuild.
 pub trait RenderPlugin<B: Backend>: std::fmt::Debug {
     /// Hook for adding systems and bundles to the dispatcher.
-    fn on_build<'a, 'b>(
-        &mut self,
-        _world: &mut World,
-        _builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
+    fn on_build<'a, 'b>(&mut self, world: &mut LegionWorld) -> Result<(), Error> {
         Ok(())
     }
 
     /// Hook for providing triggers to rebuild the render graph.
-    fn should_rebuild(&mut self, _world: &World) -> bool {
+    fn should_rebuild(&mut self, _world: &LegionWorld) -> bool {
         false
     }
 
@@ -174,7 +148,7 @@ pub trait RenderPlugin<B: Backend>: std::fmt::Debug {
         &mut self,
         plan: &mut RenderPlan<B>,
         factory: &mut Factory<B>,
-        world: &World,
+        world: &LegionWorld,
     ) -> Result<(), Error>;
 }
 
@@ -232,7 +206,7 @@ impl<B: Backend> RenderPlan<B> {
         target_plan.add_extension(Box::new(closure));
     }
 
-    fn build(self, factory: &Factory<B>) -> Result<GraphBuilder<B, World>, Error> {
+    fn build(self, factory: &Factory<B>) -> Result<GraphBuilder<B, LegionWorld>, Error> {
         let mut ctx = PlanContext {
             target_metadata: self
                 .targets
@@ -287,7 +261,7 @@ struct PlanContext<B: Backend> {
     target_metadata: HashMap<Target, TargetMetadata>,
     passes: HashMap<Target, EvaluationState>,
     outputs: HashMap<TargetImage, ImageId>,
-    graph_builder: GraphBuilder<B, World>,
+    graph_builder: GraphBuilder<B, LegionWorld>,
 }
 
 impl<B: Backend> PlanContext<B> {
@@ -313,7 +287,7 @@ impl<B: Backend> PlanContext<B> {
     fn submit_pass(
         &mut self,
         target: Target,
-        pass: RenderPassNodeBuilder<B, World>,
+        pass: RenderPassNodeBuilder<B, LegionWorld>,
     ) -> Result<(), Error> {
         match self.passes.get(&target) {
             None => {}
@@ -382,7 +356,7 @@ impl<B: Backend> PlanContext<B> {
         Ok(())
     }
 
-    pub fn graph(&mut self) -> &mut GraphBuilder<B, World> {
+    pub fn graph(&mut self) -> &mut GraphBuilder<B, LegionWorld> {
         &mut self.graph_builder
     }
 
@@ -483,7 +457,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     /// This is useful for adding custom rendering nodes
     /// that are not just standard graphics render passes,
     /// e.g. for compute dispatch.
-    pub fn graph(&mut self) -> &mut GraphBuilder<B, World> {
+    pub fn graph(&mut self) -> &mut GraphBuilder<B, LegionWorld> {
         self.plan_context.graph()
     }
 
@@ -707,7 +681,7 @@ impl<B: Backend> TargetPlan<B> {
 #[derive(Debug)]
 pub enum RenderableAction<B: Backend> {
     /// Register single render group for evaluation during target rendering
-    RenderGroup(Box<dyn RenderGroupBuilder<B, World>>),
+    RenderGroup(Box<dyn RenderGroupBuilder<B, LegionWorld>>),
 }
 
 impl<B: Backend> RenderableAction<B> {
@@ -730,7 +704,7 @@ pub trait IntoAction<B: Backend> {
     fn into(self) -> RenderableAction<B>;
 }
 
-impl<B: Backend, G: RenderGroupBuilder<B, World> + 'static> IntoAction<B> for G {
+impl<B: Backend, G: RenderGroupBuilder<B, LegionWorld> + 'static> IntoAction<B> for G {
     fn into(self) -> RenderableAction<B> {
         RenderableAction::RenderGroup(Box::new(self))
     }
@@ -890,7 +864,7 @@ mod tests {
 
         let planned_graph = plan.build(&factory).unwrap();
 
-        let mut manual_graph = GraphBuilder::<DefaultBackend, World>::new();
+        let mut manual_graph = GraphBuilder::<DefaultBackend, LegionWorld>::new();
         let color = manual_graph.create_image(kind, 1, Format::Rgb8Unorm, None);
         let depth = manual_graph.create_image(
             kind,
@@ -965,7 +939,7 @@ mod tests {
 
         let planned_graph = plan.build(&factory).unwrap();
 
-        let mut manual_graph = GraphBuilder::<DefaultBackend, World>::new();
+        let mut manual_graph = GraphBuilder::<DefaultBackend, LegionWorld>::new();
         let depth = manual_graph.create_image(
             window_kind,
             1,

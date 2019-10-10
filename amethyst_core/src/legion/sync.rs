@@ -1,4 +1,4 @@
-use crate::{legion::LegionSystemDesc, transform::Transform, SystemDesc};
+use crate::{legion::SystemDesc, transform::Transform};
 use bimap::BiMap;
 use derivative::Derivative;
 use legion::{command::CommandBuffer, event::ListenerId};
@@ -32,9 +32,11 @@ impl LegionWorld {
     }
 }
 
-#[derive(Shrinkwrap, Default)]
-#[shrinkwrap(mutable)]
-pub struct LegionSystems(pub Vec<Box<dyn legion::system::Schedulable>>);
+#[derive(Default)]
+pub struct LegionSystems {
+    pub game: Vec<Box<dyn legion::system::Schedulable>>,
+    pub render: Vec<Box<dyn legion::system::Schedulable>>,
+}
 
 #[derive(Default)]
 pub struct LegionSyncFlagComponent;
@@ -159,16 +161,15 @@ pub fn move_resource<T: legion::resource::Resource>(
 ) {
     match direction {
         SyncDirection::SpecsToLegion => {
-            let resource = world.remove::<T>().unwrap();
-            world.fetch_mut::<LegionWorld>().resources.insert(resource);
+            if let Some(resource) = world.remove::<T>() {
+                world.fetch_mut::<LegionWorld>().resources.insert(resource);
+            }
         }
         SyncDirection::LegionToSpecs => {
-            let resource = world
-                .fetch_mut::<LegionWorld>()
-                .resources
-                .remove::<T>()
-                .unwrap();
-            world.insert(resource);
+            let resource = world.fetch_mut::<LegionWorld>().resources.remove::<T>();
+            if let Some(resource) = resource {
+                world.insert(resource);
+            }
         }
     }
 }
@@ -190,8 +191,11 @@ pub fn dispatch_legion(specs_world: &mut specs::World) {
         let resources = &legion_world.resources;
         let world = &legion_world.world;
 
-        let mut stage =
-            legion::system::StageExecutor::new(&mut legion_systems).execute(resources, world);
+        let mut game_stage =
+            legion::system::StageExecutor::new(&mut legion_systems.game).execute(resources, world);
+
+        let mut render_stage = legion::system::StageExecutor::new(&mut legion_systems.render)
+            .execute(resources, world);
     }
 
     syncers
@@ -290,7 +294,7 @@ impl<'a> System<'a> for LegionSyncEntitySystem {
 
 #[derive(Default)]
 pub struct LegionSyncEntitySystemDesc;
-impl<'a, 'b> SystemDesc<'a, 'b, LegionSyncEntitySystem> for LegionSyncEntitySystemDesc {
+impl<'a, 'b> crate::SystemDesc<'a, 'b, LegionSyncEntitySystem> for LegionSyncEntitySystemDesc {
     fn build(self, world: &mut specs::World) -> LegionSyncEntitySystem {
         <LegionSyncEntitySystem as System<'_>>::SystemData::setup(world);
 
@@ -318,8 +322,12 @@ impl<'a, 'b> SystemDesc<'a, 'b, LegionSyncEntitySystem> for LegionSyncEntitySyst
 
 #[derive(Default)]
 pub struct SyncSystemLegionDesc;
-impl LegionSystemDesc for SyncSystemLegionDesc {
-    fn build(&self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
+impl SystemDesc for SyncSystemLegionDesc {
+    fn build(
+        &self,
+        world: &mut legion::world::World,
+        _resources: &mut legion::resource::Resources,
+    ) -> Box<dyn legion::system::Schedulable> {
         use legion::prelude::*;
 
         SystemBuilder::<()>::new("Test")

@@ -1,17 +1,26 @@
 use super::*;
-use crate::{shred::DispatcherBuilder, transform::Transform, SystemBundle, SystemDesc, Time};
+use crate::{
+    shred::DispatcherBuilder, transform::Transform, SystemBundle as SpecsSystemBundle, Time,
+};
 use amethyst_error::Error;
 use legion::system::Schedulable;
 use specs::{shred::ResourceId, World};
 
 #[derive(Default)]
 pub struct LegionBundle {
-    systems: Vec<Box<dyn LegionSystemDesc>>,
+    systems: Vec<Box<dyn SystemDesc>>,
+    bundles: Vec<Box<dyn SystemBundle>>,
     syncers: Vec<Box<dyn sync::SyncerTrait>>,
 }
 impl LegionBundle {
-    pub fn with_system<D: LegionSystemDesc>(mut self, desc: D) -> Self {
+    pub fn with_system<D: SystemDesc>(mut self, desc: D) -> Self {
         self.systems.push(Box::new(desc));
+
+        self
+    }
+
+    pub fn with_bundle<D: SystemBundle + 'static>(mut self, bundle: D) -> Self {
+        self.bundles.push(Box::new(bundle));
 
         self
     }
@@ -30,23 +39,35 @@ impl LegionBundle {
         self
     }
 }
-impl<'a, 'b> SystemBundle<'a, 'b> for LegionBundle {
+impl<'a, 'b> SpecsSystemBundle<'a, 'b> for LegionBundle {
     fn build(
         self,
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
+        use crate::SystemDesc;
+
         // Create the legion world
         let universe = legion::world::Universe::new();
         let mut legion_world = universe.create_world();
         let mut legion_resources = legion::resource::Resources::default();
 
-        world.insert(sync::LegionSystems(
-            self.systems
+        let mut legion_systems = sync::LegionSystems {
+            game: self
+                .systems
                 .into_iter()
-                .map(|desc| desc.build(&mut legion_world))
+                .map(|desc| desc.build(&mut legion_world, &mut legion_resources))
                 .collect(),
-        ));
+            ..Default::default()
+        };
+
+        for bundle in self.bundles.iter() {
+            bundle.build(
+                &mut legion_world,
+                &mut legion_resources,
+                &mut legion_systems,
+            )?
+        }
 
         let mut world_store = sync::LegionWorld {
             universe,
@@ -70,6 +91,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for LegionBundle {
         //world_store.add_component_sync::<crate::Named>();
         world_store.add_component_sync::<crate::Parent>();
 
+        world.insert(legion_systems);
         world.insert(world_store);
 
         builder.add(
