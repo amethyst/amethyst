@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 * Implement `Debug` for `ProgressCounter` and `ProgressCounterTracker`. ([#1973])
 * Added a custom render pass Example. ([#1904])
+* Added UI states/menu example. [#1986]
 
 ### Changed
 * Use a premultiplied view_proj matrix in vertex shaders. ([#1964])
@@ -35,6 +36,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1964]: https://github.com/amethyst/amethyst/pull/1964
 [#1973]: https://github.com/amethyst/amethyst/pull/1973
 [#1974]: https://github.com/amethyst/amethyst/pull/1974
+[#1986]: https://github.com/amethyst/amethyst/pull/1986
 
 ## [0.13.3] - 2019-10-4
 
