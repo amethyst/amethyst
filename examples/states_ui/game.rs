@@ -1,3 +1,5 @@
+use crate::pause::PauseMenuState;
+use crate::util::delete_hierarchy;
 use amethyst::{
     audio::output::init_output,
     core::Time,
@@ -5,14 +7,10 @@ use amethyst::{
     input::{is_close_requested, is_key_down},
     prelude::*,
     ui::{UiCreator, UiFinder, UiText},
-    utils::{
-        fps_counter::FpsCounter,
-    },
+    utils::fps_counter::FpsCounter,
     winit::VirtualKeyCode,
 };
 use log::info;
-use crate::pause::PauseMenuState;
-use crate::util::delete_hierarchy;
 
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
 /// The main differences include the added 'paused' field in the state, which is toggled when
@@ -26,7 +24,6 @@ pub struct Game {
     random_text: Option<Entity>,
 }
 
-
 impl SimpleState for Game {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { mut world, .. } = data;
@@ -34,9 +31,8 @@ impl SimpleState for Game {
         // needed for registering audio output.
         init_output(&mut world);
 
-        self.ui_root = Some(world.exec(|mut creator: UiCreator<'_>| {
-            creator.create("ui/example.ron", ())
-        }));
+        self.ui_root =
+            Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/example.ron", ())));
     }
 
     fn on_pause(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
@@ -104,10 +100,8 @@ impl SimpleState for Game {
             });
         }
 
-
         // it is important that the 'paused' field is actually pausing your game.
         if !self.paused {
-
             let mut ui_text = world.write_storage::<UiText>();
 
             if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
@@ -133,6 +127,3 @@ impl SimpleState for Game {
         Trans::None
     }
 }
-
-
-

@@ -10,8 +10,6 @@ use log::info;
 
 use crate::util::delete_hierarchy;
 
-
-
 #[derive(Default, Debug)]
 pub struct WelcomeScreen {
     ui_handle: Option<Entity>,

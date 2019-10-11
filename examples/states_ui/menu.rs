@@ -8,17 +8,15 @@ use amethyst::{
 
 use log::info;
 
-use crate::util::delete_hierarchy;
-use crate::welcome::WelcomeScreen;
 use crate::credits::CreditsScreen;
 use crate::game::Game;
-
+use crate::util::delete_hierarchy;
+use crate::welcome::WelcomeScreen;
 
 const BUTTON_START: &str = "start";
 const BUTTON_LOAD: &str = "load";
 const BUTTON_OPTIONS: &str = "options";
 const BUTTON_CREDITS: &str = "credits";
-
 
 #[derive(Default, Debug)]
 pub struct MainMenu {
@@ -87,7 +85,7 @@ impl SimpleState for MainMenu {
                 }
 
                 Trans::None
-            },
+            }
             _ => Trans::None,
         }
     }

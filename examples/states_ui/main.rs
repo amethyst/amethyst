@@ -1,9 +1,7 @@
 use amethyst::{
     assets::{HotReloadBundle, Processor},
     audio::Source,
-    core::{
-        transform::{TransformBundle},
-    },
+    core::transform::TransformBundle,
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -17,15 +15,13 @@ use amethyst::{
     utils::fps_counter::FpsCounterBundle,
 };
 
-mod events;
-mod menu;
 mod credits;
+mod events;
+mod game;
+mod menu;
+mod pause;
 mod util;
 mod welcome;
-mod game;
-mod pause;
-
-
 
 /// Quick overview what you can do when running this example:
 ///
@@ -35,9 +31,6 @@ mod pause;
 /// Here you can select to resume (go back to 'Game'), exit to menu (go to 'Menu') or exit (quit).
 ///
 /// During the 'Pause' menu, the 'Game' is paused accordingly.
-
-
-
 
 pub fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -52,7 +45,11 @@ pub fn main() -> amethyst::Result<()> {
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with(Processor::<Source>::new(), "source_processor", &[])
-        .with_system_desc(crate::events::UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
+        .with_system_desc(
+            crate::events::UiEventHandlerSystemDesc::default(),
+            "ui_event_handler",
+            &[],
+        )
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(FpsCounterBundle)?
         .with_bundle(
@@ -64,7 +61,11 @@ pub fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, crate::welcome::WelcomeScreen::default(), game_data)?;
+    let mut game = Application::new(
+        assets_dir,
+        crate::welcome::WelcomeScreen::default(),
+        game_data,
+    )?;
     game.run();
 
     Ok(())
