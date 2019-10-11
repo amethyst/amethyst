@@ -1,11 +1,39 @@
-use amethyst::{assets::ProgressCounter, ecs::WorldExt, State, StateData, Trans};
-use derive_new::new;
+use amethyst::{
+    assets::ProgressCounter,
+    ecs::{World, WorldExt},
+    State, StateData, Trans,
+};
+
+use derivative::Derivative;
 
 use crate::GameUpdate;
 
 /// Reads a `ProgressCounter` resource and waits for it to be `complete()`.
-#[derive(Debug, new)]
-pub struct WaitForLoad;
+#[derive(Derivative)]
+#[derivative(Debug)]
+pub struct WaitForLoad {
+    /// Function to determine loading is complete.
+    #[derivative(Debug = "ignore")]
+    fn_complete: fn(&World) -> bool,
+}
+
+impl WaitForLoad {
+    /// Returns a `WaitForLoad` that assumes a `ProgressCounter` resource exists in the `World`.
+    pub fn new() -> Self {
+        WaitForLoad {
+            fn_complete: |world| world.read_resource::<ProgressCounter>().is_complete(),
+        }
+    }
+
+    /// Returns a `WaitForLoad` with a custom completion check.
+    ///
+    /// # Parameters
+    ///
+    /// * `fn_complete`: Function to determine loading is complete.
+    pub fn new_with_fn(fn_complete: fn(&World) -> bool) -> Self {
+        WaitForLoad { fn_complete }
+    }
+}
 
 impl<T, E> State<T, E> for WaitForLoad
 where
@@ -15,8 +43,7 @@ where
     fn update(&mut self, data: StateData<'_, T>) -> Trans<T, E> {
         data.data.update(&data.world);
 
-        let progress_counter = data.world.read_resource::<ProgressCounter>();
-        if !progress_counter.is_complete() {
+        if !(self.fn_complete)(&data.world) {
             Trans::None
         } else {
             Trans::Pop
@@ -67,6 +94,54 @@ mod tests {
                 world.insert(progress_counter);
             })
             .with_state(WaitForLoad::new)
+            .with_assertion(|world| {
+                let test_asset_handle = world.read_resource::<Handle<TestAsset>>();
+                let test_assets = world.read_resource::<AssetStorage<TestAsset>>();
+                let test_asset = test_assets
+                    .get(&test_asset_handle)
+                    .expect("Expected `TestAsset` to be loaded.");
+
+                assert_eq!(&TestAsset { val: 123 }, test_asset);
+            })
+            .run()
+    }
+
+    #[test]
+    fn uses_custom_completion_function() -> Result<(), Error> {
+        AmethystApplication::blank()
+            .with_system(Processor::<TestAsset>::new(), "test_asset_processor", &[])
+            .with_effect(|world| {
+                let mut in_memory_source = InMemorySource::new();
+                in_memory_source.insert(String::from("file.ron"), b"(val: 123)".to_vec());
+
+                let mut loader = world.write_resource::<Loader>();
+                loader.add_source(IN_MEMORY_SOURCE_ID, in_memory_source);
+            })
+            .with_effect(|world| {
+                let mut progress_counter = ProgressCounter::new();
+                let test_asset_handle = {
+                    let loader = world.read_resource::<Loader>();
+                    loader.load_from(
+                        "file.ron",
+                        RonFormat,
+                        IN_MEMORY_SOURCE_ID,
+                        &mut progress_counter,
+                        &world.read_resource::<AssetStorage<TestAsset>>(),
+                    )
+                };
+
+                world.insert(test_asset_handle);
+                world.insert(vec![progress_counter]);
+            })
+            .with_state(|| {
+                WaitForLoad::new_with_fn(|world| {
+                    world
+                        .read_resource::<Vec<ProgressCounter>>()
+                        .first()
+                        .expect("Expected `Vec<ProgressCounter>` with one element.")
+                        .is_complete()
+                })
+            })
             .with_assertion(|world| {
                 let test_asset_handle = world.read_resource::<Handle<TestAsset>>();
                 let test_assets = world.read_resource::<AssetStorage<TestAsset>>();
