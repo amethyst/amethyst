@@ -9,6 +9,9 @@ use amethyst::{
 use crate::util::delete_hierarchy;
 use crate::menu::MainMenu;
 
+// A simple 'Screen' State, only capable of loading/showing the prefab ui and registering simple
+// UI interactions (pressing escape or clicking anywhere).
+
 #[derive(Debug, Default)]
 pub struct CreditsScreen {
     ui_handle: Option<Entity>,

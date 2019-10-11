@@ -7,7 +7,7 @@ use amethyst::{
 };
 
 
-/// This shows how to handle UI events.
+/// This shows how to handle UI events. This is the same as in the 'ui' example.
 #[derive(SystemDesc)]
 #[system_desc(name(UiEventHandlerSystemDesc))]
 pub struct UiEventHandlerSystem {

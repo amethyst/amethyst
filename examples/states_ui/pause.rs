@@ -10,23 +10,27 @@ use amethyst::{
 
 use crate::menu::MainMenu;
 
+/// Adapted, originally from amethyst/evoli src/states/pause_menu.rs
+
 #[derive(Default)]
 pub struct PauseMenuState {
     // button entities are created in on_start() and destroyed in on_stop()
-    // if there is an invalid Entity that could be assigned to these by default, that'd be better than using Option
     resume_button: Option<Entity>,
     exit_to_main_menu_button: Option<Entity>,
     exit_button: Option<Entity>,
     root: Option<Entity>,
 }
 
+// ID's for buttons in the prefab. Required to identify them.
 const RESUME_BUTTON_ID: &str = "resume";
 const EXIT_TO_MAIN_MENU_BUTTON_ID: &str = "exit_to_main_menu";
 const EXIT_BUTTON_ID: &str = "exit";
 
+
 // load the pause_menu.ron prefab then instantiate it
 // if the "resume" button is clicked, goto MainGameState
 // if the "exit_to_main_menu" button is clicked, remove the pause and main game states and go to MenuState.
+// if the "exit" button is clicked, quit the program.
 impl<'a> SimpleState for PauseMenuState {
 
     fn on_start(&mut self, data: StateData<GameData>) {
@@ -64,10 +68,15 @@ impl<'a> SimpleState for PauseMenuState {
                     let mut state_transition_event_channel = data
                         .world
                         .write_resource::<EventChannel<TransEvent<GameData, StateEvent>>>();
+
+                    // this allows us to first 'Pop' this state, and then exchange whatever was
+                    // below that with a new MainMenu state.
                     state_transition_event_channel.single_write(Box::new(|| Trans::Pop));
                     state_transition_event_channel
                         .single_write(Box::new(|| Trans::Switch(Box::new(MainMenu::default()))));
-                    Trans::None
+
+                    Trans::None // we could also not add the pop to the channel and Pop here
+                        // but like this the execution order is guaranteed (in the next versions)
                 } else if Some(target) == self.exit_button {
                     Trans::Quit
                 } else {

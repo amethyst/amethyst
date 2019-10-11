@@ -14,6 +14,10 @@ use log::info;
 use crate::pause::PauseMenuState;
 use crate::util::delete_hierarchy;
 
+/// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
+/// The main differences include the added 'paused' field in the state, which is toggled when
+/// 'pausing'.
+
 #[derive(Default)]
 pub struct Game {
     paused: bool,
@@ -22,11 +26,14 @@ pub struct Game {
     random_text: Option<Entity>,
 }
 
+
 impl SimpleState for Game {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { mut world, .. } = data;
 
+        // needed for registering audio output.
         init_output(&mut world);
+
         self.ui_root = Some(world.exec(|mut creator: UiCreator<'_>| {
             creator.create("ui/example.ron", ())
         }));
@@ -79,6 +86,8 @@ impl SimpleState for Game {
     fn update(&mut self, state_data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         let StateData { world, .. } = state_data;
 
+        // this cannot happen in 'on_start', as the entity might not be fully
+        // initialized/registered/created yet.
         if self.fps_display.is_none() {
             world.exec(|finder: UiFinder<'_>| {
                 if let Some(entity) = finder.find("fps") {
@@ -86,6 +95,7 @@ impl SimpleState for Game {
                 }
             });
         }
+
         if self.random_text.is_none() {
             world.exec(|finder: UiFinder| {
                 if let Some(entity) = finder.find("random_text") {
@@ -94,9 +104,11 @@ impl SimpleState for Game {
             });
         }
 
-        let mut ui_text = world.write_storage::<UiText>();
 
+        // it is important that the 'paused' field is actually pausing your game.
         if !self.paused {
+
+            let mut ui_text = world.write_storage::<UiText>();
 
             if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
                 if world.read_resource::<Time>().frame_number() % 20 == 0 && !self.paused {

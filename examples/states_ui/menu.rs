@@ -29,10 +29,9 @@ pub struct MainMenu {
     button_credits: Option<Entity>,
 }
 
-// impl Screen for MainMenu {}
-
 impl SimpleState for MainMenu {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        // create UI from prefab and save the reference.
         let world = data.world;
 
         self.ui_root =
@@ -40,6 +39,7 @@ impl SimpleState for MainMenu {
     }
 
     fn update(&mut self, state_data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        // only search for buttons if they have not been found yet
         let StateData { world, .. } = state_data;
 
         if self.button_start.is_none()
@@ -93,6 +93,7 @@ impl SimpleState for MainMenu {
     }
 
     fn on_stop(&mut self, data: StateData<GameData>) {
+        // after destroying the current UI, invalidate references as well (makes things cleaner)
         if let Some(entity) = self.ui_root {
             delete_hierarchy(entity, data.world).expect("Failed to remove MainMenu");
         }

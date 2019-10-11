@@ -26,8 +26,17 @@ mod game;
 mod pause;
 
 
-use events::UiEventHandlerSystemDesc;
-use welcome::WelcomeScreen;
+
+/// Quick overview what you can do when running this example:
+///
+/// Switch from the 'Welcome' Screen to the 'Menu' Screen.
+/// From the 'Menu', switch to either 'Credits' (from which you can only switch back) or to 'Game'.
+/// From 'Game', you can enter the 'Pause' menu.
+/// Here you can select to resume (go back to 'Game'), exit to menu (go to 'Menu') or exit (quit).
+///
+/// During the 'Pause' menu, the 'Game' is paused accordingly.
+
+
 
 
 pub fn main() -> amethyst::Result<()> {
@@ -43,7 +52,7 @@ pub fn main() -> amethyst::Result<()> {
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with(Processor::<Source>::new(), "source_processor", &[])
-        .with_system_desc(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
+        .with_system_desc(crate::events::UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(FpsCounterBundle)?
         .with_bundle(
@@ -55,7 +64,7 @@ pub fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, WelcomeScreen::default(), game_data)?;
+    let mut game = Application::new(assets_dir, crate::welcome::WelcomeScreen::default(), game_data)?;
     game.run();
 
     Ok(())
