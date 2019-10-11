@@ -535,7 +535,7 @@ where
     /// * `func`: Function to execute.
     pub fn with_fn<F>(self, func: F) -> Self
     where
-        F: Fn(&mut World) + Send + Sync + 'static,
+        F: FnOnce(&mut World) + Send + Sync + 'static,
     {
         self.with_state(move || FunctionState::new(func))
     }
@@ -564,7 +564,7 @@ where
     /// * `effect_fn`: Function that executes an effect.
     pub fn with_effect<F>(self, effect_fn: F) -> Self
     where
-        F: Fn(&mut World) + Send + Sync + 'static,
+        F: FnOnce(&mut World) + Send + Sync + 'static,
     {
         self.with_fn(effect_fn)
     }
@@ -578,7 +578,7 @@ where
     /// * `assertion_fn`: Function that asserts the expected state.
     pub fn with_assertion<F>(self, assertion_fn: F) -> Self
     where
-        F: Fn(&mut World) + Send + Sync + 'static,
+        F: FnOnce(&mut World) + Send + Sync + 'static,
     {
         self.with_fn(assertion_fn)
     }
