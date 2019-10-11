@@ -4,7 +4,8 @@ version = "0.6.1"
 authors = [
 	"Joël Lupien (Jojolepro) <jojolepromain@gmail.com>",
 	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>",
-	"Timon Post (TimonPost) <https://github.com/TimonPost>"
+	"Timon Post (TimonPost) <https://github.com/TimonPost>",
+	"Justin LeFebvre (jstnlef) <https://github.com/jstnlef>"
 ]
 edition = "2018"
 description = "Amethyst networking crate"
@@ -24,13 +25,7 @@ nightly = [ "amethyst_core/nightly" ]
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.8.1" }
 amethyst_error = { path = "../amethyst_error", version = "0.3.0" }
-serde = { version = "1", features = ["derive"] }
-shrev = "1.0"
-shred = "0.9"
-bincode = "1.0"
-log = "0.4.6"
-uuid = { version = "0.7.1", features = ["v4","serde"] }
+bytes = "0.4"
+laminar = "0.3"
+log = "0.4"
 thread_profiler = { version = "0.3" , optional = true }
-laminar = "0.2.3"
-err-derive = "0.1"
-crossbeam-channel = "0.3.9"
