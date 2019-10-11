@@ -7,7 +7,7 @@ Container(
         width: 20.,
         height: 20.,
     ),
-    // background: SolidColor(1.0, 1.0, 1.0, 1.0),
+    background: SolidColor(0.6, 0.6, 1.0, 0.8),
     children: [
         // Parenting test
         Container(
