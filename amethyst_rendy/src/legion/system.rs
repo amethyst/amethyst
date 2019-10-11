@@ -2,7 +2,6 @@
 use crate::{
     camera::{ActiveCamera, Camera},
     debug_drawing::DebugLinesComponent,
-    legion::bundle::RenderCtx,
     light::Light,
     mtl::{Material, MaterialDefaults},
     resources::Tint,
@@ -17,8 +16,9 @@ use amethyst_core::{
     components::Transform,
     ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, Write, WriteExpect},
     legion::{
-        self, system::Schedulable, LegionWorld, Resources, SystemBuilder, SystemBundle, SystemDesc,
-        Systems, World,
+        self, bitset::BitSet, command::CommandBuffer, storage::ComponentTypeId,
+        system::Schedulable, LegionWorld, Resources, SystemBuilder, SystemDesc, Systems,
+        ThreadLocalSystem, World,
     },
     timing::Time,
     Hidden, HiddenPropagate,
@@ -30,7 +30,7 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-use std::{marker::PhantomData, sync::Arc};
+use std::{any::TypeId, marker::PhantomData, sync::Arc};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -40,14 +40,10 @@ use thread_profiler::profile_scope;
 pub trait GraphCreator<B: Backend>: Send {
     /// Check if graph needs to be rebuilt.
     /// This function is evaluated every frame before running the graph.
-    fn rebuild(&mut self, world: &RenderCtx) -> bool;
+    fn rebuild(&mut self, world: &World) -> bool;
 
     /// Retrieve configured complete graph builder.
-    fn builder(
-        &mut self,
-        factory: &mut Factory<B>,
-        world: &RenderCtx,
-    ) -> GraphBuilder<B, RenderCtx>;
+    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World>;
 }
 
 /// Amethyst rendering system
@@ -57,7 +53,7 @@ where
     B: Backend,
     G: GraphCreator<B>,
 {
-    graph: Option<Graph<B, RenderCtx>>,
+    graph: Option<Graph<B, World>>,
     families: Option<Families<B>>,
     graph_creator: G,
 }
@@ -77,34 +73,16 @@ where
     }
 }
 
-type SetupData<'a> = (
-    ReadStorage<'a, Handle<Mesh>>,
-    ReadStorage<'a, Handle<Texture>>,
-    ReadStorage<'a, Handle<Material>>,
-    ReadStorage<'a, Tint>,
-    ReadStorage<'a, Light>,
-    ReadStorage<'a, Camera>,
-    ReadStorage<'a, Hidden>,
-    ReadStorage<'a, HiddenPropagate>,
-    ReadStorage<'a, DebugLinesComponent>,
-    ReadStorage<'a, Transparent>,
-    ReadStorage<'a, Transform>,
-    ReadStorage<'a, SpriteRender>,
-    Option<Read<'a, Visibility>>,
-    Read<'a, ActiveCamera>,
-    ReadStorage<'a, JointTransforms>,
-);
-
 impl<B, G> RenderingSystem<B, G>
 where
     B: Backend,
     G: GraphCreator<B>,
 {
-    fn rebuild_graph(&mut self, world: &RenderCtx) {
+    fn rebuild_graph(&mut self, world: &World) {
         #[cfg(feature = "profiler")]
         profile_scope!("rebuild_graph");
 
-        let mut factory = world.resources().get_mut::<Factory<B>>().unwrap();
+        let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
 
         if let Some(graph) = self.graph.take() {
             #[cfg(feature = "profiler")]
@@ -129,8 +107,8 @@ where
         self.graph = Some(graph);
     }
 
-    fn run_graph(&mut self, world: &RenderCtx) {
-        let mut factory = world.resources().get_mut::<Factory<B>>().unwrap();
+    fn run_graph(&mut self, world: &World) {
+        let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
         factory.maintain(self.families.as_mut().unwrap());
         self.graph
             .as_mut()
@@ -139,122 +117,90 @@ where
     }
 }
 
-/// Amethyst rendering system
-#[allow(missing_debug_implementations)]
-pub struct RenderingSystemDesc<B, G>
+impl<B, G> ThreadLocalSystem for RenderingSystem<B, G>
 where
     B: Backend,
     G: GraphCreator<B>,
 {
-    graph_creator: G,
-    _marker: PhantomData<B>,
-}
-
-impl<B, G> RenderingSystemDesc<B, G>
-where
-    B: Backend,
-    G: GraphCreator<B>,
-{
-    /// Create a new `RenderingSystem` with the supplied graph via `GraphCreator`
-    pub fn new(graph_creator: G) -> Self {
-        Self {
-            graph_creator,
-            _marker: Default::default(),
-        }
-    }
-}
-impl<B, G> SystemDesc for RenderingSystemDesc<B, G>
-where
-    B: Backend,
-    G: 'static + GraphCreator<B>,
-{
-    fn build(self, world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable> {
-        let state = RenderingSystem::new(self.graph_creator);
-
-        SystemBuilder::<()>::new("RenderingSystem").build_disposable(
-            state,
-            move |state, commands, world, resources, queries| {},
-            |mut state, _world, resources| {
-                if let Some(graph) = state.graph.take() {
-                    let mut factory = resources.get_mut::<Factory<B>>();
-                    log::debug!("Dispose graph");
-                    // TOOD: We cant use legionworld for this afterall
-                    //graph.dispose(&mut *factory, world);
-                }
-
-                log::debug!("Unload resources");
-                if let Some(mut storage) = resources.get_mut::<AssetStorage<Mesh>>() {
-                    storage.unload_all();
-                }
-                if let Some(mut storage) = resources.get_mut::<AssetStorage<Texture>>() {
-                    storage.unload_all();
-                }
-
-                log::debug!("Drop families");
-                drop(state.families);
-            },
-        )
-    }
-
-    /*
-    fn run_now(&mut self, world: &'a World) {
+    fn run(&mut self, world: &mut World) {
         let rebuild = self.graph_creator.rebuild(world);
         if self.graph.is_none() || rebuild {
-            self.rebuild_graph(world);
+            //   self.rebuild_graph(world);
         }
-        self.run_graph(world);
+        //self.run_graph(world);
     }
-
-    fn setup(&mut self, world: &mut World) {
-        let config: rendy::factory::Config = Default::default();
-        let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
-
-        let queue_id = QueueId {
-            family: families.family_by_index(0).id(),
-            index: 0,
-        };
-
-        self.families = Some(families);
-        world.insert(factory);
-        world.insert(queue_id);
-
-        SetupData::setup(world);
-
-        let mat = create_default_mat::<B>(world);
-        world.insert(MaterialDefaults(mat));
-    }
-
-    fn dispose(mut self, world: &mut World) {
-        if let Some(graph) = self.graph.take() {
-            let mut factory = world.fetch_mut::<Factory<B>>();
+    fn dispose(self, world: &mut World) {
+        let mut graph = self.graph;
+        if let Some(graph) = graph.take() {
+            let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
             log::debug!("Dispose graph");
-            graph.dispose(&mut *factory, world);
+
+            graph.dispose(&mut factory, world);
         }
 
         log::debug!("Unload resources");
-        if let Some(mut storage) = world.try_fetch_mut::<AssetStorage<Mesh>>() {
+        if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Mesh>>() {
             storage.unload_all();
         }
-        if let Some(mut storage) = world.try_fetch_mut::<AssetStorage<Texture>>() {
+        if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Texture>>() {
             storage.unload_all();
         }
 
         log::debug!("Drop families");
         drop(self.families);
     }
-    */
 }
+
+/*
+fn run_now(&mut self, world: &'a World) {
+
+}
+
+fn setup(&mut self, world: &mut World) {
+    let config: rendy::factory::Config = Default::default();
+    let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
+
+    let queue_id = QueueId {
+        family: families.family_by_index(0).id(),
+        index: 0,
+    };
+
+    self.families = Some(families);
+    world.insert(factory);
+    world.insert(queue_id);
+
+    SetupData::setup(world);
+
+    let mat = create_default_mat::<B>(world);
+    world.insert(MaterialDefaults(mat));
+}
+
+fn dispose(mut self, world: &mut World) {
+    if let Some(graph) = self.graph.take() {
+        let mut factory = world.fetch_mut::<Factory<B>>();
+        log::debug!("Dispose graph");
+        graph.dispose(&mut *factory, world);
+    }
+
+    log::debug!("Unload resources");
+    if let Some(mut storage) = world.try_fetch_mut::<AssetStorage<Mesh>>() {
+        storage.unload_all();
+    }
+    if let Some(mut storage) = world.try_fetch_mut::<AssetStorage<Texture>>() {
+        storage.unload_all();
+    }
+
+    log::debug!("Drop families");
+    drop(self.families);
+}
+*/
 
 /// Asset processing system for `Mesh` asset type.
 #[derive(Debug, derivative::Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct MeshProcessorSystemDesc<B: Backend>(PhantomData<B>);
 impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
-    fn build(
-        self,
-        world: &mut legion::world::World,
-        _res: &mut legion::resource::Resources,
-    ) -> Box<dyn legion::system::Schedulable> {
+    fn build(self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
         SystemBuilder::<()>::new("MeshProcessorSystem")
             .write_resource::<AssetStorage<Mesh>>()
             .read_resource::<QueueId>()
@@ -292,11 +238,7 @@ impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
 #[derivative(Default(bound = ""))]
 pub struct TextureProcessorSystemDesc<B: Backend>(PhantomData<B>);
 impl<B: Backend> SystemDesc for TextureProcessorSystemDesc<B> {
-    fn build(
-        self,
-        world: &mut legion::world::World,
-        _res: &mut legion::resource::Resources,
-    ) -> Box<dyn legion::system::Schedulable> {
+    fn build(self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
         SystemBuilder::<()>::new("TextureProcessorSystem")
             .write_resource::<AssetStorage<Texture>>()
             .read_resource::<QueueId>()

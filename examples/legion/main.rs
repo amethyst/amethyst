@@ -17,7 +17,7 @@ use amethyst::{
         },
         legion::{
             self,
-            sync::{LegionSyncEntitySystemDesc, SyncDirection},
+            sync::{LegionSystems, LegionWorld, SyncDirection},
             SystemDesc,
         },
         math::{Unit, UnitQuaternion, Vector3},
@@ -68,15 +68,29 @@ struct Example {
     initialised: bool,
     progress: Option<ProgressCounter>,
     bullet_time: bool,
+    legion: LegionWorld,
+    legion_systems: LegionSystems,
+    listener_id: legion::event::ListenerId,
 }
 
 impl Example {
     pub fn new() -> Self {
+        // Create the legion world
+        let universe = legion::world::Universe::new();
+        let mut legion_world = universe.create_world();
+
         Self {
             entity: None,
             initialised: false,
             progress: None,
             bullet_time: false,
+            listener_id: legion_world.entity_channel().bind_listener(2048),
+            legion: LegionWorld {
+                universe,
+                world: legion_world,
+                syncers: Vec::default(),
+            },
+            legion_systems: LegionSystems::default(),
         }
     }
 }
@@ -125,7 +139,6 @@ impl SystemDesc for OrbitSystemDesc {
     fn build(
         self,
         world: &mut amethyst::core::legion::world::World,
-        _res: &mut amethyst::core::legion::resource::Resources,
     ) -> Box<dyn amethyst::core::legion::system::Schedulable> {
         use amethyst::core::legion::{system::SystemBuilder, IntoQuery, Query, Read, Write};
 
@@ -170,6 +183,8 @@ impl SimpleState for Example {
         #[cfg(feature = "profiler")]
         profile_scope!("example on_start");
         let StateData { world, .. } = data;
+
+        legion::sync::setup(world, &mut self.legion, &mut self.legion_systems);
 
         // Registration for components that arnt synced need to happen here.
         // This a sync issue because specs requires setups, while legion doesnt
@@ -426,7 +441,8 @@ impl SimpleState for Example {
             time.set_time_scale(if self.bullet_time { 0.2 } else { 1.0 });
         }
 
-        sync::dispatch_legion(data.world);
+        legion::sync::sync_entities(&mut data.world, &mut self.legion, self.listener_id);
+        sync::dispatch_legion(data.world, &mut self.legion, &mut self.legion_systems);
 
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
@@ -653,6 +669,10 @@ fn main() -> amethyst::Result<()> {
         },
     )?;
 
+    let mut example = Example::new();
+    let legion_world = &mut example.legion;
+    let legion_systems = &mut example.legion_systems;
+
     let game_data = GameDataBuilder::default()
         // Legion stuff
         .with_bundle(
@@ -662,11 +682,13 @@ fn main() -> amethyst::Result<()> {
                 .with_system_desc(OrbitSystemDesc::default())
                 .with_bundle(amethyst::renderer::legion::bundle::RenderingBundle::<
                     DefaultBackend,
-                >::default()),
+                >::default())
+                .prepare(legion_world, legion_systems),
         )?
-        .with_bundle(amethyst::renderer::legion::RenderLegionBundle::<
-            DefaultBackend,
-        >::default())?
+        .with_bundle(
+            amethyst::renderer::legion::RenderLegionBundle::<DefaultBackend>::default()
+                .prepare(legion_world, legion_systems),
+        )?
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
         .with_system_desc(
@@ -724,7 +746,7 @@ fn main() -> amethyst::Result<()> {
                 )),
         )?;
 
-    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
+    let mut game = Application::new(assets_dir, example, game_data)?;
     game.run();
     Ok(())
 }

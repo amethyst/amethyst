@@ -20,32 +20,6 @@ use amethyst_error::{format_err, Error};
 use derivative::Derivative;
 use std::collections::HashMap;
 
-/// THIS IS A TEMPORARY HACK TO PASS BOTH INTERNALLY WITHOUT LIFETIMES
-/// This should just be function call chain scoped, so it should be okay?
-/// This will go away once resources is merged into legion `World``
-pub struct RenderCtx {
-    world: *const World,
-    resources: *const Resources,
-}
-impl RenderCtx {
-    pub fn new(world: &World, resources: &Resources) -> Self {
-        unsafe {
-            Self {
-                world: world as *const World,
-                resources: resources as *const Resources,
-            }
-        }
-    }
-
-    pub fn world(&self) -> &World {
-        unsafe { &*self.world }
-    }
-
-    pub fn resources(&self) -> &Resources {
-        unsafe { &*self.resources }
-    }
-}
-
 /// A bundle of systems used for rendering using `Rendy` render graph.
 ///
 /// Provides a mechanism for registering rendering plugins.
@@ -83,19 +57,15 @@ impl<B: Backend> RenderingBundle<B> {
 }
 
 impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
-    fn build(
-        self,
-        world: &mut World,
-        resources: &mut Resources,
-        systems: &mut Systems,
-    ) -> Result<(), Error> {
+    fn build(self, world: &mut World, systems: &mut Systems) -> Result<(), Error> {
         use amethyst_core::legion::SystemDesc;
         systems
             .game
-            .push(MeshProcessorSystemDesc::<B>::default().build(world, resources));
+            .push(MeshProcessorSystemDesc::<B>::default().build(world));
         systems
             .game
-            .push(TextureProcessorSystemDesc::<B>::default().build(world, resources));
+            .push(TextureProcessorSystemDesc::<B>::default().build(world));
+
         /*
         builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
         builder.add(
@@ -128,7 +98,7 @@ struct PluggableRenderGraphCreator<B: Backend> {
 }
 
 impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
-    fn rebuild(&mut self, world: &RenderCtx) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         let mut rebuild = false;
         for plugin in self.plugins.iter_mut() {
             rebuild = plugin.should_rebuild(world) || rebuild;
@@ -136,11 +106,7 @@ impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
         rebuild
     }
 
-    fn builder(
-        &mut self,
-        factory: &mut Factory<B>,
-        world: &RenderCtx,
-    ) -> GraphBuilder<B, RenderCtx> {
+    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World> {
         if self.plugins.is_empty() {
             log::warn!("RenderingBundle is configured to display nothing. Use `with_plugin` to add functionality.");
         }
@@ -160,12 +126,12 @@ impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
 /// and signalling when the graph has to be rebuild.
 pub trait RenderPlugin<B: Backend>: std::fmt::Debug + Send {
     /// Hook for adding systems and bundles to the dispatcher.
-    fn on_build<'a, 'b>(&mut self, world: &mut RenderCtx) -> Result<(), Error> {
+    fn on_build<'a, 'b>(&mut self, world: &mut World) -> Result<(), Error> {
         Ok(())
     }
 
     /// Hook for providing triggers to rebuild the render graph.
-    fn should_rebuild(&mut self, _world: &RenderCtx) -> bool {
+    fn should_rebuild(&mut self, _world: &World) -> bool {
         false
     }
 
@@ -174,7 +140,7 @@ pub trait RenderPlugin<B: Backend>: std::fmt::Debug + Send {
         &mut self,
         plan: &mut RenderPlan<B>,
         factory: &mut Factory<B>,
-        world: &RenderCtx,
+        world: &World,
     ) -> Result<(), Error>;
 }
 
@@ -232,7 +198,7 @@ impl<B: Backend> RenderPlan<B> {
         target_plan.add_extension(Box::new(closure));
     }
 
-    fn build(self, factory: &Factory<B>) -> Result<GraphBuilder<B, RenderCtx>, Error> {
+    fn build(self, factory: &Factory<B>) -> Result<GraphBuilder<B, World>, Error> {
         let mut ctx = PlanContext {
             target_metadata: self
                 .targets
@@ -287,7 +253,7 @@ struct PlanContext<B: Backend> {
     target_metadata: HashMap<Target, TargetMetadata>,
     passes: HashMap<Target, EvaluationState>,
     outputs: HashMap<TargetImage, ImageId>,
-    graph_builder: GraphBuilder<B, RenderCtx>,
+    graph_builder: GraphBuilder<B, World>,
 }
 
 impl<B: Backend> PlanContext<B> {
@@ -313,7 +279,7 @@ impl<B: Backend> PlanContext<B> {
     fn submit_pass(
         &mut self,
         target: Target,
-        pass: RenderPassNodeBuilder<B, RenderCtx>,
+        pass: RenderPassNodeBuilder<B, World>,
     ) -> Result<(), Error> {
         match self.passes.get(&target) {
             None => {}
@@ -382,7 +348,7 @@ impl<B: Backend> PlanContext<B> {
         Ok(())
     }
 
-    pub fn graph(&mut self) -> &mut GraphBuilder<B, RenderCtx> {
+    pub fn graph(&mut self) -> &mut GraphBuilder<B, World> {
         &mut self.graph_builder
     }
 
@@ -483,7 +449,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     /// This is useful for adding custom rendering nodes
     /// that are not just standard graphics render passes,
     /// e.g. for compute dispatch.
-    pub fn graph(&mut self) -> &mut GraphBuilder<B, RenderCtx> {
+    pub fn graph(&mut self) -> &mut GraphBuilder<B, World> {
         self.plan_context.graph()
     }
 
@@ -707,7 +673,7 @@ impl<B: Backend> TargetPlan<B> {
 #[derive(Debug)]
 pub enum RenderableAction<B: Backend> {
     /// Register single render group for evaluation during target rendering
-    RenderGroup(Box<dyn RenderGroupBuilder<B, RenderCtx>>),
+    RenderGroup(Box<dyn RenderGroupBuilder<B, World>>),
 }
 
 impl<B: Backend> RenderableAction<B> {
@@ -730,7 +696,7 @@ pub trait IntoAction<B: Backend> {
     fn into(self) -> RenderableAction<B>;
 }
 
-impl<B: Backend, G: RenderGroupBuilder<B, RenderCtx> + 'static> IntoAction<B> for G {
+impl<B: Backend, G: RenderGroupBuilder<B, World> + 'static> IntoAction<B> for G {
     fn into(self) -> RenderableAction<B> {
         RenderableAction::RenderGroup(Box::new(self))
     }
@@ -890,7 +856,7 @@ mod tests {
 
         let planned_graph = plan.build(&factory).unwrap();
 
-        let mut manual_graph = GraphBuilder::<DefaultBackend, RenderCtx>::new();
+        let mut manual_graph = GraphBuilder::<DefaultBackend, World>::new();
         let color = manual_graph.create_image(kind, 1, Format::Rgb8Unorm, None);
         let depth = manual_graph.create_image(
             kind,
@@ -965,7 +931,7 @@ mod tests {
 
         let planned_graph = plan.build(&factory).unwrap();
 
-        let mut manual_graph = GraphBuilder::<DefaultBackend, RenderCtx>::new();
+        let mut manual_graph = GraphBuilder::<DefaultBackend, World>::new();
         let depth = manual_graph.create_image(
             window_kind,
             1,

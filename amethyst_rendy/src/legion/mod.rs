@@ -11,16 +11,12 @@ pub mod system;
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct RenderLegionBundle<B: Backend>(PhantomData<B>);
-
-impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderLegionBundle<B> {
-    fn build(
-        self,
-        world: &mut specs::World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        // Create the legion world
-
-        let mut world = world.fetch_mut::<sync::LegionWorld>();
+impl<B: Backend> RenderLegionBundle<B> {
+    pub fn prepare(
+        mut self,
+        world: &mut sync::LegionWorld,
+        systems: &mut sync::LegionSystems,
+    ) -> Self {
         world.add_component_sync::<crate::SpriteRender>();
         world.add_component_sync::<crate::visibility::BoundingSphere>();
         world.add_component_sync::<crate::Camera>();
@@ -46,6 +42,17 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderLegionBundle<B> {
         world.add_resource_sync::<crate::MaterialDefaults>();
 
         world.add_resource_sync::<Factory<B>>();
+
+        self
+    }
+}
+impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderLegionBundle<B> {
+    fn build(
+        self,
+        world: &mut specs::World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
+        // Create the legion world
 
         Ok(())
     }

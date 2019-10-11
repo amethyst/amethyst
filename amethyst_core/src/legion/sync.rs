@@ -1,4 +1,7 @@
-use crate::{legion::SystemDesc, transform::Transform};
+use crate::{
+    legion::{SystemDesc, ThreadLocalSystem},
+    transform::Transform,
+};
 use bimap::BiMap;
 use derivative::Derivative;
 use legion::{command::CommandBuffer, event::ListenerId};
@@ -19,7 +22,6 @@ use std::{
 pub struct LegionWorld {
     pub universe: legion::world::Universe,
     pub world: legion::world::World,
-    pub resources: legion::resource::Resources,
     pub syncers: Vec<Box<dyn SyncerTrait>>,
 }
 impl LegionWorld {
@@ -74,21 +76,21 @@ where
         bimap: EntitiesBimapRef,
         entities: &Entities<'a>,
         storage: &mut WriteStorage<'a, T>,
-        legion_world: &legion::world::World,
-        command_buffer: &mut CommandBuffer,
+        legion_world: &mut legion::world::World,
     ) {
         let map = bimap.read().unwrap();
-
         match direction {
             SyncDirection::SpecsToLegion => {
                 for (entity, component) in (entities, storage).join() {
                     if let Some(legion_entity) = map.get_by_right(&entity) {
-                        if let Some(mut legion_component) =
-                            legion_world.get_component_mut::<T>(*legion_entity)
-                        {
-                            *legion_component = (*component).clone();
+                        let exists = legion_world
+                            .get_component_mut::<T>(*legion_entity)
+                            .is_some();
+                        if exists {
+                            *legion_world.get_component_mut::<T>(*legion_entity).unwrap() =
+                                (*component).clone();
                         } else {
-                            command_buffer.add_component(*legion_entity, (*component).clone())
+                            legion_world.add_component(*legion_entity, (*component).clone());
                         }
                     }
                 }
@@ -112,7 +114,12 @@ where
 impl<T> Syncable<T> for T where T: Clone + legion::storage::Component + specs::Component {}
 
 pub trait SyncerTrait: 'static + Send + Sync {
-    fn sync(&self, world: &mut specs::World, direction: SyncDirection);
+    fn sync(
+        &self,
+        world: &mut specs::World,
+        legion_world: &mut LegionWorld,
+        direction: SyncDirection,
+    );
 }
 
 #[derive(Derivative)]
@@ -122,23 +129,24 @@ impl<T> SyncerTrait for ComponentSyncer<T>
 where
     T: Clone + legion::storage::Component + specs::Component,
 {
-    fn sync(&self, world: &mut specs::World, direction: SyncDirection) {
-        let (bimap, entities, mut storage, legion_world, mut command_buffer) =
-            <(
-                Read<'_, EntitiesBimapRef>,
-                Entities<'_>,
-                WriteStorage<'_, T>,
-                ReadExpect<'_, LegionWorld>,
-                Write<'_, CommandBuffer>,
-            )>::fetch(world);
+    fn sync(
+        &self,
+        world: &mut specs::World,
+        legion_world: &mut LegionWorld,
+        direction: SyncDirection,
+    ) {
+        let (bimap, entities, mut storage) = <(
+            Read<'_, EntitiesBimapRef>,
+            Entities<'_>,
+            WriteStorage<'_, T>,
+        )>::fetch(world);
 
         T::sync(
             direction,
             bimap.clone(),
             &entities,
             &mut storage,
-            &legion_world.world,
-            &mut command_buffer,
+            &mut legion_world.world,
         );
     }
 }
@@ -150,23 +158,29 @@ impl<T> SyncerTrait for ResourceSyncer<T>
 where
     T: legion::resource::Resource,
 {
-    fn sync(&self, world: &mut specs::World, direction: SyncDirection) {
-        move_resource::<T>(world, direction);
+    fn sync(
+        &self,
+        world: &mut specs::World,
+        legion_world: &mut LegionWorld,
+        direction: SyncDirection,
+    ) {
+        move_resource::<T>(world, legion_world, direction);
     }
 }
 
 pub fn move_resource<T: legion::resource::Resource>(
     world: &mut specs::World,
+    legion_world: &mut LegionWorld,
     direction: SyncDirection,
 ) {
     match direction {
         SyncDirection::SpecsToLegion => {
             if let Some(resource) = world.remove::<T>() {
-                world.fetch_mut::<LegionWorld>().resources.insert(resource);
+                legion_world.world.resources.insert(resource);
             }
         }
         SyncDirection::LegionToSpecs => {
-            let resource = world.fetch_mut::<LegionWorld>().resources.remove::<T>();
+            let resource = legion_world.world.resources.remove::<T>();
             if let Some(resource) = resource {
                 world.insert(resource);
             }
@@ -174,166 +188,132 @@ pub fn move_resource<T: legion::resource::Resource>(
     }
 }
 
-pub fn dispatch_legion(specs_world: &mut specs::World) {
-    let syncers = specs_world
-        .fetch_mut::<LegionWorld>()
-        .syncers
-        .drain(..)
-        .collect::<Vec<_>>();
+pub fn dispatch_legion(
+    specs_world: &mut specs::World,
+    legion_world: &mut LegionWorld,
+    legion_systems: &mut LegionSystems,
+) {
+    let syncers = legion_world.syncers.drain(..).collect::<Vec<_>>();
 
     syncers
         .iter()
-        .for_each(|s| s.sync(specs_world, SyncDirection::SpecsToLegion));
+        .for_each(|s| s.sync(specs_world, legion_world, SyncDirection::SpecsToLegion));
 
     {
-        let (mut legion_systems, legion_world) =
-            <(WriteExpect<'_, LegionSystems>, ReadExpect<'_, LegionWorld>)>::fetch(specs_world);
-        let resources = &legion_world.resources;
         let world = &legion_world.world;
 
         let mut game_stage =
-            legion::system::StageExecutor::new(&mut legion_systems.game).execute(resources, world);
+            legion::system::StageExecutor::new(&mut legion_systems.game).execute(world);
 
-        let mut render_stage = legion::system::StageExecutor::new(&mut legion_systems.render)
-            .execute(resources, world);
+        let mut render_stage =
+            legion::system::StageExecutor::new(&mut legion_systems.render).execute(world);
     }
 
     syncers
         .iter()
-        .for_each(|s| s.sync(specs_world, SyncDirection::LegionToSpecs));
+        .for_each(|s| s.sync(specs_world, legion_world, SyncDirection::LegionToSpecs));
 
-    specs_world
-        .fetch_mut::<LegionWorld>()
-        .syncers
-        .extend(syncers.into_iter());
+    legion_world.syncers.extend(syncers.into_iter());
 }
 
-pub struct LegionSyncEntitySystem {
-    pub legion_listener_id: ListenerId,
-    new_entities: SmallVec<[legion::entity::Entity; 128]>,
+pub fn setup(
+    specs_world: &mut specs::World,
+    legion_world: &mut LegionWorld,
+    legion_systems: &mut LegionSystems,
+) {
+    let entity_map = Arc::new(RwLock::new(
+        BiMap::<legion::entity::Entity, specs::Entity>::new(),
+    ));
+    legion_world.world.resources.insert(entity_map.clone());
+    specs_world.insert(entity_map.clone());
 }
 
-impl<'a> System<'a> for LegionSyncEntitySystem {
-    type SystemData = (
-        Entities<'a>,
-        Read<'a, LazyUpdate>,
-        WriteExpect<'a, LegionWorld>,
-        WriteExpect<'a, EntitiesBimapRef>,
-        Write<'a, CommandBuffer>,
-    );
-    fn run(
-        &mut self,
-        (entities, lazy, mut legion_world, mut entity_bimap, mut command_buffer): Self::SystemData,
-    ) {
-        let specs_entities = {
-            let mut map = entity_bimap.read().unwrap();
+pub fn sync_entities(
+    specs_world: &mut specs::World,
+    legion_world: &mut LegionWorld,
+    legion_listener_id: ListenerId,
+) {
+    use smallvec::SmallVec;
 
-            (&entities)
-                .join()
-                .filter_map(|(entity)| {
-                    if !map.contains_right(&entity) {
-                        Some((SpecsEntityComponent {
-                            specs_entity: entity,
-                        },))
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>()
-        };
+    let mut new_entities = SmallVec::<[legion::entity::Entity; 512]>::new();
 
-        if !specs_entities.is_empty() {
-            let mut map = entity_bimap.write().unwrap();
-
-            legion_world
-                .world
-                .insert((SpecsTag,), specs_entities.clone())
-                .iter()
-                .enumerate()
-                .for_each(|(i, legion_entity)| {
-                    log::trace!(
-                        "{} - legion:[{:?}] = specs:[{:?}]",
-                        i,
-                        legion_entity,
-                        specs_entities[i].0.specs_entity
-                    );
-                    map.insert(*legion_entity, specs_entities[i].0.specs_entity);
-                });
-        }
-
-        while let Ok(event) = legion_world
+    let specs_entities = {
+        let entity_bimap = legion_world
             .world
-            .entity_channel()
-            .read(self.legion_listener_id)
-        {
-            let mut map = entity_bimap.read().unwrap();
-            match event {
-                legion::event::EntityEvent::Created(e) => {
-                    if !map.contains_left(&e) {
-                        self.new_entities.push(e);
-                    }
+            .resources
+            .get::<EntitiesBimapRef>()
+            .unwrap();
+        let mut map = entity_bimap.read().unwrap();
+
+        (&<(Entities<'_>)>::fetch(specs_world))
+            .join()
+            .filter_map(|(entity)| {
+                if !map.contains_right(&entity) {
+                    Some((SpecsEntityComponent {
+                        specs_entity: entity,
+                    },))
+                } else {
+                    None
                 }
-                legion::event::EntityEvent::Deleted(e) => if map.contains_left(&e) {},
-            }
-        }
-
-        if !self.new_entities.is_empty() {
-            let mut map = entity_bimap.write().unwrap();
-            self.new_entities.iter().for_each(|e| {
-                let specs_entity = lazy.create_entity(&entities).with(LegionTag).build();
-                map.insert(*e, specs_entity);
-            });
-
-            self.new_entities.clear();
-        }
-
-        // Flush the command buffer for modifications
-        command_buffer.write(&mut legion_world.world);
-    }
-}
-
-#[derive(Default)]
-pub struct LegionSyncEntitySystemDesc;
-impl<'a, 'b> crate::SystemDesc<'a, 'b, LegionSyncEntitySystem> for LegionSyncEntitySystemDesc {
-    fn build(self, world: &mut specs::World) -> LegionSyncEntitySystem {
-        <LegionSyncEntitySystem as System<'_>>::SystemData::setup(world);
-
-        let entity_map = Arc::new(RwLock::new(
-            BiMap::<legion::entity::Entity, specs::Entity>::new(),
-        ));
-        world.insert(entity_map.clone());
-
-        let (mut legion_world, mut legion_systems) =
-            <(WriteExpect<'_, LegionWorld>, WriteExpect<'_, LegionSystems>)>::fetch(world);
-
-        legion_world.resources.insert(entity_map.clone());
-
-        //let sync_system = SyncSystemLegionDesc::default().build(&mut legion_world.world);
-        //legion_systems.push(sync_system);
-
-        let legion_listener_id = legion_world.world.entity_channel().bind_listener(1024);
-
-        LegionSyncEntitySystem {
-            legion_listener_id,
-            new_entities: SmallVec::default(),
-        }
-    }
-}
-
-#[derive(Default)]
-pub struct SyncSystemLegionDesc;
-impl SystemDesc for SyncSystemLegionDesc {
-    fn build(
-        self,
-        world: &mut legion::world::World,
-        _resources: &mut legion::resource::Resources,
-    ) -> Box<dyn legion::system::Schedulable> {
-        use legion::prelude::*;
-
-        SystemBuilder::<()>::new("Test")
-            .with_query(<(Read<Transform>)>::query())
-            .build(move |commands, world, _resource, query| {
-                query.iter_entities().for_each(|(entity, transform)| {});
             })
+            .collect::<Vec<_>>()
+    };
+
+    if !specs_entities.is_empty() {
+        let new_legion = legion_world
+            .world
+            .insert((SpecsTag,), specs_entities.clone())
+            .iter()
+            .enumerate()
+            .map(|(i, legion_entity)| {
+                log::trace!(
+                    "{} - legion:[{:?}] = specs:[{:?}]",
+                    i,
+                    legion_entity,
+                    specs_entities[i].0.specs_entity
+                );
+                (i, *legion_entity)
+            })
+            .collect::<Vec<_>>();
+
+        let entity_bimap = legion_world
+            .world
+            .resources
+            .get_mut::<EntitiesBimapRef>()
+            .unwrap();
+        let mut map = entity_bimap.write().unwrap();
+        for (i, entity) in new_legion {
+            map.insert(entity, specs_entities[i].0.specs_entity);
+        }
+    }
+
+    while let Ok(event) = legion_world.world.entity_channel().read(legion_listener_id) {
+        let entity_bimap = legion_world
+            .world
+            .resources
+            .get::<EntitiesBimapRef>()
+            .unwrap();
+        let map = entity_bimap.read().unwrap();
+        match event {
+            legion::event::EntityEvent::Created(e) => {
+                if !map.contains_left(&e) {
+                    new_entities.push(e);
+                }
+            }
+            legion::event::EntityEvent::Deleted(e) => if map.contains_left(&e) {},
+        }
+    }
+
+    if !new_entities.is_empty() {
+        let entity_bimap = legion_world
+            .world
+            .resources
+            .get_mut::<EntitiesBimapRef>()
+            .unwrap();
+        let mut map = entity_bimap.write().unwrap();
+        new_entities.iter().for_each(|e| {
+            let specs_entity = specs_world.create_entity().with(LegionTag).build();
+            map.insert(*e, specs_entity);
+        });
     }
 }

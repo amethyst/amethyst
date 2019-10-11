@@ -11,24 +11,18 @@ pub trait Consume {
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        resources: &mut legion::resource::Resources,
         systems: &mut Systems,
     ) -> Result<(), amethyst_error::Error>;
 }
 
 pub trait SystemDesc: 'static {
-    fn build(
-        self,
-        world: &mut legion::world::World,
-        resources: &mut legion::resource::Resources,
-    ) -> Box<dyn legion::system::Schedulable>;
+    fn build(self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable>;
 }
 
 pub trait SystemBundle {
     fn build(
         self,
         world: &mut legion::world::World,
-        resources: &mut legion::resource::Resources,
         systems: &mut Systems,
     ) -> Result<(), amethyst_error::Error>;
 }
@@ -41,11 +35,10 @@ impl<B: SystemDesc> Consume for SystemDescWrapper<B> {
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        resources: &mut legion::resource::Resources,
         systems: &mut Systems,
     ) -> Result<(), amethyst_error::Error> {
         // TODO: Stages enum
-        systems.game.push(self.0.build(world, resources));
+        systems.game.push(self.0.build(world));
         Ok(())
     }
 }
@@ -58,9 +51,13 @@ impl<B: SystemBundle> Consume for SystemBundleWrapper<B> {
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        resources: &mut legion::resource::Resources,
         systems: &mut Systems,
     ) -> Result<(), amethyst_error::Error> {
-        self.0.build(world, resources, systems)
+        self.0.build(world, systems)
     }
+}
+
+pub trait ThreadLocalSystem {
+    fn run(&mut self, world: &mut World);
+    fn dispose(self, world: &mut World);
 }
