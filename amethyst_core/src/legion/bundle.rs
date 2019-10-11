@@ -8,19 +8,21 @@ use specs::{shred::ResourceId, World};
 
 #[derive(Default)]
 pub struct LegionBundle {
-    systems: Vec<Box<dyn SystemDesc>>,
-    bundles: Vec<Box<dyn SystemBundle>>,
+    systems: Vec<Box<dyn Consume>>,
+    bundles: Vec<Box<dyn Consume>>,
     syncers: Vec<Box<dyn sync::SyncerTrait>>,
 }
 impl LegionBundle {
-    pub fn with_system<D: SystemDesc>(mut self, desc: D) -> Self {
-        self.systems.push(Box::new(desc));
+    pub fn with_system_desc<D: SystemDesc + 'static>(mut self, desc: D) -> Self {
+        self.systems
+            .push(Box::new(SystemDescWrapper(desc)) as Box<dyn Consume>);
 
         self
     }
 
     pub fn with_bundle<D: SystemBundle + 'static>(mut self, bundle: D) -> Self {
-        self.bundles.push(Box::new(bundle));
+        self.bundles
+            .push(Box::new(SystemBundleWrapper(bundle)) as Box<dyn Consume>);
 
         self
     }
@@ -52,17 +54,17 @@ impl<'a, 'b> SpecsSystemBundle<'a, 'b> for LegionBundle {
         let mut legion_world = universe.create_world();
         let mut legion_resources = legion::resource::Resources::default();
 
-        let mut legion_systems = sync::LegionSystems {
-            game: self
-                .systems
-                .into_iter()
-                .map(|desc| desc.build(&mut legion_world, &mut legion_resources))
-                .collect(),
-            ..Default::default()
-        };
+        let mut legion_systems = sync::LegionSystems::default();
+        for desc in self.systems.into_iter() {
+            desc.consume(
+                &mut legion_world,
+                &mut legion_resources,
+                &mut legion_systems,
+            )?
+        }
 
-        for bundle in self.bundles.iter() {
-            bundle.build(
+        for bundle in self.bundles.into_iter() {
+            bundle.consume(
                 &mut legion_world,
                 &mut legion_resources,
                 &mut legion_systems,

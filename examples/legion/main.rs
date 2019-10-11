@@ -123,7 +123,7 @@ impl<'a> System<'a> for OrbitSystem {
 pub struct OrbitSystemDesc;
 impl SystemDesc for OrbitSystemDesc {
     fn build(
-        &self,
+        self,
         world: &mut amethyst::core::legion::world::World,
         _res: &mut amethyst::core::legion::resource::Resources,
     ) -> Box<dyn amethyst::core::legion::system::Schedulable> {
@@ -659,7 +659,7 @@ fn main() -> amethyst::Result<()> {
             amethyst::core::legion::bundle::LegionBundle::default()
                 .with_resource_sync::<DebugLines>()
                 .with_component_sync::<Orbit>()
-                .with_system(OrbitSystemDesc::default())
+                .with_system_desc(OrbitSystemDesc::default())
                 .with_bundle(amethyst::renderer::legion::bundle::RenderingBundle::<
                     DefaultBackend,
                 >::default()),

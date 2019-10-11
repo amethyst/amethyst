@@ -324,7 +324,7 @@ impl<'a, 'b> crate::SystemDesc<'a, 'b, LegionSyncEntitySystem> for LegionSyncEnt
 pub struct SyncSystemLegionDesc;
 impl SystemDesc for SyncSystemLegionDesc {
     fn build(
-        &self,
+        self,
         world: &mut legion::world::World,
         _resources: &mut legion::resource::Resources,
     ) -> Box<dyn legion::system::Schedulable> {

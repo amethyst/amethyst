@@ -11,7 +11,7 @@ use crate::{
         hal,
         wsi::Surface,
     },
-    system::{GraphCreator, MeshProcessorSystem, RenderingSystem, TextureProcessorSystem},
+    system::{GraphCreator, RenderingSystem},
     types::Backend,
     SpriteSheet,
 };
