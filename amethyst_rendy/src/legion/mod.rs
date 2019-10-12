@@ -1,6 +1,10 @@
 use crate::types::Backend;
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{ecs as specs, legion::sync, shred::DispatcherBuilder, SystemBundle};
+use amethyst_core::{
+    ecs as specs,
+    legion::{dispatcher::DispatcherBuilder, LegionState},
+    SystemBundle,
+};
 use amethyst_error::Error;
 use derivative::Derivative;
 use rendy::factory::Factory;
@@ -11,13 +15,9 @@ pub mod system;
 
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct RenderLegionBuilder<B: Backend>(PhantomData<B>);
-impl<B: Backend> RenderLegionBuilder<B> {
-    pub fn prepare(
-        mut self,
-        world: &mut sync::LegionWorld,
-        systems: &mut sync::LegionSystems,
-    ) -> Self {
+pub struct LegionRenderSyncer<B: Backend>(PhantomData<B>);
+impl<B: Backend> LegionRenderSyncer<B> {
+    pub fn prepare(mut self, world: &mut LegionState, dispatcher: &mut DispatcherBuilder) {
         world.add_component_sync::<crate::SpriteRender>();
         world.add_component_sync::<crate::visibility::BoundingSphere>();
         world.add_component_sync::<crate::Camera>();
@@ -45,18 +45,5 @@ impl<B: Backend> RenderLegionBuilder<B> {
         world.add_resource_sync::<amethyst_assets::Loader>();
 
         world.add_resource_sync::<Factory<B>>();
-
-        self
-    }
-}
-impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderLegionBuilder<B> {
-    fn build(
-        self,
-        world: &mut specs::World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        // Create the legion world
-
-        Ok(())
     }
 }

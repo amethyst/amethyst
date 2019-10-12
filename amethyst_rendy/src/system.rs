@@ -68,7 +68,7 @@ where
     }
 }
 
-type SetupData<'a> = (
+pub type SetupData<'a> = (
     ReadStorage<'a, Handle<Mesh>>,
     ReadStorage<'a, Handle<Texture>>,
     ReadStorage<'a, Handle<Material>>,

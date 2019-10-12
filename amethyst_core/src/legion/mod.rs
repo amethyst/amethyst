@@ -2,18 +2,13 @@
 //!
 
 pub mod bundle;
+pub mod dispatcher;
 pub mod sync;
+pub mod temp;
 
+pub use dispatcher::{ConsumeDesc, Dispatcher, DispatcherBuilder, Stage};
 pub use legion::{prelude::*, *};
-pub use sync::{LegionSystems as Systems, LegionWorld};
-
-pub trait Consume {
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        systems: &mut Systems,
-    ) -> Result<(), amethyst_error::Error>;
-}
+pub use sync::{ComponentSyncer, ResourceSyncer, SyncerTrait};
 
 pub trait SystemDesc: 'static {
     fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable>;
@@ -23,41 +18,63 @@ pub trait SystemBundle {
     fn build(
         self,
         world: &mut legion::world::World,
-        systems: &mut Systems,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error>;
 }
 
-pub struct SystemDescWrapper<B>(B)
+pub struct DispatcherSystemDesc<B>(Stage, B)
 where
     B: SystemDesc;
 
-impl<B: SystemDesc> Consume for SystemDescWrapper<B> {
+impl<B: SystemDesc> ConsumeDesc for DispatcherSystemDesc<B> {
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        systems: &mut Systems,
+        stages: &mut Dispatcher,
+        _: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
-        // TODO: Stages enum
-        systems.game.push(self.0.build(world));
+        println!("Stages = {:?}", stages.stages.len());
+        stages
+            .stages
+            .get_mut(&self.0)
+            .unwrap()
+            .push(self.1.build(world));
         Ok(())
     }
 }
 
-pub struct SystemBundleWrapper<B>(B)
+pub struct DispatcherSystemBundle<B>(B)
 where
     B: SystemBundle;
 
-impl<B: SystemBundle> Consume for SystemBundleWrapper<B> {
+impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        systems: &mut Systems,
+        _: &mut Dispatcher,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
-        self.0.build(world, systems)
+        self.0.build(world, builder)
     }
 }
 
 pub trait ThreadLocalSystem {
     fn run(&mut self, world: &mut World);
     fn dispose(self, world: &mut World);
+}
+
+pub struct LegionState {
+    pub universe: legion::world::Universe,
+    pub world: legion::world::World,
+    pub syncers: Vec<Box<dyn SyncerTrait>>,
+}
+
+impl LegionState {
+    pub fn add_resource_sync<T: legion::resource::Resource>(&mut self) {
+        self.syncers.push(Box::new(ResourceSyncer::<T>::default()));
+    }
+
+    pub fn add_component_sync<T: Clone + legion::storage::Component + specs::Component>(&mut self) {
+        self.syncers.push(Box::new(ComponentSyncer::<T>::default()));
+    }
 }

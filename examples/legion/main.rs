@@ -17,8 +17,12 @@ use amethyst::{
         },
         legion::{
             self,
-            sync::{LegionSystems, LegionWorld, SyncDirection},
-            SystemDesc,
+            bundle::LegionSyncer,
+            dispatcher::{
+                Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder, Stage,
+            },
+            sync::SyncDirection,
+            LegionState, SystemDesc,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -69,8 +73,9 @@ struct Example {
     initialised: bool,
     progress: Option<ProgressCounter>,
     bullet_time: bool,
-    legion: LegionWorld,
-    legion_systems: LegionSystems,
+    legion: LegionState,
+    legion_dispatcher: LegionDispatcher,
+    legion_dispatcher_builder: Option<LegionDispatcherBuilder>,
     listener_id: legion::event::ListenerId,
 }
 
@@ -86,12 +91,13 @@ impl Example {
             progress: None,
             bullet_time: false,
             listener_id: legion_world.entity_channel().bind_listener(2048),
-            legion: LegionWorld {
+            legion: LegionState {
                 universe,
                 world: legion_world,
                 syncers: Vec::default(),
             },
-            legion_systems: LegionSystems::default(),
+            legion_dispatcher_builder: Some(LegionDispatcherBuilder::default()),
+            legion_dispatcher: LegionDispatcher::default(),
         }
     }
 }
@@ -185,7 +191,47 @@ impl SimpleState for Example {
         profile_scope!("example on_start");
         let StateData { world, .. } = data;
 
-        legion::sync::setup(world, &mut self.legion, &mut self.legion_systems);
+        ///////
+        //////// LEGION STUFF //
+        ///////
+
+        let app_root = application_root_dir().unwrap();
+
+        let display_config_path = app_root
+            .join("examples")
+            .join("rendy")
+            .join("config")
+            .join("display.ron");
+
+        // Run a sync, THEN dispatches
+        legion::temp::setup(world, &mut self.legion);
+        amethyst::renderer::system::SetupData::setup(world);
+
+        let syncers = self.legion.syncers.drain(..).collect::<Vec<_>>();
+
+        syncers
+            .iter()
+            .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::SpecsToLegion));
+
+        self.legion_dispatcher = self
+            .legion_dispatcher_builder
+            .take()
+            .unwrap()
+            .with_system_desc(Stage::Logic, OrbitSystemDesc::default())
+            .with_bundle(
+                RenderingBundle::<DefaultBackend>::default()
+                    .with_plugin(RenderToWindow::from_config_path(display_config_path)),
+            )
+            .build(&mut self.legion.world);
+
+        syncers
+            .iter()
+            .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::LegionToSpecs));
+        self.legion.syncers.extend(syncers.into_iter());
+
+        ///////
+        //////// LEGION STUFF //
+        ///////
 
         // Registration for components that arnt synced need to happen here.
         // This a sync issue because specs requires setups, while legion doesnt
@@ -442,8 +488,16 @@ impl SimpleState for Example {
             time.set_time_scale(if self.bullet_time { 0.2 } else { 1.0 });
         }
 
+        ///////
+        //////// LEGION STUFF //
+        ///////
+
         legion::sync::sync_entities(&mut data.world, &mut self.legion, self.listener_id);
-        sync::dispatch_legion(data.world, &mut self.legion, &mut self.legion_systems);
+        legion::temp::dispatch_legion(data.world, &mut self.legion, &mut self.legion_dispatcher);
+
+        ///////
+        //////// LEGION STUFF //
+        ///////
 
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
@@ -670,38 +724,32 @@ fn main() -> amethyst::Result<()> {
         },
     )?;
 
+    ///////
+    //////// LEGION STUFF //
+    ///////
+
     let mut example = Example::new();
-    let legion_world = &mut example.legion;
-    let legion_systems = &mut example.legion_systems;
+
+    example.legion.add_resource_sync::<DebugLines>();
+    example.legion.add_resource_sync::<Orbit>();
+
+    let legion_state = &mut example.legion;
+
+    amethyst::renderer::legion::LegionRenderSyncer::<DefaultBackend>::default().prepare(
+        legion_state,
+        example.legion_dispatcher_builder.as_mut().unwrap(),
+    );
+
+    amethyst::core::legion::bundle::LegionSyncer::default().prepare(
+        legion_state,
+        example.legion_dispatcher_builder.as_mut().unwrap(),
+    );
+
+    ///////
+    //////// END LEGION STUFF //
+    ///////
 
     let game_data = GameDataBuilder::default()
-        // Legion stuff
-        .with_bundle(
-            amethyst::renderer::legion::RenderLegionBuilder::<DefaultBackend>::default()
-                .prepare(legion_world, legion_systems),
-        )?
-        .with_bundle(
-            amethyst::core::legion::bundle::LegionBuilder::default()
-                .with_resource_sync::<DebugLines>()
-                .with_component_sync::<Orbit>()
-                .with_system_desc(OrbitSystemDesc::default())
-                //with_bundle(
-                //            RenderingBundle::<DefaultBackend>::new()
-                //                .with_plugin(RenderToWindow::from_config_path(display_config_path))
-                //                .with_plugin(RenderSwitchable3D::default())
-                //                .with_plugin(RenderFlat2D::default())
-                //                .with_plugin(RenderDebugLines::default())
-                //                .with_plugin(RenderSkybox::with_colors(
-                //                    Srgb::new(0.82, 0.51, 0.50),
-                //                    Srgb::new(0.18, 0.11, 0.85),
-                //                )),
-                //        )
-                .with_bundle(
-                    RenderingBundle::<DefaultBackend>::default()
-                        .with_plugin(RenderToWindow::from_config_path(display_config_path)),
-                )
-                .prepare(legion_world, legion_systems),
-        )?
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
         .with_system_desc(
@@ -749,6 +797,7 @@ fn main() -> amethyst::Result<()> {
         ]))?;
 
     let mut game = Application::new(assets_dir, example, game_data)?;
+
     game.run();
     Ok(())
 }

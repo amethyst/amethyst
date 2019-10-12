@@ -16,12 +16,13 @@ use amethyst_core::{
     components::Transform,
     ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, Write, WriteExpect},
     legion::{
-        self, command::CommandBuffer, storage::ComponentTypeId, system::Schedulable, LegionWorld,
-        Resources, SystemBuilder, SystemDesc, Systems, ThreadLocalSystem, World,
+        self, command::CommandBuffer, storage::ComponentTypeId, system::Schedulable, LegionState,
+        Resources, SystemBuilder, SystemDesc, ThreadLocalSystem, World,
     },
     timing::Time,
     Hidden, HiddenPropagate,
 };
+use amethyst_error::Error;
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},

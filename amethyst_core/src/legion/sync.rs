@@ -1,5 +1,8 @@
 use crate::{
-    legion::{SystemDesc, ThreadLocalSystem},
+    legion::{
+        dispatcher::{Dispatcher, Stage},
+        LegionState, SystemDesc, ThreadLocalSystem,
+    },
     transform::Transform,
 };
 use bimap::BiMap;
@@ -18,28 +21,6 @@ use std::{
     marker::PhantomData,
     sync::{Arc, RwLock},
 };
-
-pub struct LegionWorld {
-    pub universe: legion::world::Universe,
-    pub world: legion::world::World,
-    pub syncers: Vec<Box<dyn SyncerTrait>>,
-}
-impl LegionWorld {
-    pub fn add_resource_sync<T: legion::resource::Resource>(&mut self) {
-        self.syncers.push(Box::new(ResourceSyncer::<T>::default()));
-    }
-
-    pub fn add_component_sync<T: Clone + legion::storage::Component + specs::Component>(&mut self) {
-        self.syncers.push(Box::new(ComponentSyncer::<T>::default()));
-    }
-}
-
-#[derive(Default)]
-pub struct LegionSystems {
-    pub thread_locals: Vec<Box<dyn ThreadLocalSystem>>,
-    pub game: Vec<Box<dyn legion::system::Schedulable>>,
-    pub render: Vec<Box<dyn legion::system::Schedulable>>,
-}
 
 #[derive(Default)]
 pub struct LegionSyncFlagComponent;
@@ -77,21 +58,21 @@ where
         bimap: EntitiesBimapRef,
         entities: &Entities<'a>,
         storage: &mut WriteStorage<'a, T>,
-        legion_world: &mut legion::world::World,
+        legion_state: &mut legion::world::World,
     ) {
         let map = bimap.read().unwrap();
         match direction {
             SyncDirection::SpecsToLegion => {
                 for (entity, component) in (entities, storage).join() {
                     if let Some(legion_entity) = map.get_by_right(&entity) {
-                        let exists = legion_world
+                        let exists = legion_state
                             .get_component_mut::<T>(*legion_entity)
                             .is_some();
                         if exists {
-                            *legion_world.get_component_mut::<T>(*legion_entity).unwrap() =
+                            *legion_state.get_component_mut::<T>(*legion_entity).unwrap() =
                                 (*component).clone();
                         } else {
-                            legion_world.add_component(*legion_entity, (*component).clone());
+                            legion_state.add_component(*legion_entity, (*component).clone());
                         }
                     }
                 }
@@ -99,7 +80,7 @@ where
             SyncDirection::LegionToSpecs => {
                 use legion::prelude::*;
                 let mut query = <(Read<T>)>::query();
-                for (entity, component) in query.iter_entities(legion_world) {
+                for (entity, component) in query.iter_entities(legion_state) {
                     if let Some(specs_entity) = map.get_by_left(&entity) {
                         if let Some(specs_component) = storage.get_mut(*specs_entity) {
                             *specs_component = (*component).clone();
@@ -118,7 +99,7 @@ pub trait SyncerTrait: 'static + Send + Sync {
     fn sync(
         &self,
         world: &mut specs::World,
-        legion_world: &mut LegionWorld,
+        legion_state: &mut LegionState,
         direction: SyncDirection,
     );
 }
@@ -133,7 +114,7 @@ where
     fn sync(
         &self,
         world: &mut specs::World,
-        legion_world: &mut LegionWorld,
+        legion_state: &mut LegionState,
         direction: SyncDirection,
     ) {
         let (bimap, entities, mut storage) = <(
@@ -147,7 +128,7 @@ where
             bimap.clone(),
             &entities,
             &mut storage,
-            &mut legion_world.world,
+            &mut legion_state.world,
         );
     }
 }
@@ -162,26 +143,26 @@ where
     fn sync(
         &self,
         world: &mut specs::World,
-        legion_world: &mut LegionWorld,
+        legion_state: &mut LegionState,
         direction: SyncDirection,
     ) {
-        move_resource::<T>(world, legion_world, direction);
+        move_resource::<T>(world, legion_state, direction);
     }
 }
 
 pub fn move_resource<T: legion::resource::Resource>(
     world: &mut specs::World,
-    legion_world: &mut LegionWorld,
+    legion_state: &mut LegionState,
     direction: SyncDirection,
 ) {
     match direction {
         SyncDirection::SpecsToLegion => {
             if let Some(resource) = world.remove::<T>() {
-                legion_world.world.resources.insert(resource);
+                legion_state.world.resources.insert(resource);
             }
         }
         SyncDirection::LegionToSpecs => {
-            let resource = legion_world.world.resources.remove::<T>();
+            let resource = legion_state.world.resources.remove::<T>();
             if let Some(resource) = resource {
                 world.insert(resource);
             }
@@ -189,49 +170,9 @@ pub fn move_resource<T: legion::resource::Resource>(
     }
 }
 
-pub fn dispatch_legion(
-    specs_world: &mut specs::World,
-    legion_world: &mut LegionWorld,
-    legion_systems: &mut LegionSystems,
-) {
-    let syncers = legion_world.syncers.drain(..).collect::<Vec<_>>();
-
-    syncers
-        .iter()
-        .for_each(|s| s.sync(specs_world, legion_world, SyncDirection::SpecsToLegion));
-
-    {
-        let world = &legion_world.world;
-
-        let mut game_stage =
-            legion::system::StageExecutor::new(&mut legion_systems.game).execute(world);
-
-        let mut render_stage =
-            legion::system::StageExecutor::new(&mut legion_systems.render).execute(world);
-    }
-
-    syncers
-        .iter()
-        .for_each(|s| s.sync(specs_world, legion_world, SyncDirection::LegionToSpecs));
-
-    legion_world.syncers.extend(syncers.into_iter());
-}
-
-pub fn setup(
-    specs_world: &mut specs::World,
-    legion_world: &mut LegionWorld,
-    legion_systems: &mut LegionSystems,
-) {
-    let entity_map = Arc::new(RwLock::new(
-        BiMap::<legion::entity::Entity, specs::Entity>::new(),
-    ));
-    legion_world.world.resources.insert(entity_map.clone());
-    specs_world.insert(entity_map.clone());
-}
-
 pub fn sync_entities(
     specs_world: &mut specs::World,
-    legion_world: &mut LegionWorld,
+    legion_state: &mut LegionState,
     legion_listener_id: ListenerId,
 ) {
     use smallvec::SmallVec;
@@ -239,7 +180,7 @@ pub fn sync_entities(
     let mut new_entities = SmallVec::<[legion::entity::Entity; 512]>::new();
 
     let specs_entities = {
-        let entity_bimap = legion_world
+        let entity_bimap = legion_state
             .world
             .resources
             .get::<EntitiesBimapRef>()
@@ -261,7 +202,7 @@ pub fn sync_entities(
     };
 
     if !specs_entities.is_empty() {
-        let new_legion = legion_world
+        let new_legion = legion_state
             .world
             .insert((SpecsTag,), specs_entities.clone())
             .iter()
@@ -277,7 +218,7 @@ pub fn sync_entities(
             })
             .collect::<Vec<_>>();
 
-        let entity_bimap = legion_world
+        let entity_bimap = legion_state
             .world
             .resources
             .get_mut::<EntitiesBimapRef>()
@@ -288,8 +229,8 @@ pub fn sync_entities(
         }
     }
 
-    while let Ok(event) = legion_world.world.entity_channel().read(legion_listener_id) {
-        let entity_bimap = legion_world
+    while let Ok(event) = legion_state.world.entity_channel().read(legion_listener_id) {
+        let entity_bimap = legion_state
             .world
             .resources
             .get::<EntitiesBimapRef>()
@@ -306,7 +247,7 @@ pub fn sync_entities(
     }
 
     if !new_entities.is_empty() {
-        let entity_bimap = legion_world
+        let entity_bimap = legion_state
             .world
             .resources
             .get_mut::<EntitiesBimapRef>()

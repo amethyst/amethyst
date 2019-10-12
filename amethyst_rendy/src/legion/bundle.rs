@@ -17,7 +17,10 @@ use crate::{
     types::Backend,
 };
 use amethyst_assets::Processor;
-use amethyst_core::legion::{bundle::LegionBuilder, Resources, SystemBundle, Systems, World};
+use amethyst_core::legion::{
+    dispatcher::{DispatcherBuilder, Stage},
+    Resources, SystemBundle, World,
+};
 use amethyst_error::{format_err, Error};
 use derivative::Derivative;
 use std::collections::HashMap;
@@ -59,16 +62,12 @@ impl<B: Backend> RenderingBundle<B> {
 }
 
 impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
-    fn build(mut self, world: &mut World, systems: &mut Systems) -> Result<(), Error> {
+    fn build(mut self, world: &mut World, builder: &mut DispatcherBuilder) -> Result<(), Error> {
         use amethyst_core::legion::SystemDesc;
-        systems
-            .game
-            .push(MeshProcessorSystemDesc::<B>::default().build(world));
-        systems
-            .game
-            .push(TextureProcessorSystemDesc::<B>::default().build(world));
+        builder.add_system_desc(Stage::Begin, MeshProcessorSystemDesc::<B>::default());
+        builder.add_system_desc(Stage::Begin, TextureProcessorSystemDesc::<B>::default());
 
-        let mut builder = LegionBuilder::default();
+        let mut builder = DispatcherBuilder::default();
 
         for mut plugin in self.plugins.drain(..) {
             plugin.on_build(world, &mut builder)?;
@@ -77,11 +76,7 @@ impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
         let mat = crate::legion::system::create_default_mat::<B>(&world.resources);
         world.resources.insert(crate::mtl::MaterialDefaults(mat));
 
-        systems
-            .thread_locals
-            .push(Box::new(RenderingSystem::<B, _>::new(
-                self.into_graph_creator(),
-            )));
+        builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
 
         /*
         builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
@@ -146,7 +141,7 @@ pub trait RenderPlugin<B: Backend>: std::fmt::Debug + Send {
     fn on_build<'a, 'b>(
         &mut self,
         world: &mut World,
-        builder: &mut LegionBuilder,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         Ok(())
     }
