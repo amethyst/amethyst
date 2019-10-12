@@ -6,6 +6,7 @@
 
     - Add `use amethyst::ecs::WorldExt` to imports.
     - Replace `world.add_resource` with `world.insert`.
+    - `use amethyst::ecs::WorldExt;` for `world.read_resource`.
     - Regex replace `\bResources\b` with `World`. Check for false replacements.
     - Replace `world.res` with `world`.
     - Regex replace `\bres\b` with `world`.

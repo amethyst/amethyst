@@ -50,6 +50,7 @@ cargo run --example {{name}} --features "{{backend}}"
    3. [Auto FOV](#auto-fov)
    4. [Sprite Camera Follow](#sprite-camera-follow)
    5. [Locale](#locale)
+   6. [Tiles](#tiles)
 8. Games
    1. [Pong](#pong)
 
@@ -338,6 +339,14 @@ See you later!
 Bonjour!
 Au revoir!
 ```
+
+---
+
+## Tiles
+
+Showcases the `amethyst_tiles` crate.
+
+![tiles example screenshot](assets/img/tiles.png)
 
 ---
 
