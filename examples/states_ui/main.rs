@@ -45,22 +45,17 @@ pub fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets");
 
     let game_data = GameDataBuilder::default()
-
         // a lot of other bundles/systems depend on this (without it being explicitly clear), so it
         // makes sense to add it early on
         .with_bundle(TransformBundle::new())?
-
         // this bundle allows us to 'find' the Buttons and other UI elements later on
         .with_bundle(UiBundle::<StringBindings>::new())?
-
         // this allows us to reload '*.ron' files during execution
         .with_bundle(HotReloadBundle::default())?
-
         // without this System, our Program will silently (!) fail when trying to load the 'Game'.
         // (try it!)
         // This System takes care of Audio (in this case, the Button audio for hovering/clicking/...
         .with(Processor::<Source>::new(), "source_processor", &[])
-
         // With this System, we can register UI events and act accordingly.
         // In this example it simply prints the events, excluding it does not provide less
         // functionality.
@@ -69,16 +64,13 @@ pub fn main() -> amethyst::Result<()> {
             "ui_event_handler",
             &[],
         )
-
         // This system is in 'events.rs'. Basically, it registers UI events that
         // happen. Without it, the buttons will not react.
         .with_bundle(InputBundle::<StringBindings>::new())?
-
         // Necessary for the FPS counter in the upper left corner to work.
         // (simply uncommenting will fail at runtime, since the resource is expected to exist, you
         // need to uncomment line 107-114 in game.rs for it to still work)
         .with_bundle(FpsCounterBundle)?
-
         // Without this, we would not get a picture.
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
