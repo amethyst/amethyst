@@ -1,13 +1,7 @@
 use amethyst::{
     core::{frame_limiter::FrameRateLimitStrategy, Time},
     ecs::{Read, System, Write},
-    network::simulation::{
-        //        laminar::{LaminarNetworkBundle, LaminarSocket},
-        tcp::TcpNetworkBundle,
-        //        udp::UdpNetworkBundle,
-        NetworkSimulationTime,
-        TransportResource,
-    },
+    network::simulation::{tcp::TcpNetworkBundle, NetworkSimulationTime, TransportResource},
     prelude::*,
     utils::application_root_dir,
     Result,
