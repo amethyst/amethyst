@@ -10,13 +10,13 @@ use legion::system::Schedulable;
 use specs::{shred::ResourceId, World};
 
 #[derive(Default)]
-pub struct LegionBundle {
+pub struct LegionBuilder {
     systems: Vec<Box<dyn Consume>>,
     bundles: Vec<Box<dyn Consume>>,
     thread_locals: Vec<Box<dyn ThreadLocalSystem>>,
     syncers: Vec<Box<dyn sync::SyncerTrait>>,
 }
-impl LegionBundle {
+impl LegionBuilder {
     pub fn with_thread_local<D: ThreadLocalSystem + 'static>(mut self, system: D) -> Self {
         self.thread_locals.push(Box::new(system));
 
@@ -63,6 +63,10 @@ impl LegionBundle {
             }
         }
 
+        legion_systems
+            .thread_locals
+            .extend(self.thread_locals.drain(..));
+
         for syncer in self.syncers.drain(..) {
             world.syncers.push(syncer);
         }
@@ -85,7 +89,7 @@ impl LegionBundle {
         self
     }
 }
-impl<'a, 'b> SpecsSystemBundle<'a, 'b> for LegionBundle {
+impl<'a, 'b> SpecsSystemBundle<'a, 'b> for LegionBuilder {
     fn build(
         self,
         world: &mut World,

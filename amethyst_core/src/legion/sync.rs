@@ -36,6 +36,7 @@ impl LegionWorld {
 
 #[derive(Default)]
 pub struct LegionSystems {
+    pub thread_locals: Vec<Box<dyn ThreadLocalSystem>>,
     pub game: Vec<Box<dyn legion::system::Schedulable>>,
     pub render: Vec<Box<dyn legion::system::Schedulable>>,
 }

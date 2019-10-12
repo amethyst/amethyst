@@ -1,6 +1,8 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
-use crate::legion::system::{GraphCreator, MeshProcessorSystemDesc, TextureProcessorSystemDesc};
+use crate::legion::system::{
+    GraphCreator, MeshProcessorSystemDesc, RenderingSystem, TextureProcessorSystemDesc,
+};
 
 use crate::{
     rendy::{
@@ -15,7 +17,7 @@ use crate::{
     types::Backend,
 };
 use amethyst_assets::Processor;
-use amethyst_core::legion::{Resources, SystemBundle, Systems, World};
+use amethyst_core::legion::{bundle::LegionBuilder, Resources, SystemBundle, Systems, World};
 use amethyst_error::{format_err, Error};
 use derivative::Derivative;
 use std::collections::HashMap;
@@ -57,7 +59,7 @@ impl<B: Backend> RenderingBundle<B> {
 }
 
 impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
-    fn build(self, world: &mut World, systems: &mut Systems) -> Result<(), Error> {
+    fn build(mut self, world: &mut World, systems: &mut Systems) -> Result<(), Error> {
         use amethyst_core::legion::SystemDesc;
         systems
             .game
@@ -65,6 +67,21 @@ impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
         systems
             .game
             .push(TextureProcessorSystemDesc::<B>::default().build(world));
+
+        let mut builder = LegionBuilder::default();
+
+        for mut plugin in self.plugins.drain(..) {
+            plugin.on_build(world, &mut builder)?;
+        }
+
+        let mat = crate::legion::system::create_default_mat::<B>(&world.resources);
+        world.resources.insert(crate::mtl::MaterialDefaults(mat));
+
+        systems
+            .thread_locals
+            .push(Box::new(RenderingSystem::<B, _>::new(
+                self.into_graph_creator(),
+            )));
 
         /*
         builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
@@ -126,7 +143,11 @@ impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
 /// and signalling when the graph has to be rebuild.
 pub trait RenderPlugin<B: Backend>: std::fmt::Debug + Send {
     /// Hook for adding systems and bundles to the dispatcher.
-    fn on_build<'a, 'b>(&mut self, world: &mut World) -> Result<(), Error> {
+    fn on_build<'a, 'b>(
+        &mut self,
+        world: &mut World,
+        builder: &mut LegionBuilder,
+    ) -> Result<(), Error> {
         Ok(())
     }
 
@@ -198,7 +219,7 @@ impl<B: Backend> RenderPlan<B> {
         target_plan.add_extension(Box::new(closure));
     }
 
-    fn build(self, factory: &Factory<B>) -> Result<GraphBuilder<B, World>, Error> {
+    fn build(mut self, factory: &Factory<B>) -> Result<GraphBuilder<B, World>, Error> {
         let mut ctx = PlanContext {
             target_metadata: self
                 .targets

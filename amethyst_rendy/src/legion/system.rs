@@ -16,9 +16,8 @@ use amethyst_core::{
     components::Transform,
     ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, Write, WriteExpect},
     legion::{
-        self, bitset::BitSet, command::CommandBuffer, storage::ComponentTypeId,
-        system::Schedulable, LegionWorld, Resources, SystemBuilder, SystemDesc, Systems,
-        ThreadLocalSystem, World,
+        self, command::CommandBuffer, storage::ComponentTypeId, system::Schedulable, LegionWorld,
+        Resources, SystemBuilder, SystemDesc, Systems, ThreadLocalSystem, World,
     },
     timing::Time,
     Hidden, HiddenPropagate,
@@ -123,6 +122,7 @@ where
     G: GraphCreator<B>,
 {
     fn run(&mut self, world: &mut World) {
+        log::debug!("RenderingSystem");
         let rebuild = self.graph_creator.rebuild(world);
         if self.graph.is_none() || rebuild {
             //   self.rebuild_graph(world);
@@ -200,7 +200,7 @@ fn dispose(mut self, world: &mut World) {
 #[derivative(Default(bound = ""))]
 pub struct MeshProcessorSystemDesc<B: Backend>(PhantomData<B>);
 impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
-    fn build(self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
+    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
         SystemBuilder::<()>::new("MeshProcessorSystem")
             .write_resource::<AssetStorage<Mesh>>()
             .read_resource::<QueueId>()
@@ -238,7 +238,7 @@ impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
 #[derivative(Default(bound = ""))]
 pub struct TextureProcessorSystemDesc<B: Backend>(PhantomData<B>);
 impl<B: Backend> SystemDesc for TextureProcessorSystemDesc<B> {
-    fn build(self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
+    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
         SystemBuilder::<()>::new("TextureProcessorSystem")
             .write_resource::<AssetStorage<Texture>>()
             .read_resource::<QueueId>()
@@ -280,7 +280,7 @@ impl<B: Backend> SystemDesc for TextureProcessorSystemDesc<B> {
     }
 }
 
-fn create_default_mat<B: Backend>(res: &mut Resources) -> Material {
+pub(crate) fn create_default_mat<B: Backend>(res: &Resources) -> Material {
     use crate::mtl::TextureOffset;
 
     use amethyst_assets::Loader;

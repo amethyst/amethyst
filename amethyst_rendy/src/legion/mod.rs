@@ -6,12 +6,13 @@ use derivative::Derivative;
 use rendy::factory::Factory;
 use std::marker::PhantomData;
 pub mod bundle;
+pub mod plugins;
 pub mod system;
 
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct RenderLegionBundle<B: Backend>(PhantomData<B>);
-impl<B: Backend> RenderLegionBundle<B> {
+pub struct RenderLegionBuilder<B: Backend>(PhantomData<B>);
+impl<B: Backend> RenderLegionBuilder<B> {
     pub fn prepare(
         mut self,
         world: &mut sync::LegionWorld,
@@ -41,12 +42,14 @@ impl<B: Backend> RenderLegionBundle<B> {
         world.add_resource_sync::<crate::visibility::Visibility>();
         world.add_resource_sync::<crate::MaterialDefaults>();
 
+        world.add_resource_sync::<amethyst_assets::Loader>();
+
         world.add_resource_sync::<Factory<B>>();
 
         self
     }
 }
-impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderLegionBundle<B> {
+impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderLegionBuilder<B> {
     fn build(
         self,
         world: &mut specs::World,

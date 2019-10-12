@@ -16,7 +16,7 @@ pub trait Consume {
 }
 
 pub trait SystemDesc: 'static {
-    fn build(self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable>;
+    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable>;
 }
 
 pub trait SystemBundle {

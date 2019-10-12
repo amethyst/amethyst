@@ -33,6 +33,7 @@ use amethyst::{
     renderer::{
         bundle::{RenderPlan, RenderPlugin},
         debug_drawing::DebugLines,
+        legion::{bundle::RenderingBundle, plugins::RenderToWindow},
         light::{Light, PointLight},
         palette::{LinSrgba, Srgb, Srgba},
         rendy::{
@@ -44,8 +45,8 @@ use amethyst::{
         types::{DefaultBackend, Mesh, Texture},
         visibility::BoundingSphere,
         ActiveCamera, Camera, Factory, ImageFormat, Material, MaterialDefaults, RenderDebugLines,
-        RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D, RenderSkybox, RenderToWindow,
-        RenderingBundle, SpriteRender, SpriteSheet, SpriteSheetFormat, Transparent,
+        RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D, RenderSkybox, SpriteRender,
+        SpriteSheet, SpriteSheetFormat, Transparent,
     },
     utils::{
         application_root_dir,
@@ -676,17 +677,29 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         // Legion stuff
         .with_bundle(
-            amethyst::core::legion::bundle::LegionBundle::default()
-                .with_resource_sync::<DebugLines>()
-                .with_component_sync::<Orbit>()
-                .with_system_desc(OrbitSystemDesc::default())
-                .with_bundle(amethyst::renderer::legion::bundle::RenderingBundle::<
-                    DefaultBackend,
-                >::default())
+            amethyst::renderer::legion::RenderLegionBuilder::<DefaultBackend>::default()
                 .prepare(legion_world, legion_systems),
         )?
         .with_bundle(
-            amethyst::renderer::legion::RenderLegionBundle::<DefaultBackend>::default()
+            amethyst::core::legion::bundle::LegionBuilder::default()
+                .with_resource_sync::<DebugLines>()
+                .with_component_sync::<Orbit>()
+                .with_system_desc(OrbitSystemDesc::default())
+                //with_bundle(
+                //            RenderingBundle::<DefaultBackend>::new()
+                //                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                //                .with_plugin(RenderSwitchable3D::default())
+                //                .with_plugin(RenderFlat2D::default())
+                //                .with_plugin(RenderDebugLines::default())
+                //                .with_plugin(RenderSkybox::with_colors(
+                //                    Srgb::new(0.82, 0.51, 0.50),
+                //                    Srgb::new(0.18, 0.11, 0.85),
+                //                )),
+                //        )
+                .with_bundle(
+                    RenderingBundle::<DefaultBackend>::default()
+                        .with_plugin(RenderToWindow::from_config_path(display_config_path)),
+                )
                 .prepare(legion_world, legion_systems),
         )?
         .with(AutoFovSystem::default(), "auto_fov", &[])
@@ -733,18 +746,7 @@ fn main() -> amethyst::Result<()> {
             "transform_system",
             "animation_control",
             "sampler_interpolation",
-        ]))?
-        .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path))
-                .with_plugin(RenderSwitchable3D::default())
-                .with_plugin(RenderFlat2D::default())
-                .with_plugin(RenderDebugLines::default())
-                .with_plugin(RenderSkybox::with_colors(
-                    Srgb::new(0.82, 0.51, 0.50),
-                    Srgb::new(0.18, 0.11, 0.85),
-                )),
-        )?;
+        ]))?;
 
     let mut game = Application::new(assets_dir, example, game_data)?;
     game.run();
