@@ -1,5 +1,5 @@
 use crate::{config::DisplayConfig, resources::ScreenDimensions};
-use amethyst_config::Config;
+use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
     ecs::{ReadExpect, RunNow, System, SystemData, World, Write, WriteExpect},
     shrev::EventChannel,
@@ -18,8 +18,12 @@ impl WindowSystem {
         world: &mut World,
         events_loop: &EventsLoop,
         path: impl AsRef<Path>,
-    ) -> Self {
-        Self::from_config(world, events_loop, DisplayConfig::load(path.as_ref()))
+    ) -> Result<Self, ConfigError> {
+        Ok(Self::from_config(
+            world,
+            events_loop,
+            DisplayConfig::load(path.as_ref())?,
+        ))
     }
 
     /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as

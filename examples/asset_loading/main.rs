@@ -127,7 +127,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderSkybox::with_colors(
                     Srgb::new(0.82, 0.51, 0.50),
