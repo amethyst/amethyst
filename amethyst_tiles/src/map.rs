@@ -447,4 +447,55 @@ mod tests {
             Point3::new(-320.0, 310.0, 20.0),
         );
     }
+
+    pub fn test_coord_with_map_transform(
+        transform: &Matrix4<f32>,
+        tile: Point3<u32>,
+        world: Point3<f32>,
+        map_transform: &Transform,
+    ) {
+        let world_result = to_world(transform, &tile, Some(map_transform));
+        assert_eq!(world_result, world.coords);
+        let tile_result = to_tile(transform, &world.coords, Some(map_transform)).unwrap();
+        assert_eq!(tile_result, tile);
+
+        let world_reverse = to_tile(transform, &world_result, Some(map_transform)).unwrap();
+        assert_eq!(world_reverse, tile);
+        let tile_reverse = to_world(transform, &tile_result, Some(map_transform));
+        assert_eq!(tile_reverse, world.coords);
+    }
+
+    #[test]
+    pub fn tilemap_coord_conversions_with_map_transform() {
+        let transform = create_transform(&Vector3::new(64, 64, 64), &Vector3::new(10, 10, 1));
+        let mut map_transform = Transform::default();
+        map_transform.set_translation_xyz(-10.0, 10.0, 0.0);
+        map_transform.copy_local_to_global();
+
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(1, 1, 0),
+            Point3::new(-320.0, 320.0, 0.0),
+            &map_transform,
+        );
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(2, 1, 0),
+            Point3::new(-310.0, 320.0, 0.0),
+            &map_transform,
+        );
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(1, 2, 0),
+            Point3::new(-320.0, 310.0, 0.0),
+            &map_transform,
+        );
+
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(1, 2, 20),
+            Point3::new(-320.0, 310.0, 20.0),
+            &map_transform,
+        );
+    }
 }
