@@ -34,11 +34,12 @@ impl WindowSystem {
 
     /// Create a new `WindowSystem` wrapping the provided `Window`
     pub fn new(world: &mut World, window: Window) -> Self {
+        let hidpi = window.get_hidpi_factor();
         let (width, height) = window
             .get_inner_size()
             .expect("Window closed during initialization!")
+            .to_physical(hidpi)
             .into();
-        let hidpi = window.get_hidpi_factor();
         world.insert(ScreenDimensions::new(width, height, hidpi));
         world.insert(window);
         Self
