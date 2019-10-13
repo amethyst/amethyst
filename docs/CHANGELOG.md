@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - amethyst_network completely rewritten to provide a new baseline with which to build. ([#1917])
 - Cleaned up tiles example. Added rotation and translation tests, fixed raycast debug box. Added default zoom to PROJECT
   perspective projection since no one knew to zoom out. ([#1974])
-- TileMaps to_tile and to_world now take an Option<&Tranform> that allows them to work if the entire map in 
+- TileMaps to_tile and to_world now take an Option<&Transform> that allows them to work if the entire map in 
  translated. ([#1987])
 
 ### Deprecated
