@@ -3,7 +3,7 @@ use amethyst_config::Config;
 use amethyst_core::{
     legion::{
         system::{Schedulable, SystemBuilder},
-        SystemDesc, ThreadLocalDesc, ThreadLocalSystem, World,
+        SystemDesc, ThreadLocal, ThreadLocalDesc, World,
     },
     shrev::EventChannel,
 };
@@ -124,7 +124,7 @@ impl EventsLoopSystem {
     }
 }
 
-impl ThreadLocalSystem for EventsLoopSystem {
+impl ThreadLocal for EventsLoopSystem {
     fn run(&mut self, world: &mut World) {
         let mut event_handler = world.resources.get_mut::<EventChannel<Event>>().unwrap();
 
@@ -132,17 +132,7 @@ impl ThreadLocalSystem for EventsLoopSystem {
         self.events_loop.poll_events(|event| {
             events.push(event);
         });
-        println!("RUN");
         event_handler.drain_vec_write(events);
     }
     fn dispose(self, world: &mut World) {}
-}
-
-pub struct EventsLoopSystemDesc {
-    pub(crate) event_loop: EventsLoop,
-}
-impl ThreadLocalDesc for EventsLoopSystemDesc {
-    fn build(mut self, world: &mut World) -> Box<dyn ThreadLocalSystem> {
-        Box::new(EventsLoopSystem::new(self.event_loop))
-    }
 }

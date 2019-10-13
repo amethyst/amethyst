@@ -22,7 +22,7 @@ pub enum Stage {
 }
 
 pub struct Dispatcher {
-    pub thread_locals: Vec<Box<dyn ThreadLocalSystem>>,
+    pub thread_locals: Vec<Box<dyn ThreadLocal>>,
     pub stages: HashMap<Stage, Vec<Box<dyn legion::system::Schedulable>>>,
 }
 impl Default for Dispatcher {
@@ -75,14 +75,25 @@ impl Dispatcher {
 #[derive(Default)]
 pub struct DispatcherBuilder {
     systems: Vec<(Stage, Box<dyn ConsumeDesc>)>,
+    thread_locals: Vec<Box<dyn ConsumeDesc>>,
     bundles: Vec<Box<dyn ConsumeDesc>>,
-    pub thread_locals: Vec<Box<dyn ConsumeDesc>>,
 }
 impl DispatcherBuilder {
-    pub fn add_thread_local<D: ThreadLocalDesc + 'static>(&mut self, system: D) {
+    pub fn add_thread_local<D: ThreadLocal + 'static>(&mut self, system: D) {
+        self.thread_locals
+            .push(Box::new(DispatcherThreadLocal(system)));
+    }
+
+    pub fn add_thread_local_desc<D: ThreadLocalDesc + 'static>(&mut self, system: D) {
         self.thread_locals
             .push(Box::new(DispatcherThreadLocalDesc(system)));
-        println!("thread locals = {}", self.thread_locals.len());
+    }
+
+    pub fn add_system<D: Schedulable + 'static>(&mut self, stage: Stage, desc: D) {
+        self.systems.push((
+            stage,
+            Box::new(DispatcherSystem(stage, desc)) as Box<dyn ConsumeDesc>,
+        ));
     }
 
     pub fn add_system_desc<D: SystemDesc + 'static>(&mut self, stage: Stage, desc: D) {
@@ -97,8 +108,20 @@ impl DispatcherBuilder {
             .push(Box::new(DispatcherSystemBundle(bundle)) as Box<dyn ConsumeDesc>);
     }
 
-    pub fn with_thread_local<D: ThreadLocalDesc + 'static>(mut self, system: D) -> Self {
+    pub fn with_thread_local<D: ThreadLocal + 'static>(mut self, system: D) -> Self {
         self.add_thread_local(system);
+
+        self
+    }
+
+    pub fn with_thread_local_desc<D: ThreadLocalDesc + 'static>(mut self, system: D) -> Self {
+        self.add_thread_local_desc(system);
+
+        self
+    }
+
+    pub fn with_system<D: Schedulable + 'static>(mut self, stage: Stage, desc: D) -> Self {
+        self.add_system(stage, desc);
 
         self
     }
@@ -134,13 +157,14 @@ impl DispatcherBuilder {
         }
 
         for bundle in self.bundles.drain(..) {
-            let mut test = DispatcherBuilder::default();
             println!("Consuming bundle...");
-            bundle.consume(world, &mut dispatcher, &mut test).unwrap();
+            bundle
+                .consume(world, &mut dispatcher, &mut recursive_builder)
+                .unwrap();
             println!(
                 "BUNDLE thread loals  = {}, recursive={}",
                 self.thread_locals.len(),
-                test.thread_locals.len()
+                recursive_builder.thread_locals.len()
             );
         }
 

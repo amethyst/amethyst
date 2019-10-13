@@ -6,6 +6,7 @@ use crate::legion::system::{
 
 use crate::{
     rendy::{
+        command::QueueId,
         factory::Factory,
         graph::{
             render::{RenderGroupBuilder, RenderPassNodeBuilder, SubpassBuilder},
@@ -67,16 +68,28 @@ impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
         builder.add_system_desc(Stage::Begin, MeshProcessorSystemDesc::<B>::default());
         builder.add_system_desc(Stage::Begin, TextureProcessorSystemDesc::<B>::default());
 
-        let mut builder = DispatcherBuilder::default();
-
         for mut plugin in self.plugins.drain(..) {
-            plugin.on_build(world, &mut builder)?;
+            plugin.on_build(world, builder)?;
         }
+
+        let config: rendy::factory::Config = Default::default();
+        let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
+
+        let queue_id = QueueId {
+            family: families.family_by_index(0).id(),
+            index: 0,
+        };
+
+        world.resources.insert(factory);
+        world.resources.insert(queue_id);
 
         let mat = crate::legion::system::create_default_mat::<B>(&world.resources);
         world.resources.insert(crate::mtl::MaterialDefaults(mat));
 
-        //builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
+        builder.add_thread_local(RenderingSystem::<B, _>::new(
+            self.into_graph_creator(),
+            families,
+        ));
 
         /*
         builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);

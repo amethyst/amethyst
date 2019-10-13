@@ -17,7 +17,7 @@ use amethyst_core::{
     ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, Write, WriteExpect},
     legion::{
         self, command::CommandBuffer, storage::ComponentTypeId, system::Schedulable, LegionState,
-        Resources, SystemBuilder, SystemDesc, ThreadLocalSystem, World,
+        Resources, SystemBuilder, SystemDesc, ThreadLocal, World,
     },
     timing::Time,
     Hidden, HiddenPropagate,
@@ -54,7 +54,7 @@ where
     G: GraphCreator<B>,
 {
     graph: Option<Graph<B, World>>,
-    families: Option<Families<B>>,
+    families: Families<B>,
     graph_creator: G,
 }
 
@@ -64,10 +64,10 @@ where
     G: GraphCreator<B>,
 {
     /// Create a new `RenderingSystem` with the supplied graph via `GraphCreator`
-    pub fn new(graph_creator: G) -> Self {
+    pub fn new(graph_creator: G, families: Families<B>) -> Self {
         Self {
             graph: None,
-            families: None,
+            families,
             graph_creator,
         }
     }
@@ -100,7 +100,7 @@ where
             #[cfg(feature = "profiler")]
             profile_scope!("build_graph");
             builder
-                .build(&mut factory, self.families.as_mut().unwrap(), world)
+                .build(&mut factory, &mut self.families, world)
                 .unwrap()
         };
 
@@ -109,15 +109,15 @@ where
 
     fn run_graph(&mut self, world: &World) {
         let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
-        factory.maintain(self.families.as_mut().unwrap());
+        factory.maintain(&mut self.families);
         self.graph
             .as_mut()
             .unwrap()
-            .run(&mut factory, self.families.as_mut().unwrap(), world)
+            .run(&mut factory, &mut self.families, world)
     }
 }
 
-impl<B, G> ThreadLocalSystem for RenderingSystem<B, G>
+impl<B, G> ThreadLocal for RenderingSystem<B, G>
 where
     B: Backend,
     G: GraphCreator<B>,
