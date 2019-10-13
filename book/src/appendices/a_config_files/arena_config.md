@@ -36,7 +36,7 @@ use crate::config::ArenaConfig;
 We'll need to load the config at startup, so let's add this to the `run` function in `main.rs`
 
 ```rust,ignore
-let arena_config = ArenaConfig::load(&config);
+let arena_config = ArenaConfig::load(&config)?;
 ```
 
 Now that we have loaded our config, we want to add it to the world so other modules can access
