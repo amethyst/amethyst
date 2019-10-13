@@ -305,15 +305,13 @@ fn to_world(
     map_transform: Option<&Transform>,
 ) -> Vector3<f32> {
 
-    let coord_f = if let Some(map_trans) = map_transform {
-        map_trans
-            .global_view_matrix()
-            .transform_point(&Point3::new(coord.x as f32, -1.0 * coord.y as f32, coord.z as f32))
-    } else {
-        Point3::new(coord.x as f32, -1.0 * coord.y as f32, coord.z as f32)
-    };
-
-    transform.transform_point(&coord_f).coords
+    let coord_f = Point3::new(coord.x as f32, -1.0 * coord.y as f32, coord.z as f32);
+    if let Some(map_trans) = map_transform {
+        map_trans.transform_point( transform.transform_point(&coord_f).coords)
+    }
+    else{
+         transform.transform_point(&coord_f).coords
+    }
 }
 
 fn to_tile(
