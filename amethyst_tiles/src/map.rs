@@ -5,6 +5,7 @@ use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
     ecs::{Component, HashMapStorage, World},
     math::{Matrix4, Point3, Vector3},
+    Transform,
 };
 use amethyst_rendy::{palette::Srgba, SpriteSheet};
 
@@ -42,12 +43,16 @@ pub trait Map {
     /// Convert a tile coordinate `Point3<u32>` to an amethyst world-coordinate space coordinate `Point3<f32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
     /// maps `origin` and `tile_dimensions` respectively.
-    fn to_world(&self, coord: &Point3<u32>) -> Vector3<f32>;
+    fn to_world(&self, coord: &Point3<u32>, map_transform: Option<Transform>) -> Vector3<f32>;
 
     /// Convert an amethyst world-coordinate space coordinate `Point3<f32>` to a tile coordinate `Point3<u32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
     /// maps `origin` and `tile_dimensions` respectively.
-    fn to_tile(&self, coord: &Vector3<f32>) -> Option<Point3<u32>>;
+    fn to_tile(
+        &self,
+        coord: &Vector3<f32>,
+        map_transform: Option<Transform>,
+    ) -> Option<Point3<u32>>;
 
     /// Returns the `Matrix4` transform which was created for transforming between world and tile coordinate spaces.
     fn transform(&self) -> &Matrix4<f32>;
@@ -180,14 +185,18 @@ impl<T: Tile, E: CoordinateEncoder> Map for TileMap<T, E> {
     }
 
     #[inline]
-    fn to_world(&self, coord: &Point3<u32>) -> Vector3<f32> {
-        to_world(&self.transform, coord)
+    fn to_world(&self, coord: &Point3<u32>, map_transform: Option<Transform>) -> Vector3<f32> {
+        to_world(&self.transform, coord, map_transform)
     }
 
     #[inline]
     #[allow(clippy::let_and_return)]
-    fn to_tile(&self, coord: &Vector3<f32>) -> Option<Point3<u32>> {
-        let ret = to_tile(&self.transform, coord);
+    fn to_tile(
+        &self,
+        coord: &Vector3<f32>,
+        map_transform: Option<Transform>,
+    ) -> Option<Point3<u32>> {
+        let ret = to_tile(&self.transform, coord, map_transform);
         #[cfg(debug_assertions)]
         {
             if let Some(r) = ret.as_ref() {
@@ -290,12 +299,20 @@ fn create_transform(map_dimensions: &Vector3<u32>, tile_dimensions: &Vector3<u32
 }
 
 #[allow(clippy::cast_precision_loss)]
-fn to_world(transform: &Matrix4<f32>, coord: &Point3<u32>) -> Vector3<f32> {
+fn to_world(
+    transform: &Matrix4<f32>,
+    coord: &Point3<u32>,
+    map_transform: Option<Transform>,
+) -> Vector3<f32> {
     let coord_f = Point3::new(coord.x as f32, -1.0 * coord.y as f32, coord.z as f32);
     transform.transform_point(&coord_f).coords
 }
 
-fn to_tile(transform: &Matrix4<f32>, coord: &Vector3<f32>) -> Option<Point3<u32>> {
+fn to_tile(
+    transform: &Matrix4<f32>,
+    coord: &Vector3<f32>,
+    map_transform: Option<Transform>,
+) -> Option<Point3<u32>> {
     let point = Point3::from(*coord);
 
     let mut inverse = transform
@@ -378,14 +395,14 @@ mod tests {
     }
 
     pub fn test_coord(transform: &Matrix4<f32>, tile: Point3<u32>, world: Point3<f32>) {
-        let world_result = to_world(transform, &tile);
+        let world_result = to_world(transform, &tile, None);
         assert_eq!(world_result, world.coords);
-        let tile_result = to_tile(transform, &world.coords).unwrap();
+        let tile_result = to_tile(transform, &world.coords, None).unwrap();
         assert_eq!(tile_result, tile);
 
-        let world_reverse = to_tile(transform, &world_result).unwrap();
+        let world_reverse = to_tile(transform, &world_result, None).unwrap();
         assert_eq!(world_reverse, tile);
-        let tile_reverse = to_world(transform, &tile_result);
+        let tile_reverse = to_world(transform, &tile_result, None);
         assert_eq!(tile_reverse, world.coords);
     }
 
