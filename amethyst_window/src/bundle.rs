@@ -1,8 +1,16 @@
-use crate::{DisplayConfig, EventsLoopSystem, WindowSystem};
+use crate::{
+    DisplayConfig, EventsLoopSystem, EventsLoopSystemDesc, WindowSystem, WindowSystemDesc,
+};
 use amethyst_config::Config;
-use amethyst_core::{bundle::SystemBundle, ecs::World, shred::DispatcherBuilder};
+use amethyst_core::{
+    legion::{
+        dispatcher::{DispatcherBuilder, Stage},
+        SystemBundle, World,
+    },
+    shrev::EventChannel,
+};
 use amethyst_error::Error;
-use winit::EventsLoop;
+use winit::{Event, EventsLoop};
 
 /// Screen width used in predefined display configuration.
 #[cfg(feature = "test-support")]
@@ -47,19 +55,23 @@ impl WindowBundle {
     }
 }
 
-impl<'a, 'b> SystemBundle<'a, 'b> for WindowBundle {
+impl SystemBundle for WindowBundle {
     fn build(
         self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
         let event_loop = EventsLoop::new();
-        builder.add(
-            WindowSystem::from_config(world, &event_loop, self.config),
-            "window",
-            &[],
+
+        world.resources.insert(EventChannel::<Event>::default());
+
+        builder.add_system_desc(
+            Stage::Render,
+            WindowSystemDesc::new(WindowSystem::from_config(world, &event_loop, self.config)),
         );
-        builder.add_thread_local(EventsLoopSystem::new(event_loop));
+
+        builder.add_thread_local(EventsLoopSystemDesc { event_loop });
+        println!("Added thread local from bundle");
         Ok(())
     }
 }

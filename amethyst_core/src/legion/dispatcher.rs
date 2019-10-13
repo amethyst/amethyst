@@ -55,17 +55,34 @@ impl Dispatcher {
             }
         }
     }
+
+    pub fn merge(mut self, mut other: Dispatcher) -> Self {
+        println!(
+            "thread-local merging {} vs. {}",
+            self.thread_locals.len(),
+            other.thread_locals.len()
+        );
+
+        self.thread_locals.extend(other.thread_locals.drain(..));
+        for (k, v) in self.stages.iter_mut() {
+            v.extend(other.stages.get_mut(k).unwrap().drain(..));
+        }
+
+        self
+    }
 }
 
 #[derive(Default)]
 pub struct DispatcherBuilder {
     systems: Vec<(Stage, Box<dyn ConsumeDesc>)>,
     bundles: Vec<Box<dyn ConsumeDesc>>,
-    thread_locals: Vec<Box<dyn ThreadLocalSystem>>,
+    pub thread_locals: Vec<Box<dyn ConsumeDesc>>,
 }
 impl DispatcherBuilder {
-    pub fn add_thread_local<D: ThreadLocalSystem + 'static>(&mut self, system: D) {
-        self.thread_locals.push(Box::new(system));
+    pub fn add_thread_local<D: ThreadLocalDesc + 'static>(&mut self, system: D) {
+        self.thread_locals
+            .push(Box::new(DispatcherThreadLocalDesc(system)));
+        println!("thread locals = {}", self.thread_locals.len());
     }
 
     pub fn add_system_desc<D: SystemDesc + 'static>(&mut self, stage: Stage, desc: D) {
@@ -80,50 +97,73 @@ impl DispatcherBuilder {
             .push(Box::new(DispatcherSystemBundle(bundle)) as Box<dyn ConsumeDesc>);
     }
 
-    pub fn with_thread_local<D: ThreadLocalSystem + 'static>(mut self, system: D) -> Self {
-        self.thread_locals.push(Box::new(system));
+    pub fn with_thread_local<D: ThreadLocalDesc + 'static>(mut self, system: D) -> Self {
+        self.add_thread_local(system);
 
         self
     }
 
     pub fn with_system_desc<D: SystemDesc + 'static>(mut self, stage: Stage, desc: D) -> Self {
-        self.systems.push((
-            stage,
-            Box::new(DispatcherSystemDesc(stage, desc)) as Box<dyn ConsumeDesc>,
-        ));
+        self.add_system_desc(stage, desc);
 
         self
     }
 
     pub fn with_bundle<D: SystemBundle + 'static>(mut self, bundle: D) -> Self {
-        self.bundles
-            .push(Box::new(DispatcherSystemBundle(bundle)) as Box<dyn ConsumeDesc>);
+        self.add_bundle(bundle);
 
         self
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.systems.is_empty() && self.bundles.is_empty() && self.thread_locals.is_empty()
     }
 
     pub fn build(mut self, world: &mut legion::world::World) -> Dispatcher {
         let mut dispatcher = Dispatcher::default();
 
-        let mut recursive_builder = DispatcherBuilder::default();
+        println!("BUILD systems loals  = {}", self.systems.len(),);
+        println!("BUILD thread loals  = {}", self.thread_locals.len(),);
 
+        let mut recursive_builder = DispatcherBuilder::default();
+        println!("WTF WTF START BUILD");
         for desc in self.systems.drain(..) {
             desc.1
                 .consume(world, &mut dispatcher, &mut recursive_builder)
-                .unwrap()
+                .unwrap();
         }
 
         for bundle in self.bundles.drain(..) {
-            bundle
-                .consume(world, &mut dispatcher, &mut recursive_builder)
-                .unwrap()
+            let mut test = DispatcherBuilder::default();
+            println!("Consuming bundle...");
+            bundle.consume(world, &mut dispatcher, &mut test).unwrap();
+            println!(
+                "BUNDLE thread loals  = {}, recursive={}",
+                self.thread_locals.len(),
+                test.thread_locals.len()
+            );
         }
 
-        dispatcher
-            .thread_locals
-            .extend(self.thread_locals.drain(..));
+        for desc in self.thread_locals.drain(..) {
+            desc.consume(world, &mut dispatcher, &mut recursive_builder)
+                .unwrap();
+        }
 
-        dispatcher
-        //recursive_builder.build(world)
+        println!(
+            "BUILD thread recursive={}",
+            recursive_builder.thread_locals.len()
+        );
+        println!(
+            "BUILD systems  recursive={}",
+            recursive_builder.systems.len()
+        );
+
+        // TODO: We need to recursively iterate any newly added bundles
+        if !recursive_builder.is_empty() {
+            println!("recurse");
+            dispatcher.merge(recursive_builder.build(world))
+        } else {
+            dispatcher
+        }
     }
 }

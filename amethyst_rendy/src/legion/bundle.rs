@@ -76,7 +76,7 @@ impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
         let mat = crate::legion::system::create_default_mat::<B>(&world.resources);
         world.resources.insert(crate::mtl::MaterialDefaults(mat));
 
-        builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
+        //builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
 
         /*
         builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);

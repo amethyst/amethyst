@@ -1,7 +1,10 @@
 use crate::{config::DisplayConfig, resources::ScreenDimensions};
 use amethyst_config::Config;
 use amethyst_core::{
-    ecs::{ReadExpect, RunNow, System, SystemData, World, Write, WriteExpect},
+    legion::{
+        system::{Schedulable, SystemBuilder},
+        SystemDesc, ThreadLocalDesc, ThreadLocalSystem, World,
+    },
     shrev::EventChannel,
 };
 use std::path::Path;
@@ -38,9 +41,15 @@ impl WindowSystem {
             .get_inner_size()
             .expect("Window closed during initialization!")
             .into();
+
         let hidpi = window.get_hidpi_factor();
-        world.insert(ScreenDimensions::new(width, height, hidpi));
-        world.insert(window);
+
+        world
+            .resources
+            .insert(ScreenDimensions::new(width, height, hidpi));
+
+        world.resources.insert(window);
+
         Self
     }
 
@@ -72,14 +81,26 @@ impl WindowSystem {
     }
 }
 
-impl<'a> System<'a> for WindowSystem {
-    type SystemData = (WriteExpect<'a, ScreenDimensions>, ReadExpect<'a, Window>);
-
-    fn run(&mut self, (mut screen_dimensions, window): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("window_system");
-
-        self.manage_dimensions(&mut screen_dimensions, &window);
+pub struct WindowSystemDesc {
+    pub system: WindowSystem,
+}
+impl WindowSystemDesc {
+    pub fn new(system: WindowSystem) -> Self {
+        Self { system }
+    }
+}
+impl SystemDesc for WindowSystemDesc {
+    fn build(self, world: &mut World) -> Box<dyn Schedulable> {
+        SystemBuilder::<()>::new("WindowSystem")
+            .write_resource::<ScreenDimensions>()
+            .read_resource::<Window>()
+            .build_disposable(
+                self.system,
+                |state, _, _, (screen_dimensions, window), _| {
+                    state.manage_dimensions(&mut &mut *screen_dimensions, &window);
+                },
+                |state, world| {},
+            )
     }
 }
 
@@ -103,18 +124,25 @@ impl EventsLoopSystem {
     }
 }
 
-impl<'a> RunNow<'a> for EventsLoopSystem {
-    fn run_now(&mut self, world: &'a World) {
-        let mut event_handler = <Write<'a, EventChannel<Event>>>::fetch(world);
+impl ThreadLocalSystem for EventsLoopSystem {
+    fn run(&mut self, world: &mut World) {
+        let mut event_handler = world.resources.get_mut::<EventChannel<Event>>().unwrap();
 
         let events = &mut self.events;
         self.events_loop.poll_events(|event| {
             events.push(event);
         });
+        println!("RUN");
         event_handler.drain_vec_write(events);
     }
+    fn dispose(self, world: &mut World) {}
+}
 
-    fn setup(&mut self, world: &mut World) {
-        <Write<'a, EventChannel<Event>>>::setup(world);
+pub struct EventsLoopSystemDesc {
+    pub(crate) event_loop: EventsLoop,
+}
+impl ThreadLocalDesc for EventsLoopSystemDesc {
+    fn build(mut self, world: &mut World) -> Box<dyn ThreadLocalSystem> {
+        Box::new(EventsLoopSystem::new(self.event_loop))
     }
 }

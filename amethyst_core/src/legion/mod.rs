@@ -14,6 +14,15 @@ pub trait SystemDesc: 'static {
     fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable>;
 }
 
+pub trait ThreadLocalSystem {
+    fn run(&mut self, world: &mut World);
+    fn dispose(self, world: &mut World);
+}
+
+pub trait ThreadLocalDesc: 'static {
+    fn build(mut self, world: &mut legion::world::World) -> Box<dyn ThreadLocalSystem>;
+}
+
 pub trait SystemBundle {
     fn build(
         self,
@@ -22,19 +31,16 @@ pub trait SystemBundle {
     ) -> Result<(), amethyst_error::Error>;
 }
 
-pub struct DispatcherSystemDesc<B>(Stage, B)
-where
-    B: SystemDesc;
+pub struct DispatcherSystemDesc<B>(Stage, B);
 
 impl<B: SystemDesc> ConsumeDesc for DispatcherSystemDesc<B> {
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        stages: &mut Dispatcher,
+        dispatcher: &mut Dispatcher,
         _: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
-        println!("Stages = {:?}", stages.stages.len());
-        stages
+        dispatcher
             .stages
             .get_mut(&self.0)
             .unwrap()
@@ -43,9 +49,7 @@ impl<B: SystemDesc> ConsumeDesc for DispatcherSystemDesc<B> {
     }
 }
 
-pub struct DispatcherSystemBundle<B>(B)
-where
-    B: SystemBundle;
+pub struct DispatcherSystemBundle<B>(B);
 
 impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
     fn consume(
@@ -54,13 +58,28 @@ impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
         _: &mut Dispatcher,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
-        self.0.build(world, builder)
+        self.0.build(world, builder)?;
+        Ok(())
     }
 }
 
-pub trait ThreadLocalSystem {
-    fn run(&mut self, world: &mut World);
-    fn dispose(self, world: &mut World);
+pub struct DispatcherThreadLocalDesc<B>(B);
+
+impl<B: ThreadLocalDesc> ConsumeDesc for DispatcherThreadLocalDesc<B> {
+    fn consume(
+        self: Box<Self>,
+        world: &mut legion::world::World,
+        dispatcher: &mut Dispatcher,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        println!("consume thread_local = {}", builder.thread_locals.len());
+        dispatcher.thread_locals.push(self.0.build(world));
+        println!(
+            "POST consume thread_local = {}",
+            builder.thread_locals.len()
+        );
+        Ok(())
+    }
 }
 
 pub struct LegionState {

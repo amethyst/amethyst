@@ -45,5 +45,9 @@ impl<B: Backend> LegionRenderSyncer<B> {
         world.add_resource_sync::<amethyst_assets::Loader>();
 
         world.add_resource_sync::<Factory<B>>();
+
+        // From window, but we sync here cuz lazy
+        world.add_resource_sync::<amethyst_window::ScreenDimensions>();
+        world.add_resource_sync::<amethyst_window::Window>();
     }
 }

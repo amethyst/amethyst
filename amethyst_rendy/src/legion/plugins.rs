@@ -7,7 +7,7 @@ use crate::{
     visibility::VisibilitySortingSystem,
     Backend, Factory,
 };
-use amethyst_core::legion::{dispatcher::DispatcherBuilder, World};
+use amethyst_core::legion::{dispatcher::DispatcherBuilder, SystemBundle, World};
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
@@ -73,7 +73,7 @@ mod window {
             builder: &mut DispatcherBuilder,
         ) -> Result<(), Error> {
             if let Some(config) = self.config.take() {
-                //WindowBundle::from_config(config).build(world, builder)?;
+                WindowBundle::from_config(config).build(world, builder)?;
             }
 
             Ok(())

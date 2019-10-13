@@ -48,8 +48,7 @@ use amethyst::{
         shape::Shape,
         types::{DefaultBackend, Mesh, Texture},
         visibility::BoundingSphere,
-        ActiveCamera, Camera, Factory, ImageFormat, Material, MaterialDefaults, RenderDebugLines,
-        RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D, RenderSkybox, SpriteRender,
+        ActiveCamera, Camera, Factory, ImageFormat, Material, MaterialDefaults, SpriteRender,
         SpriteSheet, SpriteSheetFormat, Transparent,
     },
     utils::{
@@ -213,6 +212,7 @@ impl SimpleState for Example {
             .iter()
             .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::SpecsToLegion));
 
+        println!("STARTING BUILD");
         self.legion_dispatcher = self
             .legion_dispatcher_builder
             .take()
@@ -223,7 +223,7 @@ impl SimpleState for Example {
                     .with_plugin(RenderToWindow::from_config_path(display_config_path)),
             )
             .build(&mut self.legion.world);
-
+        println!("BUILD STEP?");
         syncers
             .iter()
             .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::LegionToSpecs));
@@ -802,6 +802,7 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
+/* TODO: fix after all passes redone
 #[derive(Default, Debug)]
 struct RenderSwitchable3D {
     pbr: RenderPbr3D,
@@ -839,3 +840,4 @@ impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
         }
     }
 }
+*/
