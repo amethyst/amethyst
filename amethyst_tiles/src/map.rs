@@ -313,7 +313,13 @@ fn to_tile(
     coord: &Vector3<f32>,
     map_transform: Option<Transform>,
 ) -> Option<Point3<u32>> {
-    let point = Point3::from(*coord);
+    let point = if let Some(map_trans) = map_transform {
+        map_trans
+            .global_view_matrix()
+            .transform_point(&Point3::from(*coord))
+    } else {
+        Point3::from(*coord)
+    };
 
     let mut inverse = transform
         .try_inverse()
