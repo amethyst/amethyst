@@ -1,17 +1,28 @@
+use std::time::Duration;
+
 use amethyst::{
     assets::ProgressCounter,
+    core::Stopwatch,
     ecs::{World, WorldExt},
     State, StateData, Trans,
 };
 
 use derivative::Derivative;
+use log::warn;
 
 use crate::GameUpdate;
+
+/// Time limit before outputting a warning message.
+const LOADING_TIME_LIMIT: Duration = Duration::from_secs(10);
 
 /// Reads a `ProgressCounter` resource and waits for it to be `complete()`.
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct WaitForLoad {
+    /// Tracks how long the `WaitForLoad` state has run.
+    ///
+    /// Used to output a warning if loading takes too long.
+    stopwatch: Stopwatch,
     /// Function to determine loading is complete.
     #[derivative(Debug = "ignore")]
     fn_complete: fn(&World) -> bool,
@@ -22,6 +33,7 @@ impl WaitForLoad {
     pub fn new() -> Self {
         WaitForLoad {
             fn_complete: |world| world.read_resource::<ProgressCounter>().is_complete(),
+            stopwatch: Stopwatch::new(),
         }
     }
 
@@ -31,7 +43,10 @@ impl WaitForLoad {
     ///
     /// * `fn_complete`: Function to determine loading is complete.
     pub fn new_with_fn(fn_complete: fn(&World) -> bool) -> Self {
-        WaitForLoad { fn_complete }
+        WaitForLoad {
+            fn_complete,
+            stopwatch: Stopwatch::new(),
+        }
     }
 }
 
@@ -40,10 +55,33 @@ where
     T: GameUpdate,
     E: Send + Sync + 'static,
 {
+    fn on_start(&mut self, _data: StateData<'_, T>) {
+        self.stopwatch.start();
+    }
+
+    fn on_resume(&mut self, _data: StateData<'_, T>) {
+        self.stopwatch.restart();
+    }
+
     fn update(&mut self, data: StateData<'_, T>) -> Trans<T, E> {
         data.data.update(&data.world);
 
         if !(self.fn_complete)(&data.world) {
+            if let Stopwatch::Started(..) = &self.stopwatch {
+                let elapsed = self.stopwatch.elapsed();
+                if elapsed > LOADING_TIME_LIMIT {
+                    self.stopwatch.stop();
+
+                    let duration = humantime::Duration::from(elapsed);
+
+                    warn!(
+                        "Loading has not completed in {}, please ensure that you have registered \
+                         the relevant `Processor::<A>`s in the dispatcher.",
+                        duration
+                    );
+                }
+            }
+
             Trans::None
         } else {
             Trans::Pop

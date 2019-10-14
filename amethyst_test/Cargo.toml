@@ -17,7 +17,9 @@ amethyst = { path = "..", version = "0.13.0" }
 derivative = "1.0"
 derive-new = "0.5"
 derive_deref = "1.1.0"
+humantime = "1.3.0"
 lazy_static = "1.3"
+log = "0.4"
 
 [dev-dependencies]
 serde = "1.0"
