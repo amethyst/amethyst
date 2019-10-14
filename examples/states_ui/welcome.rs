@@ -6,8 +6,6 @@ use amethyst::{
     winit::{MouseButton, VirtualKeyCode},
 };
 
-use log::info;
-
 use crate::util::delete_hierarchy;
 
 #[derive(Default, Debug)]
@@ -31,9 +29,10 @@ impl SimpleState for WelcomeScreen {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                    log::info!("Quitting the application!");
                     Trans::Quit
                 } else if is_mouse_button_down(&event, MouseButton::Left) {
-                    info!("Switching to MainMenu!");
+                    log::info!("Switching to MainMenu!");
                     Trans::Switch(Box::new(crate::menu::MainMenu::default()))
                 } else {
                     Trans::None

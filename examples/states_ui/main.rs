@@ -92,6 +92,7 @@ pub fn main() -> amethyst::Result<()> {
         crate::welcome::WelcomeScreen::default(),
         game_data,
     )?;
+    log::info!("Starting with WelcomeScreen!");
     game.run();
 
     Ok(())

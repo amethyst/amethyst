@@ -6,8 +6,6 @@ use amethyst::{
     ui::UiEvent,
 };
 
-use log::info;
-
 /// This shows how to handle UI events. This is the same as in the 'ui' example.
 #[derive(SystemDesc)]
 #[system_desc(name(UiEventHandlerSystemDesc))]
@@ -28,7 +26,7 @@ impl<'a> System<'a> for UiEventHandlerSystem {
     fn run(&mut self, events: Self::SystemData) {
         // Reader id was just initialized above if empty
         for ev in events.read(&mut self.reader_id) {
-            info!("[SYSTEM] You just interacted with an ui element: {:?}", ev);
+            log::info!("[SYSTEM] You just interacted with an ui element: {:?}", ev);
         }
     }
 }

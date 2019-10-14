@@ -10,7 +10,6 @@ use amethyst::{
     utils::fps_counter::FpsCounter,
     winit::VirtualKeyCode,
 };
-use log::info;
 
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
 /// The main differences include the added 'paused' field in the state, which is toggled when
@@ -60,20 +59,21 @@ impl SimpleState for Game {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                    log::info!("Pausing Game!");
                     Trans::Push(Box::new(PauseMenuState::default()))
                 } else {
                     Trans::None
                 }
             }
             StateEvent::Ui(ui_event) => {
-                info!(
+                log::info!(
                     "[HANDLE_EVENT] You just interacted with a ui element: {:?}",
                     ui_event
                 );
                 Trans::None
             }
             StateEvent::Input(input) => {
-                info!("Input Event detected: {:?}.", input);
+                log::info!("Input Event detected: {:?}.", input);
                 Trans::None
             }
         }

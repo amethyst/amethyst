@@ -62,11 +62,14 @@ impl<'a> SimpleState for PauseMenuState {
                 target,
             }) => {
                 if Some(target) == self.resume_button {
+                    log::info!("Resuming Game!");
                     Trans::Pop
                 } else if Some(target) == self.exit_to_main_menu_button {
                     let mut state_transition_event_channel = data
                         .world
                         .write_resource::<EventChannel<TransEvent<GameData, StateEvent>>>();
+
+                    log::info!("Exiting Game, Switching to MainMenu!");
 
                     // this allows us to first 'Pop' this state, and then exchange whatever was
                     // below that with a new MainMenu state.

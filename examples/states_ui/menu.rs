@@ -6,8 +6,6 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 
-use log::info;
-
 use crate::credits::CreditsScreen;
 use crate::game::Game;
 use crate::util::delete_hierarchy;
@@ -64,7 +62,7 @@ impl SimpleState for MainMenu {
         match event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-                    info!("Switching back!");
+                    log::info!("Switching back to WelcomeScreen!");
                     Trans::Switch(Box::new(WelcomeScreen::default()))
                 } else {
                     Trans::None
@@ -75,13 +73,15 @@ impl SimpleState for MainMenu {
                 target,
             }) => {
                 if Some(target) == self.button_credits {
+                    log::info!("Switching to CreditsScreen!");
                     return Trans::Switch(Box::new(CreditsScreen::default()));
                 }
                 if Some(target) == self.button_start {
+                    log::info!("Switching to Game!");
                     return Trans::Switch(Box::new(Game::default()));
                 }
                 if Some(target) == self.button_load || Some(target) == self.button_options {
-                    info!("This Buttons functionality is not yet implemented!");
+                    log::info!("This Buttons functionality is not yet implemented!");
                 }
 
                 Trans::None

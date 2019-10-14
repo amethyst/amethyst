@@ -13,7 +13,6 @@ Container(
         Image(
             transform: (
                 id: "background",
-                // y: 540.,            // <- comment this
                 width: 1024.,
                 height: 768.,
                 tab_order: 1,

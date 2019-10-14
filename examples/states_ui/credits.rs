@@ -36,6 +36,7 @@ impl SimpleState for CreditsScreen {
                     || is_key_down(&event, VirtualKeyCode::Escape)
                     || is_mouse_button_down(&event, MouseButton::Left)
                 {
+                    log::info!("Switching back to MainMenu!");
                     Trans::Switch(Box::new(MainMenu::default()))
                 } else {
                     Trans::None
