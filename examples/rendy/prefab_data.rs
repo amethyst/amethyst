@@ -1,12 +1,3 @@
-use amethyst::{
-    animation::AnimationSetPrefab,
-    assets::{AssetPrefab, Handle, Prefab, PrefabData, ProgressCounter},
-    controls::ControlTagPrefab,
-    core::{ecs::Entity, Transform},
-    gltf::{GltfSceneAsset, GltfSceneFormat},
-    utils::tag::Tag,
-    Error,
-};
 use amethyst::renderer::{
     camera::CameraPrefab,
     formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
@@ -17,6 +8,15 @@ use amethyst::renderer::{
         SpriteRender,
     },
     transparent::Transparent,
+};
+use amethyst::{
+    animation::AnimationSetPrefab,
+    assets::{AssetPrefab, Handle, Prefab, PrefabData, ProgressCounter},
+    controls::ControlTagPrefab,
+    core::{ecs::Entity, Transform},
+    gltf::{GltfSceneAsset, GltfSceneFormat},
+    utils::tag::Tag,
+    Error,
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
