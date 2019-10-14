@@ -1,7 +1,7 @@
 use crate::legion::{
     dispatcher::{Dispatcher, Stage},
     sync::SyncDirection,
-    LegionState,
+    Allocators, LegionState,
 };
 use bimap::BiMap;
 use std::sync::{Arc, RwLock};
@@ -34,4 +34,6 @@ pub fn setup(specs_world: &mut specs::World, legion_state: &mut LegionState) {
     ));
     legion_state.world.resources.insert(entity_map.clone());
     specs_world.insert(entity_map.clone());
+
+    //legion_state.world.resources.insert(Allocators::default());
 }

@@ -3,7 +3,7 @@
 use crate::{
     legion::bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
     pass::*,
-    sprite_visibility::SpriteVisibilitySortingSystem,
+    sprite_visibility::SpriteVisibilitySortingSystemDesc,
     visibility::VisibilitySortingSystem,
     Backend, Factory,
 };
@@ -129,14 +129,93 @@ mod window {
     }
 }
 
+/// A [RenderPlugin] for drawing 2d objects with flat shading.
+/// Required to display sprites defined with [SpriteRender] component.
+#[derive(Default, Debug)]
+pub struct RenderFlat2D {
+    target: Target,
+}
+
+impl RenderFlat2D {
+    /// Set target to which 2d sprites will be rendered.
+    pub fn with_target(mut self, target: Target) -> Self {
+        self.target = target;
+        self
+    }
+}
+
+impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
+    fn on_build<'a, 'b>(
+        &mut self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), Error> {
+        builder.add_system_desc(SpriteVisibilitySortingSystemDesc::default());
+        Ok(())
+    }
+
+    fn on_plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        _factory: &mut Factory<B>,
+        _world: &World,
+    ) -> Result<(), Error> {
+        plan.extend_target(self.target, |ctx| {
+            ctx.add(RenderOrder::Opaque, DrawFlat2DDesc::new().builder())?;
+            ctx.add(
+                RenderOrder::Transparent,
+                DrawFlat2DTransparentDesc::new().builder(),
+            )?;
+            Ok(())
+        });
+        Ok(())
+    }
+}
+
+/// A [RenderPlugin] for drawing debug lines.
+/// Use with [debug_drawing::DebugLines] resource or [debug_drawing::DebugLinesComponent].
+#[derive(Default, Debug)]
+pub struct RenderDebugLines {
+    target: Target,
+}
+
+impl RenderDebugLines {
+    /// Set target to which debug lines will be rendered.
+    pub fn with_target(mut self, target: Target) -> Self {
+        self.target = target;
+        self
+    }
+}
+
+impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
+    fn on_plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        _factory: &mut Factory<B>,
+        _world: &World,
+    ) -> Result<(), Error> {
+        plan.extend_target(self.target, |ctx| {
+            ctx.add(
+                RenderOrder::BeforeTransparent,
+                DrawDebugLinesDesc::new().builder(),
+            )?;
+            Ok(())
+        });
+        Ok(())
+    }
+}
+
 /*
 /// A `RenderPlugin` for forward rendering of 3d objects using flat shading.
 pub type RenderFlat3D = RenderBase3D<crate::pass::FlatPassDef>;
 /// A `RenderPlugin` for forward rendering of 3d objects using shaded shading.
 pub type RenderShaded3D = RenderBase3D<crate::pass::ShadedPassDef>;
+
+
 /// A `RenderPlugin` for forward rendering of 3d objects using physically-based shading.
 pub type RenderPbr3D = RenderBase3D<crate::pass::PbrPassDef>;
-
+*/
+/*
 /// A `RenderPlugin` for forward rendering of 3d objects.
 /// Generic over 3d pass rendering method.
 #[derive(derivative::Derivative)]
@@ -192,86 +271,6 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
                 DrawBase3DTransparentDesc::<B, D>::new()
                     .with_skinning(skinning)
                     .builder(),
-            )?;
-            Ok(())
-        });
-        Ok(())
-    }
-}
-
-/// A [RenderPlugin] for drawing 2d objects with flat shading.
-/// Required to display sprites defined with [SpriteRender] component.
-#[derive(Default, Debug)]
-pub struct RenderFlat2D {
-    target: Target,
-}
-
-impl RenderFlat2D {
-    /// Set target to which 2d sprites will be rendered.
-    pub fn with_target(mut self, target: Target) -> Self {
-        self.target = target;
-        self
-    }
-}
-
-impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
-    fn on_build<'a, 'b>(
-        &mut self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        builder.add(
-            SpriteVisibilitySortingSystem::new(),
-            "sprite_visibility_system",
-            &[],
-        );
-        Ok(())
-    }
-
-    fn on_plan(
-        &mut self,
-        plan: &mut RenderPlan<B>,
-        _factory: &mut Factory<B>,
-        _world: &World,
-    ) -> Result<(), Error> {
-        plan.extend_target(self.target, |ctx| {
-            ctx.add(RenderOrder::Opaque, DrawFlat2DDesc::new().builder())?;
-            ctx.add(
-                RenderOrder::Transparent,
-                DrawFlat2DTransparentDesc::new().builder(),
-            )?;
-            Ok(())
-        });
-        Ok(())
-    }
-}
-
-/// A [RenderPlugin] for drawing debug lines.
-/// Use with [debug_drawing::DebugLines] resource or [debug_drawing::DebugLinesComponent].
-#[derive(Default, Debug)]
-pub struct RenderDebugLines {
-    target: Target,
-}
-
-impl RenderDebugLines {
-    /// Set target to which debug lines will be rendered.
-    pub fn with_target(mut self, target: Target) -> Self {
-        self.target = target;
-        self
-    }
-}
-
-impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
-    fn on_plan(
-        &mut self,
-        plan: &mut RenderPlan<B>,
-        _factory: &mut Factory<B>,
-        _world: &World,
-    ) -> Result<(), Error> {
-        plan.extend_target(self.target, |ctx| {
-            ctx.add(
-                RenderOrder::BeforeTransparent,
-                DrawDebugLinesDesc::new().builder(),
             )?;
             Ok(())
         });

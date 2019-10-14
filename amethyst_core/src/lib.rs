@@ -24,6 +24,8 @@ pub use num_traits as num;
 pub use specs as ecs;
 pub use specs::{shred, shrev};
 
+pub use bumpalo;
+
 use rayon;
 
 use std::sync::Arc;

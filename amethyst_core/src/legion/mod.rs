@@ -10,6 +10,15 @@ pub use dispatcher::{ConsumeDesc, Dispatcher, DispatcherBuilder, Stage};
 pub use legion::{prelude::*, *};
 pub use sync::{ComponentSyncer, ResourceSyncer, SyncerTrait};
 
+pub struct Allocators {
+    pub bump: bumpalo::Bump,
+}
+impl Allocators {
+    pub fn frame(&mut self) {
+        self.bump.reset();
+    }
+}
+
 pub trait SystemDesc: 'static {
     fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable>;
 }

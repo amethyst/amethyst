@@ -32,6 +32,7 @@ fnv = "1"
 derivative = "1.0"
 smallvec = "0.6.9"
 static_assertions = "0.3"
+bumpalo = "2.6"
 
 thread_profiler = { version = "0.3", optional = true }
 approx = "0.3.2"

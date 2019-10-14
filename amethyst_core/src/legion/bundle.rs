@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-    legion::{dispatcher::DispatcherBuilder, LegionState},
+    legion::{dispatcher::DispatcherBuilder, Allocators, LegionState},
     transform::Transform,
     SystemBundle as SpecsSystemBundle, Time,
 };
@@ -17,6 +17,8 @@ impl LegionSyncer {
         for syncer in self.syncers.drain(..) {
             state.syncers.push(syncer);
         }
+
+        // state.add_resource_sync::<Allocators>();
 
         // Core syncers
         state.add_resource_sync::<crate::Time>();

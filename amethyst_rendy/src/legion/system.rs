@@ -152,50 +152,6 @@ where
     }
 }
 
-/*
-fn run_now(&mut self, world: &'a World) {
-
-}
-
-fn setup(&mut self, world: &mut World) {
-    let config: rendy::factory::Config = Default::default();
-    let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
-
-    let queue_id = QueueId {
-        family: families.family_by_index(0).id(),
-        index: 0,
-    };
-
-    self.families = Some(families);
-    world.insert(factory);
-    world.insert(queue_id);
-
-    SetupData::setup(world);
-
-    let mat = create_default_mat::<B>(world);
-    world.insert(MaterialDefaults(mat));
-}
-
-fn dispose(mut self, world: &mut World) {
-    if let Some(graph) = self.graph.take() {
-        let mut factory = world.fetch_mut::<Factory<B>>();
-        log::debug!("Dispose graph");
-        graph.dispose(&mut *factory, world);
-    }
-
-    log::debug!("Unload resources");
-    if let Some(mut storage) = world.try_fetch_mut::<AssetStorage<Mesh>>() {
-        storage.unload_all();
-    }
-    if let Some(mut storage) = world.try_fetch_mut::<AssetStorage<Texture>>() {
-        storage.unload_all();
-    }
-
-    log::debug!("Drop families");
-    drop(self.families);
-}
-*/
-
 /// Asset processing system for `Mesh` asset type.
 #[derive(Debug, derivative::Derivative)]
 #[derivative(Default(bound = ""))]
