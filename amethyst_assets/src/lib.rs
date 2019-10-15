@@ -29,6 +29,9 @@ pub use crate::{
 
 pub use rayon::ThreadPool;
 
+#[cfg(feature = "legion-ecs")]
+pub mod legion;
+
 mod asset;
 mod cache;
 mod dyn_format;

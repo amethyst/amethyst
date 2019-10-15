@@ -123,12 +123,11 @@ where
     G: GraphCreator<B>,
 {
     fn run(&mut self, world: &mut World) {
-        log::debug!("RenderingSystem");
         let rebuild = self.graph_creator.rebuild(world);
         if self.graph.is_none() || rebuild {
-            //   self.rebuild_graph(world);
+            self.rebuild_graph(world);
         }
-        //self.run_graph(world);
+        self.run_graph(world);
     }
     fn dispose(self, world: &mut World) {
         let mut graph = self.graph;
@@ -170,7 +169,6 @@ impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
                     #[cfg(feature = "profiler")]
                     profile_scope!("mesh_processor");
 
-                    use std::ops::Deref;
                     mesh_storage.process(
                         |b| {
                             #[cfg(feature = "profiler")]

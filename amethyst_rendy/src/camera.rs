@@ -704,6 +704,14 @@ pub struct ActiveCamera {
     pub entity: Option<Entity>,
 }
 
+// TODO: This needs a different type because of entity types being used. This is the only place in all of
+// amethyst this is done.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct LegionActiveCamera {
+    /// Camera entity
+    pub entity: Option<amethyst_core::legion::Entity>,
+}
+
 /// Projection prefab
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum CameraPrefab {

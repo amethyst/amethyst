@@ -67,6 +67,7 @@ pub mod formats;
 pub mod light;
 pub mod mtl;
 pub mod pipeline;
+pub mod plugins;
 pub mod resources;
 pub mod serde_shim;
 pub mod shape;
@@ -97,6 +98,7 @@ pub use crate::{
         texture::{ImageFormat, TexturePrefab},
     },
     mtl::{Material, MaterialDefaults},
+    plugins::*,
     sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
     system::{GraphCreator, MeshProcessorSystem, RenderingSystem, TextureProcessorSystem},
     transparent::Transparent,

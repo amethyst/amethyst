@@ -37,7 +37,10 @@ use amethyst::{
     renderer::{
         bundle::{RenderPlan, RenderPlugin},
         debug_drawing::DebugLines,
-        legion::{bundle::RenderingBundle, plugins::RenderToWindow},
+        legion::{
+            bundle::RenderingBundle,
+            plugins::{RenderDebugLines, RenderFlat2D, RenderToWindow},
+        },
         light::{Light, PointLight},
         palette::{LinSrgba, Srgb, Srgba},
         rendy::{
@@ -220,7 +223,9 @@ impl SimpleState for Example {
             .with_system_desc(Stage::Logic, OrbitSystemDesc::default())
             .with_bundle(
                 RenderingBundle::<DefaultBackend>::default()
-                    .with_plugin(RenderToWindow::from_config_path(display_config_path)),
+                    .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                    .with_plugin(RenderDebugLines::default())
+                    .with_plugin(RenderFlat2D::default()),
             )
             .build(&mut self.legion.world);
         println!("BUILD STEP?");
@@ -686,7 +691,7 @@ fn main() -> amethyst::Result<()> {
     // .level_for("rendy_resource", log::LevelFilter::Trace)
     // .level_for("rendy_graph", log::LevelFilter::Trace)
     // .level_for("rendy_node", log::LevelFilter::Trace)
-    // .level_for("amethyst_rendy", log::LevelFilter::Trace)
+    .level_for("amethyst_rendy", log::LevelFilter::Trace)
     // .level_for("gfx_backend_metal", log::LevelFilter::Trace)
     .start();
 

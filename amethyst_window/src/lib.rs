@@ -16,6 +16,9 @@ mod monitor;
 mod resources;
 mod system;
 
+#[cfg(feature = "legion-ecs")]
+pub mod legion;
+
 #[cfg(feature = "test-support")]
 pub use crate::bundle::{SCREEN_HEIGHT, SCREEN_WIDTH};
 pub use crate::{
@@ -23,6 +26,6 @@ pub use crate::{
     config::DisplayConfig,
     monitor::{MonitorIdent, MonitorsAccess},
     resources::ScreenDimensions,
-    system::{EventsLoopSystem, WindowSystem, WindowSystemDesc},
+    system::{EventsLoopSystem, WindowSystem},
 };
 pub use winit::{Event, Icon, Window};

@@ -9,8 +9,12 @@ use amethyst_error::Error;
 use derivative::Derivative;
 use rendy::factory::Factory;
 use std::marker::PhantomData;
+
 pub mod bundle;
+pub mod pass;
 pub mod plugins;
+pub mod sprite_visibility;
+pub mod submodules;
 pub mod system;
 
 #[derive(Derivative)]
@@ -35,6 +39,7 @@ impl<B: Backend> LegionRenderSyncer<B> {
         world.add_resource_sync::<AssetStorage<crate::mtl::Material>>();
         world.add_resource_sync::<AssetStorage<crate::Mesh>>();
         world.add_resource_sync::<AssetStorage<crate::Texture>>();
+        world.add_resource_sync::<AssetStorage<crate::sprite::SpriteSheet>>();
 
         world.add_resource_sync::<amethyst_assets::HotReloadStrategy>();
         world.add_resource_sync::<rendy::command::QueueId>();

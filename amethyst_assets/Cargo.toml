@@ -47,3 +47,4 @@ serde_json = "1"
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
 json = [ "serde_json" ]
+legion-ecs = []

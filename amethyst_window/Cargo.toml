@@ -26,3 +26,4 @@ winit = { version = "0.19", features = ["serde", "icon_loading"] }
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = []
 test-support =  []
+legion-ecs = []
