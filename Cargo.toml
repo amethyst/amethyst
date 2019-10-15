@@ -334,6 +334,10 @@ name = "legion"
 path = "examples/legion/main.rs"
 required-features = ["legion-ecs", "animation", "gltf"]
 
+[[example]]
+name = "sprite_camera_follow_legion"
+path = "examples/sprite_camera_follow_legion/main.rs"
+required-features = ["legion-ecs"]
 [package.metadata.docs.rs]
 features = ["animation", "audio", "gltf", "tiles", "json", "locale", "network", "sdl_controller", "vulkan"]
 

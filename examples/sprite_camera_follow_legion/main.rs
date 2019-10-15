@@ -7,23 +7,12 @@ use amethyst::{
         WorldExt, WriteStorage,
     },
     input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
-    legion::{
-        self,
-        bundle::LegionSyncer,
-        dispatcher::{
-            Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder, Stage,
-        },
-        sync::SyncDirection,
-        LegionState, SystemDesc,
-    },
     prelude::*,
     renderer::{
-        legion::{
-            bundle::RenderingBundle,
-            plugins::{RenderFlat2D, RenderToWindow},
-        },
+        plugins::{RenderFlat2D, RenderToWindow},
         types::DefaultBackend,
-        Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture, Transparent,
+        Camera, ImageFormat, RenderingBundle, SpriteRender, SpriteSheet, SpriteSheetFormat,
+        Texture, Transparent,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
@@ -161,28 +150,7 @@ fn initialise_camera(world: &mut World, parent: Entity) -> Entity {
         .build()
 }
 
-struct Example {
-    legion: LegionState,
-    legion_dispatcher: LegionDispatcher,
-    legion_dispatcher_builder: Option<LegionDispatcherBuilder>,
-}
-impl Example {
-    pub fn new() -> Self {
-        // Create the legion world
-        let universe = legion::world::Universe::new();
-        let mut legion_world = universe.create_world();
-
-        Self {
-            legion: LegionState {
-                universe,
-                world: legion_world,
-                syncers: Vec::default(),
-            },
-            legion_dispatcher_builder: Some(LegionDispatcherBuilder::default()),
-            legion_dispatcher: LegionDispatcher::default(),
-        }
-    }
-}
+struct Example;
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
@@ -202,43 +170,6 @@ impl SimpleState for Example {
         let player = init_player(world, &circle_sprite_sheet_handle);
         let _camera = initialise_camera(world, player);
         let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
-
-        // Run a sync, THEN dispatches
-        legion::temp::setup(world, &mut self.legion);
-        amethyst::renderer::system::SetupData::setup(world);
-
-        let syncers = self.legion.syncers.drain(..).collect::<Vec<_>>();
-
-        syncers
-            .iter()
-            .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::SpecsToLegion));
-
-        println!("STARTING BUILD");
-        self.legion_dispatcher = self
-            .legion_dispatcher_builder
-            .take()
-            .unwrap()
-            .with_bundle(
-                RenderingBundle::<DefaultBackend>::default()
-                    .with_plugin(
-                        RenderToWindow::from_config_path(display_config_path)
-                            .with_clear([0.34, 0.36, 0.52, 1.0]),
-                    )
-                    .with_plugin(RenderFlat2D::default()), // .with_plugin(RenderFlat2D::default()),
-            )
-            .build(&mut self.legion.world);
-        println!("BUILD STEP?");
-        syncers
-            .iter()
-            .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::LegionToSpecs));
-        self.legion.syncers.extend(syncers.into_iter());
-    }
-
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        legion::sync::sync_entities(&mut data.world, &mut self.legion, self.listener_id);
-        legion::temp::dispatch_legion(data.world, &mut self.legion, &mut self.legion_dispatcher);
-
-        Trans::None
     }
 
     fn handle_event(
@@ -285,7 +216,15 @@ fn main() -> amethyst::Result<()> {
                 app_root.join("examples/sprite_camera_follow/config/input.ron"),
             )?,
         )?
-        .with(MovementSystem, "movement", &[]);
+        .with(MovementSystem, "movement", &[])
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                .with_plugin(RenderFlat2D::default()),
+        )?;
 
     let mut game = Application::build(assets_directory, Example)?.build(game_data)?;
     game.run();

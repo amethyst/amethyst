@@ -706,6 +706,7 @@ pub struct ActiveCamera {
 
 // TODO: This needs a different type because of entity types being used. This is the only place in all of
 // amethyst this is done.
+#[cfg(feature = "legion-ecs")]
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct LegionActiveCamera {
     /// Camera entity

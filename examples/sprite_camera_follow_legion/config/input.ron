@@ -1,0 +1,18 @@
+/*!
+    @import /amethyst_input/src/bindings.rs#Bindings, StringBindings
+    Bindings<StringBindings>
+*/
+
+(
+    axes: {
+        "entity_x": Emulated(
+            pos: Key(D),
+            neg: Key(A),
+        ),
+        "entity_y": Emulated(
+            pos: Key(W),
+            neg: Key(S),
+        ),
+    },
+    actions: {},
+)

@@ -193,10 +193,6 @@ impl SimpleState for Example {
         profile_scope!("example on_start");
         let StateData { world, .. } = data;
 
-        ///////
-        //////// LEGION STUFF //
-        ///////
-
         let app_root = application_root_dir().unwrap();
 
         let display_config_path = app_root
@@ -224,8 +220,7 @@ impl SimpleState for Example {
             .with_bundle(
                 RenderingBundle::<DefaultBackend>::default()
                     .with_plugin(RenderToWindow::from_config_path(display_config_path))
-                    .with_plugin(RenderDebugLines::default())
-                    .with_plugin(RenderFlat2D::default()),
+                    .with_plugin(RenderDebugLines::default()), // .with_plugin(RenderFlat2D::default()),
             )
             .build(&mut self.legion.world);
         println!("BUILD STEP?");
