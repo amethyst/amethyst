@@ -32,11 +32,13 @@ impl SimpleState for CreditsScreen {
     ) -> SimpleTrans {
         match &event {
             StateEvent::Window(event) => {
-                if is_close_requested(&event)
-                    || is_key_down(&event, VirtualKeyCode::Escape)
+                if is_close_requested(&event) {
+                    log::info!("[Trans::Quit] Quitting Application!");
+                    Trans::Quit
+                } else if is_key_down(&event, VirtualKeyCode::Escape)
                     || is_mouse_button_down(&event, MouseButton::Left)
                 {
-                    log::info!("Switching back to MainMenu!");
+                    log::info!("[Trans::Switch] Switching to MainMenu!");
                     Trans::Switch(Box::new(MainMenu::default()))
                 } else {
                     Trans::None

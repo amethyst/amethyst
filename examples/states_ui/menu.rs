@@ -61,8 +61,11 @@ impl SimpleState for MainMenu {
     ) -> SimpleTrans {
         match event {
             StateEvent::Window(event) => {
-                if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-                    log::info!("Switching back to WelcomeScreen!");
+                if is_close_requested(&event) {
+                    log::info!("[Trans::Quit] Quitting Application!");
+                    Trans::Quit
+                } else if is_key_down(&event, VirtualKeyCode::Escape) {
+                    log::info!("[Trans::Switch] Switching back to WelcomeScreen!");
                     Trans::Switch(Box::new(WelcomeScreen::default()))
                 } else {
                     Trans::None
@@ -73,11 +76,11 @@ impl SimpleState for MainMenu {
                 target,
             }) => {
                 if Some(target) == self.button_credits {
-                    log::info!("Switching to CreditsScreen!");
+                    log::info!("[Trans::Switch] Switching to CreditsScreen!");
                     return Trans::Switch(Box::new(CreditsScreen::default()));
                 }
                 if Some(target) == self.button_start {
-                    log::info!("Switching to Game!");
+                    log::info!("[Trans::Switch] Switching to Game!");
                     return Trans::Switch(Box::new(Game::default()));
                 }
                 if Some(target) == self.button_load || Some(target) == self.button_options {

@@ -51,7 +51,11 @@ impl<'a> SimpleState for PauseMenuState {
     fn handle_event(&mut self, data: StateData<GameData>, event: StateEvent) -> SimpleTrans {
         match event {
             StateEvent::Window(event) => {
-                if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                if is_close_requested(&event) {
+                    log::info!("[Trans::Quit] Quitting Application!");
+                    Trans::Quit
+                } else if is_key_down(&event, VirtualKeyCode::Escape) {
+                    log::info!("[Trans::Pop] Closing Pause Menu!");
                     Trans::Pop
                 } else {
                     Trans::None
@@ -69,13 +73,14 @@ impl<'a> SimpleState for PauseMenuState {
                         .world
                         .write_resource::<EventChannel<TransEvent<GameData, StateEvent>>>();
 
-                    log::info!("Exiting Game, Switching to MainMenu!");
-
                     // this allows us to first 'Pop' this state, and then exchange whatever was
                     // below that with a new MainMenu state.
                     state_transition_event_channel.single_write(Box::new(|| Trans::Pop));
                     state_transition_event_channel
                         .single_write(Box::new(|| Trans::Switch(Box::new(MainMenu::default()))));
+
+                    log::info!("[Trans::Pop] Closing Pause Menu!");
+                    log::info!("[Trans::Switch] Switching to MainMenu!");
 
                     Trans::None // we could also not add the pop to the channel and Pop here
                                 // but like this the execution order is guaranteed (in the next versions)
