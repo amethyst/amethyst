@@ -42,12 +42,14 @@ pub trait Map {
 
     /// Convert a tile coordinate `Point3<u32>` to an amethyst world-coordinate space coordinate `Point3<f32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
-    /// maps `origin` and `tile_dimensions` respectively.
+    /// maps `origin` and `tile_dimensions` respectively. If the tile map entity has a transform component, then
+    /// it also translates the point using the it's transform.
     fn to_world(&self, coord: &Point3<u32>, map_transform: Option<&Transform>) -> Vector3<f32>;
 
     /// Convert an amethyst world-coordinate space coordinate `Point3<f32>` to a tile coordinate `Point3<u32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
-    /// maps `origin` and `tile_dimensions` respectively.
+    /// maps `origin` and `tile_dimensions` respectively. If the tile map entity has a transform component, then
+    /// it also translates the point using the it's transform.
     fn to_tile(
         &self,
         coord: &Vector3<f32>,
