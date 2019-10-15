@@ -35,11 +35,13 @@ use amethyst::{
     },
     prelude::*,
     renderer::{
-        bundle::{RenderPlan, RenderPlugin},
         debug_drawing::DebugLines,
         legion::{
-            bundle::RenderingBundle,
-            plugins::{RenderDebugLines, RenderFlat2D, RenderToWindow},
+            bundle::{RenderPlan, RenderPlugin, RenderingBundle},
+            plugins::{
+                RenderDebugLines, RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D,
+                RenderSkybox, RenderToWindow,
+            },
         },
         light::{Light, PointLight},
         palette::{LinSrgba, Srgb, Srgba},
@@ -116,32 +118,6 @@ impl Component for Orbit {
     type Storage = DenseVecStorage<Self>;
 }
 
-struct OrbitSystem;
-
-impl<'a> System<'a> for OrbitSystem {
-    type SystemData = (
-        Read<'a, Time>,
-        ReadStorage<'a, Orbit>,
-        WriteStorage<'a, Transform>,
-        Write<'a, DebugLines>,
-    );
-
-    fn run(&mut self, (time, orbits, mut transforms, mut debug): Self::SystemData) {
-        for (orbit, transform) in (&orbits, &mut transforms).join() {
-            let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
-            let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
-            let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
-            let final_pos = (rot * cross) + orbit.center;
-            debug.draw_line(
-                orbit.center.into(),
-                final_pos.into(),
-                Srgba::new(0.0, 0.5, 1.0, 1.0),
-            );
-            transform.set_translation(final_pos);
-        }
-    }
-}
-
 #[derive(Default)]
 pub struct OrbitSystemDesc;
 impl SystemDesc for OrbitSystemDesc {
@@ -160,6 +136,7 @@ impl SystemDesc for OrbitSystemDesc {
                     .iter_entities()
                     .for_each(|(entity, (mut transform, orbit))| {
                         let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
+                        let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
                         let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
                         let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
                         let final_pos = (rot * cross) + orbit.center;
@@ -168,6 +145,7 @@ impl SystemDesc for OrbitSystemDesc {
                             final_pos.into(),
                             Srgba::new(0.0, 0.5, 1.0, 1.0),
                         );
+
                         transform.set_translation(final_pos);
                     });
             })
@@ -201,6 +179,12 @@ impl SimpleState for Example {
             .join("config")
             .join("display.ron");
 
+        // Registration for components that arnt synced need to happen here.
+        // This a sync issue because specs requires setups, while legion doesnt
+        world.register::<Orbit>();
+        self.legion.add_resource_sync::<RenderMode>();
+        self.legion.add_component_sync::<Orbit>();
+
         // Run a sync, THEN dispatches
         legion::temp::setup(world, &mut self.legion);
         amethyst::renderer::system::SetupData::setup(world);
@@ -219,9 +203,17 @@ impl SimpleState for Example {
             .with_system_desc(Stage::Logic, OrbitSystemDesc::default())
             .with_bundle(
                 RenderingBundle::<DefaultBackend>::default()
-                    .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                    .with_plugin(
+                        RenderToWindow::from_config_path(display_config_path)
+                            .with_clear([0.0, 0.0, 0.0, 1.0]),
+                    )
+                    .with_plugin(RenderFlat2D::default())
                     .with_plugin(RenderDebugLines::default())
-                    .with_plugin(RenderFlat2D::default()),
+                    .with_plugin(RenderSkybox::default())
+                    .with_plugin(RenderSwitchable3D::default())
+                    //.with_plugin(RenderShaded3D::default())
+                    //.with_plugin(RenderPbr3D::default())
+                   // .with_plugin(RenderFlat3D::default()),
             )
             .build(&mut self.legion.world);
         println!("BUILD STEP?");
@@ -233,10 +225,6 @@ impl SimpleState for Example {
         ///////
         //////// LEGION STUFF //
         ///////
-
-        // Registration for components that arnt synced need to happen here.
-        // This a sync issue because specs requires setups, while legion doesnt
-        world.register::<Orbit>();
 
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
 
@@ -681,7 +669,7 @@ fn main() -> amethyst::Result<()> {
         level_filter: log::LevelFilter::Error,
         ..Default::default()
     })
-    .level_for("amethyst_core", log::LevelFilter::Trace)
+    //.level_for("amethyst_core", log::LevelFilter::Trace)
     // .level_for("rendy_memory", log::LevelFilter::Trace)
     // .level_for("rendy_factory", log::LevelFilter::Trace)
     // .level_for("rendy_resource", log::LevelFilter::Trace)
@@ -730,9 +718,6 @@ fn main() -> amethyst::Result<()> {
     ///////
 
     let mut example = Example::new();
-
-    example.legion.add_resource_sync::<DebugLines>();
-    example.legion.add_resource_sync::<Orbit>();
 
     let legion_state = &mut example.legion;
 
@@ -803,7 +788,6 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
-/* TODO: fix after all passes redone
 #[derive(Default, Debug)]
 struct RenderSwitchable3D {
     pbr: RenderPbr3D,
@@ -815,24 +799,29 @@ struct RenderSwitchable3D {
 impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
     fn on_build<'a, 'b>(
         &mut self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        world: &mut amethyst_core::legion::World,
+        builder: &mut LegionDispatcherBuilder,
     ) -> Result<(), Error> {
         <RenderPbr3D as RenderPlugin<DefaultBackend>>::on_build(&mut self.pbr, world, builder)
     }
 
-    fn should_rebuild(&mut self, world: &World) -> bool {
-        let mode = *<Read<'_, RenderMode>>::fetch(world);
-        self.last_mode != mode
+    fn should_rebuild(&mut self, world: &amethyst_core::legion::World) -> bool {
+        let mode = *(world.resources.get::<RenderMode>().unwrap());
+        if self.last_mode != mode {
+            println!("Switching RenderMode ({:?} -> {:?}", self.last_mode, mode);
+            true
+        } else {
+            false
+        }
     }
 
     fn on_plan(
         &mut self,
         plan: &mut RenderPlan<DefaultBackend>,
         factory: &mut Factory<DefaultBackend>,
-        world: &World,
+        world: &amethyst_core::legion::World,
     ) -> Result<(), Error> {
-        let mode = *<Read<'_, RenderMode>>::fetch(world);
+        let mode = *(world.resources.get::<RenderMode>().unwrap());
         self.last_mode = mode;
         match mode {
             RenderMode::Pbr => self.pbr.on_plan(plan, factory, world),
@@ -841,4 +830,3 @@ impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
         }
     }
 }
-*/

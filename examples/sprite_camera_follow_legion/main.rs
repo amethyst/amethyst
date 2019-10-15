@@ -291,7 +291,7 @@ impl SimpleState for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(Default::default())
         //.level_for("amethyst_assets", log::LevelFilter::Trace)
-        .level_for("amethyst_rendy", log::LevelFilter::Trace)
+        //.level_for("amethyst_rendy", log::LevelFilter::Trace)
         .start();
 
     let app_root = application_root_dir()?;

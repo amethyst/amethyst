@@ -155,6 +155,7 @@ pub fn move_resource<T: legion::resource::Resource>(
     legion_state: &mut LegionState,
     direction: SyncDirection,
 ) {
+    log::trace!("{:?} - {}", direction, std::any::type_name::<T>());
     match direction {
         SyncDirection::SpecsToLegion => {
             if let Some(resource) = world.remove::<T>() {

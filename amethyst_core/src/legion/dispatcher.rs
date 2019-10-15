@@ -1,5 +1,7 @@
 use super::*;
-use crate::{legion::World, transform::Transform, SystemBundle as SpecsSystemBundle, Time};
+use crate::{
+    legion::World, transform::Transform, ArcThreadPool, SystemBundle as SpecsSystemBundle, Time,
+};
 use amethyst_error::Error;
 use legion::system::Schedulable;
 use std::collections::HashMap;
@@ -50,8 +52,11 @@ impl Dispatcher {
                     .for_each(|local| local.run(world));
             }
             _ => {
-                legion::system::StageExecutor::new(&mut self.stages.get_mut(&stage).unwrap())
-                    .execute(world);
+                legion::system::StageExecutor::new(
+                    &mut self.stages.get_mut(&stage).unwrap(),
+                    &world.resources.get::<ArcThreadPool>().unwrap(),
+                )
+                .execute(world);
             }
         }
     }

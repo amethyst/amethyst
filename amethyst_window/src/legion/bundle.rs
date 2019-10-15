@@ -64,10 +64,6 @@ impl SystemBundle for WindowBundle {
     ) -> Result<(), amethyst_error::Error> {
         let event_loop = EventsLoop::new();
 
-        world
-            .resources
-            .insert(EventChannel::<Event>::with_capacity(1024));
-
         builder.add_system_desc(
             Stage::Render,
             WindowSystemDesc::new(WindowSystem::from_config(world, &event_loop, self.config)),

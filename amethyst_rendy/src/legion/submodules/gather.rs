@@ -51,22 +51,7 @@ impl CameraGatherer {
         let defcam = Camera::standard_2d(1.0, 1.0);
         let identity = Transform::default();
 
-        /*
-        let (camera, transform) = active_camera
-            .entity
-            .as_ref()
-            .and_then(|ac| {
-                cameras
-                    .get(*ac)
-                    .map(|camera| (camera, transforms.get(*ac).unwrap_or(&identity)))
-            })
-            .unwrap_or_else(|| {
-                (&cameras, &transforms)
-                    .join()
-                    .next()
-                    .unwrap_or((&defcam, &identity))
-            });
-            */
+        // TODO: This should pull ActiveCamera
         let (camera, transform) = <(Read<Camera>, Read<Transform>)>::query()
             .iter(world)
             .nth(0)

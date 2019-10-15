@@ -18,6 +18,7 @@ use amethyst_core::{
     Hidden, HiddenPropagate,
 };
 use derivative::Derivative;
+use rayon::prelude::*;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
     factory::Factory,

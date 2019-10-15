@@ -15,7 +15,7 @@ use crate::{
     util,
 };
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::ecs::{Read, SystemData, World};
+use amethyst_core::legion::*;
 use glsl_layout::*;
 
 #[cfg(feature = "profiler")]
@@ -213,10 +213,8 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         profile_scope!("try_insert");
 
         use util::{desc_write, slice_as_bytes, texture_desc};
-        let (mat_storage, tex_storage) = <(
-            Read<'_, AssetStorage<Material>>,
-            Read<'_, AssetStorage<Texture>>,
-        )>::fetch(world);
+        let (mat_storage, tex_storage) =
+            <(Read<AssetStorage<Material>>, Read<AssetStorage<Texture>>)>::fetch(&world.resources);
 
         let mat = mat_storage.get(handle)?;
 

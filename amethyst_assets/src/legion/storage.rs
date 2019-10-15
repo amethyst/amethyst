@@ -6,6 +6,9 @@ use amethyst_core::{legion::*, ArcThreadPool, Time};
 use derivative::Derivative;
 use std::marker::PhantomData;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// A default implementation for an asset processing system
 /// which converts data to assets and maintains the asset storage
 /// for `A`.

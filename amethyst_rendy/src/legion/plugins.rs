@@ -5,8 +5,8 @@ use crate::{
         bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
         pass::*,
         sprite_visibility::SpriteVisibilitySortingSystemDesc,
+        visibility::VisibilitySortingSystemDesc,
     },
-    visibility::VisibilitySortingSystem,
     Backend, Factory,
 };
 use amethyst_core::legion::{
@@ -211,17 +211,13 @@ impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
     }
 }
 
-/*
 /// A `RenderPlugin` for forward rendering of 3d objects using flat shading.
-pub type RenderFlat3D = RenderBase3D<crate::pass::FlatPassDef>;
+pub type RenderFlat3D = RenderBase3D<crate::legion::pass::FlatPassDef>;
 /// A `RenderPlugin` for forward rendering of 3d objects using shaded shading.
-pub type RenderShaded3D = RenderBase3D<crate::pass::ShadedPassDef>;
-
-
+pub type RenderShaded3D = RenderBase3D<crate::legion::pass::ShadedPassDef>;
 /// A `RenderPlugin` for forward rendering of 3d objects using physically-based shading.
-pub type RenderPbr3D = RenderBase3D<crate::pass::PbrPassDef>;
-*/
-/*
+pub type RenderPbr3D = RenderBase3D<crate::legion::pass::PbrPassDef>;
+
 /// A `RenderPlugin` for forward rendering of 3d objects.
 /// Generic over 3d pass rendering method.
 #[derive(derivative::Derivative)]
@@ -252,9 +248,9 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
     fn on_build<'a, 'b>(
         &mut self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add(VisibilitySortingSystem::new(), "visibility_system", &[]);
+        builder.add_system_desc(Stage::Render, VisibilitySortingSystemDesc::default());
         Ok(())
     }
 
@@ -272,12 +268,12 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
                     .with_skinning(skinning)
                     .builder(),
             )?;
-            ctx.add(
-                RenderOrder::Transparent,
-                DrawBase3DTransparentDesc::<B, D>::new()
-                    .with_skinning(skinning)
-                    .builder(),
-            )?;
+            //ctx.add(
+            //    RenderOrder::Transparent,
+            //    DrawBase3DTransparentDesc::<B, D>::new()
+            //        .with_skinning(skinning)
+            //        .builder(),
+            //)?;
             Ok(())
         });
         Ok(())
@@ -328,5 +324,3 @@ impl<B: Backend> RenderPlugin<B> for RenderSkybox {
         Ok(())
     }
 }
-
-*/

@@ -3,9 +3,11 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs as specs,
     legion::{dispatcher::DispatcherBuilder, LegionState},
+    shrev::EventChannel,
     SystemBundle,
 };
 use amethyst_error::Error;
+use amethyst_window::Event;
 use derivative::Derivative;
 use rendy::factory::Factory;
 use std::marker::PhantomData;
@@ -16,6 +18,7 @@ pub mod plugins;
 pub mod sprite_visibility;
 pub mod submodules;
 pub mod system;
+pub mod visibility;
 
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
@@ -52,8 +55,11 @@ impl<B: Backend> LegionRenderSyncer<B> {
 
         world.add_resource_sync::<Factory<B>>();
 
+        world.add_resource_sync::<crate::debug_drawing::DebugLines>();
+
         // From window, but we sync here cuz lazy
         world.add_resource_sync::<amethyst_window::ScreenDimensions>();
         world.add_resource_sync::<amethyst_window::Window>();
+        world.add_resource_sync::<EventChannel<Event>>();
     }
 }

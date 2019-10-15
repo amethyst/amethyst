@@ -1,13 +1,13 @@
 use crate::{
+    legion::submodules::{DynamicUniform, FlatEnvironmentSub},
     palette::Srgb,
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::IntoPod,
     shape::Shape,
-    submodules::{DynamicUniform, FlatEnvironmentSub},
     types::Backend,
     util,
 };
-use amethyst_core::ecs::{Read, SystemData, World};
+use amethyst_core::legion::*;
 use derivative::Derivative;
 use glsl_layout::{vec3, AsStd140};
 use rendy::{
@@ -86,7 +86,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawSkyboxDesc {
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         queue: QueueId,
-        _resources: &World,
+        _world: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
@@ -139,16 +139,18 @@ impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        world: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
-        let settings = <(Option<Read<'_, SkyboxSettings>>)>::fetch(resources)
+        let settings = world
+            .resources
+            .get::<SkyboxSettings>()
             .map(|s| s.uniform())
             .unwrap_or_else(|| self.default_settings.uniform());
 
-        self.env.process(factory, index, resources);
+        self.env.process(factory, index, world);
         let changed = self.colors.write(factory, index, settings);
 
         if changed {
