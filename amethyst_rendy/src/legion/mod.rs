@@ -30,7 +30,7 @@ impl<B: Backend> LegionRenderSyncer<B> {
         world.add_component_sync::<crate::Camera>();
         world.add_component_sync::<crate::Transparent>();
         world.add_component_sync::<crate::resources::Tint>();
-        //world.add_component_sync::<crate::light::Light>(); // TODO: This causes chunk index out of bounds, why?
+        world.add_component_sync::<crate::light::Light>(); // TODO: This causes chunk index out of bounds, why?
         world.add_component_sync::<crate::debug_drawing::DebugLinesComponent>();
         world.add_component_sync::<crate::skinning::JointTransforms>();
         world.add_component_sync::<Handle<crate::mtl::Material>>();
