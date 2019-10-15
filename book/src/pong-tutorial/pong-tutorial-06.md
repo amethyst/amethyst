@@ -329,11 +329,12 @@ use amethyst::{
 # }
 
 pub fn initialise_audio(world: &mut World) {
-    let (sound_effects, music) = {
+    let (sound_effects, music, audio_sink) = {
         let loader = world.read_resource::<Loader>();
 
-        let mut sink = world.write_resource::<AudioSink>();
-        sink.set_volume(0.25); // Music is a bit loud, reduce the volume.
+        let output = world.read_resource::<Output>();
+        let mut audio_sink = AudioSink::new(&output);
+        audio_sink.set_volume(0.25); // Music is a bit loud, reduce the volume.
 
         let music = MUSIC_TRACKS
             .iter()
@@ -348,13 +349,14 @@ pub fn initialise_audio(world: &mut World) {
             score_sfx: load_audio_track(&loader, &world, SCORE_SOUND),
         };
 
-        (sound, music)
+        (sound, music, audio_sink)
     };
 
     // Add sound effects and music to the world. We have to do this in another scope because
     // world won't let us insert new resources as long as `Loader` is borrowed.
     world.insert(sound_effects);
     world.insert(music);
+    world.insert(audio_sink);
 }
 ```
 
