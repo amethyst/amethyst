@@ -90,7 +90,6 @@ impl<'a> SimpleState for PauseMenuState {
     }
 
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
-        data.data.update(&data.world);
         // once deferred creation of the root ui entity finishes, look up buttons
         if self.resume_button.is_none()
             || self.exit_to_main_menu_button.is_none()
