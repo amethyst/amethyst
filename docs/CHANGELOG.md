@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - amethyst_network completely rewritten to provide a new baseline with which to build. ([#1917])
 - Cleaned up tiles example. Added rotation and translation tests, fixed raycast debug box. Added default zoom to `PROJECT` perspective projection since no one knew to zoom out. ([#1974])
 - `AmethystApplication::with_fn` constraint relaxed from `Fn` to `FnOnce`. ([#1983])
+- ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
 
 ### Deprecated
 
