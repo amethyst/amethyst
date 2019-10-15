@@ -11,7 +11,7 @@ use crate::{
         hal,
         wsi::Surface,
     },
-    system::{GraphCreator, RenderingSystem},
+    system::{GraphCreator, MeshProcessorSystem, RenderingSystem, TextureProcessorSystem},
     types::Backend,
     SpriteSheet,
 };
@@ -72,48 +72,27 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        #[cfg(feature = "legion-ecs")]
-        {
-            builder.add(Processor::<Material>::new(), "material_processor", &[]);
-            builder.add(
-                Processor::<SpriteSheet>::new(),
-                "sprite_sheet_processor",
-                &[],
-            );
+        builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
+        builder.add(
+            TextureProcessorSystem::<B>::default(),
+            "texture_processor",
+            &[],
+        );
+        builder.add(Processor::<Material>::new(), "material_processor", &[]);
+        builder.add(
+            Processor::<SpriteSheet>::new(),
+            "sprite_sheet_processor",
+            &[],
+        );
 
-            // make sure that all renderer-specific systems run after game code
-            builder.add_barrier();
+        // make sure that all renderer-specific systems run after game code
+        builder.add_barrier();
 
-            for plugin in &mut self.plugins {
-                plugin.on_build(world, builder)?;
-            }
-
-            builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
+        for plugin in &mut self.plugins {
+            plugin.on_build(world, builder)?;
         }
-        #[cfg(not(feature = "legion-ecs"))]
-        {
-            builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
-            builder.add(
-                TextureProcessorSystem::<B>::default(),
-                "texture_processor",
-                &[],
-            );
-            builder.add(Processor::<Material>::new(), "material_processor", &[]);
-            builder.add(
-                Processor::<SpriteSheet>::new(),
-                "sprite_sheet_processor",
-                &[],
-            );
 
-            // make sure that all renderer-specific systems run after game code
-            builder.add_barrier();
-
-            for plugin in &mut self.plugins {
-                plugin.on_build(world, builder)?;
-            }
-
-            builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
-        }
+        builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
         Ok(())
     }
 }
