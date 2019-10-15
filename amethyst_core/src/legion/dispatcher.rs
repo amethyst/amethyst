@@ -57,12 +57,6 @@ impl Dispatcher {
     }
 
     pub fn merge(mut self, mut other: Dispatcher) -> Self {
-        println!(
-            "thread-local merging {} vs. {}",
-            self.thread_locals.len(),
-            other.thread_locals.len()
-        );
-
         self.thread_locals.extend(other.thread_locals.drain(..));
         for (k, v) in self.stages.iter_mut() {
             v.extend(other.stages.get_mut(k).unwrap().drain(..));
@@ -145,11 +139,7 @@ impl DispatcherBuilder {
     pub fn build(mut self, world: &mut legion::world::World) -> Dispatcher {
         let mut dispatcher = Dispatcher::default();
 
-        println!("BUILD systems loals  = {}", self.systems.len(),);
-        println!("BUILD thread loals  = {}", self.thread_locals.len(),);
-
         let mut recursive_builder = DispatcherBuilder::default();
-        println!("WTF WTF START BUILD");
         for desc in self.systems.drain(..) {
             desc.1
                 .consume(world, &mut dispatcher, &mut recursive_builder)
@@ -157,15 +147,9 @@ impl DispatcherBuilder {
         }
 
         for bundle in self.bundles.drain(..) {
-            println!("Consuming bundle...");
             bundle
                 .consume(world, &mut dispatcher, &mut recursive_builder)
                 .unwrap();
-            println!(
-                "BUNDLE thread loals  = {}, recursive={}",
-                self.thread_locals.len(),
-                recursive_builder.thread_locals.len()
-            );
         }
 
         for desc in self.thread_locals.drain(..) {
@@ -173,18 +157,8 @@ impl DispatcherBuilder {
                 .unwrap();
         }
 
-        println!(
-            "BUILD thread recursive={}",
-            recursive_builder.thread_locals.len()
-        );
-        println!(
-            "BUILD systems  recursive={}",
-            recursive_builder.systems.len()
-        );
-
         // TODO: We need to recursively iterate any newly added bundles
         if !recursive_builder.is_empty() {
-            println!("recurse");
             dispatcher.merge(recursive_builder.build(world))
         } else {
             dispatcher

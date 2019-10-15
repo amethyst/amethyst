@@ -126,12 +126,12 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
             profile_scope!("gather_visibility");
 
             // TODO: we should cache the query so we can do changed filtering and then reduce redraws even MORE
-            let mut query = <(Read<SpriteRender>, Read<Transform>, Read<Tint>)>::query()
+            let mut query = <(Read<SpriteRender>, Read<Transform>)>::query()
                 .filter(!component::<Hidden>() & !component::<HiddenPropagate>());
 
             query
                 .iter_entities(world)
-                .filter_map(|(entity, (sprite_render, global, tint))| {
+                .filter_map(|(entity, (sprite_render, global))| {
                     if !visibility.visible_unordered.contains(&entity) {
                         return None;
                     }
@@ -155,6 +155,21 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
                 .for_each_group(|tex_id, batch_data| {
                     sprites_ref.insert(tex_id, batch_data.drain(..))
                 });
+        }
+
+        self.textures.maintain(factory, world);
+
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("write");
+
+            sprites_ref.prune();
+            self.vertex.write(
+                factory,
+                index,
+                self.sprites.count() as u64,
+                self.sprites.data(),
+            );
         }
 
         PrepareResult::DrawRecord

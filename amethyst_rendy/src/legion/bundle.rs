@@ -53,6 +53,7 @@ impl<B: Backend> RenderingBundle<B> {
     }
 
     /// Register a [`RenderPlugin`].
+    /// Register a [`RenderPlugin`].
     pub fn add_plugin(&mut self, plugin: impl RenderPlugin<B> + 'static) {
         self.plugins.push(Box::new(plugin));
     }
@@ -72,13 +73,6 @@ impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
 
         builder.add_system_desc(Stage::Begin, ProcessorSystemDesc::<Material>::default());
         builder.add_system_desc(Stage::Begin, ProcessorSystemDesc::<SpriteSheet>::default());
-        /* TODO: We need to port assets now
-        builder.add(Processor::<Material>::new(), "material_processor", &[]);
-        builder.add(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
-        );*/
 
         for mut plugin in &mut self.plugins {
             plugin.on_build(world, builder)?;

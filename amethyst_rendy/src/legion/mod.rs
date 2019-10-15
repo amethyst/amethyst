@@ -32,6 +32,7 @@ impl<B: Backend> LegionRenderSyncer<B> {
         world.add_component_sync::<crate::skinning::JointTransforms>();
         world.add_component_sync::<Handle<crate::mtl::Material>>();
         world.add_component_sync::<Handle<crate::Mesh>>();
+        world.add_component_sync::<crate::visibility::BoundingSphere>();
 
         world.add_component_sync::<Handle<crate::mtl::Material>>();
         world.add_component_sync::<Handle<crate::Mesh>>();

@@ -171,6 +171,8 @@ impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
 
                     mesh_storage.process(
                         |b| {
+                            log::trace!("Processing Mesh: {:?}", b);
+
                             #[cfg(feature = "profiler")]
                             profile_scope!("process_mesh");
 
@@ -209,6 +211,8 @@ impl<B: Backend> SystemDesc for TextureProcessorSystemDesc<B> {
                     use std::ops::Deref;
                     texture_storage.process(
                         |b| {
+                            log::trace!("Processing Texture: {:?}", b);
+
                             #[cfg(feature = "profiler")]
                             profile_scope!("process_texture");
 

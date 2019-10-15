@@ -90,7 +90,7 @@ fn init_background_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>)
         .with(transform)
         .with(sprite)
         .named("background")
-        .with(Transparent)
+        // .with(Transparent)
         .build()
 }
 
@@ -106,7 +106,7 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) 
         .create_entity()
         .with(transform)
         .with(sprite)
-        .with(Transparent)
+        //.with(Transparent)
         .named("reference")
         .build()
 }
@@ -123,7 +123,7 @@ fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteS
         .create_entity()
         .with(transform)
         .with(sprite)
-        .with(Transparent)
+        //  .with(Transparent)
         .named("screen_reference")
         .build()
 }
@@ -140,7 +140,7 @@ fn init_player(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity 
         .with(transform)
         .with(Player)
         .with(sprite)
-        .with(Transparent)
+        //   .with(Transparent)
         .named("player")
         .build()
 }
@@ -228,7 +228,6 @@ impl SimpleState for Example {
             .iter()
             .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::SpecsToLegion));
 
-        println!("STARTING BUILD");
         self.legion_dispatcher = self
             .legion_dispatcher_builder
             .take()
@@ -246,7 +245,7 @@ impl SimpleState for Example {
                     .with_plugin(RenderFlat2D::default()),
             )
             .build(&mut self.legion.world);
-        println!("BUILD STEP?");
+
         syncers
             .iter()
             .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::LegionToSpecs));
@@ -291,7 +290,8 @@ impl SimpleState for Example {
 
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(Default::default())
-        .level_for("amethyst_assets", log::LevelFilter::Debug)
+        //.level_for("amethyst_assets", log::LevelFilter::Trace)
+        .level_for("amethyst_rendy", log::LevelFilter::Trace)
         .start();
 
     let app_root = application_root_dir()?;
