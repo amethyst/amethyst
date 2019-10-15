@@ -125,24 +125,37 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_visibility");
 
-            // TODO: we should cache the query so we can do changed filtering and then reduce redraws even MORE
-            let mut query = <(Read<SpriteRender>, Read<Transform>)>::query()
-                .filter(!component::<Hidden>() & !component::<HiddenPropagate>());
-
-            query
-                .iter_entities(world)
-                .filter_map(|(entity, (sprite_render, global))| {
-                    if !visibility.visible_unordered.contains(&entity) {
-                        return None;
-                    }
-
-                    let (batch_data, texture) = SpriteArgs::from_data(
-                        &tex_storage,
-                        &sprite_sheet_storage,
-                        &sprite_render,
-                        &global,
-                        None, // TODO:
-                    )?;
+            visibility
+                .visible_unordered
+                .iter()
+                .filter_map(|entity| {
+                    Some((
+                        entity,
+                        (
+                            world.get_component::<SpriteRender>(*entity)?,
+                            world.get_component::<Transform>(*entity)?,
+                            world.get_component::<Tint>(*entity),
+                        ),
+                    ))
+                })
+                .filter_map(|(entity, (sprite_render, global, tint))| {
+                    let (batch_data, texture) = if let Some(tint) = tint {
+                        SpriteArgs::from_data(
+                            &tex_storage,
+                            &sprite_sheet_storage,
+                            &sprite_render,
+                            &global,
+                            Some(&tint),
+                        )?
+                    } else {
+                        SpriteArgs::from_data(
+                            &tex_storage,
+                            &sprite_sheet_storage,
+                            &sprite_render,
+                            &global,
+                            None,
+                        )?
+                    };
 
                     let (tex_id, _) = textures_ref.insert(
                         factory,
@@ -209,12 +222,10 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
     }
 }
 
-/*
-/// Describes drawing transparent sprites without lighting.
+/// Draw opaque sprites without lighting.
 #[derive(Clone, Debug, PartialEq, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct DrawFlat2DTransparentDesc;
-
 impl DrawFlat2DTransparentDesc {
     /// Create instance of `DrawFlat2D` render group
     pub fn new() -> Self {
@@ -228,7 +239,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawFlat2DTransparentDesc {
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _world: &World,
+        _aux: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
@@ -236,7 +247,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawFlat2DTransparentDesc {
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         #[cfg(feature = "profiler")]
-        profile_scope!("build_trans");
+        profile_scope!("build");
 
         let env = FlatEnvironmentSub::new(factory)?;
         let textures = TextureSub::new(factory)?;
@@ -258,12 +269,11 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawFlat2DTransparentDesc {
             textures,
             vertex,
             sprites: Default::default(),
-            change: Default::default(),
         }))
     }
 }
 
-/// Draws transparent sprites without lighting.
+/// Draws opaque 2D sprites to the screen without lighting.
 #[derive(Debug)]
 pub struct DrawFlat2DTransparent<B: Backend> {
     pipeline: B::GraphicsPipeline,
@@ -271,8 +281,7 @@ pub struct DrawFlat2DTransparent<B: Backend> {
     env: FlatEnvironmentSub<B>,
     textures: TextureSub<B>,
     vertex: DynamicVertexBuffer<B, SpriteArgs>,
-    sprites: OrderedOneLevelBatch<TextureId, SpriteArgs>,
-    change: util::ChangeDetection,
+    sprites: OneLevelBatch<TextureId, SpriteArgs>,
 }
 
 impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
@@ -285,71 +294,86 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
         world: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
-        profile_scope!("prepare transparent");
+        profile_scope!("prepare opaque");
 
-        let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, transforms, tints) =
-            <(
-                Read<'_, AssetStorage<SpriteSheet>>,
-                Read<'_, AssetStorage<Texture>>,
-                ReadExpect<'_, SpriteVisibility>,
-                ReadStorage<'_, SpriteRender>,
-                ReadStorage<'_, Transform>,
-                ReadStorage<'_, Tint>,
-            )>::fetch(world);
+        let (sprite_sheet_storage, tex_storage, visibility) = <(
+            Read<AssetStorage<SpriteSheet>>,
+            Read<AssetStorage<Texture>>,
+            Read<SpriteVisibility>,
+        )>::fetch(&world.resources);
 
         self.env.process(factory, index, world);
-        self.sprites.swap_clear();
-        let mut changed = false;
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
 
+        sprites_ref.clear_inner();
+
         {
             #[cfg(feature = "profiler")]
-            profile_scope!("gather_sprites_trans");
+            profile_scope!("gather_visibility");
 
-            let mut joined = (&sprite_renders, &transforms, tints.maybe()).join();
             visibility
                 .visible_ordered
                 .iter()
-                .filter_map(|e| joined.get_unchecked(e.id()))
-                .filter_map(|(sprite_render, global, tint)| {
-                    let (batch_data, texture) = SpriteArgs::from_data(
-                        &tex_storage,
-                        &sprite_sheet_storage,
-                        &sprite_render,
-                        &global,
-                        tint,
-                    )?;
-                    let (tex_id, this_changed) = textures_ref.insert(
+                .filter_map(|entity| {
+                    Some((
+                        entity,
+                        (
+                            world.get_component::<SpriteRender>(*entity)?,
+                            world.get_component::<Transform>(*entity)?,
+                            world.get_component::<Tint>(*entity),
+                        ),
+                    ))
+                })
+                .filter_map(|(entity, (sprite_render, global, tint))| {
+                    let (batch_data, texture) = if let Some(tint) = tint {
+                        SpriteArgs::from_data(
+                            &tex_storage,
+                            &sprite_sheet_storage,
+                            &sprite_render,
+                            &global,
+                            Some(&tint),
+                        )?
+                    } else {
+                        SpriteArgs::from_data(
+                            &tex_storage,
+                            &sprite_sheet_storage,
+                            &sprite_render,
+                            &global,
+                            None,
+                        )?
+                    };
+
+                    let (tex_id, _) = textures_ref.insert(
                         factory,
                         world,
                         texture,
                         hal::image::Layout::ShaderReadOnlyOptimal,
                     )?;
-                    changed = changed || this_changed;
                     Some((tex_id, batch_data))
                 })
                 .for_each_group(|tex_id, batch_data| {
-                    sprites_ref.insert(tex_id, batch_data.drain(..));
+                    sprites_ref.insert(tex_id, batch_data.drain(..))
                 });
         }
+
         self.textures.maintain(factory, world);
-        changed = changed || self.sprites.changed();
 
         {
             #[cfg(feature = "profiler")]
             profile_scope!("write");
 
+            sprites_ref.prune();
             self.vertex.write(
                 factory,
                 index,
                 self.sprites.count() as u64,
-                Some(self.sprites.data()),
+                self.sprites.data(),
             );
         }
 
-        self.change.prepare_result(index, changed)
+        PrepareResult::DrawRecord
     }
 
     fn draw_inline(
@@ -360,7 +384,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
         _world: &World,
     ) {
         #[cfg(feature = "profiler")]
-        profile_scope!("draw transparent");
+        profile_scope!("draw opaque");
 
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
@@ -376,7 +400,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _world: &World) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -385,7 +409,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
         }
     }
 }
-*/
+
 fn build_sprite_pipeline<B: Backend>(
     factory: &Factory<B>,
     subpass: hal::pass::Subpass<'_, B>,

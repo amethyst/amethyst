@@ -90,7 +90,7 @@ fn init_background_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>)
         .with(transform)
         .with(sprite)
         .named("background")
-        // .with(Transparent)
+        .with(Transparent)
         .build()
 }
 
@@ -106,7 +106,7 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) 
         .create_entity()
         .with(transform)
         .with(sprite)
-        //.with(Transparent)
+        .with(Transparent)
         .named("reference")
         .build()
 }
@@ -140,7 +140,7 @@ fn init_player(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity 
         .with(transform)
         .with(Player)
         .with(sprite)
-        //   .with(Transparent)
+        .with(Transparent)
         .named("player")
         .build()
 }

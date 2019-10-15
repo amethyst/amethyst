@@ -168,10 +168,10 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(RenderOrder::Opaque, DrawFlat2DDesc::new().builder())?;
-            //ctx.add(
-            //    RenderOrder::Transparent,
-            //    DrawFlat2DTransparentDesc::new().builder(),
-            //)?;
+            ctx.add(
+                RenderOrder::Transparent,
+                DrawFlat2DTransparentDesc::new().builder(),
+            )?;
             Ok(())
         });
         Ok(())

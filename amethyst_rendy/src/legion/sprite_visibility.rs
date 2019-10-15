@@ -1,6 +1,7 @@
 //! Transparency, visibility sorting and camera centroid culling for 2D Sprites.
 use crate::{
     camera::{Camera, LegionActiveCamera},
+    sprite::SpriteRender,
     transparent::Transparent,
 };
 use amethyst_core::{
@@ -62,7 +63,7 @@ impl SystemDesc for SpriteVisibilitySortingSystemDesc {
             .read_component::<Transform>()
             .with_query(<(Read<Camera>, Read<Transform>)>::query())
             .with_query(
-                <(Read<Transform>)>::query()
+                <(Read<Transform>, Read<SpriteRender>)>::query()
                     .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
             )
             .build_disposable(
@@ -102,7 +103,7 @@ impl SystemDesc for SpriteVisibilitySortingSystemDesc {
                     state.centroids.extend(
                         entity_query
                             .iter_entities()
-                            .map(|(e, t)| (e, t.global_matrix().transform_point(&origin)))
+                            .map(|(e, (t, _))| (e, t.global_matrix().transform_point(&origin)))
                             // filter entities behind the camera
                             .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
                             .map(|(entity, centroid)| Internals {
