@@ -82,6 +82,8 @@ pub type SetupData<'a> = (
     ReadStorage<'a, Transform>,
     ReadStorage<'a, SpriteRender>,
     Option<Read<'a, Visibility>>,
+    Read<'a, AssetStorage<Texture>>,
+    Read<'a, AssetStorage<crate::sprite::SpriteSheet>>,
     Read<'a, ActiveCamera>,
     ReadStorage<'a, JointTransforms>,
 );
