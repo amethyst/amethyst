@@ -88,6 +88,7 @@ impl TileArgs {
         sprite_number: usize,
         tint: Option<&TintComponent>,
         tile_coordinate: &Point3<u32>,
+        flip: (bool, bool),
     ) -> Option<(Self, &'a Handle<Texture>)> {
         if !tex_storage.contains(&sprite_sheet.texture) {
             return None;
@@ -95,10 +96,20 @@ impl TileArgs {
 
         let sprite = &sprite_sheet.sprites[sprite_number];
 
+        let mut u_offset: vec2 = [sprite.tex_coords.left, sprite.tex_coords.right].into();
+        let mut v_offset: vec2 = [sprite.tex_coords.top, sprite.tex_coords.bottom].into();
+
+        if flip.0 {
+            u_offset = [sprite.tex_coords.right, sprite.tex_coords.left].into();
+        }
+        if flip.1 {
+            v_offset = [sprite.tex_coords.bottom, sprite.tex_coords.top].into();
+        }
+
         Some((
             Self {
-                u_offset: [sprite.tex_coords.left, sprite.tex_coords.right].into(),
-                v_offset: [sprite.tex_coords.top, sprite.tex_coords.bottom].into(),
+                u_offset,
+                v_offset,
                 tint: tint.map_or([1.0; 4].into(), |t| t.0.into_pod()),
                 tile_coordinate: [tile_coordinate.x, tile_coordinate.y, tile_coordinate.z].into(),
             },

@@ -20,6 +20,11 @@ pub trait Tile: 'static + Clone + Send + Sync + Default {
     fn tint(&self, coordinates: Point3<u32>, world: &World) -> Srgba {
         Srgba::new(1.0, 1.0, 1.0, 1.0)
     }
+
+    /// Takes an immutable reference to world to process this sprite and return its flip.
+    fn flip(&self, coordinates: Point3<u32>, world: &World) -> (bool, bool) {
+        (false, false)
+    }
 }
 
 /// Trait for providing access to an underlying storage type of a 3-dimensional Tile data. This is abstracted to provide

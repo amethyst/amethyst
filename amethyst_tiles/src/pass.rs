@@ -274,6 +274,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                             sprite_number,
                             Some(&TintComponent(tile.tint(coord, world))),
                             &coord,
+                            tile.flip(coord, world),
                         )?;
 
                         let (tex_id, this_changed) = textures_ref.insert(
