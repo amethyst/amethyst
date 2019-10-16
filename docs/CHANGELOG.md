@@ -23,7 +23,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Cleaned up tiles example. Added rotation and translation tests, fixed raycast debug box. Added default zoom to PROJECT
   perspective projection since no one knew to zoom out. ([#1974])
 - TileMaps to_tile and to_world now take an Option<&Transform> that allows them to work if the entire map in 
- translated. ([#1987])
+ translated. ([#1987],[#1991])
+- `AmethystApplication::with_fn` constraint relaxed from `Fn` to `FnOnce`. ([#1983])
+- ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
 
 ### Deprecated
 
@@ -40,7 +42,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1973]: https://github.com/amethyst/amethyst/pull/1973
 [#1974]: https://github.com/amethyst/amethyst/pull/1974
 [#1978]: https://github.com/amethyst/amethyst/pull/1978
-[#1978]: https://github.com/amethyst/amethyst/issue/1987
+[#1987]: https://github.com/amethyst/amethyst/issue/1987
+[#1983]: https://github.com/amethyst/amethyst/pull/1983
+[#1991]: https://github.com/amethyst/amethyst/pull/1991
 
 ## [0.13.3] - 2019-10-4
 
