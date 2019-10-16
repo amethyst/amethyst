@@ -57,7 +57,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path).with_clear(CLEAR_COLOR),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(CLEAR_COLOR),
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),

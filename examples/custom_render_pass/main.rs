@@ -97,7 +97,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)
+                    RenderToWindow::from_config_path(display_config_path)?
                         .with_clear([1.0, 1.0, 1.0, 1.0]),
                 )
                 // Add our custom render plugin to the rendering bundle.

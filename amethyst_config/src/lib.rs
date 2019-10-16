@@ -16,7 +16,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::error;
 use ron::{self, de::Error as DeError, ser::Error as SerError};
 use serde::{Deserialize, Serialize};
 
@@ -99,11 +98,13 @@ where
     Self: Sized,
 {
     /// Loads a configuration structure from a file.
-    /// Defaults if the file fails in any way.
-    fn load<P: AsRef<Path>>(path: P) -> Self;
+    fn load<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError>;
 
     /// Loads a configuration structure from a file.
-    fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError>;
+    #[deprecated(note = "use `load` instead")]
+    fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
+        Self::load(path)
+    }
 
     /// Loads configuration structure from raw bytes.
     fn load_bytes(bytes: &[u8]) -> Result<Self, ConfigError>;
@@ -114,21 +115,9 @@ where
 
 impl<T> Config for T
 where
-    T: for<'a> Deserialize<'a> + Serialize + Default,
+    T: for<'a> Deserialize<'a> + Serialize,
 {
-    fn load<P: AsRef<Path>>(path: P) -> Self {
-        Self::load_no_fallback(path.as_ref()).unwrap_or_else(|e| {
-            if let Some(path) = path.as_ref().to_str() {
-                error!("Failed to load config file '{}': {}", path, e);
-            } else {
-                error!("Failed to load config: {}", e);
-            }
-
-            Self::default()
-        })
-    }
-
-    fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
+    fn load<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
         use std::{fs::File, io::Read};
 
         let path = path.as_ref();

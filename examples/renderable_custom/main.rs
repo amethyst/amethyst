@@ -238,7 +238,7 @@ fn main() -> Result<(), Error> {
             &[],
         )
         .with(Processor::<Material>::new(), "material_processor", &[])
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(WindowBundle::from_config_path(display_config_path)?)?
         // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
         // which will always execute on the main thread.
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
