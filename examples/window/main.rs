@@ -34,7 +34,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/window/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?;
+        .with_bundle(WindowBundle::from_config_path(display_config_path)?)?;
 
     let mut game = Application::new(assets_dir, ExampleState, game_data)?;
     game.run();

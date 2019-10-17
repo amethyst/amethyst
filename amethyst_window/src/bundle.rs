@@ -1,5 +1,5 @@
 use crate::{DisplayConfig, EventsLoopSystem, WindowSystem};
-use amethyst_config::Config;
+use amethyst_config::{Config, ConfigError};
 use amethyst_core::{bundle::SystemBundle, ecs::World, shred::DispatcherBuilder};
 use amethyst_error::Error;
 use winit::EventsLoop;
@@ -27,8 +27,10 @@ impl WindowBundle {
     /// Builds a new window bundle by loading the `DisplayConfig` from `path`.
     ///
     /// Will fall back to `DisplayConfig::default()` in case of an error.
-    pub fn from_config_path(path: impl AsRef<std::path::Path>) -> Self {
-        WindowBundle::from_config(DisplayConfig::load(path.as_ref()))
+    pub fn from_config_path(path: impl AsRef<std::path::Path>) -> Result<Self, ConfigError> {
+        Ok(WindowBundle::from_config(DisplayConfig::load(
+            path.as_ref(),
+        )?))
     }
 
     /// Builds a new window bundle with a predefined `DisplayConfig`.

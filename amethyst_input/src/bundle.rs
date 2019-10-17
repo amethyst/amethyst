@@ -56,7 +56,7 @@ impl<T: BindingTypes> InputBundle<T> {
     where
         Bindings<T>: Config,
     {
-        let mut bindings = Bindings::load_no_fallback(file)?;
+        let mut bindings = Bindings::load(file)?;
         bindings.check_invariants()?;
         Ok(self.with_bindings(bindings))
     }

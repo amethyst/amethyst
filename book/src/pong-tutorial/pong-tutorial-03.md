@@ -67,7 +67,7 @@ let input_bundle = InputBundle::<StringBindings>::new()
     .with_bindings_from_file(binding_path)?;
 
 # let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path);
+# let config = DisplayConfig::load(&path)?;
 # let assets_dir = "assets";
 # struct Pong;
 # impl SimpleState for Pong { }
@@ -215,7 +215,7 @@ fn main() -> amethyst::Result<()> {
 // --snip--
 
 # let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path);
+# let config = DisplayConfig::load(&path)?;
 # mod systems {
 #
 # use amethyst::core::ecs::{System, SystemData, World};

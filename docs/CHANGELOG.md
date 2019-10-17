@@ -26,14 +26,17 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
  translated. ([#1987],[#1991])
 - `AmethystApplication::with_fn` constraint relaxed from `Fn` to `FnOnce`. ([#1983])
 - ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
+- `Config::load` now returns an error or failure rather than silently falling back to the default config. Same is true for the `from_config_file` methods on `RenderToWindow`, `WindowBundle`, and `WindowSystem` ([#1989])
 
 ### Deprecated
+- `Config::load_no_fallback`, use `Config::load` instead ([#1989])
 
 ### Removed
 
 ### Fixed
 
 - Tilemap rotation was incorrect and not transposed. Fixed and uses component rotation. ([#1974])
+- `Config` types no longer require a `Default` impl ([#1989])
 
 ### Security
 
@@ -45,6 +48,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1987]: https://github.com/amethyst/amethyst/issue/1987
 [#1983]: https://github.com/amethyst/amethyst/pull/1983
 [#1991]: https://github.com/amethyst/amethyst/pull/1991
+[#1989]: https://github.com/amethyst/amethyst/pull/1989
+
 
 ## [0.13.3] - 2019-10-4
 
