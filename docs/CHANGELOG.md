@@ -72,6 +72,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 - `FlatEncoder` added to amethyst_tiles for flat linear encoding which is optimized for space. ([#1950])
+- `SystemDesc` derive no longer requires any imports. ([#1995])
 
 ### Changed
 
@@ -88,6 +89,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1950]: https://github.com/amethyst/amethyst/pull/1950
 [#1952]: https://github.com/amethyst/amethyst/pull/1952
 [#1957]: https://github.com/amethyst/amethyst/pull/1957
+[#1995]: https://github.com/amethyst/amethyst/pull/1995
 
 ## [0.13.0] - 2019-09-25
 
