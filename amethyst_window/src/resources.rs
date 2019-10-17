@@ -3,9 +3,9 @@ use amethyst_core::math::Vector2;
 /// World resource that stores screen dimensions.
 #[derive(Debug, PartialEq, Clone)]
 pub struct ScreenDimensions {
-    /// Screen width in pixels (px).
+    /// Screen width in physical pixels (px).
     pub(crate) w: f64,
-    /// Screen height in pixels (px).
+    /// Screen height in physical pixels (px).
     pub(crate) h: f64,
     /// Width divided by height.
     aspect_ratio: f32,

@@ -140,7 +140,7 @@ keep playing after someone scores and log who got the point.
 # fn main() -> amethyst::Result<()> {
 #
 # let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path);
+# let config = DisplayConfig::load(&path)?;
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
 #
 # let mut world = World::new();

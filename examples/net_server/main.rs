@@ -3,13 +3,7 @@ use std::time::Duration;
 use amethyst::{
     core::{bundle::SystemBundle, frame_limiter::FrameRateLimitStrategy, SystemDesc},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
-    network::simulation::{
-        //        laminar::{LaminarNetworkBundle, LaminarSocket},
-        tcp::TcpNetworkBundle,
-        //        udp::UdpNetworkBundle,
-        NetworkSimulationEvent,
-        TransportResource,
-    },
+    network::simulation::{tcp::TcpNetworkBundle, NetworkSimulationEvent, TransportResource},
     prelude::*,
     shrev::{EventChannel, ReaderId},
     utils::application_root_dir,

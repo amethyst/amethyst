@@ -22,7 +22,7 @@ mod window {
         bundle::{ImageOptions, OutputColor},
         Format, Kind,
     };
-    use amethyst_config::Config;
+    use amethyst_config::{Config, ConfigError};
     use amethyst_core::{
         ecs::{ReadExpect, SystemData},
         SystemBundle,
@@ -45,8 +45,8 @@ mod window {
 
     impl RenderToWindow {
         /// Create RenderToWindow plugin with [`WindowBundle`] using specified config path.
-        pub fn from_config_path(path: impl AsRef<Path>) -> Self {
-            Self::from_config(DisplayConfig::load(path))
+        pub fn from_config_path(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
+            Ok(Self::from_config(DisplayConfig::load(path)?))
         }
 
         /// Create RenderToWindow plugin with [`WindowBundle`] using specified config.
