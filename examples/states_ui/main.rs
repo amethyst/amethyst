@@ -77,7 +77,7 @@ pub fn main() -> amethyst::Result<()> {
                 // This creates the window and draws a background, if we don't specify a
                 // background in the loaded ui prefab file.
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)
+                    RenderToWindow::from_config_path(display_config_path)?
                         .with_clear([0.005, 0.005, 0.005, 1.0]),
                 )
                 // Without this, all of our beautiful UI would not get drawn.
