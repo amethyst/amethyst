@@ -1,9 +1,9 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use amethyst_core::{
-    ecs::{Entity, ReadExpect, System, SystemData, World, Write, WriteStorage},
+    ecs::{Entity, ReadExpect, System, SystemData, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
-    ParentHierarchy, SystemDesc,
+    ParentHierarchy,
 };
 use amethyst_derive::SystemDesc;
 

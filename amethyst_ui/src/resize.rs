@@ -1,10 +1,9 @@
 use amethyst_core::{
     ecs::prelude::{
         BitSet, Component, ComponentEvent, FlaggedStorage, Join, ReadExpect, System, SystemData,
-        World, WriteStorage,
+        WriteStorage,
     },
     shrev::ReaderId,
-    SystemDesc,
 };
 use amethyst_derive::SystemDesc;
 use amethyst_window::ScreenDimensions;

@@ -8,10 +8,9 @@ use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, 
 
 use amethyst_core::{
     ecs::prelude::{
-        Entities, Join, Read, ReadStorage, System, SystemData, World, Write, WriteStorage,
+        Entities, Join, Read, ReadStorage, System, SystemData, Write, WriteStorage,
     },
     shrev::{EventChannel, ReaderId},
-    SystemDesc,
 };
 use amethyst_derive::SystemDesc;
 
