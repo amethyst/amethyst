@@ -11,9 +11,13 @@ use syn::{
 };
 
 pub fn amethyst_core() -> TokenStream {
-    if let Ok(name) = proc_macro_crate::crate_name("amethyst_core").map(|x| Ident::new(&x, Span::call_site())) {
+    if let Ok(name) =
+        proc_macro_crate::crate_name("amethyst_core").map(|x| Ident::new(&x, Span::call_site()))
+    {
         quote!(::#name)
-    } else if let Ok(name) = proc_macro_crate::crate_name("amethyst").map(|x| Ident::new(&x, Span::call_site())) {
+    } else if let Ok(name) =
+        proc_macro_crate::crate_name("amethyst").map(|x| Ident::new(&x, Span::call_site()))
+    {
         quote!(::#name::core)
     } else {
         panic!("neither amethyst nor amethyst_core found");
