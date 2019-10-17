@@ -8,8 +8,8 @@ Container(
         // here the z-value is relevant to get shown `in front of' the other UI elements
         z: 2.0,
 
-        width: 1280.0,
-        height: 960.0,
+        width: 1920.0,
+        height: 1080.0,
     ),
     background: SolidColor(0.0, 0.0, 0.0, 0.5),
     children: [
