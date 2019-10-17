@@ -309,9 +309,7 @@ fn to_world(
     let coord_f = Point3::new(coord.x as f32, -1.0 * coord.y as f32, coord.z as f32);
     if let Some(map_trans) = map_transform {
         map_trans
-            .global_view_matrix()
-            .try_inverse()
-            .unwrap()
+            .global_matrix()
             .transform_point(&transform.transform_point(&coord_f))
             .coords
     } else {
