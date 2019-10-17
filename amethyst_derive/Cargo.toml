@@ -20,6 +20,7 @@ syn = { version = "1.0", features = ["full", "visit"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 proc_macro_roids = "0.6"
+proc-macro-crate = "0.1"
 
 [dev-dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.8.1" }

@@ -10,6 +10,16 @@ use syn::{
     NestedMeta, Path, PathArguments, Type, TypeGenerics, TypePath, WhereClause,
 };
 
+pub fn amethyst_core() -> TokenStream {
+    if let Ok(name) = proc_macro_crate::crate_name("amethyst_core").map(|x| Ident::new(&x, Span::call_site())) {
+        quote!(::#name)
+    } else if let Ok(name) = proc_macro_crate::crate_name("amethyst").map(|x| Ident::new(&x, Span::call_site())) {
+        quote!(::#name::core)
+    } else {
+        panic!("neither amethyst nor amethyst_core found");
+    }
+}
+
 pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
     let system_name = &ast.ident;
     let system_desc_name = system_desc_name(&ast);
@@ -83,13 +93,14 @@ pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
         .push(GenericParam::from(system_desc_life_b.clone()));
     let (impl_generics_with_lifetimes, _, _) = generics.split_for_impl();
 
+    let amethyst_core = amethyst_core();
     quote! {
         #system_desc_struct
 
         #constructor
 
         impl #impl_generics_with_lifetimes
-        SystemDesc<
+        #amethyst_core::SystemDesc<
             #system_desc_life_a,
             #system_desc_life_b,
             #system_name #ty_generics
@@ -97,8 +108,8 @@ pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
             for #system_desc_name #ty_generics
         #where_clause
         {
-            fn build(self, world: &mut World) -> #system_name #ty_generics {
-                <#system_name #ty_generics as System<'_>>::SystemData::setup(world);
+            fn build(self, world: &mut #amethyst_core::ecs::World) -> #system_name #ty_generics {
+                <#system_name #ty_generics as #amethyst_core::ecs::System<'_>>::SystemData::setup(world);
 
                 #resource_insertion_expressions
 
@@ -230,7 +241,7 @@ fn impl_constructor(context: &Context<'_>) -> TokenStream {
 
     if *is_default {
         quote! {
-            impl #impl_generics std::default::Default for #system_desc_name #ty_generics
+            impl #impl_generics ::std::default::Default for #system_desc_name #ty_generics
             #where_clause
             {
                 fn default() -> Self {
@@ -269,7 +280,7 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
                 .iter()
                 .map(|field| {
                     if field.is_phantom_data() {
-                        quote!(std::marker::PhantomData)
+                        quote!(::std::marker::PhantomData)
                     } else {
                         let type_name_snake = snake_case(field);
                         quote!(#type_name_snake)
@@ -292,7 +303,7 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
                         .expect("Expected named field to have an ident.");
 
                     if field.is_phantom_data() {
-                        quote!(#field_name: std::marker::PhantomData)
+                        quote!(#field_name: ::std::marker::PhantomData)
                     } else {
                         quote!(#field_name)
                     }
@@ -608,6 +619,7 @@ fn resource_insertion_expressions(ast: &DeriveInput) -> TokenStream {
 
 /// Computes resources from the `World`.
 fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> TokenStream {
+    let amethyst_core = amethyst_core();
     system_desc_fields.field_mappings.iter().fold(
         TokenStream::new(),
         |mut token_stream, field_mapping| {
@@ -654,7 +666,7 @@ fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> T
                     );
                     let tokens = quote! {
                         let #field_name = world
-                            .get_mut::<EventChannel<#event_type_path>>()
+                            .get_mut::<#amethyst_core::shrev::EventChannel<#event_type_path>>()
                             .expect(#event_channel_error)
                             .register_reader();
                     };
@@ -678,7 +690,7 @@ fn field_computation_expressions(system_desc_fields: &SystemDescFields<'_>) -> T
                         }
                     };
                     let tokens = quote! {
-                        let #field_name = WriteStorage::<#component_path>::fetch(&world)
+                        let #field_name = #amethyst_core::ecs::WriteStorage::<#component_path>::fetch(&world)
                             .register_reader();
                     };
                     token_stream.extend(tokens);
