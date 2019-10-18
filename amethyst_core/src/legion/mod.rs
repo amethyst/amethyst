@@ -89,7 +89,7 @@ impl<B: 'static + ThreadLocal> ConsumeDesc for DispatcherThreadLocal<B> {
 pub struct DispatcherSystem<F>(Stage, F);
 impl<F> ConsumeDesc for DispatcherSystem<F>
 where
-    F: FnOnce(&mut World) -> Box<dyn Schedulable> + 'static,
+    F: FnOnce(&mut World) -> Box<dyn Schedulable>,
 {
     fn consume(
         self: Box<Self>,

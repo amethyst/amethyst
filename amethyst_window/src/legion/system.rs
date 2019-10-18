@@ -1,4 +1,4 @@
-use crate::{config::DisplayConfig, resources::ScreenDimensions};
+use crate::resources::ScreenDimensions;
 use amethyst_config::Config;
 use amethyst_core::{
     legion::{
@@ -10,50 +10,10 @@ use amethyst_core::{
 use std::path::Path;
 use winit::{Event, EventsLoop, Window};
 
-/// System for opening and managing the window.
-#[derive(Debug)]
-pub struct WindowSystem;
+pub mod window_system {
+    use super::*;
 
-impl WindowSystem {
-    /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
-    /// sources. Returns a new `WindowSystem`
-    pub fn from_config_path(
-        world: &mut World,
-        events_loop: &EventsLoop,
-        path: impl AsRef<Path>,
-    ) -> Self {
-        Self::from_config(world, events_loop, DisplayConfig::load(path.as_ref()))
-    }
-
-    /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
-    /// sources. Returns a new `WindowSystem`
-    pub fn from_config(world: &mut World, events_loop: &EventsLoop, config: DisplayConfig) -> Self {
-        let window = config
-            .into_window_builder(events_loop)
-            .build(events_loop)
-            .unwrap();
-        Self::new(world, window)
-    }
-
-    /// Create a new `WindowSystem` wrapping the provided `Window`
-    pub fn new(world: &mut World, window: Window) -> Self {
-        let (width, height) = window
-            .get_inner_size()
-            .expect("Window closed during initialization!")
-            .into();
-
-        let hidpi = window.get_hidpi_factor();
-
-        world
-            .resources
-            .insert(ScreenDimensions::new(width, height, hidpi));
-
-        world.resources.insert(window);
-
-        Self
-    }
-
-    fn manage_dimensions(&mut self, mut screen_dimensions: &mut ScreenDimensions, window: &Window) {
+    fn manage_dimensions(mut screen_dimensions: &mut ScreenDimensions, window: &Window) {
         let width = screen_dimensions.w;
         let height = screen_dimensions.h;
 
@@ -79,15 +39,28 @@ impl WindowSystem {
         }
         screen_dimensions.update_hidpi_factor(hidpi);
     }
-}
 
-pub fn build_window_system(world: &mut World, mut state: WindowSystem) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("WindowSystem")
-        .write_resource::<ScreenDimensions>()
-        .read_resource::<Window>()
-        .build(move |_, _, (screen_dimensions, window), _| {
-            state.manage_dimensions(&mut &mut *screen_dimensions, &window);
-        })
+    pub fn build(world: &mut World, window: Window) -> Box<dyn Schedulable> {
+        let (width, height) = window
+            .get_inner_size()
+            .expect("Window closed during initialization!")
+            .into();
+
+        let hidpi = window.get_hidpi_factor();
+
+        world
+            .resources
+            .insert(ScreenDimensions::new(width, height, hidpi));
+
+        world.resources.insert(window);
+
+        SystemBuilder::<()>::new("WindowSystem")
+            .write_resource::<ScreenDimensions>()
+            .read_resource::<Window>()
+            .build(move |_, _, (screen_dimensions, window), _| {
+                manage_dimensions(&mut &mut *screen_dimensions, &window);
+            })
+    }
 }
 
 /// System that polls the window events and pushes them to appropriate event channels.
