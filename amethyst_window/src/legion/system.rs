@@ -81,27 +81,13 @@ impl WindowSystem {
     }
 }
 
-pub struct WindowSystemDesc {
-    pub system: WindowSystem,
-}
-impl WindowSystemDesc {
-    pub fn new(system: WindowSystem) -> Self {
-        Self { system }
-    }
-}
-impl SystemDesc for WindowSystemDesc {
-    fn build(self, world: &mut World) -> Box<dyn Schedulable> {
-        SystemBuilder::<()>::new("WindowSystem")
-            .write_resource::<ScreenDimensions>()
-            .read_resource::<Window>()
-            .build_disposable(
-                self.system,
-                |state, _, _, (screen_dimensions, window), _| {
-                    state.manage_dimensions(&mut &mut *screen_dimensions, &window);
-                },
-                |state, world| {},
-            )
-    }
+pub fn build_window_system(world: &mut World, mut state: WindowSystem) -> Box<dyn Schedulable> {
+    SystemBuilder::<()>::new("WindowSystem")
+        .write_resource::<ScreenDimensions>()
+        .read_resource::<Window>()
+        .build(move |_, _, (screen_dimensions, window), _| {
+            state.manage_dimensions(&mut &mut *screen_dimensions, &window);
+        })
 }
 
 /// System that polls the window events and pushes them to appropriate event channels.

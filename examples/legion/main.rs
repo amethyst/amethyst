@@ -101,38 +101,33 @@ impl Component for Orbit {
     type Storage = DenseVecStorage<Self>;
 }
 
-#[derive(Default)]
-pub struct OrbitSystemDesc;
-impl SystemDesc for OrbitSystemDesc {
-    fn build(
-        self,
-        world: &mut amethyst::core::legion::world::World,
-    ) -> Box<dyn amethyst::core::legion::schedule::Schedulable> {
-        use amethyst::core::legion::{system::SystemBuilder, IntoQuery, Query, Read, Write};
+fn orbit_system(
+    world: &mut amethyst::core::legion::world::World,
+) -> Box<dyn amethyst::core::legion::schedule::Schedulable> {
+    use amethyst::core::legion::{system::SystemBuilder, IntoQuery, Query, Read, Write};
 
-        SystemBuilder::<()>::new("OrbitSystem")
-            .with_query(<(Write<Transform>, Read<Orbit>)>::query())
-            .read_resource::<Time>()
-            .write_resource::<DebugLines>()
-            .build(move |commands, world, (time, debug), query| {
-                query
-                    .iter_entities()
-                    .for_each(|(entity, (mut transform, orbit))| {
-                        let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
-                        let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
-                        let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
-                        let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
-                        let final_pos = (rot * cross) + orbit.center;
-                        debug.draw_line(
-                            orbit.center.into(),
-                            final_pos.into(),
-                            Srgba::new(0.0, 0.5, 1.0, 1.0),
-                        );
+    SystemBuilder::<()>::new("OrbitSystem")
+        .with_query(<(Write<Transform>, Read<Orbit>)>::query())
+        .read_resource::<Time>()
+        .write_resource::<DebugLines>()
+        .build(move |commands, world, (time, debug), query| {
+            query
+                .iter_entities()
+                .for_each(|(entity, (mut transform, orbit))| {
+                    let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
+                    let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
+                    let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
+                    let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
+                    let final_pos = (rot * cross) + orbit.center;
+                    debug.draw_line(
+                        orbit.center.into(),
+                        final_pos.into(),
+                        Srgba::new(0.0, 0.5, 1.0, 1.0),
+                    );
 
-                        transform.set_translation(final_pos);
-                    });
-            })
-    }
+                    transform.set_translation(final_pos);
+                });
+        })
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -596,12 +591,12 @@ fn main() -> amethyst::Result<()> {
         level_filter: log::LevelFilter::Error,
         ..Default::default()
     })
-    //.level_for("amethyst_core", log::LevelFilter::Trace)
     // .level_for("rendy_memory", log::LevelFilter::Trace)
     // .level_for("rendy_factory", log::LevelFilter::Trace)
     // .level_for("rendy_resource", log::LevelFilter::Trace)
     // .level_for("rendy_graph", log::LevelFilter::Trace)
     // .level_for("rendy_node", log::LevelFilter::Trace)
+    .level_for("amethyst_core", log::LevelFilter::Trace)
     .level_for("amethyst_rendy", log::LevelFilter::Trace)
     // .level_for("gfx_backend_metal", log::LevelFilter::Trace)
     .start();
@@ -642,21 +637,22 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         // Legion stuff
+        .legion_resource_sync::<Scene>()
         .legion_resource_sync::<RenderMode>()
         .legion_component_sync::<Orbit>()
         .legion_sync_bundle(amethyst::core::legion::Syncer::default())
         .legion_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
-        .legion_with_system_desc(Stage::Logic, OrbitSystemDesc::default())
+        .legion_with_system(Stage::Logic, orbit_system)
         .legion_with_bundle(
             RenderingBundle::<DefaultBackend>::default()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
                         .with_clear([0.0, 0.0, 0.0, 1.0]),
                 )
-                .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::default())
                 .with_plugin(RenderSwitchable3D::default())
+                .with_plugin(RenderFlat2D::default())
             //.with_plugin(RenderShaded3D::default())
             //.with_plugin(RenderPbr3D::default())
             // .with_plugin(RenderFlat3D::default()),

@@ -586,6 +586,8 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
                             changed = changed || this_changed;
                             statics_ref.insert(mat, mesh_id, data.drain(..));
                         }
+                    } else {
+                        log::error!("Gathered mesh with invalid mesh ID for rendering");
                     }
                 });
         }

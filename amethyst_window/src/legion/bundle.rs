@@ -1,6 +1,6 @@
 use crate::{
     config::DisplayConfig,
-    legion::system::{EventsLoopSystem, WindowSystem, WindowSystemDesc},
+    legion::system::{build_window_system, EventsLoopSystem, WindowSystem},
 };
 use amethyst_config::Config;
 use amethyst_core::{
@@ -64,10 +64,11 @@ impl SystemBundle for WindowBundle {
     ) -> Result<(), amethyst_error::Error> {
         let event_loop = EventsLoop::new();
 
-        builder.add_system_desc(
-            Stage::Render,
-            WindowSystemDesc::new(WindowSystem::from_config(world, &event_loop, self.config)),
-        );
+        let window_system = WindowSystem::from_config(world, &event_loop, self.config);
+
+        builder.add_system(Stage::Render, move |world| {
+            build_window_system(world, window_system)
+        });
 
         builder.add_thread_local(EventsLoopSystem::new(event_loop));
 

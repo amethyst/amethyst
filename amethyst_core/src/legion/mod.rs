@@ -46,22 +46,6 @@ impl<B: SystemDesc> ConsumeDesc for DispatcherSystemDesc<B> {
         Ok(())
     }
 }
-pub struct DispatcherSystem<B>(Stage, B);
-impl<B: 'static + Schedulable> ConsumeDesc for DispatcherSystem<B> {
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        dispatcher: &mut Dispatcher,
-        _: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error> {
-        dispatcher
-            .stages
-            .get_mut(&self.0)
-            .unwrap()
-            .push(Box::new(self.1));
-        Ok(())
-    }
-}
 
 pub struct DispatcherSystemBundle<B>(B);
 impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
@@ -98,6 +82,26 @@ impl<B: 'static + ThreadLocal> ConsumeDesc for DispatcherThreadLocal<B> {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
         dispatcher.thread_locals.push(Box::new(self.0));
+        Ok(())
+    }
+}
+
+pub struct DispatcherSystem<F>(Stage, F);
+impl<F> ConsumeDesc for DispatcherSystem<F>
+where
+    F: FnOnce(&mut World) -> Box<dyn Schedulable> + 'static,
+{
+    fn consume(
+        self: Box<Self>,
+        world: &mut legion::world::World,
+        dispatcher: &mut Dispatcher,
+        _: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        dispatcher
+            .stages
+            .get_mut(&self.0)
+            .unwrap()
+            .push((self.1)(world));
         Ok(())
     }
 }

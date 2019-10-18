@@ -94,7 +94,7 @@ impl SystemDesc for SpriteVisibilitySortingSystemDesc {
                                 .map(|(e, _)| world.get_component::<Transform>(e))
                         });
                     */
-                    println!("Camera point = {}", camera_query.iter_entities().count());
+
                     let camera_transform = camera_query
                         .iter_entities()
                         .nth(0)

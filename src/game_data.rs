@@ -223,7 +223,13 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         }
     }
 
-    pub fn legion_with_system<D: Schedulable + 'static>(mut self, stage: Stage, desc: D) -> Self {
+    pub fn legion_with_system<
+        D: FnOnce(&mut legion::world::World) -> Box<dyn Schedulable> + 'static,
+    >(
+        mut self,
+        stage: Stage,
+        desc: D,
+    ) -> Self {
         let legion_dispatcher_builder = self.legion_dispatcher_builder.with_system(stage, desc);
 
         Self {

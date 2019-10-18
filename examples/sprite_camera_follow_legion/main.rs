@@ -3,7 +3,6 @@ use amethyst::{
     core::{
         legion::{
             self,
-            bundle::LegionSyncer,
             dispatcher::{
                 Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder, Stage,
             },
@@ -163,37 +162,12 @@ fn initialise_camera(world: &mut World, parent: Entity) -> Entity {
         .build()
 }
 
-struct Example {
-    legion: LegionState,
-    legion_dispatcher: LegionDispatcher,
-    legion_dispatcher_builder: Option<LegionDispatcherBuilder>,
-    legion_listener_id: legion::event::ListenerId,
-}
-impl Example {
-    pub fn new() -> Self {
-        // Create the legion world
-        let universe = legion::world::Universe::new();
-        let mut legion_world = universe.create_world();
-
-        Self {
-            legion_listener_id: legion_world.entity_channel().bind_listener(2048),
-            legion: LegionState {
-                universe,
-                world: legion_world,
-                syncers: Vec::default(),
-            },
-            legion_dispatcher_builder: Some(LegionDispatcherBuilder::default()),
-            legion_dispatcher: LegionDispatcher::default(),
-        }
-    }
-}
+#[derive(Default)]
+struct Example;
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
-        world.register::<Named>();
-
-        amethyst::renderer::system::SetupData::setup(world);
 
         let circle_sprite_sheet_handle = load_sprite_sheet(
             world,
@@ -209,56 +183,7 @@ impl SimpleState for Example {
 
         let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
 
-        amethyst::renderer::legion::LegionRenderSyncer::<DefaultBackend>::default().prepare(
-            &mut self.legion,
-            self.legion_dispatcher_builder.as_mut().unwrap(),
-        );
-
-        amethyst::core::legion::bundle::LegionSyncer::default().prepare(
-            &mut self.legion,
-            self.legion_dispatcher_builder.as_mut().unwrap(),
-        );
-
-        // Run a sync, THEN dispatches
-        legion::temp::setup(world, &mut self.legion);
-
-        let syncers = self.legion.syncers.drain(..).collect::<Vec<_>>();
-
-        syncers
-            .iter()
-            .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::SpecsToLegion));
-
-        self.legion_dispatcher = self
-            .legion_dispatcher_builder
-            .take()
-            .unwrap()
-            .with_bundle(
-                RenderingBundle::<DefaultBackend>::default()
-                    .with_plugin(
-                        RenderToWindow::from_config_path(
-                            application_root_dir()
-                                .unwrap()
-                                .join("examples/sprite_camera_follow_legion/config/display.ron"),
-                        )
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
-                    )
-                    .with_plugin(RenderFlat2D::default()),
-            )
-            .build(&mut self.legion.world);
-
-        syncers
-            .iter()
-            .for_each(|s| s.sync(world, &mut self.legion, SyncDirection::LegionToSpecs));
-        self.legion.syncers.extend(syncers.into_iter());
-
         let _camera = initialise_camera(world, player);
-    }
-
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        legion::sync::sync_entities(&mut data.world, &mut self.legion, self.legion_listener_id);
-        legion::temp::dispatch_legion(data.world, &mut self.legion, &mut self.legion_dispatcher);
-
-        Trans::None
     }
 
     fn handle_event(
@@ -300,6 +225,16 @@ fn main() -> amethyst::Result<()> {
         app_root.join("examples/sprite_camera_follow/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
+        .legion_sync_bundle(amethyst::core::legion::Syncer::default())
+        .legion_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
+        .legion_with_bundle(
+            RenderingBundle::<DefaultBackend>::default()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                )
+                .with_plugin(RenderFlat2D::default()),
+        )
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(
@@ -308,7 +243,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with(MovementSystem, "movement", &[]);
 
-    let mut game = Application::build(assets_directory, Example::new())?.build(game_data)?;
+    let mut game = Application::build(assets_directory, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }

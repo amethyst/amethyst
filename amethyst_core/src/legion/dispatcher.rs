@@ -90,17 +90,14 @@ impl DispatcherBuilder {
             .push(Box::new(DispatcherThreadLocalDesc(system)));
     }
 
-    pub fn add_system<D: Schedulable + 'static>(&mut self, stage: Stage, desc: D) {
+    pub fn add_system<D: FnOnce(&mut World) -> Box<dyn Schedulable> + 'static>(
+        &mut self,
+        stage: Stage,
+        desc: D,
+    ) {
         self.systems.push((
             stage,
             Box::new(DispatcherSystem(stage, desc)) as Box<dyn ConsumeDesc>,
-        ));
-    }
-
-    pub fn add_system_desc<D: SystemDesc + 'static>(&mut self, stage: Stage, desc: D) {
-        self.systems.push((
-            stage,
-            Box::new(DispatcherSystemDesc(stage, desc)) as Box<dyn ConsumeDesc>,
         ));
     }
 
@@ -115,20 +112,12 @@ impl DispatcherBuilder {
         self
     }
 
-    pub fn with_thread_local_desc<D: ThreadLocalDesc + 'static>(mut self, system: D) -> Self {
-        self.add_thread_local_desc(system);
-
-        self
-    }
-
-    pub fn with_system<D: Schedulable + 'static>(mut self, stage: Stage, desc: D) -> Self {
+    pub fn with_system<D: FnOnce(&mut World) -> Box<dyn Schedulable> + 'static>(
+        mut self,
+        stage: Stage,
+        desc: D,
+    ) -> Self {
         self.add_system(stage, desc);
-
-        self
-    }
-
-    pub fn with_system_desc<D: SystemDesc + 'static>(mut self, stage: Stage, desc: D) -> Self {
-        self.add_system_desc(stage, desc);
 
         self
     }

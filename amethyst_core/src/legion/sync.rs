@@ -60,6 +60,8 @@ where
         storage: &mut WriteStorage<'a, T>,
         legion_state: &mut legion::world::World,
     ) {
+        log::trace!("{:?} - {}", direction, std::any::type_name::<T>());
+
         let map = bimap.read().unwrap();
         match direction {
             SyncDirection::SpecsToLegion => {
@@ -103,7 +105,7 @@ pub trait SyncerTrait: 'static + Send + Sync {
         direction: SyncDirection,
     );
 
-    fn setup(&self, world: &mut specs::World) {}
+    fn setup(&self, world: &mut specs::World);
 }
 
 #[derive(Derivative)]
@@ -115,6 +117,10 @@ where
     T::Storage: Default,
 {
     fn setup(&self, world: &mut specs::World) {
+        log::trace!(
+            "Creating component synchronizer for: {:?}",
+            std::any::type_name::<T>()
+        );
         world.register::<T>();
     }
 
@@ -163,6 +169,14 @@ where
         + Send
         + Sync,
 {
+    fn setup(&self, world: &mut specs::World) {
+        log::trace!(
+            "Creating closure component synchronizer for: {:?} - {:?}",
+            std::any::type_name::<S>(),
+            std::any::type_name::<L>()
+        );
+    }
+
     fn sync(
         &self,
         world: &mut specs::World,
@@ -239,6 +253,13 @@ impl<T> SyncerTrait for ResourceSyncer<T>
 where
     T: legion::resource::Resource,
 {
+    fn setup(&self, world: &mut specs::World) {
+        log::trace!(
+            "Creating resource synchronizer for: {:?}",
+            std::any::type_name::<T>()
+        );
+    }
+
     fn sync(
         &self,
         world: &mut specs::World,
@@ -254,7 +275,6 @@ pub fn move_resource<T: legion::resource::Resource>(
     legion_state: &mut LegionState,
     direction: SyncDirection,
 ) {
-    log::trace!("{:?} - {}", direction, std::any::type_name::<T>());
     match direction {
         SyncDirection::SpecsToLegion => {
             if let Some(resource) = world.remove::<T>() {

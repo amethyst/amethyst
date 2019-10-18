@@ -268,12 +268,12 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
                     .with_skinning(skinning)
                     .builder(),
             )?;
-            //ctx.add(
-            //    RenderOrder::Transparent,
-            //    DrawBase3DTransparentDesc::<B, D>::new()
-            //        .with_skinning(skinning)
-            //        .builder(),
-            //)?;
+            ctx.add(
+                RenderOrder::Transparent,
+                DrawBase3DTransparentDesc::<B, D>::new()
+                    .with_skinning(skinning)
+                    .builder(),
+            )?;
             Ok(())
         });
         Ok(())
