@@ -1,9 +1,11 @@
 use super::*;
 use crate::{
-    legion::World, transform::Transform, ArcThreadPool, SystemBundle as SpecsSystemBundle, Time,
+    legion::{StageExecutor, World},
+    transform::Transform,
+    ArcThreadPool, SystemBundle as SpecsSystemBundle, Time,
 };
 use amethyst_error::Error;
-use legion::system::Schedulable;
+use legion::schedule::Schedulable;
 use std::collections::HashMap;
 
 pub trait ConsumeDesc {
@@ -25,7 +27,7 @@ pub enum Stage {
 
 pub struct Dispatcher {
     pub thread_locals: Vec<Box<dyn ThreadLocal>>,
-    pub stages: HashMap<Stage, Vec<Box<dyn legion::system::Schedulable>>>,
+    pub stages: HashMap<Stage, Vec<Box<dyn legion::schedule::Schedulable>>>,
 }
 impl Default for Dispatcher {
     fn default() -> Self {
@@ -52,7 +54,7 @@ impl Dispatcher {
                     .for_each(|local| local.run(world));
             }
             _ => {
-                legion::system::StageExecutor::new(
+                StageExecutor::new(
                     &mut self.stages.get_mut(&stage).unwrap(),
                     &world.resources.get::<ArcThreadPool>().unwrap(),
                 )

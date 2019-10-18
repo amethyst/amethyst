@@ -16,7 +16,7 @@ use amethyst_core::{
     components::Transform,
     ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, Write, WriteExpect},
     legion::{
-        self, command::CommandBuffer, storage::ComponentTypeId, system::Schedulable, LegionState,
+        self, command::CommandBuffer, schedule::Schedulable, storage::ComponentTypeId, LegionState,
         Resources, SystemBuilder, SystemDesc, ThreadLocal, World,
     },
     timing::Time,
@@ -156,7 +156,7 @@ where
 #[derivative(Default(bound = ""))]
 pub struct MeshProcessorSystemDesc<B: Backend>(PhantomData<B>);
 impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
-    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
+    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::schedule::Schedulable> {
         SystemBuilder::<()>::new("MeshProcessorSystem")
             .write_resource::<AssetStorage<Mesh>>()
             .read_resource::<QueueId>()
@@ -195,7 +195,7 @@ impl<B: Backend> SystemDesc for MeshProcessorSystemDesc<B> {
 #[derivative(Default(bound = ""))]
 pub struct TextureProcessorSystemDesc<B: Backend>(PhantomData<B>);
 impl<B: Backend> SystemDesc for TextureProcessorSystemDesc<B> {
-    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable> {
+    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::schedule::Schedulable> {
         SystemBuilder::<()>::new("TextureProcessorSystem")
             .write_resource::<AssetStorage<Texture>>()
             .read_resource::<QueueId>()

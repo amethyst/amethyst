@@ -100,7 +100,7 @@ test-support = [
 ]
 experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 
-legion-ecs = ["amethyst_core/legion-ecs", "amethyst_rendy/legion-ecs", "amethyst_assets/legion-ecs", "amethyst_window/legion-ecs"]
+legion-ecs = ["amethyst_core/legion-ecs", "amethyst_rendy/legion-ecs", "amethyst_assets/legion-ecs", "amethyst_tiles/legion-ecs", "amethyst_window/legion-ecs"]
 
 [workspace]
 members = [

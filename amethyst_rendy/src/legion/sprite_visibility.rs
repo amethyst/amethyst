@@ -5,7 +5,7 @@ use crate::{
     transparent::Transparent,
 };
 use amethyst_core::{
-    legion::{prelude::*, Allocators, SystemDesc},
+    legion::*,
     math::{Point3, Vector3},
     Hidden, HiddenPropagate, Transform,
 };
@@ -22,7 +22,7 @@ use thread_profiler::profile_scope;
 #[derive(Default, Debug)]
 pub struct SpriteVisibility {
     /// Visible entities that can be drawn in any order
-    pub visible_unordered: IndexSet<Entity>,
+    pub visible_unordered: Vec<Entity>,
     /// Visible entities that need to be drawn in the given order
     pub visible_ordered: Vec<Entity>,
 }
@@ -37,8 +37,8 @@ pub struct SpriteVisibility {
 /// before rendering occurs.
 #[derive(Default, Debug)]
 pub struct SpriteVisibilitySortingSystemState {
-    centroids: Vec<Internals>,
-    transparents: Vec<Internals>,
+    transparent_centroids: Vec<Internals>,
+    nontransparent_centroids: Vec<Internals>,
 }
 #[derive(Debug, Clone)]
 struct Internals {
@@ -62,15 +62,24 @@ impl SystemDesc for SpriteVisibilitySortingSystemDesc {
             .read_component::<Transparent>()
             .read_component::<Transform>()
             .with_query(<(Read<Camera>, Read<Transform>)>::query())
+            .with_query(<(Read<Transform>, Read<SpriteRender>)>::query().filter(
+                !component::<Transparent>()
+                    & !component::<Hidden>()
+                    & !component::<HiddenPropagate>(),
+            ))
             .with_query(
-                <(Read<Transform>, Read<SpriteRender>)>::query()
+                <(Read<Transform>, Read<SpriteRender>, Read<Transparent>)>::query()
                     .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
             )
             .build_disposable(
                 SpriteVisibilitySortingSystemState::default(),
-                |state, commands, world, (visibility), (camera_query, entity_query)| {
-                    state.centroids.clear();
-                    state.transparents.clear();
+                |state,
+                 commands,
+                 world,
+                 (visibility),
+                 (camera_query, transparent_query, non_transparent_query)| {
+                    state.transparent_centroids.clear();
+                    state.nontransparent_centroids.clear();
 
                     let origin = Point3::origin();
 
@@ -85,23 +94,23 @@ impl SystemDesc for SpriteVisibilitySortingSystemDesc {
                                 .map(|(e, _)| world.get_component::<Transform>(e))
                         });
                     */
-                    let camera = camera_query
+                    println!("Camera point = {}", camera_query.iter_entities().count());
+                    let camera_transform = camera_query
                         .iter_entities()
                         .nth(0)
-                        .map(|(e, _)| world.get_component::<Transform>(e))
-                        .unwrap();
+                        .map(|(e, (camera, transform))| transform);
 
-                    let camera_backward = camera
+                    let camera_backward = camera_transform
                         .as_ref()
                         .map(|c| c.global_matrix().column(2).xyz())
                         .unwrap_or_else(Vector3::z);
-                    let camera_centroid = camera
+                    let camera_centroid = camera_transform
                         .as_ref()
                         .map(|t| t.global_matrix().transform_point(&origin))
                         .unwrap_or_else(|| origin);
 
-                    state.centroids.extend(
-                        entity_query
+                    state.transparent_centroids.extend(
+                        transparent_query
                             .iter_entities()
                             .map(|(e, (t, _))| (e, t.global_matrix().transform_point(&origin)))
                             // filter entities behind the camera
@@ -115,30 +124,33 @@ impl SystemDesc for SpriteVisibilitySortingSystemDesc {
                             }),
                     );
 
-                    state.transparents.clear();
-                    state
-                        .transparents
-                        .extend(state.centroids.iter().filter(|c| c.transparent).cloned());
-
-                    state.transparents.sort_by(|a, b| {
+                    state.transparent_centroids.sort_by(|a, b| {
                         b.camera_distance
                             .partial_cmp(&a.camera_distance)
                             .unwrap_or(Ordering::Equal)
                     });
 
-                    visibility.visible_unordered.clear();
-                    visibility.visible_unordered.extend(
-                        state
-                            .centroids
-                            .iter()
-                            .filter(|c| !c.transparent)
-                            .map(|c| c.entity),
+                    state.nontransparent_centroids.extend(
+                        non_transparent_query
+                            .iter_entities()
+                            .map(|(e, (t, _, _))| (e, t.global_matrix().transform_point(&origin)))
+                            // filter entities behind the camera
+                            .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
+                            .map(|(entity, centroid)| Internals {
+                                entity,
+                                transparent: world.get_component::<Transparent>(entity).is_some(),
+                                centroid,
+                                camera_distance: (centroid.z - camera_centroid.z).abs(),
+                                from_camera: centroid - camera_centroid,
+                            }),
                     );
 
-                    visibility.visible_ordered.clear();
+                    visibility
+                        .visible_unordered
+                        .extend(state.nontransparent_centroids.iter().map(|c| c.entity));
                     visibility
                         .visible_ordered
-                        .extend(state.transparents.iter().map(|c| c.entity));
+                        .extend(state.transparent_centroids.iter().map(|c| c.entity))
                 },
                 |_, _| {},
             )

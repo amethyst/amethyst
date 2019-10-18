@@ -21,10 +21,9 @@ pub use alga;
 pub use approx;
 pub use nalgebra as math;
 pub use num_traits as num;
+pub use purple as bump_allocator;
 pub use specs as ecs;
 pub use specs::{shred, shrev};
-
-pub use bumpalo;
 
 use rayon;
 
@@ -39,6 +38,7 @@ pub use crate::{
 };
 
 pub use self::{
+    allocators::Allocators,
     axis::{Axis2, Axis3},
     hidden::{Hidden, HiddenPropagate},
     hide_system::{HideHierarchySystem, HideHierarchySystemDesc},
@@ -46,10 +46,12 @@ pub use self::{
     system_desc::{RunNowDesc, SystemDesc},
 };
 
+pub mod allocators;
 pub mod bundle;
 pub mod deferred_dispatcher_operation;
 pub mod frame_limiter;
 pub mod geometry;
+pub mod par_tools;
 pub mod timing;
 pub mod transform;
 

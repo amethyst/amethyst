@@ -2,8 +2,8 @@ use crate::{config::DisplayConfig, resources::ScreenDimensions};
 use amethyst_config::Config;
 use amethyst_core::{
     legion::{
-        system::{Schedulable, SystemBuilder},
-        SystemDesc, ThreadLocal, ThreadLocalDesc, World,
+        schedule::Schedulable, system::SystemBuilder, SystemDesc, ThreadLocal, ThreadLocalDesc,
+        World,
     },
     shrev::EventChannel,
 };

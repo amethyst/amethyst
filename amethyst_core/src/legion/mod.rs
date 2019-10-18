@@ -1,26 +1,16 @@
 //! TODO: doc
 //!
 
-pub mod bundle;
 pub mod dispatcher;
 pub mod sync;
 pub mod temp;
 
 pub use dispatcher::{ConsumeDesc, Dispatcher, DispatcherBuilder, Stage};
 pub use legion::{prelude::*, *};
-pub use sync::{ComponentSyncer, ResourceSyncer, SyncerTrait};
-
-pub struct Allocators {
-    pub bump: bumpalo::Bump,
-}
-impl Allocators {
-    pub fn frame(&mut self) {
-        self.bump.reset();
-    }
-}
+pub use sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait};
 
 pub trait SystemDesc: 'static {
-    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::system::Schedulable>;
+    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::schedule::Schedulable>;
 }
 
 pub trait ThreadLocal {
@@ -112,6 +102,15 @@ impl<B: 'static + ThreadLocal> ConsumeDesc for DispatcherThreadLocal<B> {
     }
 }
 
+pub trait LegionSyncBuilder {
+    fn prepare(
+        &mut self,
+        specs_world: &mut specs::World,
+        state: &mut LegionState,
+        dispatcher: &mut DispatcherBuilder,
+    );
+}
+
 pub struct LegionState {
     pub universe: legion::world::Universe,
     pub world: legion::world::World,
@@ -123,7 +122,60 @@ impl LegionState {
         self.syncers.push(Box::new(ResourceSyncer::<T>::default()));
     }
 
-    pub fn add_component_sync<T: Clone + legion::storage::Component + specs::Component>(&mut self) {
+    pub fn add_component_sync<T>(&mut self)
+    where
+        T: Clone + legion::storage::Component + specs::Component,
+        T::Storage: Default,
+    {
         self.syncers.push(Box::new(ComponentSyncer::<T>::default()));
+    }
+
+    pub fn add_component_sync_with<S, L, F>(&mut self, f: F)
+    where
+        S: Send + Sync + specs::Component,
+        L: legion::storage::Component,
+        F: 'static
+            + Fn(SyncDirection, Option<&mut S>, Option<&mut L>) -> (Option<S>, Option<L>)
+            + Send
+            + Sync,
+    {
+        self.syncers
+            .push(Box::new(ComponentSyncerWith::<S, L, F>::new(f)));
+    }
+}
+
+#[derive(Default)]
+pub struct Syncer {
+    syncers: Vec<Box<dyn sync::SyncerTrait>>,
+}
+impl LegionSyncBuilder for Syncer {
+    fn prepare(
+        &mut self,
+        specs_world: &mut specs::World,
+        state: &mut LegionState,
+        dispatcher: &mut DispatcherBuilder,
+    ) {
+        for syncer in self.syncers.drain(..) {
+            state.syncers.push(syncer);
+        }
+
+        // state.add_resource_sync::<Allocators>();
+
+        // Core syncers
+        state.add_resource_sync::<crate::Time>();
+        state.add_resource_sync::<crate::ParentHierarchy>();
+        state.add_resource_sync::<crate::ArcThreadPool>();
+        state.add_resource_sync::<crate::frame_limiter::FrameLimiter>();
+        state.add_resource_sync::<crate::Stopwatch>();
+
+        state.add_resource_sync::<crate::allocators::Allocators>();
+
+        state.add_component_sync::<crate::Transform>();
+        state.add_component_sync::<crate::Hidden>();
+        state.add_component_sync::<crate::HiddenPropagate>();
+        // Why does this cause a crash? probably because this is cow borrow, but why is it Clone then?
+        // Cloning it obviously causes a crash
+        //world_store.add_component_sync::<crate::Named>();
+        state.add_component_sync::<crate::Parent>();
     }
 }

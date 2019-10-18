@@ -17,6 +17,7 @@ use crate::{
     assets::{Loader, Source},
     callback_queue::CallbackQueue,
     core::{
+        allocators::{self, Allocators},
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
@@ -29,6 +30,9 @@ use crate::{
     state_event::{StateEvent, StateEventReader},
     ui::UiEvent,
 };
+
+#[cfg(feature = "legion-ecs")]
+use crate::core::legion::{LegionState, Universe, World as LegionWorld};
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.
@@ -51,6 +55,11 @@ where
     /// The world
     #[derivative(Debug = "ignore")]
     world: World,
+
+    #[cfg(feature = "legion-ecs")]
+    #[derivative(Debug = "ignore")]
+    legion_state: LegionState,
+
     #[derivative(Debug = "ignore")]
     reader: R,
     #[derivative(Debug = "ignore")]
@@ -263,8 +272,19 @@ where
     fn initialize(&mut self) {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
+
+        #[cfg(not(feature = "legion-ecs"))]
         self.states
             .start(StateData::new(&mut self.world, &mut self.data))
+            .expect("Tried to start state machine without any states present");
+
+        #[cfg(feature = "legion-ecs")]
+        self.states
+            .start(StateData::new(
+                &mut self.world,
+                &mut self.legion_state,
+                &mut self.data,
+            ))
             .expect("Tried to start state machine without any states present");
     }
 
@@ -302,6 +322,7 @@ where
         }
     }
 
+    #[cfg(not(feature = "legion-ecs"))]
     /// Advances the game world by one tick.
     fn advance_frame(&mut self)
     where
@@ -384,6 +405,101 @@ where
         self.world.maintain();
     }
 
+    #[cfg(feature = "legion-ecs")]
+    /// Advances the game world by one tick.
+    fn advance_frame(&mut self)
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
+        trace!("Advancing frame (`Application::advance_frame`)");
+        if self.should_close() {
+            let world = &mut self.world;
+            let legion_state = &mut self.legion_state;
+            let states = &mut self.states;
+            states.stop(StateData::new(world, legion_state, &mut self.data));
+        }
+
+        // Read the Trans queue and apply changes.
+        {
+            let mut world = &mut self.world;
+            let mut legion_state = &mut self.legion_state;
+            let states = &mut self.states;
+            let reader = &mut self.trans_reader_id;
+
+            let trans = world
+                .read_resource::<EventChannel<TransEvent<T, E>>>()
+                .read(reader)
+                .map(|e| e())
+                .collect::<Vec<_>>();
+            for tr in trans {
+                states.transition(
+                    tr,
+                    StateData::new(&mut world, &mut legion_state, &mut self.data),
+                );
+            }
+        }
+
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("run_callback_queue");
+            let mut world = &mut self.world;
+            let receiver = world.read_resource::<CallbackQueue>().receiver.clone();
+            while let Ok(func) = receiver.try_recv() {
+                func(&mut world);
+            }
+        }
+
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("handle_event");
+
+            {
+                let events = &mut self.events;
+                self.reader.read(self.world.system_data(), events);
+            }
+
+            {
+                let world = &mut self.world;
+                let legion_state = &mut self.legion_state;
+                let states = &mut self.states;
+                for e in self.events.drain(..) {
+                    states.handle_event(StateData::new(world, legion_state, &mut self.data), e);
+                }
+            }
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("fixed_update");
+
+            {
+                self.world.write_resource::<Time>().start_fixed_update();
+            }
+            while { self.world.write_resource::<Time>().step_fixed_update() } {
+                self.states.fixed_update(StateData::new(
+                    &mut self.world,
+                    &mut self.legion_state,
+                    &mut self.data,
+                ));
+            }
+            {
+                self.world.write_resource::<Time>().finish_fixed_update();
+            }
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("update");
+            self.states.update(StateData::new(
+                &mut self.world,
+                &mut self.legion_state,
+                &mut self.data,
+            ));
+        }
+
+        #[cfg(feature = "profiler")]
+        profile_scope!("maintain");
+        self.world.maintain();
+    }
+
     /// Cleans up after the quit signal is received.
     fn shutdown(&mut self) {
         info!("Engine is shutting down");
@@ -416,6 +532,10 @@ pub struct ApplicationBuilder<S, T, E, R> {
     initial_state: S,
     /// Used by bundles to access the world directly
     pub world: World,
+
+    #[cfg(feature = "legion-ecs")]
+    pub legion_state: LegionState,
+
     ignore_window_close: bool,
     phantom: PhantomData<(T, E, R)>,
 }
@@ -551,14 +671,41 @@ where
         world.insert(Time::default());
         world.insert(CallbackQueue::default());
 
+        world.insert(Allocators {
+            global_frame_arena: allocators::arena::Arena::with_capacity(52_428_800),
+        });
+
         world.register::<Named>();
 
-        Ok(Self {
-            initial_state,
-            world,
-            ignore_window_close: false,
-            phantom: PhantomData,
-        })
+        #[cfg(not(feature = "legion-ecs"))]
+        {
+            Ok(Self {
+                initial_state,
+                world,
+                ignore_window_close: false,
+                phantom: PhantomData,
+            })
+        }
+
+        #[cfg(feature = "legion-ecs")]
+        {
+            let legion_universe = Universe::new();
+            let legion_world = legion_universe.create_world();
+
+            let legion_state = LegionState {
+                universe: legion_universe,
+                world: legion_world,
+                syncers: Vec::default(),
+            };
+
+            Ok(Self {
+                initial_state,
+                world,
+                legion_state,
+                ignore_window_close: false,
+                phantom: PhantomData,
+            })
+        }
     }
 
     /// Registers a component into the entity-component-system. This method
@@ -891,7 +1038,13 @@ where
 
         let mut reader = X::default();
         reader.setup(&mut self.world);
+
+        #[cfg(not(feature = "legion-ecs"))]
         let data = init.build(&mut self.world);
+
+        #[cfg(feature = "legion-ecs")]
+        let data = init.build(&mut self.world, &mut self.legion_state);
+
         let event_reader_id = self
             .world
             .exec(|mut ev: Write<'_, EventChannel<Event>>| ev.register_reader());
@@ -900,15 +1053,33 @@ where
             .world
             .exec(|mut ev: Write<'_, EventChannel<TransEvent<T, E>>>| ev.register_reader());
 
-        Ok(CoreApplication {
-            world: self.world,
-            states: StateMachine::new(self.initial_state),
-            reader,
-            events: Vec::new(),
-            ignore_window_close: self.ignore_window_close,
-            data,
-            event_reader_id,
-            trans_reader_id,
-        })
+        #[cfg(not(feature = "legion-ecs"))]
+        {
+            Ok(CoreApplication {
+                world: self.world,
+                states: StateMachine::new(self.initial_state),
+                reader,
+                events: Vec::new(),
+                ignore_window_close: self.ignore_window_close,
+                data,
+                event_reader_id,
+                trans_reader_id,
+            })
+        }
+
+        #[cfg(feature = "legion-ecs")]
+        {
+            Ok(CoreApplication {
+                world: self.world,
+                legion_state: self.legion_state,
+                states: StateMachine::new(self.initial_state),
+                reader,
+                events: Vec::new(),
+                ignore_window_close: self.ignore_window_close,
+                data,
+                event_reader_id,
+                trans_reader_id,
+            })
+        }
     }
 }

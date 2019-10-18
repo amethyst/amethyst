@@ -42,3 +42,4 @@ approx = "0.3"
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
+legion-ecs = []

@@ -7,7 +7,7 @@ use crate::{
 };
 use bimap::BiMap;
 use derivative::Derivative;
-use legion::{command::CommandBuffer, event::ListenerId};
+use legion::{command::CommandBuffer, entity::Entity as LegionEntity, event::ListenerId};
 use shrinkwraprs::Shrinkwrap;
 use smallvec::SmallVec;
 use specs::{
@@ -102,6 +102,8 @@ pub trait SyncerTrait: 'static + Send + Sync {
         legion_state: &mut LegionState,
         direction: SyncDirection,
     );
+
+    fn setup(&self, world: &mut specs::World) {}
 }
 
 #[derive(Derivative)]
@@ -110,7 +112,12 @@ pub struct ComponentSyncer<T>(PhantomData<T>);
 impl<T> SyncerTrait for ComponentSyncer<T>
 where
     T: Clone + legion::storage::Component + specs::Component,
+    T::Storage: Default,
 {
+    fn setup(&self, world: &mut specs::World) {
+        world.register::<T>();
+    }
+
     fn sync(
         &self,
         world: &mut specs::World,
@@ -130,6 +137,98 @@ where
             &mut storage,
             &mut legion_state.world,
         );
+    }
+}
+
+pub struct ComponentSyncerWith<S, L, F>(F, PhantomData<(S, L)>);
+impl<S, L, F> ComponentSyncerWith<S, L, F>
+where
+    S: specs::Component + Send + Sync,
+    L: legion::storage::Component,
+    F: 'static
+        + Fn(SyncDirection, Option<&mut S>, Option<&mut L>) -> (Option<S>, Option<L>)
+        + Send
+        + Sync,
+{
+    pub fn new(f: F) -> Self {
+        Self(f, Default::default())
+    }
+}
+impl<S, L, F> SyncerTrait for ComponentSyncerWith<S, L, F>
+where
+    S: specs::Component + Send + Sync,
+    L: legion::storage::Component,
+    F: 'static
+        + Fn(SyncDirection, Option<&mut S>, Option<&mut L>) -> (Option<S>, Option<L>)
+        + Send
+        + Sync,
+{
+    fn sync(
+        &self,
+        world: &mut specs::World,
+        legion_state: &mut LegionState,
+        direction: SyncDirection,
+    ) {
+        let (bimap, entities, mut storage) = <(
+            Read<'_, EntitiesBimapRef>,
+            Entities<'_>,
+            WriteStorage<'_, S>,
+        )>::fetch(world);
+
+        let mut new_legion: SmallVec<[(LegionEntity, L); 64]> = SmallVec::default();
+        let mut new_specs: SmallVec<[(specs::Entity, S); 64]> = SmallVec::default();
+
+        let map = bimap.read().unwrap();
+        match direction {
+            SyncDirection::SpecsToLegion => {
+                for (entity, mut component) in (&entities, &mut storage).join() {
+                    if let Some(legion_entity) = map.get_by_right(&entity) {
+                        let new = if let Some(mut comp) =
+                            legion_state.world.get_component_mut::<L>(*legion_entity)
+                        {
+                            (self.0)(direction, Some(component), Some(&mut comp))
+                        } else {
+                            (self.0)(direction, Some(component), None)
+                        };
+
+                        if let Some(new_comp) = new.0 {
+                            new_specs.push((entity, new_comp));
+                        }
+                        if let Some(new_comp) = new.1 {
+                            new_legion.push((*legion_entity, new_comp));
+                        }
+                    }
+                }
+            }
+            SyncDirection::LegionToSpecs => {
+                use legion::prelude::*;
+                let mut query = <(Write<L>)>::query();
+                for (entity, mut component) in query.iter_entities(&legion_state.world) {
+                    if let Some(specs_entity) = map.get_by_left(&entity) {
+                        let new = if let Some(specs_component) = storage.get_mut(*specs_entity) {
+                            (self.0)(direction, Some(specs_component), Some(&mut component))
+                        } else {
+                            (self.0)(direction, None, Some(&mut component))
+                        };
+
+                        if let Some(new_comp) = new.0 {
+                            new_specs.push((*specs_entity, new_comp));
+                        }
+                        if let Some(new_comp) = new.1 {
+                            new_legion.push((entity, new_comp));
+                        }
+                    }
+                }
+            }
+        }
+
+        new_legion
+            .drain()
+            .for_each(|new| legion_state.world.add_component(new.0, new.1));
+
+        new_specs.drain().for_each(|new| {
+            storage.insert(new.0, new.1);
+        });
     }
 }
 

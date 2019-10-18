@@ -6,6 +6,9 @@ use derivative::Derivative;
 
 use crate::{ecs::World, GameData, StateEvent};
 
+#[cfg(feature = "legion-ecs")]
+use amethyst_core::legion::LegionState;
+
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 #[cfg(feature = "profiler")]
@@ -33,6 +36,11 @@ impl Display for StateError {
 pub struct StateData<'a, T> {
     /// Main `World`
     pub world: &'a mut World,
+
+    #[cfg(feature = "legion-ecs")]
+    /// Main `LegionState`
+    pub legion_state: &'a mut LegionState,
+
     /// User defined game data
     pub data: &'a mut T,
 }
@@ -41,9 +49,20 @@ impl<'a, T> StateData<'a, T>
 where
     T: 'a,
 {
+    #[cfg(not(feature = "legion-ecs"))]
     /// Create a new state data
     pub fn new(world: &'a mut World, data: &'a mut T) -> Self {
         StateData { world, data }
+    }
+
+    #[cfg(feature = "legion-ecs")]
+    /// Create a new state data
+    pub fn new(world: &'a mut World, legion_state: &'a mut LegionState, data: &'a mut T) -> Self {
+        StateData {
+            world,
+            legion_state,
+            data,
+        }
     }
 }
 
@@ -330,10 +349,19 @@ impl<T: SimpleState> State<GameData<'static, 'static>, StateEvent> for T {
         self.fixed_update(data)
     }
 
+    #[cfg(not(feature = "legion-ecs"))]
     /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, mut data: StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         let r = self.update(&mut data);
         data.data.update(&data.world);
+        r
+    }
+
+    #[cfg(feature = "legion-ecs")]
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
+    fn update(&mut self, mut data: StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        let r = self.update(&mut data);
+        data.data.update(&mut data.world, &mut data.legion_state);
         r
     }
 
@@ -390,6 +418,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     }
 
     /// Passes a single event to the active state to handle.
+    #[cfg(not(feature = "legion-ecs"))]
     pub fn handle_event(&mut self, data: StateData<'_, T>, event: E) {
         let StateData { world, data } = data;
         if self.running {
@@ -402,6 +431,40 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         }
     }
 
+    /// Passes a single event to the active state to handle.
+    #[cfg(feature = "legion-ecs")]
+    pub fn handle_event(&mut self, data: StateData<'_, T>, event: E) {
+        let StateData {
+            world,
+            legion_state,
+            data,
+        } = data;
+
+        if self.running {
+            let trans = match self.state_stack.last_mut() {
+                Some(state) => state.handle_event(
+                    StateData {
+                        world,
+                        legion_state,
+                        data,
+                    },
+                    event,
+                ),
+                None => Trans::None,
+            };
+
+            self.transition(
+                trans,
+                StateData {
+                    world,
+                    legion_state,
+                    data,
+                },
+            );
+        }
+    }
+
+    #[cfg(not(feature = "legion-ecs"))]
     /// Updates the currently active state at a steady, fixed interval.
     pub fn fixed_update(&mut self, data: StateData<'_, T>) {
         let StateData { world, data } = data;
@@ -427,6 +490,53 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         }
     }
 
+    #[cfg(feature = "legion-ecs")]
+    /// Updates the currently active state at a steady, fixed interval.
+    pub fn fixed_update(&mut self, data: StateData<'_, T>) {
+        let StateData {
+            world,
+            legion_state,
+            data,
+        } = data;
+
+        if self.running {
+            let trans = match self.state_stack.last_mut() {
+                Some(state) => {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("stack fixed_update");
+                    state.fixed_update(StateData {
+                        world,
+                        legion_state,
+                        data,
+                    })
+                }
+                None => Trans::None,
+            };
+            for state in &mut self.state_stack {
+                #[cfg(feature = "profiler")]
+                profile_scope!("stack shadow_fixed_update");
+                state.shadow_fixed_update(StateData {
+                    world,
+                    legion_state,
+                    data,
+                });
+            }
+            {
+                #[cfg(feature = "profiler")]
+                profile_scope!("stack fixed transition");
+                self.transition(
+                    trans,
+                    StateData {
+                        world,
+                        legion_state,
+                        data,
+                    },
+                );
+            }
+        }
+    }
+
+    #[cfg(not(feature = "legion-ecs"))]
     /// Updates the currently active state immediately.
     pub fn update(&mut self, data: StateData<'_, T>) {
         let StateData { world, data } = data;
@@ -453,6 +563,53 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         }
     }
 
+    #[cfg(feature = "legion-ecs")]
+    /// Updates the currently active state immediately.
+    pub fn update(&mut self, data: StateData<'_, T>) {
+        let StateData {
+            world,
+            legion_state,
+            data,
+        } = data;
+
+        if self.running {
+            let trans = match self.state_stack.last_mut() {
+                Some(state) => {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("stack update");
+                    state.update(StateData {
+                        world,
+                        legion_state,
+                        data,
+                    })
+                }
+                None => Trans::None,
+            };
+            for state in &mut self.state_stack {
+                #[cfg(feature = "profiler")]
+                profile_scope!("stack shadow_update");
+                state.shadow_update(StateData {
+                    world,
+                    legion_state,
+                    data,
+                });
+            }
+
+            {
+                #[cfg(feature = "profiler")]
+                profile_scope!("stack transition");
+                self.transition(
+                    trans,
+                    StateData {
+                        world,
+                        legion_state,
+                        data,
+                    },
+                );
+            }
+        }
+    }
+
     /// Performs a state transition.
     /// Usually called by update or fixed_update by the user's defined `State`.
     /// This method can also be called when there are one or multiple `Trans` stored in the
@@ -470,6 +627,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         }
     }
 
+    #[cfg(not(feature = "legion-ecs"))]
     /// Removes the current state on the stack and inserts a different one.
     fn switch(&mut self, state: Box<dyn State<T, E>>, data: StateData<'_, T>) {
         if self.running {
@@ -486,6 +644,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         }
     }
 
+    #[cfg(not(feature = "legion-ecs"))]
     /// Pauses the active state and pushes a new state onto the state stack.
     fn push(&mut self, state: Box<dyn State<T, E>>, data: StateData<'_, T>) {
         if self.running {
@@ -502,6 +661,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         }
     }
 
+    #[cfg(not(feature = "legion-ecs"))]
     /// Stops and removes the active state and un-pauses the next state on the
     /// stack (if any).
     fn pop(&mut self, data: StateData<'_, T>) {
@@ -519,12 +679,122 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         }
     }
 
+    #[cfg(not(feature = "legion-ecs"))]
     /// Shuts the state machine down.
     pub(crate) fn stop(&mut self, data: StateData<'_, T>) {
         if self.running {
             let StateData { world, data } = data;
             while let Some(mut state) = self.state_stack.pop() {
                 state.on_stop(StateData { world, data });
+            }
+
+            self.running = false;
+        }
+    }
+
+    #[cfg(feature = "legion-ecs")]
+    /// Removes the current state on the stack and inserts a different one.
+    fn switch(&mut self, state: Box<dyn State<T, E>>, data: StateData<'_, T>) {
+        if self.running {
+            let StateData {
+                world,
+                legion_state,
+                data,
+            } = data;
+            if let Some(mut state) = self.state_stack.pop() {
+                state.on_stop(StateData {
+                    world,
+                    legion_state,
+                    data,
+                });
+            }
+
+            self.state_stack.push(state);
+
+            //State was just pushed, thus pop will always succeed
+            let new_state = self.state_stack.last_mut().unwrap();
+            new_state.on_start(StateData {
+                world,
+                legion_state,
+                data,
+            });
+        }
+    }
+
+    #[cfg(feature = "legion-ecs")]
+    /// Pauses the active state and pushes a new state onto the state stack.
+    fn push(&mut self, state: Box<dyn State<T, E>>, data: StateData<'_, T>) {
+        if self.running {
+            let StateData {
+                world,
+                legion_state,
+                data,
+            } = data;
+            if let Some(state) = self.state_stack.last_mut() {
+                state.on_pause(StateData {
+                    world,
+                    legion_state,
+                    data,
+                });
+            }
+
+            self.state_stack.push(state);
+
+            //State was just pushed, thus pop will always succeed
+            let new_state = self.state_stack.last_mut().unwrap();
+            new_state.on_start(StateData {
+                world,
+                legion_state,
+                data,
+            });
+        }
+    }
+
+    #[cfg(feature = "legion-ecs")]
+    /// Stops and removes the active state and un-pauses the next state on the
+    /// stack (if any).
+    fn pop(&mut self, data: StateData<'_, T>) {
+        if self.running {
+            let StateData {
+                world,
+                legion_state,
+                data,
+            } = data;
+            if let Some(mut state) = self.state_stack.pop() {
+                state.on_stop(StateData {
+                    world,
+                    legion_state,
+                    data,
+                });
+            }
+
+            if let Some(state) = self.state_stack.last_mut() {
+                state.on_resume(StateData {
+                    world,
+                    legion_state,
+                    data,
+                });
+            } else {
+                self.running = false;
+            }
+        }
+    }
+
+    #[cfg(feature = "legion-ecs")]
+    /// Shuts the state machine down.
+    pub(crate) fn stop(&mut self, data: StateData<'_, T>) {
+        if self.running {
+            let StateData {
+                world,
+                legion_state,
+                data,
+            } = data;
+            while let Some(mut state) = self.state_stack.pop() {
+                state.on_stop(StateData {
+                    world,
+                    legion_state,
+                    data,
+                });
             }
 
             self.running = false;

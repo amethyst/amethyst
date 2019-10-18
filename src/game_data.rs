@@ -12,10 +12,35 @@ use crate::{
     error::Error,
 };
 
+#[cfg(feature = "legion-ecs")]
+use crate::core::{
+    ecs::Component,
+    legion::{
+        Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder,
+        LegionSyncBuilder,
+    },
+};
+
+#[cfg(feature = "legion-ecs")]
+use crate::core::legion::{
+    self,
+    sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait},
+    LegionState, Schedulable, Stage, SystemBundle as LegionSystemBundle,
+    SystemDesc as LegionSystemDesc, ThreadLocal, ThreadLocalDesc,
+};
+
+#[cfg(not(feature = "legion-ecs"))]
 /// Initialise trait for game data
 pub trait DataInit<T> {
     /// Build game data
     fn build(self, world: &mut World) -> T;
+}
+
+#[cfg(feature = "legion-ecs")]
+/// Initialise trait for game data
+pub trait DataInit<T> {
+    /// Build game data
+    fn build(self, world: &mut World, legion_state: &mut LegionState) -> T;
 }
 
 /// Allow disposing game data with access to world.
@@ -31,9 +56,16 @@ pub trait DataDispose {
 #[allow(missing_debug_implementations)]
 pub struct GameData<'a, 'b> {
     dispatcher: Option<Dispatcher<'a, 'b>>,
+
+    #[cfg(feature = "legion-ecs")]
+    legion_dispatcher: LegionDispatcher,
+
+    #[cfg(feature = "legion-ecs")]
+    legion_sync_entities_id: legion::event::ListenerId,
 }
 
 impl<'a, 'b> GameData<'a, 'b> {
+    #[cfg(not(feature = "legion-ecs"))]
     /// Create new game data
     pub fn new(dispatcher: Dispatcher<'a, 'b>) -> Self {
         GameData {
@@ -41,10 +73,51 @@ impl<'a, 'b> GameData<'a, 'b> {
         }
     }
 
+    #[cfg(feature = "legion-ecs")]
+    /// Create new game data
+    pub fn new(
+        dispatcher: Dispatcher<'a, 'b>,
+        legion_dispatcher: LegionDispatcher,
+        legion_sync_entities_id: legion::event::ListenerId,
+    ) -> Self {
+        GameData {
+            dispatcher: Some(dispatcher),
+            legion_dispatcher,
+            legion_sync_entities_id,
+        }
+    }
+
+    #[cfg(not(feature = "legion-ecs"))]
     /// Update game data
     pub fn update(&mut self, world: &World) {
         if let Some(dispatcher) = &mut self.dispatcher {
             dispatcher.dispatch(&world);
+        }
+    }
+
+    #[cfg(feature = "legion-ecs")]
+    /// Update game data
+    pub fn update(&mut self, world: &mut World, legion_state: &mut LegionState) {
+        if let Some(dispatcher) = &mut self.dispatcher {
+            dispatcher.dispatch(&world);
+        }
+
+        // Sync, run and resync
+        legion::sync::sync_entities(world, legion_state, self.legion_sync_entities_id);
+
+        {
+            let syncers = legion_state.syncers.drain(..).collect::<Vec<_>>();
+
+            syncers
+                .iter()
+                .for_each(|s| s.sync(world, legion_state, SyncDirection::SpecsToLegion));
+
+            legion::temp::dispatch_legion(world, legion_state, &mut self.legion_dispatcher);
+
+            syncers
+                .iter()
+                .for_each(|s| s.sync(world, legion_state, SyncDirection::LegionToSpecs));
+            legion_state.syncers.extend(syncers.into_iter());
         }
     }
 
@@ -68,26 +141,131 @@ impl DataDispose for GameData<'_, '_> {
 
 /// Builder for default game data
 #[allow(missing_debug_implementations)]
+#[derive(Default)]
 pub struct GameDataBuilder<'a, 'b> {
     dispatcher_operations: Vec<Box<dyn DispatcherOperation<'a, 'b>>>,
     disp_builder: DispatcherBuilder<'a, 'b>,
+
+    #[cfg(feature = "legion-ecs")]
+    legion_dispatcher_builder: LegionDispatcherBuilder,
+
+    #[cfg(feature = "legion-ecs")]
+    legion_sync_builders: Vec<Box<dyn LegionSyncBuilder>>,
+
+    #[cfg(feature = "legion-ecs")]
+    legion_syncers: Vec<Box<dyn SyncerTrait>>,
 }
 
-impl<'a, 'b> Default for GameDataBuilder<'a, 'b> {
-    fn default() -> Self {
-        GameDataBuilder::new()
+#[cfg(feature = "legion-ecs")]
+impl<'a, 'b> GameDataBuilder<'a, 'b> {
+    pub fn legion_resource_sync<T: legion::resource::Resource>(mut self) -> Self {
+        self.legion_syncers
+            .push(Box::new(ResourceSyncer::<T>::default()));
+
+        self
+    }
+
+    pub fn legion_component_sync<T>(mut self) -> Self
+    where
+        T: Clone + legion::storage::Component + Component,
+        T::Storage: Default,
+    {
+        self.legion_syncers
+            .push(Box::new(ComponentSyncer::<T>::default()));
+        self
+    }
+
+    pub fn legion_component_sync_with<S, L, F>(mut self, f: F)
+    where
+        S: Send + Sync + Component,
+        L: legion::storage::Component,
+        F: 'static
+            + Fn(SyncDirection, Option<&mut S>, Option<&mut L>) -> (Option<S>, Option<L>)
+            + Send
+            + Sync,
+    {
+        self.legion_syncers
+            .push(Box::new(ComponentSyncerWith::<S, L, F>::new(f)));
+    }
+
+    pub fn legion_sync_bundle<B: LegionSyncBuilder + 'static>(mut self, syncer: B) -> Self {
+        self.legion_sync_builders.push(Box::new(syncer));
+
+        self
+    }
+
+    pub fn legion_with_thread_local<D: ThreadLocal + 'static>(mut self, system: D) -> Self {
+        let legion_dispatcher_builder = self.legion_dispatcher_builder.with_thread_local(system);
+
+        Self {
+            dispatcher_operations: self.dispatcher_operations,
+            disp_builder: self.disp_builder,
+            legion_sync_builders: self.legion_sync_builders,
+            legion_syncers: self.legion_syncers,
+            legion_dispatcher_builder,
+        }
+    }
+
+    pub fn legion_with_thread_local_desc<D: ThreadLocalDesc + 'static>(
+        mut self,
+        system: D,
+    ) -> Self {
+        let legion_dispatcher_builder = self
+            .legion_dispatcher_builder
+            .with_thread_local_desc(system);
+
+        Self {
+            dispatcher_operations: self.dispatcher_operations,
+            disp_builder: self.disp_builder,
+            legion_sync_builders: self.legion_sync_builders,
+            legion_syncers: self.legion_syncers,
+            legion_dispatcher_builder,
+        }
+    }
+
+    pub fn legion_with_system<D: Schedulable + 'static>(mut self, stage: Stage, desc: D) -> Self {
+        let legion_dispatcher_builder = self.legion_dispatcher_builder.with_system(stage, desc);
+
+        Self {
+            dispatcher_operations: self.dispatcher_operations,
+            disp_builder: self.disp_builder,
+            legion_sync_builders: self.legion_sync_builders,
+            legion_syncers: self.legion_syncers,
+            legion_dispatcher_builder,
+        }
+    }
+
+    pub fn legion_with_system_desc<D: LegionSystemDesc + 'static>(
+        mut self,
+        stage: Stage,
+        desc: D,
+    ) -> Self {
+        let legion_dispatcher_builder =
+            self.legion_dispatcher_builder.with_system_desc(stage, desc);
+
+        Self {
+            dispatcher_operations: self.dispatcher_operations,
+            disp_builder: self.disp_builder,
+            legion_sync_builders: self.legion_sync_builders,
+            legion_syncers: self.legion_syncers,
+            legion_dispatcher_builder,
+        }
+    }
+
+    pub fn legion_with_bundle<D: LegionSystemBundle + 'static>(mut self, bundle: D) -> Self {
+        let legion_dispatcher_builder = self.legion_dispatcher_builder.with_bundle(bundle);
+
+        Self {
+            dispatcher_operations: self.dispatcher_operations,
+            disp_builder: self.disp_builder,
+            legion_sync_builders: self.legion_sync_builders,
+            legion_syncers: self.legion_syncers,
+            legion_dispatcher_builder,
+        }
     }
 }
 
 impl<'a, 'b> GameDataBuilder<'a, 'b> {
-    /// Create new builder
-    pub fn new() -> Self {
-        GameDataBuilder {
-            dispatcher_operations: Vec::new(),
-            disp_builder: DispatcherBuilder::new(),
-        }
-    }
-
     /// Inserts a barrier which assures that all systems added before the
     /// barrier are executed before the ones after this barrier.
     ///
@@ -460,6 +638,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     // }
 }
 
+#[cfg(not(feature = "legion-ecs"))]
 impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
     fn build(self, mut world: &mut World) -> GameData<'a, 'b> {
         #[cfg(not(no_threading))]
@@ -483,6 +662,78 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
     }
 }
 
+#[cfg(feature = "legion-ecs")]
+impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
+    fn build(self, mut world: &mut World, legion_state: &mut LegionState) -> GameData<'a, 'b> {
+        #[cfg(not(no_threading))]
+        let pool = (*world.read_resource::<ArcThreadPool>()).clone();
+
+        let mut dispatcher_builder = self.disp_builder;
+
+        self.dispatcher_operations
+            .into_iter()
+            .try_for_each(|dispatcher_operation| {
+                dispatcher_operation.exec(world, &mut dispatcher_builder)
+            })
+            .unwrap_or_else(|e| panic!("Failed to set up dispatcher: {}", e));
+
+        #[cfg(not(no_threading))]
+        let mut dispatcher = dispatcher_builder.with_pool(pool).build();
+        #[cfg(no_threading)]
+        let mut dispatcher = dispatcher_builder.build();
+        dispatcher.setup(&mut world);
+
+        /////////////////////////////////
+
+        // Prepare legion stuff
+        let mut legion_dispatcher_builder = self.legion_dispatcher_builder;
+
+        legion::temp::setup(world, legion_state);
+
+        // TEMP: build the syncers
+        self.legion_sync_builders
+            .into_iter()
+            .for_each(|mut builder| {
+                builder.prepare(world, legion_state, &mut legion_dispatcher_builder);
+            });
+
+        self.legion_syncers
+            .iter()
+            .for_each(|syncer| syncer.setup(world));
+
+        legion_state.syncers.extend(self.legion_syncers.into_iter());
+
+        // Run a sync
+        // sync specs to legion
+        let syncers = legion_state.syncers.drain(..).collect::<Vec<_>>();
+        println!("Syncers = {}", syncers.len());
+        syncers
+            .iter()
+            .for_each(|s| s.sync(world, legion_state, SyncDirection::SpecsToLegion));
+
+        // build the dispatcher
+        let legion_dispatcher = legion_dispatcher_builder.build(&mut legion_state.world);
+
+        // Sync back to specs
+        syncers
+            .iter()
+            .for_each(|s| s.sync(world, legion_state, SyncDirection::LegionToSpecs));
+        legion_state.syncers.extend(syncers.into_iter());
+
+        GameData::new(
+            dispatcher,
+            legion_dispatcher,
+            legion_state.world.entity_channel().bind_listener(2048),
+        )
+    }
+}
+
+#[cfg(not(feature = "legion-ecs"))]
 impl DataInit<()> for () {
     fn build(self, _: &mut World) {}
+}
+
+#[cfg(feature = "legion-ecs")]
+impl DataInit<()> for () {
+    fn build(self, _: &mut World, _: &mut LegionState) {}
 }

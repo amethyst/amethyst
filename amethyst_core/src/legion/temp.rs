@@ -1,7 +1,7 @@
 use crate::legion::{
     dispatcher::{Dispatcher, Stage},
     sync::SyncDirection,
-    Allocators, LegionState,
+    LegionState,
 };
 use bimap::BiMap;
 use std::sync::{Arc, RwLock};

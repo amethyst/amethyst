@@ -24,6 +24,14 @@ where
     fn for_each_group<F>(self, on_group: F)
     where
         F: FnMut(K, &mut Vec<V>);
+
+    /// Perform grouping. Evaluates passed closure on every next
+    /// countiguous list of data with same group identifier.
+    fn par_for_each_group<F>(self, on_group: F)
+    where
+        K: 'static + Send,
+        V: 'static + Send,
+        F: 'static + Fn(K, SmallVec<[V; 64]>) + Send + Sync + Copy;
 }
 
 // This would be an iterator adaptor if `Item` type would allow a borrow on iterator itself.
@@ -63,6 +71,44 @@ where
 
         if let Some((group_id, mut group_buffer)) = block.take() {
             on_group(group_id, &mut group_buffer);
+        }
+    }
+
+    fn par_for_each_group<F>(self, on_group: F)
+    where
+        K: 'static + Send,
+        V: 'static + Send,
+        F: 'static + Fn(K, SmallVec<[V; 64]>) + Send + Sync + Copy,
+    {
+        #[cfg(feature = "profiler")]
+        profile_scope!("for_each_group");
+
+        let mut block: Option<(K, SmallVec<[V; 64]>)> = None;
+
+        for (next_group_id, value) in self {
+            let mut next = false;
+            match &mut block {
+                slot @ None => {
+                    let mut group_buffer = SmallVec::default();
+                    group_buffer.push(value);
+                    slot.replace((next_group_id, group_buffer));
+                }
+                Some((group_id, ref mut group_buffer)) if group_id == &next_group_id => {
+                    group_buffer.push(value);
+                }
+                Some((group_id, group_buffer)) => {
+                    let submitted_group_id = std::mem::replace(group_id, next_group_id);
+                    let mut new_group_buffer = SmallVec::default();
+                    new_group_buffer.push(value);
+
+                    let submitted_group_buffer = std::mem::replace(group_buffer, new_group_buffer);
+                    rayon::spawn(move || on_group(submitted_group_id, submitted_group_buffer));
+                }
+            }
+        }
+
+        if let Some((group_id, group_buffer)) = block.take() {
+            on_group(group_id, group_buffer);
         }
     }
 }

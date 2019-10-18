@@ -1,8 +1,8 @@
 use crate::types::Backend;
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    ecs as specs,
-    legion::{dispatcher::DispatcherBuilder, LegionState},
+    ecs::{self as specs, SystemData},
+    legion::{dispatcher::DispatcherBuilder, LegionState, LegionSyncBuilder},
     shrev::EventChannel,
     SystemBundle,
 };
@@ -22,9 +22,16 @@ pub mod visibility;
 
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct LegionRenderSyncer<B: Backend>(PhantomData<B>);
-impl<B: Backend> LegionRenderSyncer<B> {
-    pub fn prepare(mut self, world: &mut LegionState, dispatcher: &mut DispatcherBuilder) {
+pub struct Syncer<B: Backend>(PhantomData<B>);
+impl<B: Backend> LegionSyncBuilder for Syncer<B> {
+    fn prepare(
+        &mut self,
+        specs_world: &mut specs::World,
+        world: &mut LegionState,
+        dispatcher: &mut DispatcherBuilder,
+    ) {
+        crate::system::SetupData::setup(specs_world);
+
         world.add_component_sync::<crate::SpriteRender>();
         world.add_component_sync::<crate::visibility::BoundingSphere>();
         world.add_component_sync::<crate::Camera>();

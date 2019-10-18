@@ -13,9 +13,11 @@ use crate::{
 };
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
+    bump_allocator::collections::Vec as BumpVec,
     legion::{filter::filter_fns::component, resource::ResourceSet, IntoQuery, Read, World},
+    par_tools::IntoSeqIterator,
     transform::Transform,
-    Hidden, HiddenPropagate,
+    Allocators, Hidden, HiddenPropagate,
 };
 use derivative::Derivative;
 use rayon::prelude::*;
@@ -109,10 +111,11 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare opaque");
 
-        let (sprite_sheet_storage, tex_storage, visibility) = <(
+        let (sprite_sheet_storage, tex_storage, visibility, _) = <(
             Read<AssetStorage<SpriteSheet>>,
             Read<AssetStorage<Texture>>,
             Read<SpriteVisibility>,
+            Read<Allocators>,
         )>::fetch(&world.resources);
 
         self.env.process(factory, index, world);

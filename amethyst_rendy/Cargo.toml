@@ -32,11 +32,11 @@ fnv = "1"
 derivative = "1.0"
 smallvec = "0.6.9"
 static_assertions = "0.3"
-bumpalo = "2.6"
 indexmap = { version = "1.2", features = ["rayon"] }
 thread_profiler = { version = "0.3", optional = true }
 approx = "0.3.2"
 rayon = "1.1.0"
+crossbeam = "0.7"
 
 [dev-dependencies]
 more-asserts = "0.2.1"

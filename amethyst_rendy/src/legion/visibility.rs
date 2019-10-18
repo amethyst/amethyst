@@ -5,7 +5,6 @@ use crate::{
     visibility::BoundingSphere,
     Mesh,
 };
-use amethyst_assets::Handle;
 use amethyst_core::{
     legion::*,
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
@@ -13,7 +12,6 @@ use amethyst_core::{
 };
 
 use indexmap::IndexSet;
-use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
 #[cfg(feature = "profiler")]
@@ -60,7 +58,7 @@ impl SystemDesc for VisibilitySortingSystemDesc {
             .read_component::<Transparent>()
             .with_query(<(Read<Camera>, Read<Transform>)>::query())
             .with_query(
-                <(Read<Transform>, Read<Handle<Mesh>>)>::query()
+                <(Read<Transform>)>::query()
                     .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
             )
             .build_disposable(
@@ -89,7 +87,7 @@ impl SystemDesc for VisibilitySortingSystemDesc {
                     state.centroids.extend(
                         entity_query
                             .iter_entities()
-                            .map(|(entity, (transform, _))| {
+                            .map(|(entity, transform)| {
                                 let sphere = world.get_component::<BoundingSphere>(entity);
 
                                 let pos = sphere.clone().map_or(origin, |s| s.center);
