@@ -70,7 +70,11 @@ impl SystemBundle for WindowBundle {
             .build(&event_loop)
             .unwrap();
 
+        let mut test = 123;
+        let borrow = &test;
+
         builder.add_system(Stage::Render, move |world| {
+            println!("borrow = {}", borrow);
             window_system::build(world, window)
         });
 

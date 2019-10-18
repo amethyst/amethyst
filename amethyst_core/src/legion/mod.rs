@@ -1,6 +1,8 @@
 //! TODO: doc
 //!
 
+use std::marker::PhantomData;
+
 pub mod dispatcher;
 pub mod sync;
 pub mod temp;

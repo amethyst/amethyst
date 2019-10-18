@@ -74,23 +74,18 @@ impl Dispatcher {
 }
 
 #[derive(Default)]
-pub struct DispatcherBuilder {
-    systems: Vec<(Stage, Box<dyn ConsumeDesc>)>,
-    thread_locals: Vec<Box<dyn ConsumeDesc>>,
-    bundles: Vec<Box<dyn ConsumeDesc>>,
+pub struct DispatcherBuilder<'a> {
+    systems: Vec<(Stage, Box<dyn ConsumeDesc + 'a>)>,
+    thread_locals: Vec<Box<dyn ConsumeDesc + 'static>>,
+    bundles: Vec<Box<dyn ConsumeDesc + 'a>>,
 }
-impl DispatcherBuilder {
+impl<'a> DispatcherBuilder<'a> {
     pub fn add_thread_local<D: ThreadLocal + 'static>(&mut self, system: D) {
         self.thread_locals
             .push(Box::new(DispatcherThreadLocal(system)));
     }
 
-    pub fn add_thread_local_desc<D: ThreadLocalDesc + 'static>(&mut self, system: D) {
-        self.thread_locals
-            .push(Box::new(DispatcherThreadLocalDesc(system)));
-    }
-
-    pub fn add_system<D: FnOnce(&mut World) -> Box<dyn Schedulable> + 'static>(
+    pub fn add_system<D: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
         &mut self,
         stage: Stage,
         desc: D,
@@ -101,7 +96,7 @@ impl DispatcherBuilder {
         ));
     }
 
-    pub fn add_bundle<D: SystemBundle + 'static>(&mut self, bundle: D) {
+    pub fn add_bundle<D: SystemBundle + 'a>(&mut self, bundle: D) {
         self.bundles
             .push(Box::new(DispatcherSystemBundle(bundle)) as Box<dyn ConsumeDesc>);
     }
@@ -112,7 +107,7 @@ impl DispatcherBuilder {
         self
     }
 
-    pub fn with_system<D: FnOnce(&mut World) -> Box<dyn Schedulable> + 'static>(
+    pub fn with_system<D: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
         mut self,
         stage: Stage,
         desc: D,
@@ -122,7 +117,7 @@ impl DispatcherBuilder {
         self
     }
 
-    pub fn with_bundle<D: SystemBundle + 'static>(mut self, bundle: D) -> Self {
+    pub fn with_bundle<D: SystemBundle + 'a>(mut self, bundle: D) -> Self {
         self.add_bundle(bundle);
 
         self
