@@ -128,7 +128,12 @@ impl Dispatcher {
             .into_iter()
             .for_each(|(_, mut v)| v.drain(..).for_each(|sys| sorted_systems.push(sys)));
 
-        println!("Sorted {} systems", sorted_systems.len());
+        log::trace!("Sorted {} systems", sorted_systems.len());
+        if log::log_enabled!(log::Level::Trace) {
+            sorted_systems.iter().for_each(|system| {
+                log::trace!("System: {}", system.name());
+            });
+        }
 
         Self {
             thread_local_systems: self.thread_local_systems,
