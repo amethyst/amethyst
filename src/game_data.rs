@@ -19,6 +19,7 @@ use crate::core::{
         self,
         dispatcher::{
             Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder,
+            IntoStageEntry,
         },
         sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait},
         LegionState, LegionSyncBuilder, Runnable, Schedulable, Stage,
@@ -212,9 +213,12 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         self
     }
 
-    pub fn migration_with_system<T: FnOnce(&mut LegionWorld) -> Box<dyn Schedulable> + 'a>(
+    pub fn migration_with_system<
+        S: IntoStageEntry,
+        T: FnOnce(&mut LegionWorld) -> Box<dyn Schedulable> + 'a,
+    >(
         mut self,
-        stage: Stage,
+        stage: S,
         desc: T,
     ) -> Self {
         self.migration_dispatcher_builder.add_system(stage, desc);
@@ -678,7 +682,9 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
             .for_each(|s| s.sync(world, migration_state, SyncDirection::SpecsToLegion));
 
         // build the dispatcher
-        let migration_dispatcher = migration_dispatcher_builder.build(&mut migration_state.world);
+        let migration_dispatcher = migration_dispatcher_builder
+            .build(&mut migration_state.world)
+            .finalize();
 
         // Sync back to specs
         syncers

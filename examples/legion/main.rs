@@ -18,7 +18,8 @@ use amethyst::{
         legion::{
             self,
             dispatcher::{
-                Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder, Stage,
+                Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder,
+                Stage, StageEntry,
             },
             sync::SyncDirection,
             LegionState,
@@ -642,7 +643,7 @@ fn main() -> amethyst::Result<()> {
         .migration_component_sync::<Orbit>()
         .migration_sync_bundle(amethyst::core::legion::Syncer::default())
         .migration_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
-        .migration_with_system(Stage::Logic, orbit_system)
+        .migration_with_system(StageEntry::RelativeStage(Stage::Logic, 100),orbit_system)
         .migration_with_bundle(
             RenderingBundle::<DefaultBackend>::default()
                 .with_plugin(

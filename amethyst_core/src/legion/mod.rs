@@ -8,7 +8,7 @@ pub mod sync;
 pub mod temp;
 
 pub use dispatcher::{
-    ConsumeDesc, Dispatcher, DispatcherBuilder, IntoStageEntry, Stage, ThreadLocal,
+    ConsumeDesc, Dispatcher, DispatcherBuilder, IntoStageEntry, Stage, StageEntry, ThreadLocal,
 };
 pub use legion::{prelude::*, *};
 pub use sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait};
@@ -33,7 +33,7 @@ impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
     }
 }
 
-pub struct DispatcherSystem<F>(Stage, F);
+pub struct DispatcherSystem<F>(StageEntry, F);
 impl<F> ConsumeDesc for DispatcherSystem<F>
 where
     F: FnOnce(&mut World) -> Box<dyn Schedulable>,
@@ -44,11 +44,14 @@ where
         dispatcher: &mut Dispatcher,
         _: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
+        let sys = (self.1)(world);
+
         dispatcher
             .stages
-            .get_mut(&self.0.into_entry())
-            .unwrap()
-            .push((self.1)(world));
+            .entry(self.0)
+            .or_insert_with(Vec::default)
+            .push(sys);
+
         Ok(())
     }
 }

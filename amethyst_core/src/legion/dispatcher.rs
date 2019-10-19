@@ -6,7 +6,7 @@ use crate::{
 };
 use amethyst_error::Error;
 use legion::schedule::Schedulable;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub trait ConsumeDesc {
     fn consume(
@@ -47,16 +47,18 @@ where
     }
 }
 
-pub trait IntoStageEntry {
+pub trait IntoStageEntry: Copy {
     fn into_entry(self) -> StageEntry;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash, serde::Serialize, serde::Deserialize,
+)]
 pub enum Stage {
-    Begin,
-    Logic,
-    Render,
-    ThreadLocal,
+    Begin = 10000,
+    Logic = 20000,
+    Render = 40000,
+    ThreadLocal = 50000,
 }
 impl IntoStageEntry for Stage {
     fn into_entry(self) -> StageEntry {
@@ -69,6 +71,34 @@ pub enum StageEntry {
     Stage(Stage),
     RelativeStage(Stage, isize),
 }
+impl StageEntry {
+    fn index(&self) -> isize {
+        match *self {
+            StageEntry::Stage(stage) => stage as isize,
+            StageEntry::RelativeStage(stage, offset) => (stage as isize) + offset,
+        }
+    }
+}
+impl IntoStageEntry for StageEntry {
+    fn into_entry(self) -> StageEntry {
+        self
+    }
+}
+impl From<Stage> for StageEntry {
+    fn from(other: Stage) -> Self {
+        StageEntry::Stage(other)
+    }
+}
+impl PartialOrd for StageEntry {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.index().partial_cmp(&other.index())
+    }
+}
+impl Ord for StageEntry {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.index().cmp(&other.index())
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 struct RelativeStage(Stage, u32);
@@ -76,7 +106,8 @@ struct RelativeStage(Stage, u32);
 pub struct Dispatcher {
     pub(crate) thread_local_systems: Vec<Box<dyn legion::schedule::Runnable>>,
     pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
-    pub(crate) stages: HashMap<StageEntry, Vec<Box<dyn legion::schedule::Schedulable>>>,
+    pub(crate) stages: BTreeMap<StageEntry, Vec<Box<dyn legion::schedule::Schedulable>>>,
+    sorted_systems: Vec<Box<dyn legion::schedule::Schedulable>>,
 }
 impl Default for Dispatcher {
     fn default() -> Self {
@@ -85,44 +116,53 @@ impl Default for Dispatcher {
         Self {
             thread_local_systems: Vec::default(),
             thread_locals: Vec::default(),
-            stages: vec![
-                (Stage::Begin.into_entry(), Vec::default()),
-                (Stage::Logic.into_entry(), Vec::default()),
-                (Stage::Render.into_entry(), Vec::default()),
-            ]
-            .into_iter()
-            .collect(),
+            stages: BTreeMap::default(),
+            sorted_systems: Vec::default(),
         }
     }
 }
 impl Dispatcher {
-    pub fn run(&mut self, stage: Stage, world: &mut World) {
-        match stage {
-            Stage::ThreadLocal => {
-                self.thread_local_systems
-                    .iter_mut()
-                    .for_each(|local| local.run(world));
+    pub fn finalize(mut self) -> Self {
+        let mut sorted_systems = self.sorted_systems;
+        self.stages
+            .into_iter()
+            .for_each(|(_, mut v)| v.drain(..).for_each(|sys| sorted_systems.push(sys)));
 
-                self.thread_locals
-                    .iter_mut()
-                    .for_each(|local| local.run(world));
-            }
-            _ => {
-                StageExecutor::new(
-                    &mut self.stages.get_mut(&stage.into_entry()).unwrap(),
-                    &world.resources.get::<ArcThreadPool>().unwrap(),
-                )
-                .execute(world);
-            }
+        println!("Sorted {} systems", sorted_systems.len());
+
+        Self {
+            thread_local_systems: self.thread_local_systems,
+            thread_locals: self.thread_locals,
+            stages: BTreeMap::default(),
+            sorted_systems,
         }
+    }
+    pub fn run(&mut self, world: &mut World) {
+        StageExecutor::new(
+            self.sorted_systems.as_mut_slice(),
+            &world.resources.get::<ArcThreadPool>().unwrap(),
+        )
+        .execute(world);
+
+        self.thread_local_systems
+            .iter_mut()
+            .for_each(|local| local.run(world));
+
+        self.thread_locals
+            .iter_mut()
+            .for_each(|local| local.run(world));
     }
 
     pub fn merge(mut self, mut other: Dispatcher) -> Self {
         self.thread_local_systems
             .extend(other.thread_local_systems.drain(..));
         self.thread_locals.extend(other.thread_locals.drain(..));
-        for (k, v) in self.stages.iter_mut() {
-            v.extend(other.stages.get_mut(k).unwrap().drain(..));
+
+        for (k, mut v) in other.stages.iter_mut() {
+            self.stages
+                .entry(*k)
+                .or_insert_with(Vec::default)
+                .extend(v.drain(..))
         }
 
         self
@@ -137,15 +177,15 @@ impl Dispatcher {
             .drain(..)
             .for_each(|local| local.dispose(world));
 
-        self.stages
-            .drain()
-            .for_each(|(_, mut v)| v.drain(..).for_each(|system| system.dispose(world)));
+        self.sorted_systems
+            .into_iter()
+            .for_each(|system| system.dispose(world));
     }
 }
 
 #[derive(Default)]
 pub struct DispatcherBuilder<'a> {
-    pub(crate) systems: Vec<(Stage, Box<dyn ConsumeDesc + 'a>)>,
+    pub(crate) systems: Vec<(StageEntry, Box<dyn ConsumeDesc + 'a>)>,
     pub(crate) thread_local_systems: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) thread_locals: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) bundles: Vec<Box<dyn ConsumeDesc + 'a>>,
@@ -185,20 +225,20 @@ impl<'a> DispatcherBuilder<'a> {
         self
     }
 
-    pub fn add_system<T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
+    pub fn add_system<S: IntoStageEntry, T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
         &mut self,
-        stage: Stage,
+        stage: S,
         desc: T,
     ) {
         self.systems.push((
-            stage,
-            Box::new(DispatcherSystem(stage, desc)) as Box<dyn ConsumeDesc>,
+            stage.into_entry(),
+            Box::new(DispatcherSystem(stage.into_entry(), desc)) as Box<dyn ConsumeDesc>,
         ));
     }
 
-    pub fn with_system<T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
+    pub fn with_system<S: IntoStageEntry, T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
         mut self,
-        stage: Stage,
+        stage: S,
         desc: T,
     ) -> Self {
         self.add_system(stage, desc);
@@ -234,6 +274,11 @@ impl<'a> DispatcherBuilder<'a> {
         for bundle in self.bundles.drain(..) {
             bundle
                 .consume(world, &mut dispatcher, &mut recursive_builder)
+                .unwrap();
+        }
+
+        for desc in self.thread_locals.drain(..) {
+            desc.consume(world, &mut dispatcher, &mut recursive_builder)
                 .unwrap();
         }
 

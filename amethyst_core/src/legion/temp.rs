@@ -17,10 +17,8 @@ pub fn dispatch_legion(
         .iter()
         .for_each(|s| s.sync(specs_world, legion_state, SyncDirection::SpecsToLegion));
 
-    dispatcher.run(Stage::Begin, &mut legion_state.world);
-    dispatcher.run(Stage::Logic, &mut legion_state.world);
-    dispatcher.run(Stage::Render, &mut legion_state.world);
-    dispatcher.run(Stage::ThreadLocal, &mut legion_state.world);
+    dispatcher.run(&mut legion_state.world);
+
     syncers
         .iter()
         .for_each(|s| s.sync(specs_world, legion_state, SyncDirection::LegionToSpecs));

@@ -225,9 +225,9 @@ fn main() -> amethyst::Result<()> {
         app_root.join("examples/sprite_camera_follow/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
-        .legion_sync_bundle(amethyst::core::legion::Syncer::default())
-        .legion_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
-        .legion_with_bundle(
+        .migration_sync_bundle(amethyst::core::legion::Syncer::default())
+        .migration_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
+        .migration_with_bundle(
             RenderingBundle::<DefaultBackend>::default()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
