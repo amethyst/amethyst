@@ -147,7 +147,7 @@ pub struct GameDataBuilder<'a, 'b> {
     disp_builder: DispatcherBuilder<'a, 'b>,
 
     #[cfg(feature = "legion-ecs")]
-    legion_dispatcher_builder: LegionDispatcherBuilder,
+    legion_dispatcher_builder: LegionDispatcherBuilder<'a>,
 
     #[cfg(feature = "legion-ecs")]
     legion_sync_builders: Vec<Box<dyn LegionSyncBuilder>>,
@@ -206,23 +206,6 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         }
     }
 
-    pub fn legion_with_thread_local_desc<D: ThreadLocalDesc + 'static>(
-        mut self,
-        system: D,
-    ) -> Self {
-        let legion_dispatcher_builder = self
-            .legion_dispatcher_builder
-            .with_thread_local_desc(system);
-
-        Self {
-            dispatcher_operations: self.dispatcher_operations,
-            disp_builder: self.disp_builder,
-            legion_sync_builders: self.legion_sync_builders,
-            legion_syncers: self.legion_syncers,
-            legion_dispatcher_builder,
-        }
-    }
-
     pub fn legion_with_system<
         D: FnOnce(&mut legion::world::World) -> Box<dyn Schedulable> + 'static,
     >(
@@ -231,23 +214,6 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         desc: D,
     ) -> Self {
         let legion_dispatcher_builder = self.legion_dispatcher_builder.with_system(stage, desc);
-
-        Self {
-            dispatcher_operations: self.dispatcher_operations,
-            disp_builder: self.disp_builder,
-            legion_sync_builders: self.legion_sync_builders,
-            legion_syncers: self.legion_syncers,
-            legion_dispatcher_builder,
-        }
-    }
-
-    pub fn legion_with_system_desc<D: LegionSystemDesc + 'static>(
-        mut self,
-        stage: Stage,
-        desc: D,
-    ) -> Self {
-        let legion_dispatcher_builder =
-            self.legion_dispatcher_builder.with_system_desc(stage, desc);
 
         Self {
             dispatcher_operations: self.dispatcher_operations,

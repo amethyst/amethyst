@@ -49,110 +49,104 @@ struct Internals {
     from_camera: Vector3<f32>,
 }
 
-#[derive(Debug, Default)]
-pub struct SpriteVisibilitySortingSystemDesc;
-impl SystemDesc for SpriteVisibilitySortingSystemDesc {
-    fn build(mut self, world: &mut World) -> Box<dyn Schedulable> {
-        world.resources.insert(SpriteVisibility::default());
+pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable> {
+    world.resources.insert(SpriteVisibility::default());
 
-        SystemBuilder::<()>::new("SpriteVisibilitySortingSystem")
-            //.read_resource::<Allocators>()
-            //.read_resource::<LegionActiveCamera>()
-            .write_resource::<SpriteVisibility>()
-            .read_component::<Transparent>()
-            .read_component::<Transform>()
-            .with_query(<(Read<Camera>, Read<Transform>)>::query())
-            .with_query(<(Read<Transform>, Read<SpriteRender>)>::query().filter(
-                !component::<Transparent>()
-                    & !component::<Hidden>()
-                    & !component::<HiddenPropagate>(),
-            ))
-            .with_query(
-                <(Read<Transform>, Read<SpriteRender>, Read<Transparent>)>::query()
-                    .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
-            )
-            .build_disposable(
-                SpriteVisibilitySortingSystemState::default(),
-                |state,
-                 commands,
-                 world,
-                 (visibility),
-                 (camera_query, transparent_query, non_transparent_query)| {
-                    state.transparent_centroids.clear();
-                    state.nontransparent_centroids.clear();
+    SystemBuilder::<()>::new("SpriteVisibilitySortingSystem")
+        //.read_resource::<Allocators>()
+        //.read_resource::<LegionActiveCamera>()
+        .write_resource::<SpriteVisibility>()
+        .read_component::<Transparent>()
+        .read_component::<Transform>()
+        .with_query(<(Read<Camera>, Read<Transform>)>::query())
+        .with_query(<(Read<Transform>, Read<SpriteRender>)>::query().filter(
+            !component::<Transparent>() & !component::<Hidden>() & !component::<HiddenPropagate>(),
+        ))
+        .with_query(
+            <(Read<Transform>, Read<SpriteRender>, Read<Transparent>)>::query()
+                .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
+        )
+        .build_disposable(
+            SpriteVisibilitySortingSystemState::default(),
+            |state,
+             commands,
+             world,
+             (visibility),
+             (camera_query, transparent_query, non_transparent_query)| {
+                state.transparent_centroids.clear();
+                state.nontransparent_centroids.clear();
 
-                    let origin = Point3::origin();
+                let origin = Point3::origin();
 
-                    /* TODO: no legion active camera for now, LegionActiveCamera not used
-                    let camera = active_camera
-                        .entity
-                        .and_then(|e| *world.get_component::<Transform>(e))
-                        .or_else(|| {
-                            camera_query
-                                .iter_entities()
-                                .nth(0)
-                                .map(|(e, _)| world.get_component::<Transform>(e))
-                        });
-                    */
-
-                    let camera_transform = camera_query
-                        .iter_entities()
-                        .nth(0)
-                        .map(|(e, (camera, transform))| transform);
-
-                    let camera_backward = camera_transform
-                        .as_ref()
-                        .map(|c| c.global_matrix().column(2).xyz())
-                        .unwrap_or_else(Vector3::z);
-                    let camera_centroid = camera_transform
-                        .as_ref()
-                        .map(|t| t.global_matrix().transform_point(&origin))
-                        .unwrap_or_else(|| origin);
-
-                    state.transparent_centroids.extend(
-                        transparent_query
+                /* TODO: no legion active camera for now, LegionActiveCamera not used
+                let camera = active_camera
+                    .entity
+                    .and_then(|e| *world.get_component::<Transform>(e))
+                    .or_else(|| {
+                        camera_query
                             .iter_entities()
-                            .map(|(e, (t, _))| (e, t.global_matrix().transform_point(&origin)))
-                            // filter entities behind the camera
-                            .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
-                            .map(|(entity, centroid)| Internals {
-                                entity,
-                                transparent: world.get_component::<Transparent>(entity).is_some(),
-                                centroid,
-                                camera_distance: (centroid.z - camera_centroid.z).abs(),
-                                from_camera: centroid - camera_centroid,
-                            }),
-                    );
-
-                    state.transparent_centroids.sort_by(|a, b| {
-                        b.camera_distance
-                            .partial_cmp(&a.camera_distance)
-                            .unwrap_or(Ordering::Equal)
+                            .nth(0)
+                            .map(|(e, _)| world.get_component::<Transform>(e))
                     });
+                */
 
-                    state.nontransparent_centroids.extend(
-                        non_transparent_query
-                            .iter_entities()
-                            .map(|(e, (t, _, _))| (e, t.global_matrix().transform_point(&origin)))
-                            // filter entities behind the camera
-                            .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
-                            .map(|(entity, centroid)| Internals {
-                                entity,
-                                transparent: world.get_component::<Transparent>(entity).is_some(),
-                                centroid,
-                                camera_distance: (centroid.z - camera_centroid.z).abs(),
-                                from_camera: centroid - camera_centroid,
-                            }),
-                    );
+                let camera_transform = camera_query
+                    .iter_entities()
+                    .nth(0)
+                    .map(|(e, (camera, transform))| transform);
 
-                    visibility
-                        .visible_unordered
-                        .extend(state.nontransparent_centroids.iter().map(|c| c.entity));
-                    visibility
-                        .visible_ordered
-                        .extend(state.transparent_centroids.iter().map(|c| c.entity))
-                },
-                |_, _| {},
-            )
-    }
+                let camera_backward = camera_transform
+                    .as_ref()
+                    .map(|c| c.global_matrix().column(2).xyz())
+                    .unwrap_or_else(Vector3::z);
+                let camera_centroid = camera_transform
+                    .as_ref()
+                    .map(|t| t.global_matrix().transform_point(&origin))
+                    .unwrap_or_else(|| origin);
+
+                state.transparent_centroids.extend(
+                    transparent_query
+                        .iter_entities()
+                        .map(|(e, (t, _))| (e, t.global_matrix().transform_point(&origin)))
+                        // filter entities behind the camera
+                        .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
+                        .map(|(entity, centroid)| Internals {
+                            entity,
+                            transparent: world.get_component::<Transparent>(entity).is_some(),
+                            centroid,
+                            camera_distance: (centroid.z - camera_centroid.z).abs(),
+                            from_camera: centroid - camera_centroid,
+                        }),
+                );
+
+                state.transparent_centroids.sort_by(|a, b| {
+                    b.camera_distance
+                        .partial_cmp(&a.camera_distance)
+                        .unwrap_or(Ordering::Equal)
+                });
+
+                state.nontransparent_centroids.extend(
+                    non_transparent_query
+                        .iter_entities()
+                        .map(|(e, (t, _, _))| (e, t.global_matrix().transform_point(&origin)))
+                        // filter entities behind the camera
+                        .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
+                        .map(|(entity, centroid)| Internals {
+                            entity,
+                            transparent: world.get_component::<Transparent>(entity).is_some(),
+                            centroid,
+                            camera_distance: (centroid.z - camera_centroid.z).abs(),
+                            from_camera: centroid - camera_centroid,
+                        }),
+                );
+
+                visibility
+                    .visible_unordered
+                    .extend(state.nontransparent_centroids.iter().map(|c| c.entity));
+                visibility
+                    .visible_ordered
+                    .extend(state.transparent_centroids.iter().map(|c| c.entity))
+            },
+            |_, _| {},
+        )
 }

@@ -46,93 +46,89 @@ struct Internals {
     camera_distance: f32,
 }
 
-#[derive(Debug, Default)]
-pub struct VisibilitySortingSystemDesc;
-impl SystemDesc for VisibilitySortingSystemDesc {
-    fn build(mut self, world: &mut World) -> Box<dyn Schedulable> {
-        world.resources.insert(Visibility::default());
+pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable> {
+    world.resources.insert(Visibility::default());
 
-        SystemBuilder::<()>::new("VisibilitySortingSystem")
-            .write_resource::<Visibility>()
-            .read_component::<BoundingSphere>()
-            .read_component::<Transparent>()
-            .with_query(<(Read<Camera>, Read<Transform>)>::query())
-            .with_query(
-                <(Read<Transform>)>::query()
-                    .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
-            )
-            .build_disposable(
-                VisibilitySortingSystemState::default(),
-                |state, commands, world, visibility, (camera_query, entity_query)| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("visibility_sorting_system");
+    SystemBuilder::<()>::new("VisibilitySortingSystem")
+        .write_resource::<Visibility>()
+        .read_component::<BoundingSphere>()
+        .read_component::<Transparent>()
+        .with_query(<(Read<Camera>, Read<Transform>)>::query())
+        .with_query(
+            <(Read<Transform>)>::query()
+                .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
+        )
+        .build_disposable(
+            VisibilitySortingSystemState::default(),
+            |state, commands, world, visibility, (camera_query, entity_query)| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("visibility_sorting_system");
 
-                    visibility.visible_unordered.clear();
-                    visibility.visible_ordered.clear();
-                    state.transparent.clear();
-                    state.centroids.clear();
+                visibility.visible_unordered.clear();
+                visibility.visible_ordered.clear();
+                state.transparent.clear();
+                state.centroids.clear();
 
-                    let origin = Point3::origin();
-                    let defcam = Camera::standard_2d(1.0, 1.0);
-                    let identity = Transform::default();
+                let origin = Point3::origin();
+                let defcam = Camera::standard_2d(1.0, 1.0);
+                let identity = Transform::default();
 
-                    let (camera, camera_transform) = camera_query.iter().nth(0).unwrap();
+                let (camera, camera_transform) = camera_query.iter().nth(0).unwrap();
 
-                    let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
-                    let frustum = Frustum::new(
-                        convert::<_, Matrix4<f32>>(*camera.as_matrix())
-                            * camera_transform.global_matrix().try_inverse().unwrap(),
-                    );
+                let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
+                let frustum = Frustum::new(
+                    convert::<_, Matrix4<f32>>(*camera.as_matrix())
+                        * camera_transform.global_matrix().try_inverse().unwrap(),
+                );
 
-                    state.centroids.extend(
-                        entity_query
-                            .iter_entities()
-                            .map(|(entity, transform)| {
-                                let sphere = world.get_component::<BoundingSphere>(entity);
+                state.centroids.extend(
+                    entity_query
+                        .iter_entities()
+                        .map(|(entity, transform)| {
+                            let sphere = world.get_component::<BoundingSphere>(entity);
 
-                                let pos = sphere.clone().map_or(origin, |s| s.center);
-                                let matrix = transform.global_matrix();
-                                (
-                                    entity,
-                                    matrix.transform_point(&pos),
-                                    sphere.map_or(1.0, |s| s.radius)
-                                        * matrix[(0, 0)].max(matrix[(1, 1)]).max(matrix[(2, 2)]),
-                                )
-                            })
-                            .filter(|(_, centroid, radius)| frustum.check_sphere(centroid, *radius))
-                            .map(|(entity, centroid, _)| Internals {
+                            let pos = sphere.clone().map_or(origin, |s| s.center);
+                            let matrix = transform.global_matrix();
+                            (
                                 entity,
-                                transparent: world.get_component::<Transparent>(entity).is_some(),
-                                centroid,
-                                camera_distance: distance_squared(&centroid, &camera_centroid),
-                            }),
-                    );
+                                matrix.transform_point(&pos),
+                                sphere.map_or(1.0, |s| s.radius)
+                                    * matrix[(0, 0)].max(matrix[(1, 1)]).max(matrix[(2, 2)]),
+                            )
+                        })
+                        .filter(|(_, centroid, radius)| frustum.check_sphere(centroid, *radius))
+                        .map(|(entity, centroid, _)| Internals {
+                            entity,
+                            transparent: world.get_component::<Transparent>(entity).is_some(),
+                            centroid,
+                            camera_distance: distance_squared(&centroid, &camera_centroid),
+                        }),
+                );
 
+                state
+                    .transparent
+                    .extend(state.centroids.iter().filter(|c| c.transparent).cloned());
+
+                state.transparent.sort_by(|a, b| {
+                    b.camera_distance
+                        .partial_cmp(&a.camera_distance)
+                        .unwrap_or(Ordering::Equal)
+                });
+
+                visibility.visible_unordered.extend(
                     state
-                        .transparent
-                        .extend(state.centroids.iter().filter(|c| c.transparent).cloned());
+                        .centroids
+                        .iter()
+                        .filter(|c| !c.transparent)
+                        .map(|c| c.entity),
+                );
 
-                    state.transparent.sort_by(|a, b| {
-                        b.camera_distance
-                            .partial_cmp(&a.camera_distance)
-                            .unwrap_or(Ordering::Equal)
-                    });
-
-                    visibility.visible_unordered.extend(
-                        state
-                            .centroids
-                            .iter()
-                            .filter(|c| !c.transparent)
-                            .map(|c| c.entity),
-                    );
-
-                    visibility
-                        .visible_ordered
-                        .extend(state.transparent.iter().map(|c| c.entity));
-                },
-                |_, _| {},
-            )
-    }
+                visibility
+                    .visible_ordered
+                    .extend(state.transparent.iter().map(|c| c.entity));
+            },
+            |_, _| {},
+        )
 }
 
 /*

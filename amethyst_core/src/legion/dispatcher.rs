@@ -17,6 +17,10 @@ pub trait ConsumeDesc {
     ) -> Result<(), amethyst_error::Error>;
 }
 
+pub trait IntoStageEntry {
+    fn into_entry(self) -> StageEntry;
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Stage {
     Begin,
@@ -24,10 +28,24 @@ pub enum Stage {
     Render,
     ThreadLocal,
 }
+impl IntoStageEntry for Stage {
+    fn into_entry(self) -> StageEntry {
+        StageEntry::Stage(self)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub enum StageEntry {
+    Stage(Stage),
+    RelativeStage(Stage, isize),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+struct RelativeStage(Stage, u32);
 
 pub struct Dispatcher {
     pub thread_locals: Vec<Box<dyn ThreadLocal>>,
-    pub stages: HashMap<Stage, Vec<Box<dyn legion::schedule::Schedulable>>>,
+    pub stages: HashMap<StageEntry, Vec<Box<dyn legion::schedule::Schedulable>>>,
 }
 impl Default for Dispatcher {
     fn default() -> Self {
@@ -36,9 +54,9 @@ impl Default for Dispatcher {
         Self {
             thread_locals: Vec::default(),
             stages: vec![
-                (Stage::Begin, Vec::default()),
-                (Stage::Logic, Vec::default()),
-                (Stage::Render, Vec::default()),
+                (Stage::Begin.into_entry(), Vec::default()),
+                (Stage::Logic.into_entry(), Vec::default()),
+                (Stage::Render.into_entry(), Vec::default()),
             ]
             .into_iter()
             .collect(),
@@ -55,7 +73,7 @@ impl Dispatcher {
             }
             _ => {
                 StageExecutor::new(
-                    &mut self.stages.get_mut(&stage).unwrap(),
+                    &mut self.stages.get_mut(&stage.into_entry()).unwrap(),
                     &world.resources.get::<ArcThreadPool>().unwrap(),
                 )
                 .execute(world);

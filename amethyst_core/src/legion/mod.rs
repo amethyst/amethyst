@@ -7,7 +7,7 @@ pub mod dispatcher;
 pub mod sync;
 pub mod temp;
 
-pub use dispatcher::{ConsumeDesc, Dispatcher, DispatcherBuilder, Stage};
+pub use dispatcher::{ConsumeDesc, Dispatcher, DispatcherBuilder, IntoStageEntry, Stage};
 pub use legion::{prelude::*, *};
 pub use sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait};
 
@@ -42,7 +42,7 @@ impl<B: SystemDesc> ConsumeDesc for DispatcherSystemDesc<B> {
     ) -> Result<(), amethyst_error::Error> {
         dispatcher
             .stages
-            .get_mut(&self.0)
+            .get_mut(&self.0.into_entry())
             .unwrap()
             .push(self.1.build(world));
         Ok(())
@@ -101,7 +101,7 @@ where
     ) -> Result<(), amethyst_error::Error> {
         dispatcher
             .stages
-            .get_mut(&self.0)
+            .get_mut(&self.0.into_entry())
             .unwrap()
             .push((self.1)(world));
         Ok(())

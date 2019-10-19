@@ -4,8 +4,8 @@ use crate::{
     legion::{
         bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
         pass::*,
-        sprite_visibility::SpriteVisibilitySortingSystemDesc,
-        visibility::VisibilitySortingSystemDesc,
+        sprite_visibility::build_sprite_visibility_sorting_system,
+        visibility::build_visibility_sorting_system,
     },
     Backend, Factory,
 };
@@ -156,7 +156,7 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         world: &mut World,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system_desc(Stage::Render, SpriteVisibilitySortingSystemDesc::default());
+        builder.add_system(Stage::Render, build_sprite_visibility_sorting_system);
         Ok(())
     }
 
@@ -250,7 +250,7 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         world: &mut World,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system_desc(Stage::Render, VisibilitySortingSystemDesc::default());
+        builder.add_system(Stage::Render, build_visibility_sorting_system);
         Ok(())
     }
 

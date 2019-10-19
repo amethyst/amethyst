@@ -1,7 +1,7 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
 use crate::legion::system::{
-    GraphCreator, MeshProcessorSystemDesc, RenderingSystem, TextureProcessorSystemDesc,
+    build_mesh_processor, build_texture_processor, GraphCreator, RenderingSystem,
 };
 
 use crate::{
@@ -19,7 +19,7 @@ use crate::{
     sprite::SpriteSheet,
     types::Backend,
 };
-use amethyst_assets::legion::ProcessorSystemDesc;
+use amethyst_assets::legion::build_asset_processor;
 use amethyst_core::legion::{
     dispatcher::{DispatcherBuilder, Stage},
     Resources, SystemBundle, World,
@@ -68,11 +68,11 @@ impl<B: Backend> RenderingBundle<B> {
 impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
     fn build(mut self, world: &mut World, builder: &mut DispatcherBuilder) -> Result<(), Error> {
         use amethyst_core::legion::SystemDesc;
-        builder.add_system_desc(Stage::Begin, MeshProcessorSystemDesc::<B>::default());
-        builder.add_system_desc(Stage::Begin, TextureProcessorSystemDesc::<B>::default());
+        builder.add_system(Stage::Begin, build_mesh_processor::<B>);
+        builder.add_system(Stage::Begin, build_texture_processor::<B>);
 
-        builder.add_system_desc(Stage::Begin, ProcessorSystemDesc::<Material>::default());
-        builder.add_system_desc(Stage::Begin, ProcessorSystemDesc::<SpriteSheet>::default());
+        builder.add_system(Stage::Begin, build_asset_processor::<Material>);
+        builder.add_system(Stage::Begin, build_asset_processor::<SpriteSheet>);
 
         for mut plugin in &mut self.plugins {
             plugin.on_build(world, builder)?;
