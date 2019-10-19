@@ -14,10 +14,13 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
 use amethyst_core::{
     components::Transform,
-    ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, Write, WriteExpect},
     legion::{
-        self, command::CommandBuffer, schedule::Schedulable, storage::ComponentTypeId, LegionState,
-        Resources, SystemBuilder, SystemDesc, ThreadLocal, World,
+        self,
+        command::CommandBuffer,
+        dispatcher::{ThreadLocal, ThreadLocalObject},
+        schedule::Schedulable,
+        storage::ComponentTypeId,
+        LegionState, Resources, SystemBuilder, World,
     },
     timing::Time,
     Hidden, HiddenPropagate,
@@ -46,109 +49,102 @@ pub trait GraphCreator<B: Backend>: Send {
     fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World>;
 }
 
-/// Amethyst rendering system
-#[allow(missing_debug_implementations)]
-pub struct RenderingSystem<B, G>
-where
-    B: Backend,
-    G: GraphCreator<B>,
-{
+struct RenderState<B: Backend, G> {
     graph: Option<Graph<B, World>>,
     families: Families<B>,
     graph_creator: G,
 }
 
-impl<B, G> RenderingSystem<B, G>
+fn rebuild_graph<B, G>(state: &mut RenderState<B, G>, world: &World)
 where
     B: Backend,
     G: GraphCreator<B>,
 {
-    /// Create a new `RenderingSystem` with the supplied graph via `GraphCreator`
-    pub fn new(graph_creator: G, families: Families<B>) -> Self {
-        Self {
+    #[cfg(feature = "profiler")]
+    profile_scope!("rebuild_graph");
+
+    let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
+
+    if let Some(graph) = state.graph.take() {
+        #[cfg(feature = "profiler")]
+        profile_scope!("dispose_graph");
+        graph.dispose(&mut *factory, world);
+    }
+
+    let builder = {
+        #[cfg(feature = "profiler")]
+        profile_scope!("run_graph_creator");
+        state.graph_creator.builder(&mut factory, world)
+    };
+
+    let graph = {
+        #[cfg(feature = "profiler")]
+        profile_scope!("build_graph");
+        builder
+            .build(&mut factory, &mut state.families, world)
+            .unwrap()
+    };
+
+    state.graph = Some(graph);
+}
+
+fn run_graph<B, G>(state: &mut RenderState<B, G>, world: &World)
+where
+    B: Backend,
+    G: GraphCreator<B>,
+{
+    let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
+    factory.maintain(&mut state.families);
+    state
+        .graph
+        .as_mut()
+        .unwrap()
+        .run(&mut factory, &mut state.families, world)
+}
+
+pub fn build_rendering_system<B, G>(
+    world: &mut World,
+    graph_creator: G,
+    families: Families<B>,
+) -> Box<dyn ThreadLocal>
+where
+    B: Backend,
+    G: 'static + GraphCreator<B>,
+{
+    ThreadLocalObject::build(
+        RenderState {
             graph: None,
             families,
             graph_creator,
-        }
-    }
-}
+        },
+        |state, world| {
+            let rebuild = state.graph_creator.rebuild(world);
+            if state.graph.is_none() || rebuild {
+                rebuild_graph(state, world);
+            }
+            run_graph(state, world);
+        },
+        move |state, world| {
+            let mut graph = state.graph;
+            if let Some(graph) = graph.take() {
+                let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
+                log::debug!("Dispose graph");
 
-impl<B, G> RenderingSystem<B, G>
-where
-    B: Backend,
-    G: GraphCreator<B>,
-{
-    fn rebuild_graph(&mut self, world: &World) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("rebuild_graph");
+                graph.dispose(&mut factory, world);
+            }
 
-        let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
+            log::debug!("Unload resources");
+            if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Mesh>>() {
+                storage.unload_all();
+            }
+            if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Texture>>() {
+                storage.unload_all();
+            }
 
-        if let Some(graph) = self.graph.take() {
-            #[cfg(feature = "profiler")]
-            profile_scope!("dispose_graph");
-            graph.dispose(&mut *factory, world);
-        }
-
-        let builder = {
-            #[cfg(feature = "profiler")]
-            profile_scope!("run_graph_creator");
-            self.graph_creator.builder(&mut factory, world)
-        };
-
-        let graph = {
-            #[cfg(feature = "profiler")]
-            profile_scope!("build_graph");
-            builder
-                .build(&mut factory, &mut self.families, world)
-                .unwrap()
-        };
-
-        self.graph = Some(graph);
-    }
-
-    fn run_graph(&mut self, world: &World) {
-        let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
-        factory.maintain(&mut self.families);
-        self.graph
-            .as_mut()
-            .unwrap()
-            .run(&mut factory, &mut self.families, world)
-    }
-}
-
-impl<B, G> ThreadLocal for RenderingSystem<B, G>
-where
-    B: Backend,
-    G: GraphCreator<B>,
-{
-    fn run(&mut self, world: &mut World) {
-        let rebuild = self.graph_creator.rebuild(world);
-        if self.graph.is_none() || rebuild {
-            self.rebuild_graph(world);
-        }
-        self.run_graph(world);
-    }
-    fn dispose(self, world: &mut World) {
-        let mut graph = self.graph;
-        if let Some(graph) = graph.take() {
-            let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
-            log::debug!("Dispose graph");
-
-            graph.dispose(&mut factory, world);
-        }
-
-        log::debug!("Unload resources");
-        if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Mesh>>() {
-            storage.unload_all();
-        }
-        if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Texture>>() {
-            storage.unload_all();
-        }
-
-        log::debug!("Drop families");
-        drop(self.families);
-    }
+            log::debug!("Drop families");
+            drop(state.families);
+        },
+    )
 }
 
 /// Asset processing system for `Mesh` asset type.

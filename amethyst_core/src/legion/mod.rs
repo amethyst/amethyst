@@ -7,22 +7,11 @@ pub mod dispatcher;
 pub mod sync;
 pub mod temp;
 
-pub use dispatcher::{ConsumeDesc, Dispatcher, DispatcherBuilder, IntoStageEntry, Stage};
+pub use dispatcher::{
+    ConsumeDesc, Dispatcher, DispatcherBuilder, IntoStageEntry, Stage, ThreadLocal,
+};
 pub use legion::{prelude::*, *};
 pub use sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait};
-
-pub trait SystemDesc: 'static {
-    fn build(mut self, world: &mut legion::world::World) -> Box<dyn legion::schedule::Schedulable>;
-}
-
-pub trait ThreadLocal {
-    fn run(&mut self, world: &mut World);
-    fn dispose(self, world: &mut World);
-}
-
-pub trait ThreadLocalDesc: 'static {
-    fn build(mut self, world: &mut legion::world::World) -> Box<dyn ThreadLocal>;
-}
 
 pub trait SystemBundle {
     fn build(
@@ -31,24 +20,6 @@ pub trait SystemBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error>;
 }
-
-pub struct DispatcherSystemDesc<B>(Stage, B);
-impl<B: SystemDesc> ConsumeDesc for DispatcherSystemDesc<B> {
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        dispatcher: &mut Dispatcher,
-        _: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error> {
-        dispatcher
-            .stages
-            .get_mut(&self.0.into_entry())
-            .unwrap()
-            .push(self.1.build(world));
-        Ok(())
-    }
-}
-
 pub struct DispatcherSystemBundle<B>(B);
 impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
     fn consume(
@@ -58,32 +29,6 @@ impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
         self.0.build(world, builder)?;
-        Ok(())
-    }
-}
-
-pub struct DispatcherThreadLocalDesc<B>(B);
-impl<B: ThreadLocalDesc> ConsumeDesc for DispatcherThreadLocalDesc<B> {
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        dispatcher: &mut Dispatcher,
-        builder: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error> {
-        dispatcher.thread_locals.push(self.0.build(world));
-        Ok(())
-    }
-}
-
-pub struct DispatcherThreadLocal<B>(B);
-impl<B: 'static + ThreadLocal> ConsumeDesc for DispatcherThreadLocal<B> {
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        dispatcher: &mut Dispatcher,
-        builder: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error> {
-        dispatcher.thread_locals.push(Box::new(self.0));
         Ok(())
     }
 }
@@ -104,6 +49,38 @@ where
             .get_mut(&self.0.into_entry())
             .unwrap()
             .push((self.1)(world));
+        Ok(())
+    }
+}
+
+pub struct DispatcherThreadLocalSystem<F>(F);
+impl<F> ConsumeDesc for DispatcherThreadLocalSystem<F>
+where
+    F: FnOnce(&mut World) -> Box<dyn Runnable>,
+{
+    fn consume(
+        self: Box<Self>,
+        world: &mut legion::world::World,
+        dispatcher: &mut Dispatcher,
+        _: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        dispatcher.thread_local_systems.push((self.0)(world));
+        Ok(())
+    }
+}
+
+pub struct DispatcherThreadLocal<F>(F);
+impl<F> ConsumeDesc for DispatcherThreadLocal<F>
+where
+    F: FnOnce(&mut World) -> Box<dyn ThreadLocal>,
+{
+    fn consume(
+        self: Box<Self>,
+        world: &mut legion::world::World,
+        dispatcher: &mut Dispatcher,
+        _: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        dispatcher.thread_locals.push((self.0)(world));
         Ok(())
     }
 }

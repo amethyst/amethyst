@@ -21,7 +21,7 @@ use amethyst::{
                 Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder, Stage,
             },
             sync::SyncDirection,
-            LegionState, SystemDesc,
+            LegionState,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -637,13 +637,13 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         // Legion stuff
-        .legion_resource_sync::<Scene>()
-        .legion_resource_sync::<RenderMode>()
-        .legion_component_sync::<Orbit>()
-        .legion_sync_bundle(amethyst::core::legion::Syncer::default())
-        .legion_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
-        .legion_with_system(Stage::Logic, orbit_system)
-        .legion_with_bundle(
+        .migration_resource_sync::<Scene>()
+        .migration_resource_sync::<RenderMode>()
+        .migration_component_sync::<Orbit>()
+        .migration_sync_bundle(amethyst::core::legion::Syncer::default())
+        .migration_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
+        .migration_with_system(Stage::Logic, orbit_system)
+        .migration_with_bundle(
             RenderingBundle::<DefaultBackend>::default()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)

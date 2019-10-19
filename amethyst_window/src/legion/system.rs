@@ -2,7 +2,8 @@ use crate::resources::ScreenDimensions;
 use amethyst_config::Config;
 use amethyst_core::{
     legion::{
-        schedule::Schedulable, system::SystemBuilder, SystemDesc, ThreadLocal, ThreadLocalDesc,
+        schedule::{Runnable, Schedulable},
+        system::SystemBuilder,
         World,
     },
     shrev::EventChannel,
@@ -63,35 +64,29 @@ pub mod window_system {
     }
 }
 
-/// System that polls the window events and pushes them to appropriate event channels.
-///
-/// This system must be active for any `GameState` to receive
-/// any `StateEvent::Window` event into it's `handle_event` method.
-#[derive(Debug)]
-pub struct EventsLoopSystem {
-    events_loop: EventsLoop,
-    events: Vec<Event>,
-}
+pub mod events_loop_system {
+    //! System that polls the window events and pushes them to appropriate event channels.
+    use super::*;
 
-impl EventsLoopSystem {
     /// Creates a new `EventsLoopSystem` using the provided `EventsLoop`
-    pub fn new(events_loop: EventsLoop) -> Self {
-        Self {
+    pub fn build(world: &mut World, events_loop: EventsLoop) -> Box<dyn Runnable> {
+        pub struct State {
+            events_loop: EventsLoop,
+            events: Vec<Event>,
+        }
+        let mut state = State {
             events_loop,
             events: Vec::with_capacity(128),
-        }
-    }
-}
+        };
 
-impl ThreadLocal for EventsLoopSystem {
-    fn run(&mut self, world: &mut World) {
-        let mut event_handler = world.resources.get_mut::<EventChannel<Event>>().unwrap();
-
-        let events = &mut self.events;
-        self.events_loop.poll_events(|event| {
-            events.push(event);
-        });
-        event_handler.drain_vec_write(events);
+        SystemBuilder::<()>::new("EventsLoopSystem")
+            .write_resource::<EventChannel<Event>>()
+            .build_thread_local(move |_, _, event_handler, _| {
+                let events = &mut state.events;
+                state.events_loop.poll_events(|event| {
+                    events.push(event);
+                });
+                event_handler.drain_vec_write(events);
+            })
     }
-    fn dispose(self, world: &mut World) {}
 }

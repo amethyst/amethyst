@@ -17,6 +17,36 @@ pub trait ConsumeDesc {
     ) -> Result<(), amethyst_error::Error>;
 }
 
+pub trait ThreadLocal {
+    fn run(&mut self, world: &mut World);
+    fn dispose(self: Box<Self>, world: &mut World);
+}
+
+pub struct ThreadLocalObject<S, F, D>(S, F, D);
+impl<S, F, D> ThreadLocalObject<S, F, D>
+where
+    S: 'static,
+    F: FnMut(&mut S, &mut World) + 'static,
+    D: FnOnce(S, &mut World) + 'static,
+{
+    pub fn build(initial_state: S, run_fn: F, dispose_fn: D) -> Box<dyn ThreadLocal> {
+        Box::new(Self(initial_state, run_fn, dispose_fn))
+    }
+}
+impl<S, F, D> ThreadLocal for ThreadLocalObject<S, F, D>
+where
+    S: 'static,
+    F: FnMut(&mut S, &mut World) + 'static,
+    D: FnOnce(S, &mut World) + 'static,
+{
+    fn run(&mut self, world: &mut World) {
+        (self.1)(&mut self.0, world)
+    }
+    fn dispose(self: Box<Self>, world: &mut World) {
+        (self.2)(self.0, world)
+    }
+}
+
 pub trait IntoStageEntry {
     fn into_entry(self) -> StageEntry;
 }
@@ -44,14 +74,16 @@ pub enum StageEntry {
 struct RelativeStage(Stage, u32);
 
 pub struct Dispatcher {
-    pub thread_locals: Vec<Box<dyn ThreadLocal>>,
-    pub stages: HashMap<StageEntry, Vec<Box<dyn legion::schedule::Schedulable>>>,
+    pub(crate) thread_local_systems: Vec<Box<dyn legion::schedule::Runnable>>,
+    pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
+    pub(crate) stages: HashMap<StageEntry, Vec<Box<dyn legion::schedule::Schedulable>>>,
 }
 impl Default for Dispatcher {
     fn default() -> Self {
         use std::iter::FromIterator;
 
         Self {
+            thread_local_systems: Vec::default(),
             thread_locals: Vec::default(),
             stages: vec![
                 (Stage::Begin.into_entry(), Vec::default()),
@@ -67,6 +99,10 @@ impl Dispatcher {
     pub fn run(&mut self, stage: Stage, world: &mut World) {
         match stage {
             Stage::ThreadLocal => {
+                self.thread_local_systems
+                    .iter_mut()
+                    .for_each(|local| local.run(world));
+
                 self.thread_locals
                     .iter_mut()
                     .for_each(|local| local.run(world));
@@ -82,6 +118,8 @@ impl Dispatcher {
     }
 
     pub fn merge(mut self, mut other: Dispatcher) -> Self {
+        self.thread_local_systems
+            .extend(other.thread_local_systems.drain(..));
         self.thread_locals.extend(other.thread_locals.drain(..));
         for (k, v) in self.stages.iter_mut() {
             v.extend(other.stages.get_mut(k).unwrap().drain(..));
@@ -89,24 +127,68 @@ impl Dispatcher {
 
         self
     }
+
+    pub fn dispose(mut self, world: &mut World) {
+        self.thread_local_systems
+            .drain(..)
+            .for_each(|local| local.dispose(world));
+
+        self.thread_locals
+            .drain(..)
+            .for_each(|local| local.dispose(world));
+
+        self.stages
+            .drain()
+            .for_each(|(_, mut v)| v.drain(..).for_each(|system| system.dispose(world)));
+    }
 }
 
 #[derive(Default)]
 pub struct DispatcherBuilder<'a> {
-    systems: Vec<(Stage, Box<dyn ConsumeDesc + 'a>)>,
-    thread_locals: Vec<Box<dyn ConsumeDesc + 'static>>,
-    bundles: Vec<Box<dyn ConsumeDesc + 'a>>,
+    pub(crate) systems: Vec<(Stage, Box<dyn ConsumeDesc + 'a>)>,
+    pub(crate) thread_local_systems: Vec<Box<dyn ConsumeDesc + 'a>>,
+    pub(crate) thread_locals: Vec<Box<dyn ConsumeDesc + 'a>>,
+    pub(crate) bundles: Vec<Box<dyn ConsumeDesc + 'a>>,
 }
 impl<'a> DispatcherBuilder<'a> {
-    pub fn add_thread_local<D: ThreadLocal + 'static>(&mut self, system: D) {
+    pub fn add_thread_local<T: FnOnce(&mut World) -> Box<dyn ThreadLocal> + 'a>(
+        &mut self,
+        desc: T,
+    ) {
         self.thread_locals
-            .push(Box::new(DispatcherThreadLocal(system)));
+            .push((Box::new(DispatcherThreadLocal(desc)) as Box<dyn ConsumeDesc>));
     }
 
-    pub fn add_system<D: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
+    pub fn with_thread_local<T: FnOnce(&mut World) -> Box<dyn ThreadLocal> + 'a>(
+        mut self,
+        desc: T,
+    ) -> Self {
+        self.add_thread_local(desc);
+
+        self
+    }
+
+    pub fn add_thread_local_system<T: FnOnce(&mut World) -> Box<dyn Runnable> + 'a>(
+        &mut self,
+        desc: T,
+    ) {
+        self.thread_local_systems
+            .push((Box::new(DispatcherThreadLocalSystem(desc)) as Box<dyn ConsumeDesc>));
+    }
+
+    pub fn with_thread_local_system<T: FnOnce(&mut World) -> Box<dyn Runnable> + 'a>(
+        mut self,
+        desc: T,
+    ) -> Self {
+        self.add_thread_local_system(desc);
+
+        self
+    }
+
+    pub fn add_system<T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
         &mut self,
         stage: Stage,
-        desc: D,
+        desc: T,
     ) {
         self.systems.push((
             stage,
@@ -114,35 +196,29 @@ impl<'a> DispatcherBuilder<'a> {
         ));
     }
 
-    pub fn add_bundle<D: SystemBundle + 'a>(&mut self, bundle: D) {
-        self.bundles
-            .push(Box::new(DispatcherSystemBundle(bundle)) as Box<dyn ConsumeDesc>);
-    }
-
-    pub fn with_thread_local<D: ThreadLocal + 'static>(mut self, system: D) -> Self {
-        self.add_thread_local(system);
-
-        self
-    }
-
-    pub fn with_system<D: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
+    pub fn with_system<T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
         mut self,
         stage: Stage,
-        desc: D,
+        desc: T,
     ) -> Self {
         self.add_system(stage, desc);
 
         self
     }
 
-    pub fn with_bundle<D: SystemBundle + 'a>(mut self, bundle: D) -> Self {
+    pub fn add_bundle<T: SystemBundle + 'a>(&mut self, bundle: T) {
+        self.bundles
+            .push(Box::new(DispatcherSystemBundle(bundle)) as Box<dyn ConsumeDesc>);
+    }
+
+    pub fn with_bundle<T: SystemBundle + 'a>(mut self, bundle: T) -> Self {
         self.add_bundle(bundle);
 
         self
     }
 
     pub fn is_empty(&self) -> bool {
-        self.systems.is_empty() && self.bundles.is_empty() && self.thread_locals.is_empty()
+        self.systems.is_empty() && self.bundles.is_empty() && self.thread_local_systems.is_empty()
     }
 
     pub fn build(mut self, world: &mut legion::world::World) -> Dispatcher {
@@ -161,7 +237,7 @@ impl<'a> DispatcherBuilder<'a> {
                 .unwrap();
         }
 
-        for desc in self.thread_locals.drain(..) {
+        for desc in self.thread_local_systems.drain(..) {
             desc.consume(world, &mut dispatcher, &mut recursive_builder)
                 .unwrap();
         }

@@ -1,7 +1,7 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
 use crate::legion::system::{
-    build_mesh_processor, build_texture_processor, GraphCreator, RenderingSystem,
+    build_mesh_processor, build_rendering_system, build_texture_processor, GraphCreator,
 };
 
 use crate::{
@@ -67,7 +67,6 @@ impl<B: Backend> RenderingBundle<B> {
 
 impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
     fn build(mut self, world: &mut World, builder: &mut DispatcherBuilder) -> Result<(), Error> {
-        use amethyst_core::legion::SystemDesc;
         builder.add_system(Stage::Begin, build_mesh_processor::<B>);
         builder.add_system(Stage::Begin, build_texture_processor::<B>);
 
@@ -93,10 +92,9 @@ impl<'a, 'b, B: Backend> SystemBundle for RenderingBundle<B> {
         world.resources.insert(crate::mtl::MaterialDefaults(mat));
 
         log::trace!("Building system with {} plugins", self.plugins.len());
-        builder.add_thread_local(RenderingSystem::<B, _>::new(
-            self.into_graph_creator(),
-            families,
-        ));
+        builder.add_thread_local(move |world| {
+            build_rendering_system(world, self.into_graph_creator(), families)
+        });
 
         Ok(())
     }

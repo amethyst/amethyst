@@ -32,7 +32,7 @@ use crate::{
 };
 
 #[cfg(feature = "legion-ecs")]
-use crate::core::legion::{LegionState, Universe, World as LegionWorld};
+use crate::core::legion::{LegionState, Universe};
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.

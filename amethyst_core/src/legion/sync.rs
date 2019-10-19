@@ -1,7 +1,7 @@
 use crate::{
     legion::{
         dispatcher::{Dispatcher, Stage},
-        LegionState, SystemDesc, ThreadLocal,
+        LegionState,
     },
     transform::Transform,
 };
