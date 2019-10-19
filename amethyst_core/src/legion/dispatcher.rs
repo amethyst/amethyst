@@ -47,66 +47,63 @@ where
     }
 }
 
-pub trait IntoStageEntry: Copy {
-    fn into_entry(self) -> StageEntry;
+pub trait IntoRelativeStage: Copy {
+    fn into_relative(self) -> RelativeStage;
 }
 
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash, serde::Serialize, serde::Deserialize,
 )]
 pub enum Stage {
-    Begin = 10000,
-    Logic = 20000,
-    Render = 40000,
-    ThreadLocal = 50000,
+    Begin,
+    Logic,
+    Render,
+    ThreadLocal,
 }
-impl IntoStageEntry for Stage {
-    fn into_entry(self) -> StageEntry {
-        StageEntry::Stage(self)
+impl IntoRelativeStage for Stage {
+    fn into_relative(self) -> RelativeStage {
+        RelativeStage(self, 0)
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-pub enum StageEntry {
-    Stage(Stage),
-    RelativeStage(Stage, isize),
-}
-impl StageEntry {
-    fn index(&self) -> isize {
-        match *self {
-            StageEntry::Stage(stage) => stage as isize,
-            StageEntry::RelativeStage(stage, offset) => (stage as isize) + offset,
-        }
+pub struct RelativeStage(pub Stage, pub isize);
+impl RelativeStage {
+    pub fn stage(&self) -> Stage {
+        self.0
+    }
+
+    pub fn offset(&self) -> isize {
+        self.1
     }
 }
-impl IntoStageEntry for StageEntry {
-    fn into_entry(self) -> StageEntry {
+impl IntoRelativeStage for RelativeStage {
+    fn into_relative(self) -> RelativeStage {
         self
     }
 }
-impl From<Stage> for StageEntry {
+impl From<Stage> for RelativeStage {
     fn from(other: Stage) -> Self {
-        StageEntry::Stage(other)
+        RelativeStage(other, 0)
     }
 }
-impl PartialOrd for StageEntry {
+impl PartialOrd for RelativeStage {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.index().partial_cmp(&other.index())
+        Some(self.cmp(other))
     }
 }
-impl Ord for StageEntry {
+impl Ord for RelativeStage {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.index().cmp(&other.index())
+        self.stage()
+            .cmp(&other.stage())
+            .then(self.offset().cmp(&other.offset()))
     }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-struct RelativeStage(Stage, u32);
 
 pub struct Dispatcher {
     pub(crate) thread_local_systems: Vec<Box<dyn legion::schedule::Runnable>>,
     pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
-    pub(crate) stages: BTreeMap<StageEntry, Vec<Box<dyn legion::schedule::Schedulable>>>,
+    pub(crate) stages: BTreeMap<RelativeStage, Vec<Box<dyn legion::schedule::Schedulable>>>,
     sorted_systems: Vec<Box<dyn legion::schedule::Schedulable>>,
 }
 impl Default for Dispatcher {
@@ -190,7 +187,7 @@ impl Dispatcher {
 
 #[derive(Default)]
 pub struct DispatcherBuilder<'a> {
-    pub(crate) systems: Vec<(StageEntry, Box<dyn ConsumeDesc + 'a>)>,
+    pub(crate) systems: Vec<(RelativeStage, Box<dyn ConsumeDesc + 'a>)>,
     pub(crate) thread_local_systems: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) thread_locals: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) bundles: Vec<Box<dyn ConsumeDesc + 'a>>,
@@ -230,18 +227,18 @@ impl<'a> DispatcherBuilder<'a> {
         self
     }
 
-    pub fn add_system<S: IntoStageEntry, T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
+    pub fn add_system<S: IntoRelativeStage, T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
         &mut self,
         stage: S,
         desc: T,
     ) {
         self.systems.push((
-            stage.into_entry(),
-            Box::new(DispatcherSystem(stage.into_entry(), desc)) as Box<dyn ConsumeDesc>,
+            stage.into_relative(),
+            Box::new(DispatcherSystem(stage.into_relative(), desc)) as Box<dyn ConsumeDesc>,
         ));
     }
 
-    pub fn with_system<S: IntoStageEntry, T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
+    pub fn with_system<S: IntoRelativeStage, T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
         mut self,
         stage: S,
         desc: T,

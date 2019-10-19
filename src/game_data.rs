@@ -19,7 +19,7 @@ use crate::core::{
         self,
         dispatcher::{
             Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder,
-            IntoStageEntry,
+            IntoRelativeStage,
         },
         sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait},
         LegionState, LegionSyncBuilder, Runnable, Schedulable, Stage,
@@ -214,7 +214,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     }
 
     pub fn migration_with_system<
-        S: IntoStageEntry,
+        S: IntoRelativeStage,
         T: FnOnce(&mut LegionWorld) -> Box<dyn Schedulable> + 'a,
     >(
         mut self,

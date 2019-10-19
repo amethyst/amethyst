@@ -8,7 +8,8 @@ pub mod sync;
 pub mod temp;
 
 pub use dispatcher::{
-    ConsumeDesc, Dispatcher, DispatcherBuilder, IntoStageEntry, Stage, StageEntry, ThreadLocal,
+    ConsumeDesc, Dispatcher, DispatcherBuilder, IntoRelativeStage, RelativeStage, Stage,
+    ThreadLocal,
 };
 pub use legion::{prelude::*, *};
 pub use sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait};
@@ -33,7 +34,7 @@ impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
     }
 }
 
-pub struct DispatcherSystem<F>(StageEntry, F);
+pub struct DispatcherSystem<F>(RelativeStage, F);
 impl<F> ConsumeDesc for DispatcherSystem<F>
 where
     F: FnOnce(&mut World) -> Box<dyn Schedulable>,
