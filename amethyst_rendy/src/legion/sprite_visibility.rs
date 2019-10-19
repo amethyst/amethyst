@@ -38,12 +38,10 @@ pub struct SpriteVisibility {
 #[derive(Default, Debug)]
 pub struct SpriteVisibilitySortingSystemState {
     transparent_centroids: Vec<Internals>,
-    nontransparent_centroids: Vec<Internals>,
 }
 #[derive(Debug, Clone)]
 struct Internals {
     entity: Entity,
-    transparent: bool,
     centroid: Point3<f32>,
     camera_distance: f32,
     from_camera: Vector3<f32>,
@@ -59,13 +57,13 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
         .read_component::<Transparent>()
         .read_component::<Transform>()
         .with_query(<(Read<Camera>, Read<Transform>)>::query())
-        .with_query(<(Read<Transform>, Read<SpriteRender>)>::query().filter(
-            !component::<Transparent>() & !component::<Hidden>() & !component::<HiddenPropagate>(),
-        ))
         .with_query(
             <(Read<Transform>, Read<SpriteRender>, Read<Transparent>)>::query()
                 .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
         )
+        .with_query(<(Read<Transform>, Read<SpriteRender>)>::query().filter(
+            !component::<Transparent>() & !component::<Hidden>() & !component::<HiddenPropagate>(),
+        ))
         .build_disposable(
             SpriteVisibilitySortingSystemState::default(),
             |state,
@@ -74,9 +72,12 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
              (visibility),
              (camera_query, transparent_query, non_transparent_query)| {
                 state.transparent_centroids.clear();
-                state.nontransparent_centroids.clear();
+                visibility.visible_ordered.clear();
+                visibility.visible_unordered.clear();
 
                 let origin = Point3::origin();
+
+                // TODO: One outsatnding issue here. They are still not rendered correctly in order in the example
 
                 /* TODO: no legion active camera for now, LegionActiveCamera not used
                 let camera = active_camera
@@ -107,12 +108,11 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
                 state.transparent_centroids.extend(
                     transparent_query
                         .iter_entities()
-                        .map(|(e, (t, _))| (e, t.global_matrix().transform_point(&origin)))
+                        .map(|(e, (t, _, _))| (e, t.global_matrix().transform_point(&origin)))
                         // filter entities behind the camera
                         .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
                         .map(|(entity, centroid)| Internals {
                             entity,
-                            transparent: world.get_component::<Transparent>(entity).is_some(),
                             centroid,
                             camera_distance: (centroid.z - camera_centroid.z).abs(),
                             from_camera: centroid - camera_centroid,
@@ -125,27 +125,18 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
                         .unwrap_or(Ordering::Equal)
                 });
 
-                state.nontransparent_centroids.extend(
-                    non_transparent_query
-                        .iter_entities()
-                        .map(|(e, (t, _, _))| (e, t.global_matrix().transform_point(&origin)))
-                        // filter entities behind the camera
-                        .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
-                        .map(|(entity, centroid)| Internals {
-                            entity,
-                            transparent: world.get_component::<Transparent>(entity).is_some(),
-                            centroid,
-                            camera_distance: (centroid.z - camera_centroid.z).abs(),
-                            from_camera: centroid - camera_centroid,
-                        }),
-                );
-
-                visibility
-                    .visible_unordered
-                    .extend(state.nontransparent_centroids.iter().map(|c| c.entity));
                 visibility
                     .visible_ordered
-                    .extend(state.transparent_centroids.iter().map(|c| c.entity))
+                    .extend(state.transparent_centroids.iter().map(|c| c.entity));
+
+                visibility.visible_unordered.extend(
+                    non_transparent_query
+                        .iter_entities()
+                        .map(|(e, (t, _))| (e, t.global_matrix().transform_point(&origin)))
+                        // filter entities behind the camera
+                        .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
+                        .map(|(entity, _)| entity),
+                );
             },
             |_, _| {},
         )

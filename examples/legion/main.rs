@@ -597,7 +597,7 @@ fn main() -> amethyst::Result<()> {
     // .level_for("rendy_resource", log::LevelFilter::Trace)
     // .level_for("rendy_graph", log::LevelFilter::Trace)
     // .level_for("rendy_node", log::LevelFilter::Trace)
-    .level_for("amethyst_core", log::LevelFilter::Trace)
+    // .level_for("amethyst_core", log::LevelFilter::Trace)
     .level_for("amethyst_rendy", log::LevelFilter::Trace)
     // .level_for("gfx_backend_metal", log::LevelFilter::Trace)
     .start();

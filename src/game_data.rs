@@ -21,7 +21,10 @@ use crate::core::{
             Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder,
             IntoRelativeStage,
         },
-        sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait},
+        sync::{
+            ComponentSyncer, ComponentSyncerWith, EntitiesBimapRef, ResourceSyncer, SyncDirection,
+            SyncerTrait,
+        },
         LegionState, LegionSyncBuilder, Runnable, Schedulable, Stage,
         SystemBundle as LegionSystemBundle, ThreadLocal, World as LegionWorld,
     },
@@ -178,7 +181,12 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         S: Send + Sync + Component,
         L: legion::storage::Component,
         F: 'static
-            + Fn(SyncDirection, Option<&mut S>, Option<&mut L>) -> (Option<S>, Option<L>)
+            + Fn(
+                SyncDirection,
+                EntitiesBimapRef,
+                Option<&mut S>,
+                Option<&mut L>,
+            ) -> (Option<S>, Option<L>)
             + Send
             + Sync,
     {

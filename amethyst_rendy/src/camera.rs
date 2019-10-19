@@ -703,6 +703,9 @@ pub struct ActiveCamera {
     /// Camera entity
     pub entity: Option<Entity>,
 }
+impl Component for ActiveCamera {
+    type Storage = HashMapStorage<ActiveCamera>;
+}
 
 // TODO: This needs a different type because of entity types being used. This is the only place in all of
 // amethyst this is done.

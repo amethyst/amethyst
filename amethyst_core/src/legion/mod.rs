@@ -12,7 +12,10 @@ pub use dispatcher::{
     ThreadLocal,
 };
 pub use legion::{prelude::*, *};
-pub use sync::{ComponentSyncer, ComponentSyncerWith, ResourceSyncer, SyncDirection, SyncerTrait};
+pub use sync::{
+    ComponentSyncer, ComponentSyncerWith, EntitiesBimapRef, ResourceSyncer, SyncDirection,
+    SyncerTrait,
+};
 
 pub trait SystemBundle {
     fn build(
@@ -122,7 +125,12 @@ impl LegionState {
         S: Send + Sync + specs::Component,
         L: legion::storage::Component,
         F: 'static
-            + Fn(SyncDirection, Option<&mut S>, Option<&mut L>) -> (Option<S>, Option<L>)
+            + Fn(
+                SyncDirection,
+                EntitiesBimapRef,
+                Option<&mut S>,
+                Option<&mut L>,
+            ) -> (Option<S>, Option<L>)
             + Send
             + Sync,
     {

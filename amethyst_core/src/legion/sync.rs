@@ -41,7 +41,7 @@ impl Component for LegionTag {
     type Storage = NullStorage<Self>;
 }
 
-type EntitiesBimapRef = Arc<RwLock<BiMap<legion::entity::Entity, specs::Entity>>>;
+pub type EntitiesBimapRef = Arc<RwLock<BiMap<legion::entity::Entity, specs::Entity>>>;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum SyncDirection {
@@ -152,7 +152,12 @@ where
     S: specs::Component + Send + Sync,
     L: legion::storage::Component,
     F: 'static
-        + Fn(SyncDirection, Option<&mut S>, Option<&mut L>) -> (Option<S>, Option<L>)
+        + Fn(
+            SyncDirection,
+            EntitiesBimapRef,
+            Option<&mut S>,
+            Option<&mut L>,
+        ) -> (Option<S>, Option<L>)
         + Send
         + Sync,
 {
@@ -165,7 +170,12 @@ where
     S: specs::Component + Send + Sync,
     L: legion::storage::Component,
     F: 'static
-        + Fn(SyncDirection, Option<&mut S>, Option<&mut L>) -> (Option<S>, Option<L>)
+        + Fn(
+            SyncDirection,
+            EntitiesBimapRef,
+            Option<&mut S>,
+            Option<&mut L>,
+        ) -> (Option<S>, Option<L>)
         + Send
         + Sync,
 {
@@ -200,9 +210,9 @@ where
                         let new = if let Some(mut comp) =
                             legion_state.world.get_component_mut::<L>(*legion_entity)
                         {
-                            (self.0)(direction, Some(component), Some(&mut comp))
+                            (self.0)(direction, bimap.clone(), Some(component), Some(&mut comp))
                         } else {
-                            (self.0)(direction, Some(component), None)
+                            (self.0)(direction, bimap.clone(), Some(component), None)
                         };
 
                         if let Some(new_comp) = new.0 {
@@ -220,9 +230,14 @@ where
                 for (entity, mut component) in query.iter_entities(&legion_state.world) {
                     if let Some(specs_entity) = map.get_by_left(&entity) {
                         let new = if let Some(specs_component) = storage.get_mut(*specs_entity) {
-                            (self.0)(direction, Some(specs_component), Some(&mut component))
+                            (self.0)(
+                                direction,
+                                bimap.clone(),
+                                Some(specs_component),
+                                Some(&mut component),
+                            )
                         } else {
-                            (self.0)(direction, None, Some(&mut component))
+                            (self.0)(direction, bimap.clone(), None, Some(&mut component))
                         };
 
                         if let Some(new_comp) = new.0 {

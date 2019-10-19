@@ -1,11 +1,15 @@
-use crate::types::Backend;
+use crate::{
+    camera::{ActiveCamera, LegionActiveCamera},
+    types::Backend,
+};
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{self as specs, SystemData},
-    legion::{dispatcher::DispatcherBuilder, LegionState, LegionSyncBuilder},
+    legion::{dispatcher::DispatcherBuilder, sync::SyncDirection, LegionState, LegionSyncBuilder},
     shrev::EventChannel,
     SystemBundle,
 };
+
 use amethyst_error::Error;
 use amethyst_window::Event;
 use derivative::Derivative;
@@ -31,6 +35,13 @@ impl<B: Backend> LegionSyncBuilder for Syncer<B> {
         dispatcher: &mut DispatcherBuilder,
     ) {
         crate::system::SetupData::setup(specs_world);
+
+        world.add_component_sync_with(
+            |direction,
+             bimap,
+             specs: Option<&mut ActiveCamera>,
+             legion: Option<&mut LegionActiveCamera>| (None, None),
+        );
 
         world.add_component_sync::<crate::SpriteRender>();
         world.add_component_sync::<crate::visibility::BoundingSphere>();
