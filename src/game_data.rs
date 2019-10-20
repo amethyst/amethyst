@@ -674,10 +674,6 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
                 builder.prepare(world, migration_state, &mut migration_dispatcher_builder);
             });
 
-        self.migration_syncers
-            .iter()
-            .for_each(|syncer| syncer.setup(world));
-
         migration_state
             .syncers
             .extend(self.migration_syncers.into_iter());
@@ -685,6 +681,8 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
         // Run a sync
         // sync specs to legion
         let syncers = migration_state.syncers.drain(..).collect::<Vec<_>>();
+
+        syncers.iter().for_each(|syncer| syncer.setup(world));
 
         syncers
             .iter()
@@ -699,6 +697,7 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
         syncers
             .iter()
             .for_each(|s| s.sync(world, migration_state, SyncDirection::LegionToSpecs));
+
         migration_state.syncers.extend(syncers.into_iter());
 
         GameData::new(

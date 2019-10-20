@@ -43,6 +43,9 @@ mod scroll_direction;
 mod system;
 mod util;
 
+#[cfg(feature = "legion-ecs")]
+pub mod legion;
+
 #[cfg(feature = "sdl_controller")]
 mod sdl_events_system;
 

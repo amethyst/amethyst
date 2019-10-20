@@ -93,6 +93,7 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for InputBundle<T> {
                 SdlEventsSystem::<T>::new(world, self.controller_mappings).unwrap(),
             );
         }
+
         builder.add(
             InputSystemDesc::<T>::new(self.bindings).build(world),
             "input_system",
