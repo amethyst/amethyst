@@ -68,7 +68,7 @@ fn ask_user_data_collection() -> bool {
 }
 
 fn ask_write_user_data_collection(amethyst_home: &Path) -> bool {
-    let mut file = File::create(amethyst_home.join("sentry_status.txt"))
+    let mut file = File::create(amethyst_home.join(".sentry_status.txt"))
         .expect("Error writing Sentry status file");
     match ask_user_data_collection() {
         true => {
