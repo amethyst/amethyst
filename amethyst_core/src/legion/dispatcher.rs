@@ -22,6 +22,16 @@ pub trait ThreadLocal {
     fn dispose(self: Box<Self>, world: &mut World);
 }
 
+impl<F> ThreadLocal for F
+where
+    F: FnMut(&mut World) + 'static,
+{
+    fn run(&mut self, world: &mut World) {
+        (self)(world)
+    }
+    fn dispose(self: Box<Self>, world: &mut World) {}
+}
+
 pub struct ThreadLocalObject<S, F, D>(S, F, D);
 impl<S, F, D> ThreadLocalObject<S, F, D>
 where
