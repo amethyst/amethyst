@@ -657,7 +657,7 @@ fn main() -> amethyst::Result<()> {
         ]))?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
                 .with_plugin(RenderSwitchable3D::default())
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderDebugLines::default())
