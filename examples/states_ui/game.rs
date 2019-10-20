@@ -17,9 +17,13 @@ use amethyst::{
 
 #[derive(Default)]
 pub struct Game {
+    // If the Game is paused or not
     paused: bool,
+    // The UI root entity. Deleting this should remove the complete UI
     ui_root: Option<Entity>,
+    // A reference to the FPS display, which we want to interact with
     fps_display: Option<Entity>,
+    // A reference to the random text, which we want to modify during updates
     random_text: Option<Entity>,
 }
 
