@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{HotReloadBundle, Processor},
+    assets::HotReloadBundle,
     audio::AudioBundle,
     core::transform::TransformBundle,
     input::{InputBundle, StringBindings},
