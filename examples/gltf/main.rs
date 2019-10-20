@@ -220,7 +220,7 @@ fn main() -> Result<(), amethyst::Error> {
         // system is thread local as part of rendering, it runs after all of the systems anyway.
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
                 .with_plugin(RenderPbr3D::default().with_skinning())
                 .with_plugin(RenderSkybox::default()),
         )?;
