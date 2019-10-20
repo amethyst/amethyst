@@ -108,6 +108,7 @@ impl SimpleState for Game {
         }
 
         // it is important that the 'paused' field is actually pausing your game.
+        // Make sure to also pause your running systems.
         if !self.paused {
             let mut ui_text = world.write_storage::<UiText>();
 
