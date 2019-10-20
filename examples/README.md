@@ -37,6 +37,7 @@ cargo run --example {{name}} --features "{{backend}}"
 4. UI
    1. [UI](#ui)
    2. [Custom UI](#custom-ui)
+   3. [States Example](#states-example)
 5.  Debugging
     1.  [Debug Lines](#debug-lines)
     2.  [Debug Lines Ortho](#debug-lines-ortho)
@@ -253,6 +254,15 @@ Renders a basic UI.
 Renders a custom UI.
 
 ![custom ui example screenshot](assets/img/custom-ui.png)
+
+---
+
+## States Example
+
+Simple Example on how to use states and UI (e.g. switching between Screens).
+
+![pause menu example screenshot](assets/img/pause-menu.png)
+![main menu example screenshot](assets/img/main-menu.png)
 
 ---
 
