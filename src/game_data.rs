@@ -179,6 +179,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     pub fn migration_component_sync_with<S, L, F>(mut self, f: F)
     where
         S: Send + Sync + Component,
+        <S as Component>::Storage: Default,
         L: legion::storage::Component,
         F: 'static
             + Fn(
@@ -684,7 +685,7 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
         // Run a sync
         // sync specs to legion
         let syncers = migration_state.syncers.drain(..).collect::<Vec<_>>();
-        println!("Syncers = {}", syncers.len());
+
         syncers
             .iter()
             .for_each(|s| s.sync(world, migration_state, SyncDirection::SpecsToLegion));

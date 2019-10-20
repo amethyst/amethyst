@@ -1,10 +1,9 @@
 use crate::{
-    camera::{ActiveCamera, LegionActiveCamera},
-    types::Backend,
+    camera::ActiveCamera, legion::camera::ActiveCamera as LegionActiveCamera, types::Backend,
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    ecs::{self as specs, SystemData},
+    ecs::{self as specs, SystemData, WorldExt},
     legion::{dispatcher::DispatcherBuilder, sync::SyncDirection, LegionState, LegionSyncBuilder},
     shrev::EventChannel,
     SystemBundle,
@@ -24,6 +23,14 @@ pub mod submodules;
 pub mod system;
 pub mod visibility;
 
+pub mod camera {
+    #[derive(Clone, Debug, PartialEq, Default)]
+    pub struct ActiveCamera {
+        /// Camera entity
+        pub entity: Option<amethyst_core::legion::Entity>,
+    }
+}
+
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct Syncer<B: Backend>(PhantomData<B>);
@@ -36,11 +43,58 @@ impl<B: Backend> LegionSyncBuilder for Syncer<B> {
     ) {
         crate::system::SetupData::setup(specs_world);
 
+        specs_world.register::<ActiveCamera>();
+        world
+            .world
+            .resources
+            .insert(camera::ActiveCamera::default());
+
         world.add_component_sync_with(
             |direction,
              bimap,
              specs: Option<&mut ActiveCamera>,
-             legion: Option<&mut LegionActiveCamera>| (None, None),
+             legion: Option<&mut LegionActiveCamera>| {
+                let bimap = bimap.read().unwrap();
+
+                match direction {
+                    SyncDirection::SpecsToLegion => {
+                        let specs_camera = specs.unwrap();
+                        let legion_entity = specs_camera
+                            .entity
+                            .map(|s| *bimap.get_by_right(&s).unwrap());
+
+                        if let Some(legion_camera) = legion {
+                            legion_camera.entity = legion_entity;
+                            return (None, None);
+                        } else {
+                            return (
+                                None,
+                                Some(LegionActiveCamera {
+                                    entity: legion_entity,
+                                }),
+                            );
+                        }
+                    }
+                    SyncDirection::LegionToSpecs => {
+                        let legion_camera = legion.unwrap();
+                        let specs_entity = legion_camera
+                            .entity
+                            .map(|s| *bimap.get_by_left(&s).unwrap());
+
+                        if let Some(specs_camera) = specs {
+                            specs_camera.entity = specs_entity;
+                            return (None, None);
+                        } else {
+                            return (
+                                Some(ActiveCamera {
+                                    entity: specs_entity,
+                                }),
+                                None,
+                            );
+                        }
+                    }
+                }
+            },
         );
 
         world.add_component_sync::<crate::SpriteRender>();

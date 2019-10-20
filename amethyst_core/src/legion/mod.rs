@@ -115,7 +115,7 @@ impl LegionState {
     pub fn add_component_sync<T>(&mut self)
     where
         T: Clone + legion::storage::Component + specs::Component,
-        T::Storage: Default,
+        <T as specs::Component>::Storage: Default,
     {
         self.syncers.push(Box::new(ComponentSyncer::<T>::default()));
     }
@@ -123,6 +123,7 @@ impl LegionState {
     pub fn add_component_sync_with<S, L, F>(&mut self, f: F)
     where
         S: Send + Sync + specs::Component,
+        <S as specs::Component>::Storage: Default,
         L: legion::storage::Component,
         F: 'static
             + Fn(
@@ -154,7 +155,7 @@ impl LegionSyncBuilder for Syncer {
             state.syncers.push(syncer);
         }
 
-        // state.add_resource_sync::<Allocators>();
+        state.add_resource_sync::<crate::allocators::Allocators>();
 
         // Core syncers
         state.add_resource_sync::<crate::Time>();
@@ -168,8 +169,6 @@ impl LegionSyncBuilder for Syncer {
         state.add_component_sync::<crate::Transform>();
         state.add_component_sync::<crate::Hidden>();
         state.add_component_sync::<crate::HiddenPropagate>();
-        // Why does this cause a crash? probably because this is cow borrow, but why is it Clone then?
-        // Cloning it obviously causes a crash
         //world_store.add_component_sync::<crate::Named>();
         state.add_component_sync::<crate::Parent>();
     }

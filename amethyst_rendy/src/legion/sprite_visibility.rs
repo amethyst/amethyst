@@ -1,8 +1,6 @@
 //! Transparency, visibility sorting and camera centroid culling for 2D Sprites.
 use crate::{
-    camera::{Camera, LegionActiveCamera},
-    sprite::SpriteRender,
-    transparent::Transparent,
+    camera::Camera, legion::camera::ActiveCamera, sprite::SpriteRender, transparent::Transparent,
 };
 use amethyst_core::{
     legion::*,
@@ -27,18 +25,6 @@ pub struct SpriteVisibility {
     pub visible_ordered: Vec<Entity>,
 }
 
-/// Determines what entities to be drawn. Will also sort transparent entities back to front based on
-/// position on the Z axis.
-///
-/// The sprite render pass should draw all sprites without semi-transparent pixels, then draw the
-/// sprites with semi-transparent pixels from far to near.
-///
-/// Note that this should run after `Transform` has been updated for the current frame, and
-/// before rendering occurs.
-#[derive(Default, Debug)]
-pub struct SpriteVisibilitySortingSystemState {
-    transparent_centroids: Vec<Internals>,
-}
 #[derive(Debug, Clone)]
 struct Internals {
     entity: Entity,
@@ -50,12 +36,11 @@ struct Internals {
 pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable> {
     world.resources.insert(SpriteVisibility::default());
 
+    let mut transparent_centroids: Vec<Internals> = Vec::default();
+
     SystemBuilder::<()>::new("SpriteVisibilitySortingSystem")
-        //.read_resource::<Allocators>()
-        //.read_resource::<LegionActiveCamera>()
+        .read_resource::<ActiveCamera>()
         .write_resource::<SpriteVisibility>()
-        .read_component::<Transparent>()
-        .read_component::<Transform>()
         .with_query(<(Read<Camera>, Read<Transform>)>::query())
         .with_query(
             <(Read<Transform>, Read<SpriteRender>, Read<Transparent>)>::query()
@@ -64,32 +49,31 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
         .with_query(<(Read<Transform>, Read<SpriteRender>)>::query().filter(
             !component::<Transparent>() & !component::<Hidden>() & !component::<HiddenPropagate>(),
         ))
-        .build_disposable(
-            SpriteVisibilitySortingSystemState::default(),
-            |state,
-             commands,
-             world,
-             (visibility),
-             (camera_query, transparent_query, non_transparent_query)| {
-                state.transparent_centroids.clear();
+        .build(
+            move |commands,
+                  world,
+                  (active_camera, visibility),
+                  (camera_query, transparent_query, non_transparent_query)| {
+                transparent_centroids.clear();
                 visibility.visible_ordered.clear();
                 visibility.visible_unordered.clear();
 
                 let origin = Point3::origin();
 
-                // TODO: One outsatnding issue here. They are still not rendered correctly in order in the example
-
-                /* TODO: no legion active camera for now, LegionActiveCamera not used
                 let camera = active_camera
                     .entity
-                    .and_then(|e| *world.get_component::<Transform>(e))
+                    .and_then(|e| {
+                        camera_query
+                            .iter_entities()
+                            .find(|(camera_entity, (_, transform))| *camera_entity == e)
+                            .map(|(camera_entity, (_, transform))| transform)
+                    })
                     .or_else(|| {
                         camera_query
                             .iter_entities()
                             .nth(0)
-                            .map(|(e, _)| world.get_component::<Transform>(e))
+                            .map(|(e, (camera, transform))| transform)
                     });
-                */
 
                 let camera_transform = camera_query
                     .iter_entities()
@@ -105,7 +89,7 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
                     .map(|t| t.global_matrix().transform_point(&origin))
                     .unwrap_or_else(|| origin);
 
-                state.transparent_centroids.extend(
+                transparent_centroids.extend(
                     transparent_query
                         .iter_entities()
                         .map(|(e, (t, _, _))| (e, t.global_matrix().transform_point(&origin)))
@@ -119,7 +103,7 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
                         }),
                 );
 
-                state.transparent_centroids.sort_by(|a, b| {
+                transparent_centroids.sort_by(|a, b| {
                     b.camera_distance
                         .partial_cmp(&a.camera_distance)
                         .unwrap_or(Ordering::Equal)
@@ -127,7 +111,7 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
 
                 visibility
                     .visible_ordered
-                    .extend(state.transparent_centroids.iter().map(|c| c.entity));
+                    .extend(transparent_centroids.iter().map(|c| c.entity));
 
                 visibility.visible_unordered.extend(
                     non_transparent_query
@@ -138,6 +122,5 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
                         .map(|(entity, _)| entity),
                 );
             },
-            |_, _| {},
         )
 }

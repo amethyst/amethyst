@@ -168,6 +168,7 @@ where
 impl<S, L, F> SyncerTrait for ComponentSyncerWith<S, L, F>
 where
     S: specs::Component + Send + Sync,
+    <S as specs::Component>::Storage: Default,
     L: legion::storage::Component,
     F: 'static
         + Fn(
@@ -185,6 +186,7 @@ where
             std::any::type_name::<S>(),
             std::any::type_name::<L>()
         );
+        world.register::<S>();
     }
 
     fn sync(
@@ -202,11 +204,10 @@ where
         let mut new_legion: SmallVec<[(LegionEntity, L); 64]> = SmallVec::default();
         let mut new_specs: SmallVec<[(specs::Entity, S); 64]> = SmallVec::default();
 
-        let map = bimap.read().unwrap();
         match direction {
             SyncDirection::SpecsToLegion => {
                 for (entity, mut component) in (&entities, &mut storage).join() {
-                    if let Some(legion_entity) = map.get_by_right(&entity) {
+                    if let Some(legion_entity) = bimap.read().unwrap().get_by_right(&entity) {
                         let new = if let Some(mut comp) =
                             legion_state.world.get_component_mut::<L>(*legion_entity)
                         {
@@ -228,7 +229,7 @@ where
                 use legion::prelude::*;
                 let mut query = <(Write<L>)>::query();
                 for (entity, mut component) in query.iter_entities(&legion_state.world) {
-                    if let Some(specs_entity) = map.get_by_left(&entity) {
+                    if let Some(specs_entity) = bimap.read().unwrap().get_by_left(&entity) {
                         let new = if let Some(specs_component) = storage.get_mut(*specs_entity) {
                             (self.0)(
                                 direction,

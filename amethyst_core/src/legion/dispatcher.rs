@@ -100,23 +100,12 @@ impl Ord for RelativeStage {
     }
 }
 
+#[derive(Default)]
 pub struct Dispatcher {
     pub(crate) thread_local_systems: Vec<Box<dyn legion::schedule::Runnable>>,
     pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
     pub(crate) stages: BTreeMap<RelativeStage, Vec<Box<dyn legion::schedule::Schedulable>>>,
     sorted_systems: Vec<Box<dyn legion::schedule::Schedulable>>,
-}
-impl Default for Dispatcher {
-    fn default() -> Self {
-        use std::iter::FromIterator;
-
-        Self {
-            thread_local_systems: Vec::default(),
-            thread_locals: Vec::default(),
-            stages: BTreeMap::default(),
-            sorted_systems: Vec::default(),
-        }
-    }
 }
 impl Dispatcher {
     pub fn finalize(mut self) -> Self {
