@@ -1,6 +1,6 @@
 use amethyst::{
     assets::{HotReloadBundle, Processor},
-    audio::Source,
+    audio::AudioBundle,
     core::transform::TransformBundle,
     input::{InputBundle, StringBindings},
     prelude::*,
@@ -52,10 +52,10 @@ pub fn main() -> amethyst::Result<()> {
         .with_bundle(UiBundle::<StringBindings>::new())?
         // this allows us to reload '*.ron' files during execution
         .with_bundle(HotReloadBundle::default())?
-        // without this System, our Program will silently (!) fail when trying to load the 'Game'.
+        // without this Bundle, our Program will silently (!) fail when trying to start the 'Game'.
         // (try it!)
-        // This System takes care of Audio (in this case, the Button audio for hovering/clicking/...
-        .with(Processor::<Source>::new(), "source_processor", &[])
+        // It takes care of Audio (in this case, the Button audio for hovering/clicking)
+        .with_bundle(AudioBundle::default())?
         // With this System, we can register UI events and act accordingly.
         // In this example it simply prints the events, excluding it does not provide less
         // functionality.
