@@ -1,4 +1,4 @@
-use dirs::home_dir;
+use dirs::config_dir;
 use std::{
     fs::{create_dir_all, read_to_string, remove_file, File},
     io::{stderr, stdin, Write},
@@ -8,7 +8,7 @@ use vergen::{self, ConstantsFlags};
 
 fn main() {
     let amethyst_home =
-        Path::new(&home_dir().expect("Failed to find home directory")).join(".amethyst");
+        Path::new(&config_dir().expect("Failed to find home directory")).join("amethyst");
     match amethyst_home.exists() {
         true => match check_sentry_allowed(&amethyst_home) {
             Some(true) => {
@@ -34,7 +34,7 @@ fn main() {
 }
 
 fn check_sentry_allowed(amethyst_home: &Path) -> Option<bool> {
-    let sentry_status_file = amethyst_home.join(".sentry_status.txt");
+    let sentry_status_file = amethyst_home.join("sentry_status.txt");
     if sentry_status_file.exists() {
         match read_to_string(&sentry_status_file) {
             Ok(result) => match result.as_str().trim() {
@@ -68,7 +68,7 @@ fn ask_user_data_collection() -> bool {
 }
 
 fn ask_write_user_data_collection(amethyst_home: &Path) -> bool {
-    let mut file = File::create(amethyst_home.join(".sentry_status.txt"))
+    let mut file = File::create(amethyst_home.join("sentry_status.txt"))
         .expect("Error writing Sentry status file");
     match ask_user_data_collection() {
         true => {
