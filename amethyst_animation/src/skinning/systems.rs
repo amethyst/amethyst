@@ -1,7 +1,6 @@
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, SystemData,
-        WriteStorage,
+        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, SystemData, WriteStorage,
     },
     math::{convert, Matrix4},
     Transform,

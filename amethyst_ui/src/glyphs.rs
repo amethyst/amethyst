@@ -7,8 +7,8 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{
-        Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, SystemData,
-        Write, WriteExpect, WriteStorage,
+        Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, SystemData, Write,
+        WriteExpect, WriteStorage,
     },
     Hidden, HiddenPropagate,
 };
