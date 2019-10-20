@@ -72,12 +72,9 @@ where
                 if elapsed > LOADING_TIME_LIMIT {
                     self.stopwatch.stop();
 
-                    let duration = humantime::Duration::from(elapsed);
-
                     warn!(
-                        "Loading has not completed in {}, please ensure that you have registered \
-                         the relevant `Processor::<A>`s in the dispatcher.",
-                        duration
+                        "Loading has not completed in 10 seconds, please ensure that you have \
+                         registered the relevant `Processor::<A>`s in the dispatcher.",
                     );
                 }
             }
