@@ -3,10 +3,10 @@
 use amethyst::{
     core::{
         transform::{Transform, TransformBundle},
-        SystemDesc, Time,
+        Time,
     },
     derive::SystemDesc,
-    ecs::{Read, ReadExpect, System, SystemData, World, WorldExt, Write},
+    ecs::{Read, ReadExpect, System, SystemData, WorldExt, Write},
     prelude::*,
     renderer::{
         camera::Camera,

@@ -12,11 +12,10 @@ use amethyst::{
         math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
-        SystemDesc,
     },
     derive::SystemDesc,
     ecs::prelude::{
-        Entity, Join, Read, ReadStorage, System, SystemData, World, WorldExt, Write, WriteStorage,
+        Entity, Join, Read, ReadStorage, System, SystemData, WorldExt, Write, WriteStorage,
     },
     input::{
         get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,

@@ -8,7 +8,7 @@ use amethyst::{
         geometry::Plane,
         math::{Point2, Vector2, Vector3},
         transform::{Transform, TransformBundle},
-        Named, SystemDesc, WithNamed,
+        Named, WithNamed,
     },
     derive::SystemDesc,
     ecs::{

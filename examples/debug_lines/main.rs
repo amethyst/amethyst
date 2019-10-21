@@ -5,10 +5,10 @@ use amethyst::{
     core::{
         math::{Point3, Vector3},
         transform::{Transform, TransformBundle},
-        SystemDesc, Time,
+        Time,
     },
     derive::SystemDesc,
-    ecs::{Read, System, SystemData, World, WorldExt, Write},
+    ecs::{Read, System, SystemData, WorldExt, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
