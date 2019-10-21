@@ -284,7 +284,7 @@ pub struct DrawFlat2DTransparent<B: Backend> {
     env: FlatEnvironmentSub<B>,
     textures: TextureSub<B>,
     vertex: DynamicVertexBuffer<B, SpriteArgs>,
-    sprites: OneLevelBatch<TextureId, SpriteArgs>,
+    sprites: OrderedOneLevelBatch<TextureId, SpriteArgs>,
 }
 
 impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
@@ -310,7 +310,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
 
-        sprites_ref.clear_inner();
+        sprites_ref.swap_clear();
 
         {
             #[cfg(feature = "profiler")]
@@ -354,6 +354,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
                         texture,
                         hal::image::Layout::ShaderReadOnlyOptimal,
                     )?;
+
                     Some((tex_id, batch_data))
                 })
                 .for_each_group(|tex_id, batch_data| {
@@ -367,12 +368,11 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("write");
 
-            sprites_ref.prune();
             self.vertex.write(
                 factory,
                 index,
                 self.sprites.count() as u64,
-                self.sprites.data(),
+                Some(self.sprites.data()),
             );
         }
 

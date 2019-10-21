@@ -55,6 +55,7 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
                   world,
                   (active_camera, visibility),
                   (camera_query1, camera_query2, transparent_query, non_transparent_query)| {
+
                 transparent_centroids.clear();
                 visibility.visible_ordered.clear();
                 visibility.visible_unordered.clear();

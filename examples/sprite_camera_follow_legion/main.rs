@@ -177,11 +177,16 @@ impl SimpleState for Example {
         let background_sprite_sheet_handle =
             load_sprite_sheet(world, "texture/Background.png", "texture/Background.ron");
 
-        let _background = init_background_sprite(world, &background_sprite_sheet_handle);
-        let _reference = init_reference_sprite(world, &circle_sprite_sheet_handle);
+        let background = init_background_sprite(world, &background_sprite_sheet_handle);
+        let reference = init_reference_sprite(world, &circle_sprite_sheet_handle);
         let player = init_player(world, &circle_sprite_sheet_handle);
 
-        let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
+        let reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
+
+        println!("Background = {:?}", background);
+        println!("Reference = {:?}", reference);
+        println!("ScreenReference = {:?}", reference_screen);
+        println!("Player = {:?}", player);
 
         let _camera = initialise_camera(world, player);
     }
