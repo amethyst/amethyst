@@ -1,9 +1,7 @@
 //! Transparency, visibility sorting and camera centroid culling for 3D Meshes.
 use crate::{
-    camera::{ActiveCamera, Camera},
-    transparent::Transparent,
-    visibility::BoundingSphere,
-    Mesh,
+    camera::Camera, legion::camera::ActiveCamera, transparent::Transparent,
+    visibility::BoundingSphere, Mesh,
 };
 use amethyst_core::{
     legion::*,
@@ -50,9 +48,11 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
     world.resources.insert(Visibility::default());
 
     SystemBuilder::<()>::new("VisibilitySortingSystem")
+        .read_resource::<ActiveCamera>()
         .write_resource::<Visibility>()
         .read_component::<BoundingSphere>()
         .read_component::<Transparent>()
+        .with_query(<(Read<Camera>, Read<Transform>)>::query())
         .with_query(<(Read<Camera>, Read<Transform>)>::query())
         .with_query(
             <(Read<Transform>)>::query()
@@ -60,7 +60,11 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
         )
         .build_disposable(
             VisibilitySortingSystemState::default(),
-            |state, commands, world, visibility, (camera_query, entity_query)| {
+            |state,
+             commands,
+             world,
+             (active_camera, visibility),
+             (camera_query1, camera_query2, entity_query)| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("visibility_sorting_system");
 
@@ -70,10 +74,23 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
                 state.centroids.clear();
 
                 let origin = Point3::origin();
-                let defcam = Camera::standard_2d(1.0, 1.0);
-                let identity = Transform::default();
 
-                let (camera, camera_transform) = camera_query.iter().nth(0).unwrap();
+                let (camera, camera_transform) = active_camera.entity.map_or_else(
+                    || {
+                        camera_query1
+                            .iter_entities()
+                            .nth(0)
+                            .map(|args| args.1)
+                            .expect("No cameras are currently added to the world!")
+                    },
+                    |e| {
+                        camera_query2
+                            .iter_entities()
+                            .find(|(camera_entity, (_, _))| *camera_entity == e)
+                            .map(|args| args.1)
+                            .expect("Invalid entity set as ActiveCamera!")
+                    },
+                );
 
                 let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
                 let frustum = Frustum::new(

@@ -139,11 +139,8 @@ impl Dispatcher {
         }
     }
     pub fn run(&mut self, world: &mut World) {
-        StageExecutor::new(
-            self.sorted_systems.as_mut_slice(),
-            &world.resources.get::<ArcThreadPool>().unwrap(),
-        )
-        .execute(world);
+        let thread_pool = world.resources.get::<ArcThreadPool>().unwrap().clone();
+        StageExecutor::new(self.sorted_systems.as_mut_slice(), &thread_pool).execute(world);
 
         self.thread_local_systems
             .iter_mut()

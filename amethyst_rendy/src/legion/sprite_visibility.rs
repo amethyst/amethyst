@@ -42,6 +42,7 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
         .read_resource::<ActiveCamera>()
         .write_resource::<SpriteVisibility>()
         .with_query(<(Read<Camera>, Read<Transform>)>::query())
+        .with_query(<(Read<Camera>, Read<Transform>)>::query())
         .with_query(
             <(Read<Transform>, Read<SpriteRender>, Read<Transparent>)>::query()
                 .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
@@ -53,41 +54,32 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
             move |commands,
                   world,
                   (active_camera, visibility),
-                  (camera_query, transparent_query, non_transparent_query)| {
+                  (camera_query1, camera_query2, transparent_query, non_transparent_query)| {
                 transparent_centroids.clear();
                 visibility.visible_ordered.clear();
                 visibility.visible_unordered.clear();
 
                 let origin = Point3::origin();
 
-                let camera = active_camera
-                    .entity
-                    .and_then(|e| {
-                        camera_query
-                            .iter_entities()
-                            .find(|(camera_entity, (_, transform))| *camera_entity == e)
-                            .map(|(camera_entity, (_, transform))| transform)
-                    })
-                    .or_else(|| {
-                        camera_query
+                let camera_transform = active_camera.entity.map_or_else(
+                    || {
+                        camera_query1
                             .iter_entities()
                             .nth(0)
                             .map(|(e, (camera, transform))| transform)
-                    });
+                            .expect("No cameras are currently added to the world!")
+                    },
+                    |e| {
+                        camera_query2
+                            .iter_entities()
+                            .find(|(camera_entity, (_, transform))| *camera_entity == e)
+                            .map(|(camera_entity, (_, transform))| transform)
+                            .expect("Invalid entity set as ActiveCamera!")
+                    },
+                );
 
-                let camera_transform = camera_query
-                    .iter_entities()
-                    .nth(0)
-                    .map(|(e, (camera, transform))| transform);
-
-                let camera_backward = camera_transform
-                    .as_ref()
-                    .map(|c| c.global_matrix().column(2).xyz())
-                    .unwrap_or_else(Vector3::z);
-                let camera_centroid = camera_transform
-                    .as_ref()
-                    .map(|t| t.global_matrix().transform_point(&origin))
-                    .unwrap_or_else(|| origin);
+                let camera_backward = camera_transform.global_matrix().column(2).xyz();
+                let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
 
                 transparent_centroids.extend(
                     transparent_query
