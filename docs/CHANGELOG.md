@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - `AmethystApplication::with_fn` constraint relaxed from `Fn` to `FnOnce`. ([#1983])
 - ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
 - `Config::load` now returns an error or failure rather than silently falling back to the default config. Same is true for the `from_config_file` methods on `RenderToWindow`, `WindowBundle`, and `WindowSystem` ([#1989])
+- Adds `get` methods to the underlying net::transport resources ([#2005])
 
 ### Deprecated
 - `Config::load_no_fallback`, use `Config::load` instead ([#1989])
