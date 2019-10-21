@@ -8,7 +8,7 @@ use amethyst_core::{
     legion::*,
     math::{self, clamp, convert, Matrix4, Point2, Point3, Vector2, Vector3, Vector4},
     transform::Transform,
-    Hidden,
+    Hidden, HiddenPropagate,
 };
 
 use amethyst_assets::{AssetStorage, Handle};
@@ -51,7 +51,7 @@ use std::marker::PhantomData;
 
 use crate::{
     iters::Region,
-    map::{Map, MapStorage, Tile, TileMap},
+    legion::map::{Map, MapStorage, Tile, TileMap},
     pod::{TileArgs, TileMapArgs},
     CoordinateEncoder, MortonEncoder2D,
 };
@@ -194,16 +194,12 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
-        /*
+
         let mut changed = false;
-        let (sprite_sheet_storage, tex_storage, hiddens, tile_maps, transforms) =
-            <(
-                Read<'_, AssetStorage<SpriteSheet>>,
-                Read<'_, AssetStorage<Texture>>,
-                ReadStorage<'_, Hidden>,
-                ReadStorage<'_, TileMap<T, E>>,
-                ReadStorage<'_, Transform>,
-            )>::fetch(world);
+        let (sprite_sheet_storage, tex_storage) = <(
+            Read<AssetStorage<SpriteSheet>>,
+            Read<AssetStorage<Texture>>,
+        )>::fetch(&world.resources);
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
@@ -220,7 +216,10 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
             sprite_dimensions: Default::default(),
         };
 
-        for (tile_map, _, transform) in (&tile_maps, !&hiddens, transforms.maybe()).join() {
+        let mut query = <(Read<TileMap<T, E>>)>::query()
+            .filter(!component::<Hidden>() & !component::<HiddenPropagate>());
+
+        query.iter_entities(world).for_each(|(entity, tile_map)| {
             let maybe_sheet = tile_map
                 .sprite_sheet
                 .as_ref()
@@ -229,16 +228,17 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
 
             let sprite_sheet = match maybe_sheet {
                 Some(sheet) => sheet,
-                None => continue,
+                None => return,
             };
 
             let map_coordinate_transform: [[f32; 4]; 4] = (*tile_map.transform()).into();
 
-            let map_transform: [[f32; 4]; 4] = if let Some(transform) = transform {
-                (*transform.global_matrix()).into()
-            } else {
-                Matrix4::identity().into()
-            };
+            let map_transform: [[f32; 4]; 4] =
+                if let Some(transform) = world.get_component::<Transform>(entity) {
+                    (*transform.global_matrix()).into()
+                } else {
+                    Matrix4::identity().into()
+                };
 
             tilemap_args.map_coordinate_transform = map_coordinate_transform.into();
             tilemap_args.map_transform = map_transform.into();
@@ -248,7 +248,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
             ]
             .into();
 
-            let mut region = Z::bounds(tile_map, world);
+            let mut region = Z::bounds(&tile_map, world);
 
             let zero = Vector3::new(0, 0, 0);
             let max_value = tile_map.dimensions() - Vector3::new(1, 1, 1);
@@ -292,7 +292,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 .for_each_group(|tex_id, batch_data| {
                     sprites_ref.insert(tex_id, batch_data.drain(..))
                 });
-        }
+        });
 
         self.textures.maintain(factory, world);
         changed = changed || self.sprites.changed();
@@ -309,7 +309,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
 
             self.env.write(factory, index, tilemap_args.std140());
         }
-        */
+
         self.change.prepare_result(index, true)
     }
 

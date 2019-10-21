@@ -1,0 +1,458 @@
+use amethyst::{
+    assets::{AssetStorage, Loader},
+    core::{
+        ecs as specs,
+        legion::{self, *},
+        math::{Point3, Vector2, Vector3},
+        Named, Parent, Time, Transform, TransformBundle,
+    },
+    input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
+    prelude::*,
+    renderer::{
+        camera::{Camera, Projection},
+        debug_drawing::DebugLinesComponent,
+        formats::texture::ImageFormat,
+        legion::{
+            bundle::RenderingBundle,
+            camera::ActiveCamera,
+            plugins::{RenderDebugLines, RenderFlat2D, RenderToWindow},
+        },
+        palette::Srgba,
+        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+        transparent::Transparent,
+        types::DefaultBackend,
+        Texture,
+    },
+    tiles::legion::{RenderTiles2D, Tile, TileMap},
+    utils::application_root_dir,
+    window::ScreenDimensions,
+    winit,
+};
+
+#[derive(Default)]
+struct Player;
+/*
+#[derive(Default)]
+pub struct DrawSelectionSystem {
+    start_coordinate: Option<Point3<f32>>,
+}
+impl<'s> System<'s> for DrawSelectionSystem {
+    type SystemData = (
+        Entities<'s>,
+        Read<'s, ActiveCamera>,
+        ReadExpect<'s, ScreenDimensions>,
+        ReadStorage<'s, Camera>,
+        ReadStorage<'s, Transform>,
+        WriteStorage<'s, DebugLinesComponent>,
+        Read<'s, InputHandler<StringBindings>>,
+    );
+
+    fn run(
+        &mut self,
+        (entities, active_camera, dimensions, cameras, transforms, mut debug_lines, input): Self::SystemData,
+    ) {
+        if let Some(lines) = (&mut debug_lines).join().next() {
+            lines.clear();
+
+            if let Some(mouse_position) = input.mouse_position() {
+                let mut camera_join = (&cameras, &transforms).join();
+                if let Some((camera, camera_transform)) = active_camera
+                    .entity
+                    .and_then(|a| camera_join.get(a, &entities))
+                    .or_else(|| camera_join.next())
+                {
+                    let action_down = input
+                        .action_is_down("select")
+                        .expect("selection action missing");
+                    if action_down && self.start_coordinate.is_none() {
+                        // Starting a new selection
+                        self.start_coordinate = Some(Point3::new(
+                            mouse_position.0,
+                            mouse_position.1,
+                            camera_transform.translation().z,
+                        ));
+                    } else if action_down && self.start_coordinate.is_some() {
+                        // Active drag
+                        let screen_dimensions =
+                            Vector2::new(dimensions.width(), dimensions.height());
+                        let end_coordinate = Point3::new(
+                            mouse_position.0,
+                            mouse_position.1,
+                            camera_transform.translation().z,
+                        );
+
+                        let mut start_world = camera.projection().screen_to_world_point(
+                            self.start_coordinate.expect("Wut?"),
+                            screen_dimensions,
+                            camera_transform,
+                        );
+                        let mut end_world = camera.projection().screen_to_world_point(
+                            end_coordinate,
+                            screen_dimensions,
+                            camera_transform,
+                        );
+                        start_world.z = 0.9;
+                        end_world.z = 0.9;
+
+                        lines.add_box(start_world, end_world, Srgba::new(0.5, 0.05, 0.65, 1.0));
+                    } else if !action_down && self.start_coordinate.is_some() {
+                        // End drag, remove
+                        self.start_coordinate = None;
+                    }
+                }
+            }
+        }
+    }
+}
+*
+pub struct CameraSwitchSystem {
+    pressed: bool,
+}
+impl Default for CameraSwitchSystem {
+    fn default() -> Self { Self { pressed: false } }
+}
+impl<'s> System<'s> for CameraSwitchSystem {
+    type SystemData = (
+        Entities<'s>,
+        Read<'s, LazyUpdate>,
+        Read<'s, ActiveCamera>,
+        ReadExpect<'s, ScreenDimensions>,
+        ReadStorage<'s, Camera>,
+        ReadStorage<'s, Transform>,
+        ReadStorage<'s, Parent>,
+        Read<'s, InputHandler<StringBindings>>,
+    );
+
+    fn run(
+        &mut self,
+        (entities, lazy, active_camera, dimensions, cameras, transforms, parents, input): Self::SystemData,
+    ) {
+        if input.action_is_down("camera_switch").unwrap() {
+            self.pressed = true;
+        }
+        if self.pressed && !input.action_is_down("camera_switch").unwrap() {
+            self.pressed = false;
+
+            // Lazily delete the old camera
+            let mut camera_join = (&entities, &cameras, &transforms, &parents).join();
+            let (old_camera_entity, old_camera, _, old_parent) = active_camera
+                .entity
+                .and_then(|a| camera_join.get(a, &entities))
+                .or_else(|| camera_join.next())
+                .unwrap();
+            let old_camera_entity = old_camera_entity;
+
+            let new_parent = old_parent.entity;
+            let (new_camera, new_position) = match old_camera.projection() {
+                Projection::Orthographic(_) => (
+                    Camera::standard_3d(dimensions.width(), dimensions.height()),
+                    Vector3::new(0.0, 0.0, 500.1),
+                ),
+                Projection::Perspective(_) => (
+                    Camera::standard_2d(dimensions.width(), dimensions.height()),
+                    Vector3::new(0.0, 0.0, 1.1),
+                ),
+                Projection::CustomMatrix(_) => unimplemented!(),
+            };
+
+            lazy.exec_mut(move |w| {
+                let new_camera =
+                    init_camera(w, new_parent, Transform::from(new_position), new_camera);
+
+                w.fetch_mut::<ActiveCamera>().entity = Some(new_camera);
+
+                w.delete_entity(old_camera_entity).unwrap();
+            });
+        }
+    }
+}
+*/
+
+fn build_camera_movement_system(
+    world: &mut amethyst::core::legion::world::World,
+) -> Box<dyn amethyst::core::legion::schedule::Schedulable> {
+    SystemBuilder::<()>::new("CameraMovementSystem")
+        .read_resource::<ActiveCamera>()
+        .read_resource::<InputHandler<StringBindings>>()
+        .with_query(<(Read<Camera>, Write<Transform>)>::query())
+        .with_query(<(Read<Camera>, Write<Transform>)>::query())
+        .build(
+            move |_, _, (active_camera, input), (camera_query1, camera_query2)| {
+                let x_move = input.axis_value("camera_x").unwrap();
+                let y_move = input.axis_value("camera_y").unwrap();
+                let z_move = input.axis_value("camera_z").unwrap();
+                let z_move_scale = input.axis_value("camera_scale").unwrap();
+
+                if x_move != 0.0 || y_move != 0.0 || z_move != 0.0 || z_move_scale != 0.0 {
+                    let mut camera_transform = active_camera.entity.map_or_else(
+                        || {
+                            camera_query1
+                                .iter_entities()
+                                .nth(0)
+                                .map(|(e, (camera, transform))| transform)
+                                .expect("No cameras are currently added to the world!")
+                        },
+                        |e| {
+                            camera_query2
+                                .iter_entities()
+                                .find(|(camera_entity, (_, transform))| *camera_entity == e)
+                                .map(|(camera_entity, (_, transform))| transform)
+                                .expect("Invalid entity set as ActiveCamera!")
+                        },
+                    );
+
+                    camera_transform.prepend_translation_x(x_move * 5.0);
+                    camera_transform.prepend_translation_y(y_move * 5.0);
+                    camera_transform.prepend_translation_z(z_move);
+
+                    let z_scale = 0.01 * z_move_scale;
+                    let scale = camera_transform.scale();
+                    let scale =
+                        Vector3::new(scale.x + z_scale, scale.y + z_scale, scale.z + z_scale);
+                    camera_transform.set_scale(scale);
+                }
+            },
+        )
+}
+
+fn build_map_movement_system(
+    world: &mut amethyst::core::legion::world::World,
+) -> Box<dyn amethyst::core::legion::schedule::Schedulable> {
+    let mut rotate = false;
+    let mut translate = false;
+    let mut vector = Vector3::new(100.0, 0.0, 0.0);
+
+    SystemBuilder::<()>::new("MapMovementSystem")
+        .read_resource::<Time>()
+        .read_resource::<InputHandler<StringBindings>>()
+        .with_query(<(Read<TileMap<ExampleTile>>, Write<Transform>)>::query())
+        .build(move |_, _, (time, input), maps_query| {
+            if input.action_is_down("toggle_rotation").unwrap() {
+                rotate ^= true;
+            }
+            if input.action_is_down("toggle_translation").unwrap() {
+                translate ^= true;
+            }
+            if rotate {
+                maps_query
+                    .iter_entities()
+                    .for_each(|((entity), (_, mut transform))| {
+                        transform.rotate_2d(time.delta_seconds());
+                    });
+            }
+            if translate {
+                maps_query
+                    .iter_entities()
+                    .for_each(|((entity), (_, mut transform))| {
+                        transform.prepend_translation(vector * time.delta_seconds());
+                        if transform.translation().x > 500.0 {
+                            vector = Vector3::new(-100.0, 0.0, 0.0);
+                        } else if transform.translation().x < -500.0 {
+                            vector = Vector3::new(100.0, 0.0, 0.0);
+                        }
+                    });
+            }
+        })
+}
+
+fn load_sprite_sheet(
+    world: &mut specs::World,
+    png_path: &str,
+    ron_path: &str,
+) -> SpriteSheetHandle {
+    let texture_handle = {
+        let loader = world.read_resource::<Loader>();
+        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+        loader.load(png_path, ImageFormat::default(), (), &texture_storage)
+    };
+    let loader = world.read_resource::<Loader>();
+    let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
+    loader.load(
+        ron_path,
+        SpriteSheetFormat(texture_handle),
+        (),
+        &sprite_sheet_store,
+    )
+}
+
+// Initialize a sprite as a reference point at a fixed location
+fn init_reference_sprite(
+    world: &mut specs::World,
+    sprite_sheet: &SpriteSheetHandle,
+) -> specs::Entity {
+    let mut transform = Transform::default();
+    transform.set_translation_xyz(0.0, 0.0, 0.1);
+    let sprite = SpriteRender {
+        sprite_sheet: sprite_sheet.clone(),
+        sprite_number: 0,
+    };
+    world
+        .create_entity()
+        .with(transform)
+        .with(sprite)
+        .with(Transparent)
+        .named("reference")
+        .build()
+}
+
+// Initialize a sprite as a reference point
+fn init_screen_reference_sprite(
+    world: &mut specs::World,
+    sprite_sheet: &SpriteSheetHandle,
+) -> specs::Entity {
+    let mut transform = Transform::default();
+    transform.set_translation_xyz(-250.0, -245.0, 0.1);
+    let sprite = SpriteRender {
+        sprite_sheet: sprite_sheet.clone(),
+        sprite_number: 0,
+    };
+    world
+        .create_entity()
+        .with(transform)
+        .with(sprite)
+        .with(Transparent)
+        .named("screen_reference")
+        .build()
+}
+
+fn init_player(world: &mut specs::World, sprite_sheet: &SpriteSheetHandle) -> specs::Entity {
+    let mut transform = Transform::default();
+    transform.set_translation_xyz(0.0, 0.0, 0.1);
+    let sprite = SpriteRender {
+        sprite_sheet: sprite_sheet.clone(),
+        sprite_number: 1,
+    };
+    world
+        .create_entity()
+        .with(transform)
+        .with(sprite)
+        .with(Transparent)
+        .named("player")
+        .build()
+}
+
+fn init_camera(
+    world: &mut specs::World,
+    parent: specs::Entity,
+    transform: Transform,
+    camera: Camera,
+) -> specs::Entity {
+    world
+        .create_entity()
+        .with(transform)
+        // .with(Parent { entity: parent })
+        .with(camera)
+        .named("camera")
+        .build()
+}
+
+#[derive(Default, Clone)]
+struct ExampleTile;
+impl Tile for ExampleTile {
+    fn sprite(&self, _: Point3<u32>, _: &legion::World) -> Option<usize> { Some(16) }
+}
+
+struct Example;
+impl SimpleState for Example {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        let world = data.world;
+        world.register::<Named>();
+        // world.register::<Player>();
+
+        let circle_sprite_sheet_handle = load_sprite_sheet(
+            world,
+            "texture/Circle_Spritesheet.png",
+            "texture/Circle_Spritesheet.ron",
+        );
+
+        let map_sprite_sheet_handle =
+            load_sprite_sheet(world, "texture/cp437_20x20.png", "texture/cp437_20x20.ron");
+
+        let (width, height) = {
+            let dim = world.read_resource::<ScreenDimensions>();
+            (dim.width(), dim.height())
+        };
+
+        let _reference = init_reference_sprite(world, &circle_sprite_sheet_handle);
+        let player = init_player(world, &circle_sprite_sheet_handle);
+        let _camera = init_camera(
+            world,
+            player,
+            Transform::from(Vector3::new(0.0, 0.0, 1.1)),
+            Camera::standard_2d(width, height),
+        );
+        let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
+
+        // create a test debug lines entity
+        let _ = world
+            .create_entity()
+            .with(DebugLinesComponent::with_capacity(1))
+            .build();
+
+        let map = TileMap::<ExampleTile>::new(
+            Vector3::new(48, 48, 1),
+            Vector3::new(20, 20, 1),
+            Some(map_sprite_sheet_handle),
+        );
+
+        let _map_entity = world
+            .create_entity()
+            .with(map)
+            .with(Transform::default())
+            .build();
+    }
+
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        let StateData { .. } = data;
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
+        } else {
+            Trans::None
+        }
+    }
+}
+
+fn main() -> amethyst::Result<()> {
+    amethyst::Logger::from_config(Default::default())
+        .level_for("amethyst_tiles", log::LevelFilter::Warn)
+        .start();
+
+    let app_root = application_root_dir()?;
+    let assets_directory = app_root.join("examples/assets");
+    let display_config_path = app_root.join("examples/tiles/resources/display_config.ron");
+
+    let game_data = GameDataBuilder::default()
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(
+            InputBundle::<StringBindings>::new()
+                .with_bindings_from_file("examples/tiles/resources/input.ron")?,
+        )?
+        .migration_sync_bundle(amethyst::core::legion::Syncer::default())
+        .migration_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
+        .migration_sync_bundle(amethyst::tiles::legion::Syncer::<ExampleTile>::default())
+        .migration_sync_bundle(amethyst::input::legion::Syncer::<StringBindings>::default())
+        .migration_with_system(Stage::Logic, build_camera_movement_system)
+        .migration_with_system(Stage::Logic, build_map_movement_system)
+        .migration_with_bundle(
+            RenderingBundle::<DefaultBackend>::default()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                )
+                .with_plugin(RenderDebugLines::default())
+                .with_plugin(RenderTiles2D::<ExampleTile>::default())
+                .with_plugin(RenderFlat2D::default()),
+        );
+
+    let mut game = Application::build(assets_directory, Example)?.build(game_data)?;
+    game.run();
+    Ok(())
+}

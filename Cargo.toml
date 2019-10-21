@@ -335,6 +335,11 @@ path = "examples/legion/main.rs"
 required-features = ["legion-ecs", "animation", "gltf"]
 
 [[example]]
+name = "tiles_legion"
+path = "examples/tiles_legion/main.rs"
+required-features = [ "legion-ecs", "tiles" ]
+
+[[example]]
 name = "sprite_camera_follow_legion"
 path = "examples/sprite_camera_follow_legion/main.rs"
 required-features = ["legion-ecs"]

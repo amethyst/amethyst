@@ -1,4 +1,4 @@
-use crate::{BindingTypes, InputEvent};
+use crate::{BindingTypes, InputEvent, InputHandler};
 use amethyst_core::{ecs as specs, legion::*, shrev::EventChannel};
 use std::marker::PhantomData;
 
@@ -12,5 +12,6 @@ impl<T: BindingTypes> LegionSyncBuilder for Syncer<T> {
         dispatcher: &mut DispatcherBuilder,
     ) {
         state.add_resource_sync::<EventChannel<InputEvent<T>>>();
+        state.add_resource_sync::<InputHandler<T>>();
     }
 }

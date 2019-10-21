@@ -139,16 +139,18 @@ impl Dispatcher {
         }
     }
     pub fn run(&mut self, world: &mut World) {
-        let thread_pool = world.resources.get::<ArcThreadPool>().unwrap().clone();
-        StageExecutor::new(self.sorted_systems.as_mut_slice(), &thread_pool).execute(world);
+        if let Some(thread_pool) = world.resources.get::<ArcThreadPool>() {
+            let thread_pool = thread_pool.clone();
+            StageExecutor::new(self.sorted_systems.as_mut_slice(), &thread_pool).execute(world);
 
-        self.thread_local_systems
-            .iter_mut()
-            .for_each(|local| local.run(world));
+            self.thread_local_systems
+                .iter_mut()
+                .for_each(|local| local.run(world));
 
-        self.thread_locals
-            .iter_mut()
-            .for_each(|local| local.run(world));
+            self.thread_locals
+                .iter_mut()
+                .for_each(|local| local.run(world));
+        }
     }
 
     pub fn merge(mut self, mut other: Dispatcher) -> Self {

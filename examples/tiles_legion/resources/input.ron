@@ -1,0 +1,26 @@
+(
+    axes: {
+        "camera_x": Emulated(
+            pos: Key(D),
+            neg: Key(A),
+        ),
+        "camera_y": Emulated(
+            pos: Key(W),
+            neg: Key(S),
+        ),
+         "camera_scale": Emulated(
+                pos: Key(E),
+                neg: Key(Q),
+            ),
+        "camera_z": Emulated(
+            pos: Key(R),
+            neg: Key(F),
+        ),
+    },
+    actions: {
+        "camera_switch": [[Key(Space)]],
+        "select": [[Mouse(Left)]],
+        "toggle_rotation": [[Key(Y)]],
+        "toggle_translation": [[Key(T)]],
+    },
+)
