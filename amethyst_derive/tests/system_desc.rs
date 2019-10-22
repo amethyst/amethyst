@@ -337,7 +337,7 @@ fn struct_named_complex() -> Result<(), Error> {
 #[test]
 fn system_with_flagged_storage_reader() -> Result<(), Error> {
     use amethyst_core::{
-        ecs::{storage::ComponentEvent, WriteStorage},
+        ecs::storage::ComponentEvent,
         transform::Transform,
     };
 
