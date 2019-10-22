@@ -7,6 +7,8 @@ pub mod dispatcher;
 pub mod sync;
 pub mod temp;
 
+pub mod transform;
+
 pub use dispatcher::{
     ConsumeDesc, Dispatcher, DispatcherBuilder, IntoRelativeStage, RelativeStage, Stage,
     ThreadLocal,
