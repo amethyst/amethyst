@@ -126,7 +126,7 @@ If you are compiling on Linux, make sure to install the dependencies below.
 ### Arch Linux
 
 ```
-$ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 awk libxcb
+$ pacman -Syu grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 awk libxcb
 ```
 
 ### Debian/Ubuntu
