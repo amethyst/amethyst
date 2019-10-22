@@ -11,10 +11,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ### Added
-
 - Implement `Debug` for `ProgressCounter` and `ProgressCounterTracker`. ([#1973])
 - Added a custom render pass Example. ([#1904])
 - Add an entry for `examples/tiles` to the examples readme. ([#1978])
+- Added UI states/menu example. [#1986]
+- Allow user to specify custom completion function in `amethyst_test::WaitForLoad`. ([#1984])
+- Log warning when `amethyst_test::WaitForLoad` has not completed in 10 seconds. ([#1984])
 
 ### Changed
 
@@ -29,6 +31,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - `Config::load` now returns an error or failure rather than silently falling back to the default config. Same is true for the `from_config_file` methods on `RenderToWindow`, `WindowBundle`, and `WindowSystem` ([#1989])
 
 ### Deprecated
+
 - `Config::load_no_fallback`, use `Config::load` instead ([#1989])
 
 ### Removed
@@ -48,6 +51,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1987]: https://github.com/amethyst/amethyst/issue/1987
 [#1983]: https://github.com/amethyst/amethyst/pull/1983
 [#1991]: https://github.com/amethyst/amethyst/pull/1991
+[#1984]: https://github.com/amethyst/amethyst/pull/1984
+[#1986]: https://github.com/amethyst/amethyst/pull/1986
 [#1989]: https://github.com/amethyst/amethyst/pull/1989
 
 
