@@ -125,21 +125,23 @@ pub struct Bindings<T: BindingTypes> {
 #[derive(Clone, Derivative)]
 #[derivative(Debug(bound = ""))]
 pub enum BindingError<T: BindingTypes> {
-    /// You attempted to bind a mousewheel axis twice.
-    MouseWheelAxisAlreadyBound(T::Axis),
-    /// Combo provided for action binding has two (or more) of the same button.
-    ComboContainsDuplicates(T::Action),
-    /// Combo provided was already bound to the contained action.
-    ComboAlreadyBound(T::Action),
-    /// A combo of length one was provided, and it overlaps with an axis binding.
-    ButtonBoundToAxis(T::Axis, Axis),
-    /// Axis buttons provided have overlap with an existing axis.
-    AxisButtonAlreadyBoundToAxis(T::Axis, Axis),
     /// Axis buttons have overlap with an action combo of length one.
     AxisButtonAlreadyBoundToAction(T::Action, Button),
+    /// Axis buttons provided have overlap with an existing axis.
+    AxisButtonAlreadyBoundToAxis(T::Axis, Axis),
+    /// A combo of length one was provided, and it overlaps with an axis binding.
+    ButtonBoundToAxis(T::Axis, Axis),
+    /// Combo provided was already bound to the contained action.
+    ComboAlreadyBound(T::Action),
+    /// Combo provided for action binding has two (or more) of the same button.
+    ComboContainsDuplicates(T::Action),
     /// That specific axis on that specific controller is already in use for an
     /// axis binding.
     ControllerAxisAlreadyBound(T::Axis),
+    /// The given axis was already bound for use
+    MouseAxisAlreadyBound(T::Axis),
+    /// You attempted to bind a mousewheel axis twice.
+    MouseWheelAxisAlreadyBound(T::Axis),
 }
 
 impl<T: BindingTypes> PartialEq for BindingError<T> {
@@ -204,6 +206,9 @@ where
             ),
             BindingError::ControllerAxisAlreadyBound(ref id) => {
                 write!(f, "Controller axis provided is already in use by {}", id)
+            }
+            BindingError::MouseAxisAlreadyBound(ref id) => {
+                write!(f, "Mouse axis provided is already in use by {}", id)
             }
             BindingError::MouseWheelAxisAlreadyBound(ref id) => {
                 write!(f, "Mouse wheel axis provided is already in use by {}", id)
@@ -481,6 +486,18 @@ impl<T: BindingTypes> Bindings<T> {
                     {
                         if controller_id == input_controller_id && axis == input_axis {
                             return Err(BindingError::ControllerAxisAlreadyBound(k.clone()));
+                        }
+                    }
+                }
+            }
+            Axis::Mouse { axis, .. } => {
+                for (k, a) in self.axes.iter().filter(|(k, _a)| *k != id) {
+                    if let Axis::Mouse {
+                        axis: mouse_axis, ..
+                    } = a
+                    {
+                        if axis == mouse_axis {
+                            return Err(BindingError::MouseAxisAlreadyBound(k.clone()));
                         }
                     }
                 }
