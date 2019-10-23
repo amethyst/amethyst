@@ -1,6 +1,7 @@
 //! Various helpers and implementations for sub functions of render passes.
 mod environment;
 mod flat_environment;
+pub mod lut;
 mod material;
 mod skinning;
 mod texture;
@@ -11,6 +12,7 @@ pub mod gather;
 
 pub use environment::*;
 pub use flat_environment::*;
+pub use lut::*;
 pub use material::*;
 pub use skinning::*;
 pub use texture::*;

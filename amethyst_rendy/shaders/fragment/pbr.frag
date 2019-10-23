@@ -25,8 +25,15 @@ layout(location = 0) in VertexData {
     vec4 color;
 } vertex;
 
-layout(location = 0) out vec4 out_color;
+const float LUT_SIZE  = 64.0;
+const float LUT_SCALE = (LUT_SIZE - 1.0)/LUT_SIZE;
+const float LUT_BIAS  = 0.5/LUT_SIZE;
 
+layout(set = 3, binding = 0) uniform sampler2D ltc_1;
+layout(set = 3, binding = 1) uniform sampler2D ltc_2;
+#include "header/ltc.glsl"
+
+layout(location = 0) out vec4 out_color;
 
 vec3 fresnel(float HdotV, vec3 fresnel_base) {
     return fresnel_base + (1.0 - fresnel_base) * pow(1.0 - HdotV, 5.0);
@@ -82,7 +89,7 @@ void main() {
     // normal conversion
     normal = normal * 2 - 1;
 
-    float roughness2 = roughness * roughness;
+    float roughness2 = max(roughness * roughness, 0.03);
     vec3 fresnel_base = mix(vec3(0.04), albedo, metallic);
 
     vec3 vertex_normal = normalize(vertex.normal);
@@ -93,94 +100,100 @@ void main() {
 
     vec3 view_direction = normalize(camera_position - vertex.position);
     vec3 lighted = vec3(0.0);
-    for (int i = 0; i < point_light_count; i++) {
-        vec3 light_direction = normalize(plight[i].position - vertex.position);
-        float attenuation = plight[i].intensity / dot(light_direction, light_direction);
 
-        vec3 light = compute_light(vec3(attenuation),
-                                   plight[i].color,
-                                   view_direction,
-                                   light_direction,
-                                   albedo,
-                                   normal,
-                                   roughness2,
-                                   metallic,
-                                   fresnel_base);
+    float NdotV = dot(normal, view_direction);
+    // for (int i = 0; i < point_light_count; i++) {
+    //     vec3 light_distance = plight[i].position - vertex.position;
+    //     vec3 light_direction = normalize(light_distance);
+    //     float attenuation = plight[i].intensity / dot(light_distance, light_distance);
 
-        lighted += light;
-    }
+    //     vec3 light = compute_light(vec3(attenuation),
+    //                                plight[i].color,
+    //                                view_direction,
+    //                                light_direction,
+    //                                albedo,
+    //                                normal,
+    //                                roughness2,
+    //                                metallic,
+    //                                fresnel_base);
 
-    for (int i = 0; i < directional_light_count; i++) {
-        vec3 light_direction = -normalize(dlight[i].direction);
-        float attenuation = dlight[i].intensity;
+    //     lighted += light;
+    // }
 
-        vec3 light = compute_light(vec3(attenuation),
-                                   dlight[i].color,
-                                   view_direction,
-                                   light_direction,
-                                   albedo,
-                                   normal,
-                                   roughness2,
-                                   metallic,
-                                   fresnel_base);
+    // for (int i = 0; i < directional_light_count; i++) {
+    //     vec3 light_direction = -normalize(dlight[i].direction);
+    //     float attenuation = dlight[i].intensity;
 
-        lighted += light;
-    }
+    //     vec3 light = compute_light(vec3(attenuation),
+    //                                dlight[i].color,
+    //                                view_direction,
+    //                                light_direction,
+    //                                albedo,
+    //                                normal,
+    //                                roughness2,
+    //                                metallic,
+    //                                fresnel_base);
 
-    for (int i = 0; i < spot_light_count; i++) {
-        vec3 light_vec = slight[i].position - vertex.position;
-        vec3 normalized_light_vec = normalize(light_vec);
+    //     lighted += light;
+    // }
 
-        // The distance between the current fragment and the "core" of the light
-        float light_length = length(light_vec);
+    // for (int i = 0; i < spot_light_count; i++) {
+    //     vec3 light_vec = slight[i].position - vertex.position;
+    //     vec3 normalized_light_vec = normalize(light_vec);
 
-        // The allowed "length", everything after this won't be lit.
-        // Later on we are dividing by this range, so it can't be 0
-        float range = max(slight[i].range, 0.00001);
+    //     // The distance between the current fragment and the "core" of the light
+    //     float light_length = length(light_vec);
 
-        // get normalized range, so everything 0..1 could be lit, everything else can't.
-        float normalized_range = light_length / max(0.00001, range);
+    //     // The allowed "length", everything after this won't be lit.
+    //     // Later on we are dividing by this range, so it can't be 0
+    //     float range = max(slight[i].range, 0.00001);
 
-        // The attenuation for the "range". If we would only consider this, we'd have a
-        // point light instead, so we need to also check for the spot angle and direction.
-        float range_attenuation = max(0.0, 1.0 - normalized_range);
+    //     // get normalized range, so everything 0..1 could be lit, everything else can't.
+    //     float normalized_range = light_length / max(0.00001, range);
 
-        // this is actually the cosine of the angle, so it can be compared with the
-        // "dotted" frag_angle below a lot cheaper.
-        float spot_angle = max(slight[i].angle, 0.00001);
-        vec3 spot_direction = normalize(slight[i].direction);
-        float smoothness = 1.0 - slight[i].smoothness;
+    //     // The attenuation for the "range". If we would only consider this, we'd have a
+    //     // point light instead, so we need to also check for the spot angle and direction.
+    //     float range_attenuation = max(0.0, 1.0 - normalized_range);
 
-        // Here we check if the current fragment is within the "ring" of the spotlight.
-        float frag_angle = dot(spot_direction, -normalized_light_vec);
+    //     // this is actually the cosine of the angle, so it can be compared with the
+    //     // "dotted" frag_angle below a lot cheaper.
+    //     float spot_angle = max(slight[i].angle, 0.00001);
+    //     vec3 spot_direction = normalize(slight[i].direction);
+    //     float smoothness = 1.0 - slight[i].smoothness;
 
-        // so that the ring_attenuation won't be > 1
-        frag_angle = max(frag_angle, spot_angle);
+    //     // Here we check if the current fragment is within the "ring" of the spotlight.
+    //     float frag_angle = dot(spot_direction, -normalized_light_vec);
 
-        // How much is this outside of the ring? (let's call it "rim")
-        // Also smooth this out.
-        float rim_attenuation = pow(max((1.0 - frag_angle) / (1.0 - spot_angle), 0.00001), smoothness);
+    //     // so that the ring_attenuation won't be > 1
+    //     frag_angle = max(frag_angle, spot_angle);
 
-        // How much is this inside the "ring"?
-        float ring_attenuation = 1.0 - rim_attenuation;
+    //     // How much is this outside of the ring? (let's call it "rim")
+    //     // Also smooth this out.
+    //     float rim_attenuation = pow(max((1.0 - frag_angle) / (1.0 - spot_angle), 0.00001), smoothness);
 
-        // combine the attenuations and intensity
-        float attenuation = range_attenuation * ring_attenuation * slight[i].intensity;
+    //     // How much is this inside the "ring"?
+    //     float ring_attenuation = 1.0 - rim_attenuation;
 
-        vec3 light = compute_light(vec3(attenuation),
-                                   slight[i].color,
-                                   view_direction,
-                                   normalize(light_vec),
-                                   albedo,
-                                   normal,
-                                   roughness2,
-                                   metallic,
-                                   fresnel_base);
-        lighted += light;
-    }
+    //     // combine the attenuations and intensity
+    //     float attenuation = range_attenuation * ring_attenuation * slight[i].intensity;
+
+    //     vec3 light = compute_light(vec3(attenuation),
+    //                                slight[i].color,
+    //                                view_direction,
+    //                                normalize(light_vec),
+    //                                albedo,
+    //                                normal,
+    //                                roughness2,
+    //                                metallic,
+    //                                fresnel_base);
+    //     lighted += light;
+    // }
+    
+    lighted += compute_round_area_light(roughness2, normal, view_direction, NdotV, albedo);
+    lighted += compute_rect_area_light(roughness2, normal, view_direction, NdotV, albedo);
 
     vec3 ambient = ambient_color * albedo * ambient_occlusion;
-    vec3 color = ambient + lighted + emission;
+    vec3 color = saturate3(ambient + lighted + emission);
 
     out_color = vec4(color, alpha) * vertex.color;
 }

@@ -1,7 +1,7 @@
 //! Environment submodule for shared environmental descriptor set data.
 //! Fetches and sets projection and lighting descriptor set information.
 use crate::{
-    light::Light,
+    light::{Light, AreaLight},
     pod::{self, IntoPod},
     rendy::{
         command::RenderPassEncoder,
@@ -27,6 +27,7 @@ use thread_profiler::profile_scope;
 const MAX_POINT_LIGHTS: usize = 128;
 const MAX_DIR_LIGHTS: usize = 16;
 const MAX_SPOT_LIGHTS: usize = 128;
+const MAX_ROUND_AREA_LIGHTS: usize = 16;
 
 /// Submodule for loading and binding descriptor sets for a 3D, lit environment.
 /// This also abstracts away the need for handling multiple images in flight, as it provides
@@ -54,7 +55,7 @@ impl<B: Backend> EnvironmentSub<B> {
         flags: [hal::pso::ShaderStageFlags; 2],
     ) -> Result<Self, failure::Error> {
         Ok(Self {
-            layout: set_layout! {factory, [1] UniformBuffer flags[0], [4] UniformBuffer flags[1]},
+            layout: set_layout! {factory, [1] UniformBuffer flags[0], [6] UniformBuffer flags[1]},
             per_image: Vec::new(),
         })
     }
@@ -128,14 +129,18 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         let plight_buf_size = util::align_size::<pod::PointLight>(align, MAX_POINT_LIGHTS);
         let dlight_buf_size = util::align_size::<pod::DirectionalLight>(align, MAX_DIR_LIGHTS);
         let slight_buf_size = util::align_size::<pod::SpotLight>(align, MAX_SPOT_LIGHTS);
+        let round_alight_buf_size = util::align_size::<pod::AreaLight>(align, MAX_ROUND_AREA_LIGHTS);
+        let rect_alight_buf_size = util::align_size::<pod::AreaLight>(align, MAX_ROUND_AREA_LIGHTS);
 
         let projview_range = 0..projview_size;
         let env_range = util::next_range(&projview_range, env_buf_size);
         let plight_range = util::next_range(&env_range, plight_buf_size);
         let dlight_range = util::next_range(&plight_range, dlight_buf_size);
         let slight_range = util::next_range(&dlight_range, slight_buf_size);
+        let round_alight_range = util::next_range(&slight_range, round_alight_buf_size);
+        let rect_alight_range = util::next_range(&round_alight_range, rect_alight_buf_size);
 
-        let whole_range = 0..slight_range.end;
+        let whole_range = 0..rect_alight_range.end;
 
         let new_buffer = util::ensure_buffer(
             &factory,
@@ -156,6 +161,8 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 let desc_plight = Descriptor::Buffer(buffer, opt_range(plight_range.clone()));
                 let desc_dlight = Descriptor::Buffer(buffer, opt_range(dlight_range.clone()));
                 let desc_slight = Descriptor::Buffer(buffer, opt_range(slight_range.clone()));
+                let desc_round_alight = Descriptor::Buffer(buffer, opt_range(round_alight_range.clone()));
+                let desc_rect_alight = Descriptor::Buffer(buffer, opt_range(rect_alight_range.clone()));
 
                 unsafe {
                     factory.write_descriptor_sets(vec![
@@ -164,6 +171,8 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                         desc_write(env_set, 2, desc_plight),
                         desc_write(env_set, 3, desc_dlight),
                         desc_write(env_set, 4, desc_slight),
+                        desc_write(env_set, 5, desc_round_alight),
+                        desc_write(env_set, 6, desc_rect_alight),
                     ]);
                 }
             }
@@ -183,6 +192,8 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 point_light_count: 0,
                 directional_light_count: 0,
                 spot_light_count: 0,
+                round_area_light_count: 0,
+                rect_area_light_count: 0,
             }
             .std140();
 
@@ -193,14 +204,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 .join()
                 .filter_map(|(light, transform)| match light {
                     Light::Point(light) => Some(
-                        pod::PointLight {
-                            position: convert::<_, Vector3<f32>>(
-                                transform.global_matrix().column(3).xyz(),
-                            )
-                            .into_pod(),
-                            color: light.color.into_pod(),
-                            intensity: light.intensity,
-                        }
+                        pod::PointLight::from((transform, light))
                         .std140(),
                     ),
                     _ => None,
@@ -227,18 +231,19 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 .filter_map(|(light, transform)| {
                     if let Light::Spot(ref light) = *light {
                         Some(
-                            pod::SpotLight {
-                                position: convert::<_, Vector3<f32>>(
-                                    transform.global_matrix().column(3).xyz(),
-                                )
-                                .into_pod(),
-                                color: light.color.into_pod(),
-                                direction: light.direction.into_pod(),
-                                angle: light.angle.cos(),
-                                intensity: light.intensity,
-                                range: light.range,
-                                smoothness: light.smoothness,
-                            }
+                            // pod::SpotLight {
+                            //     position: convert::<_, Vector3<f32>>(
+                            //         transform.global_matrix().column(3).xyz(),
+                            //     )
+                            //     .into_pod(),
+                            //     color: light.color.into_pod(),
+                            //     direction: light.direction.into_pod(),
+                            //     angle: light.angle.cos(),
+                            //     intensity: light.intensity,
+                            //     range: light.range,
+                            //     smoothness: light.smoothness,
+                            // }
+                            pod::SpotLight::from((transform, light))
                             .std140(),
                         )
                     } else {
@@ -246,6 +251,43 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                     }
                 })
                 .take(MAX_SPOT_LIGHTS);
+
+            let round_area_lights = (&lights, &transforms)
+                .join()
+                .filter_map(|(light, transform)| {
+                    if let Light::Area(ref light) = *light {
+                        match *light {
+                            AreaLight::Disk(ref l) => Some(
+                                pod::AreaLight::from((transform, l))
+                                .std140(),
+                            ),
+                            AreaLight::Sphere(ref l) => Some(
+                                pod::AreaLight::from((transform, l))
+                                .std140(),
+                            ),
+                            _ => None
+                        }
+                    } else {
+                        None
+                    }
+                })
+                .take(MAX_ROUND_AREA_LIGHTS);
+            let rect_area_lights = (&lights, &transforms)
+                .join()
+                .filter_map(|(light, transform)| {
+                    if let Light::Area(ref light) = *light {
+                        match *light {
+                            AreaLight::Rectangle(ref l) => Some(
+                                pod::AreaLight::from((transform, l))
+                                .std140(),
+                            ),
+                            _ => None
+                        }
+                    } else {
+                        None
+                    }
+                })
+                .take(MAX_ROUND_AREA_LIGHTS);
 
             use util::{usize_range, write_into_slice};
             write_into_slice(
@@ -259,6 +301,14 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             write_into_slice(
                 &mut dst_slice[usize_range(slight_range)],
                 spot_lights.tap_count(&mut env.spot_light_count),
+            );
+            write_into_slice(
+                &mut dst_slice[usize_range(round_alight_range)],
+                round_area_lights.tap_count(&mut env.round_area_light_count),
+            );
+            write_into_slice(
+                &mut dst_slice[usize_range(rect_alight_range)],
+                rect_area_lights.tap_count(&mut env.rect_area_light_count),
             );
             write_into_slice(&mut dst_slice[usize_range(projview_range)], Some(projview));
             write_into_slice(&mut dst_slice[usize_range(env_range)], Some(env));

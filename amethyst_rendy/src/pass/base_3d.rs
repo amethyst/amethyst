@@ -5,13 +5,13 @@ use crate::{
     pod::{SkinnedVertexArgs, VertexArgs},
     resources::Tint,
     skinning::JointTransforms,
-    submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
+    submodules::{DynamicVertexBuffer, EnvironmentSub, LUTSub, lut, LUTSubBuilder, MaterialId, MaterialSub, SkinningSub, TextureSub, TextureId},
     transparent::Transparent,
-    types::{Backend, Mesh},
+    types::{Backend, Mesh, Texture},
     util,
     visibility::Visibility,
 };
-use amethyst_assets::{AssetStorage, Handle};
+use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
     ecs::{Join, Read, ReadExpect, ReadStorage, SystemData, World},
     transform::Transform,
@@ -103,7 +103,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        aux: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
@@ -111,7 +111,20 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         profile_scope_impl!("build");
-
+        let mut luts_builder = LUTSubBuilder::new();
+        {
+            let loader = aux.fetch_mut::<Loader>();
+            let storage = aux.fetch_mut::<AssetStorage<Texture>>();
+            let ltc_1 = lut::ltc_1(&loader, &storage);
+            let ltc_2 = lut::ltc_2(&loader, &storage);
+            {
+                luts_builder.insert(factory, aux, &ltc_1, rendy::hal::image::Layout::ShaderReadOnlyOptimal, 0);
+            }
+            {
+                luts_builder.insert(factory, aux, &ltc_2, rendy::hal::image::Layout::ShaderReadOnlyOptimal, 1);
+            }
+        }
+        let luts =  luts_builder.build(factory, aux)?;
         let env = EnvironmentSub::new(
             factory,
             [
@@ -138,6 +151,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<
                 env.raw_layout(),
                 materials.raw_layout(),
                 skinning.raw_layout(),
+                luts.raw_layout(),
             ],
         )?;
 
@@ -158,6 +172,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<
             models: DynamicVertexBuffer::new(),
             skinned_models: DynamicVertexBuffer::new(),
             marker: PhantomData,
+            luts
         }))
     }
 }
@@ -180,6 +195,7 @@ pub struct DrawBase3D<B: Backend, T: Base3DPassDef> {
     models: DynamicVertexBuffer<B, VertexArgs>,
     skinned_models: DynamicVertexBuffer<B, SkinnedVertexArgs>,
     marker: PhantomData<T>,
+    luts: LUTSub<B>,
 }
 
 impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
@@ -220,6 +236,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
         // Prepare environment
         self.env.process(factory, index, resources);
         self.materials.maintain();
+        self.luts.maintain(factory, resources);
 
         self.static_batches.clear_inner();
         self.skinned_batches.clear_inner();
@@ -309,6 +326,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
 
         encoder.bind_graphics_pipeline(&self.pipeline_basic);
         self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
+        self.luts.bind(&self.pipeline_layout, 3, &mut encoder);
 
         if self.models.bind(index, models_loc, 0, &mut encoder) {
             let mut instances_drawn = 0;
@@ -425,13 +443,27 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTrans
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        aux: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+        let mut luts_builder = LUTSubBuilder::new();
+        {
+            let loader = aux.fetch_mut::<Loader>();
+            let storage = aux.fetch_mut::<AssetStorage<Texture>>();
+            let ltc_1 = lut::ltc_1(&loader, &storage);
+            let ltc_2 = lut::ltc_2(&loader, &storage);
+            {
+                luts_builder.insert(factory, aux, &ltc_1, rendy::hal::image::Layout::ShaderReadOnlyOptimal, 0);
+            }
+            {
+                luts_builder.insert(factory, aux, &ltc_2, rendy::hal::image::Layout::ShaderReadOnlyOptimal, 1);
+            }
+        }
+        let luts =  luts_builder.build(factory, aux)?;
         let env = EnvironmentSub::new(
             factory,
             [
@@ -459,6 +491,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTrans
                 env.raw_layout(),
                 materials.raw_layout(),
                 skinning.raw_layout(),
+                luts.raw_layout(),
             ],
         )?;
 
@@ -480,6 +513,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTrans
             skinned_models: DynamicVertexBuffer::new(),
             change: Default::default(),
             marker: PhantomData,
+            luts
         }))
     }
 }
@@ -502,6 +536,7 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef> {
     skinned_models: DynamicVertexBuffer<B, SkinnedVertexArgs>,
     change: util::ChangeDetection,
     marker: PhantomData<(T)>,
+    luts: LUTSub<B>,
 }
 
 impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTransparent<B, T> {
@@ -529,6 +564,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
         // Prepare environment
         self.env.process(factory, index, resources);
         self.materials.maintain();
+        self.luts.maintain(factory, resources);
 
         self.static_batches.swap_clear();
         self.skinned_batches.swap_clear();
@@ -626,6 +662,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
 
         encoder.bind_graphics_pipeline(&self.pipeline_basic);
         self.env.bind(index, layout, 0, encoder);
+        self.luts.bind(layout, 3, encoder);
 
         if self.models.bind(index, models_loc, 0, encoder) {
             for (&mat, batches) in self.static_batches.iter() {

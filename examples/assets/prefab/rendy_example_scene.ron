@@ -268,6 +268,149 @@ Prefab (
                 gltf: File("large/crystal_stone/scene.gltf", ()),
             ),
         ),
+        // Spot
+        (
+            data: (
+                transform: (
+                    translation: (-50.0, 0.0, 0.0),
+                ),
+                gltf: File("large/LightTestRig.glb", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (-40.0, 0.0, 0.0),
+                ),
+                light: (
+                    light: Spot((
+                        intensity: 10.0,
+                        color: (1.0, 1.0, 1.0),
+                        angle: 70.0,
+                        range: 32.0,
+                        smoothness: 0.2,
+                        direction: [-1.0, -0.3, 0.0],
+                    )),
+                ),
+            ),
+        ),
+        // Point
+        (
+            data: (
+                transform: (
+                    translation: (-50.0, 0.0, 40.0),
+                    
+                ),
+                gltf: File("large/LightTestRig.glb", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (-40.0, 0.0, 40.0),
+                    scale: (1.0, 1.0, 1.0),
+                ),
+                light: (
+                    light: Point((
+                        intensity: 800.0,
+                        color: (1.0, 1.0, 1.0),
+                        radius: 20.0,
+                        smoothness: 0.2,
+                    )),
+                ),
+                mesh: Shape((shape: Sphere(20, 20))),
+                material: (
+                    albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0)),
+                ),
+            ),
+        ),
+        // Disk
+        (
+            data: (
+                transform: (
+                    translation: (-50.0, 0.0, 80.0),
+                ),
+                
+                gltf: File("large/LightTestRig.glb", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (-40.0, 0.0, 80.0),
+                    rotation: (0.0, -1.0, 0.0, 1.0),
+                    scale: (1.0, 1.0, 1.0),
+                ),
+                light: (
+                    light: Area(Disk((
+                        intensity: Power(1200.0),
+                        color: (1.0, 1.0, 1.0),
+                        radius: 10.0,
+                        two_sided: true
+                    ))),
+                ),
+                mesh: Shape((shape: Circle(20))),
+                material: (
+                    albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0)),
+                ),
+            ),
+        ),
+        // Sphere
+        (
+            data: (
+                transform: (
+                    translation: (-50.0, 0.0, 120.0),
+                ),
+                gltf: File("large/LightTestRig.glb", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (-40.0, 0.0, 120.0),
+                    rotation: (0.0, -1.0, 0.0, 1.0),
+                    scale: (1.0, 1.0, 1.0),
+                ),
+                light: (
+                    light: Area(Sphere((
+                        intensity: Luminance(1688.0),
+                        color: (1.0, 1.0, 1.0),
+                        radius: 10.0,
+                    ))),
+                ),
+                mesh: Shape((shape: Sphere(20, 20))),
+                material: (
+                    albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0)),
+                ),
+            ),
+        ),
+        // Rectangle
+        (
+            data: (
+                transform: (
+                    translation: (-50.0, 0.0, 160.0),
+                ),
+                gltf: File("large/LightTestRig.glb", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (-40.0, 0.0, 160.0),
+                    scale: (2.0, 2.0, 2.0),
+                    rotation: (0.0, -1.0, 0.0, 1.0),
+                ),
+                light: (
+                    light: Area(Rectangle((
+                        intensity: Power(1200.0),
+                        color: (1.0, 1.0, 1.0),
+                        width: 2.0,
+                        height: 2.0,
+                        two_sided: true
+                    ))),
+                ),
+            ),
+        ),
         (
             data: (
                 transform: (
@@ -801,10 +944,12 @@ Prefab (
                 ),
                 mesh: Shape(( shape: Plane(None), )),
                 material: (
-                    albedo: Generate(Srgba(0.7, 0.7, 0.7, 1.0))
+                    albedo: Generate(Srgba(0.7, 0.7, 0.7, 1.0)),
+                    metallic_roughness: Generate(Srgba(0.2, 0.7, 0.0, 0.0))
                 ),
             ),
         ),
+
         (
             data: (
                 transparent: (),

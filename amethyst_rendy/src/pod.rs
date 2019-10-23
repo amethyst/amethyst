@@ -4,18 +4,19 @@ use crate::{
     resources::Tint as TintComponent,
     sprite::{SpriteRender, SpriteSheet},
     types::Texture,
+    light,
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    math::{convert, Matrix4, Vector4},
-    Transform,
+    math::{convert, Matrix4, Vector3, Vector4, Point3, RealField, U1, U3, Translation3},
+    Transform
 };
 use glsl_layout::*;
 use rendy::{
     hal::format::Format,
     mesh::{AsAttribute, AsVertex, Model, VertexFormat},
 };
-
+use lazy_static::lazy_static;
 /// TextureOffset
 /// ```glsl,ignore
 /// struct UvOffset {
@@ -172,6 +173,8 @@ impl SkinnedVertexArgs {
 ///    vec3 position;
 ///    vec3 color;
 ///    float intensity;
+///    float radius;
+///    float smoothness;
 /// };
 /// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
@@ -180,8 +183,26 @@ pub struct PointLight {
     pub position: vec3,
     /// Light color
     pub color: vec3,
-    /// Light intensity (0 - infinity)
+    /// Luminous intensity (cd)
     pub intensity: float,
+    // Pointlight radius
+    pub radius: float,
+    /// Pointlight smoothness
+    pub smoothness: float,
+}
+impl From<(&Transform, &light::punctual::PointLight)> for PointLight {
+    fn from((transform, light): (&Transform, &light::punctual::PointLight)) -> PointLight {
+        PointLight {
+            position: convert::<_, Vector3<f32>>(
+                transform.global_matrix().column(3).xyz(),
+            )
+            .into_pod(),
+            color: light.color.into_pod(),
+            intensity: light.intensity / (4.0 * f32::pi()),
+            radius: light.radius,
+            smoothness: light.smoothness,
+        }
+    }
 }
 
 /// directional light struct
@@ -196,7 +217,7 @@ pub struct PointLight {
 pub struct DirectionalLight {
     /// Light Color
     pub color: vec3,
-    /// Light intensity (0 - infinity)
+    /// Luminous intensity (cd)
     pub intensity: float,
     /// light cast direction vector
     pub direction: vec3,
@@ -224,13 +245,139 @@ pub struct SpotLight {
     pub direction: vec3,
     /// Angle of the light in radians
     pub angle: float,
-    /// Light intensity (0 - infinity)
+    /// Luminous intensity (cd)
     pub intensity: float,
     /// Spotlight range
     pub range: float,
     /// Spotlight smoothness
     pub smoothness: float,
 }
+
+impl From<(&Transform, &light::punctual::SpotLight)> for SpotLight {
+    fn from((transform, light): (&Transform, &light::punctual::SpotLight)) -> SpotLight {
+        SpotLight {
+            position: convert::<_, Vector3<f32>>(
+                transform.global_matrix().column(3).xyz(),
+            )
+            .into_pod(),
+            color: light.color.into_pod(),
+            direction: light.direction.into_pod(),
+            angle: light.angle.cos(),
+            intensity: light.intensity / f32::pi(),
+            range: light.range,
+            smoothness: light.smoothness,
+        }
+    }
+}
+
+lazy_static!{
+    static ref LIGHT_VERTICES: [Point3<f32>; 4] = [
+        Point3::new(-0.5, -0.5, 0.0),
+        Point3::new(0.5, -0.5, 0.0),
+        Point3::new(0.5, 0.5, 0.0),
+        Point3::new(-0.5, 0.5, 0.0)
+    ];
+}
+
+/// area light struct
+/// ```glsl,ignore
+/// struct RoundAreaLight {
+///    vec3 position;
+///    vec3 color;
+///    float intensity;
+///    bool two_sided;
+///    vec3[4] quad_points;
+/// };
+/// ```
+/// todo: Merge some of the fields for optimization
+#[derive(Clone, Copy, Debug, AsStd140)]
+pub struct AreaLight {
+    /// Light world position
+    pub position: vec3,
+    /// Color of the diffuse part of the light.
+    pub diffuse_color: vec3,
+    /// Color of the specular part of the light.
+    pub spec_color: vec3,
+    /// Intensity in nits.
+    pub intensity: float,
+    /// Wether the light lights behind as well.
+    pub two_sided: boolean,
+    /// Wether the light is a sphere.
+    pub sphere: boolean,
+    /// Point for integrating the area.
+    pub quad_points: [vec3; 4],
+}
+
+impl From<(&Transform, &light::area::Sphere)> for AreaLight {
+    fn from((transform, light): (&Transform, &light::area::Sphere)) -> AreaLight {
+        let transform = transform.global_matrix();
+        let translation = Translation3::from(transform.fixed_slice::<U3, U1>(0, 3).xyz());
+        let scale_x = transform.fixed_slice::<U3, U1>(0, 0).norm();
+        let scale_y = transform.fixed_slice::<U3, U1>(0, 1).norm();
+        AreaLight {
+            position: transform.column(3).xyz().into_pod(),
+            diffuse_color: light.diffuse_color.into_pod(),
+            spec_color: light.spec_color.into_pod(),
+            intensity: light.intensity.luminance_or(|x| { x / (4.0 * scale_x * scale_y * f32::pi() * f32::pi() )}),
+            two_sided: true.into(),
+            sphere: true.into(),
+            quad_points: [
+                translation.transform_point(&LIGHT_VERTICES[0]).into_pod(),
+                translation.transform_point(&LIGHT_VERTICES[1]).into_pod(),
+                translation.transform_point(&LIGHT_VERTICES[2]).into_pod(),
+                translation.transform_point(&LIGHT_VERTICES[3]).into_pod(),
+            ]
+        }
+    }
+}
+
+impl From<(&Transform, &light::area::Disk)> for AreaLight {
+    fn from((transform, light): (&Transform, &light::area::Disk)) -> AreaLight {
+        let transform = transform.global_matrix();
+        let scale_x = transform.fixed_slice::<U3, U1>(0, 0).norm();
+        let scale_y = transform.fixed_slice::<U3, U1>(0, 1).norm();
+        AreaLight {
+            position: transform.column(3).xyz().into_pod(),
+            diffuse_color: light.diffuse_color.into_pod(),
+            spec_color: light.spec_color.into_pod(),
+            intensity: light.intensity.luminance_or(|x| { x / (scale_x * scale_y * f32::pi() * f32::pi() )}),
+            two_sided: light.two_sided.into(),
+            sphere: false.into(),
+            quad_points: [
+                transform.transform_point(&LIGHT_VERTICES[0]).into_pod(),
+                transform.transform_point(&LIGHT_VERTICES[1]).into_pod(),
+                transform.transform_point(&LIGHT_VERTICES[2]).into_pod(),
+                transform.transform_point(&LIGHT_VERTICES[3]).into_pod(),
+            ]
+        }
+    }
+}
+
+impl From<(&Transform, &light::area::Rectangle)> for AreaLight {
+    fn from((transform, light): (&Transform, &light::area::Rectangle)) -> AreaLight {
+        let transform = transform.global_matrix();
+        let scale_x = transform.fixed_slice::<U3, U1>(0, 0).norm();
+        let scale_y = transform.fixed_slice::<U3, U1>(0, 1).norm();
+        AreaLight {
+            position: transform.column(3).xyz().into_pod(),
+            diffuse_color: light.diffuse_color.into_pod(),
+            spec_color: light.spec_color.into_pod(),
+            intensity: light.intensity.luminance_or(|x| { x / (scale_x * scale_y )}),
+            two_sided: light.two_sided.into(),
+            sphere: false.into(),
+            quad_points: [
+                transform.transform_point(&LIGHT_VERTICES[0]).into_pod(),
+                transform.transform_point(&LIGHT_VERTICES[1]).into_pod(),
+                transform.transform_point(&LIGHT_VERTICES[2]).into_pod(),
+                transform.transform_point(&LIGHT_VERTICES[3]).into_pod(),
+            ]
+        }
+    }
+}
+
+
+
+
 
 /// Environment Uniform
 /// ```glsl,ignore
@@ -254,6 +401,8 @@ pub struct Environment {
     pub directional_light_count: int,
     /// Number of spot lights
     pub spot_light_count: int,
+    pub round_area_light_count: int,
+    pub rect_area_light_count: int,
 }
 
 /// Material Uniform
@@ -386,6 +535,13 @@ impl IntoPod<vec2> for amethyst_core::math::Vector2<f32> {
 impl IntoPod<vec3> for amethyst_core::math::Vector3<f32> {
     fn into_pod(self) -> vec3 {
         let arr: [f32; 3] = self.into();
+        arr.into()
+    }
+}
+
+impl IntoPod<vec3> for amethyst_core::math::Point3<f32> {
+    fn into_pod(self) -> vec3 {
+        let arr: [f32; 3] = self.coords.into();
         arr.into()
     }
 }
