@@ -145,6 +145,11 @@ impl UdpSocketResource {
         Self { socket }
     }
 
+    /// Returns an immutable reference to the socket if there is one configured.
+    pub fn get(&self) -> Option<&UdpSocket> {
+        self.socket.as_ref()
+    }
+
     /// Returns a mutable reference to the socket if there is one configured.
     pub fn get_mut(&mut self) -> Option<&mut UdpSocket> {
         self.socket.as_mut()
