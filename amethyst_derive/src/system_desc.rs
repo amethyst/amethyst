@@ -20,7 +20,7 @@ pub fn amethyst_core() -> TokenStream {
     {
         quote!(::#name::core)
     } else {
-        panic!("neither amethyst nor amethyst_core found");
+        quote!(::amethyst::core)
     }
 }
 
