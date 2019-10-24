@@ -110,6 +110,10 @@ pub struct LegionState {
 }
 
 impl LegionState {
+    pub fn add_sync<T: SyncerTrait>(&mut self, syncer: T) {
+        self.syncers.push(Box::new(syncer));
+    }
+
     pub fn add_resource_sync<T: legion::resource::Resource>(&mut self) {
         self.syncers.push(Box::new(ResourceSyncer::<T>::default()));
     }
@@ -156,6 +160,8 @@ impl LegionSyncBuilder for Syncer {
         for syncer in self.syncers.drain(..) {
             state.syncers.push(syncer);
         }
+
+        state.add_sync(transform::sync::TransformSyncer::default());
 
         state.add_resource_sync::<crate::allocators::Allocators>();
 

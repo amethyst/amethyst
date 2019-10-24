@@ -38,7 +38,10 @@ purple = { path = "../../purple" }
 thread_profiler = { version = "0.3", optional = true }
 
 legion = { git = "https://github.com/jaynus/legion.git", branch = "systems", optional = true }
-legion_transform = { git = "https://github.com/AThilenius/legion_transform.git", optional = true }
+legion_transform = { git = "https://github.com/jaynus/legion_transform.git", optional = true }
+
+#legion = { path = "../../legion", optional = true }
+#legion_transform = { path = "../../legion_transform", optional = true }
 
 [dev-dependencies]
 amethyst = { path = "..", version = "0.13.1" }

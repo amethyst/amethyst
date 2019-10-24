@@ -105,16 +105,18 @@ impl Component for Orbit {
 fn orbit_system(
     world: &mut amethyst::core::legion::world::World,
 ) -> Box<dyn amethyst::core::legion::schedule::Schedulable> {
-    use amethyst::core::legion::{system::SystemBuilder, IntoQuery, Query, Read, Write};
+    use amethyst::core::legion::{
+        system::SystemBuilder, transform::components::Translation, IntoQuery, Query, Read, Write,
+    };
 
     SystemBuilder::<()>::new("OrbitSystem")
-        .with_query(<(Write<Transform>, Read<Orbit>)>::query())
+        .with_query(<(Write<Translation>, Read<Orbit>)>::query())
         .read_resource::<Time>()
         .write_resource::<DebugLines>()
         .build(move |commands, world, (time, debug), query| {
             query
                 .iter_entities()
-                .for_each(|(entity, (mut transform, orbit))| {
+                .for_each(|(entity, (mut translation, orbit))| {
                     let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
                     let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
                     let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
@@ -126,7 +128,7 @@ fn orbit_system(
                         Srgba::new(0.0, 0.5, 1.0, 1.0),
                     );
 
-                    transform.set_translation(final_pos);
+                    *translation = final_pos.into();
                 });
         })
 }
@@ -139,7 +141,9 @@ enum RenderMode {
 }
 
 impl Default for RenderMode {
-    fn default() -> Self { RenderMode::Pbr }
+    fn default() -> Self {
+        RenderMode::Pbr
+    }
 }
 
 impl SimpleState for Example {
@@ -644,6 +648,7 @@ fn main() -> amethyst::Result<()> {
         .migration_sync_bundle(amethyst::core::legion::Syncer::default())
         .migration_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
         .migration_with_system(RelativeStage(Stage::Logic, 100), orbit_system)
+        .migration_with_bundle(amethyst::core::legion::transform::TransformBundle::default())
         .migration_with_bundle(
             RenderingBundle::<DefaultBackend>::default()
                 .with_plugin(

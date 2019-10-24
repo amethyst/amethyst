@@ -1,3 +1,5 @@
+pub mod sync;
+
 use crate::legion::*;
 use amethyst_error::Error;
 use legion_transform::*;
