@@ -271,11 +271,13 @@ impl From<(&Transform, &light::punctual::SpotLight)> for SpotLight {
 }
 
 lazy_static!{
-    static ref LIGHT_VERTICES: [Point3<f32>; 4] = [
+    static ref LIGHT_VERTICES: [Point3<f32>; 6] = [
         Point3::new(-0.5, -0.5, 0.0),
         Point3::new(0.5, -0.5, 0.0),
         Point3::new(0.5, 0.5, 0.0),
-        Point3::new(-0.5, 0.5, 0.0)
+        Point3::new(-0.5, 0.5, 0.0),
+        Point3::new(0.0, -0.5, 0.0),
+        Point3::new(0.0, 0.5, 0.0),
     ];
 }
 
@@ -286,10 +288,11 @@ lazy_static!{
 ///    vec3 color;
 ///    float intensity;
 ///    bool two_sided;
+///    bool sphere;
 ///    vec3[4] quad_points;
 /// };
 /// ```
-/// todo: Merge some of the fields for optimization
+// todo: Merge some of the fields for optimization
 #[derive(Clone, Copy, Debug, AsStd140)]
 pub struct AreaLight {
     /// Light world position
@@ -375,7 +378,51 @@ impl From<(&Transform, &light::area::Rectangle)> for AreaLight {
     }
 }
 
+/// area light struct
+/// ```glsl,ignore
+/// struct TubularAreaLight {
+///    vec3 position;
+///    vec3 diffuse_color;
+///    vec3 spec_color;
+///    float intensity;
+///    float radius;
+///    vec3 quad_points[2];
+///    bool end_caps;
+/// };
+/// ```
+// todo: Merge some of the fields for optimization
+#[derive(Clone, Copy, Debug, AsStd140)]
+pub struct TubularAreaLight {
+    /// Light world position
+    pub position: vec3,
+    /// Light Color
+    pub diffuse_color: vec3,
+    pub spec_color: vec3,
+    pub intensity: float,
+    pub radius: float,
+    pub quad_points: [vec3; 2],
+    pub end_caps: boolean,
+}
 
+impl From<(&Transform, &light::area::Tube)> for TubularAreaLight {
+    fn from((transform, light): (&Transform, &light::area::Tube)) -> TubularAreaLight {
+        let transform = transform.global_matrix();
+        let scale_x = transform.fixed_slice::<U3, U1>(0, 0).norm();
+        let scale_y = transform.fixed_slice::<U3, U1>(0, 1).norm();
+        TubularAreaLight {
+            position: transform.column(3).xyz().into_pod(),
+            diffuse_color: light.diffuse_color.into_pod(),
+            spec_color: light.spec_color.into_pod(),
+            intensity: light.intensity.luminance_or(|x| { x / (scale_x * scale_y )}),
+            radius: light.radius.into(),
+            quad_points: [
+                transform.transform_point(&LIGHT_VERTICES[4]).into_pod(),
+                transform.transform_point(&LIGHT_VERTICES[5]).into_pod(),
+            ],
+            end_caps: light.end_caps.into(),
+        }
+    }
+}
 
 
 
@@ -387,6 +434,9 @@ impl From<(&Transform, &light::area::Rectangle)> for AreaLight {
 ///    int point_light_count;
 ///    int directional_light_count;
 ///    int spot_light_count;
+///    int round_area_light_count;
+///    int rect_area_light_count;
+///    int line_area_light_count;
 /// };
 /// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
@@ -401,8 +451,12 @@ pub struct Environment {
     pub directional_light_count: int,
     /// Number of spot lights
     pub spot_light_count: int,
+    /// Number of round area lights
     pub round_area_light_count: int,
+    /// Number of rectangular area lights
     pub rect_area_light_count: int,
+    /// Number of tubular area lights
+    pub line_area_light_count: int,
 }
 
 /// Material Uniform

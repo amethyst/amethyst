@@ -21,7 +21,6 @@ layout(location = 0) in VertexData {
 
 layout(location = 0) out vec4 out_color;
 
-
 void main() {
     vec2 final_tex_coords   = tex_coords(vertex.tex_coord, uv_offset);
     vec4 albedo_alpha       = texture(albedo, final_tex_coords);

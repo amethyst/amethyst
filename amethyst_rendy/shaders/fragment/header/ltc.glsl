@@ -365,95 +365,103 @@ vec3 ltc_evaluate_rect(
     return saturate3(vec3(sum));
 }
 
-// float Fpo(float d, float l)
-// {
-//     return l/(d*(d*d + l*l)) + atan(l/d)/(d*d);
-// }
+float Fpo(float d, float l)
+{
+    return l/(d*(d*d + l*l)) + atan(l/d)/(d*d);
+}
 
-// float Fwt(float d, float l)
-// {
-//     return l*l/(d*(d*d + l*l));
-// }
+float Fwt(float d, float l)
+{
+    return l*l/(d*(d*d + l*l));
+}
 
-// float integrate_diffuse_line(vec3 p1, vec3 p2)
-// {
-//     // tangent
-//     vec3 wt = normalize(p2 - p1);
+float D(mat3 Minv, vec3 w)
+{
+    vec3 wo = Minv * w;
+    float lo = length(wo);
+    float res = 1.0/PI * max(0.0, wo.z/lo) * abs(determinant(Minv)) / (lo*lo*lo);
+    return res;
+}
 
-//     // clamping
-//     if (p1.z <= 0.0 && p2.z <= 0.0) return 0.0;
-//     if (p1.z < 0.0) p1 = (+p1*p2.z - p2*p1.z) / (+p2.z - p1.z);
-//     if (p2.z < 0.0) p2 = (-p1*p2.z + p2*p1.z) / (-p2.z + p1.z);
+float integrate_diffuse_line(vec3 p1, vec3 p2)
+{
+    // tangent
+    vec3 wt = normalize(p2 - p1);
 
-//     // parameterization
-//     float l1 = dot(p1, wt);
-//     float l2 = dot(p2, wt);
+    // clamping
+    if (p1.z <= 0.0 && p2.z <= 0.0) return 0.0;
+    if (p1.z < 0.0) p1 = (+p1*p2.z - p2*p1.z) / (+p2.z - p1.z);
+    if (p2.z < 0.0) p2 = (-p1*p2.z + p2*p1.z) / (-p2.z + p1.z);
 
-//     // shading point orthonormal projection on the line
-//     vec3 po = p1 - l1*wt;
+    // parameterization
+    float l1 = dot(p1, wt);
+    float l2 = dot(p2, wt);
 
-//     // distance to line
-//     float d = length(po);
+    // shading point orthonormal projection on the line
+    vec3 po = p1 - l1*wt;
 
-//     // integral
-//     float I = (Fpo(d, l2) - Fpo(d, l1)) * po.z +
-//               (Fwt(d, l2) - Fwt(d, l1)) * wt.z;
-//     return I / PI;
-// }
+    // distance to line
+    float d = length(po);
 
-
-// float integrate_ltc_line(vec3 p1, vec3 p2)
-// {
-//     // transform to diffuse configuration
-//     vec3 p1o = Minv * p1;
-//     vec3 p2o = Minv * p2;
-//     float area = I_diffuse_line(p1o, p2o);
-
-//     // width factor
-//     vec3 ortho = normalize(cross(p1, p2));
-//     float w =  1.0 / length(inverse(transpose(Minv)) * ortho);
-
-//     return w * area;
-// }
+    // integral
+    float I = (Fpo(d, l2) - Fpo(d, l1)) * po.z +
+              (Fwt(d, l2) - Fwt(d, l1)) * wt.z;
+    return I / PI;
+}
 
 
-// float integrate_ltc_disks(vec3 p1, vec3 p2, float radius)
-// {
-//     float A = PI * R * R;
-//     vec3 wt  = normalize(p2 - p1);
-//     vec3 wp1 = normalize(p1);
-//     vec3 wp2 = normalize(p2);
-//     float area = A * (
-//     D(wp1) * max(0.0, dot(+wt, wp1)) / dot(p1, p1) +
-//     D(wp2) * max(0.0, dot(-wt, wp2)) / dot(p2, p2));
-//     return area;
-// }
+float integrate_ltc_line(mat3 Minv, vec3 p1, vec3 p2)
+{
+    // transform to diffuse configuration
+    vec3 p1o = Minv * p1;
+    vec3 p2o = Minv * p2;
+    float area = integrate_diffuse_line(p1o, p2o);
+
+    // width factor
+    vec3 ortho = normalize(cross(p1, p2));
+    float w =  1.0 / length(inverse(transpose(Minv)) * ortho);
+
+    return w * area;
+}
 
 
-// vec3 ltc_evaluate_line(
-//     vec3 N, 
-//     vec3 V, 
-//     vec3 P,
-//     float NdotV,
-//     mat3 Minv,
-//     vec3 points[2],
-//     float radius,
-//     bool end_caps)
-// {
-//     // construct orthonormal basis around N
-//     vec3 T1, T2;
-//     T1 = normalize(V - N*NdotV);
-//     T2 = cross(N, T1);
+float integrate_ltc_disks(mat3 Minv, vec3 p1, vec3 p2, float radius)
+{
+    float A = PI * radius * radius;
+    vec3 wt  = normalize(p2 - p1);
+    vec3 wp1 = normalize(p1);
+    vec3 wp2 = normalize(p2);
+    float area = A * (
+    D(Minv, wp1) * max(0.0, dot(+wt, wp1)) / dot(p1, p1) +
+    D(Minv, wp2) * max(0.0, dot(-wt, wp2)) / dot(p2, p2));
+    return area;
+}
 
-//     mat3 R = transpose(mat3(T1, T2, N));
 
-//     vec3 p1 = R * (points[0] - P);
-//     vec3 p2 = R * (points[1] - P);
+vec3 ltc_evaluate_line(
+    vec3 N, 
+    vec3 V, 
+    vec3 P,
+    float NdotV,
+    mat3 Minv,
+    vec3 points[2],
+    float radius,
+    bool end_caps)
+{
+    // construct orthonormal basis around N
+    vec3 T1, T2;
+    T1 = normalize(V - N*NdotV);
+    T2 = cross(N, T1);
 
-//     float Iline = radius * I_ltc_line(p1, p2);
-//     float Idisks = end_caps ? I_ltc_disks(p1, p2, radius) : 0.0;
-//     return vec3(min(1.0, Iline + Idisks));
-// }
+    mat3 R = transpose(mat3(T1, T2, N));
+
+    vec3 p1 = R * (points[0] - P);
+    vec3 p2 = R * (points[1] - P);
+
+    float integral_line = radius * integrate_ltc_line(Minv, p1, p2);
+    float integral_disks = end_caps ? integrate_ltc_disks(Minv, p1, p2, radius) : 0.0;
+    return vec3(min(1.0, integral_line + integral_disks));
+}
 
 
 vec3 compute_round_area_light(float roughness, vec3 normal, vec3 view_direction, float NdotV, vec3 albedo) {
@@ -504,29 +512,29 @@ vec3 compute_rect_area_light(float roughness, vec3 normal, vec3 view_direction, 
 }
 
 
-// vec3 compute_line_area_light(float roughness, vec3 normal, vec3 view_direction, float NdotV, vec3 albedo) {    
-//     vec3 color = vec3(0);
-//     for (int i = 0; i < line_area_light_count; i++) {
+vec3 compute_line_area_light(float roughness, vec3 normal, vec3 view_direction, float NdotV, vec3 albedo) {    
+    vec3 color = vec3(0);
+    for (int i = 0; i < line_area_light_count; i++) {
 
-//         vec3 diffuse_color = line_area_light[i].diffuse_color;
-//         vec3 spec_color = line_area_light[i].spec_color;
+        vec3 diffuse_color = line_area_light[i].diffuse_color;
+        vec3 spec_color = line_area_light[i].spec_color;
         
-//         vec2 uv = ltc1_coords(NdotV, roughness);
+        vec2 uv = ltc1_coords(NdotV, roughness);
         
-//         mat3 Minv = ltc_matrix(ltc_1, uv);
+        mat3 Minv = ltc_matrix(ltc_1, uv);
         
-//         vec4 t2 = texture(ltc_2, uv);
+        vec4 t2 = texture(ltc_2, uv);
 
-//         vec3 spec = ltc_evaluate_rect(normal, view_direction, vertex.position, NdotV, Minv, );
+        vec3 spec = ltc_evaluate_line(normal, view_direction, vertex.position, NdotV, Minv, line_area_light[i].quad_points, line_area_light[i].radius, line_area_light[i].end_caps);
 
-//         // // BRDF shadowing and Fresnel
-//         spec *= spec_color*t2.r + (1.0 - spec_color)*t2.g;
+        // // BRDF shadowing and Fresnel
+        spec *= spec_color*t2.r + (1.0 - spec_color)*t2.g;
 
-//         vec3 diff = ltc_evaluate_rect(normal, view_direction, vertex.position, NdotV, mat3(1), line_area_light[i].end_caps);
-//         color += line_area_light[i].intensity*(spec + diffuse_color*albedo*diff) / (2.0*PI);
-//     }
-//     return color;
-// }
+        vec3 diff = ltc_evaluate_line(normal, view_direction, vertex.position, NdotV, mat3(1), line_area_light[i].quad_points, line_area_light[i].radius, line_area_light[i].end_caps);
+        color += line_area_light[i].intensity*(spec + diffuse_color*albedo*diff) / (2.0*PI);
+    }
+    return color;
+}
 
 
 #endif

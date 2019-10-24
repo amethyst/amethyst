@@ -167,6 +167,8 @@ pub mod area {
         Sphere(Sphere),
         /// A Disk Area Light
         Disk(Disk),
+        /// A Tubular Area Light
+        Tube(Tube),
         /// A Rectangular Area Light
         Rectangle(Rectangle),
     }
@@ -276,6 +278,38 @@ pub mod area {
         }
     }
 
+    /// A tube shaped area light source.
+    #[repr(C)]
+    #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+    #[serde(default)]
+    pub struct Tube {
+        /// Diffuse color of the light source.
+        #[serde(with = "crate::serde_shim::srgb")]
+        pub diffuse_color: palette::Srgb,
+        /// Specular color of the light source.
+        #[serde(with = "crate::serde_shim::srgb")]
+        pub spec_color: palette::Srgb,
+        /// Intensity of the light source.
+        pub intensity: Intensity,
+        pub radius: f32,
+        pub end_caps: bool,
+        // pub width: f32
+    }
+
+    impl Default for Tube {
+        /// Default value of a 75W/120V ~ 100W/230V incandescent light bulb.
+        fn default() -> Self {
+            Tube {
+                diffuse_color: Default::default(),
+                spec_color: Default::default(),
+                intensity: Default::default(),
+                radius: 0.1,
+                end_caps: true
+                // width: 1.0
+            }
+        }
+    }
+
     /// A rectangular area light source.
     #[repr(C)]
     #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -305,6 +339,7 @@ pub mod area {
         }
     }
 }
+
 
 impl Component for Light {
     type Storage = DenseVecStorage<Self>;

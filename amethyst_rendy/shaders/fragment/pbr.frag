@@ -191,6 +191,7 @@ void main() {
     
     lighted += compute_round_area_light(roughness2, normal, view_direction, NdotV, albedo);
     lighted += compute_rect_area_light(roughness2, normal, view_direction, NdotV, albedo);
+    lighted += compute_line_area_light(roughness2, normal, view_direction, NdotV, albedo);
 
     vec3 ambient = ambient_color * albedo * ambient_occlusion;
     vec3 color = saturate3(ambient + lighted + emission);

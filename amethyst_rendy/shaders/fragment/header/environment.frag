@@ -44,6 +44,17 @@ struct RectAreaLight {
     vec3 quad_points[4];
 };
 
+struct LineAreaLight {
+    vec3 position;
+    vec3 diffuse_color;
+    vec3 spec_color;
+    float intensity;
+    float radius;
+    vec3 quad_points[2];
+    bool end_caps;
+};
+
+
 layout(std140, set = 0, binding = 1) uniform Environment {
     vec3 ambient_color;
     vec3 camera_position; 
@@ -52,6 +63,7 @@ layout(std140, set = 0, binding = 1) uniform Environment {
     int spot_light_count;
     int round_area_light_count;
     int rect_area_light_count;
+    int line_area_light_count;
 };
 
 layout(std140, set = 0, binding = 2) uniform PointLights {
@@ -72,4 +84,8 @@ layout(std140, set = 0, binding = 5) uniform RoundAreaLights {
 
 layout(std140, set = 0, binding = 6) uniform RectAreaLights {
     RectAreaLight rect_area_light[16];
+};
+
+layout(std140, set = 0, binding = 7) uniform LineAreaLights {
+    LineAreaLight line_area_light[16];
 };
