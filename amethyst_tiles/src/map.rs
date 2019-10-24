@@ -143,7 +143,7 @@ impl<T: Tile, E: CoordinateEncoder> TileMap<T, E> {
         let mut data = Vec::with_capacity(size);
         data.resize_with(size, T::default);
 
-        let encoder = E::from_dimensions(dimensions.x, dimensions.y, dimensions.z);
+        let encoder = E::from_dimensions(&encoder_dimensions);
 
         Self {
             data,
@@ -353,8 +353,6 @@ mod tests {
         }
     }
 
-    use std::cell::RefCell;
-
     pub fn test_single_map<E: CoordinateEncoder>(dimensions: Vector3<u32>) {
         struct UnsafeWrapper<E: CoordinateEncoder> {
             ptr: *mut TileMap<TestTile, E>,
@@ -376,7 +374,7 @@ mod tests {
         unsafe impl<E: CoordinateEncoder> Sync for UnsafeWrapper<E> {}
 
         let mut inner = TileMap::<TestTile, E>::new(dimensions, Vector3::new(10, 10, 1), None);
-        let mut map = UnsafeWrapper::new(&mut inner);
+        let map = UnsafeWrapper::new(&mut inner);
 
         (0..dimensions.x).into_par_iter().for_each(|x| {
             (0..dimensions.y).into_par_iter().for_each(|y| {
@@ -403,20 +401,20 @@ mod tests {
         let test_dimensions = [
             Vector3::new(10, 58, 54),
             Vector3::new(66, 5, 20),
-            //Vector3::new(199, 100, 1),
+            Vector3::new(199, 100, 1),
             Vector3::new(5, 55, 6),
-            //Vector3::new(15, 23, 1),
-            //Vector3::new(20, 12, 12),
-            //Vector3::new(48, 48, 12),
-            //Vector3::new(12, 55, 12),
-            //Vector3::new(26, 25, 1),
-            //Vector3::new(1, 2, 5),
+            Vector3::new(15, 23, 1),
+            Vector3::new(20, 12, 12),
+            Vector3::new(48, 48, 12),
+            Vector3::new(12, 55, 12),
+            Vector3::new(26, 25, 1),
+            Vector3::new(1, 2, 5),
         ];
 
         test_dimensions.par_iter().for_each(|dimensions| {
             test_single_map::<MortonEncoder>(*dimensions);
             test_single_map::<MortonEncoder2D>(*dimensions);
-            //test_single_map::<FlatEncoder>(*dimensions);
+            test_single_map::<FlatEncoder>(*dimensions);
         });
     }
 

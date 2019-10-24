@@ -92,7 +92,7 @@ pub fn morton_decode_intr_3d(morton: u32) -> (u32, u32, u32) {
 #[derive(Default, Clone)]
 pub struct MortonEncoder;
 impl CoordinateEncoder for MortonEncoder {
-    fn from_dimensions(_: u32, _: u32, _: u32) -> Self {
+    fn from_dimensions(_: &Vector3<u32>) -> Self {
         Self {}
     }
 
@@ -132,10 +132,10 @@ pub struct MortonEncoder2D {
     len: u32,
 }
 impl CoordinateEncoder for MortonEncoder2D {
-    fn from_dimensions(x: u32, y: u32, z: u32) -> Self {
+    fn from_dimensions(dimensions: &Vector3<u32>) -> Self {
         Self {
-            dimensions: (x, y, z),
-            len: x * y,
+            dimensions: (dimensions.x, dimensions.y, dimensions.z),
+            len: dimensions.x * dimensions.y,
         }
     }
 

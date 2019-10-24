@@ -26,7 +26,7 @@ use amethyst_core::math::Vector3;
 pub trait CoordinateEncoder: 'static + Clone + Default + Send + Sync {
     /// Constructor interface for `Self` which consumes the maps dimensions, which is required for some
     /// encoding types to fit within a given coordinate space.
-    fn from_dimensions(x: u32, y: u32, z: u32) -> Self;
+    fn from_dimensions(dimensions: &Vector3<u32>) -> Self;
 
     /// Encode the provided x, y and z 3-dimensional coordinates into a 1-dimensional array index.
     fn encode(&self, x: u32, y: u32, z: u32) -> Option<u32>;
@@ -53,9 +53,9 @@ impl Default for FlatEncoder {
     }
 }
 impl CoordinateEncoder for FlatEncoder {
-    fn from_dimensions(x: u32, y: u32, z: u32) -> Self {
+    fn from_dimensions(dimensions: &Vector3<u32>) -> Self {
         Self {
-            dimensions: Vector3::new(x, y, z),
+            dimensions: *dimensions,
         }
     }
 
