@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Tilemap rotation was incorrect and not transposed. Fixed and uses component rotation. ([#1974])
 - `Config` types no longer require a `Default` impl ([#1989])
+- Fixed an incorrect dimensions being used in Tile Encoders, causing bad lookups in assymetric maps in any Z-level besides 0 ([#2017])
 
 ### Security
 
@@ -49,6 +50,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1984]: https://github.com/amethyst/amethyst/pull/1984
 [#1986]: https://github.com/amethyst/amethyst/pull/1986
 [#1989]: https://github.com/amethyst/amethyst/pull/1989
+[#2017]: https://github.com/amethyst/amethyst/pull/2017
 
 ## [0.13.3] - 2019-10-4
 
