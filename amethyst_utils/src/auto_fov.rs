@@ -1,12 +1,9 @@
 //! Utility to adjust the aspect ratio of cameras automatically
 
 use amethyst_assets::PrefabData;
-use amethyst_core::{
-    ecs::{
-        Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, SystemData,
-        World, WriteStorage,
-    },
-    SystemDesc,
+use amethyst_core::ecs::{
+    Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, SystemData,
+    WriteStorage,
 };
 use amethyst_derive::{PrefabData, SystemDesc};
 use amethyst_error::Error;

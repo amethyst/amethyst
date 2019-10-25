@@ -3,9 +3,9 @@
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystemDesc, Processor, RonFormat},
     audio::{output::init_output, Source},
-    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, SystemDesc, Time},
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
     derive::SystemDesc,
-    ecs::prelude::{Entity, System, SystemData, World, WorldExt, Write},
+    ecs::prelude::{Entity, System, SystemData, WorldExt, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{

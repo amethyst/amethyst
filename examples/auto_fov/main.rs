@@ -3,9 +3,9 @@ use amethyst::{
         Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystemDesc,
         ProgressCounter, RonFormat,
     },
-    core::{SystemDesc, Transform, TransformBundle},
+    core::{Transform, TransformBundle},
     derive::{PrefabData, SystemDesc},
-    ecs::{Entity, ReadExpect, ReadStorage, System, SystemData, World, WorldExt, WriteStorage},
+    ecs::{Entity, ReadExpect, ReadStorage, System, SystemData, WorldExt, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
         Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,

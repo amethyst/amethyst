@@ -3,10 +3,9 @@ use amethyst_audio::{output::Output, Source, SourceHandle};
 use amethyst_core::{
     ecs::{
         prelude::{Component, DenseVecStorage},
-        Read, System, SystemData, World, Write,
+        Read, System, SystemData, Write,
     },
     shrev::{EventChannel, ReaderId},
-    SystemDesc,
 };
 use amethyst_derive::SystemDesc;
 

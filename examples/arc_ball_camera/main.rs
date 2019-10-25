@@ -6,10 +6,9 @@ use amethyst::{
     core::{
         shrev::{EventChannel, ReaderId},
         transform::{Transform, TransformBundle},
-        SystemDesc,
     },
     derive::SystemDesc,
-    ecs::prelude::{Join, Read, ReadStorage, System, SystemData, World, WorldExt, WriteStorage},
+    ecs::prelude::{Join, Read, ReadStorage, System, SystemData, WorldExt, WriteStorage},
     input::{
         is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings, VirtualKeyCode,
     },

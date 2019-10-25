@@ -1,10 +1,9 @@
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, SystemData, World,
-        WriteStorage,
+        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, SystemData, WriteStorage,
     },
     math::{convert, Matrix4},
-    SystemDesc, Transform,
+    Transform,
 };
 use amethyst_derive::SystemDesc;
 use amethyst_rendy::skinning::JointTransforms;

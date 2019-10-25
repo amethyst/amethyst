@@ -22,7 +22,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Use a premultiplied view_proj matrix in vertex shaders. ([#1964])
 - amethyst_network completely rewritten to provide a new baseline with which to build. ([#1917])
-- Cleaned up tiles example. Added rotation and translation tests, fixed raycast debug box. Added default zoom to `PROJECT` perspective projection since no one knew to zoom out. ([#1974])
+- Cleaned up tiles example. Added rotation and translation tests, fixed raycast debug box. Added default zoom to PROJECT
+  perspective projection since no one knew to zoom out. ([#1974])
+- TileMaps to_tile and to_world now take an Option<&Transform> that allows them to work if the entire map in 
+ translated. ([#1987],[#1991])
 - `AmethystApplication::with_fn` constraint relaxed from `Fn` to `FnOnce`. ([#1983])
 - ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
 - `Config::load` now returns an error or failure rather than silently falling back to the default config. Same is true for the `from_config_file` methods on `RenderToWindow`, `WindowBundle`, and `WindowSystem` ([#1989])
@@ -46,10 +49,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1973]: https://github.com/amethyst/amethyst/pull/1973
 [#1974]: https://github.com/amethyst/amethyst/pull/1974
 [#1978]: https://github.com/amethyst/amethyst/pull/1978
+[#1987]: https://github.com/amethyst/amethyst/issue/1987
 [#1983]: https://github.com/amethyst/amethyst/pull/1983
+[#1991]: https://github.com/amethyst/amethyst/pull/1991
 [#1984]: https://github.com/amethyst/amethyst/pull/1984
 [#1986]: https://github.com/amethyst/amethyst/pull/1986
 [#1989]: https://github.com/amethyst/amethyst/pull/1989
+
 
 ## [0.13.3] - 2019-10-4
 
@@ -72,6 +78,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 - `FlatEncoder` added to amethyst_tiles for flat linear encoding which is optimized for space. ([#1950])
+- `SystemDesc` derive no longer requires any imports. ([#1995])
 
 ### Changed
 
@@ -88,6 +95,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1950]: https://github.com/amethyst/amethyst/pull/1950
 [#1952]: https://github.com/amethyst/amethyst/pull/1952
 [#1957]: https://github.com/amethyst/amethyst/pull/1957
+[#1995]: https://github.com/amethyst/amethyst/pull/1995
 
 ## [0.13.0] - 2019-09-25
 

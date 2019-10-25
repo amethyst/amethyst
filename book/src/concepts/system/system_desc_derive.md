@@ -11,27 +11,14 @@ The `SystemDesc` derive supports the following cases when generating a `SystemDe
 If your system initialization use case is not covered, please see the
 [Implementing the `SystemDesc` Trait] page.
 
-In each of the following examples, make sure you have the following imports:
-
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
-use amethyst::{
-    core::SystemDesc,
-    derive::SystemDesc,
-    ecs::{System, SystemData, World},
-};
-```
-
 ## Passing parameters to system constructor
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{System, SystemData, World},
+#     ecs::{System, SystemData},
 # };
 #
 #[derive(SystemDesc)]
@@ -60,9 +47,8 @@ impl SystemName {
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{System, SystemData, World},
+#     ecs::{System, SystemData},
 # };
 #
 # pub struct SystemName {
@@ -94,9 +80,9 @@ impl SystemNameDesc {
     }
 }
 
-impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
-    fn build(self, world: &mut World) -> SystemName {
-        <SystemName as System<'_>>::SystemData::setup(world);
+impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
+    fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
+        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
 
         SystemName::new(self.field_0, self.field_1)
     }
@@ -111,9 +97,8 @@ impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{System, SystemData, World},
+#     ecs::{System, SystemData},
 # };
 #
 #[derive(SystemDesc)]
@@ -143,9 +128,8 @@ impl SystemName {
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{System, SystemData, World},
+#     ecs::{System, SystemData},
 # };
 #
 # pub struct SystemName {
@@ -176,9 +160,9 @@ impl SystemNameDesc {
     }
 }
 
-impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
-    fn build(self, world: &mut World) -> SystemName {
-        <SystemName as System<'_>>::SystemData::setup(world);
+impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
+    fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
+        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
 
         SystemName::new(self.field_1)
     }
@@ -194,9 +178,8 @@ will call  `SystemName::default()`:
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{System, SystemData, World},
+#     ecs::{System, SystemData},
 # };
 #
 #[derive(Default, SystemDesc)]
@@ -219,9 +202,8 @@ pub struct SystemName {
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{System, SystemData, World},
+#     ecs::{System, SystemData},
 # };
 #
 # #[derive(Default)]
@@ -244,9 +226,9 @@ impl Default for SystemNameDesc {
     }
 }
 
-impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
-    fn build(self, world: &mut World) -> SystemName {
-        <SystemName as System<'_>>::SystemData::setup(world);
+impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
+    fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
+        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
 
         SystemName::default()
     }
@@ -261,9 +243,8 @@ impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{System, SystemData, World},
+#     ecs::{System, SystemData},
 #     shrev::{EventChannel, ReaderId},
 #     ui::UiEvent,
 # };
@@ -294,9 +275,8 @@ impl SystemName {
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{System, SystemData, World},
+#     ecs::{System, SystemData},
 #     shrev::{EventChannel, ReaderId},
 #     ui::UiEvent,
 # };
@@ -326,9 +306,9 @@ impl Default for SystemNameDesc {
     }
 }
 
-impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
-    fn build(self, world: &mut World) -> SystemName {
-        <SystemName as System<'_>>::SystemData::setup(world);
+impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
+    fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
+        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
 
         let reader_id = world
             .fetch_mut::<EventChannel<UiEvent>>()
@@ -347,9 +327,8 @@ impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{storage::ComponentEvent, System, SystemData, World, WriteStorage},
+#     ecs::{storage::ComponentEvent, System, SystemData, WriteStorage},
 #     shrev::{EventChannel, ReaderId},
 #     ui::UiResize,
 # };
@@ -380,9 +359,8 @@ impl SystemName {
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{storage::ComponentEvent, System, SystemData, World, WriteStorage},
+#     ecs::{storage::ComponentEvent, System, SystemData, WriteStorage},
 #     shrev::{EventChannel, ReaderId},
 #     ui::UiResize,
 # };
@@ -412,9 +390,9 @@ impl Default for SystemNameDesc {
     }
 }
 
-impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
-    fn build(self, world: &mut World) -> SystemName {
-        <SystemName as System<'_>>::SystemData::setup(world);
+impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
+    fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
+        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
 
         let resize_events_id = WriteStorage::<UiResize>::fetch(&world)
                             .register_reader();
@@ -436,9 +414,8 @@ such as a function call, you must surround that expression in quotes, e.g.
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{ReadExpect, System, SystemData, World},
+#     ecs::{ReadExpect, System, SystemData},
 # };
 #
 pub struct NonDefault;
@@ -460,9 +437,8 @@ impl<'a> System<'a> for SystemName {
 # extern crate amethyst;
 #
 # use amethyst::{
-#     core::SystemDesc,
 #     derive::SystemDesc,
-#     ecs::{ReadExpect, System, SystemData, World},
+#     ecs::{ReadExpect, System, SystemData},
 # };
 #
 # pub struct NonDefault;
@@ -485,9 +461,9 @@ impl Default for SystemNameDesc {
     }
 }
 
-impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
-    fn build(self, world: &mut World) -> SystemName {
-        <SystemName as System<'_>>::SystemData::setup(world);
+impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
+    fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
+        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
 
         world.insert(NonDefault);
 
