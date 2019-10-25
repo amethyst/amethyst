@@ -39,12 +39,12 @@ pub trait Map {
     /// Set the sprite sheet handle which the tile render pass should use for rendering this map.
     fn set_sprite_sheet(&mut self, sprite_sheet: Option<Handle<SpriteSheet>>);
 
-    /// Convert a tile coordinate `Point3<u32>` to an amethyst world-coordinate space coordinate `Point3<f32>`
+    /// Convert a tile coordinate `Point3<u32>` to an amethyst world-coordinate space coordinate `Vector3<f32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
     /// maps `origin` and `tile_dimensions` respectively.
     fn to_world(&self, coord: &Point3<u32>) -> Vector3<f32>;
 
-    /// Convert an amethyst world-coordinate space coordinate `Point3<f32>` to a tile coordinate `Point3<u32>`
+    /// Convert an amethyst world-coordinate space coordinate `Vector3<f32>` to a tile coordinate `Point3<u32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
     /// maps `origin` and `tile_dimensions` respectively.
     fn to_tile(&self, coord: &Vector3<f32>) -> Option<Point3<u32>>;

@@ -742,18 +742,18 @@ fn build_pipelines<B: Backend, T: Base3DPassDef>(
         .with_subpass(subpass)
         .with_framebuffer_size(framebuffer_width, framebuffer_height)
         .with_face_culling(pso::Face::BACK)
-        .with_depth_test(pso::DepthTest::On {
+        .with_depth_test(pso::DepthTest {
             fun: pso::Comparison::Less,
             write: !transparent,
         })
-        .with_blend_targets(vec![pso::ColorBlendDesc(
-            pso::ColorMask::ALL,
-            if transparent {
-                pso::BlendState::PREMULTIPLIED_ALPHA
+        .with_blend_targets(vec![pso::ColorBlendDesc {
+            mask: pso::ColorMask::ALL,
+            blend: if transparent {
+                Some(pso::BlendState::PREMULTIPLIED_ALPHA)
             } else {
-                pso::BlendState::Off
+                None
             },
-        )]);
+        }]);
 
     let pipelines = if skinning {
         let shader_vertex_skinned = unsafe { T::vertex_skinned_shader().module(factory).unwrap() };
