@@ -112,6 +112,7 @@ impl Ord for RelativeStage {
 
 #[derive(Default)]
 pub struct Dispatcher {
+    pub defrag_batch_limit: usize,
     pub(crate) thread_local_systems: Vec<Box<dyn legion::schedule::Runnable>>,
     pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
     pub(crate) stages: BTreeMap<RelativeStage, Vec<Box<dyn legion::schedule::Schedulable>>>,
@@ -132,6 +133,7 @@ impl Dispatcher {
         }
 
         Self {
+            defrag_batch_limit: self.defrag_batch_limit,
             thread_local_systems: self.thread_local_systems,
             thread_locals: self.thread_locals,
             stages: BTreeMap::default(),
@@ -150,6 +152,8 @@ impl Dispatcher {
             self.thread_locals
                 .iter_mut()
                 .for_each(|local| local.run(world));
+
+            world.defrag(Some(self.defrag_batch_limit));
         }
     }
 
@@ -183,12 +187,24 @@ impl Dispatcher {
     }
 }
 
-#[derive(Default)]
 pub struct DispatcherBuilder<'a> {
+    pub(crate) defrag_batch_limit: usize,
     pub(crate) systems: Vec<(RelativeStage, Box<dyn ConsumeDesc + 'a>)>,
     pub(crate) thread_local_systems: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) thread_locals: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) bundles: Vec<Box<dyn ConsumeDesc + 'a>>,
+}
+impl<'a> Default for DispatcherBuilder<'a> {
+    // We preallocate 128 for these, as its just a random round number but they are just fat-pointers so whatever
+    fn default() -> Self {
+        Self {
+            defrag_batch_limit: 1000,
+            systems: Vec::with_capacity(128),
+            thread_local_systems: Vec::with_capacity(128),
+            thread_locals: Vec::with_capacity(128),
+            bundles: Vec::with_capacity(128),
+        }
+    }
 }
 impl<'a> DispatcherBuilder<'a> {
     pub fn add_thread_local<T: FnOnce(&mut World) -> Box<dyn ThreadLocal> + 'a>(
@@ -288,6 +304,7 @@ impl<'a> DispatcherBuilder<'a> {
         }
 
         // TODO: We need to recursively iterate any newly added bundles
+        dispatcher.defrag_batch_limit = self.defrag_batch_limit;
         if !recursive_builder.is_empty() {
             dispatcher.merge(recursive_builder.build(world))
         } else {
