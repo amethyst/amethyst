@@ -169,6 +169,11 @@ impl LaminarSocketResource {
         Self { socket }
     }
 
+    /// Returns a reference to the socket if there is one configured.
+    pub fn get(&self) -> Option<&LaminarSocket> {
+        self.socket.as_ref()
+    }
+
     /// Returns a mutable reference to the socket if there is one configured.
     pub fn get_mut(&mut self) -> Option<&mut LaminarSocket> {
         self.socket.as_mut()

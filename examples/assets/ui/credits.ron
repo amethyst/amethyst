@@ -1,0 +1,32 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "background_credits",
+        anchor: Middle,
+        stretch: XY( x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
+        width: 20.,
+        height: 20.,
+    ),
+    background: SolidColor(0.03, 0.03, 0.03, 1.0),
+
+    children: [
+
+        Label(
+            transform: (
+                id: "credits_label",
+                anchor: Middle,
+                height: 480,
+                width: 720,
+            ),
+            text: (
+                text: "Credits:\n\nWritten in 2019 using Amethyst.\n\nMain Author: YOU!?!?",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 40,
+                color: (1.0, 0.65, 0., 1.0),
+                line_mode: Wrap,
+                align: Middle,
+            )
+        ),
+
+    ],
+)

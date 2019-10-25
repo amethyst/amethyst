@@ -369,7 +369,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         // ... bundles
-        .with(
+        .with_system_desc(
             DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],

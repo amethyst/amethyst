@@ -428,6 +428,10 @@ impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
 
 ## Inserting a resource into the `World`
 
+**Note:** If the resource you wish to insert is the result of an expression,
+such as a function call, you must surround that expression in quotes, e.g.
+`#[system_desc(insert("MyResource::default()"))]`.
+
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #

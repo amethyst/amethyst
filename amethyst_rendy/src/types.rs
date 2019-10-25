@@ -23,7 +23,7 @@ macro_rules! impl_backends {
 
         static_assertions::assert_cfg!(
             any($(feature = $feature),*),
-            concat!("You must specify at least one graphical backend feature: ", stringify!($($feature),* "See the wiki article https://github.com/amethyst/amethyst/wiki/GraphicalBackendError for more details."))
+            concat!("You must specify at least one graphical backend feature: ", stringify!($($feature),* "See the wiki article https://book.amethyst.rs/stable/appendices/c_feature_gates.html#graphics-features for more details."))
         );
 
         /// Backend wrapper.

@@ -21,7 +21,7 @@ travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 [features]
 default = ["animation", "audio", "locale", "network", "renderer"]
 
-vulkan = ["amethyst_rendy/vulkan"]
+vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
@@ -192,6 +192,11 @@ required-features = ["animation", "gltf"]
 [[example]]
 name = "ui"
 path = "examples/ui/main.rs"
+required-features = ["audio"]
+
+[[example]]
+name = "states_ui"
+path = "examples/states_ui/main.rs"
 required-features = ["audio"]
 
 [[example]]

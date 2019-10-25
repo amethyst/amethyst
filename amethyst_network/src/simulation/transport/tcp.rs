@@ -261,6 +261,11 @@ impl TcpNetworkResource {
         }
     }
 
+    /// Returns an immutable reference to the listener if there is one configured.
+    pub fn get(&self) -> Option<&TcpListener> {
+        self.listener.as_ref()
+    }
+
     /// Returns a mutable reference to the listener if there is one configured.
     pub fn get_mut(&mut self) -> Option<&mut TcpListener> {
         self.listener.as_mut()
