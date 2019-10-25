@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Tilemap rotation was incorrect and not transposed. Fixed and uses component rotation. ([#1974])
 - `Config` types no longer require a `Default` impl ([#1989])
+- Fixed Incorrect path for sprite_camera_follow example ([#2004])
 
 ### Security
 
@@ -55,6 +56,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1984]: https://github.com/amethyst/amethyst/pull/1984
 [#1986]: https://github.com/amethyst/amethyst/pull/1986
 [#1989]: https://github.com/amethyst/amethyst/pull/1989
+[#2005]: https://github.com/amethyst/amethyst/pull/2005
+[#2004]: https://github.com/amethyst/amethyst/pull/2004
 
 
 ## [0.13.3] - 2019-10-4
