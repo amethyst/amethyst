@@ -143,7 +143,7 @@ pub fn convert_legion_to_specs(set: LegionTransformSet) -> Transform {
     }
 
     if let Some(rotation) = set.rotation {
-        transform.set_rotation(rotation);
+        transform.set_rotation(*rotation);
     }
 
     if let Some(scale) = set.scale {
@@ -176,8 +176,8 @@ pub fn convert_specs_to_legion(specs: &Transform) -> Result<LegionTransformSet, 
 
     let rotation = {
         let q = *specs.rotation();
-        if q != ltc::Rotation::identity() {
-            Some(q)
+        if q != *ltc::Rotation::identity() {
+            Some(q.into())
         } else {
             None
         }
