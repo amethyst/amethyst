@@ -112,7 +112,7 @@ impl Ord for RelativeStage {
 
 #[derive(Default)]
 pub struct Dispatcher {
-    pub defrag_batch_limit: usize,
+    pub defrag_budget: Option<usize>,
     pub(crate) thread_local_systems: Vec<Box<dyn legion::schedule::Runnable>>,
     pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
     pub(crate) stages: BTreeMap<RelativeStage, Vec<Box<dyn legion::schedule::Schedulable>>>,
@@ -133,7 +133,7 @@ impl Dispatcher {
         }
 
         Self {
-            defrag_batch_limit: self.defrag_batch_limit,
+            defrag_budget: self.defrag_budget,
             thread_local_systems: self.thread_local_systems,
             thread_locals: self.thread_locals,
             stages: BTreeMap::default(),
@@ -153,7 +153,7 @@ impl Dispatcher {
                 .iter_mut()
                 .for_each(|local| local.run(world));
 
-            world.defrag(Some(self.defrag_batch_limit));
+            world.defrag(self.defrag_budget);
         }
     }
 
@@ -188,7 +188,7 @@ impl Dispatcher {
 }
 
 pub struct DispatcherBuilder<'a> {
-    pub(crate) defrag_batch_limit: usize,
+    pub(crate) defrag_budget: Option<usize>,
     pub(crate) systems: Vec<(RelativeStage, Box<dyn ConsumeDesc + 'a>)>,
     pub(crate) thread_local_systems: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) thread_locals: Vec<Box<dyn ConsumeDesc + 'a>>,
@@ -198,7 +198,7 @@ impl<'a> Default for DispatcherBuilder<'a> {
     // We preallocate 128 for these, as its just a random round number but they are just fat-pointers so whatever
     fn default() -> Self {
         Self {
-            defrag_batch_limit: 1000,
+            defrag_budget: None,
             systems: Vec::with_capacity(128),
             thread_local_systems: Vec::with_capacity(128),
             thread_locals: Vec::with_capacity(128),
@@ -273,6 +273,12 @@ impl<'a> DispatcherBuilder<'a> {
         self
     }
 
+    pub fn with_defrag_budget(mut self, budget: Option<usize>) -> Self {
+        self.defrag_budget = budget;
+
+        self
+    }
+
     pub fn is_empty(&self) -> bool {
         self.systems.is_empty() && self.bundles.is_empty() && self.thread_local_systems.is_empty()
     }
@@ -304,7 +310,7 @@ impl<'a> DispatcherBuilder<'a> {
         }
 
         // TODO: We need to recursively iterate any newly added bundles
-        dispatcher.defrag_batch_limit = self.defrag_batch_limit;
+        dispatcher.defrag_budget = self.defrag_budget;
         if !recursive_builder.is_empty() {
             dispatcher.merge(recursive_builder.build(world))
         } else {
