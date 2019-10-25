@@ -33,7 +33,7 @@ derivative = "1.0"
 bimap = { version = "0.4.0", optional = true }
 shrinkwraprs = "0.2"
 smallvec = "0.6"
-purple = { path = "../../purple" }
+purple = { git = "https://github.com/jaynus/purple.git" }
 
 thread_profiler = { version = "0.3", optional = true }
 
