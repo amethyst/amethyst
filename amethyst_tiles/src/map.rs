@@ -366,6 +366,7 @@ mod tests {
             pub fn get(&self) -> &TileMap<TestTile, E> {
                 unsafe { &*self.ptr }
             }
+            #[allow(clippy::mut_from_ref)]
             pub fn get_mut(&self) -> &mut TileMap<TestTile, E> {
                 unsafe { &mut *self.ptr }
             }
