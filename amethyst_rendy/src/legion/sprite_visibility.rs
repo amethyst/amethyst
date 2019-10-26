@@ -3,7 +3,7 @@ use crate::{
     camera::Camera, legion::camera::ActiveCamera, sprite::SpriteRender, transparent::Transparent,
 };
 use amethyst_core::{
-    legion::*,
+    legion::{transform::components::LocalToWorld, *},
     math::{Point3, Vector3},
     Hidden, HiddenPropagate, Transform,
 };
@@ -41,13 +41,13 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
     SystemBuilder::<()>::new("SpriteVisibilitySortingSystem")
         .read_resource::<ActiveCamera>()
         .write_resource::<SpriteVisibility>()
-        .with_query(<(Read<Camera>, Read<Transform>)>::query())
-        .with_query(<(Read<Camera>, Read<Transform>)>::query())
+        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
+        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
         .with_query(
-            <(Read<Transform>, Read<SpriteRender>, Read<Transparent>)>::query()
+            <(Read<LocalToWorld>, Read<SpriteRender>, Read<Transparent>)>::query()
                 .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
         )
-        .with_query(<(Read<Transform>, Read<SpriteRender>)>::query().filter(
+        .with_query(<(Read<LocalToWorld>, Read<SpriteRender>)>::query().filter(
             !component::<Transparent>() & !component::<Hidden>() & !component::<HiddenPropagate>(),
         ))
         .build(
@@ -79,13 +79,13 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
                     },
                 );
 
-                let camera_backward = camera_transform.global_matrix().column(2).xyz();
-                let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
+                let camera_backward = camera_transform.column(2).xyz();
+                let camera_centroid = camera_transform.transform_point(&origin);
 
                 transparent_centroids.extend(
                     transparent_query
                         .iter_entities()
-                        .map(|(e, (t, _, _))| (e, t.global_matrix().transform_point(&origin)))
+                        .map(|(e, (t, _, _))| (e, t.transform_point(&origin)))
                         // filter entities behind the camera
                         .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
                         .map(|(entity, centroid)| Internals {
@@ -109,7 +109,7 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
                 visibility.visible_unordered.extend(
                     non_transparent_query
                         .iter_entities()
-                        .map(|(e, (t, _))| (e, t.global_matrix().transform_point(&origin)))
+                        .map(|(e, (t, _))| (e, t.transform_point(&origin)))
                         // filter entities behind the camera
                         .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
                         .map(|(entity, _)| entity),

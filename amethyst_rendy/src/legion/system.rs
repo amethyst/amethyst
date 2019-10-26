@@ -13,19 +13,15 @@ use crate::{
 };
 use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
 use amethyst_core::{
-    components::Transform,
     legion::{
         self,
         command::CommandBuffer,
         dispatcher::{ThreadLocal, ThreadLocalObject},
-        schedule::Schedulable,
-        storage::ComponentTypeId,
-        LegionState, Resources, SystemBuilder, World,
+        Resources, SystemBuilder, World,
     },
     timing::Time,
-    Hidden, HiddenPropagate,
 };
-use amethyst_error::Error;
+
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
@@ -33,7 +29,6 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-use std::{any::TypeId, marker::PhantomData, sync::Arc};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -199,7 +194,6 @@ pub fn build_texture_processor<B: Backend>(
                 #[cfg(feature = "profiler")]
                 profile_scope!("texture_processor");
 
-                use std::ops::Deref;
                 texture_storage.process(
                     |b| {
                         log::trace!("Processing Texture: {:?}", b);

@@ -157,6 +157,10 @@ impl LegionSyncBuilder for Syncer {
         state: &mut LegionState,
         dispatcher: &mut DispatcherBuilder,
     ) {
+        use specs::WorldExt;
+
+        specs_world.register::<sync::LegionTag>();
+
         for syncer in self.syncers.drain(..) {
             state.syncers.push(syncer);
         }

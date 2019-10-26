@@ -1,8 +1,10 @@
 use crate::{BindingTypes, InputEvent, InputHandler};
 use amethyst_core::{ecs as specs, legion::*, shrev::EventChannel};
+use derivative::Derivative;
 use std::marker::PhantomData;
 
-#[derive(Default)]
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
 pub struct Syncer<T>(PhantomData<T>);
 impl<T: BindingTypes> LegionSyncBuilder for Syncer<T> {
     fn prepare(

@@ -1,12 +1,12 @@
 //! Transparency, visibility sorting and camera centroid culling for 3D Meshes.
 use crate::{
     camera::Camera, legion::camera::ActiveCamera, transparent::Transparent,
-    visibility::BoundingSphere, Mesh,
+    visibility::BoundingSphere,
 };
 use amethyst_core::{
-    legion::*,
+    legion::{transform::components::*, *},
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
-    Hidden, HiddenPropagate, Transform,
+    Hidden, HiddenPropagate,
 };
 
 use indexmap::IndexSet;
@@ -52,10 +52,10 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
         .write_resource::<Visibility>()
         .read_component::<BoundingSphere>()
         .read_component::<Transparent>()
-        .with_query(<(Read<Camera>, Read<Transform>)>::query())
-        .with_query(<(Read<Camera>, Read<Transform>)>::query())
+        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
+        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
         .with_query(
-            <(Read<Transform>)>::query()
+            <(Read<LocalToWorld>)>::query()
                 .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
         )
         .build_disposable(
@@ -92,10 +92,10 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
                     },
                 );
 
-                let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
+                let camera_centroid = camera_transform.transform_point(&origin);
                 let frustum = Frustum::new(
                     convert::<_, Matrix4<f32>>(*camera.as_matrix())
-                        * camera_transform.global_matrix().try_inverse().unwrap(),
+                        * camera_transform.try_inverse().unwrap(),
                 );
 
                 state.centroids.extend(
@@ -105,12 +105,13 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
                             let sphere = world.get_component::<BoundingSphere>(entity);
 
                             let pos = sphere.clone().map_or(origin, |s| s.center);
-                            let matrix = transform.global_matrix();
                             (
                                 entity,
-                                matrix.transform_point(&pos),
+                                transform.transform_point(&pos),
                                 sphere.map_or(1.0, |s| s.radius)
-                                    * matrix[(0, 0)].max(matrix[(1, 1)]).max(matrix[(2, 2)]),
+                                    * transform[(0, 0)]
+                                        .max(transform[(1, 1)])
+                                        .max(transform[(2, 2)]),
                             )
                         })
                         .filter(|(_, centroid, radius)| frustum.check_sphere(centroid, *radius))
