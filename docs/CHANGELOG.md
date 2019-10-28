@@ -30,7 +30,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
 - `Config::load` now returns an error or failure rather than silently falling back to the default config. Same is true for the `from_config_file` methods on `RenderToWindow`, `WindowBundle`, and `WindowSystem` ([#1989])
 - Adds `get` methods to the underlying net::transport resources ([#2005])
-- Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#0000])
+- Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
   Migration Note: Rons need to wrap their content in either Grid() or List()
 
 ### Deprecated
@@ -60,6 +60,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1989]: https://github.com/amethyst/amethyst/pull/1989
 [#2005]: https://github.com/amethyst/amethyst/pull/2005
 [#2004]: https://github.com/amethyst/amethyst/pull/2004
+[#2023]: https://github.com/amethyst/amethyst/pull/2023
 
 
 ## [0.13.3] - 2019-10-4
