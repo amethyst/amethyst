@@ -30,6 +30,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
 - `Config::load` now returns an error or failure rather than silently falling back to the default config. Same is true for the `from_config_file` methods on `RenderToWindow`, `WindowBundle`, and `WindowSystem` ([#1989])
 - Adds `get` methods to the underlying net::transport resources ([#2005])
+- Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#0000])
+  Migration Note: Rons need to wrap their content in either Grid() or List()
 
 ### Deprecated
 

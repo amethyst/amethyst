@@ -478,19 +478,21 @@ impl Format<SpriteSheet> for SpriteSheetFormat {
     }
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<SpriteSheet, Error> {
-        let sprite_list: SpriteList =
+        let sprites: Sprites =
             from_ron_bytes(&bytes).map_err(|_| error::Error::LoadSpritesheetError)?;
 
         Ok(SpriteSheet {
             texture: self.0.clone(),
-            sprites: sprite_list.build_sprites(),
+            sprites: sprites.build_sprites(),
         })
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::{Sprite, TextureCoordinates};
+    use super::{Sprite, SpriteSheetFormat, TextureCoordinates};
+    use amethyst_assets::Handle;
+    use crate::types::Texture;
 
     #[test]
     fn texture_coordinates_from_tuple_maps_fields_correctly() {
@@ -574,5 +576,148 @@ mod test {
                 image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets, false, false
             )
         );
+    }
+    fn create_texture() -> Handle<Texture> {
+        use amethyst_assets::{Loader, AssetStorage};
+        use std::sync::Arc;
+        use rayon::ThreadPoolBuilder;
+        use crate::formats::texture::TextureGenerator;
+
+        let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
+        let loader = Loader::new("/examples/assets", pool);
+        let generator = TextureGenerator::Srgba(1.0, 1., 1., 1.);
+
+        let storage: AssetStorage<Texture> = AssetStorage::default();
+
+        loader.load_from_data(generator.data(), (), &storage)
+    }
+    #[test]
+    fn sprite_sheet_loader_list() {
+        use amethyst_assets::Format;
+
+        let sprite_sheet_ron: String = "
+#![enable(implicit_some)]
+List((
+    texture_width: 48,
+    texture_height: 16,
+    sprites: [
+        (
+            x: 0,
+            y: 0,
+            width: 16,
+            height: 16,
+        ),
+        (
+            x: 16,
+            y: 0,
+            width: 32,
+            height: 16,
+        ),
+    ],
+))".to_string();
+
+        let sprite_list_reference : Vec<Sprite> = vec![
+            Sprite {
+                width: 16.,
+                height: 16.,
+                offsets: [0., 0.],
+                tex_coords: TextureCoordinates {
+                    left: 0.,
+                    right: 0.33333334,
+                    bottom: 1.0,
+                    top: 0.0,
+                },
+            },
+            Sprite {
+                width: 32.,
+                height: 16.,
+                offsets: [0., 0.],
+                tex_coords: TextureCoordinates {
+                    left: 0.33333334,
+                    right: 1.0,
+                    bottom: 1.0,
+                    top: 0.0,
+                },
+            },
+        ];
+        
+        let format = SpriteSheetFormat(create_texture());
+        let sprite_list_loaded = format.import_simple(sprite_sheet_ron.into_bytes());
+        let sprite_list = sprite_list_loaded.unwrap().sprites;
+        assert_eq!(sprite_list_reference, sprite_list);
+    }
+
+    #[test]
+    fn sprite_sheet_loader_grid() {
+        use amethyst_assets::Format;
+
+        let sprite_sheet_ron_rows: String = "
+#![enable(implicit_some)]
+Grid((
+    texture_width: 48,
+    texture_height: 16,
+    columns: 2,
+    rows: 1
+))".to_string();
+
+        let sprite_sheet_ron_cells: String = "
+#![enable(implicit_some)]
+Grid((
+    texture_width: 48,
+    texture_height: 16,
+    columns: 2,
+    sprite_count: 2
+))".to_string();
+
+        let sprite_sheet_ron_cell_size: String = "
+#![enable(implicit_some)]
+Grid((
+    texture_width: 48,
+    texture_height: 16,
+    columns: 2,
+    cell_size: (24, 16)
+))".to_string();
+
+        let sprite_list_reference : Vec<Sprite> = vec![
+            Sprite {
+                width: 24.,
+                height: 16.,
+                offsets: [0., 0.],
+                tex_coords: TextureCoordinates {
+                    left: 0.,
+                    right: 0.5,
+                    bottom: 1.0,
+                    top: 0.0,
+                },
+            },
+            Sprite {
+                width: 24.,
+                height: 16.,
+                offsets: [0., 0.],
+                tex_coords: TextureCoordinates {
+                    left: 0.5,
+                    right: 1.0,
+                    bottom: 1.0,
+                    top: 0.0,
+                },
+            },
+        ];
+        let texture = create_texture();
+        let format = SpriteSheetFormat(texture);
+        {
+            let sprite_list_loaded = format.import_simple(sprite_sheet_ron_rows.into_bytes());
+            let sprite_list = sprite_list_loaded.expect("failed to parse sprite_sheet_ron_rows").sprites;
+            assert_eq!(sprite_list_reference, sprite_list, "we are testing row based grids");
+        }
+        {
+            let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cells.into_bytes());
+            let sprite_list = sprite_list_loaded.expect("failed to parse sprite_sheet_ron_cells").sprites;
+            assert_eq!(sprite_list_reference, sprite_list, "we are testing number of cell based grids");
+        }
+        {
+            let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cell_size.into_bytes());
+            let sprite_list = sprite_list_loaded.expect("failed to parse sprite_sheet_ron_cell_size").sprites;
+            assert_eq!(sprite_list_reference, sprite_list, "we are testing cell size based grids");
+        }
     }
 }
