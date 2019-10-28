@@ -491,8 +491,8 @@ impl Format<SpriteSheet> for SpriteSheetFormat {
 #[cfg(test)]
 mod test {
     use super::{Sprite, SpriteSheetFormat, TextureCoordinates};
-    use amethyst_assets::Handle;
     use crate::types::Texture;
+    use amethyst_assets::Handle;
 
     #[test]
     fn texture_coordinates_from_tuple_maps_fields_correctly() {
@@ -578,10 +578,10 @@ mod test {
         );
     }
     fn create_texture() -> Handle<Texture> {
-        use amethyst_assets::{Loader, AssetStorage};
-        use std::sync::Arc;
-        use rayon::ThreadPoolBuilder;
         use crate::formats::texture::TextureGenerator;
+        use amethyst_assets::{AssetStorage, Loader};
+        use rayon::ThreadPoolBuilder;
+        use std::sync::Arc;
 
         let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
         let loader = Loader::new("/examples/assets", pool);
@@ -614,9 +614,10 @@ List((
             height: 16,
         ),
     ],
-))".to_string();
+))"
+        .to_string();
 
-        let sprite_list_reference : Vec<Sprite> = vec![
+        let sprite_list_reference: Vec<Sprite> = vec![
             Sprite {
                 width: 16.,
                 height: 16.,
@@ -640,7 +641,7 @@ List((
                 },
             },
         ];
-        
+
         let format = SpriteSheetFormat(create_texture());
         let sprite_list_loaded = format.import_simple(sprite_sheet_ron.into_bytes());
         let sprite_list = sprite_list_loaded.unwrap().sprites;
@@ -658,7 +659,8 @@ Grid((
     texture_height: 16,
     columns: 2,
     rows: 1
-))".to_string();
+))"
+        .to_string();
 
         let sprite_sheet_ron_cells: String = "
 #![enable(implicit_some)]
@@ -667,7 +669,8 @@ Grid((
     texture_height: 16,
     columns: 2,
     sprite_count: 2
-))".to_string();
+))"
+        .to_string();
 
         let sprite_sheet_ron_cell_size: String = "
 #![enable(implicit_some)]
@@ -676,9 +679,10 @@ Grid((
     texture_height: 16,
     columns: 2,
     cell_size: (24, 16)
-))".to_string();
+))"
+        .to_string();
 
-        let sprite_list_reference : Vec<Sprite> = vec![
+        let sprite_list_reference: Vec<Sprite> = vec![
             Sprite {
                 width: 24.,
                 height: 16.,
@@ -706,18 +710,33 @@ Grid((
         let format = SpriteSheetFormat(texture);
         {
             let sprite_list_loaded = format.import_simple(sprite_sheet_ron_rows.into_bytes());
-            let sprite_list = sprite_list_loaded.expect("failed to parse sprite_sheet_ron_rows").sprites;
-            assert_eq!(sprite_list_reference, sprite_list, "we are testing row based grids");
+            let sprite_list = sprite_list_loaded
+                .expect("failed to parse sprite_sheet_ron_rows")
+                .sprites;
+            assert_eq!(
+                sprite_list_reference, sprite_list,
+                "we are testing row based grids"
+            );
         }
         {
             let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cells.into_bytes());
-            let sprite_list = sprite_list_loaded.expect("failed to parse sprite_sheet_ron_cells").sprites;
-            assert_eq!(sprite_list_reference, sprite_list, "we are testing number of cell based grids");
+            let sprite_list = sprite_list_loaded
+                .expect("failed to parse sprite_sheet_ron_cells")
+                .sprites;
+            assert_eq!(
+                sprite_list_reference, sprite_list,
+                "we are testing number of cell based grids"
+            );
         }
         {
             let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cell_size.into_bytes());
-            let sprite_list = sprite_list_loaded.expect("failed to parse sprite_sheet_ron_cell_size").sprites;
-            assert_eq!(sprite_list_reference, sprite_list, "we are testing cell size based grids");
+            let sprite_list = sprite_list_loaded
+                .expect("failed to parse sprite_sheet_ron_cell_size")
+                .sprites;
+            assert_eq!(
+                sprite_list_reference, sprite_list,
+                "we are testing cell size based grids"
+            );
         }
     }
 }
