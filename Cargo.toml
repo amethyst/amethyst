@@ -148,7 +148,7 @@ ron = "0.5"
 specs-derive = "0.4"
 
 [build-dependencies]
-dirs = "1.0.5"
+dirs = "2.0.2"
 vergen = "3.0"
 
 [[example]]
