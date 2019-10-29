@@ -39,7 +39,7 @@ approx = "0.3.2"
 [dev-dependencies]
 rayon = "1.1.0"
 more-asserts = "0.2.1"
-criterion = "0.2.11"
+criterion = "0.3.0"
 winit = "0.19"
 approx = "0.3"
 
