@@ -102,8 +102,23 @@ experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 
 [workspace]
 members = [
-  "amethyst_test",
+  "amethyst_animation",
+  "amethyst_assets",
+  "amethyst_audio",
+  "amethyst_config",
+  "amethyst_core",
+  "amethyst_error",
+  "amethyst_controls",
+  "amethyst_derive",
+  "amethyst_gltf",
+  "amethyst_network",
+  "amethyst_locale",
   "amethyst_rendy",
+  "amethyst_input",
+  "amethyst_ui",
+  "amethyst_utils",
+  "amethyst_test",
+  "amethyst_tiles",
   "amethyst_window",
 ]
 
