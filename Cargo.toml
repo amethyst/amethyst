@@ -142,7 +142,7 @@ glsl-layout = "0.3"
 
 [dev-dependencies]
 derive-new = "0.5"
-env_logger = "0.6.1"
+env_logger = "0.7.1"
 genmesh = "0.6"
 ron = "0.5"
 specs-derive = "0.4"
