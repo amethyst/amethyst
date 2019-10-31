@@ -5,10 +5,8 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{Format, experimental::*};
-use amethyst_core::ecs::{
-    prelude::{Dispatcher, DispatcherBuilder, System, World, Write, WorldExt},
-};
+use amethyst_assets::{experimental::*, Format};
+use amethyst_core::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt, Write};
 use amethyst_error::{format_err, Error, ResultExt};
 use type_uuid::*;
 
@@ -48,7 +46,7 @@ impl Format<VertexData> for Ron {
 }
 // Associates the .ron file extension with the Ron Format implementation
 // The AssetDaemon will automatically trigger Ron import when a file is new/changed
-amethyst_assets::register_importer!(".ron", Ron);
+amethyst_assets::register_importer!(".vertex", Ron);
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,
@@ -64,7 +62,9 @@ impl App {
 
         use amethyst_core::bundle::SystemBundle;
         let bundle = LoaderBundle;
-        bundle.build(&mut world, &mut disp_builder).expect("Failed to build LoaderBundle");
+        bundle
+            .build(&mut world, &mut disp_builder)
+            .expect("Failed to build LoaderBundle");
 
         App {
             dispatcher: disp_builder.build(),
@@ -101,7 +101,11 @@ impl<'a> System<'a> for ProcessingSystem {
 
     fn run(&mut self, (mut processing_queue, mut storage): Self::SystemData) {
         processing_queue.process(&mut *storage, |vertex_data| {
-            Ok(ProcessingState::Loaded(MeshAsset { buffer: vertex_data.positions, handle: vertex_data.handle, vec_handle_test: vertex_data.vec_handle_test }))
+            Ok(ProcessingState::Loaded(MeshAsset {
+                buffer: vertex_data.positions,
+                handle: vertex_data.handle,
+                vec_handle_test: vertex_data.vec_handle_test,
+            }))
         });
     }
 }
@@ -118,15 +122,10 @@ impl State {
         match self {
             State::Start => {
                 let loader = world.read_resource::<DefaultLoader>();
-                Some(State::Loading(
-                    loader.load_asset_generic(
-                        // TODO: implement a proc macro to parse asset uuids at compile time
-                        // TODO: implement a generator for asset uuid constants based on asset daemon metadata
-                        *uuid::Uuid::parse_str("39c7043a-dd7e-4654-9b22-e45d5c6b87cc")
-                            .unwrap()
-                            .as_bytes(),
-                    ),
-                ))
+                Some(State::Loading(loader.load_asset_generic(
+                    // TODO: implement a generator for asset uuid constants based on asset daemon metadata
+                    asset_uuid!("563a7b4a-0703-4551-b994-ea9e1d8c0d8a"),
+                )))
             }
             State::Loading(handle) => {
                 // Check the load status - this could be a loading screen
@@ -142,7 +141,10 @@ impl State {
                 let storage = world.read_resource::<AssetStorage<MeshAsset>>();
                 let asset_with_version = handle.asset_with_version(&storage).unwrap();
                 println!("Loaded asset {:?}", asset_with_version);
-                println!("Loaded dependency {:?}", asset_with_version.0.handle.asset_with_version(&storage));
+                println!(
+                    "Loaded dependency {:?}",
+                    asset_with_version.0.handle.asset_with_version(&storage)
+                );
                 println!("Asset is loaded and the game can begin!");
                 println!("Game ending, sorry");
                 None
@@ -155,6 +157,13 @@ fn main() {
     let examples_dir = PathBuf::from(format!("{}/examples", env!("CARGO_MANIFEST_DIR")));
     let assets_dir = examples_dir.join("assets");
     atelier_daemon::init_logging().expect("Failed to initialize logging");
+    log::debug!(
+        "registered importers for {}",
+        atelier_importer::get_source_importers()
+            .map(|(ext, _)| ext)
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 
     // launch an asset daemon in a separate thread
     std::thread::spawn(move || {
@@ -164,6 +173,7 @@ fn main() {
             .with_db_path(examples_dir.join(".asset_db"))
             .run();
     });
+    std::thread::sleep_ms(5000);
 
     let mut app = App::new(State::Start);
     app.run();

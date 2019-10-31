@@ -19,7 +19,7 @@ use std::{
 };
 
 pub(crate) use atelier_loader::LoadHandle;
-pub use atelier_loader::{AssetUuid, LoadStatus, TypeUuid};
+pub use atelier_loader::{AssetRef, AssetUuid, LoadStatus, TypeUuid};
 
 /// Keeps track of whether a handle ref is a strong, weak or "internal" ref
 #[derive(Debug)]
@@ -71,7 +71,7 @@ impl Clone for HandleRef {
                 Internal(sender) | Strong(sender) => {
                     let _ = sender.send(RefOp::Increase(self.id));
                     Strong(sender.clone())
-                },
+                }
                 Weak(sender) => Weak(sender.clone()),
                 None => panic!("unexpected ref type in clone()"),
             },
@@ -274,9 +274,9 @@ impl<'a> Drop for SerdeContext<'a> {
 /// even if the LoadHandles produced are invalid. This is useful when a loader is not
 /// present, such as when processing in the atelier-assets AssetDaemon.
 struct DummySerdeContext {
-    uuid_to_load: RefCell<HashMap<AssetUuid, LoadHandle>>,
-    load_to_uuid: RefCell<HashMap<LoadHandle, AssetUuid>>,
-    current_serde_dependencies: RefCell<HashSet<AssetUuid>>,
+    uuid_to_load: RefCell<HashMap<AssetRef, LoadHandle>>,
+    load_to_uuid: RefCell<HashMap<LoadHandle, AssetRef>>,
+    current_serde_dependencies: RefCell<HashSet<AssetRef>>,
     current_serde_asset: RefCell<Option<AssetUuid>>,
     ref_sender: Arc<Sender<RefOp>>,
     handle_gen: RefCell<u64>,
@@ -297,29 +297,35 @@ impl DummySerdeContext {
 }
 
 impl LoaderInfoProvider for DummySerdeContext {
-    fn get_load_handle(&self, id: AssetUuid) -> Option<LoadHandle> {
+    fn get_load_handle(&self, asset_ref: &AssetRef) -> Option<LoadHandle> {
         let mut uuid_to_load = self.uuid_to_load.borrow_mut();
         let mut load_to_uuid = self.load_to_uuid.borrow_mut();
-        Some(*uuid_to_load.entry(id.clone()).or_insert_with(|| {
+        Some(*uuid_to_load.entry(asset_ref.clone()).or_insert_with(|| {
             let mut handle_gen = self.handle_gen.borrow_mut();
             let new_id = *handle_gen + 1;
             *handle_gen += 1;
             let handle = LoadHandle(new_id);
-            load_to_uuid.insert(handle, id.clone());
+            load_to_uuid.insert(handle, asset_ref.clone());
             handle
         }))
     }
     fn get_asset_id(&self, load: LoadHandle) -> Option<AssetUuid> {
-        let maybe_asset = self.load_to_uuid.borrow().get(&load).map(|l| *l);
-        if let Some(asset_id) = maybe_asset {
+        let maybe_asset = self.load_to_uuid.borrow().get(&load).map(|r| r.clone());
+        if let Some(asset_ref) = maybe_asset.as_ref() {
             if let Some(current_serde_id) = &*self.current_serde_asset.borrow() {
-                if *current_serde_id != asset_id && asset_id != AssetUuid::default() {
+                if AssetRef::Uuid(*current_serde_id) != *asset_ref
+                    && *asset_ref != AssetRef::Uuid(AssetUuid::default())
+                {
                     let mut dependencies = self.current_serde_dependencies.borrow_mut();
-                    dependencies.insert(asset_id);
+                    dependencies.insert(asset_ref.clone());
                 }
             }
         }
-        maybe_asset
+        if let Some(AssetRef::Uuid(uuid)) = maybe_asset {
+            Some(uuid)
+        } else {
+            None
+        }
     }
 }
 struct DummySerdeContextHandle<'a> {
@@ -330,6 +336,29 @@ impl<'a> atelier_importer::ImporterContextHandle for DummySerdeContextHandle<'a>
     fn exit(&mut self) {
         SerdeContext::exit(&mut self.ctx)
     }
+    fn enter(&mut self) {
+        self.ctx = unsafe {
+            let dummy_ref: &dyn LoaderInfoProvider = &*self.dummy;
+            SerdeContext::enter(
+                std::mem::transmute::<&dyn LoaderInfoProvider, &'static dyn LoaderInfoProvider>(
+                    dummy_ref,
+                ),
+                self.dummy.ref_sender.clone(),
+            )
+        };
+    }
+    fn resolve_ref(&mut self, asset_ref: &AssetRef, asset: AssetUuid) {
+        let new_ref = AssetRef::Uuid(asset);
+        let mut uuid_to_load = self.dummy.uuid_to_load.borrow_mut();
+        if let Some(handle) = uuid_to_load.get(asset_ref) {
+            let handle = *handle;
+            self.dummy
+                .load_to_uuid
+                .borrow_mut()
+                .insert(handle, new_ref.clone());
+            uuid_to_load.insert(new_ref, handle);
+        }
+    }
     /// Begin gathering dependencies for an asset
     fn begin_serialize_asset(&mut self, asset: AssetUuid) {
         let mut current = self.dummy.current_serde_asset.borrow_mut();
@@ -339,7 +368,7 @@ impl<'a> atelier_importer::ImporterContextHandle for DummySerdeContextHandle<'a>
         *current = Some(asset);
     }
     /// Finish gathering dependencies for an asset
-    fn end_serialize_asset(&mut self, _asset: AssetUuid) -> HashSet<AssetUuid> {
+    fn end_serialize_asset(&mut self, _asset: AssetUuid) -> HashSet<AssetRef> {
         let mut current = self.dummy.current_serde_asset.borrow_mut();
         if let None = &*current {
             panic!("end_serialize_asset when current_serde_asset is not set");
@@ -375,8 +404,8 @@ where
         let loader = loader.expect("expected loader when serializing handle");
         use ser::SerializeSeq;
         let uuid: AssetUuid = loader.get_asset_id(load).unwrap_or(Default::default());
-        let mut seq = serializer.serialize_seq(Some(uuid.len()))?;
-        for element in &uuid {
+        let mut seq = serializer.serialize_seq(Some(uuid.0.len()))?;
+        for element in &uuid.0 {
             seq.serialize_element(element)?;
         }
         seq.end()
@@ -399,19 +428,20 @@ impl Serialize for GenericHandle {
     }
 }
 
-fn get_handle_ref(uuid: AssetUuid) -> (LoadHandle, Arc<Sender<RefOp>>) {
+fn get_handle_ref(asset_ref: AssetRef) -> (LoadHandle, Arc<Sender<RefOp>>) {
     SerdeContext::with_active(|loader, sender| {
         let sender = sender
             .expect("no Sender<RefOp> set when deserializing handle")
             .clone();
-        let _ = sender.send(RefOp::IncreaseUuid(uuid));
-        let handle = if uuid == AssetUuid::default() {
+        let handle = if asset_ref == AssetRef::Uuid(AssetUuid::default()) {
             LoadHandle(0)
         } else {
             loader
                 .expect("no loader set in TLS when deserializing handle")
-                .get_load_handle(uuid).expect("Handle for AssetUuid was not present when deserializing a Handle. This indicates missing dependency metadata")
+                .get_load_handle(&asset_ref)
+                .unwrap_or_else(|| panic!("Handle for AssetUuid {:?} was not present when deserializing a Handle. This indicates missing dependency metadata, and can be caused by dependency cycles.", asset_ref))
         };
+        let _ = sender.send(RefOp::Increase(handle));
         (handle, sender)
     })
 }
@@ -421,8 +451,12 @@ impl<'de, T> Deserialize<'de> for Handle<T> {
     where
         D: de::Deserializer<'de>,
     {
-        let uuid = deserializer.deserialize_seq(AssetUuidVisitor)?;
-        let (handle, sender) = get_handle_ref(uuid);
+        let asset_ref = if deserializer.is_human_readable() {
+            deserializer.deserialize_any(AssetRefVisitor)?
+        } else {
+            deserializer.deserialize_seq(AssetRefVisitor)?
+        };
+        let (handle, sender) = get_handle_ref(asset_ref);
         Ok(Handle::new_internal(sender, handle))
     }
 }
@@ -432,16 +466,20 @@ impl<'de> Deserialize<'de> for GenericHandle {
     where
         D: de::Deserializer<'de>,
     {
-        let uuid = deserializer.deserialize_seq(AssetUuidVisitor)?;
-        let (handle, sender) = get_handle_ref(uuid);
+        let asset_ref = if deserializer.is_human_readable() {
+            deserializer.deserialize_any(AssetRefVisitor)?
+        } else {
+            deserializer.deserialize_seq(AssetRefVisitor)?
+        };
+        let (handle, sender) = get_handle_ref(asset_ref);
         Ok(GenericHandle::new_internal(sender, handle))
     }
 }
 
-struct AssetUuidVisitor;
+struct AssetRefVisitor;
 
-impl<'de> Visitor<'de> for AssetUuidVisitor {
-    type Value = AssetUuid;
+impl<'de> Visitor<'de> for AssetRefVisitor {
+    type Value = AssetRef;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str("an array of 16 u8")
@@ -474,7 +512,26 @@ impl<'de> Visitor<'de> for AssetUuidVisitor {
                 "too many elements when deserializing handle",
             ));
         }
-        Ok(uuid)
+        Ok(AssetRef::Uuid(AssetUuid(uuid)))
+    }
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        use std::str::FromStr;
+        match std::path::PathBuf::from_str(v) {
+            Ok(path) => {
+                if let Ok(uuid) = uuid::Uuid::parse_str(&path.to_string_lossy()) {
+                    Ok(AssetRef::Uuid(AssetUuid(*uuid.as_bytes())))
+                } else {
+                    Ok(AssetRef::Path(path))
+                }
+            }
+            Err(err) => Err(E::custom(format!(
+                "failed to parse Handle string: {:?}",
+                err
+            ))),
+        }
     }
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
@@ -490,7 +547,7 @@ impl<'de> Visitor<'de> for AssetUuidVisitor {
         } else {
             let mut a = <[u8; 16]>::default();
             a.copy_from_slice(v);
-            Ok(a)
+            Ok(AssetRef::Uuid(AssetUuid(a)))
         }
     }
 }

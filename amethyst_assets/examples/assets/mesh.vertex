@@ -1,0 +1,23 @@
+(
+    positions: [ 
+        (0.0, 0.0, 1), 
+        (1.0, 0.0, 0.0), 
+        (0.0, 1.0, 0.0), 
+    ],
+    tex_coords: [ 
+        (0.0, 1.0),
+        (1.0, 1.0),  
+        (0.0, 0.0,),
+    ],  
+    // References mesh2.vertex  
+    handle: "mesh2.vertex",  
+    vec_handle_test: [  
+        // Self-referencing handle
+        "563a7b4a-0703-4551-b994-ea9e1d8c0d8a",
+        // References mesh2.vertex
+        "7509a29f-9051-48f8-a54e-e94c5b8af672",
+        // References mesh_subfolder.vertex in the dummy folder.
+        // THIS WOULD BE A REFERENCE CYCLE - UNSUPPORTED!
+        // "dummy/mesh_subfolder.vertex" 
+        ],
+)

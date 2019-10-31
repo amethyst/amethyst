@@ -1,21 +1,14 @@
 use crate::{
-    handle_new::{GenericHandle, Handle, SerdeContext, WeakHandle, AssetHandle},
+    handle_new::{AssetHandle, GenericHandle, Handle, SerdeContext, WeakHandle},
     processor::ProcessingQueue,
     storage_new::AssetStorage,
 };
-use amethyst_core::ecs::{
-    DispatcherBuilder, World, System,
-};
+use amethyst_core::ecs::{DispatcherBuilder, System, World};
 use atelier_loader::{self, AssetLoadOp, AssetTypeId, Loader as AtelierLoader, LoaderInfoProvider};
 use bincode;
 use crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError};
 use serde::de::Deserialize;
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    error::Error,
-    sync::Arc,
-};
+use std::{cell::RefCell, collections::HashMap, error::Error, sync::Arc};
 
 pub(crate) use atelier_loader::LoadHandle;
 pub use atelier_loader::{AssetUuid, LoadStatus, TypeUuid};
@@ -190,7 +183,9 @@ impl<T: AtelierLoader + Send + Sync> Loader for LoaderWithStorage<T> {
                 Err(TryRecvError::Disconnected) => panic!("RefOp receiver disconnected"),
                 Ok(RefOp::Decrease(handle)) => self.loader.remove_ref(handle),
                 Ok(RefOp::Increase(handle)) => {
-                    self.loader.get_load_info(handle).map(|info| self.loader.add_ref(info.asset_id));
+                    self.loader
+                        .get_load_info(handle)
+                        .map(|info| self.loader.add_ref(info.asset_id));
                 }
                 Ok(RefOp::IncreaseUuid(uuid)) => {
                     self.loader.add_ref(uuid);
@@ -420,8 +415,8 @@ where
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
 {
     AssetType {
-        data_uuid: Intermediate::UUID,
-        asset_uuid: Asset::UUID,
+        data_uuid: AssetTypeId(Intermediate::UUID),
+        asset_uuid: AssetTypeId(Asset::UUID),
         create_storage: |res| {
             if res.try_fetch::<AssetStorage<Asset>>().is_none() {
                 res.insert(AssetStorage::<Asset>::default())

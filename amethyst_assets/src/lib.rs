@@ -65,6 +65,7 @@ pub mod experimental {
         simple_importer::{SimpleImporter, SourceFileImporter},
         storage_new::AssetStorage,
     };
+    pub use atelier_loader::asset_uuid;
 }
 
 /// Registers an importer for the new experimental asset system

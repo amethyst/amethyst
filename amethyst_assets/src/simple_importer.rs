@@ -28,7 +28,7 @@ impl<A, T: Format<A> + TypeUuid + Send + 'static> TypeUuid for SimpleImporter<A,
 where
     A: SerdeObj,
 {
-    const UUID: AssetUuid = T::UUID;
+    const UUID: type_uuid::Bytes = T::UUID;
 }
 
 impl<A, T: Format<A> + TypeUuid + Send + 'static> Importer for SimpleImporter<A, T>
@@ -55,7 +55,7 @@ where
         state: &mut Self::State,
     ) -> importer::Result<ImporterValue> {
         if state.id.is_none() {
-            state.id = Some(*uuid::Uuid::new_v4().as_bytes());
+            state.id = Some(AssetUuid(*uuid::Uuid::new_v4().as_bytes()));
         }
         let mut bytes = Vec::new();
         source.read_to_end(&mut bytes)?;
@@ -68,7 +68,6 @@ where
                 search_tags: Vec::new(),
                 build_deps: Vec::new(),
                 load_deps: Vec::new(),
-                instantiate_deps: Vec::new(),
                 asset_data: Box::new(import_result),
                 build_pipeline: None,
             }],
