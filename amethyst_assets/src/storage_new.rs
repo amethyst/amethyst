@@ -2,14 +2,14 @@ use atelier_loader::LoadHandle;
 use crossbeam_queue::SegQueue;
 use std::collections::HashMap;
 
-use crate::handle_new::AssetHandle;
+use atelier_loader::handle::AssetHandle;
 
 struct AssetState<A> {
     version: u32,
     asset: A,
 }
 
-/// An asset storage, storing the actual assets and allocating handles to them.
+/// An asset storage, storing the actual assets
 ///
 /// # Type Parameters
 ///
@@ -124,6 +124,18 @@ impl<A> AssetStorage<A> {
         while let Ok(asset) = self.to_drop.pop() {
             drop_fn(asset);
         }
+    }
+}
+
+impl<A> atelier_loader::handle::TypedAssetStorage<A> for AssetStorage<A> {
+    fn get<T: AssetHandle>(&self, handle: &T) -> Option<&A> {
+        self.get(handle)
+    }
+    fn get_version<T: AssetHandle>(&self, handle: &T) -> Option<u32> {
+        self.get_version(handle)
+    }
+    fn get_asset_with_version<T: AssetHandle>(&self, handle: &T) -> Option<(&A, u32)> {
+        self.get_asset_with_version(handle)
     }
 }
 

@@ -139,11 +139,11 @@ impl State {
                 // You could now start the actual game, cause the loading is done.
                 // This example however will just quit.
                 let storage = world.read_resource::<AssetStorage<MeshAsset>>();
-                let asset_with_version = handle.asset_with_version(&storage).unwrap();
+                let asset_with_version = handle.asset_with_version(&*storage).unwrap();
                 println!("Loaded asset {:?}", asset_with_version);
                 println!(
                     "Loaded dependency {:?}",
-                    asset_with_version.0.handle.asset_with_version(&storage)
+                    asset_with_version.0.handle.asset_with_version(&*storage)
                 );
                 println!("Asset is loaded and the game can begin!");
                 println!("Game ending, sorry");

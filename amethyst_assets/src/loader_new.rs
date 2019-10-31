@@ -1,10 +1,10 @@
-use crate::{
-    handle_new::{AssetHandle, GenericHandle, Handle, SerdeContext, WeakHandle},
-    processor::ProcessingQueue,
-    storage_new::AssetStorage,
-};
+use crate::{processor::ProcessingQueue, storage_new::AssetStorage};
 use amethyst_core::ecs::{DispatcherBuilder, System, World};
-use atelier_loader::{self, AssetLoadOp, AssetTypeId, Loader as AtelierLoader, LoaderInfoProvider};
+use atelier_loader::{
+    self,
+    handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
+    AssetLoadOp, AssetTypeId, LoadInfo, Loader as AtelierLoader, LoaderInfoProvider,
+};
 use bincode;
 use crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError};
 use serde::de::Deserialize;
@@ -124,13 +124,6 @@ pub trait Loader: Send + Sync {
 /// Default loader is the Atelier Assets `RpcLoader`.
 pub type DefaultLoader = LoaderWithStorage<atelier_loader::rpc_loader::RpcLoader>;
 
-/// Operations on an asset reference.
-pub(crate) enum RefOp {
-    Decrease(LoadHandle),
-    Increase(LoadHandle),
-    IncreaseUuid(AssetUuid),
-}
-
 /// Asset loader and storage.
 #[derive(Debug)]
 pub struct LoaderWithStorage<T: AtelierLoader + Send + Sync> {
@@ -149,6 +142,32 @@ impl<T: AtelierLoader + Send + Sync + Default> Default for LoaderWithStorage<T> 
             ref_sender: Arc::new(tx),
             ref_receiver: rx,
         }
+    }
+}
+impl<T: AtelierLoader + Send + Sync> AtelierLoader for LoaderWithStorage<T> {
+    fn add_ref(&self, id: AssetUuid) -> LoadHandle {
+        self.loader.add_ref(id)
+    }
+    fn remove_ref(&self, load_handle: LoadHandle) {
+        self.loader.remove_ref(load_handle)
+    }
+    fn get_asset(&self, load: LoadHandle) -> Option<(AssetTypeId, LoadHandle)> {
+        self.loader.get_asset(load)
+    }
+    fn get_load(&self, id: AssetUuid) -> Option<LoadHandle> {
+        self.loader.get_load(id)
+    }
+    fn get_load_info(&self, load: LoadHandle) -> Option<LoadInfo> {
+        self.loader.get_load_info(load)
+    }
+    fn get_load_status(&self, load: LoadHandle) -> LoadStatus {
+        self.loader.get_load_status(load)
+    }
+    fn process(
+        &mut self,
+        asset_storage: &dyn atelier_loader::AssetStorage,
+    ) -> Result<(), Box<dyn Error>> {
+        self.loader.process(asset_storage)
     }
 }
 
