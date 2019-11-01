@@ -4,7 +4,7 @@
 //! functions.
 
 use crate::{
-    ecs::prelude::{Read, System},
+    ecs::prelude::{Read, System, World},
     shred::{RunningTime, SystemData},
 };
 
@@ -130,5 +130,11 @@ where
 
     fn running_time(&self) -> RunningTime {
         self.system.running_time()
+    }
+
+    fn setup(&mut self, world: &mut World) {
+        Self::SystemData::setup(world);
+
+        self.system.setup(world);
     }
 }
