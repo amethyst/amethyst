@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ### Added
+
 - Implement `Debug` for `ProgressCounter` and `ProgressCounterTracker`. ([#1973])
 - Added a custom render pass Example. ([#1904])
 - Add an entry for `examples/tiles` to the examples readme. ([#1978])
@@ -42,6 +43,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Tilemap rotation was incorrect and not transposed. Fixed and uses component rotation. ([#1974])
 - `Config` types no longer require a `Default` impl ([#1989])
 - Fixed Incorrect path for sprite_camera_follow example ([#2004])
+- Run `System::setup` for pausable systems' delegate. ([#2029])
 
 ### Security
 
@@ -58,6 +60,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1989]: https://github.com/amethyst/amethyst/pull/1989
 [#2005]: https://github.com/amethyst/amethyst/pull/2005
 [#2004]: https://github.com/amethyst/amethyst/pull/2004
+[#2029]: https://github.com/amethyst/amethyst/pull/2029
 
 
 ## [0.13.3] - 2019-10-4
