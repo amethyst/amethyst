@@ -19,7 +19,8 @@ pub use crate::{
     helper::AssetLoaderSystemData,
     loader::Loader,
     prefab::{
-        AssetPrefab, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, PrefabLoaderSystemDesc,
+        AssetPrefab, Prefab, PrefabData, PrefabEntity, PrefabLoader, PrefabLoaderSystem,
+        PrefabLoaderSystemDesc,
     },
     progress::{Completion, Progress, ProgressCounter, Tracker},
     reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
