@@ -24,6 +24,7 @@ Prefab (
                                 ),
                                 comparison: None,
                                 border: (0),
+                                normalized: true,
                                 anisotropic: Off,
                             ),
                         )
@@ -78,6 +79,7 @@ Prefab (
                                 ),
                                 comparison: None,
                                 border: (0),
+                                normalized: true,
                                 anisotropic: Off,
                             ),
                         )
@@ -114,6 +116,7 @@ Prefab (
                                 ),
                                 comparison: None,
                                 border: (0),
+                                normalized: true,
                                 anisotropic: Off,
                             ),
                         )
@@ -161,6 +164,7 @@ Prefab (
                                 ),
                                 comparison: None,
                                 border: (0),
+                                normalized: true,
                                 anisotropic: Off,
                             ),
                         ),
