@@ -26,6 +26,19 @@ pub trait SystemBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error>;
 }
+
+impl SystemBundle
+    for Box<dyn FnMut(&mut World, &mut DispatcherBuilder) -> Result<(), amethyst_error::Error>>
+{
+    fn build(
+        mut self,
+        world: &mut legion::world::World,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        (self)(world, builder)
+    }
+}
+
 pub struct DispatcherSystemBundle<B>(B);
 impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
     fn consume(

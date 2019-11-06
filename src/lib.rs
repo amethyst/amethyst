@@ -88,6 +88,9 @@ pub use amethyst_utils as utils;
 pub use amethyst_window as window;
 pub use winit;
 
+
+pub use crate::core::legion;
+
 pub use crate::core::{ecs, shred, shrev};
 #[doc(hidden)]
 pub use crate::derive::*;
