@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Added UI states/menu example. [#1986]
 - Allow user to specify custom completion function in `amethyst_test::WaitForLoad`. ([#1984])
 - Log warning when `amethyst_test::WaitForLoad` has not completed in 10 seconds. ([#1984])
+- Derive `Copy` and `PartialEq` for `amethyst::renderer::resources::Tint`. ([#2033])
 
 ### Changed
 
@@ -61,6 +62,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2005]: https://github.com/amethyst/amethyst/pull/2005
 [#2004]: https://github.com/amethyst/amethyst/pull/2004
 [#2029]: https://github.com/amethyst/amethyst/pull/2029
+[#2033]: https://github.com/amethyst/amethyst/pull/2033
 
 
 ## [0.13.3] - 2019-10-4
