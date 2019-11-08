@@ -31,7 +31,7 @@ serde = { version = "1", features = ["serde_derive"] }
 fnv = "1"
 derivative = "1.0"
 smallvec = "0.6.9"
-static_assertions = "0.3"
+static_assertions = "1.0"
 
 thread_profiler = { version = "0.3", optional = true }
 approx = "0.3.2"
@@ -39,7 +39,7 @@ approx = "0.3.2"
 [dev-dependencies]
 rayon = "1.1.0"
 more-asserts = "0.2.1"
-criterion = "0.2.11"
+criterion = "0.3.0"
 winit = "0.19"
 approx = "0.3"
 

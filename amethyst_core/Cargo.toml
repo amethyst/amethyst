@@ -15,7 +15,7 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-nalgebra = { version = "0.18.1", features = ["serde-serialize", "mint"] }
+nalgebra = { version = "0.19.0", features = ["serde-serialize", "mint"] }
 alga = { version = "0.9.0", default-features = false }
 alga_derive = "0.9.0"
 approx = "0.3"

@@ -102,8 +102,23 @@ experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 
 [workspace]
 members = [
-  "amethyst_test",
+  "amethyst_animation",
+  "amethyst_assets",
+  "amethyst_audio",
+  "amethyst_config",
+  "amethyst_core",
+  "amethyst_error",
+  "amethyst_controls",
+  "amethyst_derive",
+  "amethyst_gltf",
+  "amethyst_network",
+  "amethyst_locale",
   "amethyst_rendy",
+  "amethyst_input",
+  "amethyst_ui",
+  "amethyst_utils",
+  "amethyst_test",
+  "amethyst_tiles",
   "amethyst_window",
 ]
 
@@ -131,7 +146,7 @@ fern = { version = "0.5", features = ["colored"] }
 log = { version = "0.4.6", features = ["serde"] }
 rayon = "1.1.0"
 rustc_version_runtime = "0.1"
-sentry = { version = "0.15.4", optional = true }
+sentry = { version = "0.17.0", optional = true }
 winit = { version = "0.19", features = ["serde", "icon_loading"] }
 serde = { version = "1.0", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
@@ -142,13 +157,13 @@ glsl-layout = "0.3"
 
 [dev-dependencies]
 derive-new = "0.5"
-env_logger = "0.6.1"
+env_logger = "0.7.1"
 genmesh = "0.6"
 ron = "0.5"
 specs-derive = "0.4"
 
 [build-dependencies]
-dirs = "1.0.5"
+dirs = "2.0.2"
 vergen = "3.0"
 
 [[example]]
