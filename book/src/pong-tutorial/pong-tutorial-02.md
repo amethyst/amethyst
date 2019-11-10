@@ -495,7 +495,7 @@ are on the sheet. Let's create, right next to it, a file called
 `pong_spritesheet.ron`. It will contain the following sprite sheet definition:
 
 ```text,ignore
-(
+List((
     texture_width: 8,
     texture_height: 16,
     sprites: [
@@ -512,7 +512,7 @@ are on the sheet. Let's create, right next to it, a file called
             height: 4,
         ),
     ],
-)
+))
 ```
 
 > **Note:** Make sure to pay attention to the kind of parentheses in the ron file.

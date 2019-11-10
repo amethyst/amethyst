@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Added UI states/menu example. [#1986]
 - Allow user to specify custom completion function in `amethyst_test::WaitForLoad`. ([#1984])
 - Log warning when `amethyst_test::WaitForLoad` has not completed in 10 seconds. ([#1984])
+- Derive `Copy` and `PartialEq` for `amethyst::renderer::resources::Tint`. ([#2033])
 
 ### Changed
 
@@ -31,6 +32,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
 - `Config::load` now returns an error or failure rather than silently falling back to the default config. Same is true for the `from_config_file` methods on `RenderToWindow`, `WindowBundle`, and `WindowSystem` ([#1989])
 - Adds `get` methods to the underlying net::transport resources ([#2005])
+- Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
+  Migration Note: Rons need to wrap their content in either Grid() or List()
 
 ### Deprecated
 
@@ -60,7 +63,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1989]: https://github.com/amethyst/amethyst/pull/1989
 [#2005]: https://github.com/amethyst/amethyst/pull/2005
 [#2004]: https://github.com/amethyst/amethyst/pull/2004
+[#2023]: https://github.com/amethyst/amethyst/pull/2023
 [#2029]: https://github.com/amethyst/amethyst/pull/2029
+[#2033]: https://github.com/amethyst/amethyst/pull/2033
 
 
 ## [0.13.3] - 2019-10-4
