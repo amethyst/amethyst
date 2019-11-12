@@ -1,23 +1,13 @@
 /*!
-    @import /amethyst_rendy/src/sprite/mod.rs#SpriteList
-    SpriteList
+    @import /amethyst_rendy/src/sprite/mod.rs#Sprites
+    Sprites
 */
 
-(
-  texture_width: 128,
-  texture_height: 64,
-  sprites: [
-    (
-      x: 0,
-      y: 0,
-      width: 64,
-      height: 64,
-    ),
-    (
-      x: 64,
-      y: 0,
-      width: 64,
-      height: 64,
-    ),
-  ],
-)
+#![enable(implicit_some)]
+
+Grid((
+    texture_width: 128,
+    texture_height: 64,
+    columns: 2,
+    rows: 1,
+))
