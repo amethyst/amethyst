@@ -67,6 +67,7 @@ pub fn morton_decode_lut(morton: u32) -> (u32, u32, u32) {
 #[inline]
 pub fn morton_encode_intr_3d(x: u32, y: u32, z: u32) -> u32 {
     use bitintr::Pdep;
+
     z.pdep(0x2492_4924) | y.pdep(0x1249_2492) | x.pdep(0x0924_9249)
 }
 
@@ -91,7 +92,7 @@ pub fn morton_decode_intr_3d(morton: u32) -> (u32, u32, u32) {
 #[derive(Default, Clone)]
 pub struct MortonEncoder;
 impl CoordinateEncoder for MortonEncoder {
-    fn from_dimensions(_: u32, _: u32, _: u32) -> Self {
+    fn from_dimensions(_: Vector3<u32>) -> Self {
         Self {}
     }
 
@@ -127,14 +128,12 @@ impl CoordinateEncoder for MortonEncoder {
 /// NOTE: This encoder requires allocation 2^n, equally in the X-Y axis.
 #[derive(Default, Clone)]
 pub struct MortonEncoder2D {
-    dimensions: (u32, u32, u32),
     len: u32,
 }
 impl CoordinateEncoder for MortonEncoder2D {
-    fn from_dimensions(x: u32, y: u32, z: u32) -> Self {
+    fn from_dimensions(dimensions: Vector3<u32>) -> Self {
         Self {
-            dimensions: (x, y, z),
-            len: x * y,
+            len: dimensions.x * dimensions.y,
         }
     }
 

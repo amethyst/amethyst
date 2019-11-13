@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - `Config` types no longer require a `Default` impl ([#1989])
 - Fixed Incorrect path for sprite_camera_follow example ([#2004])
 - Run `System::setup` for pausable systems' delegate. ([#2029])
+- Fixed an incorrect dimensions being used in Tile Encoders, causing bad lookups in assymetric maps in any Z-level besides 0 ([#2017])
 
 ### Security
 
@@ -66,6 +67,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2023]: https://github.com/amethyst/amethyst/pull/2023
 [#2029]: https://github.com/amethyst/amethyst/pull/2029
 [#2033]: https://github.com/amethyst/amethyst/pull/2033
+[#2017]: https://github.com/amethyst/amethyst/pull/2017
 
 
 ## [0.13.3] - 2019-10-4

@@ -150,7 +150,7 @@ impl<T: Tile, E: CoordinateEncoder> TileMap<T, E> {
         let mut data = Vec::with_capacity(size);
         data.resize_with(size, T::default);
 
-        let encoder = E::from_dimensions(dimensions.x, dimensions.y, dimensions.z);
+        let encoder = E::from_dimensions(encoder_dimensions);
 
         Self {
             data,
@@ -368,8 +368,17 @@ mod tests {
     use amethyst_core::math::Point3;
     use rayon::prelude::*;
 
-    #[derive(Default, Clone)]
-    struct TestTile;
+    #[derive(Clone, Debug)]
+    struct TestTile {
+        point: Point3<u32>,
+    }
+    impl Default for TestTile {
+        fn default() -> Self {
+            Self {
+                point: Point3::new(0, 0, 0),
+            }
+        }
+    }
     impl Tile for TestTile {
         fn sprite(&self, _: Point3<u32>, _: &World) -> Option<usize> {
             None
@@ -377,11 +386,44 @@ mod tests {
     }
 
     pub fn test_single_map<E: CoordinateEncoder>(dimensions: Vector3<u32>) {
-        let map = TileMap::<TestTile, E>::new(dimensions, Vector3::new(10, 10, 1), None);
+        struct UnsafeWrapper<E: CoordinateEncoder> {
+            ptr: *mut TileMap<TestTile, E>,
+        }
+        impl<E: CoordinateEncoder> UnsafeWrapper<E> {
+            pub fn new(map: &mut TileMap<TestTile, E>) -> Self {
+                Self {
+                    ptr: map as *mut TileMap<TestTile, E>,
+                }
+            }
+            pub fn get(&self) -> &TileMap<TestTile, E> {
+                unsafe { &*self.ptr }
+            }
+            #[allow(clippy::mut_from_ref)]
+            pub fn get_mut(&self) -> &mut TileMap<TestTile, E> {
+                unsafe { &mut *self.ptr }
+            }
+        }
+        unsafe impl<E: CoordinateEncoder> Send for UnsafeWrapper<E> {}
+        unsafe impl<E: CoordinateEncoder> Sync for UnsafeWrapper<E> {}
+
+        let mut inner = TileMap::<TestTile, E>::new(dimensions, Vector3::new(10, 10, 1), None);
+        let map = UnsafeWrapper::new(&mut inner);
+
         (0..dimensions.x).into_par_iter().for_each(|x| {
             (0..dimensions.y).into_par_iter().for_each(|y| {
                 for z in 0..dimensions.z {
-                    let _ = map.get(&Point3::new(x, y, z)).unwrap();
+                    let point = Point3::new(x, y, z);
+
+                    *map.get_mut().get_mut(&point).unwrap() = TestTile { point };
+                }
+            });
+        });
+
+        (0..dimensions.x).into_par_iter().for_each(|x| {
+            (0..dimensions.y).into_par_iter().for_each(|y| {
+                for z in 0..dimensions.z {
+                    let point = Point3::new(x, y, z);
+                    assert_eq!(map.get().get(&Point3::new(x, y, z)).unwrap().point, point);
                 }
             });
         });
@@ -391,9 +433,9 @@ mod tests {
     pub fn asymmetric_maps() {
         let test_dimensions = [
             Vector3::new(10, 58, 54),
-            Vector3::new(66, 5, 200),
+            Vector3::new(66, 5, 20),
             Vector3::new(199, 100, 1),
-            Vector3::new(5, 423, 6),
+            Vector3::new(5, 55, 6),
             Vector3::new(15, 23, 1),
             Vector3::new(20, 12, 12),
             Vector3::new(48, 48, 12),
