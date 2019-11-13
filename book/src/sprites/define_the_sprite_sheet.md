@@ -6,10 +6,10 @@ There are two ways to load a sprite sheet definition: from a file or from code.
 ## Load the sheet from a file
 
 The easiest way to load your sprites is to use a sprite sheet definition ron file.
-Here is an example of such a definition file:
+Here is an example of such a definition file using a list of sprites:
 
 ```text,ignore
-(
+List((
     // Width of the texture used by the sprite sheet
     texture_width: 48,
     // Height of the texture used by the sprite sheet
@@ -36,9 +36,26 @@ Here is an example of such a definition file:
         ),
         // etc...
     ],
-)
+))
 ```
 `offsets: Some((0.0, 0.0)),` can be replaced by `offsets: (0.0, 0.0),` if the line `#![enable(implicit_some)]` is added at the top of the definition file.
+
+Or you can use a grid based definition, for example:
+
+```text,ignore
+Grid((
+    // Width of the texture used by the sprite sheet
+    texture_width: 48,
+    // Height of the texture used by the sprite sheet
+    texture_height: 16,
+    // Specifies the number of columns in the sprite sheet
+    columns: 2,
+    // Specifies the number of sprites in the spritesheet.
+    sprite_count: 2
+))
+```
+
+For more information about list and grid based sprite sheets see [`SpriteGrid`][doc_grid] or [`SpriteList`][doc_list].
 
 Then, you can load it using the texture handle of the sheet's image you loaded earlier:
 
@@ -121,3 +138,8 @@ pub fn load_sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
     }
 }
 ```
+
+
+
+[doc_grid]: https://docs.amethyst.rs/stable/amethyst_rendy/sprite/struct.SpriteGrid.html
+[doc_list]: https://docs.amethyst.rs/stable/amethyst_rendy/sprite/struct.SpriteList.html

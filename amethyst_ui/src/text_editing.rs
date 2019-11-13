@@ -7,11 +7,8 @@ use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
 
 use amethyst_core::{
-    ecs::prelude::{
-        Entities, Join, Read, ReadStorage, System, SystemData, World, Write, WriteStorage,
-    },
+    ecs::prelude::{Entities, Join, Read, ReadStorage, System, SystemData, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
-    SystemDesc,
 };
 use amethyst_derive::SystemDesc;
 

@@ -2,11 +2,11 @@ use super::DemoState;
 use amethyst::{
     core::{
         math::{UnitQuaternion, Vector3},
-        SystemDesc, Time, Transform,
+        Time, Transform,
     },
     derive::SystemDesc,
     ecs::prelude::{
-        Entity, Join, Read, ReadStorage, System, SystemData, World, WriteExpect, WriteStorage,
+        Entity, Join, Read, ReadStorage, System, SystemData, WriteExpect, WriteStorage,
     },
     renderer::{camera::Camera, light::Light},
     ui::{UiFinder, UiText},

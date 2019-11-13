@@ -5,6 +5,7 @@ use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
     ecs::{Component, HashMapStorage, World},
     math::{Matrix4, Point3, Vector3},
+    Transform,
 };
 use amethyst_rendy::{palette::Srgba, SpriteSheet};
 
@@ -41,13 +42,19 @@ pub trait Map {
 
     /// Convert a tile coordinate `Point3<u32>` to an amethyst world-coordinate space coordinate `Vector3<f32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
-    /// maps `origin` and `tile_dimensions` respectively.
-    fn to_world(&self, coord: &Point3<u32>) -> Vector3<f32>;
+    /// maps `origin` and `tile_dimensions` respectively. If the tile map entity has a transform component, then
+    /// it also translates the point using the it's transform.
+    fn to_world(&self, coord: &Point3<u32>, map_transform: Option<&Transform>) -> Vector3<f32>;
 
     /// Convert an amethyst world-coordinate space coordinate `Vector3<f32>` to a tile coordinate `Point3<u32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
-    /// maps `origin` and `tile_dimensions` respectively.
-    fn to_tile(&self, coord: &Vector3<f32>) -> Option<Point3<u32>>;
+    /// maps `origin` and `tile_dimensions` respectively. If the tile map entity has a transform component, then
+    /// it also translates the point using the it's transform.
+    fn to_tile(
+        &self,
+        coord: &Vector3<f32>,
+        map_transform: Option<&Transform>,
+    ) -> Option<Point3<u32>>;
 
     /// Returns the `Matrix4` transform which was created for transforming between world and tile coordinate spaces.
     fn transform(&self) -> &Matrix4<f32>;
@@ -180,14 +187,18 @@ impl<T: Tile, E: CoordinateEncoder> Map for TileMap<T, E> {
     }
 
     #[inline]
-    fn to_world(&self, coord: &Point3<u32>) -> Vector3<f32> {
-        to_world(&self.transform, coord)
+    fn to_world(&self, coord: &Point3<u32>, map_transform: Option<&Transform>) -> Vector3<f32> {
+        to_world(&self.transform, coord, map_transform)
     }
 
     #[inline]
     #[allow(clippy::let_and_return)]
-    fn to_tile(&self, coord: &Vector3<f32>) -> Option<Point3<u32>> {
-        let ret = to_tile(&self.transform, coord);
+    fn to_tile(
+        &self,
+        coord: &Vector3<f32>,
+        map_transform: Option<&Transform>,
+    ) -> Option<Point3<u32>> {
+        let ret = to_tile(&self.transform, coord, map_transform);
         #[cfg(debug_assertions)]
         {
             if let Some(r) = ret.as_ref() {
@@ -290,13 +301,34 @@ fn create_transform(map_dimensions: &Vector3<u32>, tile_dimensions: &Vector3<u32
 }
 
 #[allow(clippy::cast_precision_loss)]
-fn to_world(transform: &Matrix4<f32>, coord: &Point3<u32>) -> Vector3<f32> {
+fn to_world(
+    transform: &Matrix4<f32>,
+    coord: &Point3<u32>,
+    map_transform: Option<&Transform>,
+) -> Vector3<f32> {
     let coord_f = Point3::new(coord.x as f32, -1.0 * coord.y as f32, coord.z as f32);
-    transform.transform_point(&coord_f).coords
+    if let Some(map_trans) = map_transform {
+        map_trans
+            .global_matrix()
+            .transform_point(&transform.transform_point(&coord_f))
+            .coords
+    } else {
+        transform.transform_point(&coord_f).coords
+    }
 }
 
-fn to_tile(transform: &Matrix4<f32>, coord: &Vector3<f32>) -> Option<Point3<u32>> {
-    let point = Point3::from(*coord);
+fn to_tile(
+    transform: &Matrix4<f32>,
+    coord: &Vector3<f32>,
+    map_transform: Option<&Transform>,
+) -> Option<Point3<u32>> {
+    let point = if let Some(map_trans) = map_transform {
+        map_trans
+            .global_view_matrix()
+            .transform_point(&Point3::from(*coord))
+    } else {
+        Point3::from(*coord)
+    };
 
     let mut inverse = transform
         .try_inverse()
@@ -420,14 +452,14 @@ mod tests {
     }
 
     pub fn test_coord(transform: &Matrix4<f32>, tile: Point3<u32>, world: Point3<f32>) {
-        let world_result = to_world(transform, &tile);
+        let world_result = to_world(transform, &tile, None);
         assert_eq!(world_result, world.coords);
-        let tile_result = to_tile(transform, &world.coords).unwrap();
+        let tile_result = to_tile(transform, &world.coords, None).unwrap();
         assert_eq!(tile_result, tile);
 
-        let world_reverse = to_tile(transform, &world_result).unwrap();
+        let world_reverse = to_tile(transform, &world_result, None).unwrap();
         assert_eq!(world_reverse, tile);
-        let tile_reverse = to_world(transform, &tile_result);
+        let tile_reverse = to_world(transform, &tile_result, None);
         assert_eq!(tile_reverse, world.coords);
     }
 
@@ -455,6 +487,57 @@ mod tests {
             &transform,
             Point3::new(0, 1, 20),
             Point3::new(-320.0, 310.0, 20.0),
+        );
+    }
+
+    pub fn test_coord_with_map_transform(
+        transform: &Matrix4<f32>,
+        tile: Point3<u32>,
+        world: Point3<f32>,
+        map_transform: &Transform,
+    ) {
+        let world_result = to_world(transform, &tile, Some(map_transform));
+        assert_eq!(world_result, world.coords);
+        let tile_result = to_tile(transform, &world.coords, Some(map_transform)).unwrap();
+        assert_eq!(tile_result, tile);
+
+        let world_reverse = to_tile(transform, &world_result, Some(map_transform)).unwrap();
+        assert_eq!(world_reverse, tile);
+        let tile_reverse = to_world(transform, &tile_result, Some(map_transform));
+        assert_eq!(tile_reverse, world.coords);
+    }
+
+    #[test]
+    pub fn tilemap_coord_conversions_with_map_transform() {
+        let transform = create_transform(&Vector3::new(64, 64, 64), &Vector3::new(10, 10, 1));
+        let mut map_transform = Transform::default();
+        map_transform.set_translation_xyz(-10.0, 10.0, 0.0);
+        map_transform.copy_local_to_global();
+
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(1, 1, 0),
+            Point3::new(-320.0, 320.0, 0.0),
+            &map_transform,
+        );
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(2, 1, 0),
+            Point3::new(-310.0, 320.0, 0.0),
+            &map_transform,
+        );
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(1, 2, 0),
+            Point3::new(-320.0, 310.0, 0.0),
+            &map_transform,
+        );
+
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(1, 2, 20),
+            Point3::new(-320.0, 310.0, 20.0),
+            &map_transform,
         );
     }
 }

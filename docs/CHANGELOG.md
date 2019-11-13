@@ -11,22 +11,29 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ### Added
+
 - Implement `Debug` for `ProgressCounter` and `ProgressCounterTracker`. ([#1973])
 - Added a custom render pass Example. ([#1904])
 - Add an entry for `examples/tiles` to the examples readme. ([#1978])
 - Added UI states/menu example. [#1986]
 - Allow user to specify custom completion function in `amethyst_test::WaitForLoad`. ([#1984])
 - Log warning when `amethyst_test::WaitForLoad` has not completed in 10 seconds. ([#1984])
+- Derive `Copy` and `PartialEq` for `amethyst::renderer::resources::Tint`. ([#2033])
 
 ### Changed
 
 - Use a premultiplied view_proj matrix in vertex shaders. ([#1964])
 - amethyst_network completely rewritten to provide a new baseline with which to build. ([#1917])
-- Cleaned up tiles example. Added rotation and translation tests, fixed raycast debug box. Added default zoom to `PROJECT` perspective projection since no one knew to zoom out. ([#1974])
+- Cleaned up tiles example. Added rotation and translation tests, fixed raycast debug box. Added default zoom to PROJECT
+  perspective projection since no one knew to zoom out. ([#1974])
+- TileMaps to_tile and to_world now take an Option<&Transform> that allows them to work if the entire map in 
+ translated. ([#1987],[#1991])
 - `AmethystApplication::with_fn` constraint relaxed from `Fn` to `FnOnce`. ([#1983])
 - ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
 - `Config::load` now returns an error or failure rather than silently falling back to the default config. Same is true for the `from_config_file` methods on `RenderToWindow`, `WindowBundle`, and `WindowSystem` ([#1989])
 - Adds `get` methods to the underlying net::transport resources ([#2005])
+- Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
+  Migration Note: Rons need to wrap their content in either Grid() or List()
 
 ### Deprecated
 
@@ -39,6 +46,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Tilemap rotation was incorrect and not transposed. Fixed and uses component rotation. ([#1974])
 - `Config` types no longer require a `Default` impl ([#1989])
 - Fixed Incorrect path for sprite_camera_follow example ([#2004])
+- Run `System::setup` for pausable systems' delegate. ([#2029])
 - Fixed an incorrect dimensions being used in Tile Encoders, causing bad lookups in assymetric maps in any Z-level besides 0 ([#2017])
 
 ### Security
@@ -48,13 +56,19 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1973]: https://github.com/amethyst/amethyst/pull/1973
 [#1974]: https://github.com/amethyst/amethyst/pull/1974
 [#1978]: https://github.com/amethyst/amethyst/pull/1978
+[#1987]: https://github.com/amethyst/amethyst/issue/1987
 [#1983]: https://github.com/amethyst/amethyst/pull/1983
+[#1991]: https://github.com/amethyst/amethyst/pull/1991
 [#1984]: https://github.com/amethyst/amethyst/pull/1984
 [#1986]: https://github.com/amethyst/amethyst/pull/1986
 [#1989]: https://github.com/amethyst/amethyst/pull/1989
 [#2005]: https://github.com/amethyst/amethyst/pull/2005
 [#2004]: https://github.com/amethyst/amethyst/pull/2004
+[#2023]: https://github.com/amethyst/amethyst/pull/2023
+[#2029]: https://github.com/amethyst/amethyst/pull/2029
+[#2033]: https://github.com/amethyst/amethyst/pull/2033
 [#2017]: https://github.com/amethyst/amethyst/pull/2017
+
 
 ## [0.13.3] - 2019-10-4
 
@@ -77,6 +91,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 - `FlatEncoder` added to amethyst_tiles for flat linear encoding which is optimized for space. ([#1950])
+- `SystemDesc` derive no longer requires any imports. ([#1995])
 
 ### Changed
 
@@ -93,6 +108,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1950]: https://github.com/amethyst/amethyst/pull/1950
 [#1952]: https://github.com/amethyst/amethyst/pull/1952
 [#1957]: https://github.com/amethyst/amethyst/pull/1957
+[#1995]: https://github.com/amethyst/amethyst/pull/1995
 
 ## [0.13.0] - 2019-09-25
 

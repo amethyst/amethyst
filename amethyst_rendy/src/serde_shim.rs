@@ -43,7 +43,7 @@ pub mod srgb {
 /// ```
 pub mod srgba {
     use super::*;
-    #[derive(Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
     struct Srgba(f32, f32, f32, f32);
 
     /// Serialize Srgba type as tuple struct with four floats

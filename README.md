@@ -126,7 +126,7 @@ If you are compiling on Linux, make sure to install the dependencies below.
 ### Arch Linux
 
 ```
-$ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 awk libxcb
+$ pacman -Syu grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 awk libxcb
 ```
 
 ### Debian/Ubuntu
@@ -145,6 +145,45 @@ $ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 aw
 
 ```
 # zypper install gcc pkg-config libopenssl-devel alsa-devel cmake gcc-c++ python3 freetype2-devel libexpat-devel libxcb-devel
+```
+
+### Nix/NixOS
+
+In your project's root folder, create a file `shell.nix` with the following contents:
+
+```nix
+let
+  mozilla = import (builtins.fetchTarball https://github.com/mozilla/nixpkgs-mozilla/archive/master.tar.gz);
+  nixpkgs = import <nixpkgs> { overlays = [ mozilla ]; };
+in
+
+  with nixpkgs;
+
+  mkShell {
+    buildInputs = [
+      alsaLib
+      cmake
+      freetype
+      latest.rustChannels.stable.rust
+      expat
+      openssl
+      pkgconfig
+      python3
+      vulkan-validation-layers
+      xlibs.libX11
+    ];
+
+    APPEND_LIBRARY_PATH = stdenv.lib.makeLibraryPath [
+      vulkan-loader
+      xlibs.libXcursor
+      xlibs.libXi
+      xlibs.libXrandr
+    ];
+
+    shellHook = ''
+      export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$APPEND_LIBRARY_PATH"
+    '';
+  }
 ```
 
 ### Other

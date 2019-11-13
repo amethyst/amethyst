@@ -32,7 +32,7 @@ impl<'a> PrefabData<'a> for AmbientColor {
 }
 
 /// A single object tinting applied in multiplicative mode (modulation)
-#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Tint(#[serde(with = "crate::serde_shim::srgba")] pub palette::Srgba);
 
 impl Component for Tint {

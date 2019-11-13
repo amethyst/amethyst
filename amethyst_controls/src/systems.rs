@@ -5,14 +5,11 @@ use winit::{DeviceEvent, Event, Window, WindowEvent};
 use thread_profiler::profile_scope;
 
 use amethyst_core::{
-    ecs::prelude::{
-        Join, Read, ReadExpect, ReadStorage, System, SystemData, World, Write, WriteStorage,
-    },
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, Write, WriteStorage},
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     timing::Time,
     transform::Transform,
-    SystemDesc,
 };
 use amethyst_derive::SystemDesc;
 use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};

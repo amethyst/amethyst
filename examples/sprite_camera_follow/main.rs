@@ -1,10 +1,10 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
-    core::{Named, Parent, SystemDesc, Transform, TransformBundle},
+    core::{Named, Parent, Transform, TransformBundle},
     derive::SystemDesc,
     ecs::{
-        Component, Entity, Join, NullStorage, Read, ReadStorage, System, SystemData, World,
-        WorldExt, WriteStorage,
+        Component, Entity, Join, NullStorage, Read, ReadStorage, System, SystemData, WorldExt,
+        WriteStorage,
     },
     input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
     prelude::*,
