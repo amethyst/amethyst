@@ -65,14 +65,14 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
                 let camera_transform = active_camera.entity.map_or_else(
                     || {
                         camera_query1
-                            .iter_entities()
+                            .iter_entities_immutable(world)
                             .nth(0)
                             .map(|(e, (camera, transform))| transform)
                             .expect("No cameras are currently added to the world!")
                     },
                     |e| {
                         camera_query2
-                            .iter_entities()
+                            .iter_entities_immutable(world)
                             .find(|(camera_entity, (_, transform))| *camera_entity == e)
                             .map(|(camera_entity, (_, transform))| transform)
                             .expect("Invalid entity set as ActiveCamera!")
@@ -84,7 +84,7 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
 
                 transparent_centroids.extend(
                     transparent_query
-                        .iter_entities()
+                        .iter_entities_immutable(world)
                         .map(|(e, (t, _, _))| (e, t.transform_point(&origin)))
                         // filter entities behind the camera
                         .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
@@ -108,7 +108,7 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
 
                 visibility.visible_unordered.extend(
                     non_transparent_query
-                        .iter_entities()
+                        .iter_entities_immutable(world)
                         .map(|(e, (t, _))| (e, t.transform_point(&origin)))
                         // filter entities behind the camera
                         .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)

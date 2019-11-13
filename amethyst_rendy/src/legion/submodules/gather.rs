@@ -35,7 +35,7 @@ impl CameraGatherer {
         // TODO: we do not support active camera atm because of migration
 
         <(Read<Camera>, Read<Transform>)>::query()
-            .iter_entities(world)
+            .iter_entities_immutable(world)
             .nth(0)
             .map(|(e, _)| e)
     }
@@ -61,13 +61,13 @@ impl CameraGatherer {
                     .entity
                     .and_then(|e| {
                         camera_query
-                            .iter_entities(world)
+                            .iter_entities_immutable(world)
                             .find(|(camera_entity, (_, _))| *camera_entity == e)
                             .map(|(_, (camera, transform))| (camera, transform))
                     })
                     .or_else(|| {
                         camera_query
-                            .iter_entities(world)
+                            .iter_entities_immutable(world)
                             .nth(0)
                             .map(|(e, (camera, transform))| (camera, transform))
                     })

@@ -115,7 +115,7 @@ fn orbit_system(
         .write_resource::<DebugLines>()
         .build(move |commands, world, (time, debug), query| {
             query
-                .iter_entities()
+                .iter_entities(world)
                 .for_each(|(entity, (mut translation, orbit))| {
                     let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
                     let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
@@ -647,6 +647,8 @@ fn main() -> amethyst::Result<()> {
         .migration_component_sync::<Orbit>()
         .migration_sync_bundle(amethyst::core::legion::Syncer::default())
         .migration_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
+        .migration_sync_bundle(amethyst::input::legion::Syncer::<StringBindings>::default())
+        .migration_sync_bundle(amethyst::window::legion::Syncer::default())
         .migration_with_system(RelativeStage(Stage::Logic, 100), orbit_system)
         .migration_with_bundle(amethyst::core::legion::transform::TransformBundle::default())
         .migration_with_bundle(
@@ -658,10 +660,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::default())
                 .with_plugin(RenderSwitchable3D::default())
-                .with_plugin(RenderFlat2D::default())
-            //.with_plugin(RenderShaded3D::default())
-            //.with_plugin(RenderPbr3D::default())
-            // .with_plugin(RenderFlat3D::default()),
+                .with_plugin(RenderFlat2D::default()),
         )
         //// Specs stuff
         .with(AutoFovSystem::default(), "auto_fov", &[])
