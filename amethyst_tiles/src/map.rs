@@ -150,7 +150,7 @@ impl<T: Tile, E: CoordinateEncoder> TileMap<T, E> {
         let mut data = Vec::with_capacity(size);
         data.resize_with(size, T::default);
 
-        let encoder = E::from_dimensions(&encoder_dimensions);
+        let encoder = E::from_dimensions(encoder_dimensions);
 
         Self {
             data,
