@@ -1,6 +1,6 @@
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
-use winit::{MouseButton, VirtualKeyCode};
+use winit::event::{MouseButton, VirtualKeyCode};
 
 use super::{
     bindings::BindingTypes,

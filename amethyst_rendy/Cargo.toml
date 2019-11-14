@@ -25,7 +25,7 @@ glsl-layout = "0.3"
 lazy_static = "1.4"
 log = "0.4"
 palette = { version = "0.4", features = ["serde"] }
-rendy = { version = "0.4.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1"] }
+rendy = { version = "0.5.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1", "init"] }
 ron = "0.5"
 serde = { version = "1", features = ["serde_derive"] }
 fnv = "1"
@@ -40,20 +40,19 @@ approx = "0.3.2"
 rayon = "1.3.0"
 more-asserts = "0.2.1"
 criterion = "0.3.0"
-winit = "0.19"
+winit = "0.20.0-alpha4"
 approx = "0.3"
 
 [features]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
-vulkan-x11 = ["rendy/vulkan-x11"]
 empty = ["rendy/empty"]
 profiler = [ "thread_profiler/thread_profiler", "rendy/profiler" ]
 no-slow-safety-checks = ["rendy/no-slow-safety-checks"]
 shader-compiler =  ["rendy/shader-compiler"]
 test-support =  []
 experimental-spirv-reflection = ["rendy/spirv-reflection"]
-window = ["rendy/wsi-winit", "amethyst_window"]
+window = ["rendy/init-winit", "amethyst_window"]
 
 [[bench]]
 name = "camera"

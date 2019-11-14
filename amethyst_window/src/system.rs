@@ -5,7 +5,8 @@ use amethyst_core::{
     shrev::EventChannel,
 };
 use std::path::Path;
-use winit::{Event, EventsLoop, Window};
+use winit::{event::Event, event_loop::EventLoop, window::Window};
+use winit::platform::desktop::EventLoopExtDesktop;
 
 /// System for opening and managing the window.
 #[derive(Debug)]
@@ -16,7 +17,7 @@ impl WindowSystem {
     /// sources. Returns a new `WindowSystem`
     pub fn from_config_path(
         world: &mut World,
-        events_loop: &EventsLoop,
+        events_loop: &EventLoop<()>,
         path: impl AsRef<Path>,
     ) -> Result<Self, ConfigError> {
         Ok(Self::from_config(
@@ -28,20 +29,19 @@ impl WindowSystem {
 
     /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
     /// sources. Returns a new `WindowSystem`
-    pub fn from_config(world: &mut World, events_loop: &EventsLoop, config: DisplayConfig) -> Self {
+    pub fn from_config(world: &mut World, event_loop: &EventLoop<()>, config: DisplayConfig) -> Self {
         let window = config
-            .into_window_builder(events_loop)
-            .build(events_loop)
+            .into_window_builder(event_loop)
+            .build(event_loop)
             .unwrap();
         Self::new(world, window)
     }
 
     /// Create a new `WindowSystem` wrapping the provided `Window`
     pub fn new(world: &mut World, window: Window) -> Self {
-        let hidpi = window.get_hidpi_factor();
+        let hidpi = window.hidpi_factor();
         let (width, height) = window
-            .get_inner_size()
-            .expect("Window closed during initialization!")
+            .inner_size()
             .to_physical(hidpi)
             .into();
         world.insert(ScreenDimensions::new(width, height, hidpi));
@@ -59,19 +59,18 @@ impl WindowSystem {
             screen_dimensions.dirty = false;
         }
 
-        let hidpi = window.get_hidpi_factor();
+        let hidpi = window.hidpi_factor();
 
-        if let Some(size) = window.get_inner_size() {
-            let (window_width, window_height): (f64, f64) = size.to_physical(hidpi).into();
+        let size = window.inner_size();
+        let (window_width, window_height): (f64, f64) = size.to_physical(hidpi).into();
 
-            // Send window size changes to the resource
-            if (window_width, window_height) != (width, height) {
-                screen_dimensions.update(window_width, window_height);
+        // Send window size changes to the resource
+        if (window_width, window_height) != (width, height) {
+            screen_dimensions.update(window_width, window_height);
 
-                // We don't need to send the updated size of the window back to the window itself,
-                // so set dirty to false.
-                screen_dimensions.dirty = false;
-            }
+            // We don't need to send the updated size of the window back to the window itself,
+            // so set dirty to false.
+            screen_dimensions.dirty = false;
         }
         screen_dimensions.update_hidpi_factor(hidpi);
     }
@@ -94,15 +93,15 @@ impl<'a> System<'a> for WindowSystem {
 /// any `StateEvent::Window` event into it's `handle_event` method.
 #[derive(Debug)]
 pub struct EventsLoopSystem {
-    events_loop: EventsLoop,
-    events: Vec<Event>,
+    event_loop: EventLoop<()>,
+    events: Vec<Event<()>>,
 }
 
 impl EventsLoopSystem {
     /// Creates a new `EventsLoopSystem` using the provided `EventsLoop`
-    pub fn new(events_loop: EventsLoop) -> Self {
+    pub fn new(event_loop: EventLoop<()>) -> Self {
         Self {
-            events_loop,
+            event_loop,
             events: Vec::with_capacity(128),
         }
     }
@@ -110,16 +109,16 @@ impl EventsLoopSystem {
 
 impl<'a> RunNow<'a> for EventsLoopSystem {
     fn run_now(&mut self, world: &'a World) {
-        let mut event_handler = <Write<'a, EventChannel<Event>>>::fetch(world);
+        let mut event_handler = <Write<'a, EventChannel<Event<()>>>>::fetch(world);
 
         let events = &mut self.events;
-        self.events_loop.poll_events(|event| {
+        self.event_loop.run_return(|event, _, _| {
             events.push(event);
         });
         event_handler.drain_vec_write(events);
     }
 
     fn setup(&mut self, world: &mut World) {
-        <Write<'a, EventChannel<Event>>>::setup(world);
+        <Write<'a, EventChannel<Event<()>>>>::setup(world);
     }
 }

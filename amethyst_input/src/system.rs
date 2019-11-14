@@ -1,6 +1,6 @@
 //! Input system
 use derive_new::new;
-use winit::Event;
+use winit::event::Event;
 
 use crate::{BindingTypes, Bindings, InputEvent, InputHandler};
 use amethyst_core::{
@@ -32,7 +32,7 @@ where
     fn build(self, world: &mut World) -> InputSystem<T> {
         <InputSystem<T> as System<'_>>::SystemData::setup(world);
 
-        let reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
+        let reader = world.fetch_mut::<EventChannel<Event<()>>>().register_reader();
         if let Some(bindings) = self.bindings.as_ref() {
             world.fetch_mut::<InputHandler<T>>().bindings = bindings.clone();
         }
@@ -50,18 +50,18 @@ pub struct InputSystem<T>
 where
     T: BindingTypes,
 {
-    reader: ReaderId<Event>,
+    reader: ReaderId<Event<()>>,
     bindings: Option<Bindings<T>>,
 }
 
 impl<T: BindingTypes> InputSystem<T> {
     /// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
-    pub fn new(reader: ReaderId<Event>, bindings: Option<Bindings<T>>) -> Self {
+    pub fn new(reader: ReaderId<Event<()>>, bindings: Option<Bindings<T>>) -> Self {
         InputSystem { reader, bindings }
     }
 
     fn process_event(
-        event: &Event,
+        event: &Event<()>,
         handler: &mut InputHandler<T>,
         output: &mut EventChannel<InputEvent<T>>,
         hidpi: f32,
@@ -72,7 +72,7 @@ impl<T: BindingTypes> InputSystem<T> {
 
 impl<'a, T: BindingTypes> System<'a> for InputSystem<T> {
     type SystemData = (
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         Write<'a, InputHandler<T>>,
         Write<'a, EventChannel<InputEvent<T>>>,
         ReadExpect<'a, ScreenDimensions>,

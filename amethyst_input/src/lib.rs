@@ -27,7 +27,7 @@ pub use self::{
         is_key_up, is_mouse_button_down,
     },
 };
-pub use winit::{ElementState, VirtualKeyCode};
+pub use winit::event::{ElementState, VirtualKeyCode};
 
 use std::iter::Iterator;
 

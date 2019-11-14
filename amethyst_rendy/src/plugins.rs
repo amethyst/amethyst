@@ -103,7 +103,7 @@ mod window {
             self.dirty = false;
 
             let window = <ReadExpect<'_, Window>>::fetch(world);
-            let surface = factory.create_surface(&window);
+            let surface = factory.create_surface(&*window)?;
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
@@ -111,7 +111,12 @@ mod window {
                 kind: window_kind,
                 levels: 1,
                 format: Format::D32Sfloat,
-                clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+                clear: Some(ClearValue {
+                    depth_stencil: ClearDepthStencil {
+                        depth: 1.0, 
+                        stencil: 0
+                    }
+                }),
             };
 
             plan.add_root(Target::Main);
@@ -120,7 +125,9 @@ mod window {
                 crate::bundle::TargetPlanOutputs {
                     colors: vec![OutputColor::Surface(
                         surface,
-                        self.clear.map(ClearValue::Color),
+                        self.clear.map(|c|ClearValue {
+                            color: c
+                        }),
                     )],
                     depth: Some(depth_options),
                 },

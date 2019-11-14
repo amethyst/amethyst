@@ -492,7 +492,7 @@ impl TargetImage {
 }
 
 /// Set of options required to create an image node in render graph.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct ImageOptions {
     /// Image kind and size
     pub kind: hal::image::Kind,
@@ -647,8 +647,10 @@ impl<B: Backend> TargetPlan<B> {
         for (i, color) in outputs.colors.drain(..).enumerate() {
             match color {
                 OutputColor::Surface(surface, clear) => {
+                    let target_metadata = ctx.target_metadata[&self.key];
+                    let suggested_extend = hal::window::Extent2D { width: target_metadata.width, height: target_metadata.height };
                     subpass.add_color_surface();
-                    pass.add_surface(surface, clear);
+                    pass.add_surface(surface, suggested_extend, clear);
                 }
                 OutputColor::Image(opts) => {
                     let node = ctx.create_image(opts);

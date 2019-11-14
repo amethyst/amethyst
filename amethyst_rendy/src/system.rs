@@ -8,10 +8,11 @@ use crate::{
     skinning::JointTransforms,
     sprite::SpriteRender,
     transparent::Transparent,
-    types::{Backend, Mesh, Texture},
+    types::{SelectedBackend, Backend, Mesh, Texture},
     visibility::Visibility,
 };
 use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
+use amethyst_error::Error;
 use amethyst_core::{
     components::Transform,
     ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, World, Write, WriteExpect},
@@ -21,9 +22,12 @@ use amethyst_core::{
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
+    core::EnabledBackend,
+    init::{self, AnyRendy},
     factory::{Factory, ImageState},
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
+    with_any_rendy,
 };
 use std::{marker::PhantomData, sync::Arc};
 
@@ -145,7 +149,9 @@ where
 
     fn setup(&mut self, world: &mut World) {
         let config: rendy::factory::Config = Default::default();
-        let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
+        let backend = EnabledBackend::which::<B>();
+        let rendy = AnyRendy::init(backend, &config).expect("Failed to initialize graphics backend.");
+        let (factory, families): (Factory<B>, Families<B>) = with_any_rendy!((rendy) (factory, families) => {(factory, families)});
 
         let queue_id = QueueId {
             family: families.family_by_index(0).id(),
@@ -211,7 +217,7 @@ impl<'a, B: Backend> System<'a> for MeshProcessorSystem<B> {
                 b.0.build(*queue_id, &factory)
                     .map(B::wrap_mesh)
                     .map(ProcessingState::Loaded)
-                    .map_err(|e| e.compat().into())
+                    .map_err(|e| Error::new(e))
             },
             time.frame_number(),
             &**pool,
@@ -258,7 +264,7 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
                 )
                 .map(B::wrap_texture)
                 .map(ProcessingState::Loaded)
-                .map_err(|e| e.compat().into())
+                .map_err(|e| Error::new(e))
             },
             time.frame_number(),
             &**pool,

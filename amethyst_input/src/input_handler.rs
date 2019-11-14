@@ -11,8 +11,11 @@ use derivative::Derivative;
 use smallvec::SmallVec;
 use std::{borrow::Borrow, hash::Hash};
 use winit::{
-    dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
-    MouseScrollDelta, VirtualKeyCode, WindowEvent,
+    dpi::LogicalPosition, 
+    event::{
+        DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
+        MouseScrollDelta, VirtualKeyCode, WindowEvent,
+    }
 };
 
 /// This struct holds state information about input devices.
@@ -58,7 +61,7 @@ where
     /// the world as a resource.
     pub fn send_event(
         &mut self,
-        event: &Event,
+        event: &Event<()>,
         event_handler: &mut EventChannel<InputEvent<T>>,
         hidpi: f32,
     ) {
