@@ -92,15 +92,15 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawSkyboxDesc {
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
-        let env = FlatEnvironmentSub::new(factory)?;
-        let colors = DynamicUniform::new(factory, pso::ShaderStageFlags::FRAGMENT)?;
+        let env = FlatEnvironmentSub::new(factory).map_err(|_| pso::CreationError::Other)?;
+        let colors = DynamicUniform::new(factory, pso::ShaderStageFlags::FRAGMENT).map_err(|_| pso::CreationError::Other)?;
         let mesh = Shape::Sphere(16, 16)
             .generate::<Vec<PosTex>>(None)
-            .build(queue, factory)?;
+            .build(queue, factory).map_err(|_| pso::CreationError::Other)?;
 
         let (pipeline, pipeline_layout) = build_skybox_pipeline(
             factory,
@@ -195,7 +195,7 @@ fn build_skybox_pipeline<B: Backend>(
     framebuffer_width: u32,
     framebuffer_height: u32,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()
@@ -225,7 +225,7 @@ fn build_skybox_pipeline<B: Backend>(
                     blend: None,
                 }]),
         )
-        .build(factory, None);
+        .build(factory, None).map_err(|_| pso::CreationError::Other);
 
     unsafe {
         factory.destroy_shader_module(shader_vertex);

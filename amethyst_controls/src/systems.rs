@@ -1,5 +1,8 @@
 use derive_new::new;
-use winit::{DeviceEvent, Event, Window, WindowEvent};
+use winit::{
+    event::{DeviceEvent, Event, WindowEvent}, 
+    window::Window,
+};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -129,12 +132,12 @@ pub struct FreeRotationSystem {
     sensitivity_x: f32,
     sensitivity_y: f32,
     #[system_desc(event_channel_reader)]
-    event_reader: ReaderId<Event>,
+    event_reader: ReaderId<Event<()>>,
 }
 
 impl<'a> System<'a> for FreeRotationSystem {
     type SystemData = (
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
         Read<'a, WindowFocus>,
@@ -170,11 +173,11 @@ impl<'a> System<'a> for FreeRotationSystem {
 #[system_desc(name(MouseFocusUpdateSystemDesc))]
 pub struct MouseFocusUpdateSystem {
     #[system_desc(event_channel_reader)]
-    event_reader: ReaderId<Event>,
+    event_reader: ReaderId<Event<()>>,
 }
 
 impl<'a> System<'a> for MouseFocusUpdateSystem {
-    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
+    type SystemData = (Read<'a, EventChannel<Event<()>>>, Write<'a, WindowFocus>);
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
         #[cfg(feature = "profiler")]
@@ -219,16 +222,16 @@ impl<'a> System<'a> for CursorHideSystem {
 
         let should_be_hidden = focus.is_focused && hide.hide;
         if !self.is_hidden && should_be_hidden {
-            if let Err(err) = win.grab_cursor(true) {
+            if let Err(err) = win.set_cursor_grab(true) {
                 log::error!("Unable to grab the cursor. Error: {:?}", err);
             }
-            win.hide_cursor(true);
+            win.set_cursor_visible(false);
             self.is_hidden = true;
         } else if self.is_hidden && !should_be_hidden {
-            if let Err(err) = win.grab_cursor(false) {
+            if let Err(err) = win.set_cursor_grab(false) {
                 log::error!("Unable to release the cursor. Error: {:?}", err);
             }
-            win.hide_cursor(false);
+            win.set_cursor_visible(true);
             self.is_hidden = false;
         }
     }

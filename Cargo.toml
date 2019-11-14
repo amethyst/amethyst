@@ -21,7 +21,7 @@ travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 [features]
 default = ["animation", "audio", "locale", "network", "renderer"]
 
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
@@ -147,7 +147,7 @@ log = { version = "0.4.6", features = ["serde"] }
 rayon = "1.1.0"
 rustc_version_runtime = "0.1"
 sentry = { version = "0.17.0", optional = true }
-winit = { version = "0.19", features = ["serde", "icon_loading"] }
+winit = { version = "0.20.0-alpha4", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
 failure = "0.1"

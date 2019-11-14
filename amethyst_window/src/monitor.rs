@@ -1,30 +1,30 @@
 use serde::{Deserialize, Serialize};
-use winit::{AvailableMonitorsIter, EventsLoop, MonitorId, Window};
+use winit::{event::Event, event_loop::EventLoop, monitor::MonitorHandle, window::Window};
 
 /// A struct that can resolve monitors.
 /// Usually either a Window or an EventsLoop.
-pub trait MonitorsAccess {
+pub trait MonitorsAccess {    
     /// Returns an iterator over the available monitors
-    fn iter(&self) -> AvailableMonitorsIter;
-    /// Returns the `MonitorId` of the primary display
-    fn primary(&self) -> MonitorId;
+    fn iter(&self) -> Box<Iterator<Item = MonitorHandle>>;
+    /// Returns the `MonitorHandle` of the primary display
+    fn primary(&self) -> MonitorHandle;
 }
 
-impl MonitorsAccess for EventsLoop {
-    fn iter(&self) -> AvailableMonitorsIter {
-        self.get_available_monitors()
+impl MonitorsAccess for EventLoop<()> {
+    fn iter(&self) -> Box<Iterator<Item = MonitorHandle>> {
+        Box::new(self.available_monitors())
     }
-    fn primary(&self) -> MonitorId {
-        self.get_primary_monitor()
+    fn primary(&self) -> MonitorHandle {
+        self.primary_monitor()
     }
 }
 
 impl MonitorsAccess for Window {
-    fn iter(&self) -> AvailableMonitorsIter {
-        self.get_available_monitors()
+    fn iter(&self) -> Box<Iterator<Item = MonitorHandle>> {
+        Box::new(self.available_monitors())
     }
-    fn primary(&self) -> MonitorId {
-        self.get_primary_monitor()
+    fn primary(&self) -> MonitorHandle {
+        self.primary_monitor()
     }
 }
 
@@ -45,36 +45,37 @@ impl MonitorIdent {
     }
 
     /// Get the identifier for specific monitor id.
-    pub fn from_monitor_id(monitors: &impl MonitorsAccess, monitor_id: MonitorId) -> Option<Self> {
-        #[cfg(target_os = "ios")]
-        use winit::ios::windows::MonitorIdExt;
-        #[cfg(target_os = "macos")]
-        use winit::os::macos::MonitorIdExt;
-        #[cfg(any(
-            target_os = "linux",
-            target_os = "dragonfly",
-            target_os = "freebsd",
-            target_os = "netbsd",
-            target_os = "openbsd"
-        ))]
-        use winit::os::unix::MonitorIdExt;
-        #[cfg(target_os = "windows")]
-        use winit::os::windows::MonitorIdExt;
+    pub fn from_monitor_id(monitors: &impl MonitorsAccess, monitor: MonitorHandle) -> Option<Self> {
+        // #[cfg(target_os = "ios")]
+        // use winit::platform::windows::MonitorIdExt;
+        // #[cfg(target_os = "macos")]
+        // use winit::platform::macos::MonitorIdExt;
+        // #[cfg(any(
+        //     target_os = "linux",
+        //     target_os = "dragonfly",
+        //     target_os = "freebsd",
+        //     target_os = "netbsd",
+        //     target_os = "openbsd"
+        // ))]
+        // use winit::platform::unix::MonitorHandleExtUnix;
+        // #[cfg(target_os = "windows")]
+        // use winit::platform::windows::MonitorIdExt;
 
-        let native_id = monitor_id.native_id();
-        monitors
-            .iter()
-            .enumerate()
-            .find(|(_, m)| m.native_id() == native_id)
-            .and_then(|(i, m)| m.get_name().map(|name| Self(i as u16, name)))
+        // let native_id = monitor_id.native_id();
+        // monitors
+        //     .iter()
+        //     .enumerate()
+        //     .find(|(_, m)| m.native_id() == native_id)
+        //     .and_then(|(i, m)| m.get_name().map(|name| Self(i as u16, name)))
+        None
     }
 
     /// Select a monitor that matches this identifier most closely.
-    pub fn monitor_id(&self, monitors: &impl MonitorsAccess) -> MonitorId {
+    pub fn monitor_id(&self, monitors: &impl MonitorsAccess) -> MonitorHandle {
         monitors
             .iter()
             .enumerate()
-            .filter(|(_, m)| m.get_name().map(|n| n == self.1).unwrap_or(false))
+            .filter(|(_, m)| m.name().map(|n| n == self.1).unwrap_or(false))
             .max_by_key(|(i, _)| (*i as i32 - i32::from(self.0)).abs() as u16)
             .map(|(_, m)| m)
             .unwrap_or_else(|| monitors.primary())

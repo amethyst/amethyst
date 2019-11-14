@@ -118,6 +118,7 @@ impl_backends!(
     Empty, "empty", rendy::empty::Backend;
 );
 
+
 impl Asset for Mesh {
     const NAME: &'static str = "Mesh";
     type Data = MeshData;

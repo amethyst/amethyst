@@ -109,7 +109,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, pso::CreationError> {
         profile_scope_impl!("build");
 
         let env = EnvironmentSub::new(
@@ -118,9 +118,9 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<
                 hal::pso::ShaderStageFlags::VERTEX,
                 hal::pso::ShaderStageFlags::FRAGMENT,
             ],
-        )?;
-        let materials = MaterialSub::new(factory)?;
-        let skinning = SkinningSub::new(factory)?;
+        ).map_err(|_| pso::CreationError::Other)?;
+        let materials = MaterialSub::new(factory).map_err(|_| pso::CreationError::Other)?;
+        let skinning = SkinningSub::new(factory).map_err(|_| pso::CreationError::Other)?;
 
         let mut vertex_format_base = T::base_format();
         let mut vertex_format_skinned = T::skinned_format();
@@ -431,17 +431,17 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTrans
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, pso::CreationError> {
         let env = EnvironmentSub::new(
             factory,
             [
                 hal::pso::ShaderStageFlags::VERTEX,
                 hal::pso::ShaderStageFlags::FRAGMENT,
             ],
-        )?;
+        ).map_err(|_| pso::CreationError::Other)?;
 
-        let materials = MaterialSub::new(factory)?;
-        let skinning = SkinningSub::new(factory)?;
+        let materials = MaterialSub::new(factory).map_err(|_| pso::CreationError::Other)?;
+        let skinning = SkinningSub::new(factory).map_err(|_| pso::CreationError::Other)?;
 
         let mut vertex_format_base = T::base_format();
         let mut vertex_format_skinned = T::skinned_format();
@@ -714,7 +714,7 @@ fn build_pipelines<B: Backend, T: Base3DPassDef>(
     skinning: bool,
     transparent: bool,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(Vec<B::GraphicsPipeline>, B::PipelineLayout), failure::Error> {
+) -> Result<(Vec<B::GraphicsPipeline>, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()
@@ -784,11 +784,11 @@ fn build_pipelines<B: Backend, T: Base3DPassDef>(
             factory.destroy_shader_module(shader_vertex_skinned);
         }
 
-        pipe
+        pipe.map_err(|_| pso::CreationError::Other)
     } else {
         PipelinesBuilder::new()
             .with_pipeline(pipe_desc)
-            .build(factory, None)
+            .build(factory, None).map_err(|_| pso::CreationError::Other)
     };
 
     unsafe {

@@ -23,7 +23,7 @@ derivative = "1.0"
 derive-new = "0.5"
 fnv = "1"
 serde = { version = "1", features = ["derive"] }
-winit = { version = "0.19", features = ["serde"] }
+winit = { version = "0.20.0-alpha4", features = ["serde"] }
 sdl2 = { version = "0.32.2", optional = true }
 
 thread_profiler = { version = "0.3", optional = true }

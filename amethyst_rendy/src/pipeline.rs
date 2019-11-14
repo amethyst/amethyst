@@ -9,10 +9,9 @@ use rendy::{
         pso::{
             AttributeDesc, BakedStates, BasePipeline, BlendDesc, ColorBlendDesc, DepthStencilDesc,
             DepthTest, Face, GraphicsPipelineDesc, GraphicsShaderSet, InputAssemblerDesc,
-            Multisampling, PipelineCreationFlags, Rasterizer, Rect, VertexBufferDesc,
+            Multisampling, PipelineCreationFlags, Primitive, Rasterizer, Rect, VertexBufferDesc,
             VertexInputRate, Viewport,
         },
-        Primitive,
     },
     mesh::VertexFormat,
 };
