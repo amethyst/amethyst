@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use derivative::Derivative;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use amethyst_core::{
     ecs::{
@@ -66,7 +66,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     #[system_desc(event_channel_reader)]
-    window_reader_id: ReaderId<Event>,
+    window_reader_id: ReaderId<Event<()>>,
     phantom: PhantomData<G>,
 }
 
@@ -75,7 +75,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     /// Creates a new `SelectionKeyboardSystem`.
-    pub fn new(window_reader_id: ReaderId<Event>) -> Self {
+    pub fn new(window_reader_id: ReaderId<Event<()>>) -> Self {
         Self {
             window_reader_id,
             phantom: PhantomData,
@@ -88,7 +88,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     type SystemData = (
-        Read<'a, EventChannel<Event>>,
+        Read<'a, EventChannel<Event<()>>>,
         Read<'a, CachedSelectionOrder>,
         WriteStorage<'a, Selected>,
         Write<'a, EventChannel<UiEvent>>,

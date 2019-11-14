@@ -1,5 +1,5 @@
 use derivative::Derivative;
-use winit::Event;
+use winit::event::Event;
 
 use crate::{
     core::{
@@ -22,7 +22,7 @@ where
     T: BindingTypes,
 {
     /// Events sent by the winit window.
-    Window(Event),
+    Window(Event<()>),
     /// Events sent by the ui system.
     Ui(UiEvent),
     /// Events sent by the input system.

@@ -13,7 +13,7 @@ use amethyst_input::{BindingTypes, InputHandler};
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
-use winit::MouseButton;
+use winit::event::MouseButton;
 
 pub trait TargetedEvent {
     fn get_target(&self) -> Entity;

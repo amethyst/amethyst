@@ -1,8 +1,10 @@
-use crate::{DisplayConfig, EventsLoopSystem, WindowSystem};
+use crate::{DisplayConfig, WindowSystem, EventLoop};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{bundle::SystemBundle, ecs::World, shred::DispatcherBuilder};
 use amethyst_error::Error;
-use winit::event_loop::EventLoop;
+use std::sync::{Arc, Mutex};
+use amethyst_core::shred::cell::TrustCell;
+
 
 /// Screen width used in predefined display configuration.
 #[cfg(feature = "test-support")]
@@ -15,37 +17,11 @@ pub const SCREEN_HEIGHT: u32 = 600;
 /// `EventLoopSystem` constructs used for creating the rendering window of amethyst with `winit`
 #[derive(Debug)]
 pub struct WindowBundle {
-    config: DisplayConfig,
 }
 
 impl WindowBundle {
-    /// Builds a new window bundle from a loaded `DisplayConfig`.
-    pub fn from_config(config: DisplayConfig) -> Self {
-        WindowBundle { config }
-    }
-
-    /// Builds a new window bundle by loading the `DisplayConfig` from `path`.
-    ///
-    /// Will fall back to `DisplayConfig::default()` in case of an error.
-    pub fn from_config_path(path: impl AsRef<std::path::Path>) -> Result<Self, ConfigError> {
-        Ok(WindowBundle::from_config(DisplayConfig::load(
-            path.as_ref(),
-        )?))
-    }
-
-    /// Builds a new window bundle with a predefined `DisplayConfig`.
-    ///
-    /// This uses a `DisplayConfig::default()`, but with the following differences:
-    ///
-    /// * `dimensions` is changed to `Some((SCREEN_WIDTH, SCREEN_HEIGHT))`.
-    /// * `visibility` is `false`.
-    #[cfg(feature = "test-support")]
-    pub fn from_test_config() -> Self {
-        let mut display_config = DisplayConfig::default();
-        display_config.dimensions = Some((SCREEN_WIDTH, SCREEN_HEIGHT));
-        display_config.visibility = false;
-
-        WindowBundle::from_config(display_config)
+    pub fn new() -> Self {
+        Self { }
     }
 }
 
@@ -55,13 +31,12 @@ impl<'a, 'b> SystemBundle<'a, 'b> for WindowBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        let event_loop = EventLoop::new();
-        builder.add(
-            WindowSystem::from_config(world, &event_loop, self.config),
-            "window",
-            &[],
+        
+        builder.add_thread_local(
+            WindowSystem::new()
         );
-        builder.add_thread_local(EventsLoopSystem::new(event_loop));
+        // world.insert(TrustCell::new(event_loop));
+        // builder.add_thread_local(EventsLoopSystem::new(event_loop));
         Ok(())
     }
 }

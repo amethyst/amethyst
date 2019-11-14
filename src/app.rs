@@ -1,6 +1,6 @@
 //! The core engine framework.
 
-use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
+use std::{env, marker::PhantomData, path::Path, sync::Arc, sync::Mutex, time::Duration};
 
 use crate::shred::Resource;
 use derivative::Derivative;
@@ -8,7 +8,8 @@ use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
-use winit::Event;
+use winit::event::Event;
+use winit::event_loop::EventLoop;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
@@ -55,7 +56,7 @@ where
     reader: R,
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
-    event_reader_id: ReaderId<Event>,
+    event_reader_id: ReaderId<Event<()>>,
     #[derivative(Debug = "ignore")]
     trans_reader_id: ReaderId<TransEvent<T, E>>,
     states: StateMachine<'a, T, E>,
@@ -259,8 +260,9 @@ where
         self.shutdown();
     }
 
+
     /// Sets up the application.
-    fn initialize(&mut self) {
+    pub fn initialize(&mut self) {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
         self.states
@@ -273,10 +275,10 @@ where
         if self.ignore_window_close {
             false
         } else {
-            use crate::winit::WindowEvent;
+            use crate::winit::event::WindowEvent;
             let world = &mut self.world;
             let reader_id = &mut self.event_reader_id;
-            world.exec(|ev: Read<'_, EventChannel<Event>>| {
+            world.exec(|ev: Read<'_, EventChannel<Event<()>>>| {
                 ev.read(reader_id).any(|e| {
                     if cfg!(target_os = "ios") {
                         if let Event::WindowEvent {
@@ -402,6 +404,63 @@ where
         let app_root = application_root_dir().expect("application root dir to exist");
         let path = app_root.join("thread_profile.json");
         write_profile(path.to_str().expect("application root dir to be a string"));
+    }
+}
+
+use winit::event_loop::ControlFlow;
+pub trait CoreApplicationWinitExt<'a, T, E, R> where
+    T: DataDispose + 'static,
+    E: Clone + Send + Sync + 'static,
+{
+    
+    fn run_winit_loop(&mut self, event: Event<()>, control_flow: &mut ControlFlow ) -> ()
+        where
+            for<'b> R: EventReader<'b, Event = E>;
+}
+
+impl<'a, T, E, R> CoreApplicationWinitExt<'a, T, E, R> for CoreApplication<'a, T, E, R> where
+    T: DataDispose + 'static,
+    E: Clone + Send + Sync + 'static,
+{
+    fn run_winit_loop(&mut self, event: Event<()>, control_flow: &mut ControlFlow ) -> ()
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
+        self.world.write_resource::<Stopwatch>().start();
+        
+        if Event::EventsCleared == event {
+            if !self.states.is_running() {
+                {
+                    let mut stopwatch = self.world.write_resource::<Stopwatch>();
+                    stopwatch.stop();
+                }
+                info!("Engine is shutting down");
+                self.data.dispose(&mut self.world);
+                
+                *control_flow = ControlFlow::Exit;
+                return;
+            }
+            self.advance_frame();
+            {
+                #[cfg(feature = "profiler")]
+                profile_scope!("frame_limiter wait");
+                self.world.write_resource::<FrameLimiter>().wait();
+            }
+            {
+                let elapsed = self.world.read_resource::<Stopwatch>().elapsed();
+                let mut time = self.world.write_resource::<Time>();
+                time.increment_frame_number();
+                time.set_delta_time(elapsed);
+            }
+            let mut stopwatch = self.world.write_resource::<Stopwatch>();
+            stopwatch.stop();
+            stopwatch.restart();
+            *control_flow = ControlFlow::Poll;
+        }
+        {
+            let mut event_handler = self.world.write_resource::<EventChannel<Event<()>>>();
+            event_handler.single_write(event);
+        }
     }
 }
 
@@ -543,7 +602,7 @@ where
         }
         world.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.insert(pool);
-        world.insert(EventChannel::<Event>::with_capacity(2000));
+        world.insert(EventChannel::<Event<()>>::with_capacity(2000));
         world.insert(EventChannel::<UiEvent>::with_capacity(40));
         world.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         world.insert(FrameLimiter::default());
@@ -894,7 +953,7 @@ where
         let data = init.build(&mut self.world);
         let event_reader_id = self
             .world
-            .exec(|mut ev: Write<'_, EventChannel<Event>>| ev.register_reader());
+            .exec(|mut ev: Write<'_, EventChannel<Event<()>>>| ev.register_reader());
 
         let trans_reader_id = self
             .world

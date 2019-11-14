@@ -1,7 +1,7 @@
 //! Contains common types that can be glob-imported (`*`) for convenience.
 
 pub use crate::{
-    app::{Application, ApplicationBuilder, CoreApplication},
+    app::{Application, ApplicationBuilder, CoreApplication, CoreApplicationWinitExt},
     callback_queue::{Callback, CallbackQueue},
     config::Config,
     core::{SystemDesc, SystemExt, WithNamed},

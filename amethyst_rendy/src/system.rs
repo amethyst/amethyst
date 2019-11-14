@@ -8,7 +8,7 @@ use crate::{
     skinning::JointTransforms,
     sprite::SpriteRender,
     transparent::Transparent,
-    types::{SelectedBackend, Backend, Mesh, Texture},
+    types::{Backend, Mesh, Texture},
     visibility::Visibility,
 };
 use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
@@ -53,7 +53,7 @@ where
     G: GraphCreator<B>,
 {
     graph: Option<Graph<B, World>>,
-    families: Option<Families<B>>,
+    families: Families<B>,
     graph_creator: G,
 }
 
@@ -63,10 +63,10 @@ where
     G: GraphCreator<B>,
 {
     /// Create a new `RenderingSystem` with the supplied graph via `GraphCreator`
-    pub fn new(graph_creator: G) -> Self {
+    pub fn new(graph_creator: G, families: Families<B>) -> Self {
         Self {
             graph: None,
-            families: None,
+            families,
             graph_creator,
         }
     }
@@ -117,7 +117,7 @@ where
             #[cfg(feature = "profiler")]
             profile_scope!("build_graph");
             builder
-                .build(&mut factory, self.families.as_mut().unwrap(), world)
+                .build(&mut factory, &mut self.families, world)
                 .unwrap()
         };
 
@@ -126,11 +126,11 @@ where
 
     fn run_graph(&mut self, world: &World) {
         let mut factory = world.fetch_mut::<Factory<B>>();
-        factory.maintain(self.families.as_mut().unwrap());
+        factory.maintain(&mut self.families);
         self.graph
             .as_mut()
             .unwrap()
-            .run(&mut factory, self.families.as_mut().unwrap(), world)
+            .run(&mut factory, &mut self.families, world)
     }
 }
 
@@ -148,20 +148,6 @@ where
     }
 
     fn setup(&mut self, world: &mut World) {
-        let config: rendy::factory::Config = Default::default();
-        let backend = EnabledBackend::which::<B>();
-        let rendy = AnyRendy::init(backend, &config).expect("Failed to initialize graphics backend.");
-        let (factory, families): (Factory<B>, Families<B>) = with_any_rendy!((rendy) (factory, families) => {(factory, families)});
-
-        let queue_id = QueueId {
-            family: families.family_by_index(0).id(),
-            index: 0,
-        };
-
-        self.families = Some(families);
-        world.insert(factory);
-        world.insert(queue_id);
-
         SetupData::setup(world);
 
         let mat = create_default_mat::<B>(world);
@@ -182,8 +168,6 @@ where
         if let Some(mut storage) = world.try_fetch_mut::<AssetStorage<Texture>>() {
             storage.unload_all();
         }
-
-        log::debug!("Drop families");
         drop(self.families);
     }
 }
