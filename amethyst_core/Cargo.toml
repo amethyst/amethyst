@@ -37,7 +37,7 @@ purple = { git = "https://github.com/jaynus/purple.git" }
 
 thread_profiler = { version = "0.3", optional = true }
 
-legion = { git = "https://github.com/jaynus/TomGillen.git", optional = true }
+legion = { git = "https://github.com/TomGillen/legion.git", optional = true }
 legion_transform = { git = "https://github.com/AThilenius/legion_transform.git", optional = true }
 
 #legion = { path = "../../legion", optional = true }
