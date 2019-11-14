@@ -1,11 +1,11 @@
-use crate::{config::DisplayConfig, resources::ScreenDimensions};
+use crate::{DisplayConfig, ScreenDimensions};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
     ecs::{ReadExpect, RunNow, System, SystemData, World, Write, WriteExpect},
     shrev::EventChannel,
 };
 use std::path::Path;
-use winit::{event::Event, event_loop::EventLoop, window::Window};
+use winit::{event::Event, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}, window::Window};
 use winit::platform::desktop::EventLoopExtDesktop;
 
 /// System for opening and managing the window.
@@ -13,39 +13,9 @@ use winit::platform::desktop::EventLoopExtDesktop;
 pub struct WindowSystem;
 
 impl WindowSystem {
-    /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
-    /// sources. Returns a new `WindowSystem`
-    pub fn from_config_path(
-        world: &mut World,
-        events_loop: &EventLoop<()>,
-        path: impl AsRef<Path>,
-    ) -> Result<Self, ConfigError> {
-        Ok(Self::from_config(
-            world,
-            events_loop,
-            DisplayConfig::load(path.as_ref())?,
-        ))
-    }
-
-    /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
-    /// sources. Returns a new `WindowSystem`
-    pub fn from_config(world: &mut World, event_loop: &EventLoop<()>, config: DisplayConfig) -> Self {
-        let window = config
-            .into_window_builder(event_loop)
-            .build(event_loop)
-            .unwrap();
-        Self::new(world, window)
-    }
 
     /// Create a new `WindowSystem` wrapping the provided `Window`
-    pub fn new(world: &mut World, window: Window) -> Self {
-        let hidpi = window.hidpi_factor();
-        let (width, height) = window
-            .inner_size()
-            .to_physical(hidpi)
-            .into();
-        world.insert(ScreenDimensions::new(width, height, hidpi));
-        world.insert(window);
+    pub fn new() -> Self {
         Self
     }
 
@@ -87,38 +57,3 @@ impl<'a> System<'a> for WindowSystem {
     }
 }
 
-/// System that polls the window events and pushes them to appropriate event channels.
-///
-/// This system must be active for any `GameState` to receive
-/// any `StateEvent::Window` event into it's `handle_event` method.
-#[derive(Debug)]
-pub struct EventsLoopSystem {
-    event_loop: EventLoop<()>,
-    events: Vec<Event<()>>,
-}
-
-impl EventsLoopSystem {
-    /// Creates a new `EventsLoopSystem` using the provided `EventsLoop`
-    pub fn new(event_loop: EventLoop<()>) -> Self {
-        Self {
-            event_loop,
-            events: Vec::with_capacity(128),
-        }
-    }
-}
-
-impl<'a> RunNow<'a> for EventsLoopSystem {
-    fn run_now(&mut self, world: &'a World) {
-        let mut event_handler = <Write<'a, EventChannel<Event<()>>>>::fetch(world);
-
-        let events = &mut self.events;
-        self.event_loop.run_return(|event, _, _| {
-            events.push(event);
-        });
-        event_handler.drain_vec_write(events);
-    }
-
-    fn setup(&mut self, world: &mut World) {
-        <Write<'a, EventChannel<Event<()>>>>::setup(world);
-    }
-}

@@ -4,7 +4,6 @@
 */
 
 #![enable(implicit_some)]
-
 // Used in the rendy example for sprite Tint
 Grid((
     texture_width: 32,

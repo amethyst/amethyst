@@ -27,7 +27,7 @@ mod window {
         ecs::{ReadExpect, SystemData},
         SystemBundle,
     };
-    use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
+    use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle, EventLoop};
     use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
     use std::path::Path;
 
@@ -37,24 +37,14 @@ mod window {
     #[derive(Default, Debug)]
     pub struct RenderToWindow {
         target: Target,
-        config: Option<DisplayConfig>,
         dimensions: Option<ScreenDimensions>,
         dirty: bool,
         clear: Option<ClearColor>,
     }
 
     impl RenderToWindow {
-        /// Create RenderToWindow plugin with [`WindowBundle`] using specified config path.
-        pub fn from_config_path(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
-            Ok(Self::from_config(DisplayConfig::load(path)?))
-        }
-
-        /// Create RenderToWindow plugin with [`WindowBundle`] using specified config.
-        pub fn from_config(display_config: DisplayConfig) -> Self {
-            Self {
-                config: Some(display_config),
-                ..Default::default()
-            }
+        pub fn new() -> Self {
+            Self { ..Default::default() }
         }
 
         /// Select render target which will be presented to window.
@@ -70,16 +60,13 @@ mod window {
         }
     }
 
-    impl<B: Backend> RenderPlugin<B> for RenderToWindow {
+    impl< B: Backend> RenderPlugin<B> for RenderToWindow {
         fn on_build<'a, 'b>(
             &mut self,
             world: &mut World,
             builder: &mut DispatcherBuilder<'a, 'b>,
         ) -> Result<(), Error> {
-            if let Some(config) = self.config.take() {
-                WindowBundle::from_config(config).build(world, builder)?;
-            }
-
+            WindowBundle::new().build(world, builder)?;
             Ok(())
         }
 
@@ -101,7 +88,7 @@ mod window {
             world: &World,
         ) -> Result<(), Error> {
             self.dirty = false;
-
+            
             let window = <ReadExpect<'_, Window>>::fetch(world);
             let surface = factory.create_surface(&*window)?;
             let dimensions = self.dimensions.as_ref().unwrap();

@@ -14,7 +14,7 @@ use amethyst_input::{BindingTypes, InputHandler};
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, marker::PhantomData};
-use winit::MouseButton;
+use winit::event::MouseButton;
 
 /// An event that pertains to a specific `Entity`, for example a `UiEvent` for clicking on a widget
 /// entity.

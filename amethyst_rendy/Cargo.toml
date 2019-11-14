@@ -25,7 +25,7 @@ glsl-layout = "0.3"
 lazy_static = "1.4"
 log = "0.4"
 palette = { version = "0.4", features = ["serde"] }
-rendy = { version = "0.5.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1", "init"] }
+rendy = {git = "https://github.com/valkum/rendy", branch = "error_impl", version = "0.5.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1", "init"] }
 ron = "0.5"
 serde = { version = "1", features = ["serde_derive"] }
 fnv = "1"

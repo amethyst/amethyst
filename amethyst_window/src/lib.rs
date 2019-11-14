@@ -11,7 +11,7 @@
 #![allow(clippy::new_without_default)]
 
 mod bundle;
-mod config;
+mod display_config;
 mod monitor;
 mod resources;
 mod system;
@@ -20,9 +20,9 @@ mod system;
 pub use crate::bundle::{SCREEN_HEIGHT, SCREEN_WIDTH};
 pub use crate::{
     bundle::WindowBundle,
-    config::DisplayConfig,
+    display_config::DisplayConfig,
     monitor::{MonitorIdent, MonitorsAccess},
     resources::ScreenDimensions,
-    system::{EventsLoopSystem, WindowSystem},
+    system::WindowSystem,
 };
-pub use winit::window::{Icon, Window};
+pub use winit::{event_loop::EventLoop, window::{Icon, Window}};
