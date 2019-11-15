@@ -4,7 +4,7 @@ use winit::{MouseButton, VirtualKeyCode};
 use super::{controller::ControllerButton, scroll_direction::ScrollDirection};
 
 /// A Button is any kind of digital input that the engine supports.
-#[derive(Eq, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone, Hash, Serialize, Deserialize)]
 pub enum Button {
     /// Virtual Keyboard keys, use this when the letter on the key matters
     /// more than the position of the key.
