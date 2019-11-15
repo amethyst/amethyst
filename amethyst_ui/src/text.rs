@@ -72,7 +72,7 @@ impl UiText {
             text,
             color,
             font_size,
-            font: font.clone(),
+            font,
             password: false,
             line_mode: LineMode::Single,
             align: Anchor::Middle,

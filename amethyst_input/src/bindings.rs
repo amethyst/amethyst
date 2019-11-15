@@ -312,7 +312,7 @@ impl<T: BindingTypes> Bindings<T> {
         }
         if make_new {
             let mut bindings = SmallVec::new();
-            bindings.push(bind.clone());
+            bindings.push(bind);
             self.actions.insert(id, bindings);
         }
         Ok(())

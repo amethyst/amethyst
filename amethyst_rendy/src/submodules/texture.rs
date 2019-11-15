@@ -65,7 +65,7 @@ impl<B: Backend> TextureSub<B> {
         profile_scope!("maintain");
 
         use util::{desc_write, texture_desc};
-        let tex_storage = <(Read<'_, AssetStorage<Texture>>)>::fetch(world);
+        let tex_storage = <Read<'_, AssetStorage<Texture>>>::fetch(world);
         for state in self.textures.iter_mut() {
             match state {
                 TextureState::Loaded {
@@ -114,7 +114,7 @@ impl<B: Backend> TextureSub<B> {
         profile_scope!("try_insert");
 
         use util::{desc_write, texture_desc};
-        let tex_storage = <(Read<'_, AssetStorage<Texture>>)>::fetch(world);
+        let tex_storage = <Read<'_, AssetStorage<Texture>>>::fetch(world);
 
         let (tex, version) = tex_storage.get_with_version(handle)?;
         let desc = texture_desc(tex, layout)?;

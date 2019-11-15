@@ -1,6 +1,6 @@
 //! GLTF format
 
-use std::{collections::HashMap, sync::Arc};
+use std::{cmp::Ordering, collections::HashMap, sync::Arc};
 
 use gltf::{self, Gltf};
 use log::debug;
@@ -141,7 +141,7 @@ fn load_scene(
         )?;
     }
     if bounding_box.valid() {
-        prefab.data_or_default(0).extent = Some(bounding_box.clone());
+        prefab.data_or_default(0).extent = Some(bounding_box);
     }
     prefab.data_or_default(0).materials = Some(material_set);
 
@@ -232,32 +232,12 @@ fn load_node(
     // load graphics
     if let Some(mesh) = node.mesh() {
         let mut graphics = load_mesh(&mesh, buffers, options)?;
-        if graphics.len() == 1 {
-            // single primitive can be loaded directly onto the node
-            let (mesh, material_index, bounds) = graphics.remove(0);
-            bounding_box.extend_range(&bounds);
-            let prefab_data = prefab.data_or_default(entity_index);
-            prefab_data.mesh = Some(mesh);
-            if let Some((material_id, material)) =
-                material_index.and_then(|index| gltf.materials().nth(index).map(|m| (index, m)))
-            {
-                material_set
-                    .materials
-                    .entry(material_id)
-                    .or_insert(load_material(&material, buffers, source.clone(), name)?);
-                prefab_data.material_id = Some(material_id);
-            }
-            // if we have a skin we need to track the mesh entities
-            if let Some(ref mut skin) = skin {
-                skin.mesh_indices.push(entity_index);
-            }
-        } else if graphics.len() > 1 {
-            // if we have multiple primitives,
-            // we need to add each primitive as a child entity to the node
-            for (mesh, material_index, bounds) in graphics {
-                let mesh_entity = prefab.add(Some(entity_index), None);
-                let prefab_data = prefab.data_or_default(mesh_entity);
-                prefab_data.transform = Some(Transform::default());
+        match graphics.len().cmp(&1) {
+            Ordering::Equal => {
+                // single primitive can be loaded directly onto the node
+                let (mesh, material_index, bounds) = graphics.remove(0);
+                bounding_box.extend_range(&bounds);
+                let prefab_data = prefab.data_or_default(entity_index);
                 prefab_data.mesh = Some(mesh);
                 if let Some((material_id, material)) =
                     material_index.and_then(|index| gltf.materials().nth(index).map(|m| (index, m)))
@@ -268,16 +248,40 @@ fn load_node(
                         .or_insert(load_material(&material, buffers, source.clone(), name)?);
                     prefab_data.material_id = Some(material_id);
                 }
-
                 // if we have a skin we need to track the mesh entities
                 if let Some(ref mut skin) = skin {
-                    skin.mesh_indices.push(mesh_entity);
+                    skin.mesh_indices.push(entity_index);
                 }
-
-                // extent
-                bounding_box.extend_range(&bounds);
-                prefab_data.extent = Some(bounds.into());
             }
+            Ordering::Greater => {
+                // if we have multiple primitives,
+                // we need to add each primitive as a child entity to the node
+                for (mesh, material_index, bounds) in graphics {
+                    let mesh_entity = prefab.add(Some(entity_index), None);
+                    let prefab_data = prefab.data_or_default(mesh_entity);
+                    prefab_data.transform = Some(Transform::default());
+                    prefab_data.mesh = Some(mesh);
+                    if let Some((material_id, material)) = material_index
+                        .and_then(|index| gltf.materials().nth(index).map(|m| (index, m)))
+                    {
+                        material_set
+                            .materials
+                            .entry(material_id)
+                            .or_insert(load_material(&material, buffers, source.clone(), name)?);
+                        prefab_data.material_id = Some(material_id);
+                    }
+
+                    // if we have a skin we need to track the mesh entities
+                    if let Some(ref mut skin) = skin {
+                        skin.mesh_indices.push(mesh_entity);
+                    }
+
+                    // extent
+                    bounding_box.extend_range(&bounds);
+                    prefab_data.extent = Some(bounds.into());
+                }
+            }
+            Ordering::Less => {}
         }
     }
 

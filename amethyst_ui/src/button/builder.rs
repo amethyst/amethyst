@@ -355,7 +355,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         });
 
         res.image
-            .insert(image_entity, image_handle.clone())
+            .insert(image_entity, image_handle)
             .expect("Unreachable: Inserting newly created entity");
         res.mouse_reactive
             .insert(image_entity, Interactable)

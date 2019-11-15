@@ -46,6 +46,7 @@ pub struct FlatEncoder {
     dimensions: Vector3<u32>,
 }
 impl Default for FlatEncoder {
+    #[must_use]
     fn default() -> Self {
         Self {
             dimensions: Vector3::new(0, 0, 0),
@@ -53,16 +54,19 @@ impl Default for FlatEncoder {
     }
 }
 impl CoordinateEncoder for FlatEncoder {
+    #[must_use]
     fn from_dimensions(dimensions: Vector3<u32>) -> Self {
         Self { dimensions }
     }
 
     #[inline]
+    #[must_use]
     fn encode(&self, x: u32, y: u32, z: u32) -> Option<u32> {
         Some((z * self.dimensions.x * self.dimensions.y) + (y * self.dimensions.x) + x)
     }
 
     #[inline]
+    #[must_use]
     fn decode(&self, idx: u32) -> Option<(u32, u32, u32)> {
         let z = idx / (self.dimensions.x * self.dimensions.y);
         let idx = idx - (z * self.dimensions.x * self.dimensions.y);
@@ -72,6 +76,7 @@ impl CoordinateEncoder for FlatEncoder {
         Some((x, y, z))
     }
 
+    #[must_use]
     fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
         dimensions
     }

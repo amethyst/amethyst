@@ -501,7 +501,7 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef> {
     models: DynamicVertexBuffer<B, VertexArgs>,
     skinned_models: DynamicVertexBuffer<B, SkinnedVertexArgs>,
     change: util::ChangeDetection,
-    marker: PhantomData<(T)>,
+    marker: PhantomData<T>,
 }
 
 impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTransparent<B, T> {

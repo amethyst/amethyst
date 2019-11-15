@@ -144,7 +144,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
-        let settings = <(Option<Read<'_, SkyboxSettings>>)>::fetch(resources)
+        let settings = <Option<Read<'_, SkyboxSettings>>>::fetch(resources)
             .map(|s| s.uniform())
             .unwrap_or_else(|| self.default_settings.uniform());
 
