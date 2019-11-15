@@ -335,7 +335,7 @@ fn init_camera(world: &mut World, parent: Entity, transform: Transform, camera: 
 struct ExampleTile;
 impl Tile for ExampleTile {
     fn sprite(&self, _: Point3<u32>, _: &World) -> Option<usize> {
-        Some(16)
+        Some(1)
     }
 }
 
