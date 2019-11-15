@@ -75,8 +75,6 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
 
                 let origin = Point3::origin();
 
-                let cameras = camera_query1.iter_entities_immutable(world).count();
-
                 let (camera, camera_transform) = match active_camera.entity.map_or_else(
                     || {
                         camera_query1

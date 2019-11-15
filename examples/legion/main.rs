@@ -647,11 +647,11 @@ fn main() -> amethyst::Result<()> {
         .migration_component_sync::<Orbit>()
         .migration_sync_bundle(amethyst::core::legion::Syncer::default())
         .migration_sync_bundle(amethyst::core::legion::transform::Syncer::default())
+        .migration_with_bundle(amethyst::core::legion::transform::TransformBundle::default())
         .migration_sync_bundle(amethyst::renderer::legion::Syncer::<DefaultBackend>::default())
         .migration_sync_bundle(amethyst::input::legion::Syncer::<StringBindings>::default())
         .migration_sync_bundle(amethyst::window::legion::Syncer::default())
         .migration_with_system(RelativeStage(Stage::Logic, 100), orbit_system)
-        .migration_with_bundle(amethyst::core::legion::transform::TransformBundle::default())
         .migration_with_bundle(
             RenderingBundle::<DefaultBackend>::default()
                 .with_plugin(

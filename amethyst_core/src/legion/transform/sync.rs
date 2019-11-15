@@ -107,6 +107,13 @@ pub fn specs_to_legion(
 ) -> Result<(), ()> {
     let set = convert_specs_to_legion(transform)?;
 
+    if world
+        .get_component::<ltc::LocalToWorld>(legion_entity)
+        .is_none()
+    {
+        world.add_component(legion_entity, ltc::LocalToWorld::identity())
+    }
+
     if let Some(translation) = set.translation {
         world.add_component(legion_entity, translation);
     } else {
