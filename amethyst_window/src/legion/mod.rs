@@ -17,5 +17,7 @@ impl LegionSyncBuilder for Syncer {
         dispatcher: &mut DispatcherBuilder,
     ) {
         state.add_resource_sync::<EventChannel<winit::Event>>();
+        state.add_resource_sync::<crate::ScreenDimensions>();
+        state.add_resource_sync::<crate::Window>();
     }
 }

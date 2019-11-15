@@ -107,18 +107,23 @@ impl<'a, 'b> GameData<'a, 'b> {
         legion::sync::sync_entities(world, migration_state, self.migration_sync_entities_id);
 
         {
-            let syncers = migration_state.syncers.drain(..).collect::<Vec<_>>();
-
-            syncers
-                .iter()
-                .for_each(|s| s.sync(world, migration_state, SyncDirection::SpecsToLegion));
+            unsafe {
+                let state = migration_state as *mut LegionState;
+                migration_state
+                    .syncers
+                    .iter()
+                    .for_each(|s| s.sync(world, &mut *state, SyncDirection::SpecsToLegion));
+            }
 
             legion::temp::dispatch_legion(world, migration_state, &mut self.migration_dispatcher);
 
-            syncers
-                .iter()
-                .for_each(|s| s.sync(world, migration_state, SyncDirection::LegionToSpecs));
-            migration_state.syncers.extend(syncers.into_iter());
+            unsafe {
+                let state = migration_state as *mut LegionState;
+                migration_state
+                    .syncers
+                    .iter()
+                    .for_each(|s| s.sync(world, &mut *state, SyncDirection::LegionToSpecs));
+            }
         }
     }
 
@@ -644,7 +649,6 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
     fn build(self, mut world: &mut World, migration_state: &mut LegionState) -> GameData<'a, 'b> {
         #[cfg(not(no_threading))]
         let pool = (*world.read_resource::<ArcThreadPool>()).clone();
-
         let mut dispatcher_builder = self.disp_builder;
 
         self.dispatcher_operations
@@ -666,7 +670,6 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
         let mut migration_dispatcher_builder = self.migration_dispatcher_builder;
 
         legion::temp::setup(world, migration_state);
-
         // TEMP: build the syncers
         self.migration_sync_builders
             .into_iter()
@@ -678,27 +681,36 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
             .syncers
             .extend(self.migration_syncers.into_iter());
 
-        // Run a sync
-        // sync specs to legion
-        let syncers = migration_state.syncers.drain(..).collect::<Vec<_>>();
-
-        syncers.iter().for_each(|syncer| syncer.setup(world));
-
-        syncers
+        migration_state
+            .syncers
             .iter()
-            .for_each(|s| s.sync(world, migration_state, SyncDirection::SpecsToLegion));
+            .for_each(|syncer| syncer.setup(world));
+
+        // This is safe because we never mutate the syncers portion of the array, but we need unsafe pointer magic for this
+        // temprorary sync because otherwise the API becomes crap.
+        unsafe {
+            let state = migration_state as *mut LegionState;
+            migration_state
+                .syncers
+                .iter()
+                .for_each(|s| s.sync(world, &mut *state, SyncDirection::SpecsToLegion));
+        }
 
         // build the dispatcher
         let migration_dispatcher = migration_dispatcher_builder
             .build(&mut migration_state.world)
             .finalize();
 
+        // This is safe because we never mutate the syncers portion of the array, but we need unsafe pointer magic for this
+        // temprorary sync because otherwise the API becomes crap.
         // Sync back to specs
-        syncers
-            .iter()
-            .for_each(|s| s.sync(world, migration_state, SyncDirection::LegionToSpecs));
-
-        migration_state.syncers.extend(syncers.into_iter());
+        unsafe {
+            let state = migration_state as *mut LegionState;
+            migration_state
+                .syncers
+                .iter()
+                .for_each(|s| s.sync(world, &mut *state, SyncDirection::LegionToSpecs));
+        }
 
         GameData::new(
             dispatcher,

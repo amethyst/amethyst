@@ -128,10 +128,5 @@ impl<B: Backend> LegionSyncBuilder for Syncer<B> {
         world.add_resource_sync::<Factory<B>>();
 
         world.add_resource_sync::<crate::debug_drawing::DebugLines>();
-
-        // From window, but we sync here cuz lazy
-        world.add_resource_sync::<amethyst_window::ScreenDimensions>();
-        world.add_resource_sync::<amethyst_window::Window>();
-        world.add_resource_sync::<EventChannel<Event>>();
     }
 }

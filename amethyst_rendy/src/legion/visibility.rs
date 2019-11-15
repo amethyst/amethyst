@@ -75,22 +75,25 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
 
                 let origin = Point3::origin();
 
-                let (camera, camera_transform) = active_camera.entity.map_or_else(
+                let cameras = camera_query1.iter_entities_immutable(world).count();
+
+                let (camera, camera_transform) = match active_camera.entity.map_or_else(
                     || {
                         camera_query1
                             .iter_entities_immutable(world)
                             .nth(0)
                             .map(|args| args.1)
-                            .expect("No cameras are currently added to the world!")
                     },
                     |e| {
                         camera_query2
                             .iter_entities_immutable(world)
                             .find(|(camera_entity, (_, _))| *camera_entity == e)
                             .map(|args| args.1)
-                            .expect("Invalid entity set as ActiveCamera!")
                     },
-                );
+                ) {
+                    Some(r) => r,
+                    None => return,
+                };
 
                 let camera_centroid = camera_transform.transform_point(&origin);
                 let frustum = Frustum::new(

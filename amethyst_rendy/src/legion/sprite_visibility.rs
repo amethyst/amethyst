@@ -62,22 +62,23 @@ pub fn build_sprite_visibility_sorting_system(world: &mut World) -> Box<dyn Sche
 
                 let origin = Point3::origin();
 
-                let camera_transform = active_camera.entity.map_or_else(
+                let (camera, camera_transform) = match active_camera.entity.map_or_else(
                     || {
                         camera_query1
                             .iter_entities_immutable(world)
                             .nth(0)
-                            .map(|(e, (camera, transform))| transform)
-                            .expect("No cameras are currently added to the world!")
+                            .map(|args| args.1)
                     },
                     |e| {
                         camera_query2
                             .iter_entities_immutable(world)
-                            .find(|(camera_entity, (_, transform))| *camera_entity == e)
-                            .map(|(camera_entity, (_, transform))| transform)
-                            .expect("Invalid entity set as ActiveCamera!")
+                            .find(|(camera_entity, (_, _))| *camera_entity == e)
+                            .map(|args| args.1)
                     },
-                );
+                ) {
+                    Some(r) => r,
+                    None => return,
+                };
 
                 let camera_backward = camera_transform.column(2).xyz();
                 let camera_centroid = camera_transform.transform_point(&origin);

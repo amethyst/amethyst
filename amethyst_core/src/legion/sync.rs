@@ -345,7 +345,7 @@ pub fn sync_entities(
             .enumerate()
             .map(|(i, legion_entity)| {
                 log::trace!(
-                    "{} - legion:[{:?}] = specs:[{:?}]",
+                    "NEW {} - legion:[{:?}] = specs:[{:?}]",
                     i,
                     legion_entity,
                     specs_entities[i].0.specs_entity

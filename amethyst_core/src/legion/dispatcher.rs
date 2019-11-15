@@ -154,7 +154,6 @@ impl Dispatcher {
             .for_each(|local| local.run(world));
 
         world.defrag(self.defrag_budget);
-
     }
 
     pub fn merge(mut self, mut other: Dispatcher) -> Self {

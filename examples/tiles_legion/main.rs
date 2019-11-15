@@ -349,7 +349,9 @@ fn init_camera(
 #[derive(Default, Clone)]
 struct ExampleTile;
 impl Tile for ExampleTile {
-    fn sprite(&self, _: Point3<u32>, _: &legion::World) -> Option<usize> { Some(16) }
+    fn sprite(&self, _: Point3<u32>, _: &legion::World) -> Option<usize> {
+        Some(16)
+    }
 }
 
 struct Example;

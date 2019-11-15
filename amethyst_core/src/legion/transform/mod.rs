@@ -7,6 +7,19 @@ use legion_transform::*;
 pub use legion_transform::components;
 
 #[derive(Default)]
+pub struct Syncer;
+impl LegionSyncBuilder for Syncer {
+    fn prepare(
+        &mut self,
+        specs_world: &mut specs::World,
+        state: &mut LegionState,
+        dispatcher: &mut DispatcherBuilder,
+    ) {
+        state.add_sync(sync::TransformSyncer::default());
+    }
+}
+
+#[derive(Default)]
 pub struct TransformBundle;
 impl SystemBundle for TransformBundle {
     fn build(mut self, world: &mut World, builder: &mut DispatcherBuilder) -> Result<(), Error> {
