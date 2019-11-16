@@ -41,6 +41,9 @@ pub trait Map {
     /// Set the sprite sheet handle which the tile render pass should use for rendering this map.
     fn set_sprite_sheet(&mut self, sprite_sheet: Option<Handle<SpriteSheet>>);
 
+    /// Gets the sprite sheet handle which the tile render pass should use for rendering this map.
+    fn sprite_sheet(&self) -> Option<Handle<SpriteSheet>>;
+
     /// Convert a tile coordinate `Point3<u32>` to an amethyst world-coordinate space coordinate `Point3<f32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
     /// maps `origin` and `tile_dimensions` respectively.
@@ -179,6 +182,11 @@ impl<T: Tile, E: CoordinateEncoder> Map for TileMap<T, E> {
     #[inline]
     fn set_sprite_sheet(&mut self, sprite_sheet: Option<Handle<SpriteSheet>>) {
         self.sprite_sheet = sprite_sheet;
+    }
+
+    #[inline]
+    fn sprite_sheet(&self) -> Option<Handle<SpriteSheet>> {
+        self.sprite_sheet.clone()
     }
 
     #[inline]

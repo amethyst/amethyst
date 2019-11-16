@@ -2,7 +2,7 @@
 //!
 
 #![deny(clippy::all, clippy::pedantic, missing_docs)]
-#![allow(dead_code, clippy::module_name_repetitions)]
+#![allow(dead_code, clippy::must_use_candidate, clippy::module_name_repetitions)]
 
 mod map;
 mod morton;
