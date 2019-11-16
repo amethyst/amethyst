@@ -27,14 +27,11 @@ derive-new = "0.5"
 log = "0.4.6"
 rodio = "0.9"
 serde = { version = "1.0", features = ["derive"] }
+smallvec = { version = "1.0", features = ["serde"] }
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
 amethyst_utils = { path = "../amethyst_utils", version = "0.8.0"}
-
-[dependencies.smallvec]
-version = "0.6"
-features = ["serde"]
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
