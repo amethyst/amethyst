@@ -4,11 +4,15 @@
 use std::{
     fmt::{Debug, Formatter, Result as FmtResult},
     io::Cursor,
+    sync::Arc,
 };
 
-use cpal::OutputDevices;
+use cpal::traits::DeviceTrait;
 use log::error;
-use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
+use rodio::{
+    default_output_device, output_devices, Decoder, Device, Devices, OutputDevices, Sink,
+    Source as RSource,
+};
 
 use amethyst_core::ecs::World;
 
@@ -17,9 +21,9 @@ use crate::{sink::AudioSink, source::Source, DecoderError};
 /// A speaker(s) through which audio can be played.
 ///
 /// By convention, the default output is stored as a resource in the `World`.
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone)]
 pub struct Output {
-    pub(crate) device: Device,
+    pub(crate) device: Arc<Device>,
 }
 
 /// Convenience method for opening the default output device.
@@ -30,7 +34,9 @@ pub struct Output {
 impl Default for Output {
     fn default() -> Self {
         default_output_device()
-            .map(|re| Output { device: re })
+            .map(|device| Output {
+                device: Arc::new(device),
+            })
             .expect("No default output device")
     }
 }
@@ -38,7 +44,10 @@ impl Default for Output {
 impl Output {
     /// Gets the name of the output
     pub fn name(&self) -> String {
-        self.device.name()
+        self.device.name().unwrap_or_else(|e| {
+            error!("Failed to determine output device name: {}", e);
+            String::from("<unnamed_output_device>")
+        })
     }
 
     /// Play a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
@@ -97,27 +106,31 @@ impl Debug for Output {
 /// An iterator over outputs
 #[allow(missing_debug_implementations)]
 pub struct OutputIterator {
-    input: OutputDevices,
+    devices: OutputDevices<Devices>,
 }
 
 impl Iterator for OutputIterator {
     type Item = Output;
 
     fn next(&mut self) -> Option<Output> {
-        self.input.next().map(|re| Output { device: re })
+        self.devices.next().map(|device| Output {
+            device: Arc::new(device),
+        })
     }
 }
 
 /// Get the default output, returns none if no outputs are available.
 pub fn default_output() -> Option<Output> {
-    default_output_device().map(|re| Output { device: re })
+    default_output_device().map(|device| Output {
+        device: Arc::new(device),
+    })
 }
 
 /// Get a list of outputs available to the system.
 pub fn outputs() -> OutputIterator {
-    OutputIterator {
-        input: output_devices(),
-    }
+    let devices =
+        output_devices().unwrap_or_else(|e| panic!("Error retrieving output devices: `{}`", e));
+    OutputIterator { devices }
 }
 
 /// Initialize default output
