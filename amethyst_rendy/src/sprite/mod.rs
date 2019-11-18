@@ -479,7 +479,7 @@ impl Format<SpriteSheet> for SpriteSheetFormat {
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<SpriteSheet, Error> {
         let sprites: Sprites =
-            from_ron_bytes(&bytes).map_err(|e| error::Error::LoadSpritesheetError(e))?;
+            from_ron_bytes(&bytes).map_err(error::Error::LoadSpritesheetError)?;
 
         Ok(SpriteSheet {
             texture: self.0.clone(),

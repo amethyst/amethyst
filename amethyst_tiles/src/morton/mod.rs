@@ -92,19 +92,24 @@ pub fn morton_decode_intr_3d(morton: u32) -> (u32, u32, u32) {
 #[derive(Default, Clone)]
 pub struct MortonEncoder;
 impl CoordinateEncoder for MortonEncoder {
+    #[must_use]
     fn from_dimensions(_: Vector3<u32>) -> Self {
         Self {}
     }
 
     #[inline]
+    #[must_use]
     fn encode(&self, x: u32, y: u32, z: u32) -> Option<u32> {
         Some(encode(x, y, z))
     }
+
     #[inline]
+    #[must_use]
     fn decode(&self, morton: u32) -> Option<(u32, u32, u32)> {
         Some(decode(morton))
     }
 
+    #[must_use]
     fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
         let max = dimensions
             .x
@@ -131,6 +136,7 @@ pub struct MortonEncoder2D {
     len: u32,
 }
 impl CoordinateEncoder for MortonEncoder2D {
+    #[must_use]
     fn from_dimensions(dimensions: Vector3<u32>) -> Self {
         Self {
             len: dimensions.x * dimensions.y,
@@ -138,6 +144,7 @@ impl CoordinateEncoder for MortonEncoder2D {
     }
 
     #[inline]
+    #[must_use]
     fn encode(&self, x: u32, y: u32, z: u32) -> Option<u32> {
         use bitintr::Pdep;
 
@@ -155,7 +162,9 @@ impl CoordinateEncoder for MortonEncoder2D {
 
         Some(morton)
     }
+
     #[inline]
+    #[must_use]
     fn decode(&self, mut morton: u32) -> Option<(u32, u32, u32)> {
         use bitintr::Pext;
 
@@ -165,6 +174,7 @@ impl CoordinateEncoder for MortonEncoder2D {
         Some((morton.pext(0x5555_5555), morton.pext(0xAAAA_AAAA), z))
     }
 
+    #[must_use]
     fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
         let max = dimensions.x.max(dimensions.y).next_power_of_two();
         Vector3::new(max, max, dimensions.z)

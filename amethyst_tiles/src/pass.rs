@@ -417,6 +417,7 @@ pub struct RenderTiles2D<
 
 impl<T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderTiles2D<T, E, Z> {
     /// Select render target on which Tiles should be rendered.
+    #[must_use]
     pub fn with_target(mut self, target: Target) -> Self {
         self.target = target;
         self

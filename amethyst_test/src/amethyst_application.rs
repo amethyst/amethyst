@@ -266,7 +266,7 @@ where
         //
         // If we get something else, we just inform the user to check the test output.
         if let Some(inner) = error.downcast_ref::<&str>() {
-            Error::from_string(inner.to_string())
+            Error::from_string((*inner).to_string())
         } else {
             Error::from_string(
                 "Unable to detect additional information from test failure.\n\

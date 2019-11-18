@@ -87,6 +87,9 @@ impl<'s> System<'s> for TcpStreamManagementSystem {
         Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
+    // We cannot use `net.streams.entry(message.destination).or_insert_with(|| { .. })` because
+    // there is a `return;` statement for early exit, which is not allowed within the closure.
+    #[allow(clippy::map_entry)]
     fn run(&mut self, (mut net, transport, mut event_channel): Self::SystemData) {
         // Make connections for each message in the channel if one hasn't yet been established
         transport.get_messages().iter().for_each(|message| {

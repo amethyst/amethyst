@@ -393,7 +393,7 @@ impl<'a> PrefabData<'a> for UiImagePrefab {
 }
 
 impl<'a> PrefabData<'a> for UiImageLoadPrefab {
-    type SystemData = (<TexturePrefab as PrefabData<'a>>::SystemData);
+    type SystemData = <TexturePrefab as PrefabData<'a>>::SystemData;
     type Result = UiImage;
 
     fn add_to_entity(
@@ -598,7 +598,7 @@ where
 
             on_click_stop.push(UiButtonAction {
                 target: entity,
-                event_type: UiButtonActionType::UnsetTexture(press_image.clone()),
+                event_type: UiButtonActionType::UnsetTexture(press_image),
             });
         }
 
@@ -610,7 +610,7 @@ where
 
             on_hover_stop.push(UiButtonAction {
                 target: entity,
-                event_type: UiButtonActionType::UnsetTexture(hover_image.clone()),
+                event_type: UiButtonActionType::UnsetTexture(hover_image),
             });
         }
 

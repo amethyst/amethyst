@@ -16,12 +16,14 @@ pub struct MortonRegion {
 }
 impl MortonRegion {
     /// Create a new `MortonRegion` region.
+    #[must_use]
     pub fn new(min: u32, max: u32) -> Self {
         Self { min, max }
     }
 
     /// Check if this `MortonRegion` contains a given morton coordinate.
     #[inline]
+    #[must_use]
     pub fn contains(self, morton: u32) -> bool {
         let target = morton::decode(morton);
         let min = morton::decode(self.min);
@@ -36,11 +38,13 @@ impl MortonRegion {
     }
 }
 impl PartialOrd for MortonRegion {
+    #[must_use]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 impl Ord for MortonRegion {
+    #[must_use]
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         if self.min == other.min && self.max == other.max {
             std::cmp::Ordering::Equal
@@ -52,6 +56,7 @@ impl Ord for MortonRegion {
     }
 }
 impl From<Region> for MortonRegion {
+    #[must_use]
     fn from(region: Region) -> Self {
         Self {
             min: morton::encode(region.min.x, region.min.y, region.min.z),
@@ -60,6 +65,7 @@ impl From<Region> for MortonRegion {
     }
 }
 impl<'a> From<&'a Region> for MortonRegion {
+    #[must_use]
     fn from(region: &'a Region) -> Self {
         Self {
             min: morton::encode(region.min.x, region.min.y, region.min.z),
@@ -81,11 +87,13 @@ pub struct Region {
 
 impl Region {
     /// Create a new `Region` with the given top-left and bottom-right cubic coordinates.
+    #[must_use]
     pub fn new(min: Point3<u32>, max: Point3<u32>) -> Self {
         Self { min, max }
     }
 
     /// Returns an empty `Region`
+    #[must_use]
     pub fn empty() -> Self {
         Self {
             min: Point3::new(0, 0, 0),
@@ -95,6 +103,7 @@ impl Region {
 
     /// Check if this cube contains the provided coordinate.
     #[inline]
+    #[must_use]
     pub fn contains(&self, target: &Point3<u32>) -> bool {
         target.x >= self.min.x
             && target.x <= self.max.x
@@ -106,6 +115,7 @@ impl Region {
 
     /// Check if this `Region` intersects with the provided `Region`
     #[inline]
+    #[must_use]
     pub fn intersects(&self, other: &Self) -> bool {
         (self.min.x <= other.max.x && self.max.x >= other.min.x)
             && (self.min.y <= other.max.y && self.max.y >= other.min.y)
@@ -113,11 +123,13 @@ impl Region {
     }
 
     /// Calculate the volume of this bounding box volume.
+    #[must_use]
     pub fn volume(&self) -> u32 {
         (self.max.x - self.min.x) * (self.max.y - self.min.y) * ((self.max.z - self.min.z) + 1)
     }
 
     /// Create a linear iterator across this region.
+    #[must_use]
     pub fn iter(&self) -> RegionLinearIter {
         RegionLinearIter::new(*self)
     }
@@ -127,6 +139,7 @@ impl<'a> IntoIterator for &'a Region {
     type Item = Point3<u32>;
     type IntoIter = RegionLinearIter;
 
+    #[must_use]
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
@@ -153,6 +166,7 @@ pub struct RegionLinearIter {
 }
 impl RegionLinearIter {
     /// Create a new iterator.
+    #[must_use]
     pub fn new(region: Region) -> Self {
         Self {
             region,

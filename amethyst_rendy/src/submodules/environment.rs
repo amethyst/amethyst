@@ -174,7 +174,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             } = CameraGatherer::gather(world);
 
             let mut mapped = buffer.map(factory, whole_range.clone()).unwrap();
-            let mut writer = unsafe { mapped.write::<u8>(factory, whole_range.clone()).unwrap() };
+            let mut writer = unsafe { mapped.write::<u8>(factory, whole_range).unwrap() };
             let dst_slice = unsafe { writer.slice() };
 
             let mut env = pod::Environment {
