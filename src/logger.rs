@@ -27,8 +27,10 @@ pub struct LoggerConfig {
     pub log_file: Option<PathBuf>,
     /// If set, allows the config values to be overriden via the corresponding environmental variables.
     pub allow_env_override: bool,
-    /// Sets a different level for gfx_device_gl if Some
-    pub log_gfx_device_level: Option<LevelFilter>,
+    /// Sets a different level for gfx_backend if Some
+    pub log_gfx_backend_level: Option<LevelFilter>,
+    /// Sets a different level for gfx_rendy if Some
+    pub log_gfx_rendy_level: Option<LevelFilter>,
 }
 
 impl Default for LoggerConfig {
@@ -38,7 +40,8 @@ impl Default for LoggerConfig {
             level_filter: LevelFilter::Info,
             log_file: None,
             allow_env_override: true,
-            log_gfx_device_level: Some(LevelFilter::Warn),
+            log_gfx_backend_level: Some(LevelFilter::Warn),
+            log_gfx_rendy_level: Some(LevelFilter::Warn),
         }
     }
 }
@@ -110,11 +113,21 @@ impl Logger {
             StdoutLog::Off => {}
         }
 
-        if let Some(log_gfx_device_level) = config.log_gfx_device_level {
-            logger.dispatch = logger
-                .dispatch
-                .level_for("gfx_device_gl", log_gfx_device_level);
-        }
+        let log_gfx_backend_level = config.log_gfx_backend_level.unwrap();
+        let log_gfx_rendy_level = config.log_gfx_rendy_level.unwrap();
+
+        logger.dispatch = logger
+            .dispatch
+            .level_for("gfx_backend_empty", log_gfx_backend_le  vel)
+            .level_for("gfx_backend_vulkan", log_gfx_backend_level)
+            .level_for("gfx_backend_dx12", log_gfx_backend_level)
+            .level_for("gfx_backend_metal", log_gfx_backend_level)
+            .level_for("rendy_factory::factory", log_gfx_rendy_level)
+            .level_for("rendy_memory::allocator::dynamic", log_gfx_rendy_level)
+            .level_for("rendy_graph::node::render::pass", log_gfx_rendy_level)
+            .level_for("rendy_graph::graph", log_gfx_rendy_level)
+            .level_for("rendy_memory::allocator::linear", log_gfx_rendy_level)
+            .level_for("rendy_wsi", log_gfx_rendy_level);
 
         if let Some(path) = config.log_file {
             if let Ok(log_file) = fern::log_file(path) {
