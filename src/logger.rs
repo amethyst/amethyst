@@ -118,7 +118,7 @@ impl Logger {
 
         logger.dispatch = logger
             .dispatch
-            .level_for("gfx_backend_empty", log_gfx_backend_le  vel)
+            .level_for("gfx_backend_empty", log_gfx_backend_level)
             .level_for("gfx_backend_vulkan", log_gfx_backend_level)
             .level_for("gfx_backend_dx12", log_gfx_backend_level)
             .level_for("gfx_backend_metal", log_gfx_backend_level)
