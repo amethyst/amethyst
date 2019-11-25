@@ -13,7 +13,7 @@ keywords = ["networking", "specs", "ecs", "amethyst", "serialization"]
 categories = ["game-engines"]
 
 readme = "README.md"
-documentation = "https://docs-src.amethyst.rs/stable/amethyst_network/index.html"
+documentation = "https://docs.amethyst.rs/stable/amethyst_network/index.html"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"

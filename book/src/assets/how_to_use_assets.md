@@ -176,10 +176,10 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     }
     ```
 
-[doc_asset]: https://docs-src.amethyst.rs/stable/amethyst_assets/trait.Asset.html
-[doc_asset_get]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.AssetStorage.html#method.get
-[doc_loader]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.Loader.html
-[doc_load]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.Loader.html#method.load
-[doc_processor_system]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.Processor.html
-[doc_read_resource]: https://docs-src.amethyst.rs/stable/specs/world/struct.World.html#method.read_resource
-[doc_search_format]: https://docs-src.amethyst.rs/stable/amethyst/?search=Format
+[doc_asset]: https://docs.amethyst.rs/stable/amethyst_assets/trait.Asset.html
+[doc_asset_get]: https://docs.amethyst.rs/stable/amethyst_assets/struct.AssetStorage.html#method.get
+[doc_loader]: https://docs.amethyst.rs/stable/amethyst_assets/struct.Loader.html
+[doc_load]: https://docs.amethyst.rs/stable/amethyst_assets/struct.Loader.html#method.load
+[doc_processor_system]: https://docs.amethyst.rs/stable/amethyst_assets/struct.Processor.html
+[doc_read_resource]: https://docs.amethyst.rs/stable/specs/world/struct.World.html#method.read_resource
+[doc_search_format]: https://docs.amethyst.rs/stable/amethyst/?search=Format

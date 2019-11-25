@@ -5,7 +5,7 @@ authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepromain@g
 edition = "2018"
 description = "Amethyst utils"
 
-documentation = "https://docs-src.amethyst.rs/stable/amethyst_utils/"
+documentation = "https://docs.amethyst.rs/stable/amethyst_utils/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 

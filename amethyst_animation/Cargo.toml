@@ -6,7 +6,7 @@ edition = "2018"
 description = "Animation support for Amethyst"
 keywords = ["game", "engine", "animation", "3d", "amethyst"]
 
-documentation = "https://docs-src.amethyst.rs/stable/amethyst_animation/"
+documentation = "https://docs.amethyst.rs/stable/amethyst_animation/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 

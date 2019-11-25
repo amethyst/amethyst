@@ -95,5 +95,5 @@ impl ExampleState {
 # fn main() {}
 ```
 
-[doc_tint]: https://docs-src.amethyst.rs/stable/amethyst_rendy/resources/struct.Tint.html
-[doc_component]: https://docs-src.amethyst.rs/stable/specs/trait.Component.html
+[doc_tint]: https://docs.amethyst.rs/stable/amethyst_rendy/resources/struct.Tint.html
+[doc_component]: https://docs.amethyst.rs/stable/specs/trait.Component.html
