@@ -65,14 +65,14 @@ let my_config = ImageTextureConfig {
 };
 ```
 
-[doc_asset]: https://docs-src.amethyst.rs/stable/amethyst_assets/trait.Asset.html
-[doc_asset_get]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.AssetStorage.html#method.get
-[doc_fmt_bmp]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.BmpFormat.html
-[doc_fmt_jpg]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.JpgFormat.html
-[doc_fmt_png]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.PngFormat.html
-[doc_fmt_tga]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.TgaFormat.html
-[doc_load]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.Loader.html#method.load
-[doc_read_resource]: https://docs-src.amethyst.rs/stable/specs/world/struct.World.html#method.read_resource
-[doc_ss]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.SpriteSheet.html
-[doc_tex]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Texture.html
-[doc_tex_hd]: https://docs-src.amethyst.rs/stable/amethyst_assets/type.Handle.html
+[doc_asset]: https://docs.amethyst.rs/stable/amethyst_assets/trait.Asset.html
+[doc_asset_get]: https://docs.amethyst.rs/stable/amethyst_assets/struct.AssetStorage.html#method.get
+[doc_fmt_bmp]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.BmpFormat.html
+[doc_fmt_jpg]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.JpgFormat.html
+[doc_fmt_png]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.PngFormat.html
+[doc_fmt_tga]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.TgaFormat.html
+[doc_load]: https://docs.amethyst.rs/stable/amethyst_assets/struct.Loader.html#method.load
+[doc_read_resource]: https://docs.amethyst.rs/stable/specs/world/struct.World.html#method.read_resource
+[doc_ss]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.SpriteSheet.html
+[doc_tex]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.Texture.html
+[doc_tex_hd]: https://docs.amethyst.rs/stable/amethyst_assets/type.Handle.html

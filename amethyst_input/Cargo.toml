@@ -5,7 +5,7 @@ authors = ["Rhuagh <seamonr@gmail.com>", "Xaeroxe <kieseljake@gmail.com>"]
 edition = "2018"
 description = "Input rebinding "
 
-documentation = "https://docs-src.amethyst.rs/stable/amethyst_input/"
+documentation = "https://docs.amethyst.rs/stable/amethyst_input/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 

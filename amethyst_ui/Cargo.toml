@@ -7,7 +7,7 @@ description = "Amethyst UI crate"
 keywords = ["ui", "specs", "ecs", "amethyst"]
 categories = ["game-engines"]
 
-documentation = "https://docs-src.amethyst.rs/stable/amethyst_ui/"
+documentation = "https://docs.amethyst.rs/stable/amethyst_ui/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"

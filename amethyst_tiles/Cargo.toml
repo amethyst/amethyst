@@ -5,7 +5,7 @@ authors = ["Walter Pearce <jaynus@gmail.com>"]
 edition = "2018"
 description = "2D and 3D Tile Support Library"
 
-documentation = "https://docs-src.amethyst.rs/master/amethyst_tiles/"
+documentation = "https://docs.amethyst.rs/master/amethyst_tiles/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
