@@ -1,4 +1,4 @@
-use crate::{
+pub use crate::{
     camera::ActiveCamera, legion::camera::ActiveCamera as LegionActiveCamera, types::Backend,
 };
 use amethyst_assets::{AssetStorage, Handle};

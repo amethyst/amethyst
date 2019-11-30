@@ -56,13 +56,13 @@ pub trait DataDispose {
 /// field.
 #[allow(missing_debug_implementations)]
 pub struct GameData<'a, 'b> {
-    dispatcher: Option<Dispatcher<'a, 'b>>,
+    pub(crate) dispatcher: Option<Dispatcher<'a, 'b>>,
 
     #[cfg(feature = "legion-ecs")]
-    migration_dispatcher: LegionDispatcher,
+    pub(crate) migration_dispatcher: LegionDispatcher,
 
     #[cfg(feature = "legion-ecs")]
-    migration_sync_entities_id: legion::event::ListenerId,
+    pub(crate) migration_sync_entities_id: legion::event::ListenerId,
 }
 
 impl<'a, 'b> GameData<'a, 'b> {
@@ -98,34 +98,7 @@ impl<'a, 'b> GameData<'a, 'b> {
 
     #[cfg(feature = "legion-ecs")]
     /// Update game data
-    pub fn update(&mut self, world: &mut World, migration_state: &mut LegionState) {
-        if let Some(dispatcher) = &mut self.dispatcher {
-            dispatcher.dispatch(&world);
-        }
-
-        // Sync, run and resync
-        legion::sync::sync_entities(world, migration_state, self.migration_sync_entities_id);
-
-        {
-            unsafe {
-                let state = migration_state as *mut LegionState;
-                migration_state
-                    .syncers
-                    .iter()
-                    .for_each(|s| s.sync(world, &mut *state, SyncDirection::SpecsToLegion));
-            }
-
-            legion::temp::dispatch_legion(world, migration_state, &mut self.migration_dispatcher);
-
-            unsafe {
-                let state = migration_state as *mut LegionState;
-                migration_state
-                    .syncers
-                    .iter()
-                    .for_each(|s| s.sync(world, &mut *state, SyncDirection::LegionToSpecs));
-            }
-        }
-    }
+    pub fn update(&mut self, world: &mut World, migration_state: &mut LegionState) {}
 
     /// Dispose game data, dropping the dispatcher
     pub fn dispose(&mut self, mut world: &mut World) {
@@ -211,18 +184,6 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         desc: T,
     ) -> Self {
         self.migration_dispatcher_builder.add_thread_local(desc);
-
-        self
-    }
-
-    pub fn migration_with_thread_local_system<
-        T: FnOnce(&mut LegionWorld) -> Box<dyn Runnable> + 'a,
-    >(
-        mut self,
-        desc: T,
-    ) -> Self {
-        self.migration_dispatcher_builder
-            .add_thread_local_system(desc);
 
         self
     }
@@ -697,9 +658,7 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
         }
 
         // build the dispatcher
-        let migration_dispatcher = migration_dispatcher_builder
-            .build(&mut migration_state.world)
-            .finalize();
+        let migration_dispatcher = migration_dispatcher_builder.build(&mut migration_state.world);
 
         // This is safe because we never mutate the syncers portion of the array, but we need unsafe pointer magic for this
         // temprorary sync because otherwise the API becomes crap.

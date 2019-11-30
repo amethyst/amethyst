@@ -10,8 +10,8 @@ pub mod temp;
 pub mod transform;
 
 pub use dispatcher::{
-    ConsumeDesc, Dispatcher, DispatcherBuilder, IntoRelativeStage, RelativeStage, Stage,
-    ThreadLocal,
+    ConsumeDesc, Dispatcher, DispatcherBuilder, DispatcherData, IntoRelativeStage, RelativeStage,
+    Stage, ThreadLocal, ThreadLocalObject,
 };
 pub use legion::{prelude::*, *};
 pub use sync::{
@@ -44,7 +44,7 @@ impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        _: &mut Dispatcher,
+        _: &mut DispatcherData,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
         self.0.build(world, builder)?;
@@ -60,7 +60,7 @@ where
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        dispatcher: &mut Dispatcher,
+        dispatcher: &mut DispatcherData,
         _: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
         let sys = (self.1)(world);
@@ -83,10 +83,13 @@ where
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        dispatcher: &mut Dispatcher,
+        dispatcher: &mut DispatcherData,
         _: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
-        dispatcher.thread_local_systems.push((self.0)(world));
+        let runnable = (self.0)(world);
+
+        // TODO: dispose?
+        dispatcher.thread_locals.push(runnable.into());
         Ok(())
     }
 }
@@ -99,7 +102,7 @@ where
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        dispatcher: &mut Dispatcher,
+        dispatcher: &mut DispatcherData,
         _: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
         dispatcher.thread_locals.push((self.0)(world));

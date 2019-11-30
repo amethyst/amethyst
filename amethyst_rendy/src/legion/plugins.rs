@@ -198,7 +198,7 @@ impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _world: &World,
+        world: &World,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(

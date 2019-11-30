@@ -177,29 +177,31 @@ fn build_camera_movement_system(
         .with_query(<(Read<Camera>, Write<Transform>)>::query())
         .with_query(<(Read<Camera>, Write<Transform>)>::query())
         .build(
-            move |_, _, (active_camera, input), (camera_query1, camera_query2)| {
+            move |_, world, (active_camera, input), (camera_query1, camera_query2)| {
                 let x_move = input.axis_value("camera_x").unwrap();
                 let y_move = input.axis_value("camera_y").unwrap();
                 let z_move = input.axis_value("camera_z").unwrap();
                 let z_move_scale = input.axis_value("camera_scale").unwrap();
 
                 if x_move != 0.0 || y_move != 0.0 || z_move != 0.0 || z_move_scale != 0.0 {
-                    let mut camera_transform = active_camera.entity.map_or_else(
-                        || {
-                            camera_query1
-                                .iter_entities()
-                                .nth(0)
-                                .map(|(e, (camera, transform))| transform)
-                                .expect("No cameras are currently added to the world!")
-                        },
-                        |e| {
-                            camera_query2
-                                .iter_entities()
-                                .find(|(camera_entity, (_, transform))| *camera_entity == e)
-                                .map(|(camera_entity, (_, transform))| transform)
-                                .expect("Invalid entity set as ActiveCamera!")
-                        },
-                    );
+                    let mut camera_transform = unsafe {
+                        active_camera.entity.map_or_else(
+                            || {
+                                camera_query1
+                                    .iter_entities_unchecked(world)
+                                    .nth(0)
+                                    .map(|(e, (camera, transform))| transform)
+                                    .expect("No cameras are currently added to the world!")
+                            },
+                            |e| {
+                                camera_query2
+                                    .iter_entities_unchecked(world)
+                                    .find(|(camera_entity, (_, transform))| *camera_entity == e)
+                                    .map(|(camera_entity, (_, transform))| transform)
+                                    .expect("Invalid entity set as ActiveCamera!")
+                            },
+                        )
+                    };
 
                     camera_transform.prepend_translation_x(x_move * 5.0);
                     camera_transform.prepend_translation_y(y_move * 5.0);
@@ -226,7 +228,7 @@ fn build_map_movement_system(
         .read_resource::<Time>()
         .read_resource::<InputHandler<StringBindings>>()
         .with_query(<(Read<TileMap<ExampleTile>>, Write<Transform>)>::query())
-        .build(move |_, _, (time, input), maps_query| {
+        .build(move |_, world, (time, input), maps_query| {
             if input.action_is_down("toggle_rotation").unwrap() {
                 rotate ^= true;
             }
@@ -235,14 +237,14 @@ fn build_map_movement_system(
             }
             if rotate {
                 maps_query
-                    .iter_entities()
+                    .iter_entities(world)
                     .for_each(|((entity), (_, mut transform))| {
                         transform.rotate_2d(time.delta_seconds());
                     });
             }
             if translate {
                 maps_query
-                    .iter_entities()
+                    .iter_entities(world)
                     .for_each(|((entity), (_, mut transform))| {
                         transform.prepend_translation(vector * time.delta_seconds());
                         if transform.translation().x > 500.0 {

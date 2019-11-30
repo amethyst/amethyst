@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-    legion::{StageExecutor, World},
+    legion::{Executor, World},
     transform::Transform,
     ArcThreadPool, SystemBundle as SpecsSystemBundle, Time,
 };
@@ -12,7 +12,7 @@ pub trait ConsumeDesc {
     fn consume(
         self: Box<Self>,
         world: &mut legion::world::World,
-        stages: &mut Dispatcher,
+        stages: &mut DispatcherData,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error>;
 }
@@ -32,7 +32,15 @@ where
     fn dispose(self: Box<Self>, world: &mut World) {}
 }
 
-pub struct ThreadLocalObject<S, F, D>(S, F, D);
+impl Into<Box<dyn ThreadLocal>> for Box<dyn Runnable> {
+    fn into(self) -> Box<dyn ThreadLocal> {
+        Box::new(move |world: &mut World| {
+            self.run(world);
+        })
+    }
+}
+
+pub struct ThreadLocalObject<S, F, D>(pub S, pub F, pub D);
 impl<S, F, D> ThreadLocalObject<S, F, D>
 where
     S: 'static,
@@ -110,17 +118,44 @@ impl Ord for RelativeStage {
     }
 }
 
-#[derive(Default)]
 pub struct Dispatcher {
+    executor: Executor,
     pub defrag_budget: Option<usize>,
-    pub(crate) thread_local_systems: Vec<Box<dyn legion::schedule::Runnable>>,
     pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
-    pub(crate) stages: BTreeMap<RelativeStage, Vec<Box<dyn legion::schedule::Schedulable>>>,
-    sorted_systems: Vec<Box<dyn legion::schedule::Schedulable>>,
 }
 impl Dispatcher {
-    pub fn finalize(mut self) -> Self {
-        let mut sorted_systems = self.sorted_systems;
+    pub fn run(&mut self, world: &mut World) {
+        let thread_pool = world.resources.get::<ArcThreadPool>().unwrap().clone();
+
+        self.executor.execute(world);
+
+        self.thread_locals
+            .iter_mut()
+            .for_each(|local| local.run(world));
+
+        //world.defrag(self.defrag_budget);
+    }
+    pub fn dispose(mut self, world: &mut World) {
+        self.thread_locals
+            .drain(..)
+            .for_each(|local| local.dispose(world));
+
+        self.executor
+            .into_vec()
+            .into_iter()
+            .for_each(|system| system.dispose(world));
+    }
+}
+
+#[derive(Default)]
+pub struct DispatcherData {
+    pub defrag_budget: Option<usize>,
+    pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
+    pub(crate) stages: BTreeMap<RelativeStage, Vec<Box<dyn legion::schedule::Schedulable>>>,
+}
+impl DispatcherData {
+    pub fn flatten(mut self) -> Dispatcher {
+        let mut sorted_systems = Vec::with_capacity(128);
         self.stages
             .into_iter()
             .for_each(|(_, mut v)| v.drain(..).for_each(|sys| sorted_systems.push(sys)));
@@ -132,33 +167,16 @@ impl Dispatcher {
             });
         }
 
-        Self {
+        let executor = Executor::new(sorted_systems);
+
+        Dispatcher {
             defrag_budget: self.defrag_budget,
-            thread_local_systems: self.thread_local_systems,
             thread_locals: self.thread_locals,
-            stages: BTreeMap::default(),
-            sorted_systems,
+            executor,
         }
     }
-    pub fn run(&mut self, world: &mut World) {
-        let thread_pool = world.resources.get::<ArcThreadPool>().unwrap().clone();
 
-        StageExecutor::new(self.sorted_systems.as_mut_slice(), &thread_pool).execute(world);
-
-        self.thread_local_systems
-            .iter_mut()
-            .for_each(|local| local.run(world));
-
-        self.thread_locals
-            .iter_mut()
-            .for_each(|local| local.run(world));
-
-        world.defrag(self.defrag_budget);
-    }
-
-    pub fn merge(mut self, mut other: Dispatcher) -> Self {
-        self.thread_local_systems
-            .extend(other.thread_local_systems.drain(..));
+    pub fn merge(mut self, mut other: DispatcherData) -> Self {
         self.thread_locals.extend(other.thread_locals.drain(..));
 
         for (k, mut v) in other.stages.iter_mut() {
@@ -170,26 +188,11 @@ impl Dispatcher {
 
         self
     }
-
-    pub fn dispose(mut self, world: &mut World) {
-        self.thread_local_systems
-            .drain(..)
-            .for_each(|local| local.dispose(world));
-
-        self.thread_locals
-            .drain(..)
-            .for_each(|local| local.dispose(world));
-
-        self.sorted_systems
-            .into_iter()
-            .for_each(|system| system.dispose(world));
-    }
 }
 
 pub struct DispatcherBuilder<'a> {
     pub(crate) defrag_budget: Option<usize>,
     pub(crate) systems: Vec<(RelativeStage, Box<dyn ConsumeDesc + 'a>)>,
-    pub(crate) thread_local_systems: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) thread_locals: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) bundles: Vec<Box<dyn ConsumeDesc + 'a>>,
 }
@@ -199,7 +202,6 @@ impl<'a> Default for DispatcherBuilder<'a> {
         Self {
             defrag_budget: None,
             systems: Vec::with_capacity(128),
-            thread_local_systems: Vec::with_capacity(128),
             thread_locals: Vec::with_capacity(128),
             bundles: Vec::with_capacity(128),
         }
@@ -227,7 +229,7 @@ impl<'a> DispatcherBuilder<'a> {
         &mut self,
         desc: T,
     ) {
-        self.thread_local_systems
+        self.thread_locals
             .push((Box::new(DispatcherThreadLocalSystem(desc)) as Box<dyn ConsumeDesc>));
     }
 
@@ -279,41 +281,39 @@ impl<'a> DispatcherBuilder<'a> {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.systems.is_empty() && self.bundles.is_empty() && self.thread_local_systems.is_empty()
+        self.systems.is_empty() && self.bundles.is_empty()
     }
 
-    pub fn build(mut self, world: &mut legion::world::World) -> Dispatcher {
-        let mut dispatcher = Dispatcher::default();
-
-        let mut recursive_builder = DispatcherBuilder::default();
-        for desc in self.systems.drain(..) {
-            desc.1
-                .consume(world, &mut dispatcher, &mut recursive_builder)
-                .unwrap();
-        }
+    fn build_data(&mut self, world: &mut legion::world::World) -> DispatcherData {
+        let mut dispatcher_data = DispatcherData::default();
 
         for bundle in self.bundles.drain(..) {
+            let mut recursive_builder = DispatcherBuilder::default();
             bundle
-                .consume(world, &mut dispatcher, &mut recursive_builder)
+                .consume(world, &mut dispatcher_data, &mut recursive_builder)
                 .unwrap();
+            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world));
         }
 
         for desc in self.thread_locals.drain(..) {
-            desc.consume(world, &mut dispatcher, &mut recursive_builder)
+            let mut recursive_builder = DispatcherBuilder::default();
+            desc.consume(world, &mut dispatcher_data, &mut recursive_builder)
                 .unwrap();
+            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world));
         }
 
-        for desc in self.thread_local_systems.drain(..) {
-            desc.consume(world, &mut dispatcher, &mut recursive_builder)
+        for desc in self.systems.drain(..) {
+            let mut recursive_builder = DispatcherBuilder::default();
+            desc.1
+                .consume(world, &mut dispatcher_data, &mut recursive_builder)
                 .unwrap();
+            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world));
         }
 
-        // TODO: We need to recursively iterate any newly added bundles
-        dispatcher.defrag_budget = self.defrag_budget;
-        if !recursive_builder.is_empty() {
-            dispatcher.merge(recursive_builder.build(world))
-        } else {
-            dispatcher
-        }
+        dispatcher_data
+    }
+
+    pub fn build(mut self, world: &mut legion::world::World) -> Dispatcher {
+        self.build_data(world).flatten()
     }
 }

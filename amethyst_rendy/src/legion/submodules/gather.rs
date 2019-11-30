@@ -6,9 +6,8 @@ use crate::{
     resources::AmbientColor,
 };
 use amethyst_core::{
-    legion::*,
+    legion::{transform::components::*, *},
     math::{convert, Matrix4, Vector3},
-    transform::Transform,
 };
 use glsl_layout::*;
 
@@ -34,7 +33,7 @@ impl CameraGatherer {
 
         // TODO: we do not support active camera atm because of migration
 
-        <(Read<Camera>, Read<Transform>)>::query()
+        <(Read<Camera>, Read<LocalToWorld>)>::query()
             .iter_entities_immutable(world)
             .nth(0)
             .map(|(e, _)| e)
@@ -50,10 +49,10 @@ impl CameraGatherer {
         profile_scope!("gather_cameras");
 
         let defcam = Camera::standard_3d(1.0, 1.0);
-        let identity = Transform::default();
+        let identity = LocalToWorld::identity();
 
         let active_camera = world.resources.get::<ActiveCamera>();
-        let mut camera_query = <(Read<Camera>, Read<Transform>)>::query();
+        let mut camera_query = <(Read<Camera>, Read<LocalToWorld>)>::query();
 
         let active_camera = active_camera
             .and_then(|active_camera| {
@@ -63,37 +62,31 @@ impl CameraGatherer {
                         camera_query
                             .iter_entities_immutable(world)
                             .find(|(camera_entity, (_, _))| *camera_entity == e)
-                            .map(|(_, (camera, transform))| (camera, transform))
+                            .map(|(_, (camera, global_matrix))| (camera, global_matrix))
                     })
                     .or_else(|| {
                         camera_query
                             .iter_entities_immutable(world)
                             .nth(0)
-                            .map(|(e, (camera, transform))| (camera, transform))
+                            .map(|(e, (camera, global_matrix))| (camera, global_matrix))
                     })
             })
             .or_else(|| None);
 
         let (position, view_matrix, projection) =
             if let Some((camera, transform)) = active_camera.as_ref() {
-                (
-                    transform.global_matrix().column(3).xyz(),
-                    transform.global_view_matrix(),
-                    camera.as_matrix(),
-                )
+                (transform.column(3).xyz(), &**transform, camera.as_matrix())
             } else {
-                (
-                    identity.global_matrix().column(3).xyz(),
-                    identity.global_view_matrix(),
-                    defcam.as_matrix(),
-                )
+                (identity.column(3).xyz(), &identity, defcam.as_matrix())
             };
 
         let camera_position = convert::<_, Vector3<f32>>(position).into_pod();
 
-        let proj_view: [[f32; 4]; 4] = ((*projection) * view_matrix).into();
+        let inverse_view_matrix = view_matrix.try_inverse().unwrap();
+
+        let proj_view: [[f32; 4]; 4] = ((*projection) * inverse_view_matrix).into();
         let proj: [[f32; 4]; 4] = (*projection).into();
-        let view: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(view_matrix).into();
+        let view: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(inverse_view_matrix).into();
 
         let projview = pod::ViewArgs {
             proj: proj.into(),

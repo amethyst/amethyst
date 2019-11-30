@@ -10,6 +10,9 @@ use amethyst_core::{
 use amethyst_error::Error;
 use derivative::Derivative;
 
+#[cfg(feature = "legion-ecs")]
+use amethyst_core::legion::transform::components::LocalToWorld;
+
 /// Provide a custom matrix implementation for various experimental or custom needs. Note that multiple constraints
 /// must be met using this in order to be used within Amethyst. Currently, this matrix must be invertible to be used
 /// within the engine.
@@ -518,6 +521,62 @@ impl Projection {
         }
     }
 
+    #[cfg(feature = "legion-ecs")]
+    /// Returns a `Ray` going out form the camera through provided screen position. The ray origin lies on camera near plane.
+    pub fn screen_ray(
+        &self,
+        screen_position: Point2<f32>,
+        screen_diagonal: Vector2<f32>,
+        camera_transform: &LocalToWorld,
+    ) -> Ray<f32> {
+        let screen_x = 2.0 * screen_position.x / screen_diagonal.x - 1.0;
+        let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
+
+        let matrix = **camera_transform * self.as_inverse_matrix();
+
+        let near = Point3::new(screen_x, screen_y, 0.0);
+        let far = Point3::new(screen_x, screen_y, 1.0);
+
+        let near_t = matrix.transform_point(&near);
+        let far_t = matrix.transform_point(&far);
+
+        Ray {
+            origin: near_t,
+            direction: (far_t.coords - near_t.coords).normalize(),
+        }
+    }
+
+    #[cfg(feature = "legion-ecs")]
+    /// Transforms the provided (X, Y, Z) screen coordinate into world coordinates.
+    /// This method fires a ray from the camera in its view direction, and returns the Point at `screen_position.z`
+    /// world space distance from the camera origin.
+    pub fn screen_to_world_point(
+        &self,
+        screen_position: Point3<f32>,
+        screen_diagonal: Vector2<f32>,
+        camera_transform: &LocalToWorld,
+    ) -> Point3<f32> {
+        self.screen_ray(screen_position.xy(), screen_diagonal, camera_transform)
+            .at_distance(screen_position.z)
+    }
+
+    #[cfg(feature = "legion-ecs")]
+    /// Translate from world coordinates to screen coordinates
+    pub fn world_to_screen(
+        &self,
+        world_position: Point3<f32>,
+        screen_diagonal: Vector2<f32>,
+        camera_transform: &LocalToWorld,
+    ) -> Point2<f32> {
+        let screen_pos = (**camera_transform * self.as_matrix()).transform_point(&world_position);
+
+        Point2::new(
+            (screen_pos.x + 1.0) * screen_diagonal.x / 2.0,
+            (screen_pos.y + 1.0) * screen_diagonal.y / 2.0,
+        )
+    }
+
+    #[cfg(not(feature = "legion-ecs"))]
     /// Returns a `Ray` going out form the camera through provided screen position. The ray origin lies on camera near plane.
     pub fn screen_ray(
         &self,
@@ -542,6 +601,7 @@ impl Projection {
         }
     }
 
+    #[cfg(not(feature = "legion-ecs"))]
     /// Transforms the provided (X, Y, Z) screen coordinate into world coordinates.
     /// This method fires a ray from the camera in its view direction, and returns the Point at `screen_position.z`
     /// world space distance from the camera origin.
@@ -555,6 +615,7 @@ impl Projection {
             .at_distance(screen_position.z)
     }
 
+    #[cfg(not(feature = "legion-ecs"))]
     /// Translate from world coordinates to screen coordinates
     pub fn world_to_screen(
         &self,

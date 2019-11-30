@@ -18,7 +18,7 @@ use thread_profiler::profile_scope;
 pub fn build_asset_processor<A: Asset + ProcessableAsset>(
     world: &mut World,
 ) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new(&format!("{}_ProcessorSystem", std::any::type_name::<A>()))
+    SystemBuilder::<()>::new(std::any::type_name::<A>())
         .write_resource::<AssetStorage<A>>()
         .read_resource::<ArcThreadPool>()
         .read_resource::<Time>()

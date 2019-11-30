@@ -152,6 +152,13 @@ pub trait State<T, E: Send + Sync + 'static> {
     /// even when this is not the active state,
     /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
     fn shadow_update(&mut self, _data: StateData<'_, T>) {}
+
+    fn legion_start(&mut self, _data: &mut LegionState) {}
+    fn legion_update(&mut self, _data: &mut LegionState) -> Trans<T, E> {
+        Trans::None
+    }
+    fn legion_shadow_fixed_update(&mut self, _data: &mut LegionState) {}
+    fn legion_shadow_update(&mut self, _data: &mut LegionState) {}
 }
 
 /// An empty `State` trait. It contains no `StateData` or custom `StateEvent`.
@@ -309,14 +316,63 @@ pub trait SimpleState {
     /// even when this is not the active state,
     /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
     fn shadow_update(&mut self, _data: StateData<'_, GameData<'_, '_>>) {}
+
+    fn legion_start(&mut self, _data: &mut LegionState) {}
+
+    fn legion_update(&mut self, _data: &mut LegionState) -> SimpleTrans {
+        Trans::None
+    }
+    fn legion_shadow_fixed_update(&mut self, _data: &mut LegionState) {}
+    fn legion_shadow_update(&mut self, _data: &mut LegionState) {}
 }
 
 impl<T: SimpleState> State<GameData<'static, 'static>, StateEvent> for T {
     //pub trait SimpleState<'a,'b>: State<GameData<'a,'b>,()> {
 
     /// Executed when the game state begins.
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        self.on_start(data)
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+        use amethyst_core::legion::{self, sync::SyncDirection};
+
+        let mut wtf = &mut data;
+
+        if let Some(dispatcher) = &mut wtf.data.dispatcher {
+            dispatcher.dispatch(wtf.world);
+        }
+
+        // Sync, run and resync
+        legion::sync::sync_entities(
+            wtf.world,
+            wtf.legion_state,
+            wtf.data.migration_sync_entities_id,
+        );
+
+        {
+            unsafe {
+                let state = wtf.legion_state as *mut LegionState;
+                (*state)
+                    .syncers
+                    .iter()
+                    .for_each(|s| s.sync(wtf.world, &mut *state, SyncDirection::SpecsToLegion));
+            }
+
+            self.legion_start(wtf.legion_state);
+
+            legion::temp::dispatch_legion(
+                wtf.world,
+                wtf.legion_state,
+                &mut wtf.data.migration_dispatcher,
+            );
+
+            unsafe {
+                let state = wtf.legion_state as *mut LegionState;
+                (*state)
+                    .syncers
+                    .iter()
+                    .for_each(|s| s.sync(wtf.world, &mut *state, SyncDirection::LegionToSpecs));
+            }
+        }
+
+        self.on_start(data);
     }
 
     /// Executed when the game state exits.
@@ -360,9 +416,53 @@ impl<T: SimpleState> State<GameData<'static, 'static>, StateEvent> for T {
     #[cfg(feature = "legion-ecs")]
     /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, mut data: StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        let r = self.update(&mut data);
+        use amethyst_core::legion::{self, sync::SyncDirection};
+
+        let r1 = self.update(&mut data);
         data.data.update(&mut data.world, &mut data.legion_state);
-        r
+
+        let migration_state = data.legion_state;
+        let world = data.world;
+
+        if let Some(dispatcher) = &mut data.data.dispatcher {
+            dispatcher.dispatch(world);
+        }
+
+        // Sync, run and resync
+        legion::sync::sync_entities(world, migration_state, data.data.migration_sync_entities_id);
+
+        let r2 = {
+            unsafe {
+                let state = migration_state as *mut LegionState;
+                migration_state
+                    .syncers
+                    .iter()
+                    .for_each(|s| s.sync(world, &mut *state, SyncDirection::SpecsToLegion));
+            }
+
+            let r2 = self.legion_update(migration_state);
+
+            legion::temp::dispatch_legion(
+                world,
+                migration_state,
+                &mut data.data.migration_dispatcher,
+            );
+
+            unsafe {
+                let state = migration_state as *mut LegionState;
+                migration_state
+                    .syncers
+                    .iter()
+                    .for_each(|s| s.sync(world, &mut *state, SyncDirection::LegionToSpecs));
+            }
+
+            r2
+        };
+
+        match r1 {
+            Trans::None => r2,
+            _ => r1,
+        }
     }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
