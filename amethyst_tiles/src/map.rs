@@ -145,12 +145,11 @@ impl<T: Tile, E: CoordinateEncoder> TileMap<T, E> {
         let transform = create_transform(&dimensions, &tile_dimensions);
 
         // Round the dimensions to the nearest multiplier for morton rounding
-        let encoder_dimensions = E::allocation_size(dimensions);
-        let size = (encoder_dimensions.x * encoder_dimensions.y * encoder_dimensions.z) as usize;
+        let size = E::allocation_size(dimensions);
         let mut data = Vec::with_capacity(size);
         data.resize_with(size, T::default);
 
-        let encoder = E::from_dimensions(encoder_dimensions);
+        let encoder = E::from_dimensions(dimensions);
 
         Self {
             data,
@@ -409,8 +408,8 @@ mod tests {
         let mut inner = TileMap::<TestTile, E>::new(dimensions, Vector3::new(10, 10, 1), None);
         let map = UnsafeWrapper::new(&mut inner);
 
-        (0..dimensions.x).into_par_iter().for_each(|x| {
-            (0..dimensions.y).into_par_iter().for_each(|y| {
+        (0..dimensions.x).into_iter().for_each(|x| {
+            (0..dimensions.y).into_iter().for_each(|y| {
                 for z in 0..dimensions.z {
                     let point = Point3::new(x, y, z);
 
@@ -419,8 +418,8 @@ mod tests {
             });
         });
 
-        (0..dimensions.x).into_par_iter().for_each(|x| {
-            (0..dimensions.y).into_par_iter().for_each(|y| {
+        (0..dimensions.x).into_iter().for_each(|x| {
+            (0..dimensions.y).into_iter().for_each(|y| {
                 for z in 0..dimensions.z {
                     let point = Point3::new(x, y, z);
                     assert_eq!(map.get().get(&Point3::new(x, y, z)).unwrap().point, point);
@@ -444,7 +443,7 @@ mod tests {
             Vector3::new(1, 2, 5),
         ];
 
-        test_dimensions.par_iter().for_each(|dimensions| {
+        test_dimensions.into_par_iter().for_each(|dimensions| {
             test_single_map::<MortonEncoder>(*dimensions);
             test_single_map::<MortonEncoder2D>(*dimensions);
             test_single_map::<FlatEncoder>(*dimensions);
