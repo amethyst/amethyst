@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use winit::{event::Event, event_loop::EventLoop, monitor::MonitorHandle, window::Window};
+use winit::{event_loop::EventLoop, monitor::MonitorHandle, window::Window};
 
 /// A struct that can resolve monitors.
 /// Usually either a Window or an EventsLoop.
-pub trait MonitorsAccess {    
+pub trait MonitorsAccess {
     /// Returns an iterator over the available monitors
     fn iter(&self) -> Box<Iterator<Item = MonitorHandle>>;
     /// Returns the `MonitorHandle` of the primary display
@@ -45,7 +45,11 @@ impl MonitorIdent {
     }
 
     /// Get the identifier for specific monitor id.
-    pub fn from_monitor_id(monitors: &impl MonitorsAccess, monitor: MonitorHandle) -> Option<Self> {
+    pub fn from_monitor_id(
+        _monitors: &impl MonitorsAccess,
+        _monitor: MonitorHandle,
+    ) -> Option<Self> {
+        // @todo reimplement serializable monitor identification
         // #[cfg(target_os = "ios")]
         // use winit::platform::windows::MonitorIdExt;
         // #[cfg(target_os = "macos")]

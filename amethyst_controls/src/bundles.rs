@@ -95,12 +95,8 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
             "free_rotation",
             &[],
         );
-        builder.add_thread_local(
-            MouseFocusUpdateSystemDesc::default().build(world)
-        );
-        builder.add_thread_local(
-            CursorHideSystemDesc::default().build(world)
-        );
+        builder.add_thread_local(MouseFocusUpdateSystemDesc::default().build(world));
+        builder.add_thread_local(CursorHideSystemDesc::default().build(world));
         Ok(())
     }
 }

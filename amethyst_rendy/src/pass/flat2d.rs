@@ -434,7 +434,8 @@ fn build_sprite_pipeline<B: Backend>(
                     write: !transparent,
                 }),
         )
-        .build(factory, None).map_err(|_| pso::CreationError::Other);
+        .build(factory, None)
+        .map_err(|_| pso::CreationError::Other);
 
     unsafe {
         factory.destroy_shader_module(shader_vertex);

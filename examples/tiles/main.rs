@@ -8,13 +8,16 @@ use amethyst::{
         Component, Entities, Entity, Join, LazyUpdate, NullStorage, Read, ReadExpect, ReadStorage,
         System, WriteStorage,
     },
-    input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
+    input::{
+        is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings, VirtualKeyCode,
+    },
     prelude::*,
     renderer::{
         camera::{ActiveCamera, Camera, Projection},
         debug_drawing::DebugLinesComponent,
         formats::texture::ImageFormat,
         palette::Srgba,
+        rendy::hal::command::ClearColor,
         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
         transparent::Transparent,
         types::DefaultBackend,
@@ -22,8 +25,7 @@ use amethyst::{
     },
     tiles::{MortonEncoder, RenderTiles2D, Tile, TileMap},
     utils::application_root_dir,
-    window::ScreenDimensions,
-    winit,
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
 };
 
 #[derive(Default)]
@@ -396,7 +398,7 @@ impl SimpleState for Example {
     ) -> SimpleTrans {
         let StateData { .. } = data;
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 Trans::Quit
             } else {
                 Trans::None
@@ -412,16 +414,21 @@ fn main() -> amethyst::Result<()> {
         .level_for("amethyst_tiles", log::LevelFilter::Warn)
         .start();
 
-    let app_root = application_root_dir()?;
+    let app_root = application_root_dir().expect("Could not create application root");
     let assets_directory = app_root.join("examples/assets");
     let display_config_path = app_root.join("examples/tiles/resources/display_config.ron");
+    let display_config =
+        DisplayConfig::load(display_config_path).expect("Failed to load DisplayConfig");
 
+    let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::new())
+        .expect("Could not create Bundle")
         .with_bundle(
             InputBundle::<StringBindings>::new()
                 .with_bindings_from_file("examples/tiles/resources/input.ron")?,
-        )?
+        )
+        .expect("Could not create Bundle")
         .with(
             MapMovementSystem::default(),
             "MapMovementSystem",
@@ -443,17 +450,22 @@ fn main() -> amethyst::Result<()> {
             &["camera_switch"],
         )
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
-                )
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
+                .with_plugin(RenderToWindow::new().with_clear(ClearColor {
+                    float32: [0.34, 0.36, 0.52, 1.0],
+                }))
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderTiles2D::<ExampleTile, MortonEncoder>::default()),
-        )?;
+        )
+        .expect("Could not create Bundle");
 
-    let mut game = Application::build(assets_directory, Example)?.build(game_data)?;
-    game.run();
-    Ok(())
+    let mut game = Application::new(assets_directory, Example, game_data)
+        .expect("Failed to create CoreApplication");
+    game.initialize();
+    event_loop.run(move |event, _, control_flow| {
+        #[cfg(feature = "profiler")]
+        profile_scope!("run_event_loop");
+        game.run_winit_loop(event, control_flow)
+    })
 }

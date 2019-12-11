@@ -1,6 +1,6 @@
 //! The core engine framework.
 
-use std::{env, marker::PhantomData, path::Path, sync::Arc, sync::Mutex, time::Duration};
+use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 
 use crate::shred::Resource;
 use derivative::Derivative;
@@ -9,7 +9,7 @@ use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
 use winit::event::Event;
-use winit::event_loop::EventLoop;
+use winit::event_loop::ControlFlow;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
@@ -215,7 +215,7 @@ where
         ApplicationBuilder::new(path, initial_state)
     }
 
-    /// Run the gameloop until the game state indicates that the game is no
+    /// Run a gameloop without winit until the game state indicates that the game is no
     /// longer running. This is done via the `State` returning `Trans::Quit` or
     /// `Trans::Pop` on the last state in from the stack. See full
     /// documentation on this in [State](trait.State.html) documentation.
@@ -260,6 +260,64 @@ where
         self.shutdown();
     }
 
+    /// Run a single main loop step.
+    /// This is needed because the main loop in combination with winit is handled by winit itself.
+    /// When the game state indicates that the game is no longer running,
+    /// run_winit_loop will instruct winit to close the event_loop via `control_flow`
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// let event_loop = EventLoop::new();
+    /// let mut game = Application::new(assets_dir, Example::new(), game_data).expect("Failed to create CoreApplication");
+    /// game.initialize();
+    /// event_loop.run(move |event, _, control_flow| {
+    ///     #[cfg(feature = "profiler")]
+    ///     profile_scope!("run_event_loop");
+    ///     log::trace!("main loop run");
+    ///     game.run_winit_loop(event, control_flow)
+    /// })
+    /// ~~~
+    pub fn run_winit_loop(&mut self, event: Event<()>, control_flow: &mut ControlFlow)
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
+        self.world.write_resource::<Stopwatch>().start();
+
+        if Event::EventsCleared == event {
+            if !self.states.is_running() {
+                {
+                    let mut stopwatch = self.world.write_resource::<Stopwatch>();
+                    stopwatch.stop();
+                }
+                info!("Engine is shutting down");
+                self.data.dispose(&mut self.world);
+
+                *control_flow = ControlFlow::Exit;
+                return;
+            }
+            self.advance_frame();
+            {
+                #[cfg(feature = "profiler")]
+                profile_scope!("frame_limiter wait");
+                self.world.write_resource::<FrameLimiter>().wait();
+            }
+            {
+                let elapsed = self.world.read_resource::<Stopwatch>().elapsed();
+                let mut time = self.world.write_resource::<Time>();
+                time.increment_frame_number();
+                time.set_delta_time(elapsed);
+            }
+            let mut stopwatch = self.world.write_resource::<Stopwatch>();
+            stopwatch.stop();
+            stopwatch.restart();
+            *control_flow = ControlFlow::Poll;
+        }
+        {
+            let mut event_handler = self.world.write_resource::<EventChannel<Event<()>>>();
+            event_handler.single_write(event);
+        }
+    }
 
     /// Sets up the application.
     pub fn initialize(&mut self) {
@@ -309,6 +367,8 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
+        #[cfg(feature = "profiler")]
+        profile_scope!("advance_frame");
         trace!("Advancing frame (`Application::advance_frame`)");
         if self.should_close() {
             let world = &mut self.world;
@@ -404,63 +464,6 @@ where
         let app_root = application_root_dir().expect("application root dir to exist");
         let path = app_root.join("thread_profile.json");
         write_profile(path.to_str().expect("application root dir to be a string"));
-    }
-}
-
-use winit::event_loop::ControlFlow;
-pub trait CoreApplicationWinitExt<'a, T, E, R> where
-    T: DataDispose + 'static,
-    E: Clone + Send + Sync + 'static,
-{
-    
-    fn run_winit_loop(&mut self, event: Event<()>, control_flow: &mut ControlFlow ) -> ()
-        where
-            for<'b> R: EventReader<'b, Event = E>;
-}
-
-impl<'a, T, E, R> CoreApplicationWinitExt<'a, T, E, R> for CoreApplication<'a, T, E, R> where
-    T: DataDispose + 'static,
-    E: Clone + Send + Sync + 'static,
-{
-    fn run_winit_loop(&mut self, event: Event<()>, control_flow: &mut ControlFlow ) -> ()
-    where
-        for<'b> R: EventReader<'b, Event = E>,
-    {
-        self.world.write_resource::<Stopwatch>().start();
-        
-        if Event::EventsCleared == event {
-            if !self.states.is_running() {
-                {
-                    let mut stopwatch = self.world.write_resource::<Stopwatch>();
-                    stopwatch.stop();
-                }
-                info!("Engine is shutting down");
-                self.data.dispose(&mut self.world);
-                
-                *control_flow = ControlFlow::Exit;
-                return;
-            }
-            self.advance_frame();
-            {
-                #[cfg(feature = "profiler")]
-                profile_scope!("frame_limiter wait");
-                self.world.write_resource::<FrameLimiter>().wait();
-            }
-            {
-                let elapsed = self.world.read_resource::<Stopwatch>().elapsed();
-                let mut time = self.world.write_resource::<Time>();
-                time.increment_frame_number();
-                time.set_delta_time(elapsed);
-            }
-            let mut stopwatch = self.world.write_resource::<Stopwatch>();
-            stopwatch.stop();
-            stopwatch.restart();
-            *control_flow = ControlFlow::Poll;
-        }
-        {
-            let mut event_handler = self.world.write_resource::<EventChannel<Event<()>>>();
-            event_handler.single_write(event);
-        }
     }
 }
 

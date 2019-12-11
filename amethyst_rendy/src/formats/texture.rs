@@ -96,7 +96,7 @@ impl Format<TextureData> for ImageFormat {
     fn import_simple(&self, bytes: Vec<u8>) -> Result<TextureData, Error> {
         load_from_image(std::io::Cursor::new(&bytes), self.0.clone())
             .map(|builder| builder.into())
-            .map_err(|e| Error::new(e))
+            .map_err(Error::new)
     }
 }
 

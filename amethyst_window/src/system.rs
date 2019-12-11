@@ -1,19 +1,12 @@
-use crate::{DisplayConfig, ScreenDimensions};
-use amethyst_config::{Config, ConfigError};
-use amethyst_core::{
-    ecs::{ReadExpect, RunNow, System, SystemData, World, Write, WriteExpect},
-    shrev::EventChannel,
-};
-use std::path::Path;
-use winit::{event::Event, event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget}, window::Window};
-use winit::platform::desktop::EventLoopExtDesktop;
+use crate::ScreenDimensions;
+use amethyst_core::ecs::{ReadExpect, System, WriteExpect};
+use winit::window::Window;
 
 /// System for opening and managing the window.
 #[derive(Debug)]
 pub struct WindowSystem;
 
 impl WindowSystem {
-
     /// Create a new `WindowSystem` wrapping the provided `Window`
     pub fn new() -> Self {
         Self
@@ -56,4 +49,3 @@ impl<'a> System<'a> for WindowSystem {
         self.manage_dimensions(&mut screen_dimensions, &window);
     }
 }
-

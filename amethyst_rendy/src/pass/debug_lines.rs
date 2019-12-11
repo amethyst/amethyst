@@ -57,8 +57,10 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawDebugLinesDesc {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
-        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX).map_err(|_| pso::CreationError::Other)?;
-        let args = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX).map_err(|_| pso::CreationError::Other)?;
+        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)
+            .map_err(|_| pso::CreationError::Other)?;
+        let args = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)
+            .map_err(|_| pso::CreationError::Other)?;
         let vertex = DynamicVertexBuffer::new();
 
         let (pipeline, pipeline_layout) = build_lines_pipeline(
@@ -226,7 +228,8 @@ fn build_lines_pipeline<B: Backend>(
                     write: true,
                 }),
         )
-        .build(factory, None).map_err(|_| pso::CreationError::Other);
+        .build(factory, None)
+        .map_err(|_| pso::CreationError::Other);
 
     unsafe {
         factory.destroy_shader_module(shader_vertex);

@@ -22,8 +22,11 @@ use amethyst_core::{
     SystemBundle,
 };
 use amethyst_error::{format_err, Error};
-use amethyst_window::{DisplayConfig, ScreenDimensions, EventLoop, Window};
+use amethyst_window::{DisplayConfig, EventLoop, ScreenDimensions, Window};
 use std::collections::HashMap;
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 /// A bundle of systems used for rendering using `Rendy` render graph.
 ///
@@ -46,19 +49,19 @@ pub struct RenderingBundle<B: Backend> {
 impl<B: Backend> RenderingBundle<B> {
     /// Create empty `RenderingBundle`. You must register a plugin using
     /// [`with_plugin`] in order to actually display anything.
-    pub fn new<'a>(display_config: DisplayConfig, event_loop: &'a EventLoop<()>) -> Self {
+    pub fn new(display_config: DisplayConfig, event_loop: &EventLoop<()>) -> Self {
         log::debug!("Intializing Rendy");
         let config: rendy::factory::Config = Default::default();
-        let window_builder = display_config
-            .into_window_builder();
-        let rendy = rendy::init::WindowedRendy::init(&config, window_builder, event_loop).expect("Failed to initialize graphics backend.");
+        let window_builder = display_config.into_window_builder();
+        let rendy = rendy::init::WindowedRendy::init(&config, window_builder, event_loop)
+            .expect("Failed to initialize graphics backend.");
 
         Self {
             plugins: Vec::new(),
             factory: Some(rendy.factory),
             families: Some(rendy.families),
             surface: Some(rendy.surface),
-            window: Some(rendy.window)
+            window: Some(rendy.window),
         }
     }
 
@@ -88,20 +91,18 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("build_rendering_bundle");
         if let Some(window) = self.window.take() {
             let hidpi = window.hidpi_factor();
-            let (width, height) = window
-                .inner_size()
-                .to_physical(hidpi)
-                .into();
+            let (width, height) = window.inner_size().to_physical(hidpi).into();
             world.insert(ScreenDimensions::new(width, height, hidpi));
             world.insert(window);
         }
-        
-        if let Some(factory)  = self.factory.take() {
+
+        if let Some(factory) = self.factory.take() {
             world.insert(factory);
         }
-        
 
         if let Some(families) = self.families.as_ref() {
             let queue_id = QueueId {
@@ -110,7 +111,6 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
             };
             world.insert(queue_id);
         }
-    
 
         builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
         builder.add(
@@ -124,7 +124,6 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
             "sprite_sheet_processor",
             &[],
         );
-        
 
         // make sure that all renderer-specific systems run after game code
         builder.add_barrier();
@@ -133,7 +132,10 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
             plugin.on_build(world, builder)?;
         }
         if let Some(families) = self.families.take() {
-            builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator(), families));
+            builder.add_thread_local(RenderingSystem::<B, _>::new(
+                self.into_graph_creator(),
+                families,
+            ));
         }
         Ok(())
     }
@@ -690,7 +692,10 @@ impl<B: Backend> TargetPlan<B> {
             match color {
                 OutputColor::Surface(surface, clear) => {
                     let target_metadata = ctx.target_metadata[&self.key];
-                    let suggested_extend = hal::window::Extent2D { width: target_metadata.width, height: target_metadata.height };
+                    let suggested_extend = hal::window::Extent2D {
+                        width: target_metadata.width,
+                        height: target_metadata.height,
+                    };
                     subpass.add_color_surface();
                     pass.add_surface(surface, suggested_extend, clear);
                 }

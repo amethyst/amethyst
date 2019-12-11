@@ -22,14 +22,12 @@ mod window {
         bundle::{ImageOptions, OutputColor},
         Format, Kind,
     };
-    use amethyst_config::{Config, ConfigError};
     use amethyst_core::{
         ecs::{ReadExpect, SystemData},
         SystemBundle,
     };
-    use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle, EventLoop};
+    use amethyst_window::{ScreenDimensions, Window, WindowBundle};
     use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
-    use std::path::Path;
 
     /// A [RenderPlugin] for opening a window and displaying a render target to it.
     ///
@@ -43,8 +41,11 @@ mod window {
     }
 
     impl RenderToWindow {
+        /// Creates new RenderToWindow plugin
         pub fn new() -> Self {
-            Self { ..Default::default() }
+            Self {
+                ..Default::default()
+            }
         }
 
         /// Select render target which will be presented to window.
@@ -60,7 +61,7 @@ mod window {
         }
     }
 
-    impl< B: Backend> RenderPlugin<B> for RenderToWindow {
+    impl<B: Backend> RenderPlugin<B> for RenderToWindow {
         fn on_build<'a, 'b>(
             &mut self,
             world: &mut World,
@@ -88,7 +89,7 @@ mod window {
             world: &World,
         ) -> Result<(), Error> {
             self.dirty = false;
-            
+
             let window = <ReadExpect<'_, Window>>::fetch(world);
             let surface = factory.create_surface(&*window)?;
             let dimensions = self.dimensions.as_ref().unwrap();
@@ -100,9 +101,9 @@ mod window {
                 format: Format::D32Sfloat,
                 clear: Some(ClearValue {
                     depth_stencil: ClearDepthStencil {
-                        depth: 1.0, 
-                        stencil: 0
-                    }
+                        depth: 1.0,
+                        stencil: 0,
+                    },
                 }),
             };
 
@@ -112,9 +113,7 @@ mod window {
                 crate::bundle::TargetPlanOutputs {
                     colors: vec![OutputColor::Surface(
                         surface,
-                        self.clear.map(|c|ClearValue {
-                            color: c
-                        }),
+                        self.clear.map(|c| ClearValue { color: c }),
                     )],
                     depth: Some(depth_options),
                 },

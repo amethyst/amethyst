@@ -11,11 +11,11 @@ use derivative::Derivative;
 use smallvec::SmallVec;
 use std::{borrow::Borrow, hash::Hash};
 use winit::{
-    dpi::LogicalPosition, 
+    dpi::LogicalPosition,
     event::{
-        DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
-        MouseScrollDelta, VirtualKeyCode, WindowEvent,
-    }
+        DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, MouseScrollDelta,
+        VirtualKeyCode, WindowEvent,
+    },
 };
 
 /// This struct holds state information about input devices.

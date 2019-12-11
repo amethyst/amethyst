@@ -97,10 +97,12 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawSkyboxDesc {
         profile_scope!("build");
 
         let env = FlatEnvironmentSub::new(factory).map_err(|_| pso::CreationError::Other)?;
-        let colors = DynamicUniform::new(factory, pso::ShaderStageFlags::FRAGMENT).map_err(|_| pso::CreationError::Other)?;
+        let colors = DynamicUniform::new(factory, pso::ShaderStageFlags::FRAGMENT)
+            .map_err(|_| pso::CreationError::Other)?;
         let mesh = Shape::Sphere(16, 16)
             .generate::<Vec<PosTex>>(None)
-            .build(queue, factory).map_err(|_| pso::CreationError::Other)?;
+            .build(queue, factory)
+            .map_err(|_| pso::CreationError::Other)?;
 
         let (pipeline, pipeline_layout) = build_skybox_pipeline(
             factory,
@@ -225,7 +227,8 @@ fn build_skybox_pipeline<B: Backend>(
                     blend: None,
                 }]),
         )
-        .build(factory, None).map_err(|_| pso::CreationError::Other);
+        .build(factory, None)
+        .map_err(|_| pso::CreationError::Other);
 
     unsafe {
         factory.destroy_shader_module(shader_vertex);

@@ -157,7 +157,8 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawUiDesc {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
-        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX).map_err(|_| pso::CreationError::Other)?;
+        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)
+            .map_err(|_| pso::CreationError::Other)?;
         let textures = TextureSub::new(factory).map_err(|_| pso::CreationError::Other)?;
         let vertex = DynamicVertexBuffer::new();
 
@@ -510,7 +511,8 @@ fn build_ui_pipeline<B: Backend>(
                     blend: Some(pso::BlendState::ALPHA),
                 }]),
         )
-        .build(factory, None).map_err(|_| pso::CreationError::Other);
+        .build(factory, None)
+        .map_err(|_| pso::CreationError::Other);
 
     unsafe {
         factory.destroy_shader_module(shader_vertex);

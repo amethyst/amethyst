@@ -12,22 +12,19 @@ use crate::{
     visibility::Visibility,
 };
 use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
-use amethyst_error::Error;
 use amethyst_core::{
     components::Transform,
     ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, World, Write, WriteExpect},
     timing::Time,
     Hidden, HiddenPropagate,
 };
+use amethyst_error::Error;
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
-    core::EnabledBackend,
-    init::{self, AnyRendy},
     factory::{Factory, ImageState},
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
-    with_any_rendy,
 };
 use std::{marker::PhantomData, sync::Arc};
 
@@ -125,6 +122,8 @@ where
     }
 
     fn run_graph(&mut self, world: &World) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("run_graph");
         let mut factory = world.fetch_mut::<Factory<B>>();
         factory.maintain(&mut self.families);
         self.graph
@@ -140,6 +139,8 @@ where
     G: GraphCreator<B>,
 {
     fn run_now(&mut self, world: &'a World) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("run_rendering_system");
         let rebuild = self.graph_creator.rebuild(world);
         if self.graph.is_none() || rebuild {
             self.rebuild_graph(world);
@@ -148,6 +149,8 @@ where
     }
 
     fn setup(&mut self, world: &mut World) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("setup_rendering_system");
         SetupData::setup(world);
 
         let mat = create_default_mat::<B>(world);
@@ -155,6 +158,8 @@ where
     }
 
     fn dispose(mut self: Box<Self>, world: &mut World) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("dispose_rendering_system");
         if let Some(graph) = self.graph.take() {
             let mut factory = world.fetch_mut::<Factory<B>>();
             log::debug!("Dispose graph");
@@ -201,7 +206,7 @@ impl<'a, B: Backend> System<'a> for MeshProcessorSystem<B> {
                 b.0.build(*queue_id, &factory)
                     .map(B::wrap_mesh)
                     .map(ProcessingState::Loaded)
-                    .map_err(|e| Error::new(e))
+                    .map_err(Error::new)
             },
             time.frame_number(),
             &**pool,
@@ -248,7 +253,7 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
                 )
                 .map(B::wrap_texture)
                 .map(ProcessingState::Loaded)
-                .map_err(|e| Error::new(e))
+                .map_err(Error::new)
             },
             time.frame_number(),
             &**pool,
@@ -258,6 +263,8 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
 }
 
 fn create_default_mat<B: Backend>(world: &mut World) -> Material {
+    #[cfg(feature = "profiler")]
+    profile_scope!("create_default_mat");
     use crate::mtl::TextureOffset;
 
     use amethyst_assets::Loader;
