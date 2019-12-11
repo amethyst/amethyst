@@ -93,7 +93,7 @@ pub use crate::core::{ecs, shred, shrev};
 pub use crate::derive::*;
 
 pub use self::{
-    app::{Application, ApplicationBuilder, CoreApplication, CoreApplicationWinitExt},
+    app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
     error::Error,
     game_data::{DataDispose, DataInit, GameData, GameDataBuilder},

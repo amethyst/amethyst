@@ -158,7 +158,7 @@ fn load_texture(
         ..Default::default()
     };
 
-    load_from_image(std::io::Cursor::new(&data), metadata).map_err(|e| Error::new(e))
+    load_from_image(std::io::Cursor::new(&data), metadata).map_err(Error::new)
 }
 
 fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::SamplerDesc {

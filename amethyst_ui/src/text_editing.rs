@@ -4,7 +4,9 @@ use clipboard::{ClipboardContext, ClipboardProvider};
 use log::error;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
-use winit::event::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
+use winit::event::{
+    ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent,
+};
 
 use amethyst_core::{
     ecs::prelude::{Entities, Join, Read, ReadStorage, System, SystemData, Write, WriteStorage},

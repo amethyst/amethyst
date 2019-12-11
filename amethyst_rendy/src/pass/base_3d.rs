@@ -118,7 +118,8 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<
                 hal::pso::ShaderStageFlags::VERTEX,
                 hal::pso::ShaderStageFlags::FRAGMENT,
             ],
-        ).map_err(|_| pso::CreationError::Other)?;
+        )
+        .map_err(|_| pso::CreationError::Other)?;
         let materials = MaterialSub::new(factory).map_err(|_| pso::CreationError::Other)?;
         let skinning = SkinningSub::new(factory).map_err(|_| pso::CreationError::Other)?;
 
@@ -438,7 +439,8 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTrans
                 hal::pso::ShaderStageFlags::VERTEX,
                 hal::pso::ShaderStageFlags::FRAGMENT,
             ],
-        ).map_err(|_| pso::CreationError::Other)?;
+        )
+        .map_err(|_| pso::CreationError::Other)?;
 
         let materials = MaterialSub::new(factory).map_err(|_| pso::CreationError::Other)?;
         let skinning = SkinningSub::new(factory).map_err(|_| pso::CreationError::Other)?;
@@ -788,7 +790,8 @@ fn build_pipelines<B: Backend, T: Base3DPassDef>(
     } else {
         PipelinesBuilder::new()
             .with_pipeline(pipe_desc)
-            .build(factory, None).map_err(|_| pso::CreationError::Other)
+            .build(factory, None)
+            .map_err(|_| pso::CreationError::Other)
     };
 
     unsafe {

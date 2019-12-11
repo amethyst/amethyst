@@ -16,13 +16,13 @@ use amethyst::{
     renderer::{
         camera::Camera,
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy,
         sprite::{prefab::SpriteScenePrefab, SpriteRender},
         types::DefaultBackend,
         RenderingBundle,
-        rendy
     },
     utils::application_root_dir,
-    window::{EventLoop, DisplayConfig, ScreenDimensions},
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
 };
 use serde::{Deserialize, Serialize};
@@ -137,7 +137,8 @@ fn main() {
     let display_config_path = app_root.join("examples/sprite_animation/config/display.ron");
 
     let event_loop = EventLoop::new();
-    let display_config = DisplayConfig::load(display_config_path).expect("Failed to load DisplayConfig");
+    let display_config =
+        DisplayConfig::load(display_config_path).expect("Failed to load DisplayConfig");
     let game_data = GameDataBuilder::default()
         .with_system_desc(
             PrefabLoaderSystemDesc::<MyPrefabData>::default(),
@@ -147,21 +148,26 @@ fn main() {
         .with_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
             "sprite_animation_control",
             "sprite_sampler_interpolation",
-        )).expect("Could not create bundle")
+        ))
+        .expect("Could not create bundle")
         .with_bundle(
             TransformBundle::new()
                 .with_dep(&["sprite_animation_control", "sprite_sampler_interpolation"]),
-        ).expect("Could not create bundle")
+        )
+        .expect("Could not create bundle")
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(
-                    RenderToWindow::new()
-                        .with_clear(rendy::hal::command::ClearColor{float32: [0.34, 0.36, 0.52, 1.0]}),
+                    RenderToWindow::new().with_clear(rendy::hal::command::ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderFlat2D::default()),
-        ).expect("Could not create bundle");
+        )
+        .expect("Could not create bundle");
 
-    let mut game = Application::new(assets_dir, Example::default(), game_data).expect("Could not create CoreApplication");
+    let mut game = Application::new(assets_dir, Example::default(), game_data)
+        .expect("Could not create CoreApplication");
     game.initialize();
     event_loop.run(move |event, _, control_flow| {
         log::trace!("main loop run");

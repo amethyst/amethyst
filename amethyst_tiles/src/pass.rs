@@ -125,7 +125,8 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
-        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX).map_err(|e| pso::CreationError::Other)?;
+        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)
+            .map_err(|e| pso::CreationError::Other)?;
 
         let textures = TextureSub::new(factory).map_err(|_| pso::CreationError::Other)?;
         let vertex = DynamicVertexBuffer::new();
@@ -361,7 +362,9 @@ fn build_tiles_pipeline<B: Backend>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    let mut shaders = SHADERS.build(factory, Default::default()).map_err(|_| pso::CreationError::Other)?;
+    let mut shaders = SHADERS
+        .build(factory, Default::default())
+        .map_err(|_| pso::CreationError::Other)?;
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
@@ -381,7 +384,8 @@ fn build_tiles_pipeline<B: Backend>(
                     write: false,
                 }),
         )
-        .build(factory, None).map_err(|_| pso::CreationError::Other);
+        .build(factory, None)
+        .map_err(|_| pso::CreationError::Other);
 
     shaders.dispose(factory);
 

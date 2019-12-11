@@ -1,6 +1,6 @@
 use derive_new::new;
 use winit::{
-    event::{DeviceEvent, Event, WindowEvent}, 
+    event::{DeviceEvent, Event, WindowEvent},
     window::Window,
 };
 

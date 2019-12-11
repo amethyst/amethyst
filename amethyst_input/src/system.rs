@@ -32,7 +32,9 @@ where
     fn build(self, world: &mut World) -> InputSystem<T> {
         <InputSystem<T> as System<'_>>::SystemData::setup(world);
 
-        let reader = world.fetch_mut::<EventChannel<Event<()>>>().register_reader();
+        let reader = world
+            .fetch_mut::<EventChannel<Event<()>>>()
+            .register_reader();
         if let Some(bindings) = self.bindings.as_ref() {
             world.fetch_mut::<InputHandler<T>>().bindings = bindings.clone();
         }

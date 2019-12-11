@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use log::error;
 use serde::{Deserialize, Serialize};
 use winit::window::{Icon, WindowAttributes, WindowBuilder};
 
@@ -15,7 +14,6 @@ pub struct DisplayConfig {
     /// Enables fullscreen mode on specific monitor when set.
     /// Defaults to `None`, which means fullscreen is off.
     #[serde(default)]
-    // pub fullscreen: Option<MonitorIdent>,
     pub fullscreen: Option<u32>,
     /// Current window dimensions, measured in pixels (px).
     #[serde(default)]
@@ -144,21 +142,8 @@ impl DisplayConfig {
 
         if self.loaded_icon.is_some() {
             builder = builder.with_window_icon(self.loaded_icon);
-        } else if let Some(icon) = self.icon {
-            // let icon = match Icon::from_path(&icon) {
-            //     Ok(x) => Some(x),
-            //     Err(e) => {
-            //         error!(
-            //             "Failed to load window icon from `{}`: {}",
-            //             icon.display(),
-            //             e
-            //         );
-
-            //         None
-            //     }
-            // };
-
-            // builder = builder.with_window_icon(icon);
+        } else if let Some(_icon) = self.icon {
+            // @todo: Icon::from_path got removed in winit v0.19.0 implement icon loading here
         }
 
         builder

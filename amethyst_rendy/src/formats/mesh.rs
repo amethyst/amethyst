@@ -33,7 +33,7 @@ impl Format<MeshData> for ObjFormat {
                 }
                 builder.0.into()
             })
-            .map_err(|e| Error::new(e))
+            .map_err(Error::new)
     }
 }
 

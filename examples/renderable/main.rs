@@ -26,6 +26,7 @@ use amethyst::{
         light::Light,
         palette::{Srgb, Srgba},
         plugins::{RenderShaded3D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         rendy::mesh::{Normal, Position, TexCoord},
         resources::AmbientColor,
         types::DefaultBackend,
@@ -37,7 +38,7 @@ use amethyst::{
         fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
-    Error,
+    window::{DisplayConfig, EventLoop},
 };
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
@@ -184,10 +185,10 @@ impl SimpleState for Example {
     }
 }
 
-fn main() -> Result<(), Error> {
+fn main() {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir()?;
+    let app_root = application_root_dir().expect("Could not create application root");
 
     // Add our meshes directory to the asset loader.
     let assets_dir = app_root.join("examples").join("assets");
@@ -197,27 +198,40 @@ fn main() -> Result<(), Error> {
         .join("renderable")
         .join("config")
         .join("display.ron");
+    let display_config =
+        DisplayConfig::load(display_config_path).expect("Failed to load DisplayConfig");
 
+    let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))
+        .expect("Could not create Bundle")
+        .with_bundle(UiBundle::<StringBindings>::new())
+        .expect("Could not create Bundle")
+        .with_bundle(HotReloadBundle::default())
+        .expect("Could not create Bundle")
+        .with_bundle(FpsCounterBundle::default())
+        .expect("Could not create Bundle")
+        .with_bundle(InputBundle::<StringBindings>::new())
+        .expect("Could not create Bundle")
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
-                )
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
+                .with_plugin(RenderToWindow::new().with_clear(ClearColor {
+                    float32: [0.34, 0.36, 0.52, 1.0],
+                }))
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )?;
-    let mut game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
-    game.run();
-    Ok(())
+        )
+        .expect("Could not create Bundle");
+    let mut game = Application::new(assets_dir, Loading::default(), game_data)
+        .expect("Failed to create CoreApplication");
+    game.initialize();
+    event_loop.run(move |event, _, control_flow| {
+        #[cfg(feature = "profiler")]
+        profile_scope!("run_event_loop");
+        game.run_winit_loop(event, control_flow)
+    })
 }
 
 struct DemoState {
