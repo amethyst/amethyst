@@ -414,21 +414,18 @@ fn main() -> amethyst::Result<()> {
         .level_for("amethyst_tiles", log::LevelFilter::Warn)
         .start();
 
-    let app_root = application_root_dir().expect("Could not create application root");
+    let app_root = application_root_dir()?;
     let assets_directory = app_root.join("examples/assets");
     let display_config_path = app_root.join("examples/tiles/resources/display_config.ron");
-    let display_config =
-        DisplayConfig::load(display_config_path).expect("Failed to load DisplayConfig");
+    let display_config = DisplayConfig::load(display_config_path)?;
 
     let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())
-        .expect("Could not create Bundle")
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
             InputBundle::<StringBindings>::new()
                 .with_bindings_from_file("examples/tiles/resources/input.ron")?,
-        )
-        .expect("Could not create Bundle")
+        )?
         .with(
             MapMovementSystem::default(),
             "MapMovementSystem",
@@ -457,11 +454,9 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderTiles2D::<ExampleTile, MortonEncoder>::default()),
-        )
-        .expect("Could not create Bundle");
+        )?;
 
-    let mut game = Application::new(assets_directory, Example, game_data)
-        .expect("Failed to create CoreApplication");
+    let mut game = Application::new(assets_directory, Example, game_data)?;
     game.initialize();
     event_loop.run(move |event, _, control_flow| {
         #[cfg(feature = "profiler")]

@@ -565,35 +565,10 @@ fn init_modules() {
     }
 }
 
-fn init_bindings() -> amethyst::Result<Bindings<StringBindings>> {
-    let mut bindings = Bindings::new();
-    bindings.insert_axis(
-        "vertical",
-        Axis::Emulated {
-            pos: Button::Key(VirtualKeyCode::S),
-            neg: Button::Key(VirtualKeyCode::W),
-        },
-    )?;
-    bindings.insert_axis(
-        "horizontal",
-        Axis::Emulated {
-            pos: Button::Key(VirtualKeyCode::D),
-            neg: Button::Key(VirtualKeyCode::A),
-        },
-    )?;
-    bindings.insert_axis(
-        "horizontal",
-        Axis::Emulated {
-            pos: Button::Key(VirtualKeyCode::D),
-            neg: Button::Key(VirtualKeyCode::A),
-        },
-    )?;
-    Ok(bindings)
-}
-
-fn main() {
+fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
-        // log_file: Some("rendy_example.log".into()),
+        stdout: amethyst::StdoutLog::Off,
+        log_file: Some("rendy_example.log".into()),
         level_filter: log::LevelFilter::Error,
         ..Default::default()
     })
@@ -607,31 +582,51 @@ fn main() {
     // .level_for("amethyst", log::LevelFilter::Trace)
     // .level_for("rendy", log::LevelFilter::Trace)
     // .level_for("gfx_backend_metal", log::LevelFilter::Trace)
-    .level_for("amethyst_gltf", log::LevelFilter::Trace)
+    // .level_for("amethyst_gltf", log::LevelFilter::Trace)
     .start();
 
     init_modules();
 
-    let app_root = application_root_dir().expect("Could not create application root");
+    let app_root = application_root_dir()?;
 
     let display_config_path = app_root
         .join("examples")
         .join("rendy")
         .join("config")
         .join("display.ron");
-    let display_config =
-        DisplayConfig::load(display_config_path).expect("Failed to load DisplayConfig");
+    let display_config = DisplayConfig::load(display_config_path)?;
     let assets_dir = app_root.join("examples").join("assets");
 
     let event_loop = EventLoop::new();
 
-    let bindings = init_bindings().expect("Could not create input bindings");
+    let mut bindings = Bindings::new();
+    bindings.insert_axis(
+        "vertical",
+        Axis::Emulated {
+            pos: Button::Key(winit::VirtualKeyCode::S),
+            neg: Button::Key(winit::VirtualKeyCode::W),
+        },
+    )?;
+    bindings.insert_axis(
+        "horizontal",
+        Axis::Emulated {
+            pos: Button::Key(winit::VirtualKeyCode::D),
+            neg: Button::Key(winit::VirtualKeyCode::A),
+        },
+    )?;
+    bindings.insert_axis(
+        "horizontal",
+        Axis::Emulated {
+            pos: Button::Key(winit::VirtualKeyCode::D),
+            neg: Button::Key(winit::VirtualKeyCode::A),
+        },
+    )?;
+
 
     let game_data = GameDataBuilder::default()
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
-        .with_bundle(FpsCounterBundle::default())
-        .expect("Could not create FpsCounterBundle")
+        .with_bundle(FpsCounterBundle::default())?
         .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
             "scene_loader",
@@ -645,18 +640,15 @@ fn main() {
         .with_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
-        )
-        .expect("Could not create Bundle")
+        )?
         .with_bundle(
             AnimationBundle::<SpriteAnimationId, SpriteRender>::new(
                 "sprite_animation_control",
                 "sprite_sampler_interpolation",
             )
             .with_dep(&["gltf_loader"]),
-        )
-        .expect("Could not create Bundle")
-        .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))
-        .expect("Could not create InputBundle")
+        )?
+        .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))?
         .with_bundle(
             FlyControlBundle::<StringBindings>::new(
                 Some("horizontal".into()),
@@ -665,8 +657,7 @@ fn main() {
             )
             .with_sensitivity(0.1, 0.1)
             .with_speed(5.),
-        )
-        .expect("Could not create Bundle")
+        )?
         .with_bundle(TransformBundle::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
@@ -674,14 +665,12 @@ fn main() {
             "sprite_sampler_interpolation",
             "fly_movement",
             "orbit",
-        ]))
-        .expect("Could not create Bundle")
+        ]))?
         .with_bundle(VertexSkinningBundle::new().with_dep(&[
             "transform_system",
             "animation_control",
             "sampler_interpolation",
-        ]))
-        .expect("Could not create Bundle")
+        ]))?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(RenderToWindow::new())
@@ -692,11 +681,9 @@ fn main() {
                     Srgb::new(0.82, 0.51, 0.50),
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
-        )
-        .expect("Could not create Bundle");
+        )?;
 
-    let mut game = Application::new(assets_dir, Example::new(), game_data)
-        .expect("Failed to create CoreApplication");
+    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     game.initialize();
     event_loop.run(move |event, _, control_flow| {
         #[cfg(feature = "profiler")]

@@ -269,7 +269,7 @@ where
     ///
     /// ~~~no_run
     /// let event_loop = EventLoop::new();
-    /// let mut game = Application::new(assets_dir, Example::new(), game_data).expect("Failed to create CoreApplication");
+    /// let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     /// game.initialize();
     /// event_loop.run(move |event, _, control_flow| {
     ///     #[cfg(feature = "profiler")]
