@@ -358,32 +358,28 @@ fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
     }
 }
 
-fn main() {
+fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir().expect("Could not create application root");
+    let app_root = application_root_dir()?;
 
     let display_config_path = app_root.join("examples/sprites_ordered/config/display.ron");
-    let display_config =
-        DisplayConfig::load(display_config_path).expect("Failed to load DisplayConfig");
+    let display_config = DisplayConfig::load(display_config_path)?;
 
     let assets_dir = app_root.join("examples/assets/");
 
     let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())
-        .expect("Could not create Bundle")
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(RenderToWindow::new().with_clear(ClearColor {
                     float32: [0.34, 0.36, 0.52, 1.0],
                 }))
                 .with_plugin(RenderFlat2D::default()),
-        )
-        .expect("Could not create Bundle");
+        )?;
 
-    let mut game = Application::new(assets_dir, Example::new(), game_data)
-        .expect("Failed to create CoreApplication");
+    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
     game.initialize();
     event_loop.run(move |event, _, control_flow| {
         #[cfg(feature = "profiler")]

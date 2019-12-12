@@ -185,10 +185,10 @@ impl SimpleState for Example {
     }
 }
 
-fn main() {
+fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir().expect("Could not create application root");
+    let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
     let assets_dir = app_root.join("examples").join("assets");
@@ -198,23 +198,17 @@ fn main() {
         .join("renderable")
         .join("config")
         .join("display.ron");
-    let display_config =
-        DisplayConfig::load(display_config_path).expect("Failed to load DisplayConfig");
+    let display_config = DisplayConfig::load(display_config_path)?;
 
     let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))
-        .expect("Could not create Bundle")
-        .with_bundle(UiBundle::<StringBindings>::new())
-        .expect("Could not create Bundle")
-        .with_bundle(HotReloadBundle::default())
-        .expect("Could not create Bundle")
-        .with_bundle(FpsCounterBundle::default())
-        .expect("Could not create Bundle")
-        .with_bundle(InputBundle::<StringBindings>::new())
-        .expect("Could not create Bundle")
+        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(HotReloadBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
+        .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(RenderToWindow::new().with_clear(ClearColor {
@@ -222,10 +216,8 @@ fn main() {
                 }))
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )
-        .expect("Could not create Bundle");
-    let mut game = Application::new(assets_dir, Loading::default(), game_data)
-        .expect("Failed to create CoreApplication");
+        )?;
+    let mut game = Application::new(assets_dir, Loading::default(), game_data)?;
     game.initialize();
     event_loop.run(move |event, _, control_flow| {
         #[cfg(feature = "profiler")]

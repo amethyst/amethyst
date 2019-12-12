@@ -201,29 +201,24 @@ impl SimpleState for Example {
     }
 }
 
-fn main() {
+fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(Default::default())
         .level_for("amethyst_assets", log::LevelFilter::Debug)
         .start();
 
-    let app_root = application_root_dir().expect("Could not create application root");
+    let app_root = application_root_dir()?;
     let assets_directory = app_root.join("examples/assets");
     let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
-    let display_config =
-        DisplayConfig::load(display_config_path).expect("Failed to load DisplayConfig");
+    let display_config = DisplayConfig::load(display_config_path)?;
 
     let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())
-        .expect("Could not create Bundle")
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<StringBindings>::new()
-                .with_bindings_from_file(
-                    app_root.join("examples/sprite_camera_follow/config/input.ron"),
-                )
-                .expect("Could not create Bundle"),
-        )
-        .expect("Could not create Bundle")
+            InputBundle::<StringBindings>::new().with_bindings_from_file(
+                app_root.join("examples/sprite_camera_follow/config/input.ron"),
+            )?,
+        )?
         .with(MovementSystem, "movement", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
@@ -231,11 +226,9 @@ fn main() {
                     float32: [0.34, 0.36, 0.52, 1.0],
                 }))
                 .with_plugin(RenderFlat2D::default()),
-        )
-        .expect("Could not create Bundle");
+        )?;
 
-    let mut game = Application::new(assets_directory, Example, game_data)
-        .expect("Failed to create CoreApplication");
+    let mut game = Application::new(assets_directory, Example, game_data)?;
     game.initialize();
     event_loop.run(move |event, _, control_flow| {
         #[cfg(feature = "profiler")]
