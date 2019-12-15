@@ -1,6 +1,6 @@
 #![allow(unused_variables)]
 
-use crate::CoordinateEncoder;
+use crate::{CoordinateEncoder, TileOutOfBoundsError};
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
     ecs::{Component, HashMapStorage, World},
@@ -54,7 +54,7 @@ pub trait Map {
         &self,
         coord: &Vector3<f32>,
         map_transform: Option<&Transform>,
-    ) -> Option<Point3<u32>>;
+    ) -> Result<Point3<u32>, TileOutOfBoundsError>;
 
     /// Returns the `Matrix4` transform which was created for transforming between world and tile coordinate spaces.
     fn transform(&self) -> &Matrix4<f32>;
@@ -197,24 +197,8 @@ impl<T: Tile, E: CoordinateEncoder> Map for TileMap<T, E> {
         &self,
         coord: &Vector3<f32>,
         map_transform: Option<&Transform>,
-    ) -> Option<Point3<u32>> {
-        let ret = to_tile(&self.transform, coord, map_transform);
-        #[cfg(debug_assertions)]
-        {
-            if let Some(r) = ret.as_ref() {
-                if r.x > self.dimensions().x
-                    || r.y > self.dimensions().y
-                    || r.z > self.dimensions().z
-                {
-                    panic!(
-                    "Requested coordinate is outside map dimensions: '{:?}', max dimensions=:{:?}",
-                    *r,
-                    self.dimensions()
-                );
-                }
-            }
-        }
-        ret
+    ) -> Result<Point3<u32>, TileOutOfBoundsError> {
+        to_tile(&self.transform, coord, self.dimensions(), map_transform)
     }
 
     #[inline]
@@ -317,11 +301,13 @@ fn to_world(
     }
 }
 
+#[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 fn to_tile(
     transform: &Matrix4<f32>,
     coord: &Vector3<f32>,
+    max_dimensions: &Vector3<u32>,
     map_transform: Option<&Transform>,
-) -> Option<Point3<u32>> {
+) -> Result<Point3<u32>, TileOutOfBoundsError> {
     let point = if let Some(map_trans) = map_transform {
         map_trans
             .global_view_matrix()
@@ -340,22 +326,26 @@ fn to_tile(
     inverse.y = inverse.y.round() * -1.0;
     inverse.z = inverse.z.floor();
 
-    if inverse.x < 0.0 {
-        return None;
+    if inverse.x < 0.0
+        || inverse.x as u32 > max_dimensions.x
+        || inverse.y < 0.0
+        || inverse.y as u32 > max_dimensions.y
+        || inverse.z < 0.0
+        || inverse.z as u32 > max_dimensions.z
+    {
+        let point_dimensions = Point3::new(inverse.x as i32, inverse.y as i32, inverse.z as i32);
+        Err(TileOutOfBoundsError {
+            point_dimensions,
+            max_dimensions: *max_dimensions,
+        })
+    } else {
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+        Ok(Point3::new(
+            inverse.x as u32,
+            inverse.y as u32,
+            inverse.z as u32,
+        ))
     }
-    if inverse.y < 0.0 {
-        return None;
-    }
-    if inverse.z < 0.0 {
-        return None;
-    }
-
-    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
-    Some(Point3::new(
-        inverse.x as u32,
-        inverse.y as u32,
-        inverse.z as u32,
-    ))
 }
 
 #[cfg(test)]
@@ -454,10 +444,12 @@ mod tests {
     pub fn test_coord(transform: &Matrix4<f32>, tile: Point3<u32>, world: Point3<f32>) {
         let world_result = to_world(transform, &tile, None);
         assert_eq!(world_result, world.coords);
-        let tile_result = to_tile(transform, &world.coords, None).unwrap();
+        let tile_result =
+            to_tile(transform, &world.coords, &Vector3::new(100, 100, 100), None).unwrap();
         assert_eq!(tile_result, tile);
 
-        let world_reverse = to_tile(transform, &world_result, None).unwrap();
+        let world_reverse =
+            to_tile(transform, &world_result, &Vector3::new(100, 100, 100), None).unwrap();
         assert_eq!(world_reverse, tile);
         let tile_reverse = to_world(transform, &tile_result, None);
         assert_eq!(tile_reverse, world.coords);
@@ -498,10 +490,22 @@ mod tests {
     ) {
         let world_result = to_world(transform, &tile, Some(map_transform));
         assert_eq!(world_result, world.coords);
-        let tile_result = to_tile(transform, &world.coords, Some(map_transform)).unwrap();
+        let tile_result = to_tile(
+            transform,
+            &world.coords,
+            &Vector3::new(100, 100, 100),
+            Some(map_transform),
+        )
+        .unwrap();
         assert_eq!(tile_result, tile);
 
-        let world_reverse = to_tile(transform, &world_result, Some(map_transform)).unwrap();
+        let world_reverse = to_tile(
+            transform,
+            &world_result,
+            &Vector3::new(100, 100, 100),
+            Some(map_transform),
+        )
+        .unwrap();
         assert_eq!(world_reverse, tile);
         let tile_reverse = to_world(transform, &tile_result, Some(map_transform));
         assert_eq!(tile_reverse, world.coords);
