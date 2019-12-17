@@ -7,7 +7,7 @@ use err_derive::Error;
 /// Tile is out of bounds.
 #[derive(Debug, Error)]
 #[error(
-    display = "Requested coordinate is outside map dimensions: '{:?}', max dimensions=:{:?}",
+    display = "Requested coordinate is outside map dimensions: '{:?}', max dimensions: '{:?}'",
     point_dimensions,
     max_dimensions
 )]
