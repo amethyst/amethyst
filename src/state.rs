@@ -60,16 +60,25 @@ pub enum Trans<T, E> {
     Push(Box<dyn State<T, E>>),
     /// Remove the current state on the stack and insert a different one.
     Switch(Box<dyn State<T, E>>),
+    /// Remove all states on the stack and insert a different one.
+    Replace(Box<dyn State<T, E>>),
+    /// Remove all states on the stack and insert new stack.
+    NewStack(Vec<Box<dyn State<T, E>>>),
+    /// Execute a series of Trans's.
+    Sequence(Vec<Trans<T, E>>),
     /// Stop and remove all states and shut down the engine.
     Quit,
 }
 impl<T, E> Debug for Trans<T, E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match *self {
+        match self {
             Trans::None => f.write_str("None"),
             Trans::Pop => f.write_str("Pop"),
             Trans::Push(_) => f.write_str("Push"),
             Trans::Switch(_) => f.write_str("Switch"),
+            Trans::Replace(_) => f.write_str("Replace"),
+            Trans::NewStack(_) => f.write_str("NewStack"),
+            Trans::Sequence(sequence) => f.write_str(&format!("Sequence {:?}", sequence)),
             Trans::Quit => f.write_str("Quit"),
         }
     }
@@ -465,6 +474,17 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 Trans::Pop => self.pop(data),
                 Trans::Push(state) => self.push(state, data),
                 Trans::Switch(state) => self.switch(state, data),
+                Trans::Replace(state) => self.replace(state, data),
+                Trans::NewStack(states) => self.new_stack(states, data),
+                Trans::Sequence(sequence) => {
+                    for trans in sequence {
+                        let temp_data = StateData {
+                            world: data.world,
+                            data: data.data,
+                        };
+                        self.transition(trans, temp_data);
+                    }
+                }
                 Trans::Quit => self.stop(data),
             }
         }
@@ -515,6 +535,49 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 state.on_resume(StateData { world, data });
             } else {
                 self.running = false;
+            }
+        }
+    }
+
+    /// Removes all states from the stack and replaces it with a new state.
+    pub(crate) fn replace(&mut self, state: Box<dyn State<T, E>>, data: StateData<'_, T>) {
+        if self.running {
+            //Pemove all current states
+            let StateData { world, data } = data;
+            while let Some(mut state) = self.state_stack.pop() {
+                state.on_stop(StateData { world, data });
+            }
+
+            //Push the new state
+            self.state_stack.push(state);
+
+            //State was just pushed, thus pop will always succeed
+            let new_state = self.state_stack.last_mut().unwrap();
+            new_state.on_start(StateData { world, data });
+        }
+    }
+
+    /// Removes all states from the stack and replaces it with a new stack.
+    pub(crate) fn new_stack(&mut self, states: Vec<Box<dyn State<T, E>>>, data: StateData<'_, T>) {
+        if self.running {
+            //revome all current states
+            let StateData { world, data } = data;
+            while let Some(mut state) = self.state_stack.pop() {
+                state.on_stop(StateData { world, data });
+            }
+
+            //push the new states
+            let state_count = states.len();
+            for (count, state) in states.into_iter().enumerate() {
+                self.state_stack.push(state);
+
+                //State was just pushed, thus pop will always succeed
+                let new_state = self.state_stack.last_mut().unwrap();
+                new_state.on_start(StateData { world, data });
+                if count != state_count - 1 {
+                    //pause on each state but the last
+                    new_state.on_pause(StateData { world, data });
+                }
             }
         }
     }
