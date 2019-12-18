@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Adds `get` methods to the underlying net::transport resources ([#2005])
 - Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
   Migration Note: Rons need to wrap their content in either Grid() or List()
+- Added new Error options for `NetworkSimulationEvent`.
 
 ### Deprecated
 

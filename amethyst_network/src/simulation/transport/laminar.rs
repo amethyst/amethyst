@@ -15,7 +15,7 @@ use amethyst_core::{
     shrev::EventChannel,
 };
 use amethyst_error::Error;
-pub use laminar::{Config as LaminarConfig, Socket as LaminarSocket};
+pub use laminar::{Config as LaminarConfig, ErrorKind, Socket as LaminarSocket};
 use laminar::{Packet, SocketEvent};
 
 use bytes::Bytes;
@@ -67,13 +67,14 @@ impl<'s> System<'s> for LaminarNetworkSendSystem {
         Write<'s, TransportResource>,
         Write<'s, LaminarSocketResource>,
         Read<'s, NetworkSimulationTime>,
+        Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
-    fn run(&mut self, (mut transport, mut socket, sim_time): Self::SystemData) {
+    fn run(&mut self, (mut transport, mut socket, sim_time, mut event_channel): Self::SystemData) {
         if let Some(socket) = socket.get_mut() {
             let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
 
-            for message in messages.iter() {
+            for message in messages {
                 let packet = match message.delivery {
                     DeliveryRequirement::Unreliable => {
                         Packet::unreliable(message.destination, message.payload.to_vec())
@@ -107,8 +108,14 @@ impl<'s> System<'s> for LaminarNetworkSendSystem {
                     ),
                 };
 
-                if let Err(e) = socket.send(packet) {
-                    error!("There was an error when attempting to send packet: {:?}", e);
+                match socket.send(packet) {
+                    Err(ErrorKind::IOError(e)) => {
+                        event_channel.single_write(NetworkSimulationEvent::SendError(e, message));
+                    }
+                    Err(e) => {
+                        error!("Error sending message: {:?}", e);
+                    }
+                    Ok(_) => {}
                 }
             }
         }
