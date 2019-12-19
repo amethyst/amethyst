@@ -599,15 +599,11 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
 mod tests {
     use super::*;
 
-    #[derive(PartialEq,Eq)]
     struct State0;
     struct State1(u8);
     struct State2;
-    #[derive(PartialEq,Eq)]
     struct StateNewStack;
-    #[derive(PartialEq,Eq)]
     struct StateSequence;
-    #[derive(PartialEq,Eq)]
     struct StateReplace(u8);
 
     impl State<(), ()> for State0 {
@@ -722,7 +718,7 @@ mod tests {
 
         for i in 0..3 {
             sm.update(StateData::new(&mut world, &mut ()));
-            assert_eq!(sm.state_stack.len(), i+2);
+            assert_eq!(sm.state_stack.len(), i + 2);
         }
 
         sm.update(StateData::new(&mut world, &mut ()));
