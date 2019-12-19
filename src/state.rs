@@ -599,8 +599,22 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
 mod tests {
     use super::*;
 
+    #[derive(PartialEq,Eq)]
+    struct State0;
     struct State1(u8);
     struct State2;
+    #[derive(PartialEq,Eq)]
+    struct StateNewStack;
+    #[derive(PartialEq,Eq)]
+    struct StateSequence;
+    #[derive(PartialEq,Eq)]
+    struct StateReplace(u8);
+
+    impl State<(), ()> for State0 {
+        fn update(&mut self, _: StateData<'_, ()>) -> Trans<(), ()> {
+            Trans::None
+        }
+    }
 
     impl State<(), ()> for State1 {
         fn update(&mut self, _: StateData<'_, ()>) -> Trans<(), ()> {
@@ -616,6 +630,36 @@ mod tests {
     impl State<(), ()> for State2 {
         fn update(&mut self, _: StateData<'_, ()>) -> Trans<(), ()> {
             Trans::Pop
+        }
+    }
+
+    impl State<(), ()> for StateNewStack {
+        fn update(&mut self, _: StateData<'_, ()>) -> Trans<(), ()> {
+            Trans::NewStack(vec![
+                Box::new(State0),
+                Box::new(State0),
+                Box::new(State0),
+                Box::new(State0),
+            ])
+        }
+    }
+    impl State<(), ()> for StateSequence {
+        fn update(&mut self, _: StateData<'_, ()>) -> Trans<(), ()> {
+            Trans::Sequence(vec![
+                Trans::Push(Box::new(State0)),
+                Trans::Push(Box::new(State0)),
+                Trans::Push(Box::new(State0)),
+                Trans::Pop,
+            ])
+        }
+    }
+    impl State<(), ()> for StateReplace {
+        fn update(&mut self, _: StateData<'_, ()>) -> Trans<(), ()> {
+            if self.0 == 0 {
+                Trans::Replace(Box::new(State0))
+            } else {
+                Trans::Push(Box::new(StateReplace(self.0 - 1)))
+            }
         }
     }
 
@@ -636,5 +680,52 @@ mod tests {
 
         sm.update(StateData::new(&mut world, &mut ()));
         assert!(!sm.is_running());
+    }
+
+    #[test]
+    fn new_stack() {
+        use crate::ecs::prelude::{World, WorldExt};
+
+        let mut world = World::new();
+
+        let mut sm = StateMachine::new(StateNewStack);
+        // Unwrap here is fine because start can only fail when there are no states in the machine.
+        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+
+        sm.update(StateData::new(&mut world, &mut ()));
+        assert_eq!(sm.state_stack.len(), 4);
+    }
+
+    #[test]
+    fn sequence() {
+        use crate::ecs::prelude::{World, WorldExt};
+
+        let mut world = World::new();
+
+        let mut sm = StateMachine::new(StateSequence);
+        // Unwrap here is fine because start can only fail when there are no states in the machine.
+        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+
+        sm.update(StateData::new(&mut world, &mut ()));
+        assert_eq!(sm.state_stack.len(), 3);
+    }
+
+    #[test]
+    fn replace() {
+        use crate::ecs::prelude::{World, WorldExt};
+
+        let mut world = World::new();
+
+        let mut sm = StateMachine::new(StateReplace(3));
+        // Unwrap here is fine because start can only fail when there are no states in the machine.
+        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+
+        for i in 0..3 {
+            sm.update(StateData::new(&mut world, &mut ()));
+            assert_eq!(sm.state_stack.len(), i+2);
+        }
+
+        sm.update(StateData::new(&mut world, &mut ()));
+        assert_eq!(sm.state_stack.len(), 1);
     }
 }
