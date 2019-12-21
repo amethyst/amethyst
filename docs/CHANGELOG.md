@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
   Migration Note: Rons need to wrap their content in either Grid() or List()
 - TileMap to_tile doesn't panic in debug mode. It instead return Result<Point<u32>,TileOutOfBounds>. ([#2020],[#2070])
+- Added new Error options for `NetworkSimulationEvent`.
 
 ### Deprecated
 
