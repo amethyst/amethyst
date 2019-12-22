@@ -7,25 +7,26 @@ use std::{
 use vergen::{self, ConstantsFlags};
 
 fn main() {
-    let amethyst_home =
-        Path::new(&config_dir().expect("Failed to find home directory")).join("amethyst");
-    match amethyst_home.exists() {
-        true => match check_sentry_allowed(&amethyst_home) {
-            Some(true) => {
-                load_sentry_dsn();
-            }
-            None => {
-                ask_write_user_data_collection(&amethyst_home);
-            }
-            _ => {}
-        },
-        false => {
+    let amethyst_home = config_dir().map(|p| p.as_path().join("amethyst"));
+
+    if let Some(amethyst_home) = amethyst_home {
+        if amethyst_home.exists() {
+            match check_sentry_allowed(&amethyst_home) {
+                Some(true) => {
+                    load_sentry_dsn();
+                }
+                None => {
+                    ask_write_user_data_collection(&amethyst_home);
+                }
+                _ => {}
+            };
+        } else {
             create_dir_all(&amethyst_home).expect("Failed to create amethyst home directory.");
             if ask_write_user_data_collection(&amethyst_home) {
                 load_sentry_dsn();
             }
-        }
-    };
+        };
+    }
 
     vergen::generate_cargo_keys(ConstantsFlags::all())
         .unwrap_or_else(|e| panic!("Vergen crate failed to generate version information! {}", e));
@@ -70,16 +71,16 @@ fn ask_user_data_collection() -> bool {
 fn ask_write_user_data_collection(amethyst_home: &Path) -> bool {
     let mut file = File::create(amethyst_home.join("sentry_status.txt"))
         .expect("Error writing Sentry status file");
-    match ask_user_data_collection() {
-        true => {
-            let _ = file.write_all(b"true");
-            true
-        }
-        false => {
-            let _ = file.write_all(b"false");
-            false
-        }
-    }
+
+    let consent = ask_user_data_collection();
+
+    if consent {
+        file.write_all(b"true")
+    } else {
+        file.write_all(b"false")
+    }.expect("Error writing Sentry status file");
+
+    consent
 }
 
 fn load_sentry_dsn() {
