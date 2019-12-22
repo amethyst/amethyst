@@ -17,6 +17,7 @@ pub use self::{
         UiButtonActionRetriggerSystemDesc, UiButtonActionType, UiButtonBuilder,
         UiButtonBuilderResources, UiButtonSystem, UiButtonSystemDesc,
     },
+    drag::{DragWidgetSystemDesc, Draggable},
     event::{targeted, Interactable, UiEvent, UiEventType, UiMouseSystem},
     event_retrigger::{EventReceiver, EventRetriggerSystem, EventRetriggerSystemDesc},
     font::{
@@ -47,7 +48,6 @@ pub use self::{
     text_editing::{TextEditingInputSystem, TextEditingInputSystemDesc},
     transform::{UiFinder, UiTransform},
     widgets::{Widget, WidgetId, Widgets},
-    drag::{Draggable, DragWidgetSystemDesc},
 };
 
 pub(crate) use amethyst_core::ecs::prelude::Entity;
@@ -56,6 +56,7 @@ pub(crate) use paste;
 mod blink;
 mod bundle;
 mod button;
+mod drag;
 mod event;
 mod event_retrigger;
 mod font;
@@ -74,4 +75,3 @@ mod text;
 mod text_editing;
 mod transform;
 mod widgets;
-mod drag;

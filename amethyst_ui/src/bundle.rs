@@ -1,12 +1,11 @@
 //! ECS rendering bundle
 
 use crate::{
-    BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystemDesc,
-    SelectionKeyboardSystemDesc, SelectionMouseSystemDesc, TextEditingInputSystemDesc,
-    TextEditingMouseSystemDesc, ToNativeWidget, UiButtonActionRetriggerSystemDesc,
-    UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem, UiSoundRetriggerSystemDesc,
-    UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
-    DragWidgetSystemDesc,
+    BlinkSystem, CacheSelectionOrderSystem, DragWidgetSystemDesc, FontAsset, NoCustomUi,
+    ResizeSystemDesc, SelectionKeyboardSystemDesc, SelectionMouseSystemDesc,
+    TextEditingInputSystemDesc, TextEditingMouseSystemDesc, ToNativeWidget,
+    UiButtonActionRetriggerSystemDesc, UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem,
+    UiSoundRetriggerSystemDesc, UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
 };
 use amethyst_assets::Processor;
 use amethyst_core::{

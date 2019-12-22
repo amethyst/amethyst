@@ -23,10 +23,9 @@ use amethyst_rendy::TexturePrefab;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    get_default_font, Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, TextEditing,
-    UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiImage,
+    get_default_font, Anchor, Draggable, FontAsset, Interactable, LineMode, Selectable, Stretch,
+    TextEditing, UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiImage,
     UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
-    Draggable,
 };
 
 /// Loadable `UiTransform` data.
@@ -191,7 +190,12 @@ where
         }
 
         if self.draggable {
-            system_data.4.insert(entity, Draggable { being_dragged: false })?;
+            system_data.4.insert(
+                entity,
+                Draggable {
+                    being_dragged: false,
+                },
+            )?;
         }
 
         Ok(())
