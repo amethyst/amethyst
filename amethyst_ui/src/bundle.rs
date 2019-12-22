@@ -6,6 +6,7 @@ use crate::{
     TextEditingMouseSystemDesc, ToNativeWidget, UiButtonActionRetriggerSystemDesc,
     UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem, UiSoundRetriggerSystemDesc,
     UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
+    DragSelectedSystemDesc,
 };
 use amethyst_assets::Processor;
 use amethyst_core::{
@@ -97,6 +98,11 @@ where
         builder.add(
             UiButtonSystemDesc::default().build(world),
             "ui_button_system",
+            &["ui_mouse_system"],
+        );
+        builder.add(
+            DragSelectedSystemDesc::<T>::default().build(world),
+            "ui_drag_system",
             &["ui_mouse_system"],
         );
 
