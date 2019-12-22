@@ -21,7 +21,7 @@ travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 [features]
 default = ["animation", "audio", "locale", "network", "renderer"]
 
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
@@ -134,7 +134,7 @@ amethyst_derive = { path = "amethyst_derive", version = "0.6.1" }
 amethyst_gltf = { path = "amethyst_gltf", version = "0.8.1", optional = true }
 amethyst_network = { path = "amethyst_network", version = "0.6.1", optional = true }
 amethyst_locale = { path = "amethyst_locale", version = "0.7.2", optional = true }
-amethyst_rendy = { path = "amethyst_rendy", version = "0.3.0", features = ["window", "vulkan"], optional = true }
+amethyst_rendy = { path = "amethyst_rendy", version = "0.3.0", features = ["window"], optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.9.1" }
 amethyst_ui = { path = "amethyst_ui", version = "0.8.1" }
 amethyst_utils = { path = "amethyst_utils", version = "0.8.0" }
