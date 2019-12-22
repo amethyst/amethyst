@@ -17,7 +17,7 @@ use crate::{UiEvent, UiEventType, Selected, UiTransform};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Draggable {
-    being_dragged: bool,
+    pub being_dragged: bool,
 }
 
 impl Component for Draggable {
