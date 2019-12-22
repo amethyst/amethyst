@@ -47,7 +47,7 @@ pub use self::{
     text_editing::{TextEditingInputSystem, TextEditingInputSystemDesc},
     transform::{UiFinder, UiTransform},
     widgets::{Widget, WidgetId, Widgets},
-    drag::{Draggable, DragSelectedSystemDesc},
+    drag::{Draggable, DragWidgetSystemDesc},
 };
 
 pub(crate) use amethyst_core::ecs::prelude::Entity;
