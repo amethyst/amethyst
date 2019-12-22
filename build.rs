@@ -1,7 +1,6 @@
 use dirs::config_dir;
 use std::{
-    fs::{create_dir_all, read_to_string, remove_file, File},
-    io::{stderr, stdin, Write},
+    fs::{create_dir_all, read_to_string, remove_file},
     path::Path,
 };
 use vergen::{self, ConstantsFlags};
@@ -11,20 +10,11 @@ fn main() {
 
     if let Some(amethyst_home) = amethyst_home {
         if amethyst_home.exists() {
-            match check_sentry_allowed(&amethyst_home) {
-                Some(true) => {
-                    load_sentry_dsn();
-                }
-                None => {
-                    ask_write_user_data_collection(&amethyst_home);
-                }
-                _ => {}
+            if let Some(true) = check_sentry_allowed(&amethyst_home) {
+                load_sentry_dsn();
             };
         } else {
             create_dir_all(&amethyst_home).expect("Failed to create amethyst home directory.");
-            if ask_write_user_data_collection(&amethyst_home) {
-                load_sentry_dsn();
-            }
         };
     }
 
@@ -51,36 +41,6 @@ fn check_sentry_allowed(amethyst_home: &Path) -> Option<bool> {
     } else {
         None
     }
-}
-
-fn ask_user_data_collection() -> bool {
-    eprint!("May we collect anonymous panic data and usage statistics to help improve Amethyst? No personal information is collected or stored. [Y/n]: ");
-    stderr().flush().expect("Failed to flush stdout");
-
-    let mut s = String::new();
-    stdin()
-        .read_line(&mut s)
-        .expect("There was an error getting your input");
-    s = s.trim().to_lowercase();
-    match s.chars().next() {
-        Some('n') => false,
-        _ => false, // Can't read stdin from the build.rs file. Let's default to false. Set this line to true when a solution is found.
-    }
-}
-
-fn ask_write_user_data_collection(amethyst_home: &Path) -> bool {
-    let mut file = File::create(amethyst_home.join("sentry_status.txt"))
-        .expect("Error writing Sentry status file");
-
-    let consent = ask_user_data_collection();
-
-    if consent {
-        file.write_all(b"true")
-    } else {
-        file.write_all(b"false")
-    }.expect("Error writing Sentry status file");
-
-    consent
 }
 
 fn load_sentry_dsn() {
