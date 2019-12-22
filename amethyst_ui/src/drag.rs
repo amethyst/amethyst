@@ -102,6 +102,8 @@ where
 
         for entity in click_stopped.iter() {
             draggables.get_mut(*entity).unwrap().being_dragged = false;
+
+            ui_events.single_write(UiEvent::new(UiEventType::Dropped { dropped_on: *entity }, *entity));
         }
     }
 }
