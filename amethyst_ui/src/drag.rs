@@ -98,12 +98,12 @@ where
 
                         ui_events.single_write(UiEvent::new(
                             UiEventType::Dragging {
-                                element_offset: Vector2::new(*delta_x, -*delta_y),
+                                element_offset: Vector2::new(*delta_x, *delta_y),
                             },
                             entity,
                         ));
                         ui_transform.local_x += delta_x;
-                        ui_transform.local_y -= delta_y;
+                        ui_transform.local_y += delta_y;
                     }
                 }
             }
