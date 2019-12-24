@@ -1,27 +1,26 @@
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
+use std::collections::HashMap;
 
 use amethyst_core::{
     ecs::{
-        Component, DenseVecStorage, Entities, Entity, Join, Read, ReaderId, System, SystemData,
+        Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, ReaderId, System, SystemData,
         Write, WriteStorage,
     },
     math::Vector2,
     shrev::EventChannel,
 };
 use amethyst_derive::SystemDesc;
-use amethyst_input::{BindingTypes, InputEvent};
+use amethyst_input::{BindingTypes, InputHandler};
+use amethyst_window::ScreenDimensions;
 
-use crate::{UiEvent, UiEventType, UiTransform};
+use crate::{UiEvent, UiEventType, UiTransform, targeted_below, Interactable};
 
 /// Component that denotes whether a given ui widget is draggable.
 /// Requires UiTransform to work, and its expected way of usage is
 /// through UiTransformData prefab.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Draggable {
-    /// When true, the widget is being dragged. When false, it's not.
-    pub being_dragged: bool,
-}
+pub struct Draggable;
 
 impl Component for Draggable {
     type Storage = DenseVecStorage<Self>;
@@ -31,10 +30,10 @@ impl Component for Draggable {
 #[system_desc(name(DragWidgetSystemDesc))]
 pub struct DragWidgetSystem<T: BindingTypes> {
     #[system_desc(event_channel_reader)]
-    input_reader_id: ReaderId<InputEvent<T>>,
-
-    #[system_desc(event_channel_reader)]
     ui_reader_id: ReaderId<UiEvent>,
+
+    #[system_desc(skip)]
+    record: HashMap<Entity, (Vector2<f32>, Vector2<f32>)>,
 
     phantom: PhantomData<T>,
 }
@@ -43,10 +42,10 @@ impl<T> DragWidgetSystem<T>
 where
     T: BindingTypes,
 {
-    pub fn new(input_reader_id: ReaderId<InputEvent<T>>, ui_reader_id: ReaderId<UiEvent>) -> Self {
+    pub fn new(ui_reader_id: ReaderId<UiEvent>) -> Self {
         Self {
-            input_reader_id,
             ui_reader_id,
+            record: HashMap::new(),
             phantom: PhantomData,
         }
     }
@@ -58,66 +57,56 @@ where
 {
     type SystemData = (
         Entities<'s>,
-        Read<'s, EventChannel<InputEvent<T>>>,
+        Read<'s, InputHandler<T>>,
+        ReadExpect<'s, ScreenDimensions>,
+        ReadStorage<'s, Draggable>,
+        ReadStorage<'s, Interactable>,
         Write<'s, EventChannel<UiEvent>>,
-        WriteStorage<'s, Draggable>,
         WriteStorage<'s, UiTransform>,
     );
 
     fn run(
         &mut self,
-        (entities, input_events, mut ui_events, mut draggables, mut ui_transforms): Self::SystemData,
+        (entities, input_handler, screen_dimensions, draggables, interactables, mut ui_events, mut ui_transforms): Self::SystemData,
     ) {
-        let mut click_stopped: Vec<Entity> = Vec::new();
+        if let Some((mouse_x, mouse_y)) = input_handler.mouse_position() {
+            let mouse_pos = Vector2::new(mouse_x, screen_dimensions.height() - mouse_y);
 
-        for event in ui_events.read(&mut self.ui_reader_id) {
-            match event.event_type {
-                UiEventType::ClickStart => {
-                    if let Some(draggable) = draggables.get_mut(event.target) {
-                        draggable.being_dragged = true;
+            let mut click_stopped: Vec<Entity> = Vec::new();
+
+            for event in ui_events.read(&mut self.ui_reader_id) {
+                match event.event_type {
+                    UiEventType::ClickStart => {
+                        if let Some(_) = draggables.get(event.target) {
+                            self.record.insert(event.target, (mouse_pos, mouse_pos));
+                        }
                     }
-                }
-                UiEventType::ClickStop => {
-                    if let Some(draggable) = draggables.get(event.target) {
-                        if draggable.being_dragged {
+                    UiEventType::ClickStop => {
+                        if let Some(_) = draggables.get(event.target) {
                             click_stopped.push(event.target);
                         }
                     }
-                }
-                _ => (),
-            }
-        }
-
-        for event in input_events.read(&mut self.input_reader_id) {
-            if let InputEvent::CursorMoved { delta_x, delta_y } = event {
-                for (entity, draggable, mut ui_transforms) in
-                    (&entities, &draggables, &mut ui_transforms.restrict_mut()).join()
-                {
-                    if draggable.being_dragged {
-                        let ui_transform = ui_transforms.get_mut_unchecked();
-
-                        ui_events.single_write(UiEvent::new(
-                            UiEventType::Dragging {
-                                element_offset: Vector2::new(*delta_x, -*delta_y),
-                            },
-                            entity,
-                        ));
-                        ui_transform.local_x += delta_x;
-                        ui_transform.local_y -= delta_y;
-                    }
+                    _ => (),
                 }
             }
-        }
 
-        for entity in click_stopped.iter() {
-            draggables.get_mut(*entity).unwrap().being_dragged = false;
+            for (entity, (first, prev)) in self.record.iter_mut() {
+                ui_events.single_write(UiEvent::new(UiEventType::Dragging { offset_from_mouse: mouse_pos - *first, new_position: mouse_pos }, *entity));
 
-            ui_events.single_write(UiEvent::new(
-                UiEventType::Dropped {
-                    dropped_on: *entity,
-                },
-                *entity,
-            ));
+                let ui_transform = ui_transforms.get_mut(*entity).unwrap();
+                let change = mouse_pos - *prev;
+
+                ui_transform.local_x += change[0];
+                ui_transform.local_y += change[1];
+
+                *prev = mouse_pos;
+            }
+
+            for entity in click_stopped.iter() {
+                ui_events.single_write(UiEvent::new(UiEventType::Dropped { dropped_on: targeted_below((mouse_pos[0], mouse_pos[1]), ui_transforms.get(*entity).unwrap().global_z, (&*entities, &ui_transforms, interactables.maybe()).join()) }, *entity));
+
+                self.record.remove(entity);
+            }
         }
     }
 }

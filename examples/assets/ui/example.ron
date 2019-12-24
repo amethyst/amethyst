@@ -164,6 +164,7 @@ Container(
                 id: "simple_button",
                 x: 250.,
                 y: -40., // -64-16
+                z: 11.,
                 width: 128.,
                 height: 64.,
                 tab_order: 9,
@@ -185,6 +186,7 @@ Container(
                 id: "draggable_button",
                 x: 250.,
                 y: -120., // -64-16
+                z: 12.,
                 width: 128.,
                 height: 64.,
                 tab_order: 9,

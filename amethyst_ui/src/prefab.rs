@@ -192,9 +192,7 @@ where
         if self.draggable {
             system_data.4.insert(
                 entity,
-                Draggable {
-                    being_dragged: false,
-                },
+                Draggable,
             )?;
         }
 
