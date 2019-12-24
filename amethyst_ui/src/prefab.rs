@@ -190,10 +190,7 @@ where
         }
 
         if self.draggable {
-            system_data.4.insert(
-                entity,
-                Draggable,
-            )?;
+            system_data.4.insert(entity, Draggable)?;
         }
 
         Ok(())

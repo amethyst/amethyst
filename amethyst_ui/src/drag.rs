@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
-use std::marker::PhantomData;
 use std::collections::HashMap;
+use std::marker::PhantomData;
 
 use amethyst_core::{
     ecs::{
-        Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, ReaderId, System, SystemData,
-        Write, WriteStorage,
+        Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+        ReaderId, System, SystemData, Write, WriteStorage,
     },
     math::Vector2,
     shrev::EventChannel,
@@ -14,7 +14,7 @@ use amethyst_derive::SystemDesc;
 use amethyst_input::{BindingTypes, InputHandler};
 use amethyst_window::ScreenDimensions;
 
-use crate::{UiEvent, UiEventType, UiTransform, targeted_below, Interactable};
+use crate::{targeted_below, Interactable, UiEvent, UiEventType, UiTransform};
 
 /// Component that denotes whether a given ui widget is draggable.
 /// Requires UiTransform to work, and its expected way of usage is
@@ -67,7 +67,15 @@ where
 
     fn run(
         &mut self,
-        (entities, input_handler, screen_dimensions, draggables, interactables, mut ui_events, mut ui_transforms): Self::SystemData,
+        (
+            entities,
+            input_handler,
+            screen_dimensions,
+            draggables,
+            interactables,
+            mut ui_events,
+            mut ui_transforms,
+        ): Self::SystemData,
     ) {
         if let Some((mouse_x, mouse_y)) = input_handler.mouse_position() {
             let mouse_pos = Vector2::new(mouse_x, screen_dimensions.height() - mouse_y);
@@ -77,12 +85,12 @@ where
             for event in ui_events.read(&mut self.ui_reader_id) {
                 match event.event_type {
                     UiEventType::ClickStart => {
-                        if let Some(_) = draggables.get(event.target) {
+                        if draggables.get(event.target).is_some() {
                             self.record.insert(event.target, (mouse_pos, mouse_pos));
                         }
                     }
                     UiEventType::ClickStop => {
-                        if let Some(_) = draggables.get(event.target) {
+                        if draggables.get(event.target).is_some() {
                             click_stopped.push(event.target);
                         }
                     }
@@ -91,7 +99,13 @@ where
             }
 
             for (entity, (first, prev)) in self.record.iter_mut() {
-                ui_events.single_write(UiEvent::new(UiEventType::Dragging { offset_from_mouse: mouse_pos - *first, new_position: mouse_pos }, *entity));
+                ui_events.single_write(UiEvent::new(
+                    UiEventType::Dragging {
+                        offset_from_mouse: mouse_pos - *first,
+                        new_position: mouse_pos,
+                    },
+                    *entity,
+                ));
 
                 let ui_transform = ui_transforms.get_mut(*entity).unwrap();
                 let change = mouse_pos - *prev;
@@ -103,7 +117,16 @@ where
             }
 
             for entity in click_stopped.iter() {
-                ui_events.single_write(UiEvent::new(UiEventType::Dropped { dropped_on: targeted_below((mouse_pos[0], mouse_pos[1]), ui_transforms.get(*entity).unwrap().global_z, (&*entities, &ui_transforms, interactables.maybe()).join()) }, *entity));
+                ui_events.single_write(UiEvent::new(
+                    UiEventType::Dropped {
+                        dropped_on: targeted_below(
+                            (mouse_pos[0], mouse_pos[1]),
+                            ui_transforms.get(*entity).unwrap().global_z,
+                            (&*entities, &ui_transforms, interactables.maybe()).join(),
+                        ),
+                    },
+                    *entity,
+                ));
 
                 self.record.remove(entity);
             }

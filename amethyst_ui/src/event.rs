@@ -40,7 +40,7 @@ pub enum UiEventType {
     Dragging {
         /// The position of the mouse relative to the center of the transform when the drag started.
         offset_from_mouse: Vector2<f32>,
-       /// Position at which the mouse is currently. Absolute value; not relative to the parent of the dragged entity.
+        /// Position at which the mouse is currently. Absolute value; not relative to the parent of the dragged entity.
         new_position: Vector2<f32>,
     },
     /// When stopping to drag a `Draggable` Ui element.
@@ -196,14 +196,14 @@ where
 /// on if `pos` is over the non-interactable one or not.
 pub fn targeted_below<'a, I>(pos: (f32, f32), height: f32, transforms: I) -> Option<Entity>
 where
-I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>)> + 'a,
+    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>)> + 'a,
 {
-transforms
-    .filter(|(_e, t, _m)| t.opaque && t.position_inside(pos.0, pos.1) && t.global_z < height)
-    .max_by(|(_e1, t1, _m1), (_e2, t2, _m2)| {
-        t1.global_z
-            .partial_cmp(&t2.global_z)
-            .expect("Unexpected NaN")
-    })
-    .and_then(|(e, _, m)| m.map(|_m| e))
+    transforms
+        .filter(|(_e, t, _m)| t.opaque && t.position_inside(pos.0, pos.1) && t.global_z < height)
+        .max_by(|(_e1, t1, _m1), (_e2, t2, _m2)| {
+            t1.global_z
+                .partial_cmp(&t2.global_z)
+                .expect("Unexpected NaN")
+        })
+        .and_then(|(e, _, m)| m.map(|_m| e))
 }
