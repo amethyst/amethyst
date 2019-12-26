@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Adds `get` methods to the underlying net::transport resources ([#2005])
 - Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
   Migration Note: Rons need to wrap their content in either Grid() or List()
+- TileMap to_tile doesn't panic in debug mode. It instead return Result<Point<u32>,TileOutOfBounds>. ([#2020],[#2070])
 - Added new Error options for `NetworkSimulationEvent`.
 - Changed amethyst config directory from `$HOME/.amethyst` to `$HOME/.config/amethyst` ([#2079])
 
@@ -71,6 +72,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2005]: https://github.com/amethyst/amethyst/pull/2005
 [#2004]: https://github.com/amethyst/amethyst/pull/2004
 [#2017]: https://github.com/amethyst/amethyst/pull/2017
+[#2020]: https://github.com/amethyst/amethyst/issue/2020
 [#2023]: https://github.com/amethyst/amethyst/pull/2023
 [#2029]: https://github.com/amethyst/amethyst/pull/2029
 [#2033]: https://github.com/amethyst/amethyst/pull/2033
@@ -78,6 +80,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2067]: https://github.com/amethyst/amethyst/issue/2067
 [#2048]: https://github.com/amethyst/amethyst/pull/2048
 [#2071]: https://github.com/amethyst/amethyst/pull/2071
+[#2070]: https://github.com/amethyst/amethyst/pull/2070
 [#2079]: https://github.com/amethyst/amethyst/pull/2079
 
 
