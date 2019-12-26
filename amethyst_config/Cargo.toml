@@ -6,7 +6,7 @@ edition = "2018"
 description = "Loading from .ron files into Rust structures with defaults to prevent hard errors."
 exclude = ["examples/*"]
 
-documentation = "https://docs-src.amethyst.rs/stable/amethyst_config/"
+documentation = "https://docs.amethyst.rs/stable/amethyst_config/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 

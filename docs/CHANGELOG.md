@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Log warning when `amethyst_test::WaitForLoad` has not completed in 10 seconds. ([#1984])
 - Derive `Copy` and `PartialEq` for `amethyst::renderer::resources::Tint`. ([#2033])
 - Derive `Hash` for `amethyst::input::{Button, ControllerButton, ScrollDirection}`. ([#2041])
-- Add rendy/gfx-backend log verbosity through configuration. ([#1652])
+- Add rendy/gfx-backend log verbosity through configuration. ([#1652]) ([#2048])
 
 ### Changed
 
@@ -36,6 +36,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Adds `get` methods to the underlying net::transport resources ([#2005])
 - Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
   Migration Note: Rons need to wrap their content in either Grid() or List()
+- Added new Error options for `NetworkSimulationEvent`.
+- Changed amethyst config directory from `$HOME/.amethyst` to `$HOME/.config/amethyst` ([#2079])
 
 ### Deprecated
 
@@ -53,6 +55,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Security
 
+[#1652]: https://github.com/amethyst/amethyst/issues/1652
 [#1904]: https://github.com/amethyst/amethyst/pull/1904
 [#1964]: https://github.com/amethyst/amethyst/pull/1964
 [#1973]: https://github.com/amethyst/amethyst/pull/1973
@@ -71,7 +74,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2029]: https://github.com/amethyst/amethyst/pull/2029
 [#2033]: https://github.com/amethyst/amethyst/pull/2033
 [#2041]: https://github.com/amethyst/amethyst/pull/2041
-[#1652]: https://github.com/amethyst/amethyst/issues/1652
+[#2048]: https://github.com/amethyst/amethyst/pull/2048
+[#2079]: https://github.com/amethyst/amethyst/pull/2079
 
 
 ## [0.13.3] - 2019-10-4

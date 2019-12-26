@@ -5,7 +5,7 @@ authors = ["Simon Rönnberg <seamonr@gmail.com>"]
 edition = "2018"
 description = "Amethyst derive"
 
-documentation = "https://docs-src.amethyst.rs/stable/amethyst_derive/"
+documentation = "https://docs.amethyst.rs/stable/amethyst_derive/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 

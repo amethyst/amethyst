@@ -679,7 +679,7 @@ In the next chapter, we'll explore the "S" in ECS and actually get these paddles
 moving!
 
 [sb]: https://specs.amethyst.rs/docs/tutorials/
-[sb-storage]: https://slide-rs.github.io/specs/05_storages.html#densevecstorage
-[2d]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Camera.html#method.standard_2d
+[sb-storage]: https://specs.amethyst.rs/docs/tutorials/05_storages.html#densevecstorage
+[2d]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.Camera.html#method.standard_2d
 [ss]: ../images/pong_tutorial/pong_spritesheet.png
 

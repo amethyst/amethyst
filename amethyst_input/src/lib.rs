@@ -19,6 +19,7 @@ pub use self::{
     controller::{ControllerAxis, ControllerButton, ControllerEvent},
     event::InputEvent,
     input_handler::InputHandler,
+    mouse::MouseAxis,
     scroll_direction::ScrollDirection,
     system::{InputSystem, InputSystemDesc},
     util::{
@@ -39,6 +40,7 @@ mod button;
 mod controller;
 mod event;
 mod input_handler;
+mod mouse;
 mod scroll_direction;
 mod system;
 mod util;

@@ -412,5 +412,5 @@ keypresses, and move our game's paddles accordingly. In the next chapter, we'll
 explore another key concept in real-time games: time. We'll make our game aware
 of time, and add a ball for our paddles to bounce back and forth.
 
-[doc_time]: https://docs-src.amethyst.rs/stable/amethyst_core/timing/struct.Time.html
-[doc_bindings]: https://docs-src.amethyst.rs/stable/amethyst_input/struct.Bindings.html
+[doc_time]: https://docs.amethyst.rs/stable/amethyst_core/timing/struct.Time.html
+[doc_bindings]: https://docs.amethyst.rs/stable/amethyst_input/struct.Bindings.html
