@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
   Migration Note: Rons need to wrap their content in either Grid() or List()
 - Added new Error options for `NetworkSimulationEvent`.
+- Changed amethyst config directory from `$HOME/.amethyst` to `$HOME/.config/amethyst` ([#2079])
 
 ### Deprecated
 
@@ -71,6 +72,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2029]: https://github.com/amethyst/amethyst/pull/2029
 [#2033]: https://github.com/amethyst/amethyst/pull/2033
 [#2041]: https://github.com/amethyst/amethyst/pull/2041
+[#2079]: https://github.com/amethyst/amethyst/pull/2079
 
 
 ## [0.13.3] - 2019-10-4
