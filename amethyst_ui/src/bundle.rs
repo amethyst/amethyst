@@ -47,17 +47,10 @@ where
             "ui_loader",
             &[],
         );
-
-        builder.add(
-            DragWidgetSystemDesc::<T>::default().build(world),
-            "ui_drag_system",
-            &[],
-        );
-
         builder.add(
             UiTransformSystemDesc::default().build(world),
             "ui_transform",
-            &["transform_system", "ui_drag_system"],
+            &["transform_system"],
         );
         builder.add(
             Processor::<FontAsset>::new(),
@@ -104,6 +97,11 @@ where
         builder.add(
             UiButtonSystemDesc::default().build(world),
             "ui_button_system",
+            &["ui_mouse_system"],
+        );
+        builder.add(
+            DragWidgetSystemDesc::<T>::default().build(world),
+            "ui_drag_system",
             &["ui_mouse_system"],
         );
 
