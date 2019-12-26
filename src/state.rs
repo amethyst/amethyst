@@ -560,7 +560,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     /// Removes all states from the stack and replaces it with a new stack.
     pub(crate) fn new_stack(&mut self, states: Vec<Box<dyn State<T, E>>>, data: StateData<'_, T>) {
         if self.running {
-            //revome all current states
+            //remove all current states
             let StateData { world, data } = data;
             while let Some(mut state) = self.state_stack.pop() {
                 state.on_stop(StateData { world, data });
