@@ -9,7 +9,7 @@ use amethyst::{
     utils::application_root_dir,
     Result,
 };
-use log::info;
+use log::{error, info};
 use std::net::TcpListener;
 
 fn main() -> Result<()> {
@@ -114,6 +114,10 @@ impl<'a> System<'a> for SpamReceiveSystem {
                 NetworkSimulationEvent::Disconnect(addr) => {
                     info!("Client Disconnected: {}", addr);
                 }
+                NetworkSimulationEvent::RecvError(e) => {
+                    error!("Recv Error: {:?}", e);
+                }
+                _ => {}
             }
         }
     }

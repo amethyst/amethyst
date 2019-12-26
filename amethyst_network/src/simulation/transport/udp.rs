@@ -16,7 +16,6 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use bytes::Bytes;
-use log::error;
 use std::{io, net::UdpSocket};
 
 /// Use this network bundle to add the UDP transport layer to your game.
@@ -63,16 +62,17 @@ impl<'s> System<'s> for UdpNetworkSendSystem {
         Write<'s, TransportResource>,
         Write<'s, UdpSocketResource>,
         Read<'s, NetworkSimulationTime>,
+        Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
-    fn run(&mut self, (mut transport, mut socket, sim_time): Self::SystemData) {
+    fn run(&mut self, (mut transport, mut socket, sim_time, mut channel): Self::SystemData) {
         if let Some(socket) = socket.get_mut() {
             let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
-            for message in messages.iter() {
+            for message in messages {
                 match message.delivery {
                     DeliveryRequirement::Unreliable | DeliveryRequirement::Default => {
                         if let Err(e) = socket.send_to(&message.payload, message.destination) {
-                            error!("There was an error when attempting to send packet: {:?}", e);
+                            channel.single_write(NetworkSimulationEvent::SendError(e, message));
                         }
                     }
                     delivery => panic!(
@@ -118,7 +118,7 @@ impl<'s> System<'s> for UdpNetworkRecvSystem {
                     }
                     Err(e) => {
                         if e.kind() != io::ErrorKind::WouldBlock {
-                            error!("Encountered an error receiving data: {:?}", e);
+                            event_channel.single_write(NetworkSimulationEvent::RecvError(e));
                         }
                         break;
                     }

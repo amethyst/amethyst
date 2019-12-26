@@ -37,6 +37,7 @@ where
     /// First number represents mapped ID visible to the user code,
     /// while second is the ID used by incoming events.
     connected_controllers: SmallVec<[(u32, u32); 8]>,
+    mouse_last_position: Option<(f32, f32)>,
     mouse_position: Option<(f32, f32)>,
     mouse_wheel_vertical: f32,
     mouse_wheel_horizontal: f32,
@@ -404,6 +405,7 @@ where
     pub fn send_frame_begin(&mut self) {
         self.mouse_wheel_vertical = 0.0;
         self.mouse_wheel_horizontal = 0.0;
+        self.mouse_last_position = self.mouse_position.clone();
     }
 
     /// Returns an iterator over all keys that are down.
@@ -552,6 +554,35 @@ where
                     }
                 })
                 .unwrap_or(0.0),
+            Axis::Mouse {
+                axis,
+                over_extendable,
+                radius_x,
+                radius_y,
+            } => {
+                let current_pos = self.mouse_position.unwrap_or((0., 0.));
+                let last_pos = self.mouse_last_position.unwrap_or(current_pos);
+                let delta = match axis {
+                    // These calculations have to be inverses in order to point into the right direction of movement
+                    MouseAxis::X => last_pos.0 - current_pos.0,
+                    MouseAxis::Y => last_pos.1 - current_pos.1,
+                };
+
+                let rel_delta = match axis {
+                    MouseAxis::X => delta / radius_x,
+                    MouseAxis::Y => delta / radius_y,
+                };
+
+                if over_extendable {
+                    rel_delta
+                } else if rel_delta > 1. {
+                    1.
+                } else if rel_delta < -1. {
+                    -1.
+                } else {
+                    rel_delta
+                }
+            }
             Axis::MouseWheel { horizontal } => self.mouse_wheel_value(horizontal),
         })
     }
