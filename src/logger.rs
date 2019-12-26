@@ -113,21 +113,41 @@ impl Logger {
             StdoutLog::Off => {}
         }
 
-        let log_gfx_backend_level = config.log_gfx_backend_level.unwrap();
-        let log_gfx_rendy_level = config.log_gfx_rendy_level.unwrap();
+        if let Some(log_gfx_backend_level) = config.log_gfx_backend_level {
+            logger.dispatch = logger
+                .dispatch
+                .level_for("gfx_backend_empty", log_gfx_backend_level)
+                .level_for("gfx_backend_vulkan", log_gfx_backend_level)
+                .level_for("gfx_backend_dx12", log_gfx_backend_level)
+                .level_for("gfx_backend_metal", log_gfx_backend_level)
+        } else {
+            logger.dispatch = logger
+                .dispatch
+                .level_for("gfx_backend_empty", LevelFilter::Warn)
+                .level_for("gfx_backend_vulkan", LevelFilter::Warn)
+                .level_for("gfx_backend_dx12", LevelFilter::Warn)
+                .level_for("gfx_backend_metal", LevelFilter::Warn)
+        }
 
-        logger.dispatch = logger
-            .dispatch
-            .level_for("gfx_backend_empty", log_gfx_backend_level)
-            .level_for("gfx_backend_vulkan", log_gfx_backend_level)
-            .level_for("gfx_backend_dx12", log_gfx_backend_level)
-            .level_for("gfx_backend_metal", log_gfx_backend_level)
-            .level_for("rendy_factory::factory", log_gfx_rendy_level)
-            .level_for("rendy_memory::allocator::dynamic", log_gfx_rendy_level)
-            .level_for("rendy_graph::node::render::pass", log_gfx_rendy_level)
-            .level_for("rendy_graph::graph", log_gfx_rendy_level)
-            .level_for("rendy_memory::allocator::linear", log_gfx_rendy_level)
-            .level_for("rendy_wsi", log_gfx_rendy_level);
+        if let Some(log_gfx_rendy_level) = config.log_gfx_rendy_level {
+            logger.dispatch = logger
+                .dispatch
+                .level_for("rendy_factory::factory", log_gfx_rendy_level)
+                .level_for("rendy_memory::allocator::dynamic", log_gfx_rendy_level)
+                .level_for("rendy_graph::node::render::pass", log_gfx_rendy_level)
+                .level_for("rendy_graph::graph", log_gfx_rendy_level)
+                .level_for("rendy_memory::allocator::linear", log_gfx_rendy_level)
+                .level_for("rendy_wsi", log_gfx_rendy_level);
+        } else {
+            logger.dispatch = logger
+                .dispatch
+                .level_for("rendy_factory::factory", LevelFilter::Warn)
+                .level_for("rendy_memory::allocator::dynamic", LevelFilter::Warn)
+                .level_for("rendy_graph::node::render::pass", LevelFilter::Warn)
+                .level_for("rendy_graph::graph", LevelFilter::Warn)
+                .level_for("rendy_memory::allocator::linear", LevelFilter::Warn)
+                .level_for("rendy_wsi", LevelFilter::Warn);
+        }
 
         if let Some(path) = config.log_file {
             if let Ok(log_file) = fern::log_file(path) {
