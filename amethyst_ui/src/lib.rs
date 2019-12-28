@@ -19,7 +19,9 @@ pub use self::{
     },
     drag::{DragWidgetSystemDesc, Draggable},
     event::{targeted, targeted_below, Interactable, UiEvent, UiEventType, UiMouseSystem},
-    event_retrigger::{EventReceiver, EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc},
+    event_retrigger::{
+        EventReceiver, EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc,
+    },
     font::{
         default::get_default_font,
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},

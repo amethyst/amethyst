@@ -9,6 +9,7 @@ use amethyst_core::{
     },
     math::Vector2,
     shrev::EventChannel,
+    Hidden, HiddenPropagate,
 };
 use amethyst_derive::SystemDesc;
 use amethyst_input::{BindingTypes, InputHandler};
@@ -32,9 +33,9 @@ pub struct DragWidgetSystem<T: BindingTypes> {
     #[system_desc(event_channel_reader)]
     ui_reader_id: ReaderId<UiEvent>,
 
-    /// hashmap whose keys are every entities being dragged, 
-    /// and whose element is a tuple whose first element is 
-    /// the original mouse position when drag first started, 
+    /// hashmap whose keys are every entities being dragged,
+    /// and whose element is a tuple whose first element is
+    /// the original mouse position when drag first started,
     /// and second element the mouse position one frame ago
     #[system_desc(skip)]
     record: HashMap<Entity, (Vector2<f32>, Vector2<f32>)>,
@@ -63,6 +64,8 @@ where
         Entities<'s>,
         Read<'s, InputHandler<T>>,
         ReadExpect<'s, ScreenDimensions>,
+        ReadStorage<'s, Hidden>,
+        ReadStorage<'s, HiddenPropagate>,
         ReadStorage<'s, Draggable>,
         ReadStorage<'s, Interactable>,
         Write<'s, EventChannel<UiEvent>>,
@@ -75,6 +78,8 @@ where
             entities,
             input_handler,
             screen_dimensions,
+            hiddens,
+            hidden_props,
             draggables,
             interactables,
             mut ui_events,
@@ -93,8 +98,8 @@ where
                             self.record.insert(event.target, (mouse_pos, mouse_pos));
                         }
                     }
-                    UiEventType::ClickStop => {
-                        if draggables.get(event.target).is_some() {
+                    UiEventType::ClickStop | UiEventType::HoverStop => {
+                        if self.record.contains_key(&event.target) {
                             click_stopped.push(event.target);
                         }
                     }
@@ -126,7 +131,14 @@ where
                         dropped_on: targeted_below(
                             (mouse_pos[0], mouse_pos[1]),
                             ui_transforms.get(*entity).unwrap().global_z,
-                            (&*entities, &ui_transforms, interactables.maybe()).join(),
+                            (
+                                &*entities,
+                                &ui_transforms,
+                                interactables.maybe(),
+                                !&hiddens,
+                                !&hidden_props,
+                            )
+                                .join(),
                         ),
                     },
                     *entity,
