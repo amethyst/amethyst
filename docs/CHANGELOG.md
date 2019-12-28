@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Log warning when `amethyst_test::WaitForLoad` has not completed in 10 seconds. ([#1984])
 - Derive `Copy` and `PartialEq` for `amethyst::renderer::resources::Tint`. ([#2033])
 - Derive `Hash` for `amethyst::input::{Button, ControllerButton, ScrollDirection}`. ([#2041])
-- Add `Draggable` component that can be used with `UiTransform` to make widgets draggable. 
+- Add `Draggable` component that can be used with `UiTransform` to make widgets draggable.  ([#2080])
 
 ### Changed
 

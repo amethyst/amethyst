@@ -32,6 +32,10 @@ pub struct DragWidgetSystem<T: BindingTypes> {
     #[system_desc(event_channel_reader)]
     ui_reader_id: ReaderId<UiEvent>,
 
+    /// hashmap whose keys are every entities being dragged, 
+    /// and whose element is a tuple whose first element is 
+    /// the original mouse position when drag first started, 
+    /// and second element the mouse position one frame ago
     #[system_desc(skip)]
     record: HashMap<Entity, (Vector2<f32>, Vector2<f32>)>,
 
