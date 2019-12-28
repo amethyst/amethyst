@@ -72,6 +72,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2029]: https://github.com/amethyst/amethyst/pull/2029
 [#2033]: https://github.com/amethyst/amethyst/pull/2033
 [#2041]: https://github.com/amethyst/amethyst/pull/2041
+[#2080]: https://github.com/amethyst/amethyst/pull/2080
 
 
 ## [0.13.3] - 2019-10-4
