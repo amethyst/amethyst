@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
 
 use amethyst_core::{
@@ -89,7 +89,7 @@ where
         if let Some((mouse_x, mouse_y)) = input_handler.mouse_position() {
             let mouse_pos = Vector2::new(mouse_x, screen_dimensions.height() - mouse_y);
 
-            let mut click_stopped: Vec<Entity> = Vec::new();
+            let mut click_stopped: HashSet<Entity> = HashSet::new();
 
             for event in ui_events.read(&mut self.ui_reader_id) {
                 match event.event_type {
@@ -98,12 +98,18 @@ where
                             self.record.insert(event.target, (mouse_pos, mouse_pos));
                         }
                     }
-                    UiEventType::ClickStop | UiEventType::HoverStop => {
+                    UiEventType::ClickStop => {
                         if self.record.contains_key(&event.target) {
-                            click_stopped.push(event.target);
+                            click_stopped.insert(event.target);
                         }
                     }
                     _ => (),
+                }
+            }
+
+            for (entity, _) in self.record.iter() {
+                if hiddens.get(*entity).is_some() || hidden_props.get(*entity).is_some() {
+                    click_stopped.insert(*entity);
                 }
             }
 
