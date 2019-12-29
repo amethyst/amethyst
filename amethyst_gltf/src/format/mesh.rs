@@ -7,8 +7,8 @@ use amethyst_rendy::{
     skinning::JointCombined,
 };
 use log::{trace, warn};
-use std::{iter::repeat, ops::Range};
 use mikktspace::{generate_tangents_default, Geometry};
+use std::{iter::repeat, ops::Range};
 
 fn compute_if<T, F: Fn() -> T>(predicate: bool, func: F) -> Option<T> {
     if predicate {
