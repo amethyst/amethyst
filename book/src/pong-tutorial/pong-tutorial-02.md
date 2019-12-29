@@ -215,7 +215,7 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
     By implementing `Component` for the `Paddle` struct, it can now be attached
     to entities in the game.
 
-    When implemented the `Component` trait, we must specify the storage type.
+    When implementing the `Component` trait, we must specify the storage type.
     Different storage types optimize for faster access, lower memory usage, or a
     balance between the two. For more information on storage types, check out the
     [Specs documentation][sb-storage].
