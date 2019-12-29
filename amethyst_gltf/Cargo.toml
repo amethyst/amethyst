@@ -27,7 +27,7 @@ gltf = "0.14"
 hibitset = { version = "0.6.2", features = ["parallel"] }
 itertools = "0.8"
 log = "0.4.6"
-mikktspace = { version = "0.1" }
+mikktspace = { git = "https://github.com/gltf-rs/mikktspace", rev = "abbae9b486f280ce6e331821e2454c2cfd746d5b" }
 serde = { version = "1.0", features = ["derive"] }
 
 thread_profiler = { version = "0.3", optional = true }
