@@ -272,7 +272,7 @@ impl Perspective {
     /// # Arguments
     ///
     /// * aspect - Aspect Ratio represented as a `f32` ratio.
-    /// * fov - Field of View represented in degrees
+    /// * fov - Field of View represented in radians
     /// * z_near - Near clip plane distance
     /// * z_far - Far clip plane distance
     ///

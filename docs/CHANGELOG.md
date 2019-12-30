@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Log warning when `amethyst_test::WaitForLoad` has not completed in 10 seconds. ([#1984])
 - Derive `Copy` and `PartialEq` for `amethyst::renderer::resources::Tint`. ([#2033])
 - Derive `Hash` for `amethyst::input::{Button, ControllerButton, ScrollDirection}`. ([#2041])
+- Added Trans::Replace, Trans::NewStack, and Trans::Sequence to the State Machine Transitions. ([#2067],[#2071])
+- Add rendy/gfx-backend log verbosity through configuration. ([#1652]) ([#2048])
 - Add `Draggable` component that can be used with `UiTransform` to make widgets draggable.  ([#2080])
 
 ### Changed
@@ -36,7 +38,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Adds `get` methods to the underlying net::transport resources ([#2005])
 - Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
   Migration Note: Rons need to wrap their content in either Grid() or List()
+- TileMap to_tile doesn't panic in debug mode. It instead return Result<Point<u32>,TileOutOfBounds>. ([#2020],[#2070])
 - Added new Error options for `NetworkSimulationEvent`.
+- Changed amethyst config directory from `$HOME/.amethyst` to `$HOME/.config/amethyst` ([#2079])
 
 ### Deprecated
 
@@ -54,6 +58,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Security
 
+[#1652]: https://github.com/amethyst/amethyst/issues/1652
 [#1904]: https://github.com/amethyst/amethyst/pull/1904
 [#1964]: https://github.com/amethyst/amethyst/pull/1964
 [#1973]: https://github.com/amethyst/amethyst/pull/1973
@@ -68,10 +73,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2005]: https://github.com/amethyst/amethyst/pull/2005
 [#2004]: https://github.com/amethyst/amethyst/pull/2004
 [#2017]: https://github.com/amethyst/amethyst/pull/2017
+[#2020]: https://github.com/amethyst/amethyst/issue/2020
 [#2023]: https://github.com/amethyst/amethyst/pull/2023
 [#2029]: https://github.com/amethyst/amethyst/pull/2029
 [#2033]: https://github.com/amethyst/amethyst/pull/2033
 [#2041]: https://github.com/amethyst/amethyst/pull/2041
+[#2067]: https://github.com/amethyst/amethyst/issue/2067
+[#2048]: https://github.com/amethyst/amethyst/pull/2048
+[#2071]: https://github.com/amethyst/amethyst/pull/2071
+[#2070]: https://github.com/amethyst/amethyst/pull/2070
+[#2079]: https://github.com/amethyst/amethyst/pull/2079
 [#2080]: https://github.com/amethyst/amethyst/pull/2080
 
 
