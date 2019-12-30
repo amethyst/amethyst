@@ -86,72 +86,71 @@ where
             mut ui_transforms,
         ): Self::SystemData,
     ) {
-        if let Some((mouse_x, mouse_y)) = input_handler.mouse_position() {
-            let mouse_pos = Vector2::new(mouse_x, screen_dimensions.height() - mouse_y);
+        let mouse_pos = input_handler.mouse_position().unwrap_or((0., 0.));
+        let mouse_pos = Vector2::new(mouse_pos.0, screen_dimensions.height() - mouse_pos.1);
 
-            let mut click_stopped: HashSet<Entity> = HashSet::new();
+        let mut click_stopped: HashSet<Entity> = HashSet::new();
 
-            for event in ui_events.read(&mut self.ui_reader_id) {
-                match event.event_type {
-                    UiEventType::ClickStart => {
-                        if draggables.get(event.target).is_some() {
-                            self.record.insert(event.target, (mouse_pos, mouse_pos));
-                        }
+        for event in ui_events.read(&mut self.ui_reader_id) {
+            match event.event_type {
+                UiEventType::ClickStart => {
+                    if draggables.get(event.target).is_some() {
+                        self.record.insert(event.target, (mouse_pos, mouse_pos));
                     }
-                    UiEventType::ClickStop => {
-                        if self.record.contains_key(&event.target) {
-                            click_stopped.insert(event.target);
-                        }
+                }
+                UiEventType::ClickStop => {
+                    if self.record.contains_key(&event.target) {
+                        click_stopped.insert(event.target);
                     }
-                    _ => (),
                 }
+                _ => (),
             }
+        }
 
-            for (entity, _) in self.record.iter() {
-                if hiddens.get(*entity).is_some() || hidden_props.get(*entity).is_some() {
-                    click_stopped.insert(*entity);
-                }
+        for (entity, _) in self.record.iter() {
+            if hiddens.get(*entity).is_some() || hidden_props.get(*entity).is_some() {
+                click_stopped.insert(*entity);
             }
+        }
 
-            for (entity, (first, prev)) in self.record.iter_mut() {
-                ui_events.single_write(UiEvent::new(
-                    UiEventType::Dragging {
-                        offset_from_mouse: mouse_pos - *first,
-                        new_position: mouse_pos,
-                    },
-                    *entity,
-                ));
+        for (entity, (first, prev)) in self.record.iter_mut() {
+            ui_events.single_write(UiEvent::new(
+                UiEventType::Dragging {
+                    offset_from_mouse: mouse_pos - *first,
+                    new_position: mouse_pos,
+                },
+                *entity,
+            ));
 
-                let ui_transform = ui_transforms.get_mut(*entity).unwrap();
-                let change = mouse_pos - *prev;
+            let ui_transform = ui_transforms.get_mut(*entity).unwrap();
+            let change = mouse_pos - *prev;
 
-                ui_transform.local_x += change[0];
-                ui_transform.local_y += change[1];
+            ui_transform.local_x += change[0];
+            ui_transform.local_y += change[1];
 
-                *prev = mouse_pos;
-            }
+            *prev = mouse_pos;
+        }
 
-            for entity in click_stopped.iter() {
-                ui_events.single_write(UiEvent::new(
-                    UiEventType::Dropped {
-                        dropped_on: targeted_below(
-                            (mouse_pos[0], mouse_pos[1]),
-                            ui_transforms.get(*entity).unwrap().global_z,
-                            (
-                                &*entities,
-                                &ui_transforms,
-                                interactables.maybe(),
-                                !&hiddens,
-                                !&hidden_props,
-                            )
-                                .join(),
-                        ),
-                    },
-                    *entity,
-                ));
+        for entity in click_stopped.iter() {
+            ui_events.single_write(UiEvent::new(
+                UiEventType::Dropped {
+                    dropped_on: targeted_below(
+                        (mouse_pos[0], mouse_pos[1]),
+                        ui_transforms.get(*entity).unwrap().global_z,
+                        (
+                            &*entities,
+                            &ui_transforms,
+                            interactables.maybe(),
+                            !&hiddens,
+                            !&hidden_props,
+                        )
+                            .join(),
+                    ),
+                },
+                *entity,
+            ));
 
-                self.record.remove(entity);
-            }
+            self.record.remove(entity);
         }
     }
 }

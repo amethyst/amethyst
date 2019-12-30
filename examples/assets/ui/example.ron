@@ -163,7 +163,7 @@ Container(
             transform: (
                 id: "simple_button",
                 x: 250.,
-                y: -40., // -64-16
+                y: -40.,
                 z: 11.,
                 width: 128.,
                 height: 64.,
@@ -185,7 +185,7 @@ Container(
             transform: (
                 id: "draggable_button",
                 x: 250.,
-                y: -120., // -64-16
+                y: -120.,
                 z: 12.,
                 width: 128.,
                 height: 64.,
