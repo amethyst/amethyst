@@ -163,7 +163,8 @@ Container(
             transform: (
                 id: "simple_button",
                 x: 250.,
-                y: -80., // -64-16
+                y: -40.,
+                z: 11.,
                 width: 128.,
                 height: 64.,
                 tab_order: 9,
@@ -178,6 +179,30 @@ Container(
                 normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
             )
         ),
+
+        // Draggable Button
+        Button(
+            transform: (
+                id: "draggable_button",
+                x: 250.,
+                y: -120.,
+                z: 12.,
+                width: 128.,
+                height: 64.,
+                tab_order: 9,
+                anchor: TopLeft,
+                mouse_reactive: true,
+                draggable: true,
+            ),
+            button: (
+                text: "Draggable",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 20.,
+                normal_text_color: (0.0, 0.0, 0.0, 1.0),
+                normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
+            )
+        ),
+
         Label(
             transform: (
                 id: "fps",
