@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - TileMap to_tile doesn't panic in debug mode. It instead return Result<Point<u32>,TileOutOfBounds>. ([#2020],[#2070])
 - Added new Error options for `NetworkSimulationEvent`.
 - Changed amethyst config directory from `$HOME/.amethyst` to `$HOME/.config/amethyst` ([#2079])
+- Changed `world_to_screen` camera transformation to match inverse of the one in `screen_ray` ([#2057])
 
 ### Deprecated
 
@@ -84,6 +85,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2070]: https://github.com/amethyst/amethyst/pull/2070
 [#2079]: https://github.com/amethyst/amethyst/pull/2079
 [#2080]: https://github.com/amethyst/amethyst/pull/2080
+[#2057]: https://github.com/amethyst/amethyst/issues/2057
 
 
 ## [0.13.3] - 2019-10-4

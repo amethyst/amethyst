@@ -562,8 +562,9 @@ impl Projection {
         screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
     ) -> Point2<f32> {
+        let transformation_matrix = camera_transform.global_matrix().try_inverse().unwrap();
         let screen_pos =
-            (camera_transform.global_matrix() * self.as_matrix()).transform_point(&world_position);
+            (self.as_matrix() * transformation_matrix).transform_point(&world_position);
 
         Point2::new(
             (screen_pos.x + 1.0) * screen_diagonal.x / 2.0,
