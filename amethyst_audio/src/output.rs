@@ -4,14 +4,12 @@
 use std::{
     fmt::{Debug, Formatter, Result as FmtResult},
     io::Cursor,
-    sync::Arc,
 };
 
-use cpal::traits::DeviceTrait;
 use log::error;
 use rodio::{
-    default_output_device, output_devices, Decoder, Device, Devices, OutputDevices, Sink,
-    Source as RSource,
+    default_output_device, output_devices, Decoder, Device, DeviceTrait, Devices, OutputDevices,
+    Sink, Source as RSource,
 };
 
 use amethyst_core::ecs::World;
@@ -21,9 +19,8 @@ use crate::{sink::AudioSink, source::Source, DecoderError};
 /// A speaker(s) through which audio can be played.
 ///
 /// By convention, the default output is stored as a resource in the `World`.
-#[derive(Clone)]
 pub struct Output {
-    pub(crate) device: Arc<Device>,
+    pub(crate) device: Device,
 }
 
 /// Convenience method for opening the default output device.
@@ -34,9 +31,7 @@ pub struct Output {
 impl Default for Output {
     fn default() -> Self {
         default_output_device()
-            .map(|device| Output {
-                device: Arc::new(device),
-            })
+            .map(|device| Output { device })
             .expect("No default output device")
     }
 }
@@ -113,17 +108,13 @@ impl Iterator for OutputIterator {
     type Item = Output;
 
     fn next(&mut self) -> Option<Output> {
-        self.devices.next().map(|device| Output {
-            device: Arc::new(device),
-        })
+        self.devices.next().map(|device| Output { device })
     }
 }
 
 /// Get the default output, returns none if no outputs are available.
 pub fn default_output() -> Option<Output> {
-    default_output_device().map(|device| Output {
-        device: Arc::new(device),
-    })
+    default_output_device().map(|device| Output { device })
 }
 
 /// Get a list of outputs available to the system.

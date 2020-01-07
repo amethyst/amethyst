@@ -8,7 +8,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 
-use crate::{output::Output, source::*, systems::AudioSystemDesc};
+use crate::{source::*, systems::AudioSystemDesc};
 
 /// Audio bundle
 ///
@@ -18,7 +18,7 @@ use crate::{output::Output, source::*, systems::AudioSystemDesc};
 ///
 /// The generic N type should be the same as the one in `Transform`.
 #[derive(Default, Debug)]
-pub struct AudioBundle(Output);
+pub struct AudioBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for AudioBundle {
     fn build(
@@ -26,11 +26,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for AudioBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        builder.add(
-            AudioSystemDesc::new(self.0).build(world),
-            "audio_system",
-            &[],
-        );
+        builder.add(AudioSystemDesc::new().build(world), "audio_system", &[]);
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
         Ok(())
     }

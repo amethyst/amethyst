@@ -30,24 +30,21 @@ use crate::{
 
 /// Builds an `AudioSystem`.
 #[derive(Default, Debug, new)]
-pub struct AudioSystemDesc {
-    /// Audio `Output`.
-    pub output: Output,
-}
+pub struct AudioSystemDesc;
 
 impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
     fn build(self, world: &mut World) -> AudioSystem {
         <AudioSystem as System<'_>>::SystemData::setup(world);
 
-        world.insert(self.output.clone());
+        world.insert(Output::default());
 
-        AudioSystem::new(self.output)
+        AudioSystem::new()
     }
 }
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
 #[derive(Debug, Default, new)]
-pub struct AudioSystem(Output);
+pub struct AudioSystem;
 
 /// Add this structure to world as a resource with ID 0 to select an entity whose AudioListener
 /// component will be used.  If this resource isn't found then the system will arbitrarily select
