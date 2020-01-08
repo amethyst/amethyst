@@ -8,8 +8,7 @@ use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
-use winit::event::Event;
-use winit::event_loop::ControlFlow;
+use winit::{event::Event, event_loop::ControlFlow};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
@@ -56,7 +55,7 @@ where
     reader: R,
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
-    event_reader_id: ReaderId<Event<()>>,
+    event_reader_id: ReaderId<Event<'static, ()>>,
     #[derivative(Debug = "ignore")]
     trans_reader_id: ReaderId<TransEvent<T, E>>,
     states: StateMachine<'a, T, E>,
@@ -278,13 +277,13 @@ where
     ///     game.run_winit_loop(event, control_flow)
     /// })
     /// ~~~
-    pub fn run_winit_loop(&mut self, event: Event<()>, control_flow: &mut ControlFlow)
+    pub fn run_winit_loop(&mut self, event: Event<'static, ()>, control_flow: &mut ControlFlow)
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
         self.world.write_resource::<Stopwatch>().start();
 
-        if Event::EventsCleared == event {
+        if Event::MainEventsCleared == event {
             if !self.states.is_running() {
                 {
                     let mut stopwatch = self.world.write_resource::<Stopwatch>();
@@ -314,7 +313,9 @@ where
             *control_flow = ControlFlow::Poll;
         }
         {
-            let mut event_handler = self.world.write_resource::<EventChannel<Event<()>>>();
+            let mut event_handler = self
+                .world
+                .write_resource::<EventChannel<Event<'static, ()>>>();
             event_handler.single_write(event);
         }
     }
@@ -336,7 +337,7 @@ where
             use crate::winit::event::WindowEvent;
             let world = &mut self.world;
             let reader_id = &mut self.event_reader_id;
-            world.exec(|ev: Read<'_, EventChannel<Event<()>>>| {
+            world.exec(|ev: Read<'_, EventChannel<Event<'static, ()>>>| {
                 ev.read(reader_id).any(|e| {
                     if cfg!(target_os = "ios") {
                         if let Event::WindowEvent {
@@ -605,7 +606,7 @@ where
         }
         world.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.insert(pool);
-        world.insert(EventChannel::<Event<()>>::with_capacity(2000));
+        world.insert(EventChannel::<Event<'static, ()>>::with_capacity(2000));
         world.insert(EventChannel::<UiEvent>::with_capacity(40));
         world.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         world.insert(FrameLimiter::default());
@@ -956,7 +957,7 @@ where
         let data = init.build(&mut self.world);
         let event_reader_id = self
             .world
-            .exec(|mut ev: Write<'_, EventChannel<Event<()>>>| ev.register_reader());
+            .exec(|mut ev: Write<'_, EventChannel<Event<'static, ()>>>| ev.register_reader());
 
         let trans_reader_id = self
             .world

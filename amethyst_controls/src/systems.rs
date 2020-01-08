@@ -132,12 +132,12 @@ pub struct FreeRotationSystem {
     sensitivity_x: f32,
     sensitivity_y: f32,
     #[system_desc(event_channel_reader)]
-    event_reader: ReaderId<Event<()>>,
+    event_reader: ReaderId<Event<'static, ()>>,
 }
 
 impl<'a> System<'a> for FreeRotationSystem {
     type SystemData = (
-        Read<'a, EventChannel<Event<()>>>,
+        Read<'a, EventChannel<Event<'static, ()>>>,
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
         Read<'a, WindowFocus>,
@@ -173,11 +173,14 @@ impl<'a> System<'a> for FreeRotationSystem {
 #[system_desc(name(MouseFocusUpdateSystemDesc))]
 pub struct MouseFocusUpdateSystem {
     #[system_desc(event_channel_reader)]
-    event_reader: ReaderId<Event<()>>,
+    event_reader: ReaderId<Event<'static, ()>>,
 }
 
 impl<'a> System<'a> for MouseFocusUpdateSystem {
-    type SystemData = (Read<'a, EventChannel<Event<()>>>, Write<'a, WindowFocus>);
+    type SystemData = (
+        Read<'a, EventChannel<Event<'static, ()>>>,
+        Write<'a, WindowFocus>,
+    );
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
         #[cfg(feature = "profiler")]

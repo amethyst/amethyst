@@ -522,7 +522,7 @@ impl<T: BindingTypes> Bindings<T> {
 mod tests {
     use super::*;
     use crate::{button::*, controller::ControllerAxis};
-    use winit::{MouseButton, VirtualKeyCode};
+    use winit::event::{MouseButton, VirtualKeyCode};
 
     #[test]
     fn add_and_remove_actions() {

@@ -26,12 +26,12 @@ use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 pub struct TextEditingInputSystem {
     /// A reader for winit events.
     #[system_desc(event_channel_reader)]
-    reader: ReaderId<Event<()>>,
+    reader: ReaderId<Event<'static, ()>>,
 }
 
 impl TextEditingInputSystem {
     /// Creates a new instance of this system
-    pub fn new(reader: ReaderId<Event<()>>) -> Self {
+    pub fn new(reader: ReaderId<Event<'static, ()>>) -> Self {
         Self { reader }
     }
 }
@@ -42,7 +42,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, Selected>,
-        Read<'a, EventChannel<Event<()>>>,
+        Read<'a, EventChannel<Event<'static, ()>>>,
         Write<'a, EventChannel<UiEvent>>,
     );
 
@@ -107,7 +107,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                         ..
                     } => match v_keycode {
                         VirtualKeyCode::Home | VirtualKeyCode::Up => {
-                            focused_edit.highlight_vector = if modifiers.shift {
+                            focused_edit.highlight_vector = if modifiers.shift() {
                                 focused_edit.cursor_position
                             } else {
                                 0
@@ -117,7 +117,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                         }
                         VirtualKeyCode::End | VirtualKeyCode::Down => {
                             let glyph_len = focused_text.text.graphemes(true).count() as isize;
-                            focused_edit.highlight_vector = if modifiers.shift {
+                            focused_edit.highlight_vector = if modifiers.shift() {
                                 focused_edit.cursor_position - glyph_len
                             } else {
                                 0
@@ -156,7 +156,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::Left => {
-                            if focused_edit.highlight_vector == 0 || modifiers.shift {
+                            if focused_edit.highlight_vector == 0 || modifiers.shift() {
                                 if focused_edit.cursor_position > 0 {
                                     let delta = if ctrl_or_cmd(modifiers) {
                                         let mut graphemes = 0;
@@ -175,7 +175,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                         1
                                     };
                                     focused_edit.cursor_position -= delta;
-                                    if modifiers.shift {
+                                    if modifiers.shift() {
                                         focused_edit.highlight_vector += delta;
                                     }
                                     focused_edit.cursor_blink_timer = 0.0;
@@ -188,7 +188,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::Right => {
-                            if focused_edit.highlight_vector == 0 || modifiers.shift {
+                            if focused_edit.highlight_vector == 0 || modifiers.shift() {
                                 let glyph_len = focused_text.text.graphemes(true).count();
                                 if (focused_edit.cursor_position as usize) < glyph_len {
                                     let delta = if ctrl_or_cmd(modifiers) {
@@ -204,7 +204,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                         1
                                     };
                                     focused_edit.cursor_position += delta;
-                                    if modifiers.shift {
+                                    if modifiers.shift() {
                                         focused_edit.highlight_vector -= delta;
                                     }
                                     focused_edit.cursor_blink_timer = 0.0;
@@ -299,7 +299,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                     ));
                                 }
                                 LineMode::Wrap => {
-                                    if modifiers.shift {
+                                    if modifiers.shift() {
                                         if focused_text.text.graphemes(true).count()
                                             < focused_edit.max_length
                                         {
@@ -338,8 +338,8 @@ impl<'a> System<'a> for TextEditingInputSystem {
 
 /// Returns if the command key is down on OSX, and the CTRL key for everything else.
 fn ctrl_or_cmd(modifiers: ModifiersState) -> bool {
-    (cfg!(target_os = "macos") && modifiers.logo)
-        || (cfg!(not(target_os = "macos")) && modifiers.ctrl)
+    (cfg!(target_os = "macos") && modifiers.logo())
+        || (cfg!(not(target_os = "macos")) && modifiers.ctrl())
 }
 
 fn read_highlighted<'a>(edit: &TextEditing, text: &'a UiText) -> &'a str {

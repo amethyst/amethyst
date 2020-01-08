@@ -11,7 +11,7 @@ use derivative::Derivative;
 use smallvec::SmallVec;
 use std::{borrow::Borrow, hash::Hash};
 use winit::{
-    dpi::LogicalPosition,
+    dpi::{LogicalPosition, PhysicalPosition},
     event::{
         DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, MouseScrollDelta,
         VirtualKeyCode, WindowEvent,
@@ -61,7 +61,7 @@ where
     /// the world as a resource.
     pub fn send_event(
         &mut self,
-        event: &Event<()>,
+        event: &Event<'static, ()>,
         event_handler: &mut EventChannel<InputEvent<T>>,
         hidpi: f32,
     ) {
@@ -224,7 +224,7 @@ where
                     }
                 }
                 WindowEvent::CursorMoved {
-                    position: LogicalPosition { x, y },
+                    position: PhysicalPosition { x, y },
                     ..
                 } => {
                     if let Some((old_x, old_y)) = self.mouse_position {
@@ -778,8 +778,10 @@ mod tests {
 
     use super::*;
     use winit::{
-        DeviceId, ElementState, Event, KeyboardInput, ModifiersState, ScanCode, WindowEvent,
-        WindowId,
+        event::{
+            DeviceId, ElementState, Event, KeyboardInput, ModifiersState, ScanCode, WindowEvent,
+        },
+        window::WindowId,
     };
 
     const HIDPI: f32 = 1.0;
@@ -1259,19 +1261,20 @@ right: `{:?}`",
         }
     }
 
-    fn key_press(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event {
+    fn key_press(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event<'static, ()> {
         key_event(scancode, virtual_keycode, ElementState::Pressed)
     }
 
-    fn key_release(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event {
+    fn key_release(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event<'static, ()> {
         key_event(scancode, virtual_keycode, ElementState::Released)
     }
 
+    #[allow(deprecated)] // Needed for `ModifiersState`.
     fn key_event(
         scancode: ScanCode,
         virtual_keycode: VirtualKeyCode,
         state: ElementState,
-    ) -> Event {
+    ) -> Event<'static, ()> {
         Event::WindowEvent {
             window_id: unsafe { WindowId::dummy() },
             event: WindowEvent::KeyboardInput {
@@ -1280,43 +1283,34 @@ right: `{:?}`",
                     scancode,
                     state,
                     virtual_keycode: Some(virtual_keycode),
-                    modifiers: ModifiersState {
-                        shift: false,
-                        ctrl: false,
-                        alt: false,
-                        logo: false,
-                    },
+                    modifiers: ModifiersState::empty(),
                 },
+                is_synthetic: false,
             },
         }
     }
 
-    fn mouse_press(button: MouseButton) -> Event {
+    fn mouse_press(button: MouseButton) -> Event<'static, ()> {
         mouse_event(button, ElementState::Pressed)
     }
 
-    fn mouse_release(button: MouseButton) -> Event {
+    fn mouse_release(button: MouseButton) -> Event<'static, ()> {
         mouse_event(button, ElementState::Released)
     }
 
-    fn mouse_event(button: MouseButton, state: ElementState) -> Event {
+    fn mouse_event(button: MouseButton, state: ElementState) -> Event<'static, ()> {
         Event::WindowEvent {
             window_id: unsafe { WindowId::dummy() },
             event: WindowEvent::MouseInput {
                 device_id: unsafe { DeviceId::dummy() },
                 state,
                 button,
-                modifiers: ModifiersState {
-                    shift: false,
-                    ctrl: false,
-                    alt: false,
-                    logo: false,
-                },
+                modifiers: ModifiersState::empty(),
             },
         }
     }
 
-    fn mouse_wheel(x: f32, y: f32) -> Event {
+    fn mouse_wheel(x: f32, y: f32) -> Event<'static, ()> {
         Event::DeviceEvent {
             device_id: unsafe { DeviceId::dummy() },
             event: DeviceEvent::MouseWheel {

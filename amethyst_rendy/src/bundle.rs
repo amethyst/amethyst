@@ -94,8 +94,8 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("build_rendering_bundle");
         if let Some(window) = self.window.take() {
-            let hidpi = window.hidpi_factor();
-            let (width, height) = window.inner_size().to_physical(hidpi).into();
+            let hidpi = window.scale_factor();
+            let (width, height) = window.inner_size().into();
             world.insert(ScreenDimensions::new(width, height, hidpi));
             world.insert(window);
         }
@@ -830,12 +830,14 @@ mod tests {
                 render::{RenderGroup, RenderGroupDesc},
                 GraphContext, NodeBuffer, NodeImage,
             },
+            init::Rendy,
         },
         types::{Backend, DefaultBackend},
     };
     use hal::{
         command::{ClearDepthStencil, ClearValue},
         format::Format,
+        pso::CreationError,
     };
 
     #[derive(Debug)]
@@ -855,7 +857,7 @@ mod tests {
             subpass: hal::pass::Subpass<'_, B>,
             buffers: Vec<NodeBuffer>,
             images: Vec<NodeImage>,
-        ) -> Result<Box<dyn RenderGroup<B, T>>, failure::Error> {
+        ) -> Result<Box<dyn RenderGroup<B, T>>, CreationError> {
             unimplemented!()
         }
     }
@@ -871,7 +873,7 @@ mod tests {
             subpass: hal::pass::Subpass<'_, B>,
             buffers: Vec<NodeBuffer>,
             images: Vec<NodeImage>,
-        ) -> Result<Box<dyn RenderGroup<B, T>>, failure::Error> {
+        ) -> Result<Box<dyn RenderGroup<B, T>>, CreationError> {
             unimplemented!()
         }
     }
@@ -880,8 +882,7 @@ mod tests {
     #[ignore] // CI can't run tests requiring actual backend
     fn main_pass_color_image_plan() {
         let config: rendy::factory::Config = Default::default();
-        let (factory, families): (Factory<DefaultBackend>, _) =
-            rendy::factory::init(config).unwrap();
+        let Rendy { factory, families } = Rendy::<DefaultBackend>::init(&config).unwrap();
         let mut plan = RenderPlan::<DefaultBackend>::new();
 
         plan.extend_target(Target::Main, |ctx| {
@@ -905,7 +906,12 @@ mod tests {
                     kind,
                     levels: 1,
                     format: Format::D32Sfloat,
-                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+                    clear: Some(ClearValue {
+                        depth_stencil: ClearDepthStencil {
+                            depth: 1.0,
+                            stencil: 0,
+                        },
+                    }),
                 }),
             },
         )
@@ -919,7 +925,12 @@ mod tests {
             kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+            Some(ClearValue {
+                depth_stencil: ClearDepthStencil {
+                    depth: 1.0,
+                    stencil: 0,
+                },
+            }),
         );
         manual_graph.add_node(
             RenderPassNodeBuilder::new().with_subpass(
@@ -940,26 +951,29 @@ mod tests {
     #[test]
     #[ignore] // CI can't run tests requiring actual backend
     fn main_pass_surface_plan() {
-        use winit::{EventsLoop, WindowBuilder};
+        use winit::{event_loop::EventLoop, window::WindowBuilder};
 
-        let ev_loop = EventsLoop::new();
+        let ev_loop = EventLoop::new();
         let mut window_builder = WindowBuilder::new();
         window_builder.window.visible = false;
         let window = window_builder.build(&ev_loop).unwrap();
 
-        let size = window
-            .get_inner_size()
-            .unwrap()
-            .to_physical(window.get_hidpi_factor());
+        let size = window.inner_size();
         let window_kind = crate::Kind::D2(size.width as u32, size.height as u32, 1, 1);
 
         let config: rendy::factory::Config = Default::default();
-        let (mut factory, families): (Factory<DefaultBackend>, _) =
-            rendy::factory::init(config).unwrap();
+        let Rendy {
+            mut factory,
+            families,
+        } = Rendy::<DefaultBackend>::init(&config).unwrap();
         let mut plan = RenderPlan::<DefaultBackend>::new();
 
-        let surface1 = factory.create_surface(&window);
-        let surface2 = factory.create_surface(&window);
+        let surface1 = factory
+            .create_surface(&window)
+            .expect("Failed to create surface1.");
+        let surface2 = factory
+            .create_surface(&window)
+            .expect("Failed to create surface2.");
 
         plan.extend_target(Target::Main, |ctx| {
             ctx.add(RenderOrder::Opaque, TestGroup2.builder())?;
@@ -975,7 +989,12 @@ mod tests {
                     kind: window_kind,
                     levels: 1,
                     format: Format::D32Sfloat,
-                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+                    clear: Some(ClearValue {
+                        depth_stencil: ClearDepthStencil {
+                            depth: 1.0,
+                            stencil: 0,
+                        },
+                    }),
                 }),
             },
         )
@@ -993,7 +1012,12 @@ mod tests {
             window_kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+            Some(ClearValue {
+                depth_stencil: ClearDepthStencil {
+                    depth: 1.0,
+                    stencil: 0,
+                },
+            }),
         );
         manual_graph.add_node(
             RenderPassNodeBuilder::new()
@@ -1004,7 +1028,14 @@ mod tests {
                         .with_color_surface()
                         .with_depth_stencil(depth),
                 )
-                .with_surface(surface2, None),
+                .with_surface(
+                    surface2,
+                    hal::window::Extent2D {
+                        width: size.width as _,
+                        height: size.height as _,
+                    },
+                    None,
+                ),
         );
 
         assert_eq!(

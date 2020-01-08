@@ -1,6 +1,9 @@
 use crate::ScreenDimensions;
 use amethyst_core::ecs::{ReadExpect, System, WriteExpect};
-use winit::window::Window;
+use winit::{
+    dpi::{LogicalSize, Size},
+    window::Window,
+};
 
 /// System for opening and managing the window.
 #[derive(Debug)]
@@ -18,14 +21,14 @@ impl WindowSystem {
 
         // Send resource size changes to the window
         if screen_dimensions.dirty {
-            window.set_inner_size((width, height).into());
+            window.set_inner_size(Size::Logical(LogicalSize::from((width, height))));
             screen_dimensions.dirty = false;
         }
 
-        let hidpi = window.hidpi_factor();
+        let hidpi = window.scale_factor();
 
         let size = window.inner_size();
-        let (window_width, window_height): (f64, f64) = size.to_physical(hidpi).into();
+        let (window_width, window_height): (f64, f64) = size.to_logical::<f64>(hidpi).into();
 
         // Send window size changes to the resource
         if (window_width, window_height) != (width, height) {

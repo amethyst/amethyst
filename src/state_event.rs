@@ -22,7 +22,7 @@ where
     T: BindingTypes,
 {
     /// Events sent by the winit window.
-    Window(Event<()>),
+    Window(Event<'static, ()>),
     /// Events sent by the ui system.
     Ui(UiEvent),
     /// Events sent by the input system.
