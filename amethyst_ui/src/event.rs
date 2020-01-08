@@ -8,6 +8,7 @@ use amethyst_core::{
     },
     math::Vector2,
     shrev::EventChannel,
+    Hidden, HiddenPropagate,
 };
 use amethyst_input::{BindingTypes, InputHandler};
 use amethyst_window::ScreenDimensions;
@@ -39,12 +40,14 @@ pub enum UiEventType {
     /// When dragging a `Draggable` Ui element.
     Dragging {
         /// The position of the mouse relative to the center of the transform when the drag started.
-        element_offset: Vector2<f32>,
+        offset_from_mouse: Vector2<f32>,
+        /// Position at which the mouse is currently. Absolute value; not relative to the parent of the dragged entity.
+        new_position: Vector2<f32>,
     },
     /// When stopping to drag a `Draggable` Ui element.
     Dropped {
         /// The entity on which the dragged object was dropped.
-        dropped_on: Entity,
+        dropped_on: Option<Entity>,
     },
     /// When the value of a UiText element has been changed by user input.
     ValueChange,
@@ -113,6 +116,8 @@ impl<T: BindingTypes> UiMouseSystem<T> {
 impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
     type SystemData = (
         Entities<'a>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, UiTransform>,
         ReadStorage<'a, Interactable>,
         Read<'a, InputHandler<T>>,
@@ -122,7 +127,7 @@ impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
 
     fn run(
         &mut self,
-        (entities, transform, react, input, screen_dimensions, mut events): Self::SystemData,
+        (entities, hiddens, hidden_props, transform, react, input, screen_dimensions, mut events): Self::SystemData,
     ) {
         let down = input.mouse_button_is_down(MouseButton::Left);
 
@@ -134,7 +139,17 @@ impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
             let x = pos_x as f32;
             let y = screen_dimensions.height() - pos_y as f32;
 
-            let target = targeted((x, y), (&*entities, &transform, react.maybe()).join());
+            let target = targeted(
+                (x, y),
+                (
+                    &*entities,
+                    &transform,
+                    react.maybe(),
+                    !&hiddens,
+                    !&hidden_props,
+                )
+                    .join(),
+            );
             if target != self.last_target {
                 if let Some(last_target) = self.last_target {
                     events.single_write(UiEvent::new(UiEventType::HoverStop, last_target));
@@ -177,14 +192,33 @@ impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
 /// on if `pos` is over the non-interactable one or not.
 pub fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> Option<Entity>
 where
-    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>)> + 'a,
+    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>, (), ())> + 'a,
 {
     transforms
-        .filter(|(_e, t, _m)| t.opaque && t.position_inside(pos.0, pos.1))
-        .max_by(|(_e1, t1, _m1), (_e2, t2, _m2)| {
+        .filter(|(_e, t, _m, _, _)| t.opaque && t.position_inside(pos.0, pos.1))
+        .max_by(|(_e1, t1, _m1, _, _), (_e2, t2, _m2, _, _)| {
             t1.global_z
                 .partial_cmp(&t2.global_z)
                 .expect("Unexpected NaN")
         })
-        .and_then(|(e, _, m)| m.map(|_m| e))
+        .and_then(|(e, _, m, _, _)| m.map(|_m| e))
+}
+
+/// Checks if an interactable entity is at the position `pos`, doesn't have anything on top blocking the check, and is below specified height.
+/// If you have a non-interactable entity over an interactable entity, it will consider the interactable one blocked, depending
+/// on if `pos` is over the non-interactable one or not.
+pub fn targeted_below<'a, I>(pos: (f32, f32), height: f32, transforms: I) -> Option<Entity>
+where
+    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>, (), ())> + 'a,
+{
+    transforms
+        .filter(|(_e, t, _m, _, _)| {
+            t.opaque && t.position_inside(pos.0, pos.1) && t.global_z < height
+        })
+        .max_by(|(_e1, t1, _m1, _, _), (_e2, t2, _m2, _, _)| {
+            t1.global_z
+                .partial_cmp(&t2.global_z)
+                .expect("Unexpected NaN")
+        })
+        .and_then(|(e, _, m, _, _)| m.map(|_m| e))
 }

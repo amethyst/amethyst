@@ -23,8 +23,8 @@ use amethyst_rendy::TexturePrefab;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    get_default_font, Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, TextEditing,
-    UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiImage,
+    get_default_font, Anchor, Draggable, FontAsset, Interactable, LineMode, Selectable, Stretch,
+    TextEditing, UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiImage,
     UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
 
@@ -75,6 +75,8 @@ pub struct UiTransformData<G> {
     /// this ordering backwards.
     // TODO: Make full prefab for Selectable.
     pub selectable: Option<u32>,
+    /// Makes the UiTransform draggable through mouse inputs.
+    pub draggable: bool,
     #[serde(skip)]
     _phantom: PhantomData<G>,
 }
@@ -144,6 +146,7 @@ where
         WriteStorage<'a, Interactable>,
         WriteStorage<'a, HiddenPropagate>,
         WriteStorage<'a, Selectable<G>>,
+        WriteStorage<'a, Draggable>,
     );
     type Result = ();
 
@@ -184,6 +187,10 @@ where
 
         if let Some(u) = self.selectable {
             system_data.3.insert(entity, Selectable::<G>::new(u))?;
+        }
+
+        if self.draggable {
+            system_data.4.insert(entity, Draggable)?;
         }
 
         Ok(())

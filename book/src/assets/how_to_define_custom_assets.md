@@ -97,9 +97,9 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # }
     ```
 
-4. Implement the conversion function for `A::Data` into a `ProcessingState<A>` result.
+4. Implement the [`ProcessableAsset`][doc_processable_asset] trait, providing the conversion function for `A::Data` into a `ProcessingState<A>` result.
 
-    The [`Processor<A>` system][doc_processor_system] uses this function to convert the deserialized asset data into the asset.
+    The [`Processor<A>` system][doc_processor_system] uses this trait to convert the deserialized asset data into the asset.
 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
@@ -107,7 +107,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #
     # use amethyst::{
     #     error::Error,
-    #     assets::{Asset, Handle, ProcessingState},
+    #     assets::{Asset, Handle, ProcessingState, ProcessableAsset},
     #     ecs::VecStorage,
     # };
     # use serde_derive::{Deserialize, Serialize};
@@ -141,19 +141,17 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #     Version2 { hp_damage: u32, mp_damage: u32 },
     # }
     #
-    impl From<EnergyBlastData> for Result<ProcessingState<EnergyBlast>, Error> {
-        fn from(energy_blast_data: EnergyBlastData)
-            -> Result<ProcessingState<EnergyBlast>, Error> {
-
+    impl ProcessableAsset for EnergyBlast {
+        fn process(energy_blast_data: Self::Data) -> Result<ProcessingState<Self>, Error> {
             match energy_blast_data {
                 EnergyBlastData::Version1 { hp_damage } => {
-                    Ok(ProcessingState::Loaded(EnergyBlast {
+                    Ok(ProcessingState::Loaded(Self {
                         hp_damage,
                         ..Default::default()
                     }))
                 }
                 EnergyBlastData::Version2 { hp_damage, mp_damage } => {
-                    Ok(ProcessingState::Loaded(EnergyBlast {
+                    Ok(ProcessingState::Loaded(Self {
                         hp_damage,
                         mp_damage,
                     }))
@@ -212,20 +210,17 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #     type HandleStorage = VecStorage<EnergyBlastHandle>;
     # }
     #
-    # impl From<EnergyBlastData> for Result<ProcessingState<EnergyBlast>, Error> {
-    #     fn from(energy_blast_data: EnergyBlastData)
-    #         -> Result<ProcessingState<EnergyBlast>, Error> {
-    #
-    #         use self::EnergyBlastData::*;
+    # impl ProcessableAsset for EnergyBlast {
+    #     fn process(energy_blast_data: Self::Data) -> Result<ProcessingState<Self>, Error> {
     #         match energy_blast_data {
-    #             Version1 { hp_damage } => {
-    #                 Ok(ProcessingState::Loaded(EnergyBlast {
+    #             EnergyBlastData::Version1 { hp_damage } => {
+    #                 Ok(ProcessingState::Loaded(Self {
     #                     hp_damage,
     #                     ..Default::default()
     #                 }))
     #             }
-    #             Version2 { hp_damage, mp_damage } => {
-    #                 Ok(ProcessingState::Loaded(EnergyBlast {
+    #             EnergyBlastData::Version2 { hp_damage, mp_damage } => {
+    #                 Ok(ProcessingState::Loaded(Self {
     #                     hp_damage,
     #                     mp_damage,
     #                 }))
@@ -279,4 +274,5 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 [bk_custom_formats]: how_to_define_custom_formats.html
 [doc_asset]: https://docs.amethyst.rs/stable/amethyst_assets/trait.Asset.html
 [doc_processor_system]: https://docs.amethyst.rs/stable/amethyst_assets/struct.Processor.html
+[doc_processable_asset]: https://docs.amethyst.rs/stable/amethyst_assets/trait.ProcessableAsset.html
 [gh_contributing]: https://github.com/amethyst/amethyst/blob/master/docs/CONTRIBUTING.md
