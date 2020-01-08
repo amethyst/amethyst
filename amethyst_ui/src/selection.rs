@@ -66,7 +66,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     #[system_desc(event_channel_reader)]
-    window_reader_id: ReaderId<Event<()>>,
+    window_reader_id: ReaderId<Event<'static, ()>>,
     phantom: PhantomData<G>,
 }
 
@@ -75,7 +75,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     /// Creates a new `SelectionKeyboardSystem`.
-    pub fn new(window_reader_id: ReaderId<Event<()>>) -> Self {
+    pub fn new(window_reader_id: ReaderId<Event<'static, ()>>) -> Self {
         Self {
             window_reader_id,
             phantom: PhantomData,
@@ -88,7 +88,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     type SystemData = (
-        Read<'a, EventChannel<Event<()>>>,
+        Read<'a, EventChannel<Event<'static, ()>>>,
         Read<'a, CachedSelectionOrder>,
         WriteStorage<'a, Selected>,
         Write<'a, EventChannel<UiEvent>>,
@@ -147,7 +147,7 @@ where
                     }
                     selecteds.clear();
 
-                    let target = if !modifiers.shift {
+                    let target = if !modifiers.shift() {
                         // Up
                         if highest > 0 {
                             cached.cache.get(highest - 1).unwrap_or_else(|| cached.cache.last()

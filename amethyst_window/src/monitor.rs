@@ -5,13 +5,13 @@ use winit::{event_loop::EventLoop, monitor::MonitorHandle, window::Window};
 /// Usually either a Window or an EventsLoop.
 pub trait MonitorsAccess {
     /// Returns an iterator over the available monitors
-    fn iter(&self) -> Box<Iterator<Item = MonitorHandle>>;
+    fn iter(&self) -> Box<dyn Iterator<Item = MonitorHandle>>;
     /// Returns the `MonitorHandle` of the primary display
     fn primary(&self) -> MonitorHandle;
 }
 
 impl MonitorsAccess for EventLoop<()> {
-    fn iter(&self) -> Box<Iterator<Item = MonitorHandle>> {
+    fn iter(&self) -> Box<dyn Iterator<Item = MonitorHandle>> {
         Box::new(self.available_monitors())
     }
     fn primary(&self) -> MonitorHandle {
@@ -20,7 +20,7 @@ impl MonitorsAccess for EventLoop<()> {
 }
 
 impl MonitorsAccess for Window {
-    fn iter(&self) -> Box<Iterator<Item = MonitorHandle>> {
+    fn iter(&self) -> Box<dyn Iterator<Item = MonitorHandle>> {
         Box::new(self.available_monitors())
     }
     fn primary(&self) -> MonitorHandle {
@@ -45,33 +45,28 @@ impl MonitorIdent {
     }
 
     /// Get the identifier for specific monitor id.
-    pub fn from_monitor_id(
-        _monitors: &impl MonitorsAccess,
-        _monitor: MonitorHandle,
-    ) -> Option<Self> {
-        // @todo reimplement serializable monitor identification
-        // #[cfg(target_os = "ios")]
-        // use winit::platform::windows::MonitorIdExt;
-        // #[cfg(target_os = "macos")]
-        // use winit::platform::macos::MonitorIdExt;
-        // #[cfg(any(
-        //     target_os = "linux",
-        //     target_os = "dragonfly",
-        //     target_os = "freebsd",
-        //     target_os = "netbsd",
-        //     target_os = "openbsd"
-        // ))]
-        // use winit::platform::unix::MonitorHandleExtUnix;
-        // #[cfg(target_os = "windows")]
-        // use winit::platform::windows::MonitorIdExt;
+    pub fn from_monitor_id(monitors: &impl MonitorsAccess, monitor: MonitorHandle) -> Option<Self> {
+        #[cfg(target_os = "macos")]
+        use winit::platform::macos::MonitorIdExt;
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "netbsd",
+            target_os = "openbsd"
+        ))]
+        use winit::platform::unix::MonitorHandleExtUnix;
+        #[cfg(target_os = "ios")]
+        use winit::platform::windows::MonitorIdExt;
+        #[cfg(target_os = "windows")]
+        use winit::platform::windows::MonitorIdExt;
 
-        // let native_id = monitor_id.native_id();
-        // monitors
-        //     .iter()
-        //     .enumerate()
-        //     .find(|(_, m)| m.native_id() == native_id)
-        //     .and_then(|(i, m)| m.get_name().map(|name| Self(i as u16, name)))
-        None
+        let native_id = monitor.native_id();
+        monitors
+            .iter()
+            .enumerate()
+            .find(|(_, m)| m.native_id() == native_id)
+            .and_then(|(i, m)| m.name().map(|name| Self(i as u16, name)))
     }
 
     /// Select a monitor that matches this identifier most closely.

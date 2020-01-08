@@ -1,9 +1,10 @@
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
-use winit::window::{Icon, WindowAttributes, WindowBuilder};
-
-use crate::{MonitorIdent, MonitorsAccess};
+use winit::{
+    dpi::{LogicalSize, Size},
+    window::{Icon, WindowAttributes, WindowBuilder},
+};
 
 /// Configuration for a window display.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -123,9 +124,15 @@ impl DisplayConfig {
     /// The `MonitorsAccess` is needed to configure a fullscreen window.
     pub fn into_window_builder(self) -> WindowBuilder {
         let attrs = WindowAttributes {
-            inner_size: self.dimensions.map(Into::into),
-            max_inner_size: self.max_dimensions.map(Into::into),
-            min_inner_size: self.min_dimensions.map(Into::into),
+            inner_size: self
+                .dimensions
+                .map(|dimensions| Size::Logical(LogicalSize::from(dimensions))),
+            max_inner_size: self
+                .max_dimensions
+                .map(|dimensions| Size::Logical(LogicalSize::from(dimensions))),
+            min_inner_size: self
+                .min_dimensions
+                .map(|dimensions| Size::Logical(LogicalSize::from(dimensions))),
             resizable: self.resizable,
             fullscreen: None,
             title: self.title,
