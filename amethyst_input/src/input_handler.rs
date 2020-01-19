@@ -405,7 +405,7 @@ where
     pub fn send_frame_begin(&mut self) {
         self.mouse_wheel_vertical = 0.0;
         self.mouse_wheel_horizontal = 0.0;
-        self.mouse_last_position = self.mouse_position.clone();
+        self.mouse_last_position = self.mouse_position;
     }
 
     /// Returns an iterator over all keys that are down.
