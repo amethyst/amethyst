@@ -557,8 +557,7 @@ where
             Axis::Mouse {
                 axis,
                 over_extendable,
-                radius_x,
-                radius_y,
+                radius,
             } => {
                 let current_pos = self.mouse_position.unwrap_or((0., 0.));
                 let last_pos = self.mouse_last_position.unwrap_or(current_pos);
@@ -568,10 +567,7 @@ where
                     MouseAxis::Y => last_pos.1 - current_pos.1,
                 };
 
-                let rel_delta = match axis {
-                    MouseAxis::X => delta / radius_x,
-                    MouseAxis::Y => delta / radius_y,
-                };
+                let rel_delta = delta / radius;
 
                 if over_extendable {
                     rel_delta

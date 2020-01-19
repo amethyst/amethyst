@@ -32,10 +32,8 @@ pub enum Axis {
         axis: MouseAxis,
         /// Should the API be allowed to return values outside [-1..1]?
         over_extendable: bool,
-        /// Zone to which the movement is relative on the X axis
-        radius_x: f32,
-        /// Zone to which the movement is relative on the Y axis
-        radius_y: f32,
+        /// Zone to which the movement is relative
+        radius: f32,
     },
     /// Represents the wheel on a PC mouse.
     MouseWheel {
