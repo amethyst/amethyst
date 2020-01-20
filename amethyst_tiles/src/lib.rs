@@ -36,9 +36,8 @@ pub trait CoordinateEncoder: 'static + Clone + Default + Send + Sync {
     /// Decode the provided 1-dimensional array index into its associated 3-dimensional coordinates.
     fn decode(&self, morton: u32) -> Option<(u32, u32, u32)>;
 
-    /// This function transforms the provided dimensions, performing any extra allocation needed for
-    /// padding our indexing method.
-    fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32>;
+    /// This function returns the actual number of elements allocated for a given dimension set and encoder.
+    fn allocation_size(dimensions: Vector3<u32>) -> usize;
 }
 
 /// The most basic encoder, which strictly flattens the 3d space into 1d coordinates in a linear fashion.
@@ -79,7 +78,7 @@ impl CoordinateEncoder for FlatEncoder {
     }
 
     #[must_use]
-    fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
-        dimensions
+    fn allocation_size(dimensions: Vector3<u32>) -> usize {
+        (dimensions.x * dimensions.y * dimensions.z) as usize
     }
 }
