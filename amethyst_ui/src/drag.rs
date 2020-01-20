@@ -9,13 +9,13 @@ use amethyst_core::{
     },
     math::Vector2,
     shrev::EventChannel,
-    Hidden, HiddenPropagate,
+    Hidden, HiddenPropagate, ParentHierarchy,
 };
 use amethyst_derive::SystemDesc;
 use amethyst_input::{BindingTypes, InputHandler};
 use amethyst_window::ScreenDimensions;
 
-use crate::{targeted_below, Interactable, UiEvent, UiEventType, UiTransform};
+use crate::{targeted_below, Interactable, ScaleMode, UiEvent, UiEventType, UiTransform};
 
 /// Component that denotes whether a given ui widget is draggable.
 /// Requires UiTransform to work, and its expected way of usage is
@@ -64,6 +64,7 @@ where
         Entities<'s>,
         Read<'s, InputHandler<T>>,
         ReadExpect<'s, ScreenDimensions>,
+        ReadExpect<'s, ParentHierarchy>,
         ReadStorage<'s, Hidden>,
         ReadStorage<'s, HiddenPropagate>,
         ReadStorage<'s, Draggable>,
@@ -78,6 +79,7 @@ where
             entities,
             input_handler,
             screen_dimensions,
+            hierarchy,
             hiddens,
             hidden_props,
             draggables,
@@ -122,11 +124,32 @@ where
                 *entity,
             ));
 
-            let ui_transform = ui_transforms.get_mut(*entity).unwrap();
             let change = mouse_pos - *prev;
 
-            ui_transform.local_x += change[0];
-            ui_transform.local_y += change[1];
+            match ui_transforms.get(*entity).unwrap().scale_mode {
+                ScaleMode::Pixel => {
+                    let ui_transform = ui_transforms.get_mut(*entity).unwrap();
+
+                    ui_transform.local_x += change[0];
+                    ui_transform.local_y += change[1];
+                }
+                ScaleMode::Percent => {
+                    let mut parent_width = screen_dimensions.width();
+                    let mut parent_height = screen_dimensions.height();
+
+                    if let Some(parent) = hierarchy.parent(*entity) {
+                        if let Some(ui_transform) = ui_transforms.get(parent) {
+                            parent_width = ui_transform.width;
+                            parent_height = ui_transform.height;
+                        }
+                    }
+
+                    let ui_transform = ui_transforms.get_mut(*entity).unwrap();
+
+                    ui_transform.local_x += change[0] / parent_width;
+                    ui_transform.local_y += change[1] / parent_height;
+                }
+            }
 
             *prev = mouse_pos;
         }
