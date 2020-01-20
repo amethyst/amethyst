@@ -215,7 +215,7 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
     By implementing `Component` for the `Paddle` struct, it can now be attached
     to entities in the game.
 
-    When implemented the `Component` trait, we must specify the storage type.
+    When implementing the `Component` trait, we must specify the storage type.
     Different storage types optimize for faster access, lower memory usage, or a
     balance between the two. For more information on storage types, check out the
     [Specs documentation][sb-storage].
@@ -679,7 +679,7 @@ In the next chapter, we'll explore the "S" in ECS and actually get these paddles
 moving!
 
 [sb]: https://specs.amethyst.rs/docs/tutorials/
-[sb-storage]: https://slide-rs.github.io/specs/05_storages.html#densevecstorage
+[sb-storage]: https://specs.amethyst.rs/docs/tutorials/05_storages.html#densevecstorage
 [2d]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.Camera.html#method.standard_2d
 [ss]: ../images/pong_tutorial/pong_spritesheet.png
 

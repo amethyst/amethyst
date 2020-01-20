@@ -8,10 +8,12 @@ mod map;
 mod morton;
 mod pass;
 
+pub mod error;
 pub mod iters;
 pub mod pod;
 pub mod prefab;
 
+pub use error::TileOutOfBoundsError;
 pub use iters::{MortonRegion, Region};
 pub use map::{Map, MapStorage, Tile, TileMap};
 pub use morton::{MortonEncoder, MortonEncoder2D};

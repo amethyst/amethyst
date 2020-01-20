@@ -37,10 +37,14 @@ where
     }
 }
 
+/// Trait that denotes which event gets retriggered to which other event and how
 pub trait EventRetrigger: Component {
+    /// Event type that causes retrigger
     type In: Clone + Send + Sync + TargetedEvent;
+    /// Event type that gets retriggered
     type Out: Clone + Send + Sync;
 
+    /// Denotes how In events retriggers Out events
     fn apply<R>(&self, event: &Self::In, out: &mut R)
     where
         R: EventReceiver<Self::Out>;
