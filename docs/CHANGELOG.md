@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Fixed Incorrect path for sprite_camera_follow example ([#2004])
 - Run `System::setup` for pausable systems' delegate. ([#2029])
 - Fixed an incorrect dimensions being used in Tile Encoders, causing bad lookups in assymetric maps in any Z-level besides 0 ([#2017])
+- Fix encoders dimensional cases and optimize storage space ([#2059])
 
 ### Security
 
@@ -81,6 +82,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2041]: https://github.com/amethyst/amethyst/pull/2041
 [#2067]: https://github.com/amethyst/amethyst/issue/2067
 [#2048]: https://github.com/amethyst/amethyst/pull/2048
+[#2049]: https://github.com/amethyst/amethyst/pull/2049
 [#2071]: https://github.com/amethyst/amethyst/pull/2071
 [#2070]: https://github.com/amethyst/amethyst/pull/2070
 [#2079]: https://github.com/amethyst/amethyst/pull/2079
