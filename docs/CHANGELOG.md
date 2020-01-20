@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Added new Error options for `NetworkSimulationEvent`.
 - Changed amethyst config directory from `$HOME/.amethyst` to `$HOME/.config/amethyst` ([#2079])
 - Changed `world_to_screen` camera transformation to match inverse of the one in `screen_ray` ([#2057])
+- `amethyst_input::Axis::Mouse` now only has a single radius value. One of the two values was guaranteed to be unused. ([#2099])
 
 ### Deprecated
 
@@ -88,6 +89,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2079]: https://github.com/amethyst/amethyst/pull/2079
 [#2080]: https://github.com/amethyst/amethyst/pull/2080
 [#2057]: https://github.com/amethyst/amethyst/issues/2057
+[#2099]: https://github.com/amethyst/amethyst/issues/2099
 
 
 ## [0.13.3] - 2019-10-4
