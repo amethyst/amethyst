@@ -91,6 +91,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2080]: https://github.com/amethyst/amethyst/pull/2080
 [#2057]: https://github.com/amethyst/amethyst/issues/2057
 [#2099]: https://github.com/amethyst/amethyst/issues/2099
+[#2111]: https://github.com/amethyst/amethyst/pull/2111
 
 
 ## [0.13.3] - 2019-10-4
