@@ -1,11 +1,13 @@
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
-use std::marker::PhantomData;
+use std::{
+    collections::{HashMap, HashSet},
+    marker::PhantomData,
+};
 
 use amethyst_core::{
     ecs::{
-        Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-        ReaderId, System, SystemData, Write, WriteStorage,
+        storage::GenericReadStorage, Component, DenseVecStorage, Entities, Entity, Join, Read,
+        ReadExpect, ReadStorage, ReaderId, System, SystemData, Write, WriteStorage,
     },
     math::Vector2,
     shrev::EventChannel,
@@ -126,30 +128,13 @@ where
 
             let change = mouse_pos - *prev;
 
-            match ui_transforms.get(*entity).unwrap().scale_mode {
-                ScaleMode::Pixel => {
-                    let ui_transform = ui_transforms.get_mut(*entity).unwrap();
+            let (scale_x, scale_y) = get_scale_for_entity(
+                *entity, &hierarchy, &ui_transforms, &screen_dimensions
+            );
 
-                    ui_transform.local_x += change[0];
-                    ui_transform.local_y += change[1];
-                }
-                ScaleMode::Percent => {
-                    let mut parent_width = screen_dimensions.width();
-                    let mut parent_height = screen_dimensions.height();
-
-                    if let Some(parent) = hierarchy.parent(*entity) {
-                        if let Some(ui_transform) = ui_transforms.get(parent) {
-                            parent_width = ui_transform.width;
-                            parent_height = ui_transform.height;
-                        }
-                    }
-
-                    let ui_transform = ui_transforms.get_mut(*entity).unwrap();
-
-                    ui_transform.local_x += change[0] / parent_width;
-                    ui_transform.local_y += change[1] / parent_height;
-                }
-            }
+            let ui_transform = ui_transforms.get_mut(*entity).unwrap();
+            ui_transform.local_x += scale_x * change[0];
+            ui_transform.local_y += scale_y * change[1];
 
             *prev = mouse_pos;
         }
@@ -176,4 +161,46 @@ where
             self.record.remove(entity);
         }
     }
+}
+
+/// Compose the scaling factors of all ancestors until reaching the root (screen) or an entity
+/// that doesn't need rescaling (is ScaleMode::Pixel).
+fn get_scale_for_entity<S: GenericReadStorage<Component = UiTransform>>(
+    entity: Entity,
+    hierarchy: &ParentHierarchy,
+    ui_transforms: &S,
+    screen_dimensions: &ScreenDimensions,
+) -> (f32, f32) {
+    match ui_transforms.get(entity).unwrap().scale_mode {
+        ScaleMode::Pixel => (1.0, 1.0),
+        ScaleMode::Percent => get_scale_for_percent_mode_entity(
+            entity, hierarchy, ui_transforms, screen_dimensions
+        ),
+    }
+}
+
+fn get_scale_for_percent_mode_entity<S: GenericReadStorage<Component = UiTransform>>(
+    entity: Entity,
+    hierarchy: &ParentHierarchy,
+    ui_transforms: &S,
+    screen_dimensions: &ScreenDimensions,
+) -> (f32, f32) {
+    let mut parent_width = screen_dimensions.width();
+    let mut parent_height = screen_dimensions.height();
+
+    let (parent_scale_x, parent_scale_y) = if let Some(parent) = hierarchy.parent(entity) {
+        if let Some(ui_transform) = ui_transforms.get(parent) {
+            parent_width = ui_transform.width;
+            parent_height = ui_transform.height;
+        }
+
+        get_scale_for_entity(parent, hierarchy, ui_transforms, screen_dimensions)
+    } else {
+        (1.0, 1.0)
+    };
+
+    (
+        parent_scale_x / parent_width,
+        parent_scale_y / parent_height,
+    )
 }
