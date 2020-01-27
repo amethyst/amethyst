@@ -150,7 +150,7 @@ There are a few storage strategies for different usage scenarios. The most commo
 </div>
 
 For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html)
-and the ["Storages" section](https://slide-rs.github.io/specs/05_storages.html) of the specs book.
+and the ["Storages" section](https://specs.amethyst.rs/docs/tutorials/05_storages.html) of the specs book.
 
 There are a bunch more storages, and deciding which one is the best isn't trivial and should be done based on careful benchmarking. A general rule is: if your component is used in over 30% of entities, use `VecStorage`. If you don't know which one you should use, `DenseVecStorage` is a good default. It will need more memory than `VecStorage` for pointer-sized components, but it will perform well for most scenarios.
 
