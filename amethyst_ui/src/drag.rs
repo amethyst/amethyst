@@ -128,9 +128,8 @@ where
 
             let change = mouse_pos - *prev;
 
-            let (scale_x, scale_y) = get_scale_for_entity(
-                *entity, &hierarchy, &ui_transforms, &screen_dimensions
-            );
+            let (scale_x, scale_y) =
+                get_scale_for_entity(*entity, &hierarchy, &ui_transforms, &screen_dimensions);
 
             let ui_transform = ui_transforms.get_mut(*entity).unwrap();
             ui_transform.local_x += scale_x * change[0];
@@ -173,9 +172,9 @@ fn get_scale_for_entity<S: GenericReadStorage<Component = UiTransform>>(
 ) -> (f32, f32) {
     match ui_transforms.get(entity).unwrap().scale_mode {
         ScaleMode::Pixel => (1.0, 1.0),
-        ScaleMode::Percent => get_scale_for_percent_mode_entity(
-            entity, hierarchy, ui_transforms, screen_dimensions
-        ),
+        ScaleMode::Percent => {
+            get_scale_for_percent_mode_entity(entity, hierarchy, ui_transforms, screen_dimensions)
+        }
     }
 }
 
