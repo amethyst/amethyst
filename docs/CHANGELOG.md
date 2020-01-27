@@ -58,6 +58,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Run `System::setup` for pausable systems' delegate. ([#2029])
 - Fixed an incorrect dimensions being used in Tile Encoders, causing bad lookups in assymetric maps in any Z-level besides 0 ([#2017])
 - Fix encoders dimensional cases and optimize storage space ([#2059])
+- Fix dragging UI widgets that have ScaleMode::Percent ([#2111])
 
 ### Security
 
