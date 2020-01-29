@@ -58,6 +58,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Run `System::setup` for pausable systems' delegate. ([#2029])
 - Fixed an incorrect dimensions being used in Tile Encoders, causing bad lookups in assymetric maps in any Z-level besides 0 ([#2017])
 - Fix encoders dimensional cases and optimize storage space ([#2059])
+- Fix dragging UI widgets that have ScaleMode::Percent ([#2111])
 
 ### Security
 
@@ -90,6 +91,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2080]: https://github.com/amethyst/amethyst/pull/2080
 [#2057]: https://github.com/amethyst/amethyst/issues/2057
 [#2099]: https://github.com/amethyst/amethyst/issues/2099
+[#2111]: https://github.com/amethyst/amethyst/pull/2111
 
 
 ## [0.13.3] - 2019-10-4
