@@ -334,7 +334,7 @@ impl SpriteGrid {
             self.sprite_count
                 .map(|c| {
                     if (c % self.columns) == 0 {
-                        (c / self.columns)
+                        c / self.columns
                     } else {
                         (c / self.columns) + 1
                     }
