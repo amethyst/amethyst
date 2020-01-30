@@ -1,7 +1,7 @@
 [package]
 name = "amethyst_utils"
 version = "0.9.0"
-authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepromain@gmail.com>"]
+authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst utils"
 

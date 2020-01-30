@@ -2,10 +2,11 @@
 name = "amethyst_network"
 version = "0.7.0"
 authors = [
-	"Joël Lupien (Jojolepro) <jojolepromain@gmail.com>",
+	"Joël Lupien (Jojolepro) <jojolepro@jojolepro.com>",
 	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>",
 	"Timon Post (TimonPost) <https://github.com/TimonPost>",
-	"Justin LeFebvre (jstnlef) <https://github.com/jstnlef>"
+	"Justin LeFebvre (jstnlef) <https://github.com/jstnlef>",
+        "Amethyst Foundation <contact@amethyst.rs>"
 ]
 edition = "2018"
 description = "Amethyst networking crate"

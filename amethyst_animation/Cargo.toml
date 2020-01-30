@@ -1,7 +1,7 @@
 [package]
 name = "amethyst_animation"
 version = "0.9.0"
-authors = ["Simon Rönnberg <seamonr@gmail.com>"]
+authors = ["Simon Rönnberg <seamonr@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Animation support for Amethyst"
 keywords = ["game", "engine", "animation", "3d", "amethyst"]

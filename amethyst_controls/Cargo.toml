@@ -1,7 +1,7 @@
 [package]
 name = "amethyst_controls"
 version = "0.8.0"
-authors = ["Joël Lupien <jojolepromain@gmail.com>"]
+authors = ["Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst controls"
 

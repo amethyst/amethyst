@@ -1,7 +1,7 @@
 [package]
 name = "amethyst_input"
 version = "0.10.0"
-authors = ["Rhuagh <seamonr@gmail.com>", "Xaeroxe <kieseljake@gmail.com>"]
+authors = ["Rhuagh <seamonr@gmail.com>", "Xaeroxe <kieseljake@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Input rebinding "
 
