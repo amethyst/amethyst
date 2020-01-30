@@ -231,7 +231,6 @@ let app_root = application_root_dir()?;
 
 let display_config_path = app_root.join("config").join("display.ron");
 
-let mut world = World::new();
 let game_data = GameDataBuilder::default()
     .with_bundle(
         RenderingBundle::<DefaultBackend>::new()
