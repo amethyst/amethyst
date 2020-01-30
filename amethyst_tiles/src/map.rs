@@ -326,11 +326,11 @@ fn to_tile(
     inverse.z = inverse.z.floor();
 
     if inverse.x < 0.0
-        || inverse.x as u32 > max_dimensions.x
+        || inverse.x as u32 >= max_dimensions.x
         || inverse.y < 0.0
-        || inverse.y as u32 > max_dimensions.y
+        || inverse.y as u32 >= max_dimensions.y
         || inverse.z < 0.0
-        || inverse.z as u32 > max_dimensions.z
+        || inverse.z as u32 >= max_dimensions.z
     {
         let point_dimensions = Point3::new(inverse.x as i32, inverse.y as i32, inverse.z as i32);
         Err(TileOutOfBoundsError {
