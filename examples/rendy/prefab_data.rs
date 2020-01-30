@@ -1,20 +1,20 @@
-use amethyst::renderer::{
-    camera::CameraPrefab,
-    formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
-    light::LightPrefab,
-    rendy::mesh::{Normal, Position, Tangent, TexCoord},
-    sprite::{
-        prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
-        SpriteRender,
-    },
-    transparent::Transparent,
-};
 use amethyst::{
     animation::AnimationSetPrefab,
     assets::{AssetPrefab, Handle, Prefab, PrefabData, ProgressCounter},
     controls::ControlTagPrefab,
     core::{ecs::Entity, Transform},
     gltf::{GltfSceneAsset, GltfSceneFormat},
+    renderer::{
+        camera::CameraPrefab,
+        formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
+        light::LightPrefab,
+        rendy::mesh::{Normal, Position, Tangent, TexCoord},
+        sprite::{
+            prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
+            SpriteRender,
+        },
+        transparent::Transparent,
+    },
     utils::tag::Tag,
     Error,
 };

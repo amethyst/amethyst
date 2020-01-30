@@ -4,15 +4,9 @@ use amethyst::{
     core::transform::TransformBundle,
     input::{InputBundle, StringBindings},
     prelude::*,
-    renderer::{
-        plugins::RenderToWindow,
-        // rendy::mesh::{Normal, Position, TexCoord},
-        types::DefaultBackend,
-        RenderingBundle,
-    },
+    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
     ui::{RenderUi, UiBundle},
-    utils::application_root_dir,
-    utils::fps_counter::FpsCounterBundle,
+    utils::{application_root_dir, fps_counter::FpsCounterBundle},
 };
 
 mod credits;

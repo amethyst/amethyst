@@ -1,7 +1,7 @@
 [package]
 name = "amethyst_assets"
-version = "0.9.1"
-authors = ["torkleyy <torkleyy@gmail.com>"]
+version = "0.10.0"
+authors = ["torkleyy <torkleyy@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 readme = "README.md"
 edition = "2018"
 description = """
@@ -20,9 +20,9 @@ repository = "https://github.com/amethyst/amethyst"
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.8.1" }
-amethyst_derive = { path = "../amethyst_derive", version = "0.6.1"}
-amethyst_error = { path = "../amethyst_error", version = "0.3.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.9.0" }
+amethyst_derive = { path = "../amethyst_derive", version = "0.7.0"}
+amethyst_error = { path = "../amethyst_error", version = "0.4.0" }
 crossbeam-queue = "0.1.2"
 derivative = "1.0"
 derive-new = "0.5"

@@ -1,5 +1,4 @@
-use crate::pause::PauseMenuState;
-use crate::util::delete_hierarchy;
+use crate::{pause::PauseMenuState, util::delete_hierarchy};
 use amethyst::{
     audio::output::init_output,
     core::Time,

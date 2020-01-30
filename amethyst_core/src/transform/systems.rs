@@ -124,7 +124,7 @@ impl<'a> System<'a> for TransformSystem {
                         }
                         let local = local.unwrap();
                         if let Some(parent_global) = locals.get(parent.entity) {
-                            (parent_global.global_matrix * local.matrix())
+                            parent_global.global_matrix * local.matrix()
                         } else {
                             local.matrix()
                         }

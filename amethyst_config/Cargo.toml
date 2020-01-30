@@ -1,7 +1,7 @@
 [package]
 name = "amethyst_config"
-version = "0.12.0"
-authors = ["Aceeri <conmcclusk@gmail.com>"]
+version = "0.13.0"
+authors = ["Aceeri <conmcclusk@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Loading from .ron files into Rust structures with defaults to prevent hard errors."
 exclude = ["examples/*"]

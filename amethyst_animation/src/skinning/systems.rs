@@ -95,7 +95,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
                     })
                     .flatten()
                     .map(|(global, inverse_bind_matrix)| {
-                        (global.global_matrix() * inverse_bind_matrix * bind_shape)
+                        global.global_matrix() * inverse_bind_matrix * bind_shape
                     }),
             );
 

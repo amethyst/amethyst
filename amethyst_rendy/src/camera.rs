@@ -151,13 +151,13 @@ impl Orthographic {
     /// Returns the distance between the viewer (the origin) and the closest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the closest clipping plane.
     #[inline]
     pub fn near(&self) -> f32 {
-        (self.matrix[(2, 3)] / self.matrix[(2, 2)])
+        self.matrix[(2, 3)] / self.matrix[(2, 2)]
     }
 
     /// Returns the distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
     #[inline]
     pub fn far(&self) -> f32 {
-        ((-1.0 + self.matrix[(2, 3)]) / self.matrix[(2, 2)])
+        (-1.0 + self.matrix[(2, 3)]) / self.matrix[(2, 2)]
     }
 
     /// Sets the y-coordinate of the cuboid leftmost face parallel to the xz-plane.
@@ -321,7 +321,7 @@ impl Perspective {
     /// Returns the near-clip value.
     #[inline]
     pub fn near(&self) -> f32 {
-        (self.matrix[(2, 3)] / self.matrix[(2, 2)])
+        self.matrix[(2, 3)] / self.matrix[(2, 2)]
     }
 
     /// Returns the far-clip value.
