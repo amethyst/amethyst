@@ -12,6 +12,8 @@
 // missing_docs is disabled for this crate because of a bug in current rust stable:
 // https://github.com/rust-lang/rust/issues/42008
 
+extern crate proc_macro;
+
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
