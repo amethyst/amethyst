@@ -16,7 +16,10 @@ use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 use winit::MouseButton;
 
+/// An event that pertains to a specific `Entity`, for example a `UiEvent` for clicking on a widget
+/// entity.
 pub trait TargetedEvent {
+    /// The `Entity` targeted by the event.
     fn get_target(&self) -> Entity;
 }
 
