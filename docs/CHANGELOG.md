@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+- Re-export `TargetedEvent` from amethyst_ui. ([#2114])
+
 ### Deprecated
 
 ### Removed
@@ -22,6 +24,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Fixed
 
 ### Security
+
+[#2114]: https://github.com/amethyst/amethyst/pull/2114
 
 ## [0.14.0] - 2020-01-30
 
