@@ -18,7 +18,9 @@ pub use self::{
         UiButtonBuilderResources, UiButtonSystem, UiButtonSystemDesc,
     },
     drag::{DragWidgetSystemDesc, Draggable},
-    event::{targeted, targeted_below, Interactable, UiEvent, UiEventType, UiMouseSystem},
+    event::{
+        targeted, targeted_below, Interactable, TargetedEvent, UiEvent, UiEventType, UiMouseSystem,
+    },
     event_retrigger::{
         EventReceiver, EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc,
     },
