@@ -3,7 +3,7 @@ pub use log::LevelFilter;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use std::{env, fmt, io, path::PathBuf, str::FromStr};
+use std::{borrow::Cow, env, fmt, io, path::PathBuf, str::FromStr};
 
 /// An enum that contains options for logging to the terminal.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -18,6 +18,7 @@ pub enum StdoutLog {
 
 /// Logger configuration object.
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct LoggerConfig {
     /// Determines whether to log to the terminal or not.
     pub stdout: StdoutLog,
@@ -31,6 +32,8 @@ pub struct LoggerConfig {
     pub log_gfx_backend_level: Option<LevelFilter>,
     /// Sets a different level for gfx_rendy if Some
     pub log_gfx_rendy_level: Option<LevelFilter>,
+    /// Sets the levels for specific modules.
+    pub module_levels: Vec<(String, LevelFilter)>,
 }
 
 impl Default for LoggerConfig {
@@ -42,6 +45,7 @@ impl Default for LoggerConfig {
             allow_env_override: true,
             log_gfx_backend_level: Some(LevelFilter::Warn),
             log_gfx_rendy_level: Some(LevelFilter::Warn),
+            module_levels: Vec::new(),
         }
     }
 }
@@ -149,6 +153,10 @@ impl Logger {
                 .level_for("rendy_wsi", LevelFilter::Warn);
         }
 
+        for (module, level) in config.module_levels.into_iter() {
+            logger.dispatch = logger.dispatch.level_for(Cow::Owned(module), level);
+        }
+
         if let Some(path) = config.log_file {
             if let Ok(log_file) = fern::log_file(path) {
                 logger.dispatch = logger.dispatch.chain(log_file)
@@ -177,11 +185,7 @@ impl Logger {
     }
 
     /// Set individual log levels for modules.
-    pub fn level_for<T: Into<std::borrow::Cow<'static, str>>>(
-        mut self,
-        module: T,
-        level: LevelFilter,
-    ) -> Self {
+    pub fn level_for<T: Into<Cow<'static, str>>>(mut self, module: T, level: LevelFilter) -> Self {
         self.dispatch = self.dispatch.level_for(module, level);
         self
     }
