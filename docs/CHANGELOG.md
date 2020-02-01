@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
+- Support settings module log levels from a RON file ([#2115])
+
 ### Changed
 
 - Re-export `TargetedEvent` from amethyst_ui. ([#2114])
@@ -26,6 +28,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Security
 
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
+[#2115]: https://github.com/amethyst/amethyst/pull/2115
 
 ## [0.14.0] - 2020-01-30
 
