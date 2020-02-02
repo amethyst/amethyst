@@ -92,9 +92,12 @@ impl SimpleState for MainMenu {
 
     fn on_stop(&mut self, data: StateData<GameData>) {
         // after destroying the current UI, invalidate references as well (makes things cleaner)
-        if let Some(entity) = self.ui_root {
-            delete_hierarchy(entity, data.world).expect("Failed to remove MainMenu");
+        if let Some(root_entity) = self.ui_root {
+            data.world
+                .delete_entity(root_entity)
+                .expect("Failed to remove MainMenu");
         }
+
         self.ui_root = None;
         self.button_start = None;
         self.button_load = None;

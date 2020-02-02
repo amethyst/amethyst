@@ -6,7 +6,11 @@ use amethyst::{
     winit::{MouseButton, VirtualKeyCode},
 };
 
+<<<<<<< Updated upstream
 use crate::{menu::MainMenu, util::delete_hierarchy};
+=======
+use crate::menu::MainMenu;
+>>>>>>> Stashed changes
 
 // A simple 'Screen' State, only capable of loading/showing the prefab ui and registering simple
 // UI interactions (pressing escape or clicking anywhere).
@@ -48,9 +52,12 @@ impl SimpleState for CreditsScreen {
     }
 
     fn on_stop(&mut self, data: StateData<GameData>) {
-        if let Some(handler) = self.ui_handle {
-            delete_hierarchy(handler, data.world).expect("Failed to remove CreditScreen");
+        if let Some(root_entity) = self.ui_handle {
+            data.world
+                .delete_entity(root_entity)
+                .expect("Failed to remove CreditScreen");
         }
+
         self.ui_handle = None;
     }
 }
