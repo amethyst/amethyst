@@ -25,12 +25,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
-- Fixed an issue with states_ui example loading items incorrectly ()
+- Fixed an issue with states_ui example loading items incorrectly ([#2117])
 
 ### Security
 
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
 [#2115]: https://github.com/amethyst/amethyst/pull/2115
+[#2117]: https://github.com/amethyst/amethyst/pull/2117
 
 ## [0.14.0] - 2020-01-30
 
