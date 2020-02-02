@@ -941,7 +941,7 @@ mod tests {
 
     #[test]
     fn test_perspective_serde() {
-        let test_persp = Projection::perspective(1.7, std::f32::consts::FRAC_PI_3, 0.1, 1000.0);
+        let test_persp = Projection::perspective(1.7, std::f32::consts::FRAC_PI_3, 0.1);
         println!(
             "{}",
             to_string_pretty(&test_persp, Default::default()).unwrap()
@@ -954,15 +954,12 @@ mod tests {
 
     #[test]
     fn extract_perspective_values() {
-        let proj = Perspective::new(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
+        let proj = Perspective::new(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 0.1);
 
         assert_ulps_eq!(1280.0 / 720.0, proj.aspect());
         assert_ulps_eq!(std::f32::consts::FRAC_PI_3, proj.fovy());
         assert_ulps_eq!(0.1, proj.near());
-        // TODO: we need to solve these precision errors
-        assert_relative_eq!(100.0, proj.far(), max_relative = 1.0);
 
-        //let proj = Projection::perspective(width/height, std::f32::consts::FRAC_PI_3, 0.1, 2000.0);
         let proj_standard = Camera::standard_3d(1920.0, 1280.0);
         assert_ulps_eq!(
             std::f32::consts::FRAC_PI_3,
@@ -979,11 +976,6 @@ mod tests {
         assert_ulps_eq!(
             0.1,
             proj_standard.projection().as_perspective().unwrap().near()
-        );
-        assert_relative_eq!(
-            2000.0,
-            proj_standard.projection().as_perspective().unwrap().far(),
-            max_relative = 3.0
         );
     }
 
@@ -1091,8 +1083,7 @@ mod tests {
         let height = 720.0;
 
         // Our standrd projection has a far clipping plane of 2000.0
-        let proj =
-            Projection::perspective(width / height, std::f32::consts::FRAC_PI_3, 0.1, 2000.0);
+        let proj = Projection::perspective(width / height, std::f32::consts::FRAC_PI_3, 0.1);
         let our_proj = Camera::standard_3d(width, height).inner;
 
         assert_ulps_eq!(our_proj.as_matrix(), proj.as_matrix());
@@ -1107,7 +1098,7 @@ mod tests {
         // https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#vertexpostproc-clipping-shader-outputs
         let (camera_transform, simple_points, simple_points_clipped) = setup();
 
-        let proj = Projection::perspective(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
+        let proj = Projection::perspective(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 0.1);
         let view = gatherer_calc_view_matrix(camera_transform);
 
         let mvp = proj.as_matrix() * view;
@@ -1179,7 +1170,7 @@ mod tests {
     fn perspective_depth_usage() {
         let (camera_transform, _, _) = setup();
 
-        let proj = Projection::perspective(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
+        let proj = Projection::perspective(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 0.1);
         let view = gatherer_calc_view_matrix(camera_transform);
 
         let mvp = proj.as_matrix() * view;
