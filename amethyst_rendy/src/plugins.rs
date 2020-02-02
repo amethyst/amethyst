@@ -111,7 +111,7 @@ mod window {
                 kind: window_kind,
                 levels: 1,
                 format: Format::D32Sfloat,
-                clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+                clear: Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
             };
 
             plan.add_root(Target::Main);

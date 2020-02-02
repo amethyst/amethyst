@@ -217,7 +217,7 @@ fn build_skybox_pipeline<B: Backend>(
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
                 .with_depth_test(pso::DepthTest {
-                    fun: pso::Comparison::LessEqual,
+                    fun: pso::Comparison::GreaterEqual,
                     write: false,
                 })
                 .with_blend_targets(vec![pso::ColorBlendDesc {

@@ -340,7 +340,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             window_kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+            Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
         );
 
         // Create our first `Subpass`, which contains the DrawShaded and DrawUi render groups.
