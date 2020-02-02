@@ -150,7 +150,6 @@ fn initialise_camera(world: &mut World) {
             1.0,
             std::f32::consts::FRAC_PI_3,
             0.1,
-            1000.0,
         )))
         .with(transform)
         .build();
