@@ -1,8 +1,5 @@
-<<<<<<< Updated upstream
-use crate::{pause::PauseMenuState, util::delete_hierarchy};
-=======
 use crate::pause::PauseMenuState;
->>>>>>> Stashed changes
+
 use amethyst::{
     audio::output::init_output,
     core::Time,

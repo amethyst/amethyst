@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+- Fixed an issue with states_ui example loading items incorrectly ()
+
 ### Security
 
 [#2114]: https://github.com/amethyst/amethyst/pull/2114

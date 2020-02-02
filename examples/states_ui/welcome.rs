@@ -6,7 +6,6 @@ use amethyst::{
     winit::{MouseButton, VirtualKeyCode},
 };
 
-
 #[derive(Default, Debug)]
 pub struct WelcomeScreen {
     ui_handle: Option<Entity>,
