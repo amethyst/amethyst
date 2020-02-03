@@ -7,7 +7,7 @@ use amethyst_rendy::{
     skinning::JointCombined,
 };
 use log::{trace, warn};
-use mikktspace::{generate_tangents_default, Geometry};
+use mikktspace::{generate_tangents, Geometry};
 use std::{iter::repeat, ops::Range};
 
 fn compute_if<T, F: Fn() -> T>(predicate: bool, func: F) -> Option<T> {
@@ -244,7 +244,7 @@ fn calculate_tangents(
         indices,
     };
 
-    if !generate_tangents_default(&mut geometry) {
+    if !generate_tangents(&mut geometry) {
         warn!("Could not generate tangents!");
     }
 
