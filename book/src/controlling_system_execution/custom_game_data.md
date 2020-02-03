@@ -40,11 +40,11 @@ impl<'a, 'b> CustomGameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World, running: bool) {
         if running {
-            if let Some(dispatcher) = self.running_dispatcher {
+            if let Some(dispatcher) = self.running_dispatcher.as_mut() {
                 dispatcher.dispatch(&world);
             }
         }
-        if let Some(dispatcher) = self.core_dispatcher {
+        if let Some(dispatcher) = self.core_dispatcher.as_mut() {
             dispatcher.dispatch(&world);
         }
     }
@@ -155,11 +155,11 @@ our `Application`, but first we should create some `State`s.
 #     /// Update game data
 #     pub fn update(&mut self, world: &World, running: bool) {
 #         if running {
-#             if let Some(dispatcher) = self.running_dispatcher {
+#             if let Some(dispatcher) = self.running_dispatcher.as_mut() {
 #                   dispatcher.dispatch(&world);
 #             }
 #         }
-#         if let Some(dispatcher) = self.core_dispatcher {
+#         if let Some(dispatcher) = self.core_dispatcher.as_mut() {
 #               dispatcher.dispatch(&world);
 #         }
 #     }
