@@ -126,10 +126,10 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> 
 impl<'a,'b> DataDispose for CustomGameData<'a,'b> {
     // We dispose each dispatcher owned by the `CustomGameData` structure.
     fn dispose(&mut self, world: &mut World) {
-        if let Some(ref mut dispatcher) = self.core_dispatcher {
+        if let Some(dispatcher) = self.core_dispatcher.take() {
             dispatcher.dispose(world);
         }
-        if let Some(ref mut dispatcher) = self.running_dispatcher {
+        if let Some(dispatcher) = self.running_dispatcher.take() {
             dispatcher.dispose(world);
         }
     }
