@@ -48,7 +48,7 @@ impl<'a, 'b> CustomGameData<'a, 'b> {
 ```
 
 To be able to use this structure with `Amethyst`s `Application` we need to create
-a builder that implements `DataInit`. This is the only requirement placed on the
+a builder that implements both `DataInit`. This is the only requirement placed on the
 `GameData` structure.
 
 ```rust,no_run,noplaypen
