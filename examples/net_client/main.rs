@@ -4,7 +4,9 @@ use std::time::Duration;
 use amethyst::{
     core::{bundle::SystemBundle, frame_limiter::FrameRateLimitStrategy, SystemDesc, Time},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
-    network::simulation::{tcp::TcpNetworkBundle, NetworkSimulationEvent, NetworkSimulationTime, TransportResource},
+    network::simulation::{
+        tcp::TcpNetworkBundle, NetworkSimulationEvent, NetworkSimulationTime, TransportResource,
+    },
     prelude::*,
     shrev::{EventChannel, ReaderId},
     utils::application_root_dir,
@@ -35,7 +37,7 @@ fn main() -> Result<()> {
         //        // Laminar
         //        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with_bundle(SpamBundle)?;
-        // .with(SpamSystem, "Spam_System",&[]);
+    // .with(SpamSystem, "Spam_System",&[]);
 
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(
@@ -51,56 +53,44 @@ fn main() -> Result<()> {
 pub struct GameState;
 impl SimpleState for GameState {}
 
- #[derive(Debug)]
- struct SpamBundle;
- 
- impl<'a, 'b> SystemBundle<'a, 'b> for SpamBundle {
-     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
-         builder.add(
-             SpamSystemDesc::default().build(world),
-             "spam_system",
-             &[],
-         );
-         Ok(())
-     }
- }
- 
- #[derive(Default, Debug)]
- pub struct SpamSystemDesc;
- 
- impl<'a, 'b> SystemDesc<'a, 'b, SpamSystem> for SpamSystemDesc {
-     fn build(self, world: &mut World) -> SpamSystem {
-         // Creates the EventChannel<NetworkEvent> managed by the ECS.
-         <SpamSystem as System<'_>>::SystemData::setup(world);
-         // Fetch the change we just created and call `register_reader` to get a
-         // ReaderId<NetworkEvent>. This reader id is used to fetch new events from the network event
-         // channel.
-         let reader= world
-             .fetch_mut::<EventChannel<NetworkSimulationEvent>>()
-             .register_reader();
-         
-         // let reader_tx = world
-         //     .fetch_mut::<EventChannel<NetworkSimulationEvent>>()
-         //     .register_reader();
-         
-         SpamSystem::new(reader)
-     }
- }
- 
- /// A simple system that receives a ton of network events.
- struct SpamSystem {
-     reader: ReaderId<NetworkSimulationEvent>,
- }
- 
- impl SpamSystem {
-     pub fn new(reader: ReaderId<NetworkSimulationEvent>
-               )// reader_tx: ReaderId<NetworkSimulationEvent>) 
-                -> Self {
-         Self { reader}
-     }
- }
+#[derive(Debug)]
+struct SpamBundle;
 
-//struct SpamSystem;
+impl<'a, 'b> SystemBundle<'a, 'b> for SpamBundle {
+    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(SpamSystemDesc::default().build(world), "spam_system", &[]);
+        Ok(())
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct SpamSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, SpamSystem> for SpamSystemDesc {
+    fn build(self, world: &mut World) -> SpamSystem {
+        // Creates the EventChannel<NetworkEvent> managed by the ECS.
+        <SpamSystem as System<'_>>::SystemData::setup(world);
+        // Fetch the change we just created and call `register_reader` to get a
+        // ReaderId<NetworkEvent>. This reader id is used to fetch new events from the network event
+        // channel.
+        let reader = world
+            .fetch_mut::<EventChannel<NetworkSimulationEvent>>()
+            .register_reader();
+
+        SpamSystem::new(reader)
+    }
+}
+
+/// A simple system that receives a ton of network events.
+struct SpamSystem {
+    reader: ReaderId<NetworkSimulationEvent>,
+}
+
+impl SpamSystem {
+    pub fn new(reader: ReaderId<NetworkSimulationEvent>) -> Self {
+        Self { reader }
+    }
+}
 
 impl<'a> System<'a> for SpamSystem {
     type SystemData = (
@@ -109,7 +99,7 @@ impl<'a> System<'a> for SpamSystem {
         Write<'a, TransportResource>,
         Read<'a, EventChannel<NetworkSimulationEvent>>,
     );
-    fn run(&mut self, (sim_time, time, mut net, event/*, tx*/): Self::SystemData) {
+    fn run(&mut self, (sim_time, time, mut net, event /*, tx*/): Self::SystemData) {
         let server_addr = "127.0.0.1:3457".parse().unwrap();
         for frame in sim_time.sim_frames_to_run() {
             info!("Sending message for sim frame {}.", frame);
@@ -123,12 +113,9 @@ impl<'a> System<'a> for SpamSystem {
 
         for event in event.read(&mut self.reader) {
             match event {
-                NetworkSimulationEvent::Message(_addr, payload) => 
-                    info!("Payload: {:?}", payload),
-                NetworkSimulationEvent::Connect(addr) => 
-                    info!("New client connection: {}", addr),
-                NetworkSimulationEvent::Disconnect(addr) => 
-                    info!("Server Disconnected: {}", addr),
+                NetworkSimulationEvent::Message(_addr, payload) => info!("Payload: {:?}", payload),
+                NetworkSimulationEvent::Connect(addr) => info!("New client connection: {}", addr),
+                NetworkSimulationEvent::Disconnect(addr) => info!("Server Disconnected: {}", addr),
                 NetworkSimulationEvent::RecvError(e) => {
                     error!("Recv Error: {:?}", e);
                 }
@@ -138,24 +125,5 @@ impl<'a> System<'a> for SpamSystem {
                 _ => {}
             }
         }
-        // 
-        // for event in rx.read(&mut self.reader_rx) {
-        //     match event {
-        //         NetworkSimulationEvent::Message(_addr, payload) => {
-        //             info!("Payload: {:?}", payload);
-        //         }
-        //         NetworkSimulationEvent::Connect(addr) => info!("New client connection: {}", addr),
-        //         NetworkSimulationEvent::Disconnect(addr) => {
-        //             info!("Server Disconnected: {}", addr);
-        //         }
-        //         NetworkSimulationEvent::RecvError(e) => {
-        //             error!("Recv Error: {:?}", e);
-        //         }
-        //         NetworkSimulationEvent::SendError(e, msg) => {
-        //             error!("Send Error: {:?}, {:?}", e, msg);
-        //         }
-        //         _ => {}
-        //     }
-        // }
     }
 }
