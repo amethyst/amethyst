@@ -61,7 +61,7 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 #
 # use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt};
 # use amethyst::core::SystemBundle;
-# use amethyst::{Error, DataInit};
+# use amethyst::{Error, DataInit, DataDispose};
 #
 # pub struct CustomGameData<'a, 'b> {
 #     core_dispatcher: Option<Dispatcher<'a, 'b>>,
@@ -250,7 +250,7 @@ The only thing that remains now is to use our `CustomGameDataBuilder` when build
 #     },
 #     ui::{RenderUi, UiBundle},
 #     utils::application_root_dir,
-#     DataInit, Error,
+#     DataInit, Error, DataDispose,
 # };
 #
 # pub struct CustomGameData<'a, 'b> {
