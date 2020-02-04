@@ -37,7 +37,6 @@ fn main() -> Result<()> {
         //        // Laminar
         //        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with_bundle(SpamBundle)?;
-    // .with(SpamSystem, "Spam_System",&[]);
 
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(
