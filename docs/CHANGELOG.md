@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Support settings module log levels from a RON file ([#2115])
 - Export the `get_parent_pixel_size` functions from the ui module ([[#2128])
+- Export the `pixel_width` and `pixel_height` methods on the `UiTransform` ([[#2128])
 
 ### Changed
 
