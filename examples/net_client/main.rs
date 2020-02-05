@@ -13,7 +13,6 @@ use amethyst::{
     Result,
 };
 use log::{error, info};
-use std::net::TcpListener;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
