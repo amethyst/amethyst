@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 - Support settings module log levels from a RON file ([#2115])
+- Export the `get_parent_pixel_size` functions from the ui module ([[#2128])
 
 ### Changed
 
@@ -29,6 +30,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
 [#2115]: https://github.com/amethyst/amethyst/pull/2115
+[#2128]: https://github.com/amethyst/amethyst/pull/2128
 
 ## [0.14.0] - 2020-01-30
 
