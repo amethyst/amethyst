@@ -54,7 +54,7 @@ impl Camera {
             width / 2.0,
             -height / 2.0,
             height / 2.0,
-            0.1,
+            0.125,
             2000.0,
         )
     }
@@ -117,7 +117,7 @@ impl Camera {
     /// of view of π/3 radians (60 degrees).
     /// View transformation will be multiplicative identity.
     pub fn standard_3d(width: f32, height: f32) -> Self {
-        Self::perspective(width / height, std::f32::consts::FRAC_PI_3, 0.1)
+        Self::perspective(width / height, std::f32::consts::FRAC_PI_3, 0.125)
     }
 
     /// An appropriate perspective projection for the coordinate space used by Amethyst.
@@ -137,7 +137,7 @@ impl Camera {
         if cfg!(debug_assertions) {
             assert!(
                 !approx::relative_eq!(aspect, 0.0),
-                "The apsect ratio must not be zero."
+                "The aspect ratio must not be zero."
             );
         }
 
@@ -350,21 +350,23 @@ mod tests {
 
         let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
         let top_left = Point3::new(0.0, 0.0, 0.0);
-        let bottom_right = Point3::new(diagonal.x - 1.0, diagonal.y - 1.0, 0.0);
+        let bottom_right = Point3::new(diagonal.x, diagonal.y, 0.0);
 
         assert_ulps_eq!(
             camera.screen_to_world_point(center_screen, diagonal, &transform),
-            Point3::new(0.0, 0.0, -0.1)
+            Point3::new(0.0, 0.0, -0.125)
         );
+
+        // y is tan(fov/2) * near and x is that times aspect ratio
 
         assert_ulps_eq!(
             camera.screen_to_world_point(top_left, diagonal, &transform),
-            Point3::new(-0.076_980_04, 0.057_735_037, -0.1)
+            Point3::new(-0.09622504486493762, 0.07216878364870322, -0.125)
         );
 
         assert_ulps_eq!(
             camera.screen_to_world_point(bottom_right, diagonal, &transform),
-            Point3::new(0.076_829_69, -0.057_584_69, -0.1)
+            Point3::new(0.09622504486493762, -0.07216878364870322, -0.125)
         );
 
         transform.set_translation_x(100.0);
@@ -372,7 +374,7 @@ mod tests {
         transform.copy_local_to_global();
         assert_ulps_eq!(
             camera.screen_to_world_point(center_screen, diagonal, &transform),
-            Point3::new(100.0, 100.0, -0.1)
+            Point3::new(100.0, 100.0, -0.125)
         );
     }
 
@@ -389,17 +391,17 @@ mod tests {
 
         assert_ulps_eq!(
             camera.screen_to_world_point(center_screen, diagonal, &transform),
-            Point3::new(0.0, 0.0, -0.1)
+            Point3::new(0.0, 0.0, -0.125)
         );
 
         assert_ulps_eq!(
             camera.screen_to_world_point(top_left, diagonal, &transform),
-            Point3::new(-512.0, 384.0, -0.1)
+            Point3::new(-512.0, 384.0, -0.125)
         );
 
         assert_ulps_eq!(
             camera.screen_to_world_point(bottom_right, diagonal, &transform),
-            Point3::new(511.0, -383.0, -0.1)
+            Point3::new(511.0, -383.0, -0.125)
         );
 
         transform.set_translation_x(100.0);
@@ -407,7 +409,7 @@ mod tests {
         transform.copy_local_to_global();
         assert_ulps_eq!(
             camera.screen_to_world_point(center_screen, diagonal, &transform),
-            Point3::new(100.0, 100.0, -0.1)
+            Point3::new(100.0, 100.0, -0.125)
         );
     }
 
@@ -533,7 +535,7 @@ mod tests {
         let right = width / 2.0;
 
         // Our standrd projection has a far clipping plane of 2000.0
-        let proj = Camera::orthographic(left, right, bottom, top, 0.1, 2000.0);
+        let proj = Camera::orthographic(left, right, bottom, top, 0.125, 2000.0);
         let our_proj = Camera::standard_2d(width, height);
 
         assert_ulps_eq!(our_proj.matrix, proj.matrix);
@@ -544,8 +546,7 @@ mod tests {
         let width = 1280.0;
         let height = 720.0;
 
-        // Our standrd projection has a far clipping plane of 2000.0
-        let proj = Camera::perspective(width / height, std::f32::consts::FRAC_PI_3, 0.1);
+        let proj = Camera::perspective(width / height, std::f32::consts::FRAC_PI_3, 0.125);
         let our_proj = Camera::standard_3d(width, height);
 
         assert_ulps_eq!(our_proj.matrix, proj.matrix);
