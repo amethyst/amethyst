@@ -624,12 +624,12 @@ mod tests {
     fn perspective_depth_usage() {
         let (camera_transform, _, _) = setup();
 
-        let proj = Camera::perspective(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 0.1);
+        let proj = Camera::perspective(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 1.);
         let view = gatherer_calc_view_matrix(camera_transform);
 
         let mvp = proj.matrix * view;
         // Nearest point = distance to (0,0) - zNear
-        let near = Point3::new(0.0, 0.0, 2.9);
+        let near = Point3::new(0.0, 0.0, 2.);
         let projected_point = mvp.transform_point(&near);
         assert_abs_diff_eq!(projected_point[2], 1.0);
 
