@@ -257,11 +257,11 @@ impl<'a> System<'a> for AutoFovSystem {
 
         if self.last_dimensions != *screen {
             for (camera, auto_fov) in (&mut cameras, &auto_fovs).join() {
-                if let Some(perspective) = camera.projection_mut().as_perspective_mut() {
+                /*if let Some(perspective) = camera.projection_mut().as_perspective_mut() {
                     let fovy = perspective.fovy();
                     let fovx = auto_fov.new_fovx(screen.aspect_ratio(), fovy);
                     perspective.set_aspect(fovx / fovy);
-                }
+                }*/ // TODO: fix auto fov
             }
             self.last_dimensions = screen.clone();
         }

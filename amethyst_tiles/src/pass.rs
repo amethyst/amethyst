@@ -15,7 +15,7 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_rendy::{
     batch::{GroupIterator, OneLevelBatch, OrderedTwoLevelBatch},
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
-    camera::{ActiveCamera, Camera, Projection},
+    camera::{ActiveCamera, Camera},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::IntoPod,
     rendy::{

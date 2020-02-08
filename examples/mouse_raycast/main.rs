@@ -74,7 +74,7 @@ impl<'s> System<'s> for MouseRaycastSystem {
                 .or_else(|| camera_join.next())
             {
                 // Project a ray from the camera to the 0z axis
-                let ray = camera.projection().screen_ray(
+                let ray = camera.screen_ray(
                     Point2::new(mouse_position.0, mouse_position.1),
                     Vector2::new(screen_dimensions.width(), screen_dimensions.height()),
                     camera_transform,
