@@ -52,6 +52,10 @@ pub struct UiTransformData<G> {
     /// the next element (for example, the text on a button).
     #[derivative(Default(value = "true"))]
     pub opaque: bool,
+    /// Allows transparent (`opaque = false`) transforms to still be targeted by the events that
+    /// pass through them.
+    #[derivative(Default(value = "false"))]
+    pub transparent_target: bool,
     /// Renders this UI element by evaluating transform as a percentage of the parent size,
     /// rather than rendering it with pixel units.
     pub percent: bool,
@@ -173,6 +177,7 @@ where
         if !self.opaque {
             transform = transform.into_transparent();
         }
+        transform.transparent_target = self.transparent_target;
         if self.percent {
             transform = transform.into_percent();
         }
