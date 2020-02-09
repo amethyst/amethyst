@@ -407,7 +407,6 @@ fn main() -> amethyst::Result<()> {
 #       app_root.join("examples/pong_tutorial_02/config/display.ron");
 #
     // ...
-    let mut world = World::new();
     let game_data = GameDataBuilder::default()
         // ...
 
