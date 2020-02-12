@@ -197,44 +197,44 @@ fn calculate_normals(positions: &[Position], indices: &Indices) -> Vec<Normal> {
         .collect::<Vec<_>>()
 }
 
+struct TangentsGeometry<'a> {
+    tangents: Vec<Tangent>,
+    num_faces: usize,
+    positions: &'a [Position],
+    normals: &'a [Normal],
+    tex_coords: &'a [TexCoord],
+    indices: &'a Indices,
+}
+
+impl<'a> Geometry for TangentsGeometry<'a> {
+    fn num_faces(&self) -> usize {
+        self.num_faces
+    }
+    fn num_vertices_of_face(&self, _face: usize) -> usize {
+        3
+    }
+    fn position(&self, face: usize, vert: usize) -> [f32; 3] {
+        self.positions[self.indices.map(face, vert)].0
+    }
+    fn normal(&self, face: usize, vert: usize) -> [f32; 3] {
+        self.normals[self.indices.map(face, vert)].0
+    }
+    fn tex_coord(&self, face: usize, vert: usize) -> [f32; 2] {
+        self.tex_coords[self.indices.map(face, vert)].0
+    }
+
+    fn set_tangent_encoded(&mut self, tangent: [f32; 4], face: usize, vert: usize) {
+        let [x, y, z, w] = tangent;
+        self.tangents[self.indices.map(face, vert)] = Tangent([x, y, z, -w]);
+    }
+}
+
 fn calculate_tangents(
     positions: &[Position],
     normals: &[Normal],
     tex_coords: &[TexCoord],
     indices: &Indices,
 ) -> Vec<Tangent> {
-    struct TangentsGeometry<'a> {
-        tangents: Vec<Tangent>,
-        num_faces: usize,
-        positions: &'a [Position],
-        normals: &'a [Normal],
-        tex_coords: &'a [TexCoord],
-        indices: &'a Indices,
-    }
-
-    impl<'a> Geometry for TangentsGeometry<'a> {
-        fn num_faces(&self) -> usize {
-            self.num_faces
-        }
-        fn num_vertices_of_face(&self, _face: usize) -> usize {
-            3
-        }
-        fn position(&self, face: usize, vert: usize) -> [f32; 3] {
-            self.positions[self.indices.map(face, vert)].0
-        }
-        fn normal(&self, face: usize, vert: usize) -> [f32; 3] {
-            self.normals[self.indices.map(face, vert)].0
-        }
-        fn tex_coord(&self, face: usize, vert: usize) -> [f32; 2] {
-            self.tex_coords[self.indices.map(face, vert)].0
-        }
-
-        fn set_tangent_encoded(&mut self, tangent: [f32; 4], face: usize, vert: usize) {
-            let [x, y, z, w] = tangent;
-            self.tangents[self.indices.map(face, vert)] = Tangent([x, y, z, -w]);
-        }
-    }
-
     let mut geometry = TangentsGeometry {
         tangents: vec![Tangent([0.0, 0.0, 0.0, 0.0]); positions.len()],
         num_faces: indices.len().unwrap_or_else(|| positions.len()) / 3,
