@@ -21,16 +21,29 @@ use thread_profiler::profile_scope;
 #[prefab(Component)]
 #[serde(default)]
 pub struct AutoFov {
-    /// The desired vertical fov
     fov_y: f32,
-    /// Distance to the near plane
     z_near: f32,
+    // FOV has to be adjusted when the camera parameters change or when a new
+    // camera is created.
+    dirty: bool,
 }
 
 impl AutoFov {
     /// Creates a new instance with vertical fov of pi/3 and near plane of 0.125.
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Set the vertical fov
+    pub fn set_fov(&mut self, fov: f32) {
+        self.fov_y = fov;
+        self.dirty = true;
+    }
+
+    /// Set the distance to the near plane
+    pub fn set_near(&mut self, near: f32) {
+        self.z_near = near;
+        self.dirty = true;
     }
 }
 
@@ -39,6 +52,7 @@ impl Default for AutoFov {
         Self {
             fov_y: std::f32::consts::FRAC_PI_3,
             z_near: 0.125,
+            dirty: true,
         }
     }
 }
@@ -70,21 +84,22 @@ impl AutoFovSystem {
 impl<'a> System<'a> for AutoFovSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
-        ReadStorage<'a, AutoFov>,
+        WriteStorage<'a, AutoFov>,
         WriteStorage<'a, Camera>,
     );
 
-    fn run(&mut self, (screen, auto_fovs, mut cameras): Self::SystemData) {
+    fn run(&mut self, (screen, mut auto_fovs, mut cameras): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("auto_fov_system");
 
-        if self.last_dimensions != *screen {
-            for (camera, auto_fov) in (&mut cameras, &auto_fovs).join() {
+        for (camera, auto_fov) in (&mut cameras, &mut auto_fovs).join() {
+            if self.last_dimensions != *screen || auto_fov.dirty {
                 *camera =
-                    Camera::perspective(screen.aspect_ratio(), auto_fov.fov_y, auto_fov.z_near)
+                    Camera::perspective(screen.aspect_ratio(), auto_fov.fov_y, auto_fov.z_near);
+                auto_fov.dirty = false;
             }
-            self.last_dimensions = screen.clone();
         }
+        self.last_dimensions = screen.clone();
     }
 }
 
