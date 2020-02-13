@@ -39,7 +39,18 @@ impl<'a, 'b> SystemBundle<'a, 'b> for LaminarNetworkBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
-        builder.add(LaminarNetworkSendSystem, NETWORK_SEND_SYSTEM_NAME, &[]);
+        builder.add(
+            NetworkSimulationTimeSystem,
+            NETWORK_SIM_TIME_SYSTEM_NAME,
+            &[],
+        );
+
+        builder.add(
+            LaminarNetworkSendSystem,
+            NETWORK_SEND_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+
         builder.add(
             LaminarNetworkPollSystem,
             NETWORK_POLL_SYSTEM_NAME,
@@ -50,11 +61,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for LaminarNetworkBundle {
             NETWORK_RECV_SYSTEM_NAME,
             &[NETWORK_POLL_SYSTEM_NAME],
         );
-        builder.add(
-            NetworkSimulationTimeSystem,
-            NETWORK_SIM_TIME_SYSTEM_NAME,
-            &[NETWORK_RECV_SYSTEM_NAME],
-        );
+
         world.insert(LaminarSocketResource::new(self.socket));
         Ok(())
     }

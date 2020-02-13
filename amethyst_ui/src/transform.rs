@@ -1,11 +1,16 @@
 use std::marker::PhantomData;
 
-use amethyst_core::ecs::{
-    prelude::{
-        Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage, World,
+use amethyst_core::{
+    ecs::{
+        prelude::{
+            Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage, World,
+        },
+        shred::{ResourceId, SystemData},
+        storage::GenericReadStorage,
     },
-    shred::{ResourceId, SystemData},
+    ParentHierarchy,
 };
+use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};
 
@@ -162,10 +167,40 @@ impl UiTransform {
     pub fn global_z(&self) -> f32 {
         self.global_z
     }
+
+    /// Returns the width of this UiTransform (in pixels) as computed by the `UiTransformSystem`.
+    pub fn pixel_width(&self) -> f32 {
+        self.pixel_width
+    }
+
+    /// Returns the height of this UiTransform (in pixels) as computed by the `UiTransformSystem`.
+    pub fn pixel_height(&self) -> f32 {
+        self.pixel_height
+    }
 }
 
 impl Component for UiTransform {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
+}
+
+/// Get the (width, height) in pixels of the parent of this `UiTransform`.
+pub fn get_parent_pixel_size<S: GenericReadStorage<Component = UiTransform>>(
+    entity: Entity,
+    hierarchy: &ParentHierarchy,
+    ui_transforms: &S,
+    screen_dimensions: &ScreenDimensions,
+) -> (f32, f32) {
+    let mut parent_width = screen_dimensions.width();
+    let mut parent_height = screen_dimensions.height();
+
+    if let Some(parent) = hierarchy.parent(entity) {
+        if let Some(ui_transform) = ui_transforms.get(parent) {
+            parent_width = ui_transform.pixel_width();
+            parent_height = ui_transform.pixel_height();
+        }
+    }
+
+    (parent_width, parent_height)
 }
 
 #[cfg(test)]
