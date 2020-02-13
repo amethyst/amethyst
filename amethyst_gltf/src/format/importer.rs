@@ -156,13 +156,13 @@ pub fn get_image_data(
                 } else {
                     let mimetype = uri
                         .split(',')
-                        .nth(0)
+                        .next()
                         .expect("Unreachable: `split` will always return at least one element")
                         .split(':')
                         .nth(1)
                         .expect("URI does not contain ':'")
                         .split(';')
-                        .nth(0)
+                        .next()
                         .expect("Unreachable: `split` will always return at least one element");
                     Ok((data, ImageFormat::from_mime_type(mimetype)))
                 }

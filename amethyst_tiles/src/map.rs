@@ -50,6 +50,10 @@ pub trait Map {
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
     /// maps `origin` and `tile_dimensions` respectively. If the tile map entity has a transform component, then
     /// it also translates the point using the it's transform.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TileOutOfBoundsError` if the coordinate is not within the bounds of the tiles
     fn to_tile(
         &self,
         coord: &Vector3<f32>,
