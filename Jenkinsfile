@@ -59,7 +59,7 @@ pipeline {
                         sh 'cargo update'
                         // Perform actual check
                         echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features "nightly vulkan sdl_controller json saveload tiles"'
+                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles"'
                     }
                 }
             }
