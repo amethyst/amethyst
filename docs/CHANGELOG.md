@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Removed
 
+* `"nightly"` feature is removed, missing resource panic message includes type name on stable. ([#2136])
+
 ### Fixed
 
 ### Security
@@ -32,6 +34,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
 [#2115]: https://github.com/amethyst/amethyst/pull/2115
 [#2128]: https://github.com/amethyst/amethyst/pull/2128
+[#2136]: https://github.com/amethyst/amethyst/pull/2136
 
 ## [0.14.0] - 2020-01-30
 
