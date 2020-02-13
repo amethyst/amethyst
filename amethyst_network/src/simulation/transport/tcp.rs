@@ -248,7 +248,7 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                         if recv_len > 0 {
                             let event = NetworkSimulationEvent::Message(
                                 peer_addr,
-                                Bytes::copy_from_slice(&resource.recv_buffer[..recv_len]),
+                                Bytes::from(&resource.recv_buffer[..recv_len]),
                             );
                             event_channel.single_write(event);
                         } else {

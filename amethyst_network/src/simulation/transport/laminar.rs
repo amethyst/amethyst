@@ -155,7 +155,7 @@ impl<'s> System<'s> for LaminarNetworkRecvSystem {
                 let event = match event {
                     SocketEvent::Packet(packet) => NetworkSimulationEvent::Message(
                         packet.addr(),
-                        Bytes::copy_from_slice(packet.payload()),
+                        Bytes::from(packet.payload()),
                     ),
                     SocketEvent::Connect(addr) => NetworkSimulationEvent::Connect(addr),
                     SocketEvent::Timeout(addr) => NetworkSimulationEvent::Disconnect(addr),

@@ -26,7 +26,7 @@ impl Message {
     ) -> Self {
         Self {
             destination,
-            payload: Bytes::copy_from_slice(payload),
+            payload: Bytes::from(payload),
             delivery,
             urgency,
         }
