@@ -140,13 +140,12 @@ mod tests {
                 let entities = world.read_resource::<EntitiesRes>();
                 let storage = world.read_storage::<External>();
 
-                assert_eq!(
-                    (&entities, &storage)
-                        .join()
-                        .map(|(_, ex)| assert_eq!(ex.inner, 100))
-                        .count(),
-                    1
-                );
+                let entities_components = (&entities, &storage).join().collect::<Vec<_>>();
+
+                assert_eq!(entities_components.len(), 1);
+                entities_components
+                    .into_iter()
+                    .for_each(|(_, ex)| assert_eq!(ex.inner, 100));
             }
         );
     }
@@ -162,13 +161,12 @@ mod tests {
                 let entities = world.read_resource::<EntitiesRes>();
                 let storage = world.read_storage::<Stuff<usize>>();
 
-                assert_eq!(
-                    (&entities, &storage)
-                        .join()
-                        .map(|(_, ex)| assert_eq!(ex.inner, 1))
-                        .count(),
-                    1
-                );
+                let entities_components = (&entities, &storage).join().collect::<Vec<_>>();
+
+                assert_eq!(entities_components.len(), 1);
+                entities_components
+                    .into_iter()
+                    .for_each(|(_, ex)| assert_eq!(ex.inner, 1));
             }
         );
     }
@@ -184,13 +182,12 @@ mod tests {
                 let entities = world.read_resource::<EntitiesRes>();
                 let storage = world.read_storage::<External>();
 
-                assert_eq!(
-                    (&entities, &storage)
-                        .join()
-                        .map(|(_, ex)| assert_eq!(ex.inner, 2))
-                        .count(),
-                    1
-                );
+                let entities_components = (&entities, &storage).join().collect::<Vec<_>>();
+
+                assert_eq!(entities_components.len(), 1);
+                entities_components
+                    .into_iter()
+                    .for_each(|(_, ex)| assert_eq!(ex.inner, 2));
             }
         );
     }
@@ -210,16 +207,15 @@ mod tests {
                 let stuff_storage = world.read_storage::<Stuff<String>>();
                 let external_storage = world.read_storage::<External>();
 
-                assert_eq!(
-                    (&entities, &stuff_storage, &external_storage)
-                        .join()
-                        .map(|(_, st, ex)| {
-                            assert_eq!(st.inner, "three");
-                            assert_eq!(ex.inner, 4);
-                        })
-                        .count(),
-                    1
-                );
+                let entities_components = (&entities, &stuff_storage, &external_storage)
+                    .join()
+                    .collect::<Vec<_>>();
+
+                assert_eq!(entities_components.len(), 1);
+                entities_components.into_iter().for_each(|(_, st, ex)| {
+                    assert_eq!(st.inner, "three");
+                    assert_eq!(ex.inner, 4);
+                });
             }
         );
     }

@@ -563,7 +563,7 @@ signature to:
 # extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
-fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>)
+fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>)
 # { }
 ```
 
@@ -575,10 +575,10 @@ the right one is flipped horizontally.
 # extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::{assets::Handle, renderer::{SpriteRender, SpriteSheet}};
-# fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
+# fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 // Assign the sprites for the paddles
 let sprite_render = SpriteRender {
-    sprite_sheet: sprite_sheet.clone(),
+    sprite_sheet: sprite_sheet_handle,
     sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 };
 # }
@@ -596,9 +596,9 @@ Next we simply add the components to the paddle entities:
 # use amethyst::assets::Handle;
 # use amethyst::renderer::sprite::{SpriteSheet, SpriteRender};
 # use amethyst::prelude::*;
-# fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
+# fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 # let sprite_render = SpriteRender {
-#   sprite_sheet: sprite_sheet.clone(),
+#   sprite_sheet: sprite_sheet_handle,
 #   sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 # };
 // Create a left plank entity.
@@ -611,7 +611,7 @@ world
 // Create right plank entity.
 world
     .create_entity()
-    .with(sprite_render.clone())
+    .with(sprite_render)
     // ... other components
     .build();
 # }

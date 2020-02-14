@@ -70,7 +70,7 @@ mod tests {
 
     impl From<TestEvent> for AggregateEvent {
         fn from(event: TestEvent) -> Self {
-            AggregateEvent::Test(event.clone())
+            AggregateEvent::Test(event)
         }
     }
 

@@ -158,7 +158,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
 
     // Assign the sprites for the paddles
     let sprite_render = SpriteRender {
-        sprite_sheet: sprite_sheet_handle.clone(),
+        sprite_sheet: sprite_sheet_handle,
         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
     };
 
@@ -173,7 +173,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
     // Create right plank entity.
     world
         .create_entity()
-        .with(sprite_render.clone())
+        .with(sprite_render)
         .with(Paddle::new(Side::Right))
         .with(right_transform)
         .build();
@@ -246,12 +246,7 @@ fn initialise_scoreboard(world: &mut World) {
     let p2_score = world
         .create_entity()
         .with(p2_transform)
-        .with(UiText::new(
-            font.clone(),
-            "0".to_string(),
-            [1., 1., 1., 1.],
-            50.,
-        ))
+        .with(UiText::new(font, "0".to_string(), [1., 1., 1., 1.], 50.))
         .build();
 
     world.insert(ScoreText { p1_score, p2_score });
