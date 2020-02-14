@@ -24,18 +24,14 @@ derive-new = "0.5"
 fnv = "1"
 serde = { version = "1", features = ["derive"] }
 winit = { version = "0.19", features = ["serde"] }
-sdl2 = { version = "0.32.2", optional = true }
+sdl2 = { version = "0.33", optional = true }
+smallvec = { version = "1.2", features = ["serde"] }
 
 thread_profiler = { version = "0.3", optional = true }
-
-[dependencies.smallvec]
-version = "0.6"
-features = ["serde"]
 
 [dev-dependencies]
 approx = "0.3"
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
-nightly = [ "amethyst_core/nightly" ]
 sdl_controller = ["sdl2"]

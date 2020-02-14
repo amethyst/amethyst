@@ -355,7 +355,7 @@ mod tests {
                     },
                 ],
             })],
-            texture: TexturePrefab::Handle(texture.clone()),
+            texture: TexturePrefab::Handle(texture),
             name: None,
         };
         prefab

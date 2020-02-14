@@ -21,12 +21,11 @@ license = "MIT/Apache-2.0"
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
-nightly = [ "amethyst_core/nightly" ]
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.9.0" }
 amethyst_error = { path = "../amethyst_error", version = "0.4.0" }
-bytes = "0.4"
+bytes = "0.5"
 laminar = "0.3"
 log = "0.4"
 thread_profiler = { version = "0.3" , optional = true }

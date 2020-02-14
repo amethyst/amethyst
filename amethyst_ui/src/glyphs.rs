@@ -371,7 +371,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                 move |glyph| {
                     // The glyph's Z parameter smuggles entity id, so glyphs can be associated
                     // for rendering as part of specific components.
-                    let entity_id: u32 = unsafe { std::mem::transmute(glyph.z) };
+                    let entity_id: u32 = glyph.z.to_bits();
 
                     let mut uv = glyph.tex_coords;
                     let bounds_max_x = glyph.bounds.max.x as f32;

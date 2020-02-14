@@ -1,4 +1,4 @@
-use std::{collections::HashMap, marker::PhantomData, ops::Deref};
+use std::{collections::HashMap, marker::PhantomData};
 
 use derivative::Derivative;
 use log::error;
@@ -102,7 +102,7 @@ where
             mut tags,
             mut prefab_system_data,
         ) = data;
-        let strategy = strategy.as_ref().map(Deref::deref);
+        let strategy = strategy.as_deref();
         prefab_storage.process(
             |mut d| {
                 d.tag = Some(self.next_tag);

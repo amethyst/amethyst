@@ -105,7 +105,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
 
     // Assign the sprites for the paddles
     let sprite_render = SpriteRender {
-        sprite_sheet: sprite_sheet_handle.clone(),
+        sprite_sheet: sprite_sheet_handle,
         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
     };
 
@@ -125,7 +125,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
     // Create right plank entity.
     world
         .create_entity()
-        .with(sprite_render.clone())
+        .with(sprite_render)
         .with(Paddle {
             velocity: PADDLE_VELOCITY,
             side: Side::Right,

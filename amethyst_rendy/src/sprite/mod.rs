@@ -624,7 +624,7 @@ List((
                 offsets: [0., 0.],
                 tex_coords: TextureCoordinates {
                     left: 0.,
-                    right: 0.33333334,
+                    right: 0.333_333_34,
                     bottom: 1.0,
                     top: 0.0,
                 },
@@ -634,7 +634,7 @@ List((
                 height: 16.,
                 offsets: [0., 0.],
                 tex_coords: TextureCoordinates {
-                    left: 0.33333334,
+                    left: 0.333_333_34,
                     right: 1.0,
                     bottom: 1.0,
                     top: 0.0,
