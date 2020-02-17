@@ -80,6 +80,9 @@ pub struct UiTransform {
     /// If set to false, the element will behaves as if it was transparent and will let events go to
     /// the next element (for example, the text on a button).
     pub opaque: bool,
+    /// Allows transparent (opaque = false) transforms to still be targeted by the events that pass
+    /// through them.
+    pub transparent_target: bool,
     /// A private field to keep this from being initialized without new.
     pd: PhantomData<()>,
 }
@@ -114,6 +117,7 @@ impl UiTransform {
             pixel_height: height,
             scale_mode: ScaleMode::Pixel,
             opaque: true,
+            transparent_target: false,
             pd: PhantomData,
         }
     }
