@@ -203,13 +203,7 @@ where
             .expect("Unexpected NaN")
     });
 
-    let mut first_opaque = None;
-    for (i, (_e, t)) in entity_transforms.iter().enumerate() {
-        if t.opaque {
-            first_opaque = Some(i);
-            break;
-        }
-    }
+    let first_opaque = entity_transforms.iter().position(|(_e, t)| t.opaque);
     if let Some(i) = first_opaque {
         entity_transforms.truncate(i + 1);
     }
