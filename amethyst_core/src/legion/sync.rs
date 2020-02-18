@@ -7,7 +7,7 @@ use crate::{
 };
 use bimap::BiMap;
 use derivative::Derivative;
-use legion::{command::CommandBuffer, entity::Entity as LegionEntity, event::ListenerId};
+use legion::{command::CommandBuffer, entity::Entity as LegionEntity};
 use shrinkwraprs::Shrinkwrap;
 use smallvec::SmallVec;
 use specs::{
@@ -228,7 +228,7 @@ where
             SyncDirection::LegionToSpecs => {
                 use legion::prelude::*;
                 let mut query = <(Write<L>)>::query();
-                for (entity, mut component) in query.iter_entities(&mut legion_state.world) {
+                for (entity, mut component) in query.iter_entities_mut(&mut legion_state.world) {
                     if let Some(specs_entity) = bimap.read().unwrap().get_by_left(&entity) {
                         let new = if let Some(specs_component) = storage.get_mut(*specs_entity) {
                             (self.0)(
@@ -253,10 +253,10 @@ where
         }
 
         new_legion
-            .drain()
-            .for_each(|new| legion_state.world.add_component(new.0, new.1));
+            .drain(..)
+            .for_each(|new| legion_state.world.add_component(new.0, new.1).unwrap());
 
-        new_specs.drain().for_each(|new| {
+        new_specs.drain(..).for_each(|new| {
             storage.insert(new.0, new.1);
         });
     }
@@ -267,7 +267,7 @@ where
 pub struct ResourceSyncer<T>(PhantomData<T>);
 impl<T> SyncerTrait for ResourceSyncer<T>
 where
-    T: legion::resource::Resource,
+    T: legion::systems::resource::Resource,
 {
     fn setup(&self, world: &mut specs::World) {
         log::trace!(
@@ -286,7 +286,7 @@ where
     }
 }
 
-pub fn move_resource<T: legion::resource::Resource>(
+pub fn move_resource<T: legion::systems::resource::Resource>(
     world: &mut specs::World,
     legion_state: &mut LegionState,
     direction: SyncDirection,
@@ -294,11 +294,11 @@ pub fn move_resource<T: legion::resource::Resource>(
     match direction {
         SyncDirection::SpecsToLegion => {
             if let Some(resource) = world.remove::<T>() {
-                legion_state.world.resources.insert(resource);
+                legion_state.resources.insert(resource);
             }
         }
         SyncDirection::LegionToSpecs => {
-            let resource = legion_state.world.resources.remove::<T>();
+            let resource = legion_state.resources.remove::<T>();
             if let Some(resource) = resource {
                 world.insert(resource);
             }
@@ -306,21 +306,13 @@ pub fn move_resource<T: legion::resource::Resource>(
     }
 }
 
-pub fn sync_entities(
-    specs_world: &mut specs::World,
-    legion_state: &mut LegionState,
-    legion_listener_id: ListenerId,
-) {
+pub fn sync_entities(specs_world: &mut specs::World, legion_state: &mut LegionState) {
     use smallvec::SmallVec;
 
     let mut new_entities = SmallVec::<[legion::entity::Entity; 512]>::new();
 
     let specs_entities = {
-        let entity_bimap = legion_state
-            .world
-            .resources
-            .get::<EntitiesBimapRef>()
-            .unwrap();
+        let entity_bimap = legion_state.resources.get::<EntitiesBimapRef>().unwrap();
         let mut map = entity_bimap.read().unwrap();
 
         (&<(Entities<'_>)>::fetch(specs_world))
@@ -355,7 +347,6 @@ pub fn sync_entities(
             .collect::<Vec<_>>();
 
         let entity_bimap = legion_state
-            .world
             .resources
             .get_mut::<EntitiesBimapRef>()
             .unwrap();
@@ -365,7 +356,8 @@ pub fn sync_entities(
         }
     }
 
-    while let Some(event) = legion_state.world.entity_channel().read(legion_listener_id) {
+    /* TODO: This changed
+    while let Some(event) = legion_state.world.entity_channel().read() {
         let entity_bimap = legion_state
             .world
             .resources
@@ -381,10 +373,9 @@ pub fn sync_entities(
             legion::event::EntityEvent::Deleted(e) => if map.contains_left(&e) {},
         }
     }
-
+    */
     if !new_entities.is_empty() {
         let entity_bimap = legion_state
-            .world
             .resources
             .get_mut::<EntitiesBimapRef>()
             .unwrap();

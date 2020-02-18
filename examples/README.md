@@ -37,6 +37,7 @@ cargo run --example {{name}} --features "{{backend}}"
 4. UI
    1. [UI](#ui)
    2. [Custom UI](#custom-ui)
+   3. [States Example](#states-example)
 5.  Debugging
     1.  [Debug Lines](#debug-lines)
     2.  [Debug Lines Ortho](#debug-lines-ortho)
@@ -49,6 +50,7 @@ cargo run --example {{name}} --features "{{backend}}"
    3. [Auto FOV](#auto-fov)
    4. [Sprite Camera Follow](#sprite-camera-follow)
    5. [Locale](#locale)
+   6. [Tiles](#tiles)
 8. Games
    1. [Pong](#pong)
 
@@ -255,6 +257,15 @@ Renders a custom UI.
 
 ---
 
+## States Example
+
+Simple Example on how to use states and UI (e.g. switching between Screens).
+
+![pause menu example screenshot](assets/img/pause-menu.png)
+![main menu example screenshot](assets/img/main-menu.png)
+
+---
+
 # Debugging
 
 ## Debug Lines
@@ -331,6 +342,14 @@ See you later!
 Bonjour!
 Au revoir!
 ```
+
+---
+
+## Tiles
+
+Showcases the `amethyst_tiles` crate.
+
+![tiles example screenshot](assets/img/tiles.png)
 
 ---
 

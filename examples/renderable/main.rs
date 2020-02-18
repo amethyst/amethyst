@@ -12,11 +12,10 @@ use amethyst::{
         math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
-        SystemDesc,
     },
     derive::SystemDesc,
     ecs::prelude::{
-        Entity, Join, Read, ReadStorage, System, SystemData, World, WorldExt, Write, WriteStorage,
+        Entity, Join, Read, ReadStorage, System, SystemData, WorldExt, Write, WriteStorage,
     },
     input::{
         get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
@@ -210,7 +209,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)
+                    RenderToWindow::from_config_path(display_config_path)?
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
                 .with_plugin(RenderShaded3D::default())

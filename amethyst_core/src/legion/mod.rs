@@ -10,105 +10,13 @@ pub mod temp;
 pub mod transform;
 
 pub use dispatcher::{
-    ConsumeDesc, Dispatcher, DispatcherBuilder, DispatcherData, IntoRelativeStage, RelativeStage,
-    Stage, ThreadLocal, ThreadLocalObject,
+    ConsumeDesc, Dispatcher, DispatcherBuilder, DispatcherData, RelativeStage, Stage,
 };
 pub use legion::{prelude::*, *};
 pub use sync::{
     ComponentSyncer, ComponentSyncerWith, EntitiesBimapRef, ResourceSyncer, SyncDirection,
     SyncerTrait,
 };
-
-pub trait SystemBundle {
-    fn build(
-        self,
-        world: &mut legion::world::World,
-        builder: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error>;
-}
-
-impl SystemBundle
-    for Box<dyn FnMut(&mut World, &mut DispatcherBuilder) -> Result<(), amethyst_error::Error>>
-{
-    fn build(
-        mut self,
-        world: &mut legion::world::World,
-        builder: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error> {
-        (self)(world, builder)
-    }
-}
-
-pub struct DispatcherSystemBundle<B>(B);
-impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        _: &mut DispatcherData,
-        builder: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error> {
-        self.0.build(world, builder)?;
-        Ok(())
-    }
-}
-
-pub struct DispatcherSystem<F>(RelativeStage, F);
-impl<F> ConsumeDesc for DispatcherSystem<F>
-where
-    F: FnOnce(&mut World) -> Box<dyn Schedulable>,
-{
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error> {
-        let sys = (self.1)(world);
-
-        dispatcher
-            .stages
-            .entry(self.0)
-            .or_insert_with(Vec::default)
-            .push(sys);
-
-        Ok(())
-    }
-}
-
-pub struct DispatcherThreadLocalSystem<F>(F);
-impl<F> ConsumeDesc for DispatcherThreadLocalSystem<F>
-where
-    F: FnOnce(&mut World) -> Box<dyn Runnable>,
-{
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error> {
-        let runnable = (self.0)(world);
-
-        // TODO: dispose?
-        dispatcher.thread_locals.push(runnable.into());
-        Ok(())
-    }
-}
-
-pub struct DispatcherThreadLocal<F>(F);
-impl<F> ConsumeDesc for DispatcherThreadLocal<F>
-where
-    F: FnOnce(&mut World) -> Box<dyn ThreadLocal>,
-{
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder,
-    ) -> Result<(), amethyst_error::Error> {
-        dispatcher.thread_locals.push((self.0)(world));
-        Ok(())
-    }
-}
 
 pub trait LegionSyncBuilder {
     fn prepare(
@@ -122,6 +30,7 @@ pub trait LegionSyncBuilder {
 pub struct LegionState {
     pub universe: legion::world::Universe,
     pub world: legion::world::World,
+    pub resources: legion::prelude::Resources,
     pub syncers: Vec<Box<dyn SyncerTrait>>,
 }
 
@@ -130,7 +39,7 @@ impl LegionState {
         self.syncers.push(Box::new(syncer));
     }
 
-    pub fn add_resource_sync<T: legion::resource::Resource>(&mut self) {
+    pub fn add_resource_sync<T: legion::systems::resource::Resource>(&mut self) {
         self.syncers.push(Box::new(ResourceSyncer::<T>::default()));
     }
 

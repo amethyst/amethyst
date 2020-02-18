@@ -215,7 +215,7 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
     By implementing `Component` for the `Paddle` struct, it can now be attached
     to entities in the game.
 
-    When implemented the `Component` trait, we must specify the storage type.
+    When implementing the `Component` trait, we must specify the storage type.
     Different storage types optimize for faster access, lower memory usage, or a
     balance between the two. For more information on storage types, check out the
     [Specs documentation][sb-storage].
@@ -317,38 +317,18 @@ fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 Let's run our blank screen game!
 
 ```text,ignore
-thread 'main' panicked at 'Tried to fetch a resource, but the resource does not exist.
-Try adding the resource by inserting it manually or using the `setup` method.
+Tried to fetch resource of type `MaskedStorage<Paddle>`[^1] from the `World`, but the resource does not exist.
+
+You may ensure the resource exists through one of the following methods:
+
+* Inserting it when the world is created: `world.insert(..)`.
+* If the resource implements `Default`, include it in a system's `SystemData`, and ensure the system is registered in the dispatcher.
+* If the resource does not implement `Default`, insert in the world during `System::setup`.
+
+[^1]: Full type name: `amethyst::ecs::storage::MaskedStorage<pong::Paddle>`
 ```
 
-Uh oh, what's wrong? Sadly the message is pretty difficult to decipher.
-
-If you are using a `nightly` compiler and enable the `nightly` feature of
-Amethyst, you will receive a more informative error message:
-
-```text,ignore
-thread 'main' panicked at 'Tried to fetch a resource of type "amethyst::ecs::storage::MaskedStorage<pong::Paddle>", but the resource does not exist.
-Try adding the resource by inserting it manually or using the `setup` method.'
-```
-
-To turn on the `nightly` feature, enable the `nightly` flag for the Amethyst crate in your Cargo.toml file.  
-Use *one* of the below methods for declaring dependencies (using both will result in an error):
-#### In Dependencies:
-
-```toml
-[dependencies]
-amethyst = { version = "X.XX", features = ["nightly"] }
-```
-
-#### In Separate Table:
-
-```toml
-[dependencies.amethyst]
-version = "X.XX"
-features = ["nightly"]
-```
-
-Run the project using the nightly channel if you don't have it as your default: `cargo +nightly run`.
+Uh oh, what's wrong?
 
 For a `Component` to be used, there must be a `Storage<ComponentType>` resource
 set up in the `World`. The error message above means we have registered the
@@ -495,7 +475,7 @@ are on the sheet. Let's create, right next to it, a file called
 `pong_spritesheet.ron`. It will contain the following sprite sheet definition:
 
 ```text,ignore
-(
+List((
     texture_width: 8,
     texture_height: 16,
     sprites: [
@@ -512,7 +492,7 @@ are on the sheet. Let's create, right next to it, a file called
             height: 4,
         ),
     ],
-)
+))
 ```
 
 > **Note:** Make sure to pay attention to the kind of parentheses in the ron file.
@@ -583,7 +563,7 @@ signature to:
 # extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
-fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>)
+fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>)
 # { }
 ```
 
@@ -595,10 +575,10 @@ the right one is flipped horizontally.
 # extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::{assets::Handle, renderer::{SpriteRender, SpriteSheet}};
-# fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
+# fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 // Assign the sprites for the paddles
 let sprite_render = SpriteRender {
-    sprite_sheet: sprite_sheet.clone(),
+    sprite_sheet: sprite_sheet_handle,
     sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 };
 # }
@@ -616,9 +596,9 @@ Next we simply add the components to the paddle entities:
 # use amethyst::assets::Handle;
 # use amethyst::renderer::sprite::{SpriteSheet, SpriteRender};
 # use amethyst::prelude::*;
-# fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
+# fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 # let sprite_render = SpriteRender {
-#   sprite_sheet: sprite_sheet.clone(),
+#   sprite_sheet: sprite_sheet_handle,
 #   sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 # };
 // Create a left plank entity.
@@ -631,7 +611,7 @@ world
 // Create right plank entity.
 world
     .create_entity()
-    .with(sprite_render.clone())
+    .with(sprite_render)
     // ... other components
     .build();
 # }
@@ -678,8 +658,8 @@ If all is well, we should get something that looks like this:
 In the next chapter, we'll explore the "S" in ECS and actually get these paddles
 moving!
 
-[sb]: https://slide-rs.github.io/specs/
-[sb-storage]: https://slide-rs.github.io/specs/05_storages.html#densevecstorage
-[2d]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Camera.html#method.standard_2d
+[sb]: https://specs.amethyst.rs/docs/tutorials/
+[sb-storage]: https://specs.amethyst.rs/docs/tutorials/05_storages.html#densevecstorage
+[2d]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.Camera.html#method.standard_2d
 [ss]: ../images/pong_tutorial/pong_spritesheet.png
 

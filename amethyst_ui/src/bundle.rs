@@ -1,11 +1,11 @@
 //! ECS rendering bundle
 
 use crate::{
-    BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystemDesc,
-    SelectionKeyboardSystemDesc, SelectionMouseSystemDesc, TextEditingInputSystemDesc,
-    TextEditingMouseSystemDesc, ToNativeWidget, UiButtonActionRetriggerSystemDesc,
-    UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem, UiSoundRetriggerSystemDesc,
-    UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
+    BlinkSystem, CacheSelectionOrderSystem, DragWidgetSystemDesc, FontAsset, NoCustomUi,
+    ResizeSystemDesc, SelectionKeyboardSystemDesc, SelectionMouseSystemDesc,
+    TextEditingInputSystemDesc, TextEditingMouseSystemDesc, ToNativeWidget,
+    UiButtonActionRetriggerSystemDesc, UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem,
+    UiSoundRetriggerSystemDesc, UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
 };
 use amethyst_assets::Processor;
 use amethyst_core::{
@@ -97,6 +97,11 @@ where
         builder.add(
             UiButtonSystemDesc::default().build(world),
             "ui_button_system",
+            &["ui_mouse_system"],
+        );
+        builder.add(
+            DragWidgetSystemDesc::<T>::default().build(world),
+            "ui_drag_system",
             &["ui_mouse_system"],
         );
 

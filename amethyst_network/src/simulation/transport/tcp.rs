@@ -2,13 +2,13 @@
 
 use crate::simulation::{
     events::NetworkSimulationEvent,
+    message::Message,
     requirements::DeliveryRequirement,
     timing::{NetworkSimulationTime, NetworkSimulationTimeSystem},
     transport::{
         TransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
         NETWORK_SIM_TIME_SYSTEM_NAME,
     },
-    Message,
 };
 use amethyst_core::{
     bundle::SystemBundle,
@@ -17,7 +17,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use bytes::Bytes;
-use log::{error, warn};
+use log::warn;
 use std::{
     collections::HashMap,
     io::{self, Read as IORead, Write as IOWrite},
@@ -49,26 +49,46 @@ impl<'a, 'b> SystemBundle<'a, 'b> for TcpNetworkBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
-        builder.add(TcpNetworkSendSystem, NETWORK_SEND_SYSTEM_NAME, &[]);
-        builder.add(TcpNetworkRecvSystem, NETWORK_RECV_SYSTEM_NAME, &[]);
-        builder.add(
-            TcpStreamManagementSystem,
-            STREAM_MANAGEMENT_SYSTEM_NAME,
-            &[NETWORK_SEND_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME],
-        );
-        builder.add(
-            TcpConnectionListenerSystem,
-            CONNECTION_LISTENER_SYSTEM_NAME,
-            &[NETWORK_SEND_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME],
-        );
+        // NetworkSimulationTime should run first
+        // followed by TcpConnectionListenerSystem and TcpStreamManagementSystem
+        // then TcpNetworkSendSystem and TcpNetworkRecvSystem
+
         builder.add(
             NetworkSimulationTimeSystem,
             NETWORK_SIM_TIME_SYSTEM_NAME,
+            &[],
+        );
+
+        builder.add(
+            TcpConnectionListenerSystem,
+            CONNECTION_LISTENER_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+
+        builder.add(
+            TcpStreamManagementSystem,
+            STREAM_MANAGEMENT_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+
+        builder.add(
+            TcpNetworkSendSystem,
+            NETWORK_SEND_SYSTEM_NAME,
             &[
                 STREAM_MANAGEMENT_SYSTEM_NAME,
                 CONNECTION_LISTENER_SYSTEM_NAME,
             ],
         );
+
+        builder.add(
+            TcpNetworkRecvSystem,
+            NETWORK_RECV_SYSTEM_NAME,
+            &[
+                STREAM_MANAGEMENT_SYSTEM_NAME,
+                CONNECTION_LISTENER_SYSTEM_NAME,
+            ],
+        );
+
         world.insert(TcpNetworkResource::new(
             self.listener,
             self.recv_buffer_size_bytes,
@@ -87,6 +107,9 @@ impl<'s> System<'s> for TcpStreamManagementSystem {
         Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
+    // We cannot use `net.streams.entry(message.destination).or_insert_with(|| { .. })` because
+    // there is a `return;` statement for early exit, which is not allowed within the closure.
+    #[allow(clippy::map_entry)]
     fn run(&mut self, (mut net, transport, mut event_channel): Self::SystemData) {
         // Make connections for each message in the channel if one hasn't yet been established
         transport.get_messages().iter().for_each(|message| {
@@ -94,10 +117,10 @@ impl<'s> System<'s> for TcpStreamManagementSystem {
                 let s = match TcpStream::connect(message.destination) {
                     Ok(s) => s,
                     Err(e) => {
-                        warn!(
-                            "Error attempting to connection to {}: {:?}",
-                            message.destination, e
-                        );
+                        event_channel.single_write(NetworkSimulationEvent::ConnectionError(
+                            e,
+                            Some(message.destination),
+                        ));
                         return;
                     }
                 };
@@ -143,7 +166,8 @@ impl<'s> System<'s> for TcpConnectionListenerSystem {
                         break;
                     }
                     Err(e) => {
-                        error!("Error listening for connections: {}", e);
+                        event_channel
+                            .single_write(NetworkSimulationEvent::ConnectionError(e, None));
                         break;
                     }
                 };
@@ -160,18 +184,19 @@ impl<'s> System<'s> for TcpNetworkSendSystem {
         Write<'s, TransportResource>,
         Write<'s, TcpNetworkResource>,
         Read<'s, NetworkSimulationTime>,
+        Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
-    fn run(&mut self, (mut transport, mut net, sim_time): Self::SystemData) {
+    fn run(&mut self, (mut transport, mut net, sim_time, mut channel): Self::SystemData) {
         let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
-        for message in messages.iter() {
+        for message in messages {
             match message.delivery {
                 DeliveryRequirement::ReliableOrdered(Some(_)) => {
                     warn!("Streams are not supported by TCP and will be ignored.");
-                    write_message(message, &mut net);
+                    write_message(message, &mut net, &mut channel);
                 }
                 DeliveryRequirement::ReliableOrdered(_) | DeliveryRequirement::Default => {
-                    write_message(message, &mut net);
+                    write_message(message, &mut net, &mut channel);
                 }
                 delivery => panic!(
                     "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
@@ -182,13 +207,14 @@ impl<'s> System<'s> for TcpNetworkSendSystem {
     }
 }
 
-fn write_message(message: &Message, net: &mut TcpNetworkResource) {
+fn write_message(
+    message: Message,
+    net: &mut TcpNetworkResource,
+    channel: &mut EventChannel<NetworkSimulationEvent>,
+) {
     if let Some((_, stream)) = net.get_stream(message.destination) {
         if let Err(e) = stream.write(&message.payload) {
-            error!(
-                "There was an error when attempting to send message: {:?}",
-                e
-            );
+            channel.single_write(NetworkSimulationEvent::SendError(e, message));
         }
     }
 }
@@ -222,7 +248,7 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                         if recv_len > 0 {
                             let event = NetworkSimulationEvent::Message(
                                 peer_addr,
-                                Bytes::from(&resource.recv_buffer[..recv_len]),
+                                Bytes::copy_from_slice(&resource.recv_buffer[..recv_len]),
                             );
                             event_channel.single_write(event);
                         } else {
@@ -236,7 +262,9 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                                 *active = false;
                             }
                             io::ErrorKind::WouldBlock => {}
-                            _ => error!("Encountered an error receiving data: {:?}", e),
+                            _ => {
+                                event_channel.single_write(NetworkSimulationEvent::RecvError(e));
+                            }
                         }
                         break;
                     }
@@ -259,6 +287,11 @@ impl TcpNetworkResource {
             streams: HashMap::new(),
             recv_buffer: vec![0; recv_buffer_size_bytes],
         }
+    }
+
+    /// Returns an immutable reference to the listener if there is one configured.
+    pub fn get(&self) -> Option<&TcpListener> {
+        self.listener.as_ref()
     }
 
     /// Returns a mutable reference to the listener if there is one configured.

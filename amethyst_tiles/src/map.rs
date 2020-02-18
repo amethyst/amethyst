@@ -1,10 +1,11 @@
 #![allow(unused_variables)]
 
-use crate::CoordinateEncoder;
+use crate::{CoordinateEncoder, TileOutOfBoundsError};
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
     ecs::{Component, HashMapStorage, World},
     math::{Matrix4, Point3, Vector3},
+    Transform,
 };
 use amethyst_rendy::{palette::Srgba, SpriteSheet};
 
@@ -39,15 +40,25 @@ pub trait Map {
     /// Set the sprite sheet handle which the tile render pass should use for rendering this map.
     fn set_sprite_sheet(&mut self, sprite_sheet: Option<Handle<SpriteSheet>>);
 
-    /// Convert a tile coordinate `Point3<u32>` to an amethyst world-coordinate space coordinate `Point3<f32>`
+    /// Convert a tile coordinate `Point3<u32>` to an amethyst world-coordinate space coordinate `Vector3<f32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
-    /// maps `origin` and `tile_dimensions` respectively.
-    fn to_world(&self, coord: &Point3<u32>) -> Vector3<f32>;
+    /// maps `origin` and `tile_dimensions` respectively. If the tile map entity has a transform component, then
+    /// it also translates the point using the it's transform.
+    fn to_world(&self, coord: &Point3<u32>, map_transform: Option<&Transform>) -> Vector3<f32>;
 
-    /// Convert an amethyst world-coordinate space coordinate `Point3<f32>` to a tile coordinate `Point3<u32>`
+    /// Convert an amethyst world-coordinate space coordinate `Vector3<f32>` to a tile coordinate `Point3<u32>`
     /// This performs an inverse matrix transformation of the world coordinate, scaling and translating using this
-    /// maps `origin` and `tile_dimensions` respectively.
-    fn to_tile(&self, coord: &Vector3<f32>) -> Option<Point3<u32>>;
+    /// maps `origin` and `tile_dimensions` respectively. If the tile map entity has a transform component, then
+    /// it also translates the point using the it's transform.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TileOutOfBoundsError` if the coordinate is not within the bounds of the tiles
+    fn to_tile(
+        &self,
+        coord: &Vector3<f32>,
+        map_transform: Option<&Transform>,
+    ) -> Result<Point3<u32>, TileOutOfBoundsError>;
 
     /// Returns the `Matrix4` transform which was created for transforming between world and tile coordinate spaces.
     fn transform(&self) -> &Matrix4<f32>;
@@ -138,12 +149,11 @@ impl<T: Tile, E: CoordinateEncoder> TileMap<T, E> {
         let transform = create_transform(&dimensions, &tile_dimensions);
 
         // Round the dimensions to the nearest multiplier for morton rounding
-        let encoder_dimensions = E::allocation_size(dimensions);
-        let size = (encoder_dimensions.x * encoder_dimensions.y * encoder_dimensions.z) as usize;
+        let size = E::allocation_size(dimensions);
         let mut data = Vec::with_capacity(size);
         data.resize_with(size, T::default);
 
-        let encoder = E::from_dimensions(dimensions.x, dimensions.y, dimensions.z);
+        let encoder = E::from_dimensions(dimensions);
 
         Self {
             data,
@@ -180,30 +190,18 @@ impl<T: Tile, E: CoordinateEncoder> Map for TileMap<T, E> {
     }
 
     #[inline]
-    fn to_world(&self, coord: &Point3<u32>) -> Vector3<f32> {
-        to_world(&self.transform, coord)
+    fn to_world(&self, coord: &Point3<u32>, map_transform: Option<&Transform>) -> Vector3<f32> {
+        to_world(&self.transform, coord, map_transform)
     }
 
     #[inline]
     #[allow(clippy::let_and_return)]
-    fn to_tile(&self, coord: &Vector3<f32>) -> Option<Point3<u32>> {
-        let ret = to_tile(&self.transform, coord);
-        #[cfg(debug_assertions)]
-        {
-            if let Some(r) = ret.as_ref() {
-                if r.x > self.dimensions().x
-                    || r.y > self.dimensions().y
-                    || r.z > self.dimensions().z
-                {
-                    panic!(
-                    "Requested coordinate is outside map dimensions: '{:?}', max dimensions=:{:?}",
-                    *r,
-                    self.dimensions()
-                );
-                }
-            }
-        }
-        ret
+    fn to_tile(
+        &self,
+        coord: &Vector3<f32>,
+        map_transform: Option<&Transform>,
+    ) -> Result<Point3<u32>, TileOutOfBoundsError> {
+        to_tile(&self.transform, coord, self.dimensions(), map_transform)
     }
 
     #[inline]
@@ -290,13 +288,36 @@ fn create_transform(map_dimensions: &Vector3<u32>, tile_dimensions: &Vector3<u32
 }
 
 #[allow(clippy::cast_precision_loss)]
-fn to_world(transform: &Matrix4<f32>, coord: &Point3<u32>) -> Vector3<f32> {
+fn to_world(
+    transform: &Matrix4<f32>,
+    coord: &Point3<u32>,
+    map_transform: Option<&Transform>,
+) -> Vector3<f32> {
     let coord_f = Point3::new(coord.x as f32, -1.0 * coord.y as f32, coord.z as f32);
-    transform.transform_point(&coord_f).coords
+    if let Some(map_trans) = map_transform {
+        map_trans
+            .global_matrix()
+            .transform_point(&transform.transform_point(&coord_f))
+            .coords
+    } else {
+        transform.transform_point(&coord_f).coords
+    }
 }
 
-fn to_tile(transform: &Matrix4<f32>, coord: &Vector3<f32>) -> Option<Point3<u32>> {
-    let point = Point3::from(*coord);
+#[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+fn to_tile(
+    transform: &Matrix4<f32>,
+    coord: &Vector3<f32>,
+    max_dimensions: &Vector3<u32>,
+    map_transform: Option<&Transform>,
+) -> Result<Point3<u32>, TileOutOfBoundsError> {
+    let point = if let Some(map_trans) = map_transform {
+        map_trans
+            .global_view_matrix()
+            .transform_point(&Point3::from(*coord))
+    } else {
+        Point3::from(*coord)
+    };
 
     let mut inverse = transform
         .try_inverse()
@@ -308,22 +329,26 @@ fn to_tile(transform: &Matrix4<f32>, coord: &Vector3<f32>) -> Option<Point3<u32>
     inverse.y = inverse.y.round() * -1.0;
     inverse.z = inverse.z.floor();
 
-    if inverse.x < 0.0 {
-        return None;
+    if inverse.x < 0.0
+        || inverse.x as u32 >= max_dimensions.x
+        || inverse.y < 0.0
+        || inverse.y as u32 >= max_dimensions.y
+        || inverse.z < 0.0
+        || inverse.z as u32 >= max_dimensions.z
+    {
+        let point_dimensions = Point3::new(inverse.x as i32, inverse.y as i32, inverse.z as i32);
+        Err(TileOutOfBoundsError {
+            point_dimensions,
+            max_dimensions: *max_dimensions,
+        })
+    } else {
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+        Ok(Point3::new(
+            inverse.x as u32,
+            inverse.y as u32,
+            inverse.z as u32,
+        ))
     }
-    if inverse.y < 0.0 {
-        return None;
-    }
-    if inverse.z < 0.0 {
-        return None;
-    }
-
-    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
-    Some(Point3::new(
-        inverse.x as u32,
-        inverse.y as u32,
-        inverse.z as u32,
-    ))
 }
 
 #[cfg(test)]
@@ -336,8 +361,17 @@ mod tests {
     use amethyst_core::math::Point3;
     use rayon::prelude::*;
 
-    #[derive(Default, Clone)]
-    struct TestTile;
+    #[derive(Clone, Debug)]
+    struct TestTile {
+        point: Point3<u32>,
+    }
+    impl Default for TestTile {
+        fn default() -> Self {
+            Self {
+                point: Point3::new(0, 0, 0),
+            }
+        }
+    }
     impl Tile for TestTile {
         fn sprite(&self, _: Point3<u32>, _: &World) -> Option<usize> {
             None
@@ -345,11 +379,44 @@ mod tests {
     }
 
     pub fn test_single_map<E: CoordinateEncoder>(dimensions: Vector3<u32>) {
-        let map = TileMap::<TestTile, E>::new(dimensions, Vector3::new(10, 10, 1), None);
-        (0..dimensions.x).into_par_iter().for_each(|x| {
-            (0..dimensions.y).into_par_iter().for_each(|y| {
+        struct UnsafeWrapper<E: CoordinateEncoder> {
+            ptr: *mut TileMap<TestTile, E>,
+        }
+        impl<E: CoordinateEncoder> UnsafeWrapper<E> {
+            pub fn new(map: &mut TileMap<TestTile, E>) -> Self {
+                Self {
+                    ptr: map as *mut TileMap<TestTile, E>,
+                }
+            }
+            pub fn get(&self) -> &TileMap<TestTile, E> {
+                unsafe { &*self.ptr }
+            }
+            #[allow(clippy::mut_from_ref)]
+            pub fn get_mut(&self) -> &mut TileMap<TestTile, E> {
+                unsafe { &mut *self.ptr }
+            }
+        }
+        unsafe impl<E: CoordinateEncoder> Send for UnsafeWrapper<E> {}
+        unsafe impl<E: CoordinateEncoder> Sync for UnsafeWrapper<E> {}
+
+        let mut inner = TileMap::<TestTile, E>::new(dimensions, Vector3::new(10, 10, 1), None);
+        let map = UnsafeWrapper::new(&mut inner);
+
+        (0..dimensions.x).for_each(|x| {
+            (0..dimensions.y).for_each(|y| {
                 for z in 0..dimensions.z {
-                    let _ = map.get(&Point3::new(x, y, z)).unwrap();
+                    let point = Point3::new(x, y, z);
+
+                    *map.get_mut().get_mut(&point).unwrap() = TestTile { point };
+                }
+            });
+        });
+
+        (0..dimensions.x).for_each(|x| {
+            (0..dimensions.y).for_each(|y| {
+                for z in 0..dimensions.z {
+                    let point = Point3::new(x, y, z);
+                    assert_eq!(map.get().get(&Point3::new(x, y, z)).unwrap().point, point);
                 }
             });
         });
@@ -359,9 +426,9 @@ mod tests {
     pub fn asymmetric_maps() {
         let test_dimensions = [
             Vector3::new(10, 58, 54),
-            Vector3::new(66, 5, 200),
+            Vector3::new(66, 5, 20),
             Vector3::new(199, 100, 1),
-            Vector3::new(5, 423, 6),
+            Vector3::new(5, 55, 6),
             Vector3::new(15, 23, 1),
             Vector3::new(20, 12, 12),
             Vector3::new(48, 48, 12),
@@ -370,7 +437,7 @@ mod tests {
             Vector3::new(1, 2, 5),
         ];
 
-        test_dimensions.par_iter().for_each(|dimensions| {
+        test_dimensions.into_par_iter().for_each(|dimensions| {
             test_single_map::<MortonEncoder>(*dimensions);
             test_single_map::<MortonEncoder2D>(*dimensions);
             test_single_map::<FlatEncoder>(*dimensions);
@@ -378,14 +445,16 @@ mod tests {
     }
 
     pub fn test_coord(transform: &Matrix4<f32>, tile: Point3<u32>, world: Point3<f32>) {
-        let world_result = to_world(transform, &tile);
+        let world_result = to_world(transform, &tile, None);
         assert_eq!(world_result, world.coords);
-        let tile_result = to_tile(transform, &world.coords).unwrap();
+        let tile_result =
+            to_tile(transform, &world.coords, &Vector3::new(100, 100, 100), None).unwrap();
         assert_eq!(tile_result, tile);
 
-        let world_reverse = to_tile(transform, &world_result).unwrap();
+        let world_reverse =
+            to_tile(transform, &world_result, &Vector3::new(100, 100, 100), None).unwrap();
         assert_eq!(world_reverse, tile);
-        let tile_reverse = to_world(transform, &tile_result);
+        let tile_reverse = to_world(transform, &tile_result, None);
         assert_eq!(tile_reverse, world.coords);
     }
 
@@ -413,6 +482,69 @@ mod tests {
             &transform,
             Point3::new(0, 1, 20),
             Point3::new(-320.0, 310.0, 20.0),
+        );
+    }
+
+    pub fn test_coord_with_map_transform(
+        transform: &Matrix4<f32>,
+        tile: Point3<u32>,
+        world: Point3<f32>,
+        map_transform: &Transform,
+    ) {
+        let world_result = to_world(transform, &tile, Some(map_transform));
+        assert_eq!(world_result, world.coords);
+        let tile_result = to_tile(
+            transform,
+            &world.coords,
+            &Vector3::new(100, 100, 100),
+            Some(map_transform),
+        )
+        .unwrap();
+        assert_eq!(tile_result, tile);
+
+        let world_reverse = to_tile(
+            transform,
+            &world_result,
+            &Vector3::new(100, 100, 100),
+            Some(map_transform),
+        )
+        .unwrap();
+        assert_eq!(world_reverse, tile);
+        let tile_reverse = to_world(transform, &tile_result, Some(map_transform));
+        assert_eq!(tile_reverse, world.coords);
+    }
+
+    #[test]
+    pub fn tilemap_coord_conversions_with_map_transform() {
+        let transform = create_transform(&Vector3::new(64, 64, 64), &Vector3::new(10, 10, 1));
+        let mut map_transform = Transform::default();
+        map_transform.set_translation_xyz(-10.0, 10.0, 0.0);
+        map_transform.copy_local_to_global();
+
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(1, 1, 0),
+            Point3::new(-320.0, 320.0, 0.0),
+            &map_transform,
+        );
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(2, 1, 0),
+            Point3::new(-310.0, 320.0, 0.0),
+            &map_transform,
+        );
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(1, 2, 0),
+            Point3::new(-320.0, 310.0, 0.0),
+            &map_transform,
+        );
+
+        test_coord_with_map_transform(
+            &transform,
+            Point3::new(1, 2, 20),
+            Point3::new(-320.0, 310.0, 20.0),
+            &map_transform,
         );
     }
 }

@@ -99,7 +99,7 @@ use crate::config::PongConfig;
 Now, modify the `run()` function, from
 
 ```rust,ignore
-let arena_config = ArenaConfig::load(&config);
+let arena_config = ArenaConfig::load(&config)?;
 [..]
     .with_bundle(PongBundle::default())?
 [..]
@@ -109,7 +109,7 @@ let arena_config = ArenaConfig::load(&config);
 to
 
 ```rust,ignore
-let pong_config = PongConfig::load(&config);
+let pong_config = PongConfig::load(&config)?;
 [..]
     .with_bundle(PongBundle::default())?
 [..]

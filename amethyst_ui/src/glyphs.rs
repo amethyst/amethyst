@@ -7,10 +7,10 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{
-        Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, SystemData, World,
-        Write, WriteExpect, WriteStorage,
+        Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, SystemData, Write,
+        WriteExpect, WriteStorage,
     },
-    Hidden, HiddenPropagate, SystemDesc,
+    Hidden, HiddenPropagate,
 };
 use amethyst_derive::SystemDesc;
 use amethyst_rendy::{
@@ -371,7 +371,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                 move |glyph| {
                     // The glyph's Z parameter smuggles entity id, so glyphs can be associated
                     // for rendering as part of specific components.
-                    let entity_id: u32 = unsafe { std::mem::transmute(glyph.z) };
+                    let entity_id: u32 = glyph.z.to_bits();
 
                     let mut uv = glyph.tex_coords;
                     let bounds_max_x = glyph.bounds.max.x as f32;

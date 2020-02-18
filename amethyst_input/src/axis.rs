@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Button, ControllerAxis};
+use super::{Button, ControllerAxis, MouseAxis};
 
 /// Represents any input represented by a float value from -1 to 1.
 /// Retrieve the value of this with [axis_value](struct.InputHandler.html#method.axis_value).
@@ -25,6 +25,15 @@ pub enum Axis {
         /// Treat input values from -dead_zone to dead_zone as 0,
         /// linearly interpolate remaining ranges.
         dead_zone: f64,
+    },
+    /// Represents a mouse as a 2D input device
+    Mouse {
+        /// The axis being bound
+        axis: MouseAxis,
+        /// Should the API be allowed to return values outside [-1..1]?
+        over_extendable: bool,
+        /// Zone to which the movement is relative
+        radius: f32,
     },
     /// Represents the wheel on a PC mouse.
     MouseWheel {

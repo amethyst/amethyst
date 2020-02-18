@@ -231,13 +231,12 @@ let app_root = application_root_dir()?;
 
 let display_config_path = app_root.join("config").join("display.ron");
 
-let mut world = World::new();
 let game_data = GameDataBuilder::default()
     .with_bundle(
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
             .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)
+                RenderToWindow::from_config_path(display_config_path)?
                     .with_clear([0.0, 0.0, 0.0, 1.0]),
             )
             // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
@@ -274,9 +273,9 @@ get a window. It should look something like this:
 ![Step one](../images/pong_tutorial/pong_01.png)
 
 [ron]: https://github.com/ron-rs/ron
-[simplestate]: https://docs-src.amethyst.rs/stable/amethyst/prelude/trait.SimpleState.html
-[state]: https://docs-src.amethyst.rs/stable/amethyst/prelude/trait.State.html
-[ap]: https://docs-src.amethyst.rs/stable/amethyst/type.Application.html
-[log]: https://docs-src.amethyst.rs/stable/amethyst/struct.Logger.html
-[displayconf]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.DisplayConfig.html
+[simplestate]: https://docs.amethyst.rs/stable/amethyst/prelude/trait.SimpleState.html
+[state]: https://docs.amethyst.rs/stable/amethyst/prelude/trait.State.html
+[ap]: https://docs.amethyst.rs/stable/amethyst/type.Application.html
+[log]: https://docs.amethyst.rs/stable/amethyst/struct.Logger.html
+[displayconf]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.DisplayConfig.html
 [graph]: https://github.com/amethyst/rendy/blob/master/docs/graph.md

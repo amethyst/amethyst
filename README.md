@@ -64,24 +64,24 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 ## Navigation
 
-* [**Link to the book (0.11)**][bks11]
-* [**Link to the book (0.10)**][bks10]
+* [**Link to the book (0.14)**][bkstable]
+* [**Link to the book (0.13)**][bks13]
 * [**Link to the book (master)**][bkm]
-* [**Link to the examples (0.11)**][exr11]
-* [**Link to the examples (0.10)**][exr10]
+* [**Link to the examples (0.14)**][exr14]
+* [**Link to the examples (0.13)**][exr13]
 * [**Link to the examples (master)**][exm]
 
 ## Usage
 
-While the engine can be hard to use at times, we made a lot of [documentation][bks11] that will teach you everything you need to use Amethyst comfortably.
+While the engine can be hard to use at times, we made a lot of [documentation][bkstable] that will teach you everything you need to use Amethyst comfortably.
 
 If you don't understand a part of the documentation, please let us know. Join us on Discord or open an issue; we are always happy to help!
 
-[bks11]: https://book.amethyst.rs/stable/
-[bks10]: https://book.amethyst.rs/v0.10.0/
+[bkstable]: https://book.amethyst.rs/stable/
+[bks13]: https://book.amethyst.rs/v0.13.0/
 [bkm]: https://book.amethyst.rs/master/
-[exr11]: https://github.com/amethyst/amethyst/tree/v0.11.0/examples
-[exr10]: https://github.com/amethyst/amethyst/tree/v0.10.0/examples
+[exr14]: https://github.com/amethyst/amethyst/tree/v0.14.0/examples
+[exr13]: https://github.com/amethyst/amethyst/tree/v0.13.2/examples
 [exm]: https://github.com/amethyst/amethyst/tree/master/examples
 
 ## Getting started
@@ -126,7 +126,7 @@ If you are compiling on Linux, make sure to install the dependencies below.
 ### Arch Linux
 
 ```
-$ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 awk libxcb
+$ pacman -Syu grep gcc pkgconf openssl alsa-lib cmake make python3 freetype2 awk libxcb
 ```
 
 ### Debian/Ubuntu
@@ -145,6 +145,45 @@ $ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 aw
 
 ```
 # zypper install gcc pkg-config libopenssl-devel alsa-devel cmake gcc-c++ python3 freetype2-devel libexpat-devel libxcb-devel
+```
+
+### Nix/NixOS
+
+In your project's root folder, create a file `shell.nix` with the following contents:
+
+```nix
+let
+  mozilla = import (builtins.fetchTarball https://github.com/mozilla/nixpkgs-mozilla/archive/master.tar.gz);
+  nixpkgs = import <nixpkgs> { overlays = [ mozilla ]; };
+in
+
+  with nixpkgs;
+
+  mkShell {
+    buildInputs = [
+      alsaLib
+      cmake
+      freetype
+      latest.rustChannels.stable.rust
+      expat
+      openssl
+      pkgconfig
+      python3
+      vulkan-validation-layers
+      xlibs.libX11
+    ];
+
+    APPEND_LIBRARY_PATH = stdenv.lib.makeLibraryPath [
+      vulkan-loader
+      xlibs.libXcursor
+      xlibs.libXi
+      xlibs.libXrandr
+    ];
+
+    shellHook = ''
+      export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$APPEND_LIBRARY_PATH"
+    '';
+  }
 ```
 
 ### Other

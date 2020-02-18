@@ -140,7 +140,7 @@ keep playing after someone scores and log who got the point.
 # fn main() -> amethyst::Result<()> {
 #
 # let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path);
+# let config = DisplayConfig::load(&path)?;
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
 #
 # let mut world = World::new();
@@ -221,7 +221,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # let game_data = GameDataBuilder::default()
 .with_bundle(UiBundle::<StringBindings>::new())?
 # ;
-# 
+#
 # Ok(())
 # }
 ```
@@ -280,7 +280,7 @@ use amethyst::{
 };
 
 # pub struct Pong;
-# 
+#
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 #       let world = data.world;
@@ -316,17 +316,14 @@ fn initialise_scoreboard(world: &mut World) {
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
-        )).build();
+        ))
+        .build();
 
     let p2_score = world
         .create_entity()
         .with(p2_transform)
-        .with(UiText::new(
-            font.clone(),
-            "0".to_string(),
-            [1., 1., 1., 1.],
-            50.,
-        )).build();
+        .with(UiText::new(font, "0".to_string(), [1., 1., 1., 1.], 50.))
+        .build();
 
 # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
     world.insert(ScoreText { p1_score, p2_score });
@@ -361,8 +358,8 @@ it to either side, so we'll add that next!
 
 
 [font-download]: https://github.com/amethyst/amethyst/raw/master/examples/assets/font/square.ttf
-[input-handler]: https://docs-src.amethyst.rs/stable/amethyst_input/struct.InputHandler.html
-[ui-bundle]: https://docs-src.amethyst.rs/stable/amethyst_ui/struct.UiBundle.html
+[input-handler]: https://docs.amethyst.rs/stable/amethyst_input/struct.InputHandler.html
+[ui-bundle]: https://docs.amethyst.rs/stable/amethyst_ui/struct.UiBundle.html
 
 
 ## Updating the Scoreboard

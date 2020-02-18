@@ -13,12 +13,7 @@ use crate::{
 };
 use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
 use amethyst_core::{
-    legion::{
-        self,
-        command::CommandBuffer,
-        dispatcher::{ThreadLocal, ThreadLocalObject},
-        Resources, SystemBuilder, World,
-    },
+    legion::{self, command::CommandBuffer, Resources, SystemBuilder, World},
     timing::Time,
 };
 
@@ -145,7 +140,7 @@ where
 /// Asset processing system for `Mesh` asset type.
 pub fn build_mesh_processor<B: Backend>(
     world: &mut legion::world::World,
-) -> Box<dyn legion::schedule::Schedulable> {
+) -> Box<dyn legion::prelude::Schedulable> {
     SystemBuilder::<()>::new("MeshProcessorSystem")
         .write_resource::<AssetStorage<Mesh>>()
         .read_resource::<QueueId>()
@@ -181,7 +176,7 @@ pub fn build_mesh_processor<B: Backend>(
 /// Asset processing system for `Mesh` asset type.
 pub fn build_texture_processor<B: Backend>(
     world: &mut legion::world::World,
-) -> Box<dyn legion::schedule::Schedulable> {
+) -> Box<dyn legion::prelude::Schedulable> {
     SystemBuilder::<()>::new("TextureProcessorSystem")
         .write_resource::<AssetStorage<Texture>>()
         .read_resource::<QueueId>()

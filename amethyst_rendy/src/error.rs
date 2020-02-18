@@ -6,7 +6,7 @@ use std::{error, fmt};
 #[derive(Debug)]
 pub(crate) enum Error {
     /// Failed to parse a Spritesheet from RON.
-    LoadSpritesheetError,
+    LoadSpritesheetError(ron::de::Error),
 }
 
 impl error::Error for Error {}
@@ -16,7 +16,7 @@ impl fmt::Display for Error {
         use self::Error::*;
 
         match *self {
-            LoadSpritesheetError => write!(fmt, "Failed to parse SpriteSheet"),
+            LoadSpritesheetError(..) => write!(fmt, "Failed to parse SpriteSheet"),
         }
     }
 }

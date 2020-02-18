@@ -76,6 +76,7 @@ impl Default for ImageFormat {
                 },
                 comparison: None,
                 border: PackedColor(0),
+                normalized: true,
                 anisotropic: Anisotropic::Off,
             },
             generate_mips: false,

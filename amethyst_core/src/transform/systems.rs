@@ -124,7 +124,7 @@ impl<'a> System<'a> for TransformSystem {
                         }
                         let local = local.unwrap();
                         if let Some(parent_global) = locals.get(parent.entity) {
-                            (parent_global.global_matrix * local.matrix())
+                            parent_global.global_matrix * local.matrix()
                         } else {
                             local.matrix()
                         }
@@ -371,7 +371,7 @@ mod tests {
         // Release the indeterminate forms!
         local.set_translation_xyz(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
 
-        world.create_entity().with(local.clone()).build();
+        world.create_entity().with(local).build();
 
         hs.run_now(&world);
         system.run_now(&world);
@@ -386,7 +386,7 @@ mod tests {
         let mut local = Transform::default();
         // Release the indeterminate forms!
         local.set_translation_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
-        world.create_entity().with(local.clone()).build();
+        world.create_entity().with(local).build();
 
         hs.run_now(&world);
         system.run_now(&world);

@@ -22,7 +22,7 @@ mod window {
         bundle::{ImageOptions, OutputColor},
         Format, Kind,
     };
-    use amethyst_config::Config;
+    use amethyst_config::{Config, ConfigError};
     use amethyst_core::{
         ecs::{ReadExpect, SystemData},
         SystemBundle,
@@ -45,8 +45,8 @@ mod window {
 
     impl RenderToWindow {
         /// Create RenderToWindow plugin with [`WindowBundle`] using specified config path.
-        pub fn from_config_path(path: impl AsRef<Path>) -> Self {
-            Self::from_config(DisplayConfig::load(path))
+        pub fn from_config_path(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
+            Ok(Self::from_config(DisplayConfig::load(path)?))
         }
 
         /// Create RenderToWindow plugin with [`WindowBundle`] using specified config.
@@ -86,10 +86,9 @@ mod window {
         #[allow(clippy::map_clone)]
         fn should_rebuild(&mut self, world: &World) -> bool {
             let new_dimensions = world.try_fetch::<ScreenDimensions>();
-            use std::ops::Deref;
-            if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            if self.dimensions.as_ref() != new_dimensions.as_deref() {
                 self.dirty = true;
-                self.dimensions = new_dimensions.map(|d| d.deref().clone());
+                self.dimensions = new_dimensions.map(|d| (*d).clone());
                 return false;
             }
             self.dirty

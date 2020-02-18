@@ -21,8 +21,8 @@ use crate::{
 };
 use amethyst_assets::legion::build_asset_processor;
 use amethyst_core::legion::{
-    dispatcher::{DispatcherBuilder, Stage},
-    Resources, SystemBundle, World,
+    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
+    prelude::*,
 };
 use amethyst_error::{format_err, Error};
 use derivative::Derivative;

@@ -57,6 +57,7 @@ Prefab (
                                     ),
                                     comparison: None,
                                     border: (0),
+                                    normalized: true,
                                     anisotropic: On(8),
                                 ),
                             )

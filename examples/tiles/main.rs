@@ -20,7 +20,7 @@ use amethyst::{
         types::DefaultBackend,
         RenderDebugLines, RenderFlat2D, RenderToWindow, RenderingBundle, Texture,
     },
-    tiles::{RenderTiles2D, Tile, TileMap},
+    tiles::{MortonEncoder, RenderTiles2D, Tile, TileMap},
     utils::application_root_dir,
     window::ScreenDimensions,
     winit,
@@ -335,7 +335,7 @@ fn init_camera(world: &mut World, parent: Entity, transform: Transform, camera: 
 struct ExampleTile;
 impl Tile for ExampleTile {
     fn sprite(&self, _: Point3<u32>, _: &World) -> Option<usize> {
-        Some(16)
+        Some(1)
     }
 }
 
@@ -376,7 +376,7 @@ impl SimpleState for Example {
             .with(DebugLinesComponent::with_capacity(1))
             .build();
 
-        let map = TileMap::<ExampleTile>::new(
+        let map = TileMap::<ExampleTile, MortonEncoder>::new(
             Vector3::new(48, 48, 1),
             Vector3::new(20, 20, 1),
             Some(map_sprite_sheet_handle),
@@ -445,12 +445,12 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)
+                    RenderToWindow::from_config_path(display_config_path)?
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderFlat2D::default())
-                .with_plugin(RenderTiles2D::<ExampleTile>::default()),
+                .with_plugin(RenderTiles2D::<ExampleTile, MortonEncoder>::default()),
         )?;
 
     let mut game = Application::build(assets_directory, Example)?.build(game_data)?;

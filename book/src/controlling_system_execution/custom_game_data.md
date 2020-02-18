@@ -20,8 +20,8 @@ Let's start by creating the `GameData` structure:
 # use amethyst::ecs::prelude::Dispatcher;
 #
 pub struct CustomGameData<'a, 'b> {
-    core_dispatcher: Dispatcher<'a, 'b>,
-    running_dispatcher: Dispatcher<'a, 'b>,
+    core_dispatcher: Option<Dispatcher<'a, 'b>>,
+    running_dispatcher: Option<Dispatcher<'a, 'b>>,
 }
 ```
 
@@ -32,23 +32,28 @@ We also add a utility function for performing dispatch:
 # use amethyst::ecs::prelude::{Dispatcher, World};
 #
 # pub struct CustomGameData<'a, 'b> {
-#     core_dispatcher: Dispatcher<'a, 'b>,
-#     running_dispatcher: Dispatcher<'a, 'b>,
+#     core_dispatcher: Option<Dispatcher<'a, 'b>>,
+#     running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
 #
 impl<'a, 'b> CustomGameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World, running: bool) {
         if running {
-            self.running_dispatcher.dispatch(&world);
+            if let Some(dispatcher) = self.running_dispatcher.as_mut() {
+                dispatcher.dispatch(&world);
+            }
         }
-        self.core_dispatcher.dispatch(&world);
+        if let Some(dispatcher) = self.core_dispatcher.as_mut() {
+            dispatcher.dispatch(&world);
+        }
     }
 }
 ```
 
 To be able to use this structure with `Amethyst`s `Application` we need to create
-a builder that implements `DataInit`. This is the only requirement placed on the
+a builder that implements `DataInit`, as well as implement `DataDispose` for our
+`GameData` structure. These are the only requirements placed on the
 `GameData` structure.
 
 ```rust,no_run,noplaypen
@@ -56,11 +61,11 @@ a builder that implements `DataInit`. This is the only requirement placed on the
 #
 # use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt};
 # use amethyst::core::SystemBundle;
-# use amethyst::{Error, DataInit};
+# use amethyst::{Error, DataInit, DataDispose};
 #
 # pub struct CustomGameData<'a, 'b> {
-#     core_dispatcher: Dispatcher<'a, 'b>,
-#     running_dispatcher: Dispatcher<'a, 'b>,
+#     core_dispatcher: Option<Dispatcher<'a, 'b>>,
+#     running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
 #
 use amethyst::core::ArcThreadPool;
@@ -111,7 +116,22 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> 
         core_dispatcher.setup(world);
         running_dispatcher.setup(world);
 
+        let core_dispatcher = Some(core_dispatcher);
+        let running_dispatcher = Some(running_dispatcher);
+
         CustomGameData { core_dispatcher, running_dispatcher }
+    }
+}
+
+impl<'a,'b> DataDispose for CustomGameData<'a,'b> {
+    // We dispose each dispatcher owned by the `CustomGameData` structure.
+    fn dispose(&mut self, world: &mut World) {
+        if let Some(dispatcher) = self.core_dispatcher.take() {
+            dispatcher.dispose(world);
+        }
+        if let Some(dispatcher) = self.running_dispatcher.take() {
+            dispatcher.dispose(world);
+        }
     }
 }
 ```
@@ -127,17 +147,21 @@ our `Application`, but first we should create some `State`s.
 # use amethyst::input::{is_close_requested, is_key_down, VirtualKeyCode};
 #
 # pub struct CustomGameData<'a, 'b> {
-#     core_dispatcher: Dispatcher<'a, 'b>,
-#     running_dispatcher: Dispatcher<'a, 'b>,
+#     core_dispatcher: Option<Dispatcher<'a, 'b>>,
+#     running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
 #
 # impl<'a, 'b> CustomGameData<'a, 'b> {
 #     /// Update game data
 #     pub fn update(&mut self, world: &World, running: bool) {
 #         if running {
-#             self.running_dispatcher.dispatch(&world);
+#             if let Some(dispatcher) = self.running_dispatcher.as_mut() {
+#                   dispatcher.dispatch(&world);
+#             }
 #         }
-#         self.core_dispatcher.dispatch(&world);
+#         if let Some(dispatcher) = self.core_dispatcher.as_mut() {
+#               dispatcher.dispatch(&world);
+#         }
 #     }
 # }
 #
@@ -226,12 +250,12 @@ The only thing that remains now is to use our `CustomGameDataBuilder` when build
 #     },
 #     ui::{RenderUi, UiBundle},
 #     utils::application_root_dir,
-#     DataInit, Error,
+#     DataInit, Error, DataDispose,
 # };
 #
 # pub struct CustomGameData<'a, 'b> {
-#     core_dispatcher: Dispatcher<'a, 'b>,
-#     running_dispatcher: Dispatcher<'a, 'b>,
+#     core_dispatcher: Option<Dispatcher<'a, 'b>>,
+#     running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
 #
 # pub struct CustomGameDataBuilder<'a, 'b> {
@@ -262,6 +286,10 @@ The only thing that remains now is to use our `CustomGameDataBuilder` when build
 #
 # impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
 #     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> { unimplemented!() }
+# }
+#
+# impl<'a, 'b> DataDispose for CustomGameDataBuilder<'a, 'b> {
+#     fn dispose(&mut self, world: &mut World) { unimplemented!() }
 # }
 #
 # fn main() -> amethyst::Result<()> {

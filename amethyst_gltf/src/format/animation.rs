@@ -120,6 +120,5 @@ where
         Linear => InterpolationFunction::Linear,
         Step => InterpolationFunction::Step,
         CubicSpline => InterpolationFunction::CubicSpline,
-        CatmullRomSpline => InterpolationFunction::CatmullRomSpline,
     }
 }

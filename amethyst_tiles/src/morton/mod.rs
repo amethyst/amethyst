@@ -67,6 +67,7 @@ pub fn morton_decode_lut(morton: u32) -> (u32, u32, u32) {
 #[inline]
 pub fn morton_encode_intr_3d(x: u32, y: u32, z: u32) -> u32 {
     use bitintr::Pdep;
+
     z.pdep(0x2492_4924) | y.pdep(0x1249_2492) | x.pdep(0x0924_9249)
 }
 
@@ -91,26 +92,26 @@ pub fn morton_decode_intr_3d(morton: u32) -> (u32, u32, u32) {
 #[derive(Default, Clone)]
 pub struct MortonEncoder;
 impl CoordinateEncoder for MortonEncoder {
-    fn from_dimensions(_: u32, _: u32, _: u32) -> Self {
+    #[must_use]
+    fn from_dimensions(_: Vector3<u32>) -> Self {
         Self {}
     }
 
     #[inline]
+    #[must_use]
     fn encode(&self, x: u32, y: u32, z: u32) -> Option<u32> {
         Some(encode(x, y, z))
     }
+
     #[inline]
+    #[must_use]
     fn decode(&self, morton: u32) -> Option<(u32, u32, u32)> {
         Some(decode(morton))
     }
 
-    fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
-        let max = dimensions
-            .x
-            .max(dimensions.y)
-            .max(dimensions.z)
-            .next_power_of_two();
-        Vector3::new(max, max, max)
+    #[must_use]
+    fn allocation_size(dimensions: Vector3<u32>) -> usize {
+        encode(dimensions.x, dimensions.y, dimensions.z) as usize
     }
 }
 
@@ -127,18 +128,20 @@ impl CoordinateEncoder for MortonEncoder {
 /// NOTE: This encoder requires allocation 2^n, equally in the X-Y axis.
 #[derive(Default, Clone)]
 pub struct MortonEncoder2D {
-    dimensions: (u32, u32, u32),
     len: u32,
 }
 impl CoordinateEncoder for MortonEncoder2D {
-    fn from_dimensions(x: u32, y: u32, z: u32) -> Self {
+    #[must_use]
+    fn from_dimensions(dimensions: Vector3<u32>) -> Self {
+        use bitintr::Pdep;
+
         Self {
-            dimensions: (x, y, z),
-            len: x * y,
+            len: dimensions.x.pdep(0x5555_5555) | dimensions.y.pdep(0xAAAA_AAAA),
         }
     }
 
     #[inline]
+    #[must_use]
     fn encode(&self, x: u32, y: u32, z: u32) -> Option<u32> {
         use bitintr::Pdep;
 
@@ -156,7 +159,9 @@ impl CoordinateEncoder for MortonEncoder2D {
 
         Some(morton)
     }
+
     #[inline]
+    #[must_use]
     fn decode(&self, mut morton: u32) -> Option<(u32, u32, u32)> {
         use bitintr::Pext;
 
@@ -166,9 +171,11 @@ impl CoordinateEncoder for MortonEncoder2D {
         Some((morton.pext(0x5555_5555), morton.pext(0xAAAA_AAAA), z))
     }
 
-    fn allocation_size(dimensions: Vector3<u32>) -> Vector3<u32> {
-        let max = dimensions.x.max(dimensions.y).next_power_of_two();
-        Vector3::new(max, max, dimensions.z)
+    #[must_use]
+    fn allocation_size(dimensions: Vector3<u32>) -> usize {
+        use bitintr::Pdep;
+
+        ((dimensions.x.pdep(0x5555_5555) | dimensions.y.pdep(0xAAAA_AAAA)) * dimensions.z) as usize
     }
 }
 
@@ -198,6 +205,50 @@ mod tests {
     use super::*;
     use more_asserts::*;
     use rayon::prelude::*;
+
+    pub fn test_encoder<E: CoordinateEncoder>(dimensions: Vector3<u32>) {
+        let encoder = E::from_dimensions(dimensions);
+
+        for x in 0..dimensions.x {
+            for y in 0..dimensions.y {
+                for z in 0..dimensions.z {
+                    let value = encoder.encode(x, y, z);
+                    assert!(value.is_some());
+                    let (x2, y2, z2) = encoder.decode(value.unwrap()).unwrap();
+                    assert_eq!(x, x2);
+                    assert_eq!(y, y2);
+                    assert_eq!(z, z2);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_encoders() {
+        let test_dimensions = [
+            Vector3::new(50, 50, 3),
+            Vector3::new(10, 58, 54),
+            Vector3::new(66, 5, 20),
+            Vector3::new(199, 100, 1),
+            Vector3::new(5, 55, 6),
+            Vector3::new(15, 23, 1),
+            Vector3::new(20, 12, 12),
+            Vector3::new(48, 48, 12),
+            Vector3::new(12, 55, 12),
+            Vector3::new(26, 25, 1),
+            Vector3::new(1, 2, 5),
+        ];
+
+        test_dimensions
+            .into_par_iter()
+            .for_each(|dimensions| test_encoder::<crate::FlatEncoder>(*dimensions));
+        test_dimensions
+            .into_par_iter()
+            .for_each(|dimensions| test_encoder::<MortonEncoder>(*dimensions));
+        test_dimensions
+            .into_par_iter()
+            .for_each(|dimensions| test_encoder::<MortonEncoder2D>(*dimensions));
+    }
 
     #[test]
     fn morton_minmax() {

@@ -10,8 +10,8 @@ use crate::{
     Backend, Factory,
 };
 use amethyst_core::legion::{
-    dispatcher::{DispatcherBuilder, Stage},
-    SystemBundle, World,
+    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
+    prelude::*,
 };
 use amethyst_error::Error;
 use palette::Srgb;

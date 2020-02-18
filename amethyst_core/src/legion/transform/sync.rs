@@ -111,17 +111,19 @@ pub fn specs_to_legion(
         .get_component::<ltc::LocalToWorld>(legion_entity)
         .is_none()
     {
-        world.add_component(legion_entity, ltc::LocalToWorld::identity())
+        world
+            .add_component(legion_entity, ltc::LocalToWorld::identity())
+            .unwrap()
     }
 
     if let Some(translation) = set.translation {
-        world.add_component(legion_entity, translation);
+        world.add_component(legion_entity, translation).unwrap()
     } else {
         world.remove_component::<ltc::Translation>(legion_entity);
     }
 
     if let Some(rotation) = set.rotation {
-        world.add_component(legion_entity, rotation);
+        world.add_component(legion_entity, rotation).unwrap();
     } else {
         world.remove_component::<ltc::Rotation>(legion_entity);
     }
@@ -129,11 +131,11 @@ pub fn specs_to_legion(
     if let Some(scale) = set.scale {
         match scale {
             LegionTransformSetScale::Uniform(value) => {
-                world.add_component(legion_entity, value);
+                world.add_component(legion_entity, value).unwrap();
                 world.remove_component::<ltc::NonUniformScale>(legion_entity);
             }
             LegionTransformSetScale::NonUniform(value) => {
-                world.add_component(legion_entity, value);
+                world.add_component(legion_entity, value).unwrap();
                 world.remove_component::<ltc::Scale>(legion_entity);
             }
         }

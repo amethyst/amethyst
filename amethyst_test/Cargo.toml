@@ -1,30 +1,30 @@
 [package]
 name = "amethyst_test"
-version = "0.4.0"
-authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.5.0"
+authors = ["Azriel Hoh <azriel91@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst test utilities crate"
 keywords = ["test", "amethyst"]
 categories = ["game-engines"]
 
-documentation = "https://docs-src.amethyst.rs/stable/amethyst_test/"
+documentation = "https://docs.amethyst.rs/stable/amethyst_test/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst = { path = "..", version = "0.13.0" }
+amethyst = { path = "..", version = "0.14.0" }
 derivative = "1.0"
 derive-new = "0.5"
 derive_deref = "1.1.0"
-lazy_static = "1.3"
+lazy_static = "1.4"
+log = "0.4"
 
 [dev-dependencies]
 serde = "1.0"
 
 [features]
 default = []
-nightly = ["amethyst/nightly"]
 empty = ["amethyst/empty"]
 metal = ["amethyst/metal"]
 vulkan = ["amethyst/vulkan"]

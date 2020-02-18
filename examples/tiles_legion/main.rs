@@ -170,7 +170,7 @@ impl<'s> System<'s> for CameraSwitchSystem {
 
 fn build_camera_movement_system(
     world: &mut amethyst::core::legion::world::World,
-) -> Box<dyn amethyst::core::legion::schedule::Schedulable> {
+) -> Box<dyn amethyst::core::legion::prelude::Schedulable> {
     SystemBuilder::<()>::new("CameraMovementSystem")
         .read_resource::<ActiveCamera>()
         .read_resource::<InputHandler<StringBindings>>()
@@ -219,7 +219,7 @@ fn build_camera_movement_system(
 
 fn build_map_movement_system(
     world: &mut amethyst::core::legion::world::World,
-) -> Box<dyn amethyst::core::legion::schedule::Schedulable> {
+) -> Box<dyn amethyst::core::legion::prelude::Schedulable> {
     let mut rotate = false;
     let mut translate = false;
     let mut vector = Vector3::new(100.0, 0.0, 0.0);

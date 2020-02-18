@@ -67,7 +67,7 @@ let input_bundle = InputBundle::<StringBindings>::new()
     .with_bindings_from_file(binding_path)?;
 
 # let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path);
+# let config = DisplayConfig::load(&path)?;
 # let assets_dir = "assets";
 # struct Pong;
 # impl SimpleState for Pong { }
@@ -215,7 +215,7 @@ fn main() -> amethyst::Result<()> {
 // --snip--
 
 # let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path);
+# let config = DisplayConfig::load(&path)?;
 # mod systems {
 #
 # use amethyst::core::ecs::{System, SystemData, World};
@@ -412,5 +412,5 @@ keypresses, and move our game's paddles accordingly. In the next chapter, we'll
 explore another key concept in real-time games: time. We'll make our game aware
 of time, and add a ball for our paddles to bounce back and forth.
 
-[doc_time]: https://docs-src.amethyst.rs/stable/amethyst_core/timing/struct.Time.html
-[doc_bindings]: https://docs-src.amethyst.rs/stable/amethyst_input/struct.Bindings.html
+[doc_time]: https://docs.amethyst.rs/stable/amethyst_core/timing/struct.Time.html
+[doc_bindings]: https://docs.amethyst.rs/stable/amethyst_input/struct.Bindings.html

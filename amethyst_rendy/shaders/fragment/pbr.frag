@@ -1,53 +1,8 @@
 #version 450
 
-// layout(early_fragment_tests) in;
+#include "header/math.frag"
 
-struct PointLight {
-    vec3 position;
-    vec3 color;
-    float intensity;
-};
-
-struct DirectionalLight {
-    vec3 color;
-    float intensity;
-    vec3 direction;
-};
-
-struct SpotLight {
-    vec3 position;
-    vec3 color;
-    vec3 direction;
-    float angle;
-    float intensity;
-    float range;
-    float smoothness;
-};
-
-layout(std140, set = 0, binding = 1) uniform Environment {
-    vec3 ambient_color;
-    vec3 camera_position; 
-    int point_light_count;
-    int directional_light_count;
-    int spot_light_count;
-};
-
-layout(std140, set = 0, binding = 2) uniform PointLights {
-    PointLight plight[128];
-};
-
-layout(std140, set = 0, binding = 3) uniform DirectionalLights {
-    DirectionalLight dlight[16];
-};
-
-layout(std140, set = 0, binding = 4) uniform SpotLights {
-    SpotLight slight[128];
-};
-
-struct UvOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-};
+#include "header/environment.frag"
 
 layout(std140, set = 1, binding = 0) uniform Material {
     UvOffset uv_offset;
@@ -72,36 +27,6 @@ layout(location = 0) in VertexData {
 
 layout(location = 0) out vec4 out_color;
 
-const float PI = 3.14159265359;
-
-float tex_coord(float coord, vec2 offset) {
-    return offset.x + coord * (offset.y - offset.x);
-}
-
-vec2 tex_coords(vec2 coord, vec2 u, vec2 v) {
-    return vec2(tex_coord(coord.x, u), tex_coord(coord.y, v));
-}
-
-float normal_distribution(vec3 N, vec3 H, float a) {
-    float a2 = a * a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH*NdotH;
-
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-
-    return (a2 + 0.0000001) / denom;
-}
-
-float geometry(float NdotV, float NdotL, float r2) {
-    float a1 = r2 + 1.0;
-    float k = a1 * a1 / 8.0;
-    float denom = NdotV * (1.0 - k) + k;
-    float ggx1 = NdotV / denom;
-    denom = NdotL * (1.0 - k) + k;
-    float ggx2 = NdotL / denom;
-    return ggx1 * ggx2;
-}
 
 vec3 fresnel(float HdotV, vec3 fresnel_base) {
     return fresnel_base + (1.0 - fresnel_base) * pow(1.0 - HdotV, 5.0);
@@ -118,12 +43,12 @@ vec3 compute_light(vec3 attenuation,
                    vec3 fresnel_base) {
 
     vec3 halfway = normalize(view_direction + light_direction);
-    float normal_distribution = normal_distribution(normal, halfway, roughness2);
+    float normal_distribution = ggx_normal_distribution(normal, halfway, roughness2);
 
     float NdotV = max(dot(normal, view_direction), 0.0);
     float NdotL = max(dot(normal, light_direction), 0.0);
     float HdotV = max(dot(halfway, view_direction), 0.0);
-    float geometry = geometry(NdotV, NdotL, roughness2);
+    float geometry = ggx_geometry(NdotV, NdotL, roughness2);
 
 
     vec3 fresnel = fresnel(HdotV, fresnel_base);
@@ -139,7 +64,7 @@ vec3 compute_light(vec3 attenuation,
 }
 
 void main() {
-    vec2 final_tex_coords   = tex_coords(vertex.tex_coord, uv_offset.u_offset, uv_offset.v_offset);
+    vec2 final_tex_coords   = tex_coords(vertex.tex_coord, uv_offset);
     vec4 albedo_alpha       = texture(albedo, final_tex_coords);
     float alpha             = albedo_alpha.a;
     if(alpha < alpha_cutoff) discard;

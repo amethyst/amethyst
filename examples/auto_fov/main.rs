@@ -3,9 +3,9 @@ use amethyst::{
         Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystemDesc,
         ProgressCounter, RonFormat,
     },
-    core::{SystemDesc, Transform, TransformBundle},
+    core::{Transform, TransformBundle},
     derive::{PrefabData, SystemDesc},
-    ecs::{Entity, ReadExpect, ReadStorage, System, SystemData, World, WorldExt, WriteStorage},
+    ecs::{Entity, ReadExpect, ReadStorage, System, SystemData, WorldExt, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
         Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
@@ -57,7 +57,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path).with_clear(CLEAR_COLOR),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(CLEAR_COLOR),
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),

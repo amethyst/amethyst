@@ -1,10 +1,9 @@
 pub mod sync;
 
-use crate::legion::*;
+use crate::legion::{dispatcher::SystemBundle, *};
 use amethyst_error::Error;
-use legion_transform::*;
-
 pub use legion_transform::components;
+use legion_transform::*;
 
 #[derive(Default)]
 pub struct Syncer;
@@ -22,10 +21,15 @@ impl LegionSyncBuilder for Syncer {
 #[derive(Default)]
 pub struct TransformBundle;
 impl SystemBundle for TransformBundle {
-    fn build(mut self, world: &mut World, builder: &mut DispatcherBuilder) -> Result<(), Error> {
-        hierarchy_maintenance_system::build(world)
+    fn build(
+        mut self,
+        world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), Error> {
+        hierarchy_maintenance_system::build(world, resources)
             .into_iter()
-            .for_each(|system| builder.add_system(Stage::Begin, move |_| system));
+            .for_each(|system| builder.add_system(Stage::Begin, move |_, _| system));
 
         builder.add_system(Stage::Begin, local_to_parent_system::build);
         builder.add_system(Stage::Begin, local_to_world_system::build);

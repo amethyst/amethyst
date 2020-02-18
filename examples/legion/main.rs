@@ -1,16 +1,26 @@
 //! Displays spheres with physically based materials.
 
 use amethyst::{
-    animation::{get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet, EndControl, VertexSkinningBundle},
-    assets::{AssetLoaderSystemData, AssetStorage, Completion, Handle, Loader, PrefabLoader, PrefabLoaderSystemDesc, ProgressCounter, RonFormat},
+    animation::{
+        get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
+        EndControl, VertexSkinningBundle,
+    },
+    assets::{
+        AssetLoaderSystemData, AssetStorage, Completion, Handle, Loader, PrefabLoader,
+        PrefabLoaderSystemDesc, ProgressCounter, RonFormat,
+    },
     controls::{FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
-            Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read, ReadStorage, System, SystemData, World, Write, WriteStorage,
+            Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
+            ReadStorage, System, SystemData, World, Write, WriteStorage,
         },
         legion::{
             self,
-            dispatcher::{Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder, RelativeStage, Stage},
+            dispatcher::{
+                Dispatcher as LegionDispatcher, DispatcherBuilder as LegionDispatcherBuilder,
+                RelativeStage, Stage,
+            },
             sync::SyncDirection,
             LegionState,
         },
@@ -19,13 +29,19 @@ use amethyst::{
     },
     error::Error,
     gltf::GltfSceneLoaderSystemDesc,
-    input::{is_close_requested, is_key_down, is_key_up, Axis, Bindings, Button, InputBundle, StringBindings},
+    input::{
+        is_close_requested, is_key_down, is_key_up, Axis, Bindings, Button, InputBundle,
+        StringBindings,
+    },
     prelude::*,
     renderer::{
         debug_drawing::DebugLines,
         legion::{
             bundle::{RenderPlan, RenderPlugin, RenderingBundle},
-            plugins::{RenderDebugLines, RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D, RenderSkybox, RenderToWindow},
+            plugins::{
+                RenderDebugLines, RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D,
+                RenderSkybox, RenderToWindow,
+            },
         },
         light::{Light, PointLight},
         palette::{LinSrgba, Srgb, Srgba},
@@ -37,7 +53,8 @@ use amethyst::{
         shape::Shape,
         types::{DefaultBackend, Mesh, Texture},
         visibility::BoundingSphere,
-        ActiveCamera, Camera, Factory, ImageFormat, Material, MaterialDefaults, SpriteRender, SpriteSheet, SpriteSheetFormat, Transparent,
+        ActiveCamera, Camera, Factory, ImageFormat, Material, MaterialDefaults, SpriteRender,
+        SpriteSheet, SpriteSheetFormat, Transparent,
     },
     utils::{
         application_root_dir,
@@ -85,8 +102,12 @@ impl Component for Orbit {
     type Storage = DenseVecStorage<Self>;
 }
 
-fn orbit_system(world: &mut amethyst::core::legion::world::World) -> Box<dyn amethyst::core::legion::schedule::Schedulable> {
-    use amethyst::core::legion::{system::SystemBuilder, transform::components::Translation, IntoQuery, Query, Read, Write};
+fn orbit_system(
+    world: &mut amethyst::core::legion::world::World,
+) -> Box<dyn amethyst::core::legion::prelude::Schedulable> {
+    use amethyst::core::legion::{
+        system::SystemBuilder, transform::components::Translation, IntoQuery, Query, Read, Write,
+    };
 
     world.resources.insert(DebugLines::new());
 
@@ -95,16 +116,22 @@ fn orbit_system(world: &mut amethyst::core::legion::world::World) -> Box<dyn ame
         .read_resource::<Time>()
         .write_resource::<DebugLines>()
         .build(move |commands, world, (time, debug), query| {
-            query.iter_entities(world).for_each(|(entity, (mut translation, orbit))| {
-                let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
-                let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
-                let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
-                let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
-                let final_pos = (rot * cross) + orbit.center;
-                debug.draw_line(orbit.center.into(), final_pos.into(), Srgba::new(0.0, 0.5, 1.0, 1.0));
+            query
+                .iter_entities(world)
+                .for_each(|(entity, (mut translation, orbit))| {
+                    let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
+                    let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
+                    let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
+                    let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
+                    let final_pos = (rot * cross) + orbit.center;
+                    debug.draw_line(
+                        orbit.center.into(),
+                        final_pos.into(),
+                        Srgba::new(0.0, 0.5, 1.0, 1.0),
+                    );
 
-                *translation = final_pos.into();
-            });
+                    *translation = final_pos.into();
+                });
         })
 }
 
@@ -133,7 +160,11 @@ impl SimpleState for Example {
 
         let app_root = application_root_dir().unwrap();
 
-        let display_config_path = app_root.join("examples").join("rendy").join("config").join("display.ron");
+        let display_config_path = app_root
+            .join("examples")
+            .join("rendy")
+            .join("config")
+            .join("display.ron");
 
         // Registration for components that arnt synced need to happen here.
         // This a sync issue because specs requires setups, while legion doesnt
@@ -143,13 +174,19 @@ impl SimpleState for Example {
 
         self.progress = Some(ProgressCounter::default());
 
-        world.exec(|(loader, mut scene): (PrefabLoader<'_, ScenePrefabData>, Write<'_, Scene>)| {
-            scene.handle = Some(loader.load(
-                Path::new("prefab").join("rendy_example_scene.ron").to_string_lossy(),
-                RonFormat,
-                self.progress.as_mut().unwrap(),
-            ));
-        });
+        world.exec(
+            |(loader, mut scene): (PrefabLoader<'_, ScenePrefabData>, Write<'_, Scene>)| {
+                scene.handle = Some(
+                    loader.load(
+                        Path::new("prefab")
+                            .join("rendy_example_scene.ron")
+                            .to_string_lossy(),
+                        RonFormat,
+                        self.progress.as_mut().unwrap(),
+                    ),
+                );
+            },
+        );
 
         let (mesh, albedo) = {
             let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh>| {
@@ -187,9 +224,13 @@ impl SimpleState for Example {
                 let metallic = j as f32 / 9.0;
 
                 let mtl = world.exec(
-                    |(mtl_loader, tex_loader): (AssetLoaderSystemData<'_, Material>, AssetLoaderSystemData<'_, Texture>)| {
+                    |(mtl_loader, tex_loader): (
+                        AssetLoaderSystemData<'_, Material>,
+                        AssetLoaderSystemData<'_, Texture>,
+                    )| {
                         let metallic_roughness = tex_loader.load_from_data(
-                            load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0)).into(),
+                            load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0))
+                                .into(),
                             self.progress.as_mut().unwrap(),
                         );
 
@@ -214,7 +255,8 @@ impl SimpleState for Example {
                     let y = j as f32 / (NUM_ROWS - 1) as f32;
                     let z = k as f32 / (NUM_PLANES - 1) as f32;
 
-                    let center = Vector3::new(15.0 * (x - 0.5), 15.0 * (y - 0.5), 2.0 * (z - 0.5) - 5.0);
+                    let center =
+                        Vector3::new(15.0 * (x - 0.5), 15.0 * (y - 0.5), 2.0 * (z - 0.5) - 5.0);
 
                     let mut pos = Transform::default();
                     pos.set_translation(center);
@@ -290,9 +332,17 @@ impl SimpleState for Example {
             })
             .build();
 
-        world.create_entity().with(light2).with(light2_transform).build();
+        world
+            .create_entity()
+            .with(light2)
+            .with(light2_transform)
+            .build();
 
-        world.create_entity().with(light3).with(light3_transform).build();
+        world
+            .create_entity()
+            .with(light3)
+            .with(light3_transform)
+            .build();
 
         create_tinted_crates(world);
 
@@ -312,10 +362,16 @@ impl SimpleState for Example {
             .with(FlyControlTag)
             .build();
 
-        world.insert(ActiveCamera { entity: Some(camera) });
+        world.insert(ActiveCamera {
+            entity: Some(camera),
+        });
     }
 
-    fn handle_event(&mut self, data: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         #[cfg(feature = "profiler")]
         profile_scope!("example handle_event");
         let StateData { world, .. } = data;
@@ -368,7 +424,13 @@ impl SimpleState for Example {
                 None | Some(Completion::Loading) => false,
 
                 Some(Completion::Complete) => {
-                    let scene_handle = data.world.read_resource::<Scene>().handle.as_ref().unwrap().clone();
+                    let scene_handle = data
+                        .world
+                        .read_resource::<Scene>()
+                        .handle
+                        .as_ref()
+                        .unwrap()
+                        .clone();
                     println!("Loading complete.");
                     data.world.create_entity().with(scene_handle).build();
                     true
@@ -383,7 +445,10 @@ impl SimpleState for Example {
                 self.progress = None;
             }
             if self.entity.is_none() {
-                if let Some(entity) = data.world.exec(|finder: TagFinder<'_, AnimationMarker>| finder.find()) {
+                if let Some(entity) = data
+                    .world
+                    .exec(|finder: TagFinder<'_, AnimationMarker>| finder.find())
+                {
                     self.entity = Some(entity);
                     self.initialised = true;
                 }
@@ -396,7 +461,10 @@ impl SimpleState for Example {
                     WriteStorage<AnimationControlSet<SpriteAnimationId, SpriteRender>>,
                 )| {
                     // For each entity that has AnimationSet
-                    for (entity, animation_set, _) in (&entities, &animation_sets, !&control_sets).join().collect::<Vec<_>>() {
+                    for (entity, animation_set, _) in (&entities, &animation_sets, !&control_sets)
+                        .join()
+                        .collect::<Vec<_>>()
+                    {
                         // Creates a new AnimationControlSet for the entity
                         let control_set = get_animation_set(&mut control_sets, entity).unwrap();
                         // Adds the `Fly` animation to AnimationControlSet and loops infinitely
@@ -431,7 +499,9 @@ fn load_crate_spritesheet(world: &mut World) -> Handle<SpriteSheet> {
     let crate_spritesheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
 
     resource_loader.load(
-        Path::new("texture").join("crate_spritesheet.ron").to_string_lossy(),
+        Path::new("texture")
+            .join("crate_spritesheet.ron")
+            .to_string_lossy(),
         SpriteSheetFormat(crate_texture_handle),
         (),
         &crate_spritesheet_store,
@@ -496,7 +566,13 @@ fn toggle_or_cycle_animation(
                 set.toggle(scene.animation_index);
             } else {
                 println!("Running animation {}", scene.animation_index);
-                set.add_animation(scene.animation_index, animation, EndControl::Normal, 1.0, AnimationCommand::Start);
+                set.add_animation(
+                    scene.animation_index,
+                    animation,
+                    EndControl::Normal,
+                    1.0,
+                    AnimationCommand::Start,
+                );
             }
             scene.animation_index += 1;
             if scene.animation_index >= animations.animations.len() {
@@ -538,7 +614,11 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples").join("rendy").join("config").join("display.ron");
+    let display_config_path = app_root
+        .join("examples")
+        .join("rendy")
+        .join("config")
+        .join("display.ron");
     let assets_dir = app_root.join("examples").join("assets");
 
     let mut bindings = Bindings::new();
@@ -578,7 +658,10 @@ fn main() -> amethyst::Result<()> {
         .migration_with_system(RelativeStage(Stage::Logic, 100), orbit_system)
         .migration_with_bundle(
             RenderingBundle::<DefaultBackend>::default()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path).with_clear([0.0, 0.0, 0.0, 1.0]))
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                )
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::default())
                 .with_plugin(RenderSwitchable3D::default())
@@ -587,22 +670,36 @@ fn main() -> amethyst::Result<()> {
         //// Specs stuff
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
-        .with_system_desc(PrefabLoaderSystemDesc::<ScenePrefabData>::default(), "scene_loader", &[])
+        .with_system_desc(
+            PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
+            "scene_loader",
+            &[],
+        )
         .with_system_desc(
             GltfSceneLoaderSystemDesc::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
-        .with_bundle(AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation").with_dep(&["gltf_loader"]))?
         .with_bundle(
-            AnimationBundle::<SpriteAnimationId, SpriteRender>::new("sprite_animation_control", "sprite_sampler_interpolation")
+            AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
+        )?
+        .with_bundle(
+            AnimationBundle::<SpriteAnimationId, SpriteRender>::new(
+                "sprite_animation_control",
+                "sprite_sampler_interpolation",
+            )
+            .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))?
         .with_bundle(
-            FlyControlBundle::<StringBindings>::new(Some("horizontal".into()), None, Some("vertical".into()))
-                .with_sensitivity(0.1, 0.1)
-                .with_speed(5.),
+            FlyControlBundle::<StringBindings>::new(
+                Some("horizontal".into()),
+                None,
+                Some("vertical".into()),
+            )
+            .with_sensitivity(0.1, 0.1)
+            .with_speed(5.),
         )?
         .with_bundle(TransformBundle::new().with_dep(&[
             "animation_control",
@@ -611,7 +708,11 @@ fn main() -> amethyst::Result<()> {
             "sprite_sampler_interpolation",
             "fly_movement",
         ]))?
-        .with_bundle(VertexSkinningBundle::new().with_dep(&["transform_system", "animation_control", "sampler_interpolation"]))?;
+        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+            "transform_system",
+            "animation_control",
+            "sampler_interpolation",
+        ]))?;
 
     let mut game = Application::new(assets_dir, Example::default(), game_data)?;
 
@@ -628,7 +729,11 @@ struct RenderSwitchable3D {
 }
 
 impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
-    fn on_build<'a, 'b>(&mut self, world: &mut amethyst_core::legion::World, builder: &mut LegionDispatcherBuilder) -> Result<(), Error> {
+    fn on_build<'a, 'b>(
+        &mut self,
+        world: &mut amethyst_core::legion::World,
+        builder: &mut LegionDispatcherBuilder,
+    ) -> Result<(), Error> {
         <RenderPbr3D as RenderPlugin<DefaultBackend>>::on_build(&mut self.pbr, world, builder)
     }
 

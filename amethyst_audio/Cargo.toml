@@ -1,14 +1,14 @@
 [package]
 name = "amethyst_audio"
-version = "0.8.0"
-authors = ["Xaeroxe <kieseljake@gmail.com>"]
+version = "0.9.0"
+authors = ["Xaeroxe <kieseljake@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Audio support for Amethyst"
 exclude = ["examples/*"]
 keywords = ["game", "engine", "audio","amethyst"]
 categories = ["audio"]
 
-documentation = "https://docs-src.amethyst.rs/stable/amethyst_audio/"
+documentation = "https://docs.amethyst.rs/stable/amethyst_audio/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -19,23 +19,19 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.9.0"}
-amethyst_core = { path = "../amethyst_core", version = "0.8.0"}
-amethyst_error = { path = "../amethyst_error", version = "0.3.0"}
-cpal = "0.8"
+amethyst_assets = { path = "../amethyst_assets", version = "0.10.0"}
+amethyst_core = { path = "../amethyst_core", version = "0.9.0"}
+amethyst_error = { path = "../amethyst_error", version = "0.4.0"}
+cpal = "0.10"
 derive-new = "0.5"
 log = "0.4.6"
-rodio = "0.9"
+rodio = "0.10"
 serde = { version = "1.0", features = ["derive"] }
+smallvec = { version = "1.2", features = ["serde"] }
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-amethyst_utils = { path = "../amethyst_utils", version = "0.8.0"}
-
-[dependencies.smallvec]
-version = "0.6"
-features = ["serde"]
+amethyst_utils = { path = "../amethyst_utils", version = "0.9.0"}
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
-nightly = [ "amethyst_core/nightly" ]

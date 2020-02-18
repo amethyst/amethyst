@@ -15,7 +15,7 @@ use amethyst_core::{
     shrev::EventChannel,
 };
 use amethyst_error::Error;
-pub use laminar::{Config as LaminarConfig, Socket as LaminarSocket};
+pub use laminar::{Config as LaminarConfig, ErrorKind, Socket as LaminarSocket};
 use laminar::{Packet, SocketEvent};
 
 use bytes::Bytes;
@@ -39,7 +39,18 @@ impl<'a, 'b> SystemBundle<'a, 'b> for LaminarNetworkBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
-        builder.add(LaminarNetworkSendSystem, NETWORK_SEND_SYSTEM_NAME, &[]);
+        builder.add(
+            NetworkSimulationTimeSystem,
+            NETWORK_SIM_TIME_SYSTEM_NAME,
+            &[],
+        );
+
+        builder.add(
+            LaminarNetworkSendSystem,
+            NETWORK_SEND_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+
         builder.add(
             LaminarNetworkPollSystem,
             NETWORK_POLL_SYSTEM_NAME,
@@ -50,11 +61,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for LaminarNetworkBundle {
             NETWORK_RECV_SYSTEM_NAME,
             &[NETWORK_POLL_SYSTEM_NAME],
         );
-        builder.add(
-            NetworkSimulationTimeSystem,
-            NETWORK_SIM_TIME_SYSTEM_NAME,
-            &[NETWORK_RECV_SYSTEM_NAME],
-        );
+
         world.insert(LaminarSocketResource::new(self.socket));
         Ok(())
     }
@@ -67,13 +74,14 @@ impl<'s> System<'s> for LaminarNetworkSendSystem {
         Write<'s, TransportResource>,
         Write<'s, LaminarSocketResource>,
         Read<'s, NetworkSimulationTime>,
+        Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
-    fn run(&mut self, (mut transport, mut socket, sim_time): Self::SystemData) {
+    fn run(&mut self, (mut transport, mut socket, sim_time, mut event_channel): Self::SystemData) {
         if let Some(socket) = socket.get_mut() {
             let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
 
-            for message in messages.iter() {
+            for message in messages {
                 let packet = match message.delivery {
                     DeliveryRequirement::Unreliable => {
                         Packet::unreliable(message.destination, message.payload.to_vec())
@@ -107,8 +115,14 @@ impl<'s> System<'s> for LaminarNetworkSendSystem {
                     ),
                 };
 
-                if let Err(e) = socket.send(packet) {
-                    error!("There was an error when attempting to send packet: {:?}", e);
+                match socket.send(packet) {
+                    Err(ErrorKind::IOError(e)) => {
+                        event_channel.single_write(NetworkSimulationEvent::SendError(e, message));
+                    }
+                    Err(e) => {
+                        error!("Error sending message: {:?}", e);
+                    }
+                    Ok(_) => {}
                 }
             }
         }
@@ -141,7 +155,7 @@ impl<'s> System<'s> for LaminarNetworkRecvSystem {
                 let event = match event {
                     SocketEvent::Packet(packet) => NetworkSimulationEvent::Message(
                         packet.addr(),
-                        Bytes::from(packet.payload()),
+                        Bytes::copy_from_slice(packet.payload()),
                     ),
                     SocketEvent::Connect(addr) => NetworkSimulationEvent::Connect(addr),
                     SocketEvent::Timeout(addr) => NetworkSimulationEvent::Disconnect(addr),
@@ -167,6 +181,11 @@ impl LaminarSocketResource {
     /// Creates a new instance of the `UdpSocketResource`.
     pub fn new(socket: Option<LaminarSocket>) -> Self {
         Self { socket }
+    }
+
+    /// Returns a reference to the socket if there is one configured.
+    pub fn get(&self) -> Option<&LaminarSocket> {
+        self.socket.as_ref()
     }
 
     /// Returns a mutable reference to the socket if there is one configured.

@@ -17,7 +17,10 @@ pub fn dispatch_legion(
         .iter()
         .for_each(|s| s.sync(specs_world, legion_state, SyncDirection::SpecsToLegion));
 
-    dispatcher.run(&mut legion_state.world);
+    let world = &mut legion_state.world;
+    let resources = &mut legion_state.resources;
+
+    dispatcher.run(world, resources);
 
     syncers
         .iter()
@@ -30,7 +33,7 @@ pub fn setup(specs_world: &mut specs::World, legion_state: &mut LegionState) {
     let entity_map = Arc::new(RwLock::new(
         BiMap::<legion::entity::Entity, specs::Entity>::new(),
     ));
-    legion_state.world.resources.insert(entity_map.clone());
+    legion_state.resources.insert(entity_map.clone());
     specs_world.insert(entity_map.clone());
 
     //legion_state.world.resources.insert(Allocators::default());

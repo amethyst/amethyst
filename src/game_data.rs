@@ -137,7 +137,7 @@ pub struct GameDataBuilder<'a, 'b> {
 
 #[cfg(feature = "legion-ecs")]
 impl<'a, 'b> GameDataBuilder<'a, 'b> {
-    pub fn migration_resource_sync<T: legion::resource::Resource>(mut self) -> Self {
+    pub fn migration_resource_sync<T: legion::systems::resource::Resource>(mut self) -> Self {
         self.migration_syncers
             .push(Box::new(ResourceSyncer::<T>::default()));
 

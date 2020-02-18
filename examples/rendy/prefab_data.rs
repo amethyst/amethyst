@@ -4,19 +4,19 @@ use amethyst::{
     controls::ControlTagPrefab,
     core::{ecs::Entity, Transform},
     gltf::{GltfSceneAsset, GltfSceneFormat},
+    renderer::{
+        camera::CameraPrefab,
+        formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
+        light::LightPrefab,
+        rendy::mesh::{Normal, Position, Tangent, TexCoord},
+        sprite::{
+            prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
+            SpriteRender,
+        },
+        transparent::Transparent,
+    },
     utils::tag::Tag,
     Error,
-};
-use amethyst_rendy::{
-    camera::CameraPrefab,
-    formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
-    light::LightPrefab,
-    rendy::mesh::{Normal, Position, Tangent, TexCoord},
-    sprite::{
-        prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
-        SpriteRender,
-    },
-    transparent::Transparent,
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};

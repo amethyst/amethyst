@@ -52,11 +52,9 @@ impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
 /// # use amethyst_assets::HotReloadStrategy;
 /// # use amethyst_core::ecs::{World, WorldExt};
 /// #
-/// # fn main() {
 /// let mut world = World::new();
 /// // Assets will be reloaded every two seconds (in case they changed)
 /// world.insert(HotReloadStrategy::every(2));
-/// # }
 /// ```
 #[derive(Clone, Debug)]
 pub struct HotReloadStrategy {

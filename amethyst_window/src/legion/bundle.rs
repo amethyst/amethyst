@@ -1,12 +1,9 @@
-use crate::{
-    config::DisplayConfig,
-    legion::system::{events_loop_system, window_system},
-};
+use crate::{config::DisplayConfig, legion::*};
 use amethyst_config::Config;
 use amethyst_core::{
     legion::{
-        dispatcher::{DispatcherBuilder, Stage},
-        SystemBundle, World,
+        dispatcher::{Stage, SystemBundle},
+        prelude::*,
     },
     shrev::EventChannel,
 };
@@ -37,7 +34,7 @@ impl WindowBundle {
     ///
     /// Will fall back to `DisplayConfig::default()` in case of an error.
     pub fn from_config_path(path: impl AsRef<std::path::Path>) -> Self {
-        WindowBundle::from_config(DisplayConfig::load(path.as_ref()))
+        WindowBundle::from_config(DisplayConfig::load(path.as_ref()).unwrap())
     }
 
     /// Builds a new window bundle with a predefined `DisplayConfig`.
@@ -60,6 +57,7 @@ impl SystemBundle for WindowBundle {
     fn build(
         self,
         world: &mut World,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error> {
         let event_loop = EventsLoop::new();
@@ -70,10 +68,12 @@ impl SystemBundle for WindowBundle {
             .build(&event_loop)
             .unwrap();
 
-        builder.add_system(Stage::Render, move |world| {
-            window_system::build(world, window)
+        builder.add_system(Stage::Render, move |world, resources| {
+            window_system::build(world, resources, window)
         });
-        builder.add_thread_local_system(move |world| events_loop_system::build(world, event_loop));
+        builder.add_thread_local_system(Stage::Begin, move |world, resources| {
+            events_loop_system::build(world, resources, event_loop)
+        });
 
         Ok(())
     }

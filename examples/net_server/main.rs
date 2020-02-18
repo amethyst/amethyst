@@ -1,21 +1,16 @@
+// SERVER
 use std::time::Duration;
 
 use amethyst::{
     core::{bundle::SystemBundle, frame_limiter::FrameRateLimitStrategy, SystemDesc},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
-    network::simulation::{
-        //        laminar::{LaminarNetworkBundle, LaminarSocket},
-        tcp::TcpNetworkBundle,
-        //        udp::UdpNetworkBundle,
-        NetworkSimulationEvent,
-        TransportResource,
-    },
+    network::simulation::{tcp::TcpNetworkBundle, NetworkSimulationEvent, TransportResource},
     prelude::*,
     shrev::{EventChannel, ReaderId},
     utils::application_root_dir,
     Result,
 };
-use log::info;
+use log::{error, info};
 use std::net::TcpListener;
 
 fn main() -> Result<()> {
@@ -42,6 +37,7 @@ fn main() -> Result<()> {
         //        // Laminar
         //        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with_bundle(SpamReceiveBundle)?;
+
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
@@ -120,6 +116,10 @@ impl<'a> System<'a> for SpamReceiveSystem {
                 NetworkSimulationEvent::Disconnect(addr) => {
                     info!("Client Disconnected: {}", addr);
                 }
+                NetworkSimulationEvent::RecvError(e) => {
+                    error!("Recv Error: {:?}", e);
+                }
+                _ => {}
             }
         }
     }

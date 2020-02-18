@@ -326,7 +326,7 @@ as well as adding our new systems to the game data:
 # use amethyst::input::StringBindings;
 # fn main() -> amethyst::Result<()> {
 # let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path);
+# let config = DisplayConfig::load(&path)?;
 # mod systems {
 # use amethyst;
 # use amethyst::core::ecs::{System, SystemData, World};
@@ -523,6 +523,6 @@ In the next chapter, we'll add a system checking when a player loses the game,
 and add a scoring system!
 
 [pong_02_drawing]: pong-tutorial-02.html#drawing
-[doc_time]: https://docs-src.amethyst.rs/stable/amethyst_core/timing/struct.Time.html
+[doc_time]: https://docs.amethyst.rs/stable/amethyst_core/timing/struct.Time.html
 [delta_timing]: https://en.wikipedia.org/wiki/Delta_timing
 

@@ -7,13 +7,13 @@ use std::net::SocketAddr;
 #[derive(Debug, PartialEq, Eq)]
 pub struct Message {
     /// The destination to send the message.
-    pub(crate) destination: SocketAddr,
+    pub destination: SocketAddr,
     /// The serialized payload itself.
-    pub(crate) payload: Bytes,
+    pub payload: Bytes,
     /// The requirement around whether or not this message should be resent if lost.
-    pub(crate) delivery: DeliveryRequirement,
+    pub delivery: DeliveryRequirement,
     /// The requirement around when this message should be sent.
-    pub(crate) urgency: UrgencyRequirement,
+    pub urgency: UrgencyRequirement,
 }
 
 impl Message {
@@ -26,7 +26,7 @@ impl Message {
     ) -> Self {
         Self {
             destination,
-            payload: Bytes::from(payload),
+            payload: Bytes::copy_from_slice(payload),
             delivery,
             urgency,
         }

@@ -20,7 +20,7 @@ pub enum ControllerAxis {
 }
 
 /// Controller buttons matching SDL controller model
-#[derive(Eq, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone, Hash, Serialize, Deserialize)]
 pub enum ControllerButton {
     /// The A button, typically the lower button in the "diamond" of buttons on the right side
     /// of the controller.

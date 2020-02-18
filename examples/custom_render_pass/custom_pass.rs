@@ -13,8 +13,7 @@ use amethyst::{
                 render::{PrepareResult, RenderGroup, RenderGroupDesc},
                 GraphContext, NodeBuffer, NodeImage,
             },
-            hal::pso::ShaderStageFlags,
-            hal::{self, device::Device, format::Format, pso},
+            hal::{self, device::Device, format::Format, pso, pso::ShaderStageFlags},
             mesh::{AsVertex, VertexFormat},
             shader::{Shader, SpirvShader},
         },
@@ -31,17 +30,17 @@ use glsl_layout::*;
 lazy_static::lazy_static! {
     // These uses the precompiled shaders.
     // These can be obtained using glslc.exe in the vulkan sdk.
-    static ref VERTEX: SpirvShader = SpirvShader::new(
-        include_bytes!("../assets/shaders/compiled/vertex/custom.vert.spv").to_vec(),
+    static ref VERTEX: SpirvShader = SpirvShader::from_bytes(
+        include_bytes!("../assets/shaders/compiled/vertex/custom.vert.spv"),
         ShaderStageFlags::VERTEX,
         "main",
-    );
+    ).unwrap();
 
-    static ref FRAGMENT: SpirvShader = SpirvShader::new(
-        include_bytes!("../assets/shaders/compiled/fragment/custom.frag.spv").to_vec(),
+    static ref FRAGMENT: SpirvShader = SpirvShader::from_bytes(
+        include_bytes!("../assets/shaders/compiled/fragment/custom.frag.spv"),
         ShaderStageFlags::FRAGMENT,
         "main",
-    );
+    ).unwrap();
 }
 
 /// Example code of using a custom shader
@@ -234,10 +233,10 @@ fn build_custom_pipeline<B: Backend>(
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
                 // We are using alpha blending
-                .with_blend_targets(vec![pso::ColorBlendDesc(
-                    pso::ColorMask::ALL,
-                    pso::BlendState::ALPHA,
-                )]),
+                .with_blend_targets(vec![pso::ColorBlendDesc {
+                    mask: pso::ColorMask::ALL,
+                    blend: Some(pso::BlendState::ALPHA),
+                }]),
         )
         .build(factory, None);
 

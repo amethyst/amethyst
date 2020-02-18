@@ -16,7 +16,6 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use bytes::Bytes;
-use log::error;
 use std::{io, net::UdpSocket};
 
 /// Use this network bundle to add the UDP transport layer to your game.
@@ -40,17 +39,22 @@ impl<'a, 'b> SystemBundle<'a, 'b> for UdpNetworkBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
-        builder.add(UdpNetworkSendSystem, NETWORK_SEND_SYSTEM_NAME, &[]);
-        builder.add(
-            UdpNetworkRecvSystem::with_buffer_capacity(self.recv_buffer_size_bytes),
-            NETWORK_RECV_SYSTEM_NAME,
-            &[],
-        );
         builder.add(
             NetworkSimulationTimeSystem,
             NETWORK_SIM_TIME_SYSTEM_NAME,
-            &[NETWORK_SEND_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME],
+            &[],
         );
+        builder.add(
+            UdpNetworkRecvSystem::with_buffer_capacity(self.recv_buffer_size_bytes),
+            NETWORK_RECV_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+        builder.add(
+            UdpNetworkSendSystem,
+            NETWORK_SEND_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+
         world.insert(UdpSocketResource::new(self.socket));
         Ok(())
     }
@@ -63,16 +67,17 @@ impl<'s> System<'s> for UdpNetworkSendSystem {
         Write<'s, TransportResource>,
         Write<'s, UdpSocketResource>,
         Read<'s, NetworkSimulationTime>,
+        Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
-    fn run(&mut self, (mut transport, mut socket, sim_time): Self::SystemData) {
+    fn run(&mut self, (mut transport, mut socket, sim_time, mut channel): Self::SystemData) {
         if let Some(socket) = socket.get_mut() {
             let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
-            for message in messages.iter() {
+            for message in messages {
                 match message.delivery {
                     DeliveryRequirement::Unreliable | DeliveryRequirement::Default => {
                         if let Err(e) = socket.send_to(&message.payload, message.destination) {
-                            error!("There was an error when attempting to send packet: {:?}", e);
+                            channel.single_write(NetworkSimulationEvent::SendError(e, message));
                         }
                     }
                     delivery => panic!(
@@ -111,14 +116,14 @@ impl<'s> System<'s> for UdpNetworkRecvSystem {
                     Ok((recv_len, address)) => {
                         let event = NetworkSimulationEvent::Message(
                             address,
-                            Bytes::from(&self.recv_buffer[..recv_len]),
+                            Bytes::copy_from_slice(&self.recv_buffer[..recv_len]),
                         );
                         // TODO: Handle other types of events.
                         event_channel.single_write(event);
                     }
                     Err(e) => {
                         if e.kind() != io::ErrorKind::WouldBlock {
-                            error!("Encountered an error receiving data: {:?}", e);
+                            event_channel.single_write(NetworkSimulationEvent::RecvError(e));
                         }
                         break;
                     }
@@ -143,6 +148,11 @@ impl UdpSocketResource {
     /// Create a new instance of the `UdpSocketResource`
     pub fn new(socket: Option<UdpSocket>) -> Self {
         Self { socket }
+    }
+
+    /// Returns an immutable reference to the socket if there is one configured.
+    pub fn get(&self) -> Option<&UdpSocket> {
+        self.socket.as_ref()
     }
 
     /// Returns a mutable reference to the socket if there is one configured.

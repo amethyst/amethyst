@@ -13,10 +13,8 @@ use crate::{
 };
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    legion::{filter::filter_fns::component, resource::ResourceSet, IntoQuery, Read, World},
-    par_tools::IntoSeqIterator,
-    transform::Transform,
-    Allocators, Hidden, HiddenPropagate,
+    legion::prelude::*, par_tools::IntoSeqIterator, transform::Transform, Allocators, Hidden,
+    HiddenPropagate,
 };
 use derivative::Derivative;
 use rayon::prelude::*;

@@ -3,7 +3,7 @@ pub use log::LevelFilter;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use std::{env, fmt, io, path::PathBuf, str::FromStr};
+use std::{borrow::Cow, env, fmt, io, path::PathBuf, str::FromStr};
 
 /// An enum that contains options for logging to the terminal.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -18,6 +18,7 @@ pub enum StdoutLog {
 
 /// Logger configuration object.
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct LoggerConfig {
     /// Determines whether to log to the terminal or not.
     pub stdout: StdoutLog,
@@ -27,8 +28,12 @@ pub struct LoggerConfig {
     pub log_file: Option<PathBuf>,
     /// If set, allows the config values to be overriden via the corresponding environmental variables.
     pub allow_env_override: bool,
-    /// Sets a different level for gfx_device_gl if Some
-    pub log_gfx_device_level: Option<LevelFilter>,
+    /// Sets a different level for gfx_backend if Some
+    pub log_gfx_backend_level: Option<LevelFilter>,
+    /// Sets a different level for gfx_rendy if Some
+    pub log_gfx_rendy_level: Option<LevelFilter>,
+    /// Sets the levels for specific modules.
+    pub module_levels: Vec<(String, LevelFilter)>,
 }
 
 impl Default for LoggerConfig {
@@ -38,7 +43,9 @@ impl Default for LoggerConfig {
             level_filter: LevelFilter::Info,
             log_file: None,
             allow_env_override: true,
-            log_gfx_device_level: Some(LevelFilter::Warn),
+            log_gfx_backend_level: Some(LevelFilter::Warn),
+            log_gfx_rendy_level: Some(LevelFilter::Warn),
+            module_levels: Vec::new(),
         }
     }
 }
@@ -110,10 +117,44 @@ impl Logger {
             StdoutLog::Off => {}
         }
 
-        if let Some(log_gfx_device_level) = config.log_gfx_device_level {
+        if let Some(log_gfx_backend_level) = config.log_gfx_backend_level {
             logger.dispatch = logger
                 .dispatch
-                .level_for("gfx_device_gl", log_gfx_device_level);
+                .level_for("gfx_backend_empty", log_gfx_backend_level)
+                .level_for("gfx_backend_vulkan", log_gfx_backend_level)
+                .level_for("gfx_backend_dx12", log_gfx_backend_level)
+                .level_for("gfx_backend_metal", log_gfx_backend_level)
+        } else {
+            logger.dispatch = logger
+                .dispatch
+                .level_for("gfx_backend_empty", LevelFilter::Warn)
+                .level_for("gfx_backend_vulkan", LevelFilter::Warn)
+                .level_for("gfx_backend_dx12", LevelFilter::Warn)
+                .level_for("gfx_backend_metal", LevelFilter::Warn)
+        }
+
+        if let Some(log_gfx_rendy_level) = config.log_gfx_rendy_level {
+            logger.dispatch = logger
+                .dispatch
+                .level_for("rendy_factory::factory", log_gfx_rendy_level)
+                .level_for("rendy_memory::allocator::dynamic", log_gfx_rendy_level)
+                .level_for("rendy_graph::node::render::pass", log_gfx_rendy_level)
+                .level_for("rendy_graph::graph", log_gfx_rendy_level)
+                .level_for("rendy_memory::allocator::linear", log_gfx_rendy_level)
+                .level_for("rendy_wsi", log_gfx_rendy_level);
+        } else {
+            logger.dispatch = logger
+                .dispatch
+                .level_for("rendy_factory::factory", LevelFilter::Warn)
+                .level_for("rendy_memory::allocator::dynamic", LevelFilter::Warn)
+                .level_for("rendy_graph::node::render::pass", LevelFilter::Warn)
+                .level_for("rendy_graph::graph", LevelFilter::Warn)
+                .level_for("rendy_memory::allocator::linear", LevelFilter::Warn)
+                .level_for("rendy_wsi", LevelFilter::Warn);
+        }
+
+        for (module, level) in config.module_levels.into_iter() {
+            logger.dispatch = logger.dispatch.level_for(Cow::Owned(module), level);
         }
 
         if let Some(path) = config.log_file {
@@ -144,11 +185,7 @@ impl Logger {
     }
 
     /// Set individual log levels for modules.
-    pub fn level_for<T: Into<std::borrow::Cow<'static, str>>>(
-        mut self,
-        module: T,
-        level: LevelFilter,
-    ) -> Self {
+    pub fn level_for<T: Into<Cow<'static, str>>>(mut self, module: T, level: LevelFilter) -> Self {
         self.dispatch = self.dispatch.level_for(module, level);
         self
     }

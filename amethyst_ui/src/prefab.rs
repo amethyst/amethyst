@@ -23,8 +23,8 @@ use amethyst_rendy::TexturePrefab;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    get_default_font, Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, TextEditing,
-    UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiImage,
+    get_default_font, Anchor, Draggable, FontAsset, Interactable, LineMode, Selectable, Stretch,
+    TextEditing, UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiImage,
     UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
 
@@ -52,6 +52,10 @@ pub struct UiTransformData<G> {
     /// the next element (for example, the text on a button).
     #[derivative(Default(value = "true"))]
     pub opaque: bool,
+    /// Allows transparent (`opaque = false`) transforms to still be targeted by the events that
+    /// pass through them.
+    #[derivative(Default(value = "false"))]
+    pub transparent_target: bool,
     /// Renders this UI element by evaluating transform as a percentage of the parent size,
     /// rather than rendering it with pixel units.
     pub percent: bool,
@@ -75,6 +79,8 @@ pub struct UiTransformData<G> {
     /// this ordering backwards.
     // TODO: Make full prefab for Selectable.
     pub selectable: Option<u32>,
+    /// Makes the UiTransform draggable through mouse inputs.
+    pub draggable: bool,
     #[serde(skip)]
     _phantom: PhantomData<G>,
 }
@@ -144,6 +150,7 @@ where
         WriteStorage<'a, Interactable>,
         WriteStorage<'a, HiddenPropagate>,
         WriteStorage<'a, Selectable<G>>,
+        WriteStorage<'a, Draggable>,
     );
     type Result = ();
 
@@ -170,6 +177,7 @@ where
         if !self.opaque {
             transform = transform.into_transparent();
         }
+        transform.transparent_target = self.transparent_target;
         if self.percent {
             transform = transform.into_percent();
         }
@@ -184,6 +192,10 @@ where
 
         if let Some(u) = self.selectable {
             system_data.3.insert(entity, Selectable::<G>::new(u))?;
+        }
+
+        if self.draggable {
+            system_data.4.insert(entity, Draggable)?;
         }
 
         Ok(())
@@ -393,7 +405,7 @@ impl<'a> PrefabData<'a> for UiImagePrefab {
 }
 
 impl<'a> PrefabData<'a> for UiImageLoadPrefab {
-    type SystemData = (<TexturePrefab as PrefabData<'a>>::SystemData);
+    type SystemData = <TexturePrefab as PrefabData<'a>>::SystemData;
     type Result = UiImage;
 
     fn add_to_entity(
@@ -598,7 +610,7 @@ where
 
             on_click_stop.push(UiButtonAction {
                 target: entity,
-                event_type: UiButtonActionType::UnsetTexture(press_image.clone()),
+                event_type: UiButtonActionType::UnsetTexture(press_image),
             });
         }
 
@@ -610,7 +622,7 @@ where
 
             on_hover_stop.push(UiButtonAction {
                 target: entity,
-                event_type: UiButtonActionType::UnsetTexture(hover_image.clone()),
+                event_type: UiButtonActionType::UnsetTexture(hover_image),
             });
         }
 

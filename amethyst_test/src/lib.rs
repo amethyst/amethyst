@@ -71,9 +71,7 @@
 //!     );
 //! }
 //! #
-//! # fn main() {
-//! #     loading_state_adds_load_resource();
-//! # }
+//! # loading_state_adds_load_resource();
 //! ```
 //!
 //! The Amethyst application is initialized with one of the following functions, each providing a
@@ -212,9 +210,7 @@
 //!     );
 //! }
 //! #
-//! # fn main() {
-//! #     bundle_registers_system_with_resource();
-//! # }
+//! # bundle_registers_system_with_resource();
 //! ```
 //!
 //! Testing a system:
@@ -270,9 +266,7 @@
 //!     );
 //! }
 //! #
-//! # fn main() {
-//! #     system_increases_component_value_by_one();
-//! # }
+//! # system_increases_component_value_by_one();
 //! ```
 //!
 //! Testing a System in a custom dispatcher. This is useful when your system must run *after* some
@@ -318,9 +312,7 @@
 //!     );
 //! }
 //! #
-//! # fn main() {
-//! #     system_increases_resource_value_by_one();
-//! # }
+//! # system_increases_resource_value_by_one();
 //! ```
 
 pub use crate::{

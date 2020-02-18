@@ -59,17 +59,17 @@ use crate::{
 use thread_profiler::profile_scope;
 
 lazy_static::lazy_static! {
-    static ref VERTEX: SpirvShader = SpirvShader::new(
-        include_bytes!("../compiled/tiles.vert.spv").to_vec(),
+    static ref VERTEX: SpirvShader = SpirvShader::from_bytes(
+        include_bytes!("../compiled/tiles.vert.spv"),
         ShaderStageFlags::VERTEX,
         "main",
-    );
+    ).unwrap();
 
-    static ref FRAGMENT: SpirvShader = SpirvShader::new(
-        include_bytes!("../compiled/tiles.frag.spv").to_vec(),
+    static ref FRAGMENT: SpirvShader = SpirvShader::from_bytes(
+        include_bytes!("../compiled/tiles.frag.spv"),
         ShaderStageFlags::FRAGMENT,
         "main",
-    );
+    ).unwrap();
 
     static ref SHADERS: ShaderSetBuilder = ShaderSetBuilder::default()
         .with_vertex(&*VERTEX).unwrap()
@@ -372,11 +372,11 @@ fn build_tiles_pipeline<B: Backend>(
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
-                .with_blend_targets(vec![pso::ColorBlendDesc(
-                    pso::ColorMask::ALL,
-                    pso::BlendState::PREMULTIPLIED_ALPHA,
-                )])
-                .with_depth_test(pso::DepthTest::On {
+                .with_blend_targets(vec![pso::ColorBlendDesc {
+                    mask: pso::ColorMask::ALL,
+                    blend: Some(pso::BlendState::PREMULTIPLIED_ALPHA),
+                }])
+                .with_depth_test(pso::DepthTest {
                     fun: pso::Comparison::Less,
                     write: false,
                 }),
@@ -417,6 +417,7 @@ pub struct RenderTiles2D<
 
 impl<T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderTiles2D<T, E, Z> {
     /// Select render target on which Tiles should be rendered.
+    #[must_use]
     pub fn with_target(mut self, target: Target) -> Self {
         self.target = target;
         self

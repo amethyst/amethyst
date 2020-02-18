@@ -1,36 +1,8 @@
 #version 450
 
-struct PointLight {
-    vec3 position;
-    vec3 color;
-    float intensity;
-};
+#include "header/math.frag"
 
-struct DirectionalLight {
-    vec3 color;
-    float intensity;
-    vec3 direction;
-};
-
-layout(set = 0, binding = 1) uniform Environment {
-    vec3 ambient_color;
-    vec3 camera_position; 
-    int point_light_count;
-    int directional_light_count;
-};
-
-layout(set = 0, binding = 2) uniform PointLights {
-    PointLight plight[128];
-};
-
-layout(set = 0, binding = 3) uniform DirectionalLights {
-    DirectionalLight dlight[16];
-};
-
-struct UvOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-};
+#include "header/environment.frag"
 
 layout(set = 1, binding = 0) uniform Material {
     UvOffset uv_offset;
@@ -49,16 +21,9 @@ layout(location = 0) in VertexData {
 
 layout(location = 0) out vec4 out_color;
 
-float tex_coord(float coord, vec2 offset) {
-    return offset.x + coord * (offset.y - offset.x);
-}
-
-vec2 tex_coords(vec2 coord, vec2 u, vec2 v) {
-    return vec2(tex_coord(coord.x, u), tex_coord(coord.y, v));
-}
 
 void main() {
-    vec2 final_tex_coords   = tex_coords(vertex.tex_coord, uv_offset.u_offset, uv_offset.v_offset);
+    vec2 final_tex_coords   = tex_coords(vertex.tex_coord, uv_offset);
     vec4 albedo_alpha       = texture(albedo, final_tex_coords);
     float alpha             = albedo_alpha.a;
     if(alpha < alpha_cutoff) discard;

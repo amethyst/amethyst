@@ -1,13 +1,6 @@
 use crate::resources::ScreenDimensions;
 use amethyst_config::Config;
-use amethyst_core::{
-    legion::{
-        schedule::{Runnable, Schedulable},
-        system::SystemBuilder,
-        World,
-    },
-    shrev::EventChannel,
-};
+use amethyst_core::{legion::prelude::*, shrev::EventChannel};
 use std::path::Path;
 use winit::{Event, EventsLoop, Window};
 
@@ -41,7 +34,11 @@ pub mod window_system {
         screen_dimensions.update_hidpi_factor(hidpi);
     }
 
-    pub fn build(world: &mut World, window: Window) -> Box<dyn Schedulable> {
+    pub fn build(
+        world: &mut World,
+        resources: &mut Resources,
+        window: Window,
+    ) -> Box<dyn Schedulable> {
         let (width, height) = window
             .get_inner_size()
             .expect("Window closed during initialization!")
@@ -49,11 +46,9 @@ pub mod window_system {
 
         let hidpi = window.get_hidpi_factor();
 
-        world
-            .resources
-            .insert(ScreenDimensions::new(width, height, hidpi));
+        resources.insert(ScreenDimensions::new(width, height, hidpi));
 
-        world.resources.insert(window);
+        resources.insert(window);
 
         SystemBuilder::<()>::new("WindowSystem")
             .write_resource::<ScreenDimensions>()
@@ -69,7 +64,11 @@ pub mod events_loop_system {
     use super::*;
 
     /// Creates a new `EventsLoopSystem` using the provided `EventsLoop`
-    pub fn build(world: &mut World, events_loop: EventsLoop) -> Box<dyn Runnable> {
+    pub fn build(
+        world: &mut World,
+        resources: &mut Resources,
+        events_loop: EventsLoop,
+    ) -> Box<dyn Runnable> {
         pub struct State {
             events_loop: EventsLoop,
             events: Vec<Event>,

@@ -1,72 +1,149 @@
-use super::*;
-use crate::{
-    legion::{Executor, World},
-    transform::Transform,
-    ArcThreadPool, SystemBundle as SpecsSystemBundle, Time,
-};
-use amethyst_error::Error;
-use legion::schedule::Schedulable;
+use legion::prelude::*;
 use std::collections::BTreeMap;
 
-pub trait ConsumeDesc {
-    fn consume(
-        self: Box<Self>,
-        world: &mut legion::world::World,
-        stages: &mut DispatcherData,
+pub trait SystemBundle {
+    fn build(
+        self,
+        world: &mut World,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), amethyst_error::Error>;
 }
 
-pub trait ThreadLocal {
-    fn run(&mut self, world: &mut World);
-    fn dispose(self: Box<Self>, world: &mut World);
-}
-
-impl<F> ThreadLocal for F
+impl<T> ConsumeDesc for T
 where
-    F: FnMut(&mut World) + 'static,
+    T: SystemBundle,
 {
-    fn run(&mut self, world: &mut World) {
-        (self)(world)
-    }
-    fn dispose(self: Box<Self>, world: &mut World) {}
-}
-
-impl Into<Box<dyn ThreadLocal>> for Box<dyn Runnable> {
-    fn into(self) -> Box<dyn ThreadLocal> {
-        Box::new(move |world: &mut World| {
-            self.run(world);
-        })
+    fn consume(
+        self: Box<Self>,
+        world: &mut World,
+        resources: &mut Resources,
+        _: &mut DispatcherData,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        self.build(world, resources, builder)
     }
 }
 
-pub struct ThreadLocalObject<S, F, D>(pub S, pub F, pub D);
-impl<S, F, D> ThreadLocalObject<S, F, D>
+pub struct SystemBundleFn<F>(F);
+impl<F> ConsumeDesc for SystemBundleFn<F>
 where
-    S: 'static,
-    F: FnMut(&mut S, &mut World) + 'static,
-    D: FnOnce(S, &mut World) + 'static,
+    F: FnOnce(
+        &mut World,
+        &mut Resources,
+        &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error>,
 {
-    pub fn build(initial_state: S, run_fn: F, dispose_fn: D) -> Box<dyn ThreadLocal> {
-        Box::new(Self(initial_state, run_fn, dispose_fn))
-    }
-}
-impl<S, F, D> ThreadLocal for ThreadLocalObject<S, F, D>
-where
-    S: 'static,
-    F: FnMut(&mut S, &mut World) + 'static,
-    D: FnOnce(S, &mut World) + 'static,
-{
-    fn run(&mut self, world: &mut World) {
-        (self.1)(&mut self.0, world)
-    }
-    fn dispose(self: Box<Self>, world: &mut World) {
-        (self.2)(self.0, world)
+    fn consume(
+        self: Box<Self>,
+        world: &mut World,
+        resources: &mut Resources,
+        _: &mut DispatcherData,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        (self.0)(world, resources, builder)
     }
 }
 
-pub trait IntoRelativeStage: Copy {
-    fn into_relative(self) -> RelativeStage;
+pub struct DispatcherSystem<F>(RelativeStage, F);
+impl<F> ConsumeDesc for DispatcherSystem<F>
+where
+    F: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>,
+{
+    fn consume(
+        self: Box<Self>,
+        world: &mut World,
+        resources: &mut Resources,
+        dispatcher: &mut DispatcherData,
+        _: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        let sys = (self.1)(world, resources);
+
+        dispatcher
+            .stages
+            .entry(self.0)
+            .or_insert_with(Vec::default)
+            .push(DispatcherEntry::System(sys));
+
+        Ok(())
+    }
+}
+
+pub struct DispatcherThreadLocalSystem<F>(RelativeStage, F);
+impl<F> ConsumeDesc for DispatcherThreadLocalSystem<F>
+where
+    F: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable>,
+{
+    fn consume(
+        self: Box<Self>,
+        world: &mut World,
+        resources: &mut Resources,
+        dispatcher: &mut DispatcherData,
+        _: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        let sys = (self.1)(world, resources);
+
+        dispatcher
+            .stages
+            .entry(self.0)
+            .or_insert_with(Vec::default)
+            .push(DispatcherEntry::ThreadLocalSystem(sys));
+
+        Ok(())
+    }
+}
+
+pub struct DispatcherThreadLocal<F>(RelativeStage, F);
+impl<F> ConsumeDesc for DispatcherThreadLocal<F>
+where
+    F: FnOnce(&mut World, &mut Resources) -> Box<dyn FnMut(&mut World, &mut Resources)>,
+{
+    fn consume(
+        self: Box<Self>,
+        world: &mut World,
+        resources: &mut Resources,
+        dispatcher: &mut DispatcherData,
+        _: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        let sys = (self.1)(world, resources);
+
+        dispatcher
+            .stages
+            .entry(self.0)
+            .or_insert_with(Vec::default)
+            .push(DispatcherEntry::ThreadLocal(sys));
+
+        Ok(())
+    }
+}
+
+pub struct DispatcherFlush(RelativeStage);
+impl ConsumeDesc for DispatcherFlush {
+    fn consume(
+        self: Box<Self>,
+        _: &mut World,
+        _: &mut Resources,
+        dispatcher: &mut DispatcherData,
+        _: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error> {
+        dispatcher
+            .stages
+            .entry(self.0)
+            .or_insert_with(Vec::default)
+            .push(DispatcherEntry::Flush);
+
+        Ok(())
+    }
+}
+
+pub trait ConsumeDesc {
+    fn consume(
+        self: Box<Self>,
+        world: &mut World,
+        resources: &mut Resources,
+        stages: &mut DispatcherData,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), amethyst_error::Error>;
 }
 
 #[derive(
@@ -74,12 +151,14 @@ pub trait IntoRelativeStage: Copy {
 )]
 pub enum Stage {
     Begin,
+    AI,
     Logic,
     Render,
     ThreadLocal,
+    End,
 }
-impl IntoRelativeStage for Stage {
-    fn into_relative(self) -> RelativeStage {
+impl Into<RelativeStage> for Stage {
+    fn into(self) -> RelativeStage {
         RelativeStage(self, 0)
     }
 }
@@ -95,16 +174,7 @@ impl RelativeStage {
         self.1
     }
 }
-impl IntoRelativeStage for RelativeStage {
-    fn into_relative(self) -> RelativeStage {
-        self
-    }
-}
-impl From<Stage> for RelativeStage {
-    fn from(other: Stage) -> Self {
-        RelativeStage(other, 0)
-    }
-}
+
 impl PartialOrd for RelativeStage {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
@@ -119,67 +189,52 @@ impl Ord for RelativeStage {
 }
 
 pub struct Dispatcher {
-    executor: Executor,
+    schedule: Schedule,
     pub defrag_budget: Option<usize>,
-    pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
 }
 impl Dispatcher {
-    pub fn run(&mut self, world: &mut World) {
-        let thread_pool = world.resources.get::<ArcThreadPool>().unwrap().clone();
+    pub fn run(&mut self, world: &mut World, resources: &mut Resources) {
+        self.schedule.execute(world, resources);
 
-        self.executor.execute(world);
-
-        self.thread_locals
-            .iter_mut()
-            .for_each(|local| local.run(world));
-
-        //world.defrag(self.defrag_budget);
+        world.defrag(self.defrag_budget);
     }
-    pub fn dispose(mut self, world: &mut World) {
-        self.thread_locals
-            .drain(..)
-            .for_each(|local| local.dispose(world));
+}
 
-        self.executor
-            .into_vec()
-            .into_iter()
-            .for_each(|system| system.dispose(world));
-    }
+pub enum DispatcherEntry {
+    System(Box<dyn Schedulable>),
+    ThreadLocal(Box<dyn FnMut(&mut World, &mut Resources)>),
+    ThreadLocalSystem(Box<dyn Runnable>),
+    Flush,
 }
 
 #[derive(Default)]
 pub struct DispatcherData {
     pub defrag_budget: Option<usize>,
-    pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
-    pub(crate) stages: BTreeMap<RelativeStage, Vec<Box<dyn legion::schedule::Schedulable>>>,
+    pub(crate) stages: BTreeMap<RelativeStage, Vec<DispatcherEntry>>,
 }
 impl DispatcherData {
-    pub fn flatten(mut self) -> Dispatcher {
-        let mut sorted_systems = Vec::with_capacity(128);
-        self.stages
-            .into_iter()
-            .for_each(|(_, mut v)| v.drain(..).for_each(|sys| sorted_systems.push(sys)));
-
-        log::trace!("Sorted {} systems", sorted_systems.len());
-        if log::log_enabled!(log::Level::Trace) {
-            sorted_systems.iter().for_each(|system| {
-                log::trace!("System: {}", system.name());
-            });
+    pub fn flatten(self) -> Result<Dispatcher, amethyst_error::Error> {
+        let mut builder = Schedule::builder();
+        for (_, mut v) in self.stages {
+            for entry in v.drain(..) {
+                match entry {
+                    DispatcherEntry::System(sys) => builder = builder.add_system(sys),
+                    DispatcherEntry::ThreadLocal(sys) => builder = builder.add_thread_local_fn(sys),
+                    DispatcherEntry::ThreadLocalSystem(sys) => {
+                        builder = builder.add_thread_local(sys)
+                    }
+                    DispatcherEntry::Flush => builder = builder.flush(),
+                }
+            }
         }
-
-        let executor = Executor::new(sorted_systems);
-
-        Dispatcher {
+        Ok(Dispatcher {
             defrag_budget: self.defrag_budget,
-            thread_locals: self.thread_locals,
-            executor,
-        }
+            schedule: builder.build(),
+        })
     }
 
-    pub fn merge(mut self, mut other: DispatcherData) -> Self {
-        self.thread_locals.extend(other.thread_locals.drain(..));
-
-        for (k, mut v) in other.stages.iter_mut() {
+    pub fn merge(mut self, mut other: Self) -> Self {
+        for (k, v) in &mut other.stages {
             self.stages
                 .entry(*k)
                 .or_insert_with(Vec::default)
@@ -193,7 +248,6 @@ impl DispatcherData {
 pub struct DispatcherBuilder<'a> {
     pub(crate) defrag_budget: Option<usize>,
     pub(crate) systems: Vec<(RelativeStage, Box<dyn ConsumeDesc + 'a>)>,
-    pub(crate) thread_locals: Vec<Box<dyn ConsumeDesc + 'a>>,
     pub(crate) bundles: Vec<Box<dyn ConsumeDesc + 'a>>,
 }
 impl<'a> Default for DispatcherBuilder<'a> {
@@ -202,58 +256,96 @@ impl<'a> Default for DispatcherBuilder<'a> {
         Self {
             defrag_budget: None,
             systems: Vec::with_capacity(128),
-            thread_locals: Vec::with_capacity(128),
             bundles: Vec::with_capacity(128),
         }
     }
 }
 impl<'a> DispatcherBuilder<'a> {
-    pub fn add_thread_local<T: FnOnce(&mut World) -> Box<dyn ThreadLocal> + 'a>(
-        &mut self,
-        desc: T,
-    ) {
-        self.thread_locals
-            .push((Box::new(DispatcherThreadLocal(desc)) as Box<dyn ConsumeDesc>));
+    pub fn add_flush<S: Copy + Into<RelativeStage>>(&mut self, stage: S) {
+        self.systems.push((
+            stage.into(),
+            Box::new(DispatcherFlush(stage.into())) as Box<dyn ConsumeDesc>,
+        ));
     }
 
-    pub fn with_thread_local<T: FnOnce(&mut World) -> Box<dyn ThreadLocal> + 'a>(
-        mut self,
-        desc: T,
-    ) -> Self {
-        self.add_thread_local(desc);
+    pub fn with_flush<S: Copy + Into<RelativeStage>>(mut self, stage: S) -> Self {
+        self.add_flush(stage);
 
         self
     }
 
-    pub fn add_thread_local_system<T: FnOnce(&mut World) -> Box<dyn Runnable> + 'a>(
-        &mut self,
-        desc: T,
-    ) {
-        self.thread_locals
-            .push((Box::new(DispatcherThreadLocalSystem(desc)) as Box<dyn ConsumeDesc>));
-    }
-
-    pub fn with_thread_local_system<T: FnOnce(&mut World) -> Box<dyn Runnable> + 'a>(
-        mut self,
-        desc: T,
-    ) -> Self {
-        self.add_thread_local_system(desc);
-
-        self
-    }
-
-    pub fn add_system<S: IntoRelativeStage, T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
+    pub fn add_thread_local_fn<
+        S: Copy + Into<RelativeStage>,
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn FnMut(&mut World, &mut Resources)> + 'a,
+    >(
         &mut self,
         stage: S,
         desc: T,
     ) {
         self.systems.push((
-            stage.into_relative(),
-            Box::new(DispatcherSystem(stage.into_relative(), desc)) as Box<dyn ConsumeDesc>,
+            stage.into(),
+            Box::new(DispatcherThreadLocal(stage.into(), desc)) as Box<dyn ConsumeDesc>,
         ));
     }
 
-    pub fn with_system<S: IntoRelativeStage, T: FnOnce(&mut World) -> Box<dyn Schedulable> + 'a>(
+    pub fn with_thread_local_fn<
+        S: Copy + Into<RelativeStage>,
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn FnMut(&mut World, &mut Resources)> + 'a,
+    >(
+        mut self,
+        stage: S,
+        desc: T,
+    ) -> Self {
+        self.add_thread_local_fn(stage, desc);
+
+        self
+    }
+
+    pub fn add_thread_local_system<
+        S: Copy + Into<RelativeStage>,
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a,
+    >(
+        &mut self,
+        stage: S,
+        desc: T,
+    ) {
+        self.systems.push((
+            stage.into(),
+            Box::new(DispatcherThreadLocalSystem(stage.into(), desc)) as Box<dyn ConsumeDesc>,
+        ));
+    }
+
+    pub fn with_thread_local_system<
+        S: Copy + Into<RelativeStage>,
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a,
+    >(
+        mut self,
+        stage: S,
+        desc: T,
+    ) -> Self {
+        self.add_thread_local_system(stage, desc);
+
+        self
+    }
+
+    pub fn add_system<
+        S: Copy + Into<RelativeStage>,
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a,
+    >(
+        &mut self,
+        stage: S,
+        desc: T,
+    ) {
+        self.systems.push((
+            stage.into(),
+            Box::new(DispatcherSystem(stage.into(), desc)) as Box<dyn ConsumeDesc>,
+        ));
+    }
+
+    pub fn with_system<
+        S: Copy + Into<RelativeStage>,
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a,
+    >(
         mut self,
         stage: S,
         desc: T,
@@ -263,12 +355,32 @@ impl<'a> DispatcherBuilder<'a> {
         self
     }
 
-    pub fn add_bundle<T: SystemBundle + 'a>(&mut self, bundle: T) {
+    pub fn add_bundle<
+        F: FnOnce(
+                &mut World,
+                &mut Resources,
+                &mut DispatcherBuilder,
+            ) -> Result<(), amethyst_error::Error>
+            + 'a,
+    >(
+        &mut self,
+        bundle: F,
+    ) {
         self.bundles
-            .push(Box::new(DispatcherSystemBundle(bundle)) as Box<dyn ConsumeDesc>);
+            .push(Box::new(SystemBundleFn(bundle)) as Box<dyn ConsumeDesc>);
     }
 
-    pub fn with_bundle<T: SystemBundle + 'a>(mut self, bundle: T) -> Self {
+    pub fn with_bundle<
+        F: FnOnce(
+                &mut World,
+                &mut Resources,
+                &mut DispatcherBuilder,
+            ) -> Result<(), amethyst_error::Error>
+            + 'a,
+    >(
+        mut self,
+        bundle: F,
+    ) -> Self {
         self.add_bundle(bundle);
 
         self
@@ -284,36 +396,43 @@ impl<'a> DispatcherBuilder<'a> {
         self.systems.is_empty() && self.bundles.is_empty()
     }
 
-    fn build_data(&mut self, world: &mut legion::world::World) -> DispatcherData {
+    fn build_data(&mut self, world: &mut World, resources: &mut Resources) -> DispatcherData {
         let mut dispatcher_data = DispatcherData::default();
 
         for bundle in self.bundles.drain(..) {
             let mut recursive_builder = DispatcherBuilder::default();
             bundle
-                .consume(world, &mut dispatcher_data, &mut recursive_builder)
+                .consume(
+                    world,
+                    resources,
+                    &mut dispatcher_data,
+                    &mut recursive_builder,
+                )
                 .unwrap();
-            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world));
-        }
-
-        for desc in self.thread_locals.drain(..) {
-            let mut recursive_builder = DispatcherBuilder::default();
-            desc.consume(world, &mut dispatcher_data, &mut recursive_builder)
-                .unwrap();
-            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world));
+            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
         }
 
         for desc in self.systems.drain(..) {
             let mut recursive_builder = DispatcherBuilder::default();
             desc.1
-                .consume(world, &mut dispatcher_data, &mut recursive_builder)
+                .consume(
+                    world,
+                    resources,
+                    &mut dispatcher_data,
+                    &mut recursive_builder,
+                )
                 .unwrap();
-            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world));
+            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
         }
 
         dispatcher_data
     }
 
-    pub fn build(mut self, world: &mut legion::world::World) -> Dispatcher {
-        self.build_data(world).flatten()
+    pub fn build(
+        mut self,
+        world: &mut World,
+        resources: &mut Resources,
+    ) -> Result<Dispatcher, amethyst_error::Error> {
+        self.build_data(world, resources).flatten()
     }
 }

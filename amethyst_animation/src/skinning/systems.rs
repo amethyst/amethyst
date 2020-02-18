@@ -1,10 +1,9 @@
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, SystemData, World,
-        WriteStorage,
+        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, SystemData, WriteStorage,
     },
     math::{convert, Matrix4},
-    SystemDesc, Transform,
+    Transform,
 };
 use amethyst_derive::SystemDesc;
 use amethyst_rendy::skinning::JointTransforms;
@@ -96,7 +95,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
                     })
                     .flatten()
                     .map(|(global, inverse_bind_matrix)| {
-                        (global.global_matrix() * inverse_bind_matrix * bind_shape)
+                        global.global_matrix() * inverse_bind_matrix * bind_shape
                     }),
             );
 

@@ -62,6 +62,7 @@ pub struct TileArgs {
 }
 
 impl AsVertex for TileArgs {
+    #[must_use]
     fn vertex() -> VertexFormat {
         VertexFormat::new((
             (Format::Rg32Sfloat, "u_offset"),

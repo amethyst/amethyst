@@ -154,13 +154,13 @@ impl Orthographic {
     /// Returns the distance between the viewer (the origin) and the closest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the closest clipping plane.
     #[inline]
     pub fn near(&self) -> f32 {
-        (self.matrix[(2, 3)] / self.matrix[(2, 2)])
+        self.matrix[(2, 3)] / self.matrix[(2, 2)]
     }
 
     /// Returns the distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
     #[inline]
     pub fn far(&self) -> f32 {
-        ((-1.0 + self.matrix[(2, 3)]) / self.matrix[(2, 2)])
+        (-1.0 + self.matrix[(2, 3)]) / self.matrix[(2, 2)]
     }
 
     /// Sets the y-coordinate of the cuboid leftmost face parallel to the xz-plane.
@@ -275,7 +275,7 @@ impl Perspective {
     /// # Arguments
     ///
     /// * aspect - Aspect Ratio represented as a `f32` ratio.
-    /// * fov - Field of View represented in degrees
+    /// * fov - Field of View represented in radians
     /// * z_near - Near clip plane distance
     /// * z_far - Far clip plane distance
     ///
@@ -324,7 +324,7 @@ impl Perspective {
     /// Returns the near-clip value.
     #[inline]
     pub fn near(&self) -> f32 {
-        (self.matrix[(2, 3)] / self.matrix[(2, 2)])
+        self.matrix[(2, 3)] / self.matrix[(2, 2)]
     }
 
     /// Returns the far-clip value.
@@ -623,8 +623,9 @@ impl Projection {
         screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
     ) -> Point2<f32> {
+        let transformation_matrix = camera_transform.global_matrix().try_inverse().unwrap();
         let screen_pos =
-            (camera_transform.global_matrix() * self.as_matrix()).transform_point(&world_position);
+            (self.as_matrix() * transformation_matrix).transform_point(&world_position);
 
         Point2::new(
             (screen_pos.x + 1.0) * screen_diagonal.x / 2.0,
