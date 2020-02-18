@@ -40,7 +40,7 @@ thread_profiler = { version = "0.3", optional = true }
 #legion = { git = "https://github.com/TomGillen/legion.git", optional = true }
 #legion_transform = { git = "https://github.com/AThilenius/legion_transform.git", optional = true }
 
-legion = { path = "../../legion", optional = true }
+legion = { version = "0.2", optional = true }
 legion_transform = { path = "../../legion_transform", optional = true }
 
 [dev-dependencies]
