@@ -1,14 +1,10 @@
 use crate::{config::DisplayConfig, legion::*};
 use amethyst_config::Config;
-use amethyst_core::{
-    legion::{
-        dispatcher::{Stage, SystemBundle},
-        prelude::*,
-    },
-    shrev::EventChannel,
+use amethyst_core::legion::{
+    dispatcher::{Stage, SystemBundle},
+    prelude::*,
 };
-use amethyst_error::Error;
-use winit::{Event, EventsLoop};
+use winit::EventsLoop;
 
 /// Screen width used in predefined display configuration.
 #[cfg(feature = "test-support")]
@@ -56,9 +52,9 @@ impl WindowBundle {
 impl SystemBundle for WindowBundle {
     fn build(
         self,
-        world: &mut World,
-        resources: &mut Resources,
-        builder: &mut DispatcherBuilder,
+        _: &mut World,
+        _: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error> {
         let event_loop = EventsLoop::new();
 

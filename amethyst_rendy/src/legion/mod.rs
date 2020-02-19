@@ -5,12 +5,8 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{self as specs, SystemData, WorldExt},
     legion::{dispatcher::DispatcherBuilder, sync::SyncDirection, LegionState, LegionSyncBuilder},
-    shrev::EventChannel,
-    SystemBundle,
 };
 
-use amethyst_error::Error;
-use amethyst_window::Event;
 use derivative::Derivative;
 use rendy::factory::Factory;
 use std::marker::PhantomData;
@@ -39,15 +35,12 @@ impl<B: Backend> LegionSyncBuilder for Syncer<B> {
         &mut self,
         specs_world: &mut specs::World,
         world: &mut LegionState,
-        dispatcher: &mut DispatcherBuilder,
+        dispatcher: &mut DispatcherBuilder<'_>,
     ) {
         crate::system::SetupData::setup(specs_world);
 
         specs_world.register::<ActiveCamera>();
-        world
-            .world
-            .resources
-            .insert(camera::ActiveCamera::default());
+        world.resources.insert(camera::ActiveCamera::default());
 
         world.add_component_sync_with(
             |direction,

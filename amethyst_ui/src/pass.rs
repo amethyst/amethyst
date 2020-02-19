@@ -64,11 +64,11 @@ impl RenderUi {
 impl<B: Backend> RenderPlugin<B> for RenderUi {
     fn on_build<'a, 'b>(
         &mut self,
-        world: &mut World,
+        state: &mut LegionState,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         builder.add(
-            UiGlyphsSystemDesc::<B>::default().build(world),
+            UiGlyphsSystemDesc::<B>::default().build(state),
             "ui_glyphs_system",
             &[],
         );
@@ -79,7 +79,7 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _world: &World,
+        _state: &LegionState,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(RenderOrder::Overlay, DrawUiDesc::new().builder())?;

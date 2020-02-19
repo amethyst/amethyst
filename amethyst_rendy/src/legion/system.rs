@@ -1,19 +1,11 @@
 //! Renderer system
 use crate::{
-    camera::{ActiveCamera, Camera},
-    debug_drawing::DebugLinesComponent,
-    light::Light,
-    mtl::{Material, MaterialDefaults},
-    resources::Tint,
-    skinning::JointTransforms,
-    sprite::SpriteRender,
-    transparent::Transparent,
+    mtl::Material,
     types::{Backend, Mesh, Texture},
-    visibility::Visibility,
 };
-use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
+use amethyst_assets::{AssetStorage, ProcessingState};
 use amethyst_core::{
-    legion::{self, command::CommandBuffer, Resources, SystemBuilder, World},
+    legion::{self, LegionState, Resources, SystemBuilder, World},
     timing::Time,
 };
 
@@ -33,19 +25,23 @@ use thread_profiler::profile_scope;
 pub trait GraphCreator<B: Backend>: Send {
     /// Check if graph needs to be rebuilt.
     /// This function is evaluated every frame before running the graph.
-    fn rebuild(&mut self, world: &World) -> bool;
+    fn rebuild(&mut self, world: &World, resources: &Resources) -> bool;
 
     /// Retrieve configured complete graph builder.
-    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World>;
+    fn builder(
+        &mut self,
+        factory: &mut Factory<B>,
+        world: &LegionState,
+    ) -> GraphBuilder<B, LegionState>;
 }
 
 struct RenderState<B: Backend, G> {
-    graph: Option<Graph<B, World>>,
+    graph: Option<Graph<B, LegionState>>,
     families: Families<B>,
     graph_creator: G,
 }
 
-fn rebuild_graph<B, G>(state: &mut RenderState<B, G>, world: &World)
+fn rebuild_graph<B, G>(state: &mut RenderState<B, G>, world: &LegionState)
 where
     B: Backend,
     G: GraphCreator<B>,
@@ -78,7 +74,7 @@ where
     state.graph = Some(graph);
 }
 
-fn run_graph<B, G>(state: &mut RenderState<B, G>, world: &World)
+fn run_graph<B, G>(state: &mut RenderState<B, G>, world: &LegionState)
 where
     B: Backend,
     G: GraphCreator<B>,
@@ -94,52 +90,52 @@ where
 
 pub fn build_rendering_system<B, G>(
     world: &mut World,
+    resources: &mut Resources,
     graph_creator: G,
     families: Families<B>,
-) -> Box<dyn ThreadLocal>
+) -> Box<dyn FnMut(&mut World, &mut Resources)>
 where
     B: Backend,
     G: 'static + GraphCreator<B>,
 {
-    ThreadLocalObject::build(
-        RenderState {
-            graph: None,
-            families,
-            graph_creator,
-        },
-        |state, world| {
-            let rebuild = state.graph_creator.rebuild(world);
-            if state.graph.is_none() || rebuild {
-                rebuild_graph(state, world);
-            }
-            run_graph(state, world);
-        },
-        move |state, world| {
-            let mut graph = state.graph;
-            if let Some(graph) = graph.take() {
-                let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
-                log::debug!("Dispose graph");
+    let mut state = RenderState {
+        graph: None,
+        families,
+        graph_creator,
+    };
 
-                graph.dispose(&mut factory, world);
-            }
+    let rebuild = state.graph_creator.rebuild(world, resources);
+    if state.graph.is_none() || rebuild {
+        rebuild_graph(&mut state, world);
+    }
+    run_graph(&mut state, world);
 
-            log::debug!("Unload resources");
-            if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Mesh>>() {
-                storage.unload_all();
-            }
-            if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Texture>>() {
-                storage.unload_all();
-            }
+    Box::new(move |state, world| {
+        let mut graph = state.graph;
+        if let Some(graph) = graph.take() {
+            let mut factory = world.resources.get_mut::<Factory<B>>().unwrap();
+            log::debug!("Dispose graph");
 
-            log::debug!("Drop families");
-            drop(state.families);
-        },
-    )
+            graph.dispose(&mut factory, world);
+        }
+
+        log::debug!("Unload resources");
+        if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Mesh>>() {
+            storage.unload_all();
+        }
+        if let Some(mut storage) = world.resources.get_mut::<AssetStorage<Texture>>() {
+            storage.unload_all();
+        }
+
+        log::debug!("Drop families");
+        drop(state.families);
+    })
 }
 
 /// Asset processing system for `Mesh` asset type.
 pub fn build_mesh_processor<B: Backend>(
     world: &mut legion::world::World,
+    resources: &mut legion::prelude::Resources,
 ) -> Box<dyn legion::prelude::Schedulable> {
     SystemBuilder::<()>::new("MeshProcessorSystem")
         .write_resource::<AssetStorage<Mesh>>()
@@ -176,6 +172,7 @@ pub fn build_mesh_processor<B: Backend>(
 /// Asset processing system for `Mesh` asset type.
 pub fn build_texture_processor<B: Backend>(
     world: &mut legion::world::World,
+    resources: &mut legion::prelude::Resources,
 ) -> Box<dyn legion::prelude::Schedulable> {
     SystemBuilder::<()>::new("TextureProcessorSystem")
         .write_resource::<AssetStorage<Texture>>()

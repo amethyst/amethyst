@@ -5,7 +5,6 @@ use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
     geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
-    transform::components::Transform,
 };
 use amethyst_error::Error;
 use derivative::Derivative;

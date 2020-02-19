@@ -74,7 +74,9 @@ where
                             *legion_state.get_component_mut::<T>(*legion_entity).unwrap() =
                                 (*component).clone();
                         } else {
-                            legion_state.add_component(*legion_entity, (*component).clone());
+                            legion_state
+                                .add_component(*legion_entity, (*component).clone())
+                                .unwrap();
                         }
                     }
                 }
@@ -82,7 +84,7 @@ where
             SyncDirection::LegionToSpecs => {
                 use legion::prelude::*;
                 let mut query = <(Read<T>)>::query();
-                for (entity, component) in query.iter_entities(legion_state) {
+                for (entity, component) in query.iter_entities_mut(legion_state) {
                     if let Some(specs_entity) = map.get_by_left(&entity) {
                         if let Some(specs_component) = storage.get_mut(*specs_entity) {
                             *specs_component = (*component).clone();
@@ -257,12 +259,12 @@ where
             .for_each(|new| legion_state.world.add_component(new.0, new.1).unwrap());
 
         new_specs.drain(..).for_each(|new| {
-            storage.insert(new.0, new.1);
+            storage.insert(new.0, new.1).unwrap();
         });
     }
 }
 
-#[derive(Derivative)]
+#[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct ResourceSyncer<T>(PhantomData<T>);
 impl<T> SyncerTrait for ResourceSyncer<T>

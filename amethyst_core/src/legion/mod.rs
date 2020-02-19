@@ -23,7 +23,7 @@ pub trait LegionSyncBuilder {
         &mut self,
         specs_world: &mut specs::World,
         state: &mut LegionState,
-        dispatcher: &mut DispatcherBuilder,
+        dispatcher: &mut DispatcherBuilder<'_>,
     );
 }
 
@@ -80,7 +80,7 @@ impl LegionSyncBuilder for Syncer {
         &mut self,
         specs_world: &mut specs::World,
         state: &mut LegionState,
-        dispatcher: &mut DispatcherBuilder,
+        dispatcher: &mut DispatcherBuilder<'_>,
     ) {
         use specs::WorldExt;
 

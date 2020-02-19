@@ -237,14 +237,14 @@ fn build_map_movement_system(
             }
             if rotate {
                 maps_query
-                    .iter_entities(world)
+                    .iter_entities_mut(world)
                     .for_each(|((entity), (_, mut transform))| {
                         transform.rotate_2d(time.delta_seconds());
                     });
             }
             if translate {
                 maps_query
-                    .iter_entities(world)
+                    .iter_entities_mut(world)
                     .for_each(|((entity), (_, mut transform))| {
                         transform.prepend_translation(vector * time.delta_seconds());
                         if transform.translation().x > 500.0 {

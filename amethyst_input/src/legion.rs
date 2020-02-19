@@ -3,15 +3,15 @@ use amethyst_core::{ecs as specs, legion::*, shrev::EventChannel};
 use derivative::Derivative;
 use std::marker::PhantomData;
 
-#[derive(Derivative)]
+#[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct Syncer<T>(PhantomData<T>);
 impl<T: BindingTypes> LegionSyncBuilder for Syncer<T> {
     fn prepare(
         &mut self,
-        specs_world: &mut specs::World,
+        _: &mut specs::World,
         state: &mut LegionState,
-        dispatcher: &mut DispatcherBuilder,
+        _: &mut DispatcherBuilder<'_>,
     ) {
         state.add_resource_sync::<EventChannel<InputEvent<T>>>();
         state.add_resource_sync::<InputHandler<T>>();

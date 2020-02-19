@@ -11,7 +11,7 @@ use legion::prelude as l;
 use legion_transform::components as ltc;
 use std::marker::PhantomData;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct TransformSyncer;
 impl SyncerTrait for TransformSyncer {
     fn setup(&self, world: &mut specs::World) {}
@@ -45,24 +45,26 @@ impl SyncerTrait for TransformSyncer {
                         if let Some(transform) = transforms.get_mut(*specs_entity) {
                             transform
                         } else {
-                            transforms.insert(*specs_entity, Transform::default());
+                            transforms
+                                .insert(*specs_entity, Transform::default())
+                                .unwrap();
                             transforms.get_mut(*specs_entity).unwrap()
                         }
                     };
-                    legion_to_specs(*legion_entity, &mut legion_state.world, transform);
+                    legion_to_specs(*legion_entity, &mut legion_state.world, transform).unwrap();
                 }
             }
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum LegionTransformSetScale {
     NonUniform(ltc::NonUniformScale),
     Uniform(ltc::Scale),
 }
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct LegionTransformSet {
     translation: Option<ltc::Translation>,
     rotation: Option<ltc::Rotation>,
@@ -119,24 +121,30 @@ pub fn specs_to_legion(
     if let Some(translation) = set.translation {
         world.add_component(legion_entity, translation).unwrap()
     } else {
-        world.remove_component::<ltc::Translation>(legion_entity);
+        world
+            .remove_component::<ltc::Translation>(legion_entity)
+            .unwrap();
     }
 
     if let Some(rotation) = set.rotation {
         world.add_component(legion_entity, rotation).unwrap();
     } else {
-        world.remove_component::<ltc::Rotation>(legion_entity);
+        world
+            .remove_component::<ltc::Rotation>(legion_entity)
+            .unwrap();
     }
 
     if let Some(scale) = set.scale {
         match scale {
             LegionTransformSetScale::Uniform(value) => {
                 world.add_component(legion_entity, value).unwrap();
-                world.remove_component::<ltc::NonUniformScale>(legion_entity);
+                world
+                    .remove_component::<ltc::NonUniformScale>(legion_entity)
+                    .unwrap();
             }
             LegionTransformSetScale::NonUniform(value) => {
                 world.add_component(legion_entity, value).unwrap();
-                world.remove_component::<ltc::Scale>(legion_entity);
+                world.remove_component::<ltc::Scale>(legion_entity).unwrap();
             }
         }
     }

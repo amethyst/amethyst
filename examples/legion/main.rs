@@ -117,7 +117,7 @@ fn orbit_system(
         .write_resource::<DebugLines>()
         .build(move |commands, world, (time, debug), query| {
             query
-                .iter_entities(world)
+                .iter_entities_mut(world)
                 .for_each(|(entity, (mut translation, orbit))| {
                     let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
                     let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;

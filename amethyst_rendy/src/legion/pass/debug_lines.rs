@@ -41,19 +41,19 @@ impl DrawDebugLinesDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawDebugLinesDesc {
+impl<B: Backend> RenderGroupDesc<B, LegionState> for DrawDebugLinesDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _aux: &LegionState,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, LegionState>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -97,32 +97,32 @@ pub struct DrawDebugLines<B: Backend> {
     change: util::ChangeDetection,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawDebugLines<B> {
+impl<B: Backend> RenderGroup<B, LegionState> for DrawDebugLines<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        state: &LegionState,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
-        let mut lines_query = <(Write<DebugLinesComponent>)>::query();
+        let mut lines_query = <Write<DebugLinesComponent>>::query();
 
         let old_len = self.lines.len();
         self.lines.clear();
-        for lines_component in unsafe { lines_query.iter_unchecked(world) } {
+        for lines_component in unsafe { lines_query.iter_unchecked(&state.world) } {
             self.lines.extend_from_slice(lines_component.lines())
         }
 
-        if let Some(mut lines_res) = world.resources.get_mut::<DebugLines>() {
+        if let Some(mut lines_res) = state.resources.get_mut::<DebugLines>() {
             self.lines.extend(lines_res.drain());
         };
 
-        let cam = CameraGatherer::gather(world);
-        let line_width = world
+        let cam = CameraGatherer::gather(&state);
+        let line_width = state
             .resources
             .get::<DebugLinesParams>()
             .map(|p| p.line_width)
@@ -158,7 +158,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawDebugLines<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &World,
+        _resources: &LegionState,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -177,7 +177,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawDebugLines<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &LegionState) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -215,11 +215,11 @@ fn build_lines_pipeline<B: Backend>(
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
-                .with_blend_targets(vec![pso::ColorBlendDesc(
-                    pso::ColorMask::ALL,
-                    pso::BlendState::ALPHA,
-                )])
-                .with_depth_test(pso::DepthTest::On {
+                .with_blend_targets(vec![pso::ColorBlendDesc {
+                    mask: pso::ColorMask::ALL,
+                    blend: Some(pso::BlendState::ALPHA),
+                }])
+                .with_depth_test(pso::DepthTest {
                     fun: pso::Comparison::LessEqual,
                     write: true,
                 }),

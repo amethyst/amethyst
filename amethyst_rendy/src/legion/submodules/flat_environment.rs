@@ -6,7 +6,7 @@ use crate::{
     rendy::{command::RenderPassEncoder, factory::Factory},
     types::Backend,
 };
-use amethyst_core::legion::World;
+use amethyst_core::legion::LegionState;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -33,7 +33,7 @@ impl<B: Backend> FlatEnvironmentSub<B> {
     }
 
     /// Performs any re-allocation and GPU memory writing required for this environment set.
-    pub fn process(&mut self, factory: &Factory<B>, index: usize, world: &World) {
+    pub fn process(&mut self, factory: &Factory<B>, index: usize, world: &LegionState) {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
         let projview = CameraGatherer::gather(world).projview;

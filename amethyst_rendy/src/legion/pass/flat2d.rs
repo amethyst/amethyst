@@ -13,8 +13,9 @@ use crate::{
 };
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    legion::prelude::*, par_tools::IntoSeqIterator, transform::Transform, Allocators, Hidden,
-    HiddenPropagate,
+    legion::{prelude::*, LegionState},
+    transform::Transform,
+    Allocators,
 };
 use derivative::Derivative;
 use rayon::prelude::*;
@@ -45,19 +46,19 @@ impl DrawFlat2DDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawFlat2DDesc {
+impl<B: Backend> RenderGroupDesc<B, LegionState> for DrawFlat2DDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _aux: &LegionState,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, LegionState>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -96,14 +97,14 @@ pub struct DrawFlat2D<B: Backend> {
     sprites: OneLevelBatch<TextureId, SpriteArgs>,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
+impl<B: Backend> RenderGroup<B, LegionState> for DrawFlat2D<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        state: &LegionState,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare opaque");
@@ -113,9 +114,9 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
             Read<AssetStorage<Texture>>,
             Read<SpriteVisibility>,
             Read<Allocators>,
-        )>::fetch(&world.resources);
+        )>::fetch(&state.resources);
 
-        self.env.process(factory, index, world);
+        self.env.process(factory, index, state);
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
@@ -133,9 +134,9 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
                     Some((
                         entity,
                         (
-                            world.get_component::<SpriteRender>(*entity)?,
-                            world.get_component::<Transform>(*entity)?,
-                            world.get_component::<Tint>(*entity),
+                            state.world.get_component::<SpriteRender>(*entity)?,
+                            state.world.get_component::<Transform>(*entity)?,
+                            state.world.get_component::<Tint>(*entity),
                         ),
                     ))
                 })
@@ -160,7 +161,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
 
                     let (tex_id, _) = textures_ref.insert(
                         factory,
-                        world,
+                        state,
                         texture,
                         hal::image::Layout::ShaderReadOnlyOptimal,
                     )?;
@@ -171,7 +172,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
                 });
         }
 
-        self.textures.maintain(factory, world);
+        self.textures.maintain(factory, state);
 
         {
             #[cfg(feature = "profiler")]
@@ -194,7 +195,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _world: &World,
+        _state: &LegionState,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw opaque");
@@ -213,7 +214,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _world: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _state: &LegionState) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -234,19 +235,19 @@ impl DrawFlat2DTransparentDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawFlat2DTransparentDesc {
+impl<B: Backend> RenderGroupDesc<B, LegionState> for DrawFlat2DTransparentDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _aux: &LegionState,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, LegionState>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -285,14 +286,14 @@ pub struct DrawFlat2DTransparent<B: Backend> {
     sprites: OrderedOneLevelBatch<TextureId, SpriteArgs>,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
+impl<B: Backend> RenderGroup<B, LegionState> for DrawFlat2DTransparent<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        state: &LegionState,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare opaque");
@@ -301,9 +302,9 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
             Read<AssetStorage<SpriteSheet>>,
             Read<AssetStorage<Texture>>,
             Read<SpriteVisibility>,
-        )>::fetch(&world.resources);
+        )>::fetch(&state.resources);
 
-        self.env.process(factory, index, world);
+        self.env.process(factory, index, state);
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
@@ -321,9 +322,9 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
                     Some((
                         entity,
                         (
-                            world.get_component::<SpriteRender>(*entity)?,
-                            world.get_component::<Transform>(*entity)?,
-                            world.get_component::<Tint>(*entity),
+                            state.world.get_component::<SpriteRender>(*entity)?,
+                            state.world.get_component::<Transform>(*entity)?,
+                            state.world.get_component::<Tint>(*entity),
                         ),
                     ))
                 })
@@ -348,7 +349,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
 
                     let (tex_id, _) = textures_ref.insert(
                         factory,
-                        world,
+                        state,
                         texture,
                         hal::image::Layout::ShaderReadOnlyOptimal,
                     )?;
@@ -360,7 +361,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
                 });
         }
 
-        self.textures.maintain(factory, world);
+        self.textures.maintain(factory, state);
 
         {
             #[cfg(feature = "profiler")]
@@ -382,7 +383,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _world: &World,
+        _state: &LegionState,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw opaque");
@@ -401,7 +402,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _world: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _state: &LegionState) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -440,15 +441,15 @@ fn build_sprite_pipeline<B: Backend>(
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
-                .with_blend_targets(vec![pso::ColorBlendDesc(
-                    pso::ColorMask::ALL,
-                    if transparent {
-                        pso::BlendState::PREMULTIPLIED_ALPHA
+                .with_blend_targets(vec![pso::ColorBlendDesc {
+                    mask: pso::ColorMask::ALL,
+                    blend: if transparent {
+                        Some(pso::BlendState::PREMULTIPLIED_ALPHA)
                     } else {
-                        pso::BlendState::Off
+                        None
                     },
-                )])
-                .with_depth_test(pso::DepthTest::On {
+                }])
+                .with_depth_test(pso::DepthTest {
                     fun: pso::Comparison::Less,
                     write: !transparent,
                 }),

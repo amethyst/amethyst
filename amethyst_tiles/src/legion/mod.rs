@@ -26,7 +26,7 @@ where
         &mut self,
         specs_world: &mut specs::World,
         state: &mut LegionState,
-        dispatcher: &mut DispatcherBuilder,
+        dispatcher: &mut DispatcherBuilder<'_>,
     ) {
         state.add_component_sync::<TileMap<T, E>>();
     }

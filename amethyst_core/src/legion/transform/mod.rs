@@ -5,27 +5,27 @@ use amethyst_error::Error;
 pub use legion_transform::components;
 use legion_transform::*;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Syncer;
 impl LegionSyncBuilder for Syncer {
     fn prepare(
         &mut self,
         specs_world: &mut specs::World,
         state: &mut LegionState,
-        dispatcher: &mut DispatcherBuilder,
+        dispatcher: &mut DispatcherBuilder<'_>,
     ) {
         state.add_sync(sync::TransformSyncer::default());
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct TransformBundle;
 impl SystemBundle for TransformBundle {
     fn build(
         mut self,
         world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         hierarchy_maintenance_system::build(world, resources)
             .into_iter()

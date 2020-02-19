@@ -9,12 +9,11 @@ use crate::{
     pod::{SkinnedVertexArgs, VertexArgs},
     resources::Tint,
     skinning::JointTransforms,
-    transparent::Transparent,
     types::{Backend, Mesh},
     util,
 };
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{legion::*, transform::Transform, Hidden, HiddenPropagate};
+use amethyst_core::{legion::*, transform::Transform};
 use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
@@ -95,19 +94,19 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, LegionState> for DrawBase3DDesc<B, T> {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _aux: &LegionState,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, LegionState>>, failure::Error> {
         profile_scope_impl!("build");
 
         let env = EnvironmentSub::new(
@@ -180,22 +179,22 @@ pub struct DrawBase3D<B: Backend, T: Base3DPassDef> {
     marker: PhantomData<T>,
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroup<B, LegionState> for DrawBase3D<B, T> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        state: &LegionState,
     ) -> PrepareResult {
         profile_scope_impl!("prepare opaque");
 
-        let visibility = world.resources.get::<Visibility>().unwrap();
-        let mesh_storage = world.resources.get::<AssetStorage<Mesh>>().unwrap();
+        let visibility = state.resources.get::<Visibility>().unwrap();
+        let mesh_storage = state.resources.get::<AssetStorage<Mesh>>().unwrap();
 
         // Prepare environment
-        self.env.process(factory, index, world);
+        self.env.process(factory, index, &state);
         self.materials.maintain();
 
         self.static_batches.clear_inner();
@@ -216,10 +215,10 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
                     Some((
                         entity,
                         (
-                            world.get_component::<Handle<Material>>(*entity)?,
-                            world.get_component::<Handle<Mesh>>(*entity)?,
-                            world.get_component::<Transform>(*entity)?,
-                            world.get_component::<Tint>(*entity),
+                            state.world.get_component::<Handle<Material>>(*entity)?,
+                            state.world.get_component::<Handle<Mesh>>(*entity)?,
+                            state.world.get_component::<Transform>(*entity)?,
+                            state.world.get_component::<Tint>(*entity),
                         ),
                     ))
                 })
@@ -235,7 +234,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
                 })
                 .for_each_group(|(mat, mesh_id), data| {
                     if mesh_storage.contains_id(mesh_id) {
-                        if let Some((mat, _)) = materials_ref.insert(factory, world, &mat) {
+                        if let Some((mat, _)) = materials_ref.insert(factory, state, &mat) {
                             statics_ref.insert(mat, mesh_id, data.drain(..));
                         }
                     }
@@ -252,11 +251,11 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
                     Some((
                         entity,
                         (
-                            world.get_component::<Handle<Material>>(*entity)?,
-                            world.get_component::<Handle<Mesh>>(*entity)?,
-                            world.get_component::<Transform>(*entity)?,
-                            world.get_component::<Tint>(*entity),
-                            world.get_component::<JointTransforms>(*entity)?,
+                            state.world.get_component::<Handle<Material>>(*entity)?,
+                            state.world.get_component::<Handle<Mesh>>(*entity)?,
+                            state.world.get_component::<Transform>(*entity)?,
+                            state.world.get_component::<Tint>(*entity),
+                            state.world.get_component::<JointTransforms>(*entity)?,
                         ),
                     ))
                 })
@@ -283,7 +282,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
                 })
                 .for_each_group(|(mat, mesh_id), data| {
                     if mesh_storage.contains_id(mesh_id) {
-                        if let Some((mat, _)) = materials_ref.insert(factory, world, &mat) {
+                        if let Some((mat, _)) = materials_ref.insert(factory, state, &mat) {
                             skinned_ref.insert(mat, mesh_id, data.drain(..));
                         }
                     }
@@ -319,11 +318,11 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        state: &LegionState,
     ) {
         profile_scope_impl!("draw opaque");
 
-        let mesh_storage = world.resources.get::<AssetStorage<Mesh>>().unwrap();
+        let mesh_storage = state.resources.get::<AssetStorage<Mesh>>().unwrap();
         let models_loc = self.vertex_format_base.len() as u32;
         let skin_models_loc = self.vertex_format_skinned.len() as u32;
 
@@ -391,7 +390,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
         }
     }
 
-    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &LegionState) {
         profile_scope_impl!("dispose");
         unsafe {
             factory
@@ -439,19 +438,21 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTransparentDesc<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, LegionState>
+    for DrawBase3DTransparentDesc<B, T>
+{
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _aux: &LegionState,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, LegionState>>, failure::Error> {
         let env = EnvironmentSub::new(
             factory,
             [
@@ -521,25 +522,25 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef> {
     models: DynamicVertexBuffer<B, VertexArgs>,
     skinned_models: DynamicVertexBuffer<B, SkinnedVertexArgs>,
     change: util::ChangeDetection,
-    marker: PhantomData<(T)>,
+    marker: PhantomData<T>,
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTransparent<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroup<B, LegionState> for DrawBase3DTransparent<B, T> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        state: &LegionState,
     ) -> PrepareResult {
         profile_scope_impl!("prepare opaque");
 
-        let visibility = world.resources.get::<Visibility>().unwrap();
-        let mesh_storage = world.resources.get::<AssetStorage<Mesh>>().unwrap();
+        let visibility = state.resources.get::<Visibility>().unwrap();
+        let mesh_storage = state.resources.get::<AssetStorage<Mesh>>().unwrap();
 
         // Prepare environment
-        self.env.process(factory, index, world);
+        self.env.process(factory, index, state);
         self.materials.maintain();
 
         self.static_batches.swap_clear();
@@ -561,10 +562,10 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
                     Some((
                         entity,
                         (
-                            world.get_component::<Handle<Material>>(*entity)?,
-                            world.get_component::<Handle<Mesh>>(*entity)?,
-                            world.get_component::<Transform>(*entity)?,
-                            world.get_component::<Tint>(*entity),
+                            state.world.get_component::<Handle<Material>>(*entity)?,
+                            state.world.get_component::<Handle<Mesh>>(*entity)?,
+                            state.world.get_component::<Transform>(*entity)?,
+                            state.world.get_component::<Tint>(*entity),
                         ),
                     ))
                 })
@@ -581,7 +582,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
                 .for_each_group(|(mat, mesh_id), data| {
                     if mesh_storage.contains_id(mesh_id) {
                         if let Some((mat, this_changed)) =
-                            materials_ref.insert(factory, world, &mat)
+                            materials_ref.insert(factory, state, &mat)
                         {
                             changed = changed || this_changed;
                             statics_ref.insert(mat, mesh_id, data.drain(..));
@@ -602,11 +603,11 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
                     Some((
                         entity,
                         (
-                            world.get_component::<Handle<Material>>(*entity)?,
-                            world.get_component::<Handle<Mesh>>(*entity)?,
-                            world.get_component::<Transform>(*entity)?,
-                            world.get_component::<Tint>(*entity),
-                            world.get_component::<JointTransforms>(*entity)?,
+                            state.world.get_component::<Handle<Material>>(*entity)?,
+                            state.world.get_component::<Handle<Mesh>>(*entity)?,
+                            state.world.get_component::<Transform>(*entity)?,
+                            state.world.get_component::<Tint>(*entity),
+                            state.world.get_component::<JointTransforms>(*entity)?,
                         ),
                     ))
                 })
@@ -634,7 +635,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
                 .for_each_group(|(mat, mesh_id), data| {
                     if mesh_storage.contains_id(mesh_id) {
                         if let Some((mat, this_changed)) =
-                            materials_ref.insert(factory, world, &mat)
+                            materials_ref.insert(factory, state, &mat)
                         {
                             changed = changed || this_changed;
                             skinned_ref.insert(mat, mesh_id, data.drain(..));
@@ -670,11 +671,11 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        state: &LegionState,
     ) {
         profile_scope_impl!("draw transparent");
 
-        let mesh_storage = world.resources.get::<AssetStorage<Mesh>>().unwrap();
+        let mesh_storage = state.resources.get::<AssetStorage<Mesh>>().unwrap();
         let layout = &self.pipeline_layout;
         let encoder = &mut encoder;
 
@@ -746,7 +747,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
         }
     }
 
-    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &LegionState) {
         unsafe {
             factory
                 .device()
@@ -799,18 +800,18 @@ fn build_pipelines<B: Backend, T: Base3DPassDef>(
         .with_subpass(subpass)
         .with_framebuffer_size(framebuffer_width, framebuffer_height)
         .with_face_culling(pso::Face::BACK)
-        .with_depth_test(pso::DepthTest::On {
+        .with_depth_test(pso::DepthTest {
             fun: pso::Comparison::Less,
             write: !transparent,
         })
-        .with_blend_targets(vec![pso::ColorBlendDesc(
-            pso::ColorMask::ALL,
-            if transparent {
-                pso::BlendState::PREMULTIPLIED_ALPHA
+        .with_blend_targets(vec![pso::ColorBlendDesc {
+            mask: pso::ColorMask::ALL,
+            blend: if transparent {
+                Some(pso::BlendState::PREMULTIPLIED_ALPHA)
             } else {
-                pso::BlendState::Off
+                None
             },
-        )]);
+        }]);
 
     let pipelines = if skinning {
         let shader_vertex_skinned = unsafe { T::vertex_skinned_shader().module(factory).unwrap() };

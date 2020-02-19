@@ -190,7 +190,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        state: &LegionState,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
@@ -219,82 +219,80 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         let mut query = <(Read<TileMap<T, E>>)>::query()
             .filter(!component::<Hidden>() & !component::<HiddenPropagate>());
 
-        query
-            .iter_entities_immutable(world)
-            .for_each(|(entity, tile_map)| {
-                let maybe_sheet = tile_map
-                    .sprite_sheet
-                    .as_ref()
-                    .and_then(|handle| sprite_sheet_storage.get(handle))
-                    .filter(|sheet| tex_storage.contains(&sheet.texture));
+        query.iter_entities(world).for_each(|(entity, tile_map)| {
+            let maybe_sheet = tile_map
+                .sprite_sheet
+                .as_ref()
+                .and_then(|handle| sprite_sheet_storage.get(handle))
+                .filter(|sheet| tex_storage.contains(&sheet.texture));
 
-                let sprite_sheet = match maybe_sheet {
-                    Some(sheet) => sheet,
-                    None => return,
+            let sprite_sheet = match maybe_sheet {
+                Some(sheet) => sheet,
+                None => return,
+            };
+
+            let map_coordinate_transform: [[f32; 4]; 4] = (*tile_map.transform()).into();
+
+            let map_transform: [[f32; 4]; 4] =
+                if let Some(transform) = world.get_component::<Transform>(entity) {
+                    (*transform.global_matrix()).into()
+                } else {
+                    Matrix4::identity().into()
                 };
 
-                let map_coordinate_transform: [[f32; 4]; 4] = (*tile_map.transform()).into();
+            tilemap_args.map_coordinate_transform = map_coordinate_transform.into();
+            tilemap_args.map_transform = map_transform.into();
+            tilemap_args.sprite_dimensions = [
+                tile_map.tile_dimensions().x as f32,
+                tile_map.tile_dimensions().y as f32,
+            ]
+            .into();
 
-                let map_transform: [[f32; 4]; 4] =
-                    if let Some(transform) = world.get_component::<Transform>(entity) {
-                        (*transform.global_matrix()).into()
-                    } else {
-                        Matrix4::identity().into()
-                    };
+            let mut region = Z::bounds(&tile_map, world);
 
-                tilemap_args.map_coordinate_transform = map_coordinate_transform.into();
-                tilemap_args.map_transform = map_transform.into();
-                tilemap_args.sprite_dimensions = [
-                    tile_map.tile_dimensions().x as f32,
-                    tile_map.tile_dimensions().y as f32,
-                ]
-                .into();
+            let zero = Vector3::new(0, 0, 0);
+            let max_value = tile_map.dimensions() - Vector3::new(1, 1, 1);
 
-                let mut region = Z::bounds(&tile_map, world);
+            region.min = Point3::new(
+                region.min.x.max(0).min(max_value.x),
+                region.min.y.max(0).min(max_value.y),
+                region.min.z.max(0).min(max_value.z),
+            );
+            region.max = Point3::new(
+                region.max.x.max(0).min(max_value.x),
+                region.max.y.max(0).min(max_value.y),
+                region.max.z.max(0).min(max_value.z),
+            );
 
-                let zero = Vector3::new(0, 0, 0);
-                let max_value = tile_map.dimensions() - Vector3::new(1, 1, 1);
+            region
+                .iter()
+                .filter_map(|coord| {
+                    let tile = tile_map.get(&coord).unwrap();
+                    if let Some(sprite_number) = tile.sprite(coord, world) {
+                        let (batch_data, texture) = TileArgs::from_data(
+                            &tex_storage,
+                            &sprite_sheet,
+                            sprite_number,
+                            Some(&TintComponent(tile.tint(coord, world))),
+                            &coord,
+                        )?;
 
-                region.min = Point3::new(
-                    region.min.x.max(0).min(max_value.x),
-                    region.min.y.max(0).min(max_value.y),
-                    region.min.z.max(0).min(max_value.z),
-                );
-                region.max = Point3::new(
-                    region.max.x.max(0).min(max_value.x),
-                    region.max.y.max(0).min(max_value.y),
-                    region.max.z.max(0).min(max_value.z),
-                );
+                        let (tex_id, this_changed) = textures_ref.insert(
+                            factory,
+                            world,
+                            texture,
+                            hal::image::Layout::ShaderReadOnlyOptimal,
+                        )?;
+                        changed = changed || this_changed;
 
-                region
-                    .iter()
-                    .filter_map(|coord| {
-                        let tile = tile_map.get(&coord).unwrap();
-                        if let Some(sprite_number) = tile.sprite(coord, world) {
-                            let (batch_data, texture) = TileArgs::from_data(
-                                &tex_storage,
-                                &sprite_sheet,
-                                sprite_number,
-                                Some(&TintComponent(tile.tint(coord, world))),
-                                &coord,
-                            )?;
-
-                            let (tex_id, this_changed) = textures_ref.insert(
-                                factory,
-                                world,
-                                texture,
-                                hal::image::Layout::ShaderReadOnlyOptimal,
-                            )?;
-                            changed = changed || this_changed;
-
-                            return Some((tex_id, batch_data));
-                        }
-                        None
-                    })
-                    .for_each_group(|tex_id, batch_data| {
-                        sprites_ref.insert(tex_id, batch_data.drain(..))
-                    });
-            });
+                        return Some((tex_id, batch_data));
+                    }
+                    None
+                })
+                .for_each_group(|tex_id, batch_data| {
+                    sprites_ref.insert(tex_id, batch_data.drain(..))
+                });
+        });
 
         self.textures.maintain(factory, world);
         changed = changed || self.sprites.changed();
@@ -379,7 +377,7 @@ fn build_tiles_pipeline<B: Backend>(
                     pso::ColorMask::ALL,
                     pso::BlendState::PREMULTIPLIED_ALPHA,
                 )])
-                .with_depth_test(pso::DepthTest::On {
+                .with_depth_test(pso::DepthTest {
                     fun: pso::Comparison::Less,
                     write: false,
                 }),
@@ -432,7 +430,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderPlug
     fn on_build<'a, 'b>(
         &mut self,
         world: &mut World,
-        builder: &mut DispatcherBuilder,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error> {
         Ok(())
     }

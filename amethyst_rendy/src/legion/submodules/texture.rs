@@ -60,7 +60,7 @@ impl<B: Backend> TextureSub<B> {
 
     /// Generationally track our currently allocated vs. used textures and release memory for any
     /// textures which have been removed from this submission set.
-    pub fn maintain(&mut self, factory: &Factory<B>, world: &World) {
+    pub fn maintain(&mut self, factory: &Factory<B>, world: &LegionState) {
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
 
@@ -107,7 +107,7 @@ impl<B: Backend> TextureSub<B> {
     fn try_insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        world: &LegionState,
         handle: &Handle<Texture>,
         layout: hal::image::Layout,
     ) -> Option<TextureState<B>> {
@@ -137,7 +137,7 @@ impl<B: Backend> TextureSub<B> {
     pub fn insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        world: &LegionState,
         handle: &Handle<Texture>,
         layout: hal::image::Layout,
     ) -> Option<(TextureId, bool)> {

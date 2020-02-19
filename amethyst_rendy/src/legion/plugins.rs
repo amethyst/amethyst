@@ -12,6 +12,7 @@ use crate::{
 use amethyst_core::legion::{
     dispatcher::{DispatcherBuilder, Stage, SystemBundle},
     prelude::*,
+    LegionState,
 };
 use amethyst_error::Error;
 use palette::Srgb;
@@ -48,7 +49,7 @@ mod window {
     impl RenderToWindow {
         /// Create RenderToWindow plugin with [`WindowBundle`] using specified config path.
         pub fn from_config_path(path: impl AsRef<Path>) -> Self {
-            Self::from_config(DisplayConfig::load(path))
+            Self::from_config(DisplayConfig::load(path).unwrap())
         }
 
         /// Create RenderToWindow plugin with [`WindowBundle`] using specified config.
@@ -76,17 +77,18 @@ mod window {
         fn on_build<'a, 'b>(
             &mut self,
             world: &mut World,
-            builder: &mut DispatcherBuilder,
+            resources: &mut Resources,
+            builder: &mut DispatcherBuilder<'_>,
         ) -> Result<(), Error> {
             if let Some(config) = self.config.take() {
-                WindowBundle::from_config(config).build(world, builder)?;
+                WindowBundle::from_config(config).build(world, resources, builder)?;
             }
 
             Ok(())
         }
 
         #[allow(clippy::map_clone)]
-        fn should_rebuild(&mut self, world: &World) -> bool {
+        fn should_rebuild(&mut self, world: &LegionState) -> bool {
             let new_dimensions = world.resources.get::<ScreenDimensions>();
             use std::ops::Deref;
             if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
@@ -101,11 +103,12 @@ mod window {
             &mut self,
             plan: &mut RenderPlan<B>,
             factory: &mut Factory<B>,
-            world: &World,
+            _: &mut World,
+            resources: &mut Resources,
         ) -> Result<(), Error> {
             self.dirty = false;
 
-            let window = world.resources.get::<Window>().unwrap();
+            let window = resources.get::<Window>().unwrap();
 
             let surface = factory.create_surface(&window);
             let dimensions = self.dimensions.as_ref().unwrap();
@@ -153,8 +156,9 @@ impl RenderFlat2D {
 impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
     fn on_build<'a, 'b>(
         &mut self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder,
+        _: &mut World,
+        _: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         builder.add_system(Stage::Render, build_sprite_visibility_sorting_system);
         Ok(())
@@ -164,7 +168,8 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _world: &World,
+        _: &mut World,
+        _: &mut Resources,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(RenderOrder::Opaque, DrawFlat2DDesc::new().builder())?;
@@ -198,7 +203,8 @@ impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        world: &World,
+        _: &mut World,
+        _: &mut Resources,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(
@@ -247,8 +253,9 @@ impl<D: Base3DPassDef> RenderBase3D<D> {
 impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
     fn on_build<'a, 'b>(
         &mut self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder,
+        _: &mut World,
+        _: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         builder.add_system(Stage::Render, build_visibility_sorting_system);
         Ok(())
@@ -258,7 +265,8 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _world: &World,
+        _: &mut World,
+        _: &mut Resources,
     ) -> Result<(), Error> {
         let skinning = self.skinning;
         plan.extend_target(self.target, move |ctx| {
@@ -308,7 +316,8 @@ impl<B: Backend> RenderPlugin<B> for RenderSkybox {
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _world: &World,
+        _: &mut World,
+        _: &mut Resources,
     ) -> Result<(), Error> {
         let colors = self.colors;
         plan.extend_target(self.target, move |ctx| {

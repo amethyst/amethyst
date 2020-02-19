@@ -2,9 +2,7 @@ use crate::{
     asset::{Asset, ProcessableAsset},
     storage::AssetStorage,
 };
-use amethyst_core::{legion::*, ArcThreadPool, Time};
-use derivative::Derivative;
-use std::marker::PhantomData;
+use amethyst_core::{legion::prelude::*, ArcThreadPool, Time};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -16,14 +14,15 @@ use thread_profiler::profile_scope;
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
 pub fn build_asset_processor<A: Asset + ProcessableAsset>(
-    world: &mut World,
+    _: &mut World,
+    _: &mut Resources,
 ) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new(std::any::type_name::<A>())
         .write_resource::<AssetStorage<A>>()
         .read_resource::<ArcThreadPool>()
         .read_resource::<Time>()
         //          .read_resource::<HotReloadStrategy>() TODO: we should allow options
-        .build(move |commands, world, (storage, pool, time), _| {
+        .build(move |_, _, (storage, pool, time), _| {
             #[cfg(feature = "profiler")]
             profile_scope!("processor_system");
 

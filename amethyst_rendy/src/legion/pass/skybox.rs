@@ -80,19 +80,19 @@ impl DrawSkyboxDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawSkyboxDesc {
+impl<B: Backend> RenderGroupDesc<B, LegionState> for DrawSkyboxDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         queue: QueueId,
-        _world: &World,
+        _world: &LegionState,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, LegionState>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -132,14 +132,14 @@ pub struct DrawSkybox<B: Backend> {
     default_settings: SkyboxSettings,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
+impl<B: Backend> RenderGroup<B, LegionState> for DrawSkybox<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        world: &LegionState,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
@@ -165,7 +165,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &World,
+        _resources: &LegionState,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -181,7 +181,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &LegionState) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -218,14 +218,14 @@ fn build_skybox_pipeline<B: Backend>(
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
-                .with_depth_test(pso::DepthTest::On {
+                .with_depth_test(pso::DepthTest {
                     fun: pso::Comparison::LessEqual,
                     write: false,
                 })
-                .with_blend_targets(vec![pso::ColorBlendDesc(
-                    pso::ColorMask::ALL,
-                    pso::BlendState::Off,
-                )]),
+                .with_blend_targets(vec![pso::ColorBlendDesc {
+                    mask: pso::ColorMask::ALL,
+                    blend: None,
+                }]),
         )
         .build(factory, None);
 

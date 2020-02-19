@@ -206,7 +206,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     fn try_insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        state: &LegionState,
         handle: &Handle<Material>,
     ) -> Option<MaterialState<B>> {
         #[cfg(feature = "profiler")]
@@ -214,7 +214,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
 
         use util::{desc_write, slice_as_bytes, texture_desc};
         let (mat_storage, tex_storage) =
-            <(Read<AssetStorage<Material>>, Read<AssetStorage<Texture>>)>::fetch(&world.resources);
+            <(Read<AssetStorage<Material>>, Read<AssetStorage<Texture>>)>::fetch(&state.resources);
 
         let mat = mat_storage.get(handle)?;
 
@@ -273,7 +273,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     pub fn insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        state: &LegionState,
         handle: &Handle<Material>,
     ) -> Option<(MaterialId, bool)> {
         #[cfg(feature = "profiler")]
@@ -293,7 +293,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
 
         debug_assert!(self.materials.len() >= id);
         let (new_state, loaded) = self
-            .try_insert(factory, world, handle)
+            .try_insert(factory, state, handle)
             .map(|s| (s, true))
             .unwrap_or_else(|| {
                 (

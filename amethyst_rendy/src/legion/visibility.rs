@@ -44,8 +44,13 @@ struct Internals {
     camera_distance: f32,
 }
 
-pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable> {
-    world.resources.insert(Visibility::default());
+pub fn build_visibility_sorting_system(
+    _: &mut World,
+    resources: &mut Resources,
+) -> Box<dyn Schedulable> {
+    resources.insert(Visibility::default());
+
+    let mut state = VisibilitySortingSystemState::default();
 
     SystemBuilder::<()>::new("VisibilitySortingSystem")
         .read_resource::<ActiveCamera>()
@@ -55,16 +60,15 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
         .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
         .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
         .with_query(
-            <(Read<LocalToWorld>)>::query()
+            <Read<LocalToWorld>>::query()
                 .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
         )
-        .build_disposable(
-            VisibilitySortingSystemState::default(),
-            |state,
-             commands,
-             world,
-             (active_camera, visibility),
-             (camera_query1, camera_query2, entity_query)| {
+        .build(
+            move |commands,
+                  world,
+                  resources,
+                  (active_camera, visibility),
+                  (camera_query1, camera_query2, entity_query)| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("visibility_sorting_system");
 
@@ -76,15 +80,10 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
                 let origin = Point3::origin();
 
                 let (camera, camera_transform) = match active_camera.entity.map_or_else(
-                    || {
-                        camera_query1
-                            .iter_entities_immutable(world)
-                            .nth(0)
-                            .map(|args| args.1)
-                    },
+                    || camera_query1.iter_entities(world).nth(0).map(|args| args.1),
                     |e| {
                         camera_query2
-                            .iter_entities_immutable(world)
+                            .iter_entities(world)
                             .find(|(camera_entity, (_, _))| *camera_entity == e)
                             .map(|args| args.1)
                     },
@@ -101,7 +100,7 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
 
                 state.centroids.extend(
                     entity_query
-                        .iter_entities_immutable(world)
+                        .iter_entities(world)
                         .map(|(entity, transform)| {
                             let sphere = world.get_component::<BoundingSphere>(entity);
 
@@ -146,7 +145,6 @@ pub fn build_visibility_sorting_system(world: &mut World) -> Box<dyn Schedulable
                     .visible_ordered
                     .extend(state.transparent.iter().map(|c| c.entity));
             },
-            |_, _| {},
         )
 }
 

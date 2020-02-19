@@ -1,7 +1,5 @@
 use crate::resources::ScreenDimensions;
-use amethyst_config::Config;
 use amethyst_core::{legion::prelude::*, shrev::EventChannel};
-use std::path::Path;
 use winit::{Event, EventsLoop, Window};
 
 pub mod window_system {
@@ -64,11 +62,7 @@ pub mod events_loop_system {
     use super::*;
 
     /// Creates a new `EventsLoopSystem` using the provided `EventsLoop`
-    pub fn build(
-        world: &mut World,
-        resources: &mut Resources,
-        events_loop: EventsLoop,
-    ) -> Box<dyn Runnable> {
+    pub fn build(_: &mut World, _: &mut Resources, events_loop: EventsLoop) -> Box<dyn Runnable> {
         pub struct State {
             events_loop: EventsLoop,
             events: Vec<Event>,

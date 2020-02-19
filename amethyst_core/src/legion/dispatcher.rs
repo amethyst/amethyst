@@ -6,7 +6,7 @@ pub trait SystemBundle {
         self,
         world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error>;
 }
 
@@ -19,7 +19,7 @@ where
         world: &mut World,
         resources: &mut Resources,
         _: &mut DispatcherData,
-        builder: &mut DispatcherBuilder,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error> {
         self.build(world, resources, builder)
     }
@@ -31,7 +31,7 @@ where
     F: FnOnce(
         &mut World,
         &mut Resources,
-        &mut DispatcherBuilder,
+        &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error>,
 {
     fn consume(
@@ -39,7 +39,7 @@ where
         world: &mut World,
         resources: &mut Resources,
         _: &mut DispatcherData,
-        builder: &mut DispatcherBuilder,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error> {
         (self.0)(world, resources, builder)
     }
@@ -55,7 +55,7 @@ where
         world: &mut World,
         resources: &mut Resources,
         dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder,
+        _: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error> {
         let sys = (self.1)(world, resources);
 
@@ -79,7 +79,7 @@ where
         world: &mut World,
         resources: &mut Resources,
         dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder,
+        _: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error> {
         let sys = (self.1)(world, resources);
 
@@ -103,7 +103,7 @@ where
         world: &mut World,
         resources: &mut Resources,
         dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder,
+        _: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error> {
         let sys = (self.1)(world, resources);
 
@@ -124,7 +124,7 @@ impl ConsumeDesc for DispatcherFlush {
         _: &mut World,
         _: &mut Resources,
         dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder,
+        _: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error> {
         dispatcher
             .stages
@@ -142,7 +142,7 @@ pub trait ConsumeDesc {
         world: &mut World,
         resources: &mut Resources,
         stages: &mut DispatcherData,
-        builder: &mut DispatcherBuilder,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), amethyst_error::Error>;
 }
 
@@ -359,7 +359,7 @@ impl<'a> DispatcherBuilder<'a> {
         F: FnOnce(
                 &mut World,
                 &mut Resources,
-                &mut DispatcherBuilder,
+                &mut DispatcherBuilder<'_>,
             ) -> Result<(), amethyst_error::Error>
             + 'a,
     >(
@@ -374,7 +374,7 @@ impl<'a> DispatcherBuilder<'a> {
         F: FnOnce(
                 &mut World,
                 &mut Resources,
-                &mut DispatcherBuilder,
+                &mut DispatcherBuilder<'_>,
             ) -> Result<(), amethyst_error::Error>
             + 'a,
     >(

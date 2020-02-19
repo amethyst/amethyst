@@ -27,14 +27,14 @@ pub struct CameraGatherer {
 
 impl CameraGatherer {
     /// Collect just the entity which has the current `ActiveCamera`
-    pub fn gather_camera_entity(world: &World) -> Option<Entity> {
+    pub fn gather_camera_entity(state: &LegionState) -> Option<Entity> {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_camera (1st)");
 
         // TODO: we do not support active camera atm because of migration
 
         <(Read<Camera>, Read<LocalToWorld>)>::query()
-            .iter_entities_immutable(world)
+            .iter_entities(&state.world)
             .nth(0)
             .map(|(e, _)| e)
     }
@@ -44,14 +44,14 @@ impl CameraGatherer {
     /// projection matrix.
     ///
     /// The matrix returned is the camera's `Projection` matrix and the camera `Transform::global_view_matrix`
-    pub fn gather(world: &World) -> Self {
+    pub fn gather(state: &LegionState) -> Self {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_cameras");
 
         let defcam = Camera::standard_3d(1.0, 1.0);
         let identity = LocalToWorld::identity();
 
-        let active_camera = world.resources.get::<ActiveCamera>();
+        let active_camera = state.resources.get::<ActiveCamera>();
         let mut camera_query = <(Read<Camera>, Read<LocalToWorld>)>::query();
 
         let active_camera = active_camera
@@ -60,13 +60,13 @@ impl CameraGatherer {
                     .entity
                     .and_then(|e| {
                         camera_query
-                            .iter_entities_immutable(world)
+                            .iter_entities(&state.world)
                             .find(|(camera_entity, (_, _))| *camera_entity == e)
                             .map(|(_, (camera, global_matrix))| (camera, global_matrix))
                     })
                     .or_else(|| {
                         camera_query
-                            .iter_entities_immutable(world)
+                            .iter_entities(&state.world)
                             .nth(0)
                             .map(|(e, (camera, global_matrix))| (camera, global_matrix))
                     })
@@ -107,7 +107,7 @@ impl CameraGatherer {
 pub struct AmbientGatherer;
 impl AmbientGatherer {
     /// If an `AmbientColor` exists in the world, return it - otherwise return pure white.
-    pub fn gather(world: &World) -> vec3 {
+    pub fn gather(world: &LegionState) -> vec3 {
         let ambient_color = world.resources.get::<AmbientColor>();
 
         ambient_color.map_or([0.0, 0.0, 0.0].into(), |c| {

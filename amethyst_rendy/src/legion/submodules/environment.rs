@@ -15,7 +15,7 @@ use crate::{
     util::{self, TapCountIter},
 };
 use amethyst_core::{
-    legion::{filter::filter_fns::component, IntoQuery, Read, World},
+    legion::{prelude::*, LegionState},
     math::{convert, Vector3},
     transform::Transform,
 };
@@ -65,7 +65,7 @@ impl<B: Backend> EnvironmentSub<B> {
     }
 
     /// Performs any re-allocation and GPU memory writing required for this environment set.
-    pub fn process(&mut self, factory: &Factory<B>, index: usize, world: &World) -> bool {
+    pub fn process(&mut self, factory: &Factory<B>, index: usize, state: &LegionState) -> bool {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
 
@@ -76,7 +76,7 @@ impl<B: Backend> EnvironmentSub<B> {
             }
             &mut self.per_image[index]
         };
-        this_image.process(factory, world)
+        this_image.process(factory, state)
     }
 
     /// Binds this environment set for all images.
@@ -117,7 +117,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         }
     }
 
-    fn process(&mut self, factory: &Factory<B>, world: &World) -> bool {
+    fn process(&mut self, factory: &Factory<B>, state: &LegionState) -> bool {
         let align = factory
             .physical()
             .limits()
@@ -171,14 +171,14 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             let CameraGatherer {
                 camera_position,
                 projview,
-            } = CameraGatherer::gather(world);
+            } = CameraGatherer::gather(state);
 
             let mut mapped = buffer.map(factory, whole_range.clone()).unwrap();
             let mut writer = unsafe { mapped.write::<u8>(factory, whole_range.clone()).unwrap() };
             let dst_slice = unsafe { writer.slice() };
 
             let mut env = pod::Environment {
-                ambient_color: AmbientGatherer::gather(world),
+                ambient_color: AmbientGatherer::gather(state),
                 camera_position,
                 point_light_count: 0,
                 directional_light_count: 0,
@@ -188,7 +188,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
 
             let mut q1 = <(Read<Light>, Read<Transform>)>::query();
             let point_lights = q1
-                .iter_immutable(world)
+                .iter(&state.world)
                 .filter_map(|(light, transform)| match &*light {
                     Light::Point(light) => Some(
                         pod::PointLight {
@@ -205,9 +205,9 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 })
                 .take(MAX_POINT_LIGHTS);
 
-            let mut all_lights = <(Read<Light>)>::query();
+            let mut all_lights = <Read<Light>>::query();
             let dir_lights = all_lights
-                .iter_immutable(world)
+                .iter(&state.world)
                 .filter_map(|light| match &*light {
                     Light::Directional(ref light) => Some(
                         pod::DirectionalLight {
@@ -223,7 +223,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
 
             let mut q2 = <(Read<Light>, Read<Transform>)>::query();
             let spot_lights = q2
-                .iter_immutable(world)
+                .iter(&state.world)
                 .filter_map(|(light, transform)| {
                     if let Light::Spot(ref light) = &*light {
                         Some(
