@@ -333,21 +333,8 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                     });
 
                 let mut last_cached_glyph: Option<CachedGlyph> = None;
-                let all_glyphs = ui_text.text.graphemes(true).filter_map(|s| {
-                    let c = if s.len() == 1 {
-                        if let Some(c) = s.chars().next() {
-                            if c.is_whitespace() {
-                                Some(c)
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    };
-                    if let Some(c) = c {
+                let all_glyphs = ui_text.text.chars().filter_map(|c| {
+                    if c.is_whitespace() {
                         let (x, y) = if let Some(last_cached_glyph) = last_cached_glyph {
                             let x = last_cached_glyph.x + last_cached_glyph.advance_width;
                             let y = last_cached_glyph.y;
