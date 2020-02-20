@@ -203,7 +203,6 @@ impl<'a, B: Backend> System<'a> for MeshProcessorSystem<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("mesh_processor");
 
-        use std::ops::Deref;
         mesh_storage.process(
             |b| {
                 #[cfg(feature = "profiler")]
@@ -216,7 +215,7 @@ impl<'a, B: Backend> System<'a> for MeshProcessorSystem<B> {
             },
             time.frame_number(),
             &**pool,
-            strategy.as_ref().map(Deref::deref),
+            strategy.as_deref(),
         );
     }
 }
@@ -242,7 +241,6 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("texture_processor");
 
-        use std::ops::Deref;
         texture_storage.process(
             |b| {
                 #[cfg(feature = "profiler")]
@@ -264,7 +262,7 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
             },
             time.frame_number(),
             &**pool,
-            strategy.as_ref().map(Deref::deref),
+            strategy.as_deref(),
         );
     }
 }

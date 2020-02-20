@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Support settings module log levels from a RON file ([#2115])
 - Export the `get_parent_pixel_size` functions from the ui module ([[#2128])
 - Export the `pixel_width` and `pixel_height` methods on the `UiTransform` ([[#2128])
+- Support UiEvents targeting multiple overlapping entities ([#2138])
 
 ### Changed
 
@@ -24,6 +25,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Deprecated
 
 ### Removed
+
+* `"nightly"` feature is removed, missing resource panic message includes type name on stable. ([#2136])
 
 ### Fixed
 
@@ -35,6 +38,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2115]: https://github.com/amethyst/amethyst/pull/2115
 [#2117]: https://github.com/amethyst/amethyst/pull/2117
 [#2128]: https://github.com/amethyst/amethyst/pull/2128
+[#2136]: https://github.com/amethyst/amethyst/pull/2136
+[#2138]: https://github.com/amethyst/amethyst/pull/2138
 
 
 ## [0.14.0] - 2020-01-30
@@ -67,11 +72,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Adds `get` methods to the underlying net::transport resources ([#2005])
 - Changed `SpriteSheetFormat::import_simple` to allow importing grid based `SpriteSheets` ([#2023])
   Migration Note: Rons need to wrap their content in either Grid() or List()
+  ***Migration Note:*** Rons need to wrap their content in either `Grid()` or `List()`
 - TileMap to_tile doesn't panic in debug mode. It instead return Result<Point<u32>,TileOutOfBounds>. ([#2020],[#2070])
 - Added new Error options for `NetworkSimulationEvent`.
 - Changed amethyst config directory from `$HOME/.amethyst` to `$HOME/.config/amethyst` ([#2079])
 - Changed `world_to_screen` camera transformation to match inverse of the one in `screen_ray` ([#2057])
 - `amethyst_input::Axis::Mouse` now only has a single radius value. One of the two values was guaranteed to be unused. ([#2099])
+- Updated `rodio` from `0.9` to `0.10`. ([#2044])
+- Updated `cpal` from `0.8` to `0.10`. ([#2044])
 
 ### Deprecated
 
@@ -104,22 +112,23 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1984]: https://github.com/amethyst/amethyst/pull/1984
 [#1986]: https://github.com/amethyst/amethyst/pull/1986
 [#1989]: https://github.com/amethyst/amethyst/pull/1989
-[#2005]: https://github.com/amethyst/amethyst/pull/2005
 [#2004]: https://github.com/amethyst/amethyst/pull/2004
+[#2005]: https://github.com/amethyst/amethyst/pull/2005
 [#2017]: https://github.com/amethyst/amethyst/pull/2017
 [#2020]: https://github.com/amethyst/amethyst/issue/2020
 [#2023]: https://github.com/amethyst/amethyst/pull/2023
 [#2029]: https://github.com/amethyst/amethyst/pull/2029
 [#2033]: https://github.com/amethyst/amethyst/pull/2033
 [#2041]: https://github.com/amethyst/amethyst/pull/2041
-[#2067]: https://github.com/amethyst/amethyst/issue/2067
+[#2044]: https://github.com/amethyst/amethyst/pull/2044
 [#2048]: https://github.com/amethyst/amethyst/pull/2048
+[#2057]: https://github.com/amethyst/amethyst/issues/2057
 [#2059]: https://github.com/amethyst/amethyst/pull/2059
-[#2071]: https://github.com/amethyst/amethyst/pull/2071
+[#2067]: https://github.com/amethyst/amethyst/issue/2067
 [#2070]: https://github.com/amethyst/amethyst/pull/2070
+[#2071]: https://github.com/amethyst/amethyst/pull/2071
 [#2079]: https://github.com/amethyst/amethyst/pull/2079
 [#2080]: https://github.com/amethyst/amethyst/pull/2080
-[#2057]: https://github.com/amethyst/amethyst/issues/2057
 [#2099]: https://github.com/amethyst/amethyst/issues/2099
 [#2103]: https://github.com/amethyst/amethyst/pull/2103
 [#2111]: https://github.com/amethyst/amethyst/pull/2111

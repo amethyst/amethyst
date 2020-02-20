@@ -221,7 +221,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # let game_data = GameDataBuilder::default()
 .with_bundle(UiBundle::<StringBindings>::new())?
 # ;
-# 
+#
 # Ok(())
 # }
 ```
@@ -280,7 +280,7 @@ use amethyst::{
 };
 
 # pub struct Pong;
-# 
+#
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 #       let world = data.world;
@@ -316,17 +316,14 @@ fn initialise_scoreboard(world: &mut World) {
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
-        )).build();
+        ))
+        .build();
 
     let p2_score = world
         .create_entity()
         .with(p2_transform)
-        .with(UiText::new(
-            font.clone(),
-            "0".to_string(),
-            [1., 1., 1., 1.],
-            50.,
-        )).build();
+        .with(UiText::new(font, "0".to_string(), [1., 1., 1., 1.], 50.))
+        .build();
 
 # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
     world.insert(ScoreText { p1_score, p2_score });

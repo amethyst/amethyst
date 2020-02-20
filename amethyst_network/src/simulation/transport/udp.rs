@@ -116,7 +116,7 @@ impl<'s> System<'s> for UdpNetworkRecvSystem {
                     Ok((recv_len, address)) => {
                         let event = NetworkSimulationEvent::Message(
                             address,
-                            Bytes::from(&self.recv_buffer[..recv_len]),
+                            Bytes::copy_from_slice(&self.recv_buffer[..recv_len]),
                         );
                         // TODO: Handle other types of events.
                         event_channel.single_write(event);
