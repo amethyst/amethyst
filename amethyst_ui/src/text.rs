@@ -46,12 +46,12 @@ pub struct UiText {
     pub line_mode: LineMode,
     /// How to align the text within its `UiTransform`.
     pub align: Anchor,
-    /// Cached glyph positions, used to process mouse highlighting
+    /// Cached glyph positions including invisible characters, used to process mouse highlighting.
     #[serde(skip)]
     pub(crate) cached_glyphs: Vec<CachedGlyph>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) struct CachedGlyph {
     pub(crate) x: f32,
     pub(crate) y: f32,
