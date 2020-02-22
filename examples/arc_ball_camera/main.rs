@@ -21,8 +21,10 @@ use amethyst::{
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
     Error,
 };
+
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>), f32>;
 
@@ -104,6 +106,8 @@ fn main() -> Result<(), Error> {
 
     let key_bindings_path = app_root.join("examples/arc_ball_camera/config/input.ron");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new().with_dep(&[]))?
@@ -117,8 +121,8 @@ fn main() -> Result<(), Error> {
             &["input_system"],
         )
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
+                .with_plugin(RenderToWindow::new())
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderSkybox::with_colors(
                     Srgb::new(0.82, 0.51, 0.50),

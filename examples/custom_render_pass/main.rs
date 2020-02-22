@@ -10,7 +10,13 @@ use amethyst::{
     prelude::*,
     renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
-    winit::VirtualKeyCode,
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
+    winit::event::VirtualKeyCode,
+};
+use amethyst_rendy::rendy;
+
+const CLEAR_COLOR: rendy::hal::command::ClearColor= rendy::hal::command::ClearColor {
+    float32: [0.34, 0.36, 0.52, 1.0],
 };
 
 pub struct CustomShaderState;
@@ -92,13 +98,15 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/custom_render_pass/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([1.0, 1.0, 1.0, 1.0]),
+                    RenderToWindow::new()
+                        .with_clear(CLEAR_COLOR),
                 )
                 // Add our custom render plugin to the rendering bundle.
                 .with_plugin(RenderCustom::default()),

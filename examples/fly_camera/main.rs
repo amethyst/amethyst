@@ -14,9 +14,11 @@ use amethyst::{
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
-    winit::{MouseButton, VirtualKeyCode},
+    winit::event::{ MouseButton, VirtualKeyCode},
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
     Error,
 };
+use amethyst_rendy::rendy;
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
@@ -64,6 +66,8 @@ fn main() -> Result<(), Error> {
 
     let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
@@ -79,10 +83,12 @@ fn main() -> Result<(), Error> {
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            RenderingBundle::<DefaultBackend>::new(display_config,&event_loop)
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::new()
+                        .with_clear(rendy::hal::command::ClearColor {
+                            float32: [0.34, 0.36, 0.52, 1.0],
+                        }),
                 )
                 .with_plugin(RenderShaded3D::default()),
         )?;

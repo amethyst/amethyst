@@ -10,6 +10,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Named, WithNamed,
     },
+    config::Config,
     derive::SystemDesc,
     ecs::{
         prelude::Entity, Entities, Join, Read, ReadExpect, ReadStorage, System, SystemData,
@@ -26,9 +27,10 @@ use amethyst::{
     },
     ui::{RenderUi, UiBundle, UiCreator, UiFinder, UiText},
     utils::application_root_dir,
-    window::ScreenDimensions,
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
 };
+use amethyst_rendy::rendy;
 
 #[derive(SystemDesc)]
 struct MouseRaycastSystem;
@@ -237,8 +239,8 @@ fn load_sprite_sheet<P>(
     ron_path: &str,
     progress: P,
 ) -> Handle<SpriteSheet>
-where
-    P: Progress,
+    where
+        P: Progress,
 {
     let texture_handle = {
         let loader = world.read_resource::<Loader>();
@@ -262,15 +264,18 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets/");
     let display_config_path = app_root.join("examples/mouse_raycast/config/display.ron");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::new().with_clear(rendy::hal::command::ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderUi::default())
                 .with_plugin(RenderFlat2D::default()),

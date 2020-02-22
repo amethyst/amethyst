@@ -10,6 +10,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::RenderToWindow,
+        rendy::hal::command::ClearColor,
         rendy::mesh::{Normal, Position, TexCoord},
         types::DefaultBackend,
         RenderingBundle,
@@ -21,7 +22,8 @@ use amethyst::{
         fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
-    winit::VirtualKeyCode,
+    window::{DisplayConfig, EventLoop},
+    winit::event::VirtualKeyCode,
 };
 use log::info;
 
@@ -128,6 +130,9 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/ui/config/display.ron");
     let assets_dir = app_root.join("examples/assets");
 
+
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
@@ -137,10 +142,12 @@ fn main() -> amethyst::Result<()> {
         .with_system_desc(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
         .with_bundle(FpsCounterBundle::default())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::new()
+                        .with_clear(ClearColor {
+                            float32: [0.34, 0.36, 0.52, 1.0],
+                        })
                 )
                 .with_plugin(RenderUi::default()),
         )?;
@@ -149,8 +156,15 @@ fn main() -> amethyst::Result<()> {
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;
-    game.run();
-    Ok(())
+    game.initialize();
+    event_loop.run(move |event, _, control_flow| {
+        #[cfg(feature = "profiler")]
+        profile_scope!("run_event_loop");
+        log::trace!("main loop run");
+        if let Some(event) = event.to_static() {
+            game.run_winit_loop(event, control_flow)
+        }
+    })
 }
 
 /// This shows how to handle UI events.

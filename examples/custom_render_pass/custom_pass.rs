@@ -92,7 +92,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, hal::pso::CreationError> {
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let vertex = DynamicVertexBuffer::new();
 
@@ -206,7 +206,7 @@ fn build_custom_pipeline<B: Backend>(
     framebuffer_width: u32,
     framebuffer_height: u32,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), hal::pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()
@@ -223,7 +223,7 @@ fn build_custom_pipeline<B: Backend>(
             PipelineDescBuilder::new()
                 // This Pipeline uses our custom vertex description and does not use instancing
                 .with_vertex_desc(&[(CustomArgs::vertex(), pso::VertexInputRate::Vertex)])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleList))
+                .with_input_assembler(pso::InputAssemblerDesc::new(hal::pso::Primitive::TriangleList))
                 // Add the shaders
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,

@@ -385,6 +385,8 @@ fn main() -> amethyst::Result<()> {
         #[cfg(feature = "profiler")]
         profile_scope!("run_event_loop");
         log::trace!("main loop run");
-        game.run_winit_loop(event, control_flow)
+        if let Some(event) = event.to_static() {
+            game.run_winit_loop(event, control_flow)
+        }
     })
 }

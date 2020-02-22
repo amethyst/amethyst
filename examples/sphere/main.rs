@@ -11,8 +11,10 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
+    window::{EventLoop, ScreenDimensions, DisplayConfig},
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
+use amethyst_rendy::rendy;
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
@@ -35,18 +37,28 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/sphere/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::new()
+                        .with_clear(rendy::hal::command::ClearColor {
+                            float32: [0.34, 0.36, 0.52, 1.0],
+                        }),
                 )
                 .with_plugin(RenderShaded3D::default()),
         )?;
     let mut game = Application::new(assets_dir, Example, game_data)?;
-    game.run();
-    Ok(())
+    game.initialize();
+
+    event_loop.run(move |event, _, control_flow| {
+        log::trace!("main loop run");
+        if let Some(event) = event.to_static() {
+            game.run_winit_loop(event, control_flow)
+        }
+    })
 }

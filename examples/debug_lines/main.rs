@@ -19,8 +19,9 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
+    window::{EventLoop, DisplayConfig},
     utils::application_root_dir,
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
 };
 
 #[derive(SystemDesc)]
@@ -180,6 +181,8 @@ fn main() -> amethyst::Result<()> {
     )
     .with_sensitivity(0.1, 0.1);
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
@@ -188,8 +191,8 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(fly_control_bundle)?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
+                .with_plugin(RenderToWindow::new())
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::default()),
         )?;

@@ -21,6 +21,7 @@ use amethyst::{
         types::{DefaultBackend, Mesh, MeshData},
         RenderingBundle,
     },
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
     utils::application_root_dir,
 };
 
@@ -122,12 +123,14 @@ fn main() -> Result<(), Error> {
 
     let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
+            RenderingBundle::<DefaultBackend>::new(display_config,&event_loop)
+                .with_plugin(RenderToWindow::new())
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderSkybox::with_colors(
                     Srgb::new(0.82, 0.51, 0.50),

@@ -166,6 +166,8 @@ fn main() -> amethyst::Result<()> {
     game.initialize();
     event_loop.run(move |event, _, control_flow| {
         log::trace!("main loop run");
-        game.run_winit_loop(event, control_flow)
+        if let Some(event) = event.to_static() {
+            game.run_winit_loop(event, control_flow)
+        }
     })
 }

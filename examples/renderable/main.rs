@@ -222,7 +222,11 @@ fn main() -> amethyst::Result<()> {
     event_loop.run(move |event, _, control_flow| {
         #[cfg(feature = "profiler")]
         profile_scope!("run_event_loop");
-        game.run_winit_loop(event, control_flow)
+        if let Some(event) = event.to_static() {
+            game.run_winit_loop(event, control_flow)
+        } else {
+            println!("Non-static errors");
+        }
     })
 }
 
@@ -287,15 +291,15 @@ impl<'a> System<'a> for ExampleSystem {
         }
 
         for (point_light, transform) in
-            (&mut lights, &mut transforms)
-                .join()
-                .filter_map(|(light, transform)| {
-                    if let Light::Point(ref mut point_light) = *light {
-                        Some((point_light, transform))
-                    } else {
-                        None
-                    }
-                })
+        (&mut lights, &mut transforms)
+            .join()
+            .filter_map(|(light, transform)| {
+                if let Light::Point(ref mut point_light) = *light {
+                    Some((point_light, transform))
+                } else {
+                    None
+                }
+            })
         {
             transform.set_translation_xyz(
                 light_orbit_radius * state.light_angle.cos(),

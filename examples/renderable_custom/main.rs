@@ -33,6 +33,7 @@ use amethyst::{
         visibility::VisibilitySortingSystem,
         Camera, Factory, Format, GraphBuilder, GraphCreator, Kind, MeshProcessorSystem,
         RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder, TextureProcessorSystem,
+        rendy::command::Families,
     },
     ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiGlyphsSystemDesc, UiText},
     utils::{
@@ -43,6 +44,7 @@ use amethyst::{
     window::{ScreenDimensions, Window, WindowBundle},
     Error,
 };
+use amethyst_rendy::rendy;
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
@@ -238,12 +240,16 @@ fn main() -> Result<(), Error> {
             &[],
         )
         .with(Processor::<Material>::new(), "material_processor", &[])
-        .with_bundle(WindowBundle::from_config_path(display_config_path)?)?
+        .with_bundle(WindowBundle::new())?;
         // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
         // which will always execute on the main thread.
+        // TODO
+        /*
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
+
         ));
+        */
 
     let mut game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
     game.run();
@@ -311,6 +317,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             graph::present::PresentNode,
             hal::command::{ClearDepthStencil, ClearValue},
         };
+        use std::ops::Deref;
 
         self.dirty = false;
 
@@ -320,24 +327,35 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         // Create a new drawing surface in our window
-        let surface = factory.create_surface(&window);
+        let surface = factory.create_surface(window.deref()).unwrap();
         let surface_format = factory.get_surface_format(&surface);
 
         // Begin building our RenderGraph
         let mut graph_builder = GraphBuilder::new();
+
+        let clear = ClearValue {
+            color : rendy::hal::command::ClearColor {
+                float32: [0.34, 0.36, 0.52, 1.0],
+            }
+        };
         let color = graph_builder.create_image(
             window_kind,
             1,
             surface_format,
             // clear screen to black
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+            Some(clear),
         );
+
+        let clear = ClearValue {
+            depth_stencil : ClearDepthStencil{ depth: 1.0, stencil:  0 },
+
+        };
 
         let depth = graph_builder.create_image(
             window_kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+            Some(clear)
         );
 
         // Create our first `Subpass`, which contains the DrawShaded and DrawUi render groups.

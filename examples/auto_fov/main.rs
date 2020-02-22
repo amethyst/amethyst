@@ -3,6 +3,7 @@ use amethyst::{
         Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystemDesc,
         ProgressCounter, RonFormat,
     },
+    config::Config,
     core::{Transform, TransformBundle},
     derive::{PrefabData, SystemDesc},
     ecs::{Entity, ReadExpect, ReadStorage, System, SystemData, WorldExt, WriteStorage},
@@ -25,14 +26,17 @@ use amethyst::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
-    window::ScreenDimensions,
-    winit::VirtualKeyCode,
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
+    winit::event::VirtualKeyCode,
     Error,
 };
 use log::{error, info};
 use serde::{Deserialize, Serialize};
+use amethyst_rendy::rendy;
 
-const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+const CLEAR_COLOR: rendy::hal::command::ClearColor= rendy::hal::command::ClearColor {
+    float32: [0.34, 0.36, 0.52, 1.0],
+};
 
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
@@ -41,6 +45,8 @@ fn main() -> Result<(), Error> {
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
     let assets_dir = app_dir.join("assets");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::new()
         .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefab>::default(),
@@ -55,9 +61,9 @@ fn main() -> Result<(), Error> {
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?.with_clear(CLEAR_COLOR),
+                    RenderToWindow::new().with_clear(CLEAR_COLOR),
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
