@@ -20,7 +20,7 @@ amethyst_error = { path = "../amethyst_error/", version = "0.4.0" }
 log = "0.4.6"
 serde = { version = "1", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
-winit = { version = "0.20.0", features = ["serde"] }
+winit = { version = "0.21.0", features = ["serde"] }
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]

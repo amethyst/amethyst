@@ -60,7 +60,7 @@ where
     G: GraphCreator<B>,
 {
     /// Create a new `RenderingSystem` with the supplied graph via `GraphCreator`
-    pub fn new(graph_creator: G, families: Families<B>) -> Self {
+    pub fn  new(graph_creator: G, families: Families<B>) -> Self {
         Self {
             graph: None,
             families,
@@ -253,7 +253,8 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
                 )
                 .map(B::wrap_texture)
                 .map(ProcessingState::Loaded)
-                .map_err(Error::new)
+                    //TODO: Fix error types here
+                .map_err(|e|Error::from_string(format!("{:?}", e)))
             },
             time.frame_number(),
             &**pool,

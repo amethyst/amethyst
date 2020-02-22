@@ -7,6 +7,7 @@ use rendy::{
         device::Device,
         pass::Subpass,
         pso::{
+            CreationError,
             AttributeDesc, BakedStates, BasePipeline, BlendDesc, ColorBlendDesc, DepthStencilDesc,
             DepthTest, Face, GraphicsPipelineDesc, GraphicsShaderSet, InputAssemblerDesc,
             Multisampling, PipelineCreationFlags, Primitive, Rasterizer, Rect, VertexBufferDesc,
@@ -344,7 +345,7 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
         self,
         factory: &Factory<B>,
         cache: Option<&B::PipelineCache>,
-    ) -> Result<Vec<B::GraphicsPipeline>, failure::Error> {
+    ) -> Result<Vec<B::GraphicsPipeline>, CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("create_pipelines");
 
@@ -360,7 +361,7 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
                     factory.destroy_graphics_pipeline(p);
                 }
             }
-            failure::bail!(err);
+            return Err(err);
         }
 
         Ok(pipelines.into_iter().map(|p| p.unwrap()).collect())

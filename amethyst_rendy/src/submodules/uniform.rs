@@ -44,7 +44,7 @@ where
     pub fn new(
         factory: &Factory<B>,
         flags: hal::pso::ShaderStageFlags,
-    ) -> Result<Self, failure::Error> {
+    ) -> Result<Self, hal::pso::CreationError> {
         Ok(Self {
             layout: factory
                 .create_descriptor_set_layout(util::set_layout_bindings(Some((
