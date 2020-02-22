@@ -112,7 +112,7 @@ macro_rules! impl_single_default {
 impl_backends!(
     // DirectX 12 is currently disabled because of incomplete gfx-hal support for it.
     // It will be re-enabled when it actually works.
-    // Dx12, "dx12", rendy::dx12::Backend; 
+    // Dx12, "dx12", rendy::dx12::Backend;
     Metal, "metal", rendy::metal::Backend;
     Vulkan, "vulkan", rendy::vulkan::Backend;
     Empty, "empty", rendy::empty::Backend;

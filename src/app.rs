@@ -29,6 +29,7 @@ use crate::{
     state_event::{StateEvent, StateEventReader},
     ui::UiEvent,
 };
+use winit::event_loop::EventLoop;
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.
@@ -258,7 +259,6 @@ where
 
         self.shutdown();
     }
-
     /// Run a single main loop step.
     /// This is needed because the main loop in combination with winit is handled by winit itself.
     /// When the game state indicates that the game is no longer running,
@@ -277,7 +277,43 @@ where
     ///     game.run_winit_loop(event, control_flow)
     /// })
     /// ~~~
-    pub fn run_winit_loop(&mut self, event: Event<'static, ()>, control_flow: &mut ControlFlow)
+    pub fn run_winit_loop(mut self, event_loop: EventLoop<()>) -> !
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+        Self: 'static,
+        E: 'static,
+    {
+        self.initialize();
+
+        event_loop.run(move |event, _, control_flow| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("run_event_loop");
+            if let Some(event) = event.to_static() {
+                self.handle_winit_event(event, control_flow)
+            } else {
+                println!("Non-static errors");
+            }
+        })
+    }
+    /// Run a single main loop step.
+    /// This is needed because the main loop in combination with winit is handled by winit itself.
+    /// When the game state indicates that the game is no longer running,
+    /// run_winit_loop will instruct winit to close the event_loop via `control_flow`
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// let event_loop = EventLoop::new();
+    /// let mut game = Application::new(assets_dir, Example::new(), game_data)?;
+    /// game.initialize();
+    /// event_loop.run(move |event, _, control_flow| {
+    ///     #[cfg(feature = "profiler")]
+    ///     profile_scope!("run_event_loop");
+    ///     log::trace!("main loop run");
+    ///     game.run_winit_loop(event, control_flow)
+    /// })
+    /// ~~~
+    pub fn handle_winit_event(&mut self, event: Event<'static, ()>, control_flow: &mut ControlFlow)
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
