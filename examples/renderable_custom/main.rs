@@ -27,13 +27,15 @@ use amethyst::{
         mtl::Material,
         palette::{Srgb, Srgba},
         pass::DrawShadedDesc,
-        rendy::mesh::{Normal, Position, TexCoord},
+        rendy::{
+            command::Families,
+            mesh::{Normal, Position, TexCoord},
+        },
         resources::AmbientColor,
         types::DefaultBackend,
         visibility::VisibilitySortingSystem,
         Camera, Factory, Format, GraphBuilder, GraphCreator, Kind, MeshProcessorSystem,
         RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder, TextureProcessorSystem,
-        rendy::command::Families,
     },
     ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiGlyphsSystemDesc, UiText},
     utils::{
@@ -241,19 +243,18 @@ fn main() -> Result<(), Error> {
         )
         .with(Processor::<Material>::new(), "material_processor", &[])
         .with_bundle(WindowBundle::new())?;
-        // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
-        // which will always execute on the main thread.
-        // TODO
-        /*
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
+    // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
+    // which will always execute on the main thread.
+    // TODO
+    /*
+    .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+        ExampleGraph::default(),
 
-        ));
-        */
+    ));
+    */
 
     let mut game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
-    game.run();
-    Ok(())
+    game.run_winit_loop(event_loop);
 }
 
 struct DemoState {
@@ -334,9 +335,9 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         let mut graph_builder = GraphBuilder::new();
 
         let clear = ClearValue {
-            color : rendy::hal::command::ClearColor {
+            color: rendy::hal::command::ClearColor {
                 float32: [0.34, 0.36, 0.52, 1.0],
-            }
+            },
         };
         let color = graph_builder.create_image(
             window_kind,
@@ -347,16 +348,13 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         );
 
         let clear = ClearValue {
-            depth_stencil : ClearDepthStencil{ depth: 1.0, stencil:  0 },
-
+            depth_stencil: ClearDepthStencil {
+                depth: 1.0,
+                stencil: 0,
+            },
         };
 
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(clear)
-        );
+        let depth = graph_builder.create_image(window_kind, 1, Format::D32Sfloat, Some(clear));
 
         // Create our first `Subpass`, which contains the DrawShaded and DrawUi render groups.
         // We pass the subpass builder a description of our groups for construction

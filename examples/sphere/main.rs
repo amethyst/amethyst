@@ -11,8 +11,8 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    window::{EventLoop, ScreenDimensions, DisplayConfig},
     utils::{application_root_dir, scene::BasicScenePrefab},
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
 };
 use amethyst_rendy::rendy;
 
@@ -45,20 +45,13 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(
-                    RenderToWindow::new()
-                        .with_clear(rendy::hal::command::ClearColor {
-                            float32: [0.34, 0.36, 0.52, 1.0],
-                        }),
+                    RenderToWindow::new().with_clear(rendy::hal::command::ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderShaded3D::default()),
         )?;
     let mut game = Application::new(assets_dir, Example, game_data)?;
     game.initialize();
-
-    event_loop.run(move |event, _, control_flow| {
-        log::trace!("main loop run");
-        if let Some(event) = event.to_static() {
-            game.run_winit_loop(event, control_flow)
-        }
-    })
+    game.run_winit_loop(event_loop);
 }

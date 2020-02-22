@@ -13,19 +13,19 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
     utils::{application_root_dir, scene::BasicScenePrefab},
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
     winit::event::{ElementState, VirtualKeyCode},
 };
-use serde::{Deserialize, Serialize};
 use amethyst_rendy::rendy;
+use serde::{Deserialize, Serialize};
 
 type MyPrefabData = (
     Option<BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>>,
     Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
 
-const CLEAR_COLOR: rendy::hal::command::ClearColor  = rendy::hal::command::ClearColor {
+const CLEAR_COLOR: rendy::hal::command::ClearColor = rendy::hal::command::ClearColor {
     float32: [0.34, 0.36, 0.52, 1.0],
 };
 
@@ -238,16 +238,12 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
-                .with_plugin(
-                    RenderToWindow::new().with_clear(CLEAR_COLOR),
-                )
+                .with_plugin(RenderToWindow::new().with_clear(CLEAR_COLOR))
                 .with_plugin(RenderPbr3D::default()),
         )?;
     let state: Example = Default::default();
     let mut game = Application::new(assets_dir, state, game_data)?;
-    game.run();
-
-    Ok(())
+    game.run_winit_loop(event_loop);
 }
 
 fn add_animation(

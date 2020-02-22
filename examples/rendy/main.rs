@@ -622,7 +622,6 @@ fn main() -> amethyst::Result<()> {
         },
     )?;
 
-
     let game_data = GameDataBuilder::default()
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
@@ -684,13 +683,7 @@ fn main() -> amethyst::Result<()> {
         )?;
 
     let mut game = Application::new(assets_dir, Example::new(), game_data)?;
-    game.initialize();
-    event_loop.run(move |event, _, control_flow| {
-        #[cfg(feature = "profiler")]
-        profile_scope!("run_event_loop");
-        log::trace!("main loop run");
-        game.run_winit_loop(event, control_flow)
-    })
+    game.run_winit_loop(event_loop);
 }
 
 #[derive(Default, Debug)]

@@ -457,10 +457,5 @@ fn main() -> amethyst::Result<()> {
         )?;
 
     let mut game = Application::new(assets_directory, Example, game_data)?;
-    game.initialize();
-    event_loop.run(move |event, _, control_flow| {
-        #[cfg(feature = "profiler")]
-        profile_scope!("run_event_loop");
-        game.run_winit_loop(event, control_flow)
-    })
+    game.run_winit_loop(event_loop);
 }

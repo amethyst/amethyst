@@ -9,8 +9,8 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
     utils::{application_root_dir, scene::BasicScenePrefab},
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
 };
 use amethyst_rendy::rendy;
 
@@ -34,7 +34,6 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/spotlights/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-
     let event_loop = EventLoop::new();
     let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
@@ -50,11 +49,5 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderPbr3D::default()),
         )?;
     let mut game = Application::new(assets_dir, Example, game_data)?;
-    game.initialize();
-    event_loop.run(move |event, _, control_flow| {
-        log::trace!("main loop run");
-        if let Some(event) = event.to_static() {
-            game.run_winit_loop(event, control_flow)
-        }
-    })
+    game.run_winit_loop(event_loop);
 }

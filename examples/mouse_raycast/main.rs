@@ -4,13 +4,13 @@
 
 use amethyst::{
     assets::{AssetStorage, Handle, Loader, Progress, ProgressCounter},
+    config::Config,
     core::{
         geometry::Plane,
         math::{Point2, Vector2, Vector3},
         transform::{Transform, TransformBundle},
         Named, WithNamed,
     },
-    config::Config,
     derive::SystemDesc,
     ecs::{
         prelude::Entity, Entities, Join, Read, ReadExpect, ReadStorage, System, SystemData,
@@ -239,8 +239,8 @@ fn load_sprite_sheet<P>(
     ron_path: &str,
     progress: P,
 ) -> Handle<SpriteSheet>
-    where
-        P: Progress,
+where
+    P: Progress,
 {
     let texture_handle = {
         let loader = world.read_resource::<Loader>();
@@ -283,7 +283,5 @@ fn main() -> amethyst::Result<()> {
         .with(MouseRaycastSystem, "MouseRaycastSystem", &["input_system"]);
 
     let mut game = Application::new(assets_dir, Example::default(), game_data)?;
-    game.run();
-
-    Ok(())
+    game.run_winit_loop(event_loop);
 }

@@ -25,7 +25,6 @@ use amethyst::{
     Error,
 };
 
-
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>), f32>;
 
 struct ExampleState;
@@ -131,6 +130,5 @@ fn main() -> Result<(), Error> {
         )?;
 
     let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
-    game.run();
-    Ok(())
+    game.run_winit_loop(event_loop);
 }

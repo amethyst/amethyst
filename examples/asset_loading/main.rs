@@ -21,8 +21,8 @@ use amethyst::{
         types::{DefaultBackend, Mesh, MeshData},
         RenderingBundle,
     },
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
     utils::application_root_dir,
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
 };
 
 #[derive(Clone, Debug)]
@@ -129,7 +129,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new(display_config,&event_loop)
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(RenderToWindow::new())
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderSkybox::with_colors(
@@ -138,8 +138,7 @@ fn main() -> Result<(), Error> {
                 )),
         )?;
     let mut game = Application::new(assets_dir, AssetsExample, game_data)?;
-    game.run();
-    Ok(())
+    game.run_winit_loop(event_loop);
 }
 
 fn initialise_camera(world: &mut World) {

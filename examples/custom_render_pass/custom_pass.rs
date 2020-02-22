@@ -223,7 +223,9 @@ fn build_custom_pipeline<B: Backend>(
             PipelineDescBuilder::new()
                 // This Pipeline uses our custom vertex description and does not use instancing
                 .with_vertex_desc(&[(CustomArgs::vertex(), pso::VertexInputRate::Vertex)])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::pso::Primitive::TriangleList))
+                .with_input_assembler(pso::InputAssemblerDesc::new(
+                    hal::pso::Primitive::TriangleList,
+                ))
                 // Add the shaders
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,

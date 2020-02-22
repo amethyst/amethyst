@@ -19,8 +19,8 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    window::{EventLoop, DisplayConfig},
     utils::application_root_dir,
+    window::{DisplayConfig, EventLoop},
     winit::event::VirtualKeyCode,
 };
 
@@ -198,6 +198,5 @@ fn main() -> amethyst::Result<()> {
         )?;
 
     let mut game = Application::new(assets_dir, ExampleState, game_data)?;
-    game.run();
-    Ok(())
+    game.run_winit_loop(event_loop);
 }

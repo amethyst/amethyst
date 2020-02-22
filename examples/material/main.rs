@@ -1,11 +1,11 @@
 //! Displays spheres with physically based materials.
 use amethyst::{
     assets::AssetLoaderSystemData,
+    config::Config,
     core::{
         ecs::{Builder, WorldExt},
         Transform, TransformBundle,
     },
-    config::Config,
     renderer::{
         camera::Camera,
         light::{Light, PointLight},
@@ -21,16 +21,14 @@ use amethyst::{
         Mesh, RenderingBundle, Texture,
     },
     utils::application_root_dir,
-    window::{ScreenDimensions, EventLoop, DisplayConfig},
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
     Application, GameData, GameDataBuilder, SimpleState, StateData,
 };
 use amethyst_rendy::rendy;
 
-
-const CLEAR_COLOR: rendy::hal::command::ClearColor= rendy::hal::command::ClearColor {
+const CLEAR_COLOR: rendy::hal::command::ClearColor = rendy::hal::command::ClearColor {
     float32: [0.0, 0.0, 0.0, 1.0],
 };
-
 
 struct Example;
 
@@ -158,26 +156,16 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/material/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-
     let event_loop = EventLoop::new();
     let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
-                .with_plugin(
-                    RenderToWindow::new()
-                        .with_clear(CLEAR_COLOR),
-                )
+                .with_plugin(RenderToWindow::new().with_clear(CLEAR_COLOR))
                 .with_plugin(RenderPbr3D::default()),
         )?;
 
     let mut game = Application::new(assets_dir, Example, game_data)?;
-    game.initialize();
-    event_loop.run(move |event, _, control_flow| {
-        log::trace!("main loop run");
-        if let Some(event) = event.to_static() {
-            game.run_winit_loop(event, control_flow)
-        }
-    })
+    game.run_winit_loop(event_loop);
 }

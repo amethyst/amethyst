@@ -226,6 +226,5 @@ fn main() -> Result<(), amethyst::Error> {
         )?;
 
     let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
-    game.run();
-    Ok(())
+    game.run_winit_loop(event_loop);
 }

@@ -15,7 +15,7 @@ use amethyst::{
 };
 use amethyst_rendy::rendy;
 
-const CLEAR_COLOR: rendy::hal::command::ClearColor= rendy::hal::command::ClearColor {
+const CLEAR_COLOR: rendy::hal::command::ClearColor = rendy::hal::command::ClearColor {
     float32: [0.34, 0.36, 0.52, 1.0],
 };
 
@@ -104,16 +104,11 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
-                .with_plugin(
-                    RenderToWindow::new()
-                        .with_clear(CLEAR_COLOR),
-                )
+                .with_plugin(RenderToWindow::new().with_clear(CLEAR_COLOR))
                 // Add our custom render plugin to the rendering bundle.
                 .with_plugin(RenderCustom::default()),
         )?;
 
     let mut game = Application::new(assets_dir, CustomShaderState, game_data)?;
-
-    game.run();
-    Ok(())
+    game.run_winit_loop(event_loop);
 }

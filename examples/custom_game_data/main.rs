@@ -24,8 +24,8 @@ use amethyst::{
         RenderingBundle,
     },
     ui::{RenderUi, UiBundle, UiCreator, UiLoader, UiPrefab},
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
     utils::{application_root_dir, fps_counter::FpsCounterBundle, scene::BasicScenePrefab},
+    window::{DisplayConfig, EventLoop, ScreenDimensions},
     winit::event::VirtualKeyCode,
     Error,
 };
@@ -34,11 +34,9 @@ use amethyst_rendy::rendy;
 mod example_system;
 mod game_data;
 
-
-const CLEAR_COLOR: rendy::hal::command::ClearColor= rendy::hal::command::ClearColor {
+const CLEAR_COLOR: rendy::hal::command::ClearColor = rendy::hal::command::ClearColor {
     float32: [0.0, 0.0, 0.0, 1.0],
 };
-
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
@@ -203,8 +201,8 @@ fn main() -> Result<(), Error> {
         level_filter: log::LevelFilter::Info,
         ..Default::default()
     })
-        .level_for("custom_game_data", log::LevelFilter::Debug)
-        .start();
+    .level_for("custom_game_data", log::LevelFilter::Debug)
+    .start();
 
     let app_root = application_root_dir()?;
 
@@ -224,15 +222,11 @@ fn main() -> Result<(), Error> {
         .with_base_bundle(InputBundle::<StringBindings>::new())
         .with_base_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
-                .with_plugin(
-                    RenderToWindow::new().with_clear(CLEAR_COLOR),
-                )
+                .with_plugin(RenderToWindow::new().with_clear(CLEAR_COLOR))
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
         );
 
     let mut game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
-    game.run();
-
-    Ok(())
+    game.run_winit_loop(event_loop);
 }

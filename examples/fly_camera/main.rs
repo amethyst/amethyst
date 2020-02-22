@@ -14,8 +14,8 @@ use amethyst::{
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
-    winit::event::{ MouseButton, VirtualKeyCode},
     window::{DisplayConfig, EventLoop, ScreenDimensions},
+    winit::event::{MouseButton, VirtualKeyCode},
     Error,
 };
 use amethyst_rendy::rendy;
@@ -83,17 +83,15 @@ fn main() -> Result<(), Error> {
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new(display_config,&event_loop)
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(
-                    RenderToWindow::new()
-                        .with_clear(rendy::hal::command::ClearColor {
-                            float32: [0.34, 0.36, 0.52, 1.0],
-                        }),
+                    RenderToWindow::new().with_clear(rendy::hal::command::ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderShaded3D::default()),
         )?;
 
     let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
-    game.run();
-    Ok(())
+    game.run_winit_loop(event_loop);
 }

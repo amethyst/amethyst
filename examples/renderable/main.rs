@@ -26,8 +26,10 @@ use amethyst::{
         light::Light,
         palette::{Srgb, Srgba},
         plugins::{RenderShaded3D, RenderToWindow},
-        rendy::hal::command::ClearColor,
-        rendy::mesh::{Normal, Position, TexCoord},
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, TexCoord},
+        },
         resources::AmbientColor,
         types::DefaultBackend,
         Camera, RenderingBundle,
@@ -218,16 +220,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
     let mut game = Application::new(assets_dir, Loading::default(), game_data)?;
-    game.initialize();
-    event_loop.run(move |event, _, control_flow| {
-        #[cfg(feature = "profiler")]
-        profile_scope!("run_event_loop");
-        if let Some(event) = event.to_static() {
-            game.run_winit_loop(event, control_flow)
-        } else {
-            println!("Non-static errors");
-        }
-    })
+    game.run_winit_loop(event_loop);
 }
 
 struct DemoState {
@@ -291,15 +284,15 @@ impl<'a> System<'a> for ExampleSystem {
         }
 
         for (point_light, transform) in
-        (&mut lights, &mut transforms)
-            .join()
-            .filter_map(|(light, transform)| {
-                if let Light::Point(ref mut point_light) = *light {
-                    Some((point_light, transform))
-                } else {
-                    None
-                }
-            })
+            (&mut lights, &mut transforms)
+                .join()
+                .filter_map(|(light, transform)| {
+                    if let Light::Point(ref mut point_light) = *light {
+                        Some((point_light, transform))
+                    } else {
+                        None
+                    }
+                })
         {
             transform.set_translation_xyz(
                 light_orbit_radius * state.light_angle.cos(),

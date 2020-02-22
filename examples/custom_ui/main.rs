@@ -111,6 +111,5 @@ fn main() -> amethyst::Result<()> {
         )?;
 
     let mut game = Application::new(assets_dir, Example, game_data)?;
-    game.run();
-    Ok(())
+    game.run_winit_loop(event_loop);
 }

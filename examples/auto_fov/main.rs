@@ -30,11 +30,11 @@ use amethyst::{
     winit::event::VirtualKeyCode,
     Error,
 };
+use amethyst_rendy::rendy;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
-use amethyst_rendy::rendy;
 
-const CLEAR_COLOR: rendy::hal::command::ClearColor= rendy::hal::command::ClearColor {
+const CLEAR_COLOR: rendy::hal::command::ClearColor = rendy::hal::command::ClearColor {
     float32: [0.34, 0.36, 0.52, 1.0],
 };
 
@@ -62,17 +62,13 @@ fn main() -> Result<(), Error> {
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
-                .with_plugin(
-                    RenderToWindow::new().with_clear(CLEAR_COLOR),
-                )
+                .with_plugin(RenderToWindow::new().with_clear(CLEAR_COLOR))
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
         )?;
 
     let mut game = Application::build(assets_dir, Loading::new())?.build(game_data)?;
-    game.run();
-
-    Ok(())
+    game.run_winit_loop(event_loop);
 }
 
 #[derive(Default, Deserialize, PrefabData, Serialize)]
