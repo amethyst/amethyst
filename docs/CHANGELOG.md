@@ -26,17 +26,21 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Removed
 
-* `"nightly"` feature is removed, missing resource panic message includes type name on stable. ([#2136])
+- `"nightly"` feature is removed, missing resource panic message includes type name on stable. ([#2136])
 
 ### Fixed
 
+- Editable text fields now correctly highlight strings containing spaces. ([#2108], [#2143])
+
 ### Security
 
+[#2108]: https://github.com/amethyst/amethyst/issues/2108
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
 [#2115]: https://github.com/amethyst/amethyst/pull/2115
 [#2128]: https://github.com/amethyst/amethyst/pull/2128
 [#2136]: https://github.com/amethyst/amethyst/pull/2136
 [#2138]: https://github.com/amethyst/amethyst/pull/2138
+[#2143]: https://github.com/amethyst/amethyst/pull/2143
 
 ## [0.14.0] - 2020-01-30
 

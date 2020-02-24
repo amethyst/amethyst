@@ -184,6 +184,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
         {
             ui_text.cached_glyphs.clear();
 
+            let font_asset = font_storage.get(&ui_text.font).map(|font| font.0.clone());
             let font_lookup = fonts_map_ref
                 .entry(ui_text.font.id())
                 .or_insert(FontState::NotFound);
@@ -193,7 +194,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                 }
             }
 
-            if let Some(font_id) = font_lookup.id() {
+            if let (Some(font_id), Some(font_asset)) = (font_lookup.id(), font_asset) {
                 let tint_color = tint.map_or([1., 1., 1., 1.], |t| {
                     let (r, g, b, a) = t.0.into_components();
                     [r, g, b, a]
@@ -310,19 +311,54 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                     text,
                 };
 
-                ui_text.cached_glyphs.extend(
-                    glyph_brush_ref
-                        .glyphs_custom_layout(&section, &layout)
-                        .map(|g| {
-                            let pos = g.position();
-                            let advance_width = g.unpositioned().h_metrics().advance_width;
-                            CachedGlyph {
-                                x: pos.x,
-                                y: -pos.y,
-                                advance_width,
-                            }
-                        }),
-                );
+                // `GlyphBrush::glyphs_custom_layout` does not return glyphs for invisible
+                // characters.
+                //
+                // <https://docs.rs/glyph_brush/0.6.2/glyph_brush/trait.GlyphCruncher.html
+                //  #tymethod.glyphs_custom_layout>
+                //
+                // For support, see:
+                //
+                // <https://github.com/alexheretic/glyph-brush/issues/80>
+                let mut nonempty_cached_glyphs = glyph_brush_ref
+                    .glyphs_custom_layout(&section, &layout)
+                    .map(|g| {
+                        let pos = g.position();
+                        let advance_width = g.unpositioned().h_metrics().advance_width;
+                        CachedGlyph {
+                            x: pos.x,
+                            y: -pos.y,
+                            advance_width,
+                        }
+                    });
+
+                let mut last_cached_glyph: Option<CachedGlyph> = None;
+                let all_glyphs = ui_text.text.chars().filter_map(|c| {
+                    if c.is_whitespace() {
+                        let (x, y) = if let Some(last_cached_glyph) = last_cached_glyph {
+                            let x = last_cached_glyph.x + last_cached_glyph.advance_width;
+                            let y = last_cached_glyph.y;
+                            (x, y)
+                        } else {
+                            (0.0, 0.0)
+                        };
+
+                        let advance_width =
+                            font_asset.glyph(c).scaled(scale).h_metrics().advance_width;
+
+                        let cached_glyph = CachedGlyph {
+                            x,
+                            y,
+                            advance_width,
+                        };
+                        last_cached_glyph = Some(cached_glyph);
+                        last_cached_glyph
+                    } else {
+                        last_cached_glyph = nonempty_cached_glyphs.next();
+                        last_cached_glyph
+                    }
+                });
+                ui_text.cached_glyphs.extend(all_glyphs);
 
                 glyph_brush_ref.queue_custom_layout(section, &layout);
             }
