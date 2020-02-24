@@ -19,7 +19,7 @@ use amethyst_window::ScreenDimensions;
 use super::*;
 
 /// How lines should behave when they are longer than the maximum line length.
-#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LineMode {
     /// Single line. It ignores line breaks.
     Single,
