@@ -246,6 +246,7 @@ impl<'a> System<'a> for TextEditingMouseSystem {
                                     mouse_y,
                                     &text.cached_glyphs,
                                 );
+                                text_editing.cursor_blink_timer = 0.0;
 
                                 // The end of the text, while not a glyph, is still something
                                 // you'll likely want to click your cursor to, so if the cursor is
