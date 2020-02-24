@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Fixed
 
 - Editable text fields now correctly highlight strings containing spaces. ([#2108], [#2143])
+- Caret for editable text box is drawn in correct position. ([#2146], [#2149])
 
 ### Security
 
@@ -41,6 +42,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2136]: https://github.com/amethyst/amethyst/pull/2136
 [#2138]: https://github.com/amethyst/amethyst/pull/2138
 [#2143]: https://github.com/amethyst/amethyst/pull/2143
+[#2146]: https://github.com/amethyst/amethyst/issues/2146
+[#2149]: https://github.com/amethyst/amethyst/pull/2149
 
 ## [0.14.0] - 2020-01-30
 
