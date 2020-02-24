@@ -53,7 +53,7 @@ impl Anchor {
     /// Returns the normalized offset using the `Anchor` setting.
     /// The normalized offset is a [-0.5,0.5] value
     /// indicating the relative offset multiplier from the parent's position (centered).
-    pub fn norm_offset(&self) -> (f32, f32) {
+    pub fn norm_offset(self) -> (f32, f32) {
         match self {
             Anchor::TopLeft => (-0.5, 0.5),
             Anchor::TopMiddle => (0.0, 0.5),
@@ -68,7 +68,7 @@ impl Anchor {
     }
 
     /// Vertical align. Used by the `UiGlyphsSystem`.
-    pub(crate) fn vertical_align(&self) -> VerticalAlign {
+    pub(crate) fn vertical_align(self) -> VerticalAlign {
         match self {
             Anchor::TopLeft => VerticalAlign::Top,
             Anchor::TopMiddle => VerticalAlign::Top,
@@ -83,7 +83,7 @@ impl Anchor {
     }
 
     /// Horizontal align. Used by the `UiGlyphsSystem`.
-    pub(crate) fn horizontal_align(&self) -> HorizontalAlign {
+    pub(crate) fn horizontal_align(self) -> HorizontalAlign {
         match self {
             Anchor::TopLeft => HorizontalAlign::Left,
             Anchor::TopMiddle => HorizontalAlign::Center,
