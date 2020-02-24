@@ -21,6 +21,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Changed
 
 - Re-export `TargetedEvent` from amethyst_ui. ([#2114])
+- `amethyst::ui::Anchor` is now `Copy`. ([#2148])
+- `amethyst::ui::LineMode` is now `Copy`. ([#2148])
+- `UiButtonBuilder::build` takes in `&mut UiButtonBuilderResources`. ([#2148])
 
 ### Deprecated
 
@@ -43,6 +46,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2138]: https://github.com/amethyst/amethyst/pull/2138
 [#2143]: https://github.com/amethyst/amethyst/pull/2143
 [#2146]: https://github.com/amethyst/amethyst/issues/2146
+[#2148]: https://github.com/amethyst/amethyst/pull/2148
 [#2149]: https://github.com/amethyst/amethyst/pull/2149
 
 ## [0.14.0] - 2020-01-30
