@@ -551,23 +551,43 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                             glyph_data.height = height;
                             glyph_data.space_width =
                                 font.0.glyph(' ').scaled(scale).h_metrics().advance_width;
-                            glyph_data.cursor_pos =
-                                if let Some(glyph) = ui_text.cached_glyphs.get(pos as usize) {
-                                    (glyph.x, glyph.y + offset)
-                                } else if let Some(glyph) = ui_text.cached_glyphs.last() {
-                                    (glyph.x + glyph.advance_width, glyph.y + offset)
-                                } else {
-                                    (
-                                        transform.pixel_x()
-                                            + transform.pixel_width * ui_text.align.norm_offset().0,
-                                        transform.pixel_y(),
-                                    )
-                                };
+                            update_cursor_position(
+                                glyph_data,
+                                ui_text,
+                                transform,
+                                pos as usize,
+                                offset,
+                            );
                         }
                     }
                     break;
                 }
                 Ok(BrushAction::ReDraw) => {
+                    for (glyph_data, ui_text, editing, transform, _, _) in (
+                        &mut glyphs,
+                        &texts,
+                        &text_editings,
+                        &transforms,
+                        !&hiddens,
+                        !&hidden_propagates,
+                    )
+                        .join()
+                    {
+                        let font = font_storage
+                            .get(&ui_text.font)
+                            .expect("Font with rendered glyphs must be loaded");
+                        let scale = Scale::uniform(ui_text.font_size);
+                        let v_metrics = font.0.v_metrics(scale);
+                        let pos = editing.cursor_position;
+                        let offset = (v_metrics.ascent + v_metrics.descent) * 0.5;
+                        update_cursor_position(
+                            glyph_data,
+                            ui_text,
+                            transform,
+                            pos as usize,
+                            offset,
+                        );
+                    }
                     break;
                 }
                 Err(BrushError::TextureTooSmall { suggested: (w, h) }) => {
@@ -582,6 +602,25 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
             }
         }
     }
+}
+
+fn update_cursor_position(
+    glyph_data: &mut UiGlyphs,
+    ui_text: &UiText,
+    transform: &UiTransform,
+    pos: usize,
+    offset: f32,
+) {
+    glyph_data.cursor_pos = if let Some(glyph) = ui_text.cached_glyphs.get(pos) {
+        (glyph.x, glyph.y + offset)
+    } else if let Some(glyph) = ui_text.cached_glyphs.last() {
+        (glyph.x + glyph.advance_width, glyph.y + offset)
+    } else {
+        (
+            transform.pixel_x() + transform.pixel_width * ui_text.align.norm_offset().0,
+            transform.pixel_y(),
+        )
+    };
 }
 
 fn create_glyph_texture<B: Backend>(
