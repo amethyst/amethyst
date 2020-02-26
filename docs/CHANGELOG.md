@@ -13,10 +13,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
-- Support settings module log levels from a RON file ([#2115])
-- Export the `get_parent_pixel_size` functions from the ui module ([[#2128])
-- Export the `pixel_width` and `pixel_height` methods on the `UiTransform` ([[#2128])
-- Support UiEvents targeting multiple overlapping entities ([#2138])
+- Support settings module log levels from a RON file. ([#2115])
+- Export the `get_parent_pixel_size` functions from the ui module. ([[#2128])
+- Export the `pixel_width` and `pixel_height` methods on the `UiTransform`. ([[#2128])
+- Support UiEvents targeting multiple overlapping entities. ([#2138])
+- `"storage-event-control"` feature enables the `specs` `"storage-event-control"` feature. ([#2152])
 
 ### Changed
 
@@ -53,6 +54,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2148]: https://github.com/amethyst/amethyst/pull/2148
 [#2149]: https://github.com/amethyst/amethyst/pull/2149
 [#2151]: https://github.com/amethyst/amethyst/pull/2151
+[#2152]: https://github.com/amethyst/amethyst/pull/2152
 
 ## [0.14.0] - 2020-01-30
 
