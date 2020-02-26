@@ -224,7 +224,6 @@ impl<'a> System<'a> for TextEditingMouseSystem {
                     ..
                 } => match state {
                     ElementState::Pressed => {
-                        println!("hey");
                         just_pressed = true;
                         self.left_mouse_button_pressed = true;
                     }
