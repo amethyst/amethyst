@@ -20,10 +20,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
-- Re-export `TargetedEvent` from amethyst_ui. ([#2114])
+- Re-export `TargetedEvent` from `amethyst_ui`. ([#2114])
 - `amethyst::ui::Anchor` is now `Copy`. ([#2148])
 - `amethyst::ui::LineMode` is now `Copy`. ([#2148])
 - `UiButtonBuilder::build` takes in `&mut UiButtonBuilderResources`. ([#2148])
+- ***Breaking:*** `UiBundle` depends on `InputBundle` being registered with the dispatcher first. ([#2151])
 
 ### Deprecated
 
@@ -35,9 +36,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Editable text fields now correctly highlight strings containing spaces. ([#2108], [#2143])
 - Caret for editable text box is drawn in correct position. ([#2146], [#2149])
+- Caret for editable text box is positioned correctly on first click. ([#2151])
+- Editable text is correctly blurred / unfocused when clicking outside its bounds. ([#2091], [#2151])
 
 ### Security
 
+[#2091]: https://github.com/amethyst/amethyst/issues/2091
 [#2108]: https://github.com/amethyst/amethyst/issues/2108
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
 [#2115]: https://github.com/amethyst/amethyst/pull/2115
@@ -48,6 +52,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2146]: https://github.com/amethyst/amethyst/issues/2146
 [#2148]: https://github.com/amethyst/amethyst/pull/2148
 [#2149]: https://github.com/amethyst/amethyst/pull/2149
+[#2151]: https://github.com/amethyst/amethyst/pull/2151
 
 ## [0.14.0] - 2020-01-30
 
