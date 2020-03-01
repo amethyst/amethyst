@@ -387,7 +387,7 @@ mod tests {
 
         let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
         let top_left = Point3::new(0.0, 0.0, 0.0);
-        let bottom_right = Point3::new(diagonal.x - 1.0, diagonal.y - 1.0, 0.0);
+        let bottom_right = Point3::new(diagonal.x, diagonal.y, 0.0);
 
         assert_ulps_eq!(
             camera.screen_to_world_point(center_screen, diagonal, &transform),
@@ -396,12 +396,12 @@ mod tests {
 
         assert_ulps_eq!(
             camera.screen_to_world_point(top_left, diagonal, &transform),
-            Point3::new(-512.0, 384.0, -0.125)
+            Point3::new(-diagonal.x / 2.0, diagonal.y / 2.0, -0.125)
         );
 
         assert_ulps_eq!(
             camera.screen_to_world_point(bottom_right, diagonal, &transform),
-            Point3::new(511.0, -383.0, -0.125)
+            Point3::new(diagonal.x / 2.0, -diagonal.y / 2.0, -0.125)
         );
 
         transform.set_translation_x(100.0);
@@ -424,8 +424,8 @@ mod tests {
         let top_left = Point2::new(0.0, 0.0);
         let bottom_right = Point2::new(diagonal.x - 1.0, diagonal.y - 1.0);
 
-        let top_left_world = Point3::new(-512.0, 384.0, -0.1);
-        let bottom_right_world = Point3::new(511.0, -383.0, -0.1);
+        let top_left_world = Point3::new(-diagonal.x / 2.0, diagonal.y / 2.0, -0.1);
+        let bottom_right_world = Point3::new(diagonal.x / 2.0, -diagonal.y / 2.0, -0.1);
 
         assert_ulps_eq!(
             ortho.world_to_screen(top_left_world, diagonal, &transform),
