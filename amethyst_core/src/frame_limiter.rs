@@ -46,10 +46,9 @@
 //! * `Yield` will call [`thread::yield_now`] repeatedly until the frame duration has
 //!   passed. This will result in the most accurate frame timings, but effectively guarantees
 //!   that one CPU core will be fully utilized during the frame's idle time.
-//! * `Sleep` will call [`thread::sleep`] with a duration of 0 milliseconds until the
-//!   frame duration has passed. This will result in lower CPU usage while the game is idle, but
-//!   risks fluctuations in frame timing if the operating system doesn't wake the game until
-//!   after the frame should have started.
+//! * `Sleep` will sleep for the approximate remainder of the frame duration. This will result in
+//!   lower CPU usage while the game is idle, but risks fluctuations in frame timing if the
+//!   operating system doesn't wake the game until after the frame should have started.
 //! * `SleepAndYield` will sleep until there's only a small amount of time left in the frame,
 //!   and then will yield until the next frame starts. This approach attempts to get the
 //!   consistent frame timings of yielding, while reducing CPU usage compared to the yield-only
