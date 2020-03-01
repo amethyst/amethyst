@@ -42,6 +42,7 @@ impl<'a, 'b> SystemDesc<'a, 'b, HideHierarchySystem> for HideHierarchySystemDesc
 #[derive(Debug)]
 pub struct HideHierarchySystem {
     marked_as_modified: BitSet,
+    manually_hidden: BitSet,
     hidden_events_id: ReaderId<ComponentEvent>,
     parent_events_id: ReaderId<HierarchyEvent>,
 }
@@ -54,6 +55,7 @@ impl HideHierarchySystem {
     ) -> Self {
         Self {
             marked_as_modified: BitSet::default(),
+            manually_hidden: BitSet::default(),
             hidden_events_id,
             parent_events_id,
         }
@@ -71,10 +73,12 @@ impl<'a> System<'a> for HideHierarchySystem {
         profile_scope!("hide_hierarchy_system");
 
         self.marked_as_modified.clear();
+        self.manually_hidden.clear();
 
         // Borrow multiple parts of self as mutable
         let self_hidden_events_id = &mut self.hidden_events_id;
         let self_marked_as_modified = &mut self.marked_as_modified;
+        let self_manually_hidden = &mut self.manually_hidden;
 
         hidden
             .channel()
@@ -101,7 +105,12 @@ impl<'a> System<'a> for HideHierarchySystem {
         // Compute hide status with parents.
         for entity in hierarchy.all() {
             {
-                let self_dirty = self_marked_as_modified.contains(entity.id());
+                let self_hidden = hidden.get(*entity);
+                let mut self_is_manually_hidden =
+                    self_hidden.as_ref().map_or(false, |p| !p.was_propagated);
+                if self_is_manually_hidden {
+                    self_manually_hidden.add(entity.id());
+                }
 
                 let parent_entity = parents
                     .get(*entity)
@@ -111,54 +120,21 @@ impl<'a> System<'a> for HideHierarchySystem {
                     )
                     .entity;
                 let parent_dirty = self_marked_as_modified.contains(parent_entity.id());
-                if parent_dirty {
-                    if hidden.contains(parent_entity) {
-                        for child in hierarchy.all_children_iter(parent_entity) {
-                            if !hidden.contains(child) {
-                                if let Err(e) =
-                                    hidden.insert(child, HiddenPropagate::new_propagated())
-                                {
-                                    error!(
-                                        "Failed to automatically add `HiddenPropagate`: {:?}",
-                                        e
-                                    );
-                                };
-                            }
+                let parent_hidden = hidden.get(parent_entity);
+                let parent_is_manually_hidden =
+                    parent_hidden.as_ref().map_or(false, |p| !p.was_propagated);
+                if parent_is_manually_hidden {
+                    self_manually_hidden.add(parent_entity.id());
+                    self_manually_hidden.add(entity.id());
+                }
+
+                if parent_dirty && !self_is_manually_hidden {
+                    if parent_hidden.is_some() {
+                        if let Err(e) = hidden.insert(*entity, HiddenPropagate::new_propagated()) {
+                            error!("Failed to automatically add `HiddenPropagate`: {:?}", e);
                         }
                     } else {
-                        for child in hierarchy.all_children_iter(parent_entity) {
-                            if let Some(hidden_propagate) = hidden.get(child) {
-                                if hidden_propagate.was_propagated {
-                                    hidden.remove(child);
-                                }
-                            }
-                        }
-                    }
-                } else if self_dirty {
-                    // in case the parent was already dirty, this entity and its children have
-                    // already been hidden, therefore it only needs to be an else-if, instead of a
-                    // stand-alone if.
-                    if hidden.contains(*entity) {
-                        for child in hierarchy.all_children_iter(*entity) {
-                            if !hidden.contains(child) {
-                                if let Err(e) =
-                                    hidden.insert(child, HiddenPropagate::new_propagated())
-                                {
-                                    error!(
-                                        "Failed to automatically add `HiddenPropagate`: {:?}",
-                                        e
-                                    );
-                                };
-                            }
-                        }
-                    } else {
-                        for child in hierarchy.all_children_iter(*entity) {
-                            if let Some(hidden_propagate) = hidden.get(child) {
-                                if hidden_propagate.was_propagated {
-                                    hidden.remove(child);
-                                }
-                            }
-                        }
+                        hidden.remove(*entity);
                     }
                 }
             }
