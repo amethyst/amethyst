@@ -187,7 +187,7 @@ where
         }
 
         if self.hidden {
-            system_data.2.insert(entity, HiddenPropagate)?;
+            system_data.2.insert(entity, HiddenPropagate::new())?;
         }
 
         if let Some(u) = self.selectable {

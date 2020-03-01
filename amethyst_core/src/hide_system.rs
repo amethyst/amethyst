@@ -114,13 +114,24 @@ impl<'a> System<'a> for HideHierarchySystem {
                 if parent_dirty {
                     if hidden.contains(parent_entity) {
                         for child in hierarchy.all_children_iter(parent_entity) {
-                            if let Err(e) = hidden.insert(child, HiddenPropagate::default()) {
-                                error!("Failed to automatically add `HiddenPropagate`: {:?}", e);
-                            };
+                            if !hidden.contains(child) {
+                                if let Err(e) =
+                                    hidden.insert(child, HiddenPropagate::new_propagated())
+                                {
+                                    error!(
+                                        "Failed to automatically add `HiddenPropagate`: {:?}",
+                                        e
+                                    );
+                                };
+                            }
                         }
                     } else {
                         for child in hierarchy.all_children_iter(parent_entity) {
-                            hidden.remove(child);
+                            if let Some(hidden_propagate) = hidden.get(child) {
+                                if hidden_propagate.was_propagated {
+                                    hidden.remove(child);
+                                }
+                            }
                         }
                     }
                 } else if self_dirty {
@@ -129,13 +140,24 @@ impl<'a> System<'a> for HideHierarchySystem {
                     // stand-alone if.
                     if hidden.contains(*entity) {
                         for child in hierarchy.all_children_iter(*entity) {
-                            if let Err(e) = hidden.insert(child, HiddenPropagate::default()) {
-                                error!("Failed to automatically add `HiddenPropagate`: {:?}", e);
-                            };
+                            if !hidden.contains(child) {
+                                if let Err(e) =
+                                    hidden.insert(child, HiddenPropagate::new_propagated())
+                                {
+                                    error!(
+                                        "Failed to automatically add `HiddenPropagate`: {:?}",
+                                        e
+                                    );
+                                };
+                            }
                         }
                     } else {
                         for child in hierarchy.all_children_iter(*entity) {
-                            hidden.remove(child);
+                            if let Some(hidden_propagate) = hidden.get(child) {
+                                if hidden_propagate.was_propagated {
+                                    hidden.remove(child);
+                                }
+                            }
                         }
                     }
                 }
