@@ -166,6 +166,9 @@ impl Camera {
     }
 
     /// Returns a `Ray` going out form the camera through provided screen position. The ray origin lies on camera near plane.
+    ///
+    /// The screen coordinate (0, 0) is the top-left corner of the top-left pixel.
+    /// `screen_diagonal` is the bottom-right corner of the bottom-right pixel.
     pub fn screen_ray(
         &self,
         screen_position: Point2<f32>,
@@ -203,6 +206,9 @@ impl Camera {
     }
 
     /// Translate from world coordinates to screen coordinates
+    ///
+    /// The screen coordinate (0, 0) is the top-left corner of the top-left pixel.
+    /// `screen_diagonal` is the bottom-right corner of the bottom-right pixel.
     pub fn world_to_screen(
         &self,
         world_position: Point3<f32>,
