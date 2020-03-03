@@ -541,13 +541,11 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("processor_system");
 
-        use std::ops::Deref;
-
         storage.process(
             ProcessableAsset::process,
             time.frame_number(),
             &**pool,
-            strategy.as_ref().map(Deref::deref),
+            strategy.as_deref(),
         );
     }
 }

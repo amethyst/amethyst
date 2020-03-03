@@ -30,7 +30,7 @@ test_bins_by_crate="$(
   )"
 
 # Set `LD_LIBRARY_PATH` so that tests can link against it
-target_arch=$(rustup target list | grep -F default | cut -d ' ' -f 1)
+target_arch=$(rustup toolchain list | grep -F default | cut -d ' ' -f 1 | rev | cut -d '-' -f 1-4 | rev)
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(rustc --print sysroot)/lib/rustlib/${target_arch}/lib/"
 
 crate_coverage_dirs=()

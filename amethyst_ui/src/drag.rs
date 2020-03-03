@@ -6,8 +6,8 @@ use std::{
 
 use amethyst_core::{
     ecs::{
-        storage::GenericReadStorage, Component, DenseVecStorage, Entities, Entity, Join, Read,
-        ReadExpect, ReadStorage, ReaderId, System, SystemData, Write, WriteStorage,
+        Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+        ReaderId, System, SystemData, Write, WriteStorage,
     },
     math::Vector2,
     shrev::EventChannel,
@@ -17,7 +17,10 @@ use amethyst_derive::SystemDesc;
 use amethyst_input::{BindingTypes, InputHandler};
 use amethyst_window::ScreenDimensions;
 
-use crate::{targeted_below, Interactable, ScaleMode, UiEvent, UiEventType, UiTransform};
+use crate::{
+    get_parent_pixel_size, targeted_below, Interactable, ScaleMode, UiEvent, UiEventType,
+    UiTransform,
+};
 
 /// Component that denotes whether a given ui widget is draggable.
 /// Requires UiTransform to work, and its expected way of usage is
@@ -128,12 +131,17 @@ where
 
             let change = mouse_pos - *prev;
 
-            let (scale_x, scale_y) =
-                get_scale_for_entity(*entity, &hierarchy, &ui_transforms, &screen_dimensions);
+            let (parent_width, parent_height) =
+                get_parent_pixel_size(*entity, &hierarchy, &ui_transforms, &screen_dimensions);
 
             let ui_transform = ui_transforms.get_mut(*entity).unwrap();
-            ui_transform.local_x += scale_x * change[0];
-            ui_transform.local_y += scale_y * change[1];
+            let (scale_x, scale_y) = match ui_transform.scale_mode {
+                ScaleMode::Pixel => (1.0, 1.0),
+                ScaleMode::Percent => (parent_width, parent_height),
+            };
+
+            ui_transform.local_x += change[0] / scale_x;
+            ui_transform.local_y += change[1] / scale_y;
 
             *prev = mouse_pos;
         }
@@ -160,46 +168,4 @@ where
             self.record.remove(entity);
         }
     }
-}
-
-/// Compose the scaling factors of all ancestors until reaching the root (screen) or an entity
-/// that doesn't need rescaling (is ScaleMode::Pixel).
-fn get_scale_for_entity<S: GenericReadStorage<Component = UiTransform>>(
-    entity: Entity,
-    hierarchy: &ParentHierarchy,
-    ui_transforms: &S,
-    screen_dimensions: &ScreenDimensions,
-) -> (f32, f32) {
-    match ui_transforms.get(entity).unwrap().scale_mode {
-        ScaleMode::Pixel => (1.0, 1.0),
-        ScaleMode::Percent => {
-            get_scale_for_percent_mode_entity(entity, hierarchy, ui_transforms, screen_dimensions)
-        }
-    }
-}
-
-fn get_scale_for_percent_mode_entity<S: GenericReadStorage<Component = UiTransform>>(
-    entity: Entity,
-    hierarchy: &ParentHierarchy,
-    ui_transforms: &S,
-    screen_dimensions: &ScreenDimensions,
-) -> (f32, f32) {
-    let mut parent_width = screen_dimensions.width();
-    let mut parent_height = screen_dimensions.height();
-
-    let (parent_scale_x, parent_scale_y) = if let Some(parent) = hierarchy.parent(entity) {
-        if let Some(ui_transform) = ui_transforms.get(parent) {
-            parent_width = ui_transform.width;
-            parent_height = ui_transform.height;
-        }
-
-        get_scale_for_entity(parent, hierarchy, ui_transforms, screen_dimensions)
-    } else {
-        (1.0, 1.0)
-    };
-
-    (
-        parent_scale_x / parent_width,
-        parent_scale_y / parent_height,
-    )
 }

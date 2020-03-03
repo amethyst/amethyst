@@ -86,10 +86,9 @@ mod window {
         #[allow(clippy::map_clone)]
         fn should_rebuild(&mut self, world: &World) -> bool {
             let new_dimensions = world.try_fetch::<ScreenDimensions>();
-            use std::ops::Deref;
-            if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            if self.dimensions.as_ref() != new_dimensions.as_deref() {
                 self.dirty = true;
-                self.dimensions = new_dimensions.map(|d| d.deref().clone());
+                self.dimensions = new_dimensions.map(|d| (*d).clone());
                 return false;
             }
             self.dirty

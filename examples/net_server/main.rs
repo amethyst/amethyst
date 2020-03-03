@@ -1,3 +1,4 @@
+// SERVER
 use std::time::Duration;
 
 use amethyst::{
@@ -36,6 +37,7 @@ fn main() -> Result<()> {
         //        // Laminar
         //        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .with_bundle(SpamReceiveBundle)?;
+
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),

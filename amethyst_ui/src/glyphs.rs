@@ -184,6 +184,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
         {
             ui_text.cached_glyphs.clear();
 
+            let font_asset = font_storage.get(&ui_text.font).map(|font| font.0.clone());
             let font_lookup = fonts_map_ref
                 .entry(ui_text.font.id())
                 .or_insert(FontState::NotFound);
@@ -193,7 +194,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                 }
             }
 
-            if let Some(font_id) = font_lookup.id() {
+            if let (Some(font_id), Some(font_asset)) = (font_lookup.id(), font_asset) {
                 let tint_color = tint.map_or([1., 1., 1., 1.], |t| {
                     let (r, g, b, a) = t.0.into_components();
                     [r, g, b, a]
@@ -310,19 +311,54 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                     text,
                 };
 
-                ui_text.cached_glyphs.extend(
-                    glyph_brush_ref
-                        .glyphs_custom_layout(&section, &layout)
-                        .map(|g| {
-                            let pos = g.position();
-                            let advance_width = g.unpositioned().h_metrics().advance_width;
-                            CachedGlyph {
-                                x: pos.x,
-                                y: -pos.y,
-                                advance_width,
-                            }
-                        }),
-                );
+                // `GlyphBrush::glyphs_custom_layout` does not return glyphs for invisible
+                // characters.
+                //
+                // <https://docs.rs/glyph_brush/0.6.2/glyph_brush/trait.GlyphCruncher.html
+                //  #tymethod.glyphs_custom_layout>
+                //
+                // For support, see:
+                //
+                // <https://github.com/alexheretic/glyph-brush/issues/80>
+                let mut nonempty_cached_glyphs = glyph_brush_ref
+                    .glyphs_custom_layout(&section, &layout)
+                    .map(|g| {
+                        let pos = g.position();
+                        let advance_width = g.unpositioned().h_metrics().advance_width;
+                        CachedGlyph {
+                            x: pos.x,
+                            y: -pos.y,
+                            advance_width,
+                        }
+                    });
+
+                let mut last_cached_glyph: Option<CachedGlyph> = None;
+                let all_glyphs = ui_text.text.chars().filter_map(|c| {
+                    if c.is_whitespace() {
+                        let (x, y) = if let Some(last_cached_glyph) = last_cached_glyph {
+                            let x = last_cached_glyph.x + last_cached_glyph.advance_width;
+                            let y = last_cached_glyph.y;
+                            (x, y)
+                        } else {
+                            (0.0, 0.0)
+                        };
+
+                        let advance_width =
+                            font_asset.glyph(c).scaled(scale).h_metrics().advance_width;
+
+                        let cached_glyph = CachedGlyph {
+                            x,
+                            y,
+                            advance_width,
+                        };
+                        last_cached_glyph = Some(cached_glyph);
+                        last_cached_glyph
+                    } else {
+                        last_cached_glyph = nonempty_cached_glyphs.next();
+                        last_cached_glyph
+                    }
+                });
+                ui_text.cached_glyphs.extend(all_glyphs);
 
                 glyph_brush_ref.queue_custom_layout(section, &layout);
             }
@@ -371,7 +407,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                 move |glyph| {
                     // The glyph's Z parameter smuggles entity id, so glyphs can be associated
                     // for rendering as part of specific components.
-                    let entity_id: u32 = unsafe { std::mem::transmute(glyph.z) };
+                    let entity_id: u32 = glyph.z.to_bits();
 
                     let mut uv = glyph.tex_coords;
                     let bounds_max_x = glyph.bounds.max.x as f32;
@@ -515,23 +551,43 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                             glyph_data.height = height;
                             glyph_data.space_width =
                                 font.0.glyph(' ').scaled(scale).h_metrics().advance_width;
-                            glyph_data.cursor_pos =
-                                if let Some(glyph) = ui_text.cached_glyphs.get(pos as usize) {
-                                    (glyph.x, glyph.y + offset)
-                                } else if let Some(glyph) = ui_text.cached_glyphs.last() {
-                                    (glyph.x + glyph.advance_width, glyph.y + offset)
-                                } else {
-                                    (
-                                        transform.pixel_x()
-                                            + transform.pixel_width * ui_text.align.norm_offset().0,
-                                        transform.pixel_y(),
-                                    )
-                                };
+                            update_cursor_position(
+                                glyph_data,
+                                ui_text,
+                                transform,
+                                pos as usize,
+                                offset,
+                            );
                         }
                     }
                     break;
                 }
                 Ok(BrushAction::ReDraw) => {
+                    for (glyph_data, ui_text, editing, transform, _, _) in (
+                        &mut glyphs,
+                        &texts,
+                        &text_editings,
+                        &transforms,
+                        !&hiddens,
+                        !&hidden_propagates,
+                    )
+                        .join()
+                    {
+                        let font = font_storage
+                            .get(&ui_text.font)
+                            .expect("Font with rendered glyphs must be loaded");
+                        let scale = Scale::uniform(ui_text.font_size);
+                        let v_metrics = font.0.v_metrics(scale);
+                        let pos = editing.cursor_position;
+                        let offset = (v_metrics.ascent + v_metrics.descent) * 0.5;
+                        update_cursor_position(
+                            glyph_data,
+                            ui_text,
+                            transform,
+                            pos as usize,
+                            offset,
+                        );
+                    }
                     break;
                 }
                 Err(BrushError::TextureTooSmall { suggested: (w, h) }) => {
@@ -546,6 +602,25 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
             }
         }
     }
+}
+
+fn update_cursor_position(
+    glyph_data: &mut UiGlyphs,
+    ui_text: &UiText,
+    transform: &UiTransform,
+    pos: usize,
+    offset: f32,
+) {
+    glyph_data.cursor_pos = if let Some(glyph) = ui_text.cached_glyphs.get(pos) {
+        (glyph.x, glyph.y + offset)
+    } else if let Some(glyph) = ui_text.cached_glyphs.last() {
+        (glyph.x + glyph.advance_width, glyph.y + offset)
+    } else {
+        (
+            transform.pixel_x() + transform.pixel_width * ui_text.align.norm_offset().0,
+            transform.pixel_y(),
+        )
+    };
 }
 
 fn create_glyph_texture<B: Backend>(

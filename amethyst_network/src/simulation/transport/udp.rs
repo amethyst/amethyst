@@ -39,17 +39,22 @@ impl<'a, 'b> SystemBundle<'a, 'b> for UdpNetworkBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
-        builder.add(UdpNetworkSendSystem, NETWORK_SEND_SYSTEM_NAME, &[]);
-        builder.add(
-            UdpNetworkRecvSystem::with_buffer_capacity(self.recv_buffer_size_bytes),
-            NETWORK_RECV_SYSTEM_NAME,
-            &[],
-        );
         builder.add(
             NetworkSimulationTimeSystem,
             NETWORK_SIM_TIME_SYSTEM_NAME,
-            &[NETWORK_SEND_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME],
+            &[],
         );
+        builder.add(
+            UdpNetworkRecvSystem::with_buffer_capacity(self.recv_buffer_size_bytes),
+            NETWORK_RECV_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+        builder.add(
+            UdpNetworkSendSystem,
+            NETWORK_SEND_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+
         world.insert(UdpSocketResource::new(self.socket));
         Ok(())
     }
@@ -111,7 +116,7 @@ impl<'s> System<'s> for UdpNetworkRecvSystem {
                     Ok((recv_len, address)) => {
                         let event = NetworkSimulationEvent::Message(
                             address,
-                            Bytes::from(&self.recv_buffer[..recv_len]),
+                            Bytes::copy_from_slice(&self.recv_buffer[..recv_len]),
                         );
                         // TODO: Handle other types of events.
                         event_channel.single_write(event);

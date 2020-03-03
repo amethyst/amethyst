@@ -52,6 +52,10 @@ pub struct UiTransformData<G> {
     /// the next element (for example, the text on a button).
     #[derivative(Default(value = "true"))]
     pub opaque: bool,
+    /// Allows transparent (`opaque = false`) transforms to still be targeted by the events that
+    /// pass through them.
+    #[derivative(Default(value = "false"))]
+    pub transparent_target: bool,
     /// Renders this UI element by evaluating transform as a percentage of the parent size,
     /// rather than rendering it with pixel units.
     pub percent: bool,
@@ -159,8 +163,8 @@ where
     ) -> Result<(), Error> {
         let mut transform = UiTransform::new(
             self.id.clone(),
-            self.anchor.clone(),
-            self.pivot.clone(),
+            self.anchor,
+            self.pivot,
             self.x,
             self.y,
             self.z,
@@ -173,6 +177,7 @@ where
         if !self.opaque {
             transform = transform.into_transparent();
         }
+        transform.transparent_target = self.transparent_target;
         if self.percent {
             transform = transform.into_percent();
         }
@@ -296,12 +301,12 @@ impl<'a> PrefabData<'a> for UiTextData {
         let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
 
-        if let Some(ref align) = self.align {
-            ui_text.align = align.clone();
+        if let Some(align) = self.align {
+            ui_text.align = align;
         }
 
-        if let Some(ref line_mode) = self.line_mode {
-            ui_text.line_mode = line_mode.clone();
+        if let Some(line_mode) = self.line_mode {
+            ui_text.line_mode = line_mode;
         }
 
         texts.insert(entity, ui_text)?;

@@ -4,13 +4,13 @@
 #![recursion_limit = "256"]
 #![warn(
     missing_debug_implementations,
+    missing_docs,
     rust_2018_idioms,
     rust_2018_compatibility,
     clippy::all
 )]
-// #![warn(missing_docs)]
-// missing_docs is disabled for this crate because of a bug in current rust stable:
-// https://github.com/rust-lang/rust/issues/42008
+// Needed because `nightly` warns on `extern crate proc_macro;`, but `stable` still requires it.
+#![allow(unused_extern_crates)]
 
 extern crate proc_macro;
 

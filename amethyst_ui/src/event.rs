@@ -13,7 +13,7 @@ use amethyst_core::{
 use amethyst_input::{BindingTypes, InputHandler};
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
-use std::marker::PhantomData;
+use std::{collections::HashSet, marker::PhantomData};
 use winit::MouseButton;
 
 /// An event that pertains to a specific `Entity`, for example a `UiEvent` for clicking on a widget
@@ -99,8 +99,8 @@ impl Component for Interactable {
 #[derive(Default, Debug)]
 pub struct UiMouseSystem<T: BindingTypes> {
     was_down: bool,
-    click_started_on: Option<Entity>,
-    last_target: Option<Entity>,
+    click_started_on: HashSet<Entity>,
+    last_targets: HashSet<Entity>,
     _marker: PhantomData<T>,
 }
 
@@ -109,8 +109,8 @@ impl<T: BindingTypes> UiMouseSystem<T> {
     pub fn new() -> Self {
         UiMouseSystem {
             was_down: false,
-            click_started_on: None,
-            last_target: None,
+            click_started_on: HashSet::new(),
+            last_targets: HashSet::new(),
             _marker: PhantomData,
         }
     }
@@ -142,7 +142,7 @@ impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
             let x = pos_x as f32;
             let y = screen_dimensions.height() - pos_y as f32;
 
-            let target = targeted(
+            let targets = targeted(
                 (x, y),
                 (
                     &*entities,
@@ -153,36 +153,31 @@ impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
                 )
                     .join(),
             );
-            if target != self.last_target {
-                if let Some(last_target) = self.last_target {
-                    events.single_write(UiEvent::new(UiEventType::HoverStop, last_target));
+            for target in targets.difference(&self.last_targets) {
+                events.single_write(UiEvent::new(UiEventType::HoverStart, *target));
+            }
+            for last_target in self.last_targets.difference(&targets) {
+                events.single_write(UiEvent::new(UiEventType::HoverStop, *last_target));
+            }
+
+            if click_started {
+                self.click_started_on = targets.clone();
+                for target in targets.iter() {
+                    events.single_write(UiEvent::new(UiEventType::ClickStart, *target));
                 }
-                if let Some(target) = target {
-                    events.single_write(UiEvent::new(UiEventType::HoverStart, target));
+            } else if click_stopped {
+                for click_start_target in self.click_started_on.intersection(&targets) {
+                    events.single_write(UiEvent::new(UiEventType::Click, *click_start_target));
                 }
             }
 
-            if let Some(e) = target {
-                if click_started {
-                    events.single_write(UiEvent::new(UiEventType::ClickStart, e));
-                    self.click_started_on = Some(e);
-                } else if click_stopped {
-                    if let Some(e2) = self.click_started_on {
-                        if e2 == e {
-                            events.single_write(UiEvent::new(UiEventType::Click, e2));
-                        }
-                    }
-                }
-            }
-
-            self.last_target = target;
+            self.last_targets = targets;
         }
 
         // Could be used for drag and drop
         if click_stopped {
-            if let Some(e) = self.click_started_on {
-                events.single_write(UiEvent::new(UiEventType::ClickStop, e));
-                self.click_started_on = None;
+            for click_start_target in self.click_started_on.drain() {
+                events.single_write(UiEvent::new(UiEventType::ClickStop, click_start_target));
             }
         }
 
@@ -190,26 +185,34 @@ impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
     }
 }
 
-/// Checks if an interactable entity is at the position `pos` and doesn't have anything on top blocking the check.
-/// If you have a non-interactable entity over an interactable entity, it will consider the interactable one blocked, depending
-/// on if `pos` is over the non-interactable one or not.
-pub fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> Option<Entity>
+/// Finds all interactable entities at the position `pos` which don't have any opaque entities on
+/// top blocking them.
+pub fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> HashSet<Entity>
 where
     I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>, (), ())> + 'a,
 {
-    transforms
-        .filter(|(_e, t, _m, _, _)| t.opaque && t.position_inside(pos.0, pos.1))
-        .max_by(|(_e1, t1, _m1, _, _), (_e2, t2, _m2, _, _)| {
-            t1.global_z
-                .partial_cmp(&t2.global_z)
-                .expect("Unexpected NaN")
+    let mut entity_transforms: Vec<(Entity, &UiTransform)> = transforms
+        .filter(|(_e, t, _m, _, _)| {
+            (t.opaque || t.transparent_target) && t.position_inside(pos.0, pos.1)
         })
-        .and_then(|(e, _, m, _, _)| m.map(|_m| e))
+        .map(|(e, t, _m, _, _)| (e, t))
+        .collect();
+    entity_transforms.sort_by(|(_, t1), (_, t2)| {
+        t2.global_z
+            .partial_cmp(&t1.global_z)
+            .expect("Unexpected NaN")
+    });
+
+    let first_opaque = entity_transforms.iter().position(|(_e, t)| t.opaque);
+    if let Some(i) = first_opaque {
+        entity_transforms.truncate(i + 1);
+    }
+
+    entity_transforms.into_iter().map(|(e, _t)| e).collect()
 }
 
-/// Checks if an interactable entity is at the position `pos`, doesn't have anything on top blocking the check, and is below specified height.
-/// If you have a non-interactable entity over an interactable entity, it will consider the interactable one blocked, depending
-/// on if `pos` is over the non-interactable one or not.
+/// Checks if an interactable entity is at the position `pos`, doesn't have anything on top blocking
+/// the check, and is below specified height.
 pub fn targeted_below<'a, I>(pos: (f32, f32), height: f32, transforms: I) -> Option<Entity>
 where
     I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>, (), ())> + 'a,

@@ -267,6 +267,8 @@ where
         // If we get something else, we just inform the user to check the test output.
         if let Some(inner) = error.downcast_ref::<&str>() {
             Error::from_string((*inner).to_string())
+        } else if let Some(inner) = error.downcast_ref::<String>() {
+            Error::from_string(inner.clone())
         } else {
             Error::from_string(
                 "Unable to detect additional information from test failure.\n\
@@ -630,7 +632,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic] // This cannot be expect explicit because of nightly feature.
+    #[should_panic(expected = "Tried to fetch resource of type `ApplicationResource`")]
     fn assertion_when_resource_is_not_added_should_panic() {
         let assertion_fn = |world: &mut World| {
             // Panics if `ApplicationResource` was not added.
@@ -675,7 +677,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic] // This cannot be expect explicit because of nightly feature.
+    #[should_panic(expected = "Tried to fetch resource of type `LoadResource`")]
     fn assertion_switch_with_loading_state_without_add_resource_should_panic() {
         let state_fns = || {
             let assertion_fn = |world: &mut World| {
@@ -692,7 +694,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic] // This cannot be expect explicit because of nightly feature.
+    #[should_panic(expected = "Tried to fetch resource of type `LoadResource`")]
     fn assertion_push_with_loading_state_without_add_resource_should_panic() {
         // Alternative to embedding the `FunctionState` is to switch to a `PopState` but still
         // provide the assertion function

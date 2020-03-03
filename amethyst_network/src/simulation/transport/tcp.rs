@@ -49,26 +49,46 @@ impl<'a, 'b> SystemBundle<'a, 'b> for TcpNetworkBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
-        builder.add(TcpNetworkSendSystem, NETWORK_SEND_SYSTEM_NAME, &[]);
-        builder.add(TcpNetworkRecvSystem, NETWORK_RECV_SYSTEM_NAME, &[]);
-        builder.add(
-            TcpStreamManagementSystem,
-            STREAM_MANAGEMENT_SYSTEM_NAME,
-            &[NETWORK_SEND_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME],
-        );
-        builder.add(
-            TcpConnectionListenerSystem,
-            CONNECTION_LISTENER_SYSTEM_NAME,
-            &[NETWORK_SEND_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME],
-        );
+        // NetworkSimulationTime should run first
+        // followed by TcpConnectionListenerSystem and TcpStreamManagementSystem
+        // then TcpNetworkSendSystem and TcpNetworkRecvSystem
+
         builder.add(
             NetworkSimulationTimeSystem,
             NETWORK_SIM_TIME_SYSTEM_NAME,
+            &[],
+        );
+
+        builder.add(
+            TcpConnectionListenerSystem,
+            CONNECTION_LISTENER_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+
+        builder.add(
+            TcpStreamManagementSystem,
+            STREAM_MANAGEMENT_SYSTEM_NAME,
+            &[NETWORK_SIM_TIME_SYSTEM_NAME],
+        );
+
+        builder.add(
+            TcpNetworkSendSystem,
+            NETWORK_SEND_SYSTEM_NAME,
             &[
                 STREAM_MANAGEMENT_SYSTEM_NAME,
                 CONNECTION_LISTENER_SYSTEM_NAME,
             ],
         );
+
+        builder.add(
+            TcpNetworkRecvSystem,
+            NETWORK_RECV_SYSTEM_NAME,
+            &[
+                STREAM_MANAGEMENT_SYSTEM_NAME,
+                CONNECTION_LISTENER_SYSTEM_NAME,
+            ],
+        );
+
         world.insert(TcpNetworkResource::new(
             self.listener,
             self.recv_buffer_size_bytes,
@@ -228,7 +248,7 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                         if recv_len > 0 {
                             let event = NetworkSimulationEvent::Message(
                                 peer_addr,
-                                Bytes::from(&resource.recv_buffer[..recv_len]),
+                                Bytes::copy_from_slice(&resource.recv_buffer[..recv_len]),
                             );
                             event_channel.single_write(event);
                         } else {
