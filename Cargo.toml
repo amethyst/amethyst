@@ -19,7 +19,7 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
-default = ["animation", "audio", "locale", "network", "renderer"]
+default = ["animation", "audio", "locale", "network", "renderer", "vulkan"]
 
 vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
@@ -207,6 +207,11 @@ required-features = ["animation", "gltf"]
 [[example]]
 name = "ui"
 path = "examples/ui/main.rs"
+required-features = ["audio"]
+
+[[example]]
+name = "ui_tutorial_01"
+path = "examples/ui_tutorial_01/main.rs"
 required-features = ["audio"]
 
 [[example]]
