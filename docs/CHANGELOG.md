@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Caret for editable text box is drawn in correct position. ([#2146], [#2149])
 - Caret for editable text box is positioned correctly on first click. ([#2151])
 - Editable text is correctly blurred / unfocused when clicking outside its bounds. ([#2091], [#2151])
+- `amethyst_test` crate features now map 1-1 to `amethyst` features. ([#2153])
 
 ### Security
 
@@ -53,6 +54,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2148]: https://github.com/amethyst/amethyst/pull/2148
 [#2149]: https://github.com/amethyst/amethyst/pull/2149
 [#2151]: https://github.com/amethyst/amethyst/pull/2151
+[#2153]: https://github.com/amethyst/amethyst/pull/2153
 
 ## [0.14.0] - 2020-01-30
 
