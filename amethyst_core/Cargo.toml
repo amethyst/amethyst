@@ -41,3 +41,4 @@ ron = "0.5.1"
 default = ["specs/parallel", "specs-hierarchy/parallel"]
 profiler = ["thread_profiler/thread_profiler"]
 saveload = ["specs/serde"]
+storage-event-control = ["specs/storage-event-control"]

@@ -78,6 +78,9 @@ server = [
     "locale",
     "network"
 ]
+storage-event-control = [
+    "amethyst_core/storage-event-control"
+]
 no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
 shader-compiler = ["amethyst_rendy/shader-compiler"]
 test-support = [
