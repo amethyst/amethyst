@@ -19,7 +19,7 @@ use amethyst_window::ScreenDimensions;
 use super::*;
 
 /// How lines should behave when they are longer than the maximum line length.
-#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
 pub enum LineMode {
     /// Single line. It ignores line breaks.
     Single,
@@ -46,12 +46,12 @@ pub struct UiText {
     pub line_mode: LineMode,
     /// How to align the text within its `UiTransform`.
     pub align: Anchor,
-    /// Cached glyph positions, used to process mouse highlighting
+    /// Cached glyph positions including invisible characters, used to process mouse highlighting.
     #[serde(skip)]
     pub(crate) cached_glyphs: Vec<CachedGlyph>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) struct CachedGlyph {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -194,73 +194,81 @@ impl<'a> System<'a> for TextEditingMouseSystem {
             }
         }
 
+        let mut just_pressed = false;
+        let mut moved_while_pressed = false;
+
         // Process only if an editable text is selected.
         for event in events.read(&mut self.reader) {
-            for (ref mut text, ref mut text_editing, _) in
-                (&mut texts, &mut text_editings, &selecteds).join()
-            {
-                // Process events for the whole UI.
-                match *event {
-                    Event::WindowEvent {
-                        event: WindowEvent::CursorMoved { position, .. },
-                        ..
-                    } => {
-                        let hidpi = screen_dimensions.hidpi_factor() as f32;
-                        self.mouse_position = (
-                            position.x as f32 * hidpi,
-                            (screen_dimensions.height() - position.y as f32) * hidpi,
-                        );
-                        if self.left_mouse_button_pressed {
-                            let (mouse_x, mouse_y) = self.mouse_position;
-                            text_editing.highlight_vector =
-                                closest_glyph_index_to_mouse(mouse_x, mouse_y, &text.cached_glyphs)
-                                    - text_editing.cursor_position;
-                            // The end of the text, while not a glyph, is still something
-                            // you'll likely want to click your cursor to, so if the cursor is
-                            // near the end of the text, check if we should put it at the end
-                            // of the text.
-                            if should_advance_to_end(mouse_x, text_editing, text) {
-                                text_editing.highlight_vector += 1;
-                            }
-                        }
+            // Process events for the whole UI.
+            match *event {
+                Event::WindowEvent {
+                    event: WindowEvent::CursorMoved { position, .. },
+                    ..
+                } => {
+                    let hidpi = screen_dimensions.hidpi_factor() as f32;
+                    self.mouse_position = (
+                        position.x as f32 * hidpi,
+                        (screen_dimensions.height() - position.y as f32) * hidpi,
+                    );
+                    if self.left_mouse_button_pressed {
+                        moved_while_pressed = true;
                     }
-                    Event::WindowEvent {
-                        event:
-                            WindowEvent::MouseInput {
-                                button: MouseButton::Left,
-                                state,
-                                ..
-                            },
-                        ..
-                    } => {
-                        match state {
-                            ElementState::Pressed => {
-                                self.left_mouse_button_pressed = true;
-
-                                // If we focused an editable text field be sure to position the cursor
-                                // in it.
-                                let (mouse_x, mouse_y) = self.mouse_position;
-                                text_editing.highlight_vector = 0;
-                                text_editing.cursor_position = closest_glyph_index_to_mouse(
-                                    mouse_x,
-                                    mouse_y,
-                                    &text.cached_glyphs,
-                                );
-
-                                // The end of the text, while not a glyph, is still something
-                                // you'll likely want to click your cursor to, so if the cursor is
-                                // near the end of the text, check if we should put it at the end
-                                // of the text.
-                                if should_advance_to_end(mouse_x, text_editing, text) {
-                                    text_editing.cursor_position += 1;
-                                }
-                            }
-                            ElementState::Released => {
-                                self.left_mouse_button_pressed = false;
-                            }
-                        }
+                }
+                Event::WindowEvent {
+                    event:
+                        WindowEvent::MouseInput {
+                            button: MouseButton::Left,
+                            state,
+                            ..
+                        },
+                    ..
+                } => match state {
+                    ElementState::Pressed => {
+                        just_pressed = true;
+                        self.left_mouse_button_pressed = true;
                     }
-                    _ => {}
+                    ElementState::Released => {
+                        self.left_mouse_button_pressed = false;
+                    }
+                },
+                _ => {}
+            }
+        }
+
+        for (ref mut text, ref mut text_editing, selected) in
+            (&mut texts, &mut text_editings, selecteds.maybe()).join()
+        {
+            if selected.is_none() {
+                // If an editable text field is no longer selected, we should reset
+                // the highlight vector.
+                text_editing.highlight_vector = 0;
+            } else if just_pressed {
+                // If we focused an editable text field be sure to position the cursor
+                // in it.
+                let (mouse_x, mouse_y) = self.mouse_position;
+                text_editing.highlight_vector = 0;
+                text_editing.cursor_position =
+                    closest_glyph_index_to_mouse(mouse_x, mouse_y, &text.cached_glyphs);
+                text_editing.cursor_blink_timer = 0.0;
+
+                // The end of the text, while not a glyph, is still something
+                // you'll likely want to click your cursor to, so if the cursor is
+                // near the end of the text, check if we should put it at the end
+                // of the text.
+                if should_advance_to_end(mouse_x, text_editing, text) {
+                    text_editing.cursor_position += 1;
+                }
+            } else if moved_while_pressed {
+                let (mouse_x, mouse_y) = self.mouse_position;
+                text_editing.highlight_vector =
+                    closest_glyph_index_to_mouse(mouse_x, mouse_y, &text.cached_glyphs)
+                        - text_editing.cursor_position;
+                // The end of the text, while not a glyph, is still something
+                // you'll likely want to click your cursor to, so if the cursor is
+                // near the end of the text, check if we should put it at the end
+                // of the text.
+                if should_advance_to_end(mouse_x, text_editing, text) {
+                    text_editing.highlight_vector += 1;
                 }
             }
         }

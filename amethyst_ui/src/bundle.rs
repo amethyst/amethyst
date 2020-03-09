@@ -53,6 +53,11 @@ where
             &["transform_system"],
         );
         builder.add(
+            UiMouseSystem::<T>::new(),
+            "ui_mouse_system",
+            &["input_system", "ui_transform"],
+        );
+        builder.add(
             Processor::<FontAsset>::new(),
             "font_processor",
             &["ui_loader"],
@@ -65,7 +70,7 @@ where
         builder.add(
             SelectionMouseSystemDesc::<G, T>::default().build(world),
             "ui_mouse_selection",
-            &[],
+            &["ui_mouse_system"],
         );
         builder.add(
             SelectionKeyboardSystemDesc::<G>::default().build(world),
@@ -88,11 +93,6 @@ where
             ResizeSystemDesc::default().build(world),
             "ui_resize_system",
             &[],
-        );
-        builder.add(
-            UiMouseSystem::<T>::new(),
-            "ui_mouse_system",
-            &["ui_transform"],
         );
         builder.add(
             UiButtonSystemDesc::default().build(world),

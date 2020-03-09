@@ -163,8 +163,8 @@ where
     ) -> Result<(), Error> {
         let mut transform = UiTransform::new(
             self.id.clone(),
-            self.anchor.clone(),
-            self.pivot.clone(),
+            self.anchor,
+            self.pivot,
             self.x,
             self.y,
             self.z,
@@ -301,12 +301,12 @@ impl<'a> PrefabData<'a> for UiTextData {
         let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
 
-        if let Some(ref align) = self.align {
-            ui_text.align = align.clone();
+        if let Some(align) = self.align {
+            ui_text.align = align;
         }
 
-        if let Some(ref line_mode) = self.line_mode {
-            ui_text.line_mode = line_mode.clone();
+        if let Some(line_mode) = self.line_mode {
+            ui_text.line_mode = line_mode;
         }
 
         texts.insert(entity, ui_text)?;

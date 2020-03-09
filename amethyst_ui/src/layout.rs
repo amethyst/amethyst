@@ -27,7 +27,7 @@ pub enum ScaleMode {
 
 /// Indicated where the anchor is, relative to the parent (or to the screen, if there is no parent).
 /// Follow a normal english Y,X naming.
-#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
 pub enum Anchor {
     /// Anchors the entity at the top left of the parent.
     TopLeft,
@@ -53,7 +53,7 @@ impl Anchor {
     /// Returns the normalized offset using the `Anchor` setting.
     /// The normalized offset is a [-0.5,0.5] value
     /// indicating the relative offset multiplier from the parent's position (centered).
-    pub fn norm_offset(&self) -> (f32, f32) {
+    pub fn norm_offset(self) -> (f32, f32) {
         match self {
             Anchor::TopLeft => (-0.5, 0.5),
             Anchor::TopMiddle => (0.0, 0.5),
@@ -68,7 +68,7 @@ impl Anchor {
     }
 
     /// Vertical align. Used by the `UiGlyphsSystem`.
-    pub(crate) fn vertical_align(&self) -> VerticalAlign {
+    pub(crate) fn vertical_align(self) -> VerticalAlign {
         match self {
             Anchor::TopLeft => VerticalAlign::Top,
             Anchor::TopMiddle => VerticalAlign::Top,
@@ -83,7 +83,7 @@ impl Anchor {
     }
 
     /// Horizontal align. Used by the `UiGlyphsSystem`.
-    pub(crate) fn horizontal_align(&self) -> HorizontalAlign {
+    pub(crate) fn horizontal_align(self) -> HorizontalAlign {
         match self {
             Anchor::TopLeft => HorizontalAlign::Left,
             Anchor::TopMiddle => HorizontalAlign::Center,

@@ -955,7 +955,7 @@ mod test {
     /// ```
     ///
     /// For more details, see <https://github.com/amethyst/amethyst/issues/1595>.
-    #[cfg(feature = "audio")]
+    #[cfg(feature = "test_audio")]
     mod audio_test {
         use amethyst::{
             assets::AssetStorage,

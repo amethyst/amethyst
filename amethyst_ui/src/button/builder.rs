@@ -259,7 +259,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Build this with the `UiButtonBuilderResources`.
-    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I>) -> (I, UiButton) {
+    pub fn build(mut self, res: &mut UiButtonBuilderResources<'a, G, I>) -> (I, UiButton) {
         let image_entity = res.entities.create();
         let text_entity = res.entities.create();
         let widget = UiButton::new(text_entity, image_entity);
@@ -410,7 +410,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
 
     /// Create the UiButton based on provided configuration parameters.
     pub fn build_from_world(self, world: &World) -> (I, UiButton) {
-        self.build(UiButtonBuilderResources::<G, I>::fetch(&world))
+        self.build(&mut UiButtonBuilderResources::<G, I>::fetch(&world))
     }
 }
 

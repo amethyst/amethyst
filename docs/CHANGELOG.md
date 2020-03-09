@@ -20,26 +20,43 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
-- Re-export `TargetedEvent` from amethyst_ui. ([#2114])
+- Re-export `TargetedEvent` from `amethyst_ui`. ([#2114])
+- `amethyst::ui::Anchor` is now `Copy`. ([#2148])
+- `amethyst::ui::LineMode` is now `Copy`. ([#2148])
+- `UiButtonBuilder::build` takes in `&mut UiButtonBuilderResources`. ([#2148])
+- ***Breaking:*** `UiBundle` depends on `InputBundle` being registered with the dispatcher first. ([#2151])
 
 ### Deprecated
 
 ### Removed
 
-* `"nightly"` feature is removed, missing resource panic message includes type name on stable. ([#2136])
+- `"nightly"` feature is removed, missing resource panic message includes type name on stable. ([#2136])
 
 ### Fixed
 
-- Fixed an issue with states_ui example loading items incorrectly ([#2117])
+- Fixed an issue with `states_ui` example loading items incorrectly. ([#2117])
+- Editable text fields now correctly highlight strings containing spaces. ([#2108], [#2143])
+- Caret for editable text box is drawn in correct position. ([#2146], [#2149])
+- Caret for editable text box is positioned correctly on first click. ([#2151])
+- Editable text is correctly blurred / unfocused when clicking outside its bounds. ([#2091], [#2151])
+- `amethyst_test` crate features now map 1-1 to `amethyst` features. ([#2153])
 
 ### Security
 
+[#2091]: https://github.com/amethyst/amethyst/issues/2091
+[#2108]: https://github.com/amethyst/amethyst/issues/2108
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
 [#2115]: https://github.com/amethyst/amethyst/pull/2115
 [#2117]: https://github.com/amethyst/amethyst/pull/2117
 [#2128]: https://github.com/amethyst/amethyst/pull/2128
 [#2136]: https://github.com/amethyst/amethyst/pull/2136
 [#2138]: https://github.com/amethyst/amethyst/pull/2138
+[#2143]: https://github.com/amethyst/amethyst/pull/2143
+[#2146]: https://github.com/amethyst/amethyst/issues/2146
+[#2148]: https://github.com/amethyst/amethyst/pull/2148
+[#2149]: https://github.com/amethyst/amethyst/pull/2149
+[#2151]: https://github.com/amethyst/amethyst/pull/2151
+[#2153]: https://github.com/amethyst/amethyst/pull/2153
 
 
 ## [0.14.0] - 2020-01-30

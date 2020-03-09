@@ -254,88 +254,79 @@ where
         // Add clicked elements to clicked buffer
         for ev in ui_events.read(&mut self.ui_reader_id) {
             if let UiEventType::ClickStart = ev.event_type {
-                // Ignore events from elements removed between the event emission and now.
-                if selectables.get(ev.target).is_some() {
-                    let clicked = ev.target;
-                    // Inside of the loop because its possible that the user clicks two times in a frame while pressing shift.
-                    let highest = cached.highest_order_selected_index(&selecteds);
+                if !selectables.contains(ev.target) {
+                    for (entity, _) in (&*entities, &selecteds).join() {
+                        emitted.push(UiEvent::new(UiEventType::Blur, entity));
+                    }
+                    selecteds.clear();
+                    continue;
+                }
 
-                    if let Some(highest) = highest {
-                        let (highest_is_select, auto_multi_select) = {
-                            let highest_multi_select_group = &selectables
-                                .get(
-                                    cached
-                                        .cache
-                                        .get(highest)
-                                        .expect(
-                                            "unreachable: we just got those values from the cache.",
-                                        )
-                                        .1,
-                                )
-                                .expect("unreachable: we just got those values from the cache.")
-                                .multi_select_group;
+                let clicked = ev.target;
+                // Inside of the loop because its possible that the user clicks two times in a frame while pressing shift.
+                let highest = cached.highest_order_selected_index(&selecteds);
 
-                            let (target_multi_select_group, auto_multi_select) = {
-                                let target_selectable = selectables.get(clicked).expect("unreachable: Because when filling the buffer we checked that the component still exist on the entity.");
-                                (
-                                    &target_selectable.multi_select_group,
-                                    target_selectable.auto_multi_select,
-                                )
-                            };
+                if let Some(highest) = highest {
+                    let (highest_is_select, auto_multi_select) = {
+                        let highest_multi_select_group = &selectables
+                            .get(
+                                cached
+                                    .cache
+                                    .get(highest)
+                                    .expect("unreachable: we just got those values from the cache.")
+                                    .1,
+                            )
+                            .expect("unreachable: we just got those values from the cache.")
+                            .multi_select_group;
+
+                        let (target_multi_select_group, auto_multi_select) = {
+                            let target_selectable = selectables.get(clicked).expect("unreachable: Because when filling the buffer we checked that the component still exist on the entity.");
                             (
-                                highest_multi_select_group == target_multi_select_group,
-                                auto_multi_select,
+                                &target_selectable.multi_select_group,
+                                target_selectable.auto_multi_select,
                             )
                         };
+                        (
+                            highest_multi_select_group == target_multi_select_group,
+                            auto_multi_select,
+                        )
+                    };
 
-                        if highest_is_select {
-                            if shift {
-                                // Add from latest selected to target for all that have same multi_select_group
-                                let cached_index_clicked = cached.index_of(clicked)
-                                    .expect("unreachable: Entity has to be in the cache, otherwise it wouldn't have been added.");
+                    if highest_is_select {
+                        if shift {
+                            // Add from latest selected to target for all that have same multi_select_group
+                            let cached_index_clicked = cached.index_of(clicked)
+                                .expect("unreachable: Entity has to be in the cache, otherwise it wouldn't have been added.");
 
-                                // When multi-selecting, you remove everything that was previously selected, and then add everything in the range.
-                                for (entity, _) in (&*entities, &selecteds).join() {
-                                    emitted.push(UiEvent::new(UiEventType::Blur, entity));
-                                }
-                                selecteds.clear();
-
-                                let min = cached_index_clicked.min(highest);
-                                let max = cached_index_clicked.max(highest);
-
-                                for i in min..=max {
-                                    let target_entity = cached.cache.get(i).expect(
-                                        "unreachable: Range has to be inside of the cache range.",
-                                    );
-                                    selecteds
-                                        .insert(target_entity.1, Selected)
-                                        .expect("unreachable: We are inserting");
-
-                                    emitted.push(UiEvent::new(UiEventType::Focus, target_entity.1));
-                                }
-                            } else if ctrl || auto_multi_select {
-                                // Select adding single element
-                                selecteds
-                                    .insert(clicked, Selected)
-                                    .expect("unreachable: We are inserting");
-
-                                emitted.push(UiEvent::new(UiEventType::Focus, clicked));
-                            } else {
-                                // Select replace, because we don't want to be adding elements.
-                                selecteds.clear();
-                                selecteds
-                                    .insert(clicked, Selected)
-                                    .expect("unreachable: We are inserting");
-
-                                emitted.push(UiEvent::new(UiEventType::Focus, clicked));
-                            }
-                        } else {
+                            // When multi-selecting, you remove everything that was previously selected, and then add everything in the range.
                             for (entity, _) in (&*entities, &selecteds).join() {
                                 emitted.push(UiEvent::new(UiEventType::Blur, entity));
                             }
-                            // Different multi select group than the latest one selected. Execute Select replace
                             selecteds.clear();
 
+                            let min = cached_index_clicked.min(highest);
+                            let max = cached_index_clicked.max(highest);
+
+                            for i in min..=max {
+                                let target_entity = cached.cache.get(i).expect(
+                                    "unreachable: Range has to be inside of the cache range.",
+                                );
+                                selecteds
+                                    .insert(target_entity.1, Selected)
+                                    .expect("unreachable: We are inserting");
+
+                                emitted.push(UiEvent::new(UiEventType::Focus, target_entity.1));
+                            }
+                        } else if ctrl || auto_multi_select {
+                            // Select adding single element
+                            selecteds
+                                .insert(clicked, Selected)
+                                .expect("unreachable: We are inserting");
+
+                            emitted.push(UiEvent::new(UiEventType::Focus, clicked));
+                        } else {
+                            // Select replace, because we don't want to be adding elements.
+                            selecteds.clear();
                             selecteds
                                 .insert(clicked, Selected)
                                 .expect("unreachable: We are inserting");
@@ -343,13 +334,25 @@ where
                             emitted.push(UiEvent::new(UiEventType::Focus, clicked));
                         }
                     } else {
-                        // Nothing was previously selected, let's just select single.
+                        for (entity, _) in (&*entities, &selecteds).join() {
+                            emitted.push(UiEvent::new(UiEventType::Blur, entity));
+                        }
+                        // Different multi select group than the latest one selected. Execute Select replace
+                        selecteds.clear();
+
                         selecteds
                             .insert(clicked, Selected)
                             .expect("unreachable: We are inserting");
 
                         emitted.push(UiEvent::new(UiEventType::Focus, clicked));
                     }
+                } else {
+                    // Nothing was previously selected, let's just select single.
+                    selecteds
+                        .insert(clicked, Selected)
+                        .expect("unreachable: We are inserting");
+
+                    emitted.push(UiEvent::new(UiEventType::Focus, clicked));
                 }
             }
         }
