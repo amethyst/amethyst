@@ -415,7 +415,7 @@ impl SpriteGrid {
 /// Example:
 /// ```text,ignore
 /// #![enable(implicit_some)]
-/// (
+/// List((
 ///     // Width of the texture
 ///     texture_width: 48,
 ///     // Height of the texture
@@ -431,7 +431,8 @@ impl SpriteGrid {
 ///             width: 16,
 ///             // Height of the sprite
 ///             height: 16,
-///             // Number of pixels to shift the sprite to the left and down relative to the entity holding it when rendering
+///             // Number of pixels to shift the sprite to the left and down relative to the
+///             // entity holding it when rendering
 ///             offsets: (0.0, 0.0), // This is optional and defaults to (0.0, 0.0)
 ///         ),
 ///         (
@@ -441,7 +442,7 @@ impl SpriteGrid {
 ///             height: 16,
 ///         ),
 ///     ],
-/// )
+/// ))
 /// ```
 ///
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.

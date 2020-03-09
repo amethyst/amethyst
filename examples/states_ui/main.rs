@@ -14,7 +14,6 @@ mod events;
 mod game;
 mod menu;
 mod pause;
-mod util;
 mod welcome;
 
 /// Quick overview what you can do when running this example:

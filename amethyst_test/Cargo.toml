@@ -13,7 +13,7 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst = { path = "..", version = "0.14.0" }
+amethyst = { path = "..", version = "0.14.0", default-features = false }
 derivative = "1.0"
 derive-new = "0.5"
 derive_deref = "1.1.0"
@@ -24,10 +24,27 @@ log = "0.4"
 serde = "1.0"
 
 [features]
-default = []
-empty = ["amethyst/empty"]
-metal = ["amethyst/metal"]
+default = ["animation", "audio", "locale", "network", "renderer"]
+
 vulkan = ["amethyst/vulkan"]
+metal = ["amethyst/metal"]
+empty = ["amethyst/empty"]
+tiles = ["amethyst/tiles"]
+animation = ["amethyst/animation"]
+audio = ["amethyst/audio"]
+gltf = ["amethyst/gltf"]
+locale = ["amethyst/locale"]
+network = ["amethyst/network"]
+renderer = ["amethyst/renderer"]
+profiler = ["amethyst/profiler"]
+sdl_controller = ["amethyst/sdl_controller"]
+json = ["amethyst/json"]
+saveload = ["amethyst/saveload"]
+server = ["amethyst/server"]
+no-slow-safety-checks = ["amethyst/no-slow-safety-checks"]
+shader-compiler = ["amethyst/shader-compiler"]
+test-support = ["amethyst/test-support"]
+experimental-spirv-reflection = ["amethyst/experimental-spirv-reflection"]
 
 # Used to tag tests that need an audio backend to run.
-audio = []
+test_audio = []

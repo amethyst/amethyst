@@ -35,10 +35,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+- Fixed an issue with `states_ui` example loading items incorrectly. ([#2117])
 - Editable text fields now correctly highlight strings containing spaces. ([#2108], [#2143])
 - Caret for editable text box is drawn in correct position. ([#2146], [#2149])
 - Caret for editable text box is positioned correctly on first click. ([#2151])
 - Editable text is correctly blurred / unfocused when clicking outside its bounds. ([#2091], [#2151])
+- `amethyst_test` crate features now map 1-1 to `amethyst` features. ([#2153])
 
 ### Security
 
@@ -46,6 +48,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2108]: https://github.com/amethyst/amethyst/issues/2108
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
 [#2115]: https://github.com/amethyst/amethyst/pull/2115
+[#2117]: https://github.com/amethyst/amethyst/pull/2117
 [#2128]: https://github.com/amethyst/amethyst/pull/2128
 [#2136]: https://github.com/amethyst/amethyst/pull/2136
 [#2138]: https://github.com/amethyst/amethyst/pull/2138
@@ -55,6 +58,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2149]: https://github.com/amethyst/amethyst/pull/2149
 [#2151]: https://github.com/amethyst/amethyst/pull/2151
 [#2152]: https://github.com/amethyst/amethyst/pull/2152
+[#2153]: https://github.com/amethyst/amethyst/pull/2153
+
 
 ## [0.14.0] - 2020-01-30
 

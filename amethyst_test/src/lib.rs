@@ -318,7 +318,6 @@
 pub use crate::{
     amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH},
     effect_return::EffectReturn,
-    fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture},
     game_update::GameUpdate,
     in_memory_source::{InMemorySource, IN_MEMORY_SOURCE_ID},
     state::{
@@ -332,6 +331,9 @@ pub(crate) use crate::{
     system_injection_bundle::SystemInjectionBundle,
     thread_local_injection_bundle::ThreadLocalInjectionBundle,
 };
+
+#[cfg(feature = "animation")]
+pub use crate::fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture};
 
 mod amethyst_application;
 mod effect_return;
