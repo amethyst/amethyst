@@ -343,7 +343,7 @@ impl<'a> PrefabData<'a> for UiTextData {
 /// Loadable `UiImage` data. Adds UiImage component to the entity.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(transparent)]
-pub struct UiImagePrefab(UiImageLoadPrefab);
+pub struct UiImagePrefab(pub UiImageLoadPrefab);
 
 /// Loadable `UiImage` data. Returns image component from `add_to_entity` instead of adding it.
 #[derive(Clone, Debug, Deserialize, Serialize)]
