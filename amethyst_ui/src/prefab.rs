@@ -353,25 +353,40 @@ pub enum UiImageLoadPrefab {
     Texture(TexturePrefab),
     /// A partial textured image
     PartialTexture {
+        /// Texture prefab.
         tex: TexturePrefab,
+        /// Left.
         left: f32,
+        /// Right.
         right: f32,
+        /// Bottom.
         bottom: f32,
+        /// Top.
         top: f32,
     },
     /// Solid color image
     SolidColor(f32, f32, f32, f32),
     /// 9-Slice image
     NineSlice {
+        /// X start.
         x_start: u32,
+        /// Y start.
         y_start: u32,
+        /// Width.
         width: u32,
+        /// Height.
         height: u32,
+        /// Left distance.
         left_dist: u32,
+        /// Right distance.
         right_dist: u32,
+        /// Top distance.
         top_dist: u32,
+        /// Bottom distance.
         bottom_dist: u32,
+        /// Texture prefab.
         tex: TexturePrefab,
+        /// Texture dimensions.
         texture_dimensions: (u32, u32),
     },
 }
