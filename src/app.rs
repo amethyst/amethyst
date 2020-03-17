@@ -267,15 +267,25 @@ where
     /// # Examples
     ///
     /// ~~~no_run
+    /// # use amethyst::prelude::*;
+    /// # use amethyst::utils::application_root_dir;
+    /// # use amethyst::winit::event_loop::EventLoop;
+    /// # use amethyst::Error;
+    /// #
+    /// # struct Example;
+    /// # impl EmptyState for Example {}
+    /// #
+    /// # fn main() -> Result<(), Error> {
+    /// let app_root = application_root_dir()?;
+    /// let assets_dir = app_root.join("assets");
+    ///
     /// let event_loop = EventLoop::new();
-    /// let mut game = Application::new(assets_dir, Example::new(), game_data)?;
-    /// game.initialize();
-    /// event_loop.run(move |event, _, control_flow| {
-    ///     #[cfg(feature = "profiler")]
-    ///     profile_scope!("run_event_loop");
-    ///     log::trace!("main loop run");
-    ///     game.run_winit_loop(event, control_flow)
-    /// })
+    /// let game_data = ();
+    /// let mut game = Application::new(assets_dir, Example, game_data)?;
+    /// game.run_winit_loop(event_loop);
+    ///
+    /// Ok(())
+    /// # }
     /// ~~~
     pub fn run_winit_loop(mut self, event_loop: EventLoop<()>) -> !
     where
@@ -303,15 +313,35 @@ where
     /// # Examples
     ///
     /// ~~~no_run
+    /// # use amethyst::prelude::*;
+    /// # use amethyst::winit::event_loop::EventLoop;
+    /// # use amethyst::utils::application_root_dir;
+    /// # use amethyst::Error;
+    /// #
+    /// # struct Example;
+    /// # impl EmptyState for Example {}
+    /// #
+    /// # fn main() -> Result<(), Error> {
+    /// let app_root = application_root_dir()?;
+    /// let assets_dir = app_root.join("assets");
+    ///
     /// let event_loop = EventLoop::new();
-    /// let mut game = Application::new(assets_dir, Example::new(), game_data)?;
+    /// let game_data = ();
+    /// let mut game = Application::new(assets_dir, Example, game_data)?;
     /// game.initialize();
     /// event_loop.run(move |event, _, control_flow| {
     ///     #[cfg(feature = "profiler")]
     ///     profile_scope!("run_event_loop");
     ///     log::trace!("main loop run");
-    ///     game.run_winit_loop(event, control_flow)
-    /// })
+    ///     if let Some(event) = event.to_static() {
+    ///         game.handle_winit_event(event, control_flow)
+    ///     } else {
+    ///         println!("Non-static errors");
+    ///     }
+    /// });
+    ///
+    /// Ok(())
+    /// # }
     /// ~~~
     pub fn handle_winit_event(&mut self, event: Event<'static, ()>, control_flow: &mut ControlFlow)
     where
@@ -560,17 +590,21 @@ where
     /// use amethyst::prelude::*;
     /// use amethyst::core::transform::{Parent, Transform};
     /// use amethyst::ecs::prelude::System;
+    /// use amethyst::utils::application_root_dir;
+    /// use amethyst::winit::event_loop::EventLoop;
+    /// use amethyst::Error;
     ///
     /// struct NullState;
     /// impl EmptyState for NullState {}
     ///
-    /// # fn main() -> amethyst::Result<()> {
+    /// # fn main() -> Result<(), Error> {
     /// #
     /// // initialize the builder, the `ApplicationBuilder` object
     /// // follows the use pattern of most builder objects found
     /// // in the rust ecosystem. Each function modifies the object
     /// // returning a new object with the modified configuration.
-    /// let assets_dir = "assets/";
+    /// let app_root = application_root_dir()?;
+    /// let assets_dir = app_root.join("assets");
     /// let mut game = Application::build(assets_dir, NullState)?
     ///
     /// // components can be registered at this stage
@@ -582,9 +616,11 @@ where
     ///     .build(())?;
     ///
     /// // the game instance can now be run, this exits only when the game is done
-    /// game.run();
     ///
-    /// # Ok(())
+    /// let event_loop = EventLoop::new();
+    /// game.run_winit_loop(event_loop);
+    ///
+    /// Ok(())
     /// # }
     /// ~~~
     pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self, Error> {
