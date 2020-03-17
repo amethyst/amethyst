@@ -39,12 +39,20 @@ pub struct MonitorIdent(u16, String);
 /// Useful for keeping fullscreen configuration persistent.
 impl MonitorIdent {
     /// Get the identifier for current primary monitor.
+    #[cfg(not(feature = "wasm"))]
     pub fn from_primary(monitors: &impl MonitorsAccess) -> Self {
         Self::from_monitor_id(monitors, monitors.primary())
             .expect("Primary monitor not found in the list of all monitors")
     }
 
+    /// Get the identifier for current primary monitor.
+    #[cfg(feature = "wasm")]
+    pub fn from_primary(_: &impl MonitorsAccess) -> Self {
+        Self(0, String::from("wasm-canvas"))
+    }
+
     /// Get the identifier for specific monitor id.
+    #[cfg(not(feature = "wasm"))]
     pub fn from_monitor_id(monitors: &impl MonitorsAccess, monitor: MonitorHandle) -> Option<Self> {
         #[cfg(target_os = "macos")]
         use winit::platform::macos::MonitorIdExt;

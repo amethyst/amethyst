@@ -1,15 +1,10 @@
-#[cfg(feature = "wasm")]
-use std::sync::{Arc, Mutex};
-
 use amethyst_core::ecs::{ReadExpect, System, WriteExpect};
-#[cfg(feature = "wasm")]
-use log::error;
 use winit::{
     dpi::{LogicalSize, Size},
     window::Window,
 };
 
-use crate::ScreenDimensions;
+use crate::{ScreenDimensions, WindowRes};
 
 /// System for opening and managing the window.
 #[derive(Debug)]
@@ -48,34 +43,13 @@ impl WindowSystem {
     }
 }
 
-#[cfg(not(feature = "wasm"))]
 impl<'a> System<'a> for WindowSystem {
-    type SystemData = (WriteExpect<'a, ScreenDimensions>, ReadExpect<'a, Window>);
+    type SystemData = (WriteExpect<'a, ScreenDimensions>, ReadExpect<'a, WindowRes>);
 
     fn run(&mut self, (mut screen_dimensions, window): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("window_system");
 
         self.manage_dimensions(&mut screen_dimensions, &window);
-    }
-}
-
-#[cfg(feature = "wasm")]
-impl<'a> System<'a> for WindowSystem {
-    type SystemData = (
-        WriteExpect<'a, ScreenDimensions>,
-        ReadExpect<'a, Arc<Mutex<Window>>>,
-    );
-
-    fn run(&mut self, (mut screen_dimensions, window): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("window_system");
-
-        let mut window_lock = window.lock();
-        if let Ok(ref mut window) = window_lock {
-            self.manage_dimensions(&mut screen_dimensions, &*window);
-        } else {
-            error!("Failed to lock window.");
-        }
     }
 }

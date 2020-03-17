@@ -46,7 +46,7 @@ use amethyst::{
         fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
-    window::{DisplayConfig, EventLoop, ScreenDimensions, Window, WindowBundle},
+    window::{DisplayConfig, EventLoop, ScreenDimensions, WindowBundle, WindowRes},
     Error,
 };
 use amethyst_rendy::rendy;
@@ -328,13 +328,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         self.dirty = false;
 
         // Retrieve a reference to the target window, which is created by the WindowBundle
-        #[cfg(not(feature = "wasm"))]
-        let window = <ReadExpect<'_, Window>>::fetch(world);
-        #[cfg(feature = "wasm")]
-        let window = {
-            let window = <ReadExpect<'_, Arc<Mutex<Window>>>>::fetch(world);
-            window.lock().expect("Failed to acquire window lock.")
-        };
+        let window = <ReadExpect<'_, WindowRes>>::fetch(world);
 
         let dimensions = self.dimensions.as_ref().unwrap();
         let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);

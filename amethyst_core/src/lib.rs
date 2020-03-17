@@ -35,6 +35,8 @@ pub use crate::{
     transform::*,
 };
 
+#[cfg(feature = "wasm")]
+pub use self::ss::Ss;
 pub use self::{
     axis::{Axis2, Axis3},
     hidden::{Hidden, HiddenPropagate},
@@ -55,6 +57,8 @@ mod event;
 mod hidden;
 mod hide_system;
 mod named;
+#[cfg(feature = "wasm")]
+mod ss;
 mod system_desc;
 mod system_ext;
 

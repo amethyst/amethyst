@@ -1,8 +1,5 @@
 use derive_new::new;
-use winit::{
-    event::{DeviceEvent, Event, WindowEvent},
-    window::Window,
-};
+use winit::event::{DeviceEvent, Event, WindowEvent};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -16,6 +13,7 @@ use amethyst_core::{
 };
 use amethyst_derive::SystemDesc;
 use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
+use amethyst_window::WindowRes;
 
 use crate::{
     components::{ArcBallControlTag, FlyControlTag},
@@ -214,7 +212,7 @@ impl Default for CursorHideSystem {
 
 impl<'a> System<'a> for CursorHideSystem {
     type SystemData = (
-        ReadExpect<'a, Window>,
+        ReadExpect<'a, WindowRes>,
         Read<'a, HideCursor>,
         Read<'a, WindowFocus>,
     );

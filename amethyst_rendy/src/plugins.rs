@@ -17,9 +17,6 @@ pub use window::RenderToWindow;
 
 #[cfg(feature = "window")]
 mod window {
-    #[cfg(feature = "wasm")]
-    use std::sync::{Arc, Mutex};
-
     use super::*;
     use crate::{
         bundle::{ImageOptions, OutputColor},
@@ -29,7 +26,7 @@ mod window {
         ecs::{ReadExpect, SystemData},
         SystemBundle,
     };
-    use amethyst_window::{ScreenDimensions, Window, WindowBundle};
+    use amethyst_window::{ScreenDimensions, WindowBundle, WindowRes};
     use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
 
     /// A [RenderPlugin] for opening a window and displaying a render target to it.
@@ -93,14 +90,8 @@ mod window {
         ) -> Result<(), Error> {
             self.dirty = false;
 
-            #[cfg(not(feature = "wasm"))]
-            let window = <ReadExpect<'_, Window>>::fetch(world);
-            #[cfg(feature = "wasm")]
-            let window = {
-                let window = <ReadExpect<'_, Arc<Mutex<Window>>>>::fetch(world);
-                window.lock().expect("Failed to acquire window lock.")
-            };
-            let surface = factory.create_surface(&*window)?;
+            let window = <ReadExpect<'_, WindowRes>>::fetch(world);
+            let surface = factory.create_surface(&**window)?;
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 

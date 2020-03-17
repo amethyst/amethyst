@@ -1,8 +1,5 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
-#[cfg(feature = "wasm")]
-use std::sync::{Arc, Mutex};
-
 use crate::{
     mtl::Material,
     rendy::{
@@ -104,7 +101,7 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
             #[cfg(not(feature = "wasm"))]
             world.insert(window);
             #[cfg(feature = "wasm")]
-            world.insert(Arc::new(Mutex::new(window)));
+            world.insert(amethyst_core::Ss::new(window));
         }
 
         if let Some(factory) = self.factory.take() {

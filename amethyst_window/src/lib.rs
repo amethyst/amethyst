@@ -29,3 +29,10 @@ pub use winit::{
     event_loop::EventLoop,
     window::{Icon, Window},
 };
+
+/// Regular `winit::window::Window`.
+#[cfg(not(feature = "wasm"))]
+pub type WindowRes = winit::window::Window;
+/// `Ss` wrapped `winit::window::Window`.
+#[cfg(feature = "wasm")]
+pub type WindowRes = amethyst_core::Ss<winit::window::Window>;
