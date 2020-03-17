@@ -173,24 +173,6 @@ where
     ///
     /// Application will return an error if the internal thread pool fails
     /// to initialize correctly because of systems resource limitations
-    ///
-    /// # Examples
-    ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    ///
-    /// struct NullState;
-    /// impl EmptyState for NullState {}
-    ///
-    /// # fn main() -> amethyst::Result<()> {
-    /// #
-    /// let assets_dir = "assets/";
-    /// let mut game = Application::new(assets_dir, NullState, ())?;
-    /// game.run();
-    ///
-    /// #     Ok(())
-    /// # }
-    /// ~~~
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self, Error>
     where
         P: AsRef<Path>,

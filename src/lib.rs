@@ -13,7 +13,9 @@
 //!
 //! ```rust,no_run
 //! use amethyst::prelude::*;
+//! use amethyst::utils::application_root_dir;
 //! use amethyst::winit::event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+//! use amethyst::winit::event_loop::EventLoop;
 //!
 //! struct GameState;
 //!
@@ -46,9 +48,11 @@
 //! }
 //!
 //! fn main() -> amethyst::Result<()> {
-//!     let assets_dir = "assets/";
+//!     let app_root = application_root_dir()?;
+//!     let assets_dir = app_root.join("assets");
+//!     let event_loop = EventLoop::new();
 //!     let mut game = Application::new(assets_dir, GameState, GameDataBuilder::default())?;
-//!     game.run();
+//!     game.run_winit_loop(event_loop);
 //!     Ok(())
 //! }
 //! ```

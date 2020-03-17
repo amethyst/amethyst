@@ -93,7 +93,7 @@ pub fn main() -> amethyst::Result<()> {
         game_data,
     )?;
     log::info!("Starting with WelcomeScreen!");
-    game.run();
+    game.run_winit_loop(event_loop);
 
     Ok(())
 }

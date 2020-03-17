@@ -95,7 +95,7 @@ fn main() -> amethyst::Result<()> {
         )
         .build(game_data)?;
 
-    game.run();
+    game.run_winit_loop(event_loop);
     Ok(())
 }
 
