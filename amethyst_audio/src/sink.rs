@@ -106,25 +106,25 @@ mod tests {
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
+    #[cfg(all(feature = "wav", target_os = "linux"))]
     fn test_append_wav() {
         test_append("tests/sound_test.wav", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
+    #[cfg(all(feature = "mp3", target_os = "linux"))]
     fn test_append_mp3() {
         test_append("tests/sound_test.mp3", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
+    #[cfg(all(feature = "flac", target_os = "linux"))]
     fn test_append_flac() {
         test_append("tests/sound_test.flac", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
+    #[cfg(all(feature = "ogg", target_os = "linux"))]
     fn test_play_ogg() {
         test_append("tests/sound_test.ogg", true);
     }

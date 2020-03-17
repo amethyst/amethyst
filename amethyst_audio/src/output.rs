@@ -155,25 +155,25 @@ mod tests {
     };
 
     #[test]
-    #[cfg(target_os = "linux")]
+    #[cfg(all(feature = "wav", target_os = "linux"))]
     fn test_play_wav() {
         test_play("tests/sound_test.wav", true)
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
+    #[cfg(all(feature = "mp3", target_os = "linux"))]
     fn test_play_mp3() {
         test_play("tests/sound_test.mp3", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
+    #[cfg(all(feature = "flac", target_os = "linux"))]
     fn test_play_flac() {
         test_play("tests/sound_test.flac", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
+    #[cfg(all(feature = "vorbis", target_os = "linux"))]
     fn test_play_ogg() {
         test_play("tests/sound_test.ogg", true);
     }

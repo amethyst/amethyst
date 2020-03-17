@@ -94,21 +94,25 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "wav")]
     fn test_play_wav() {
         test_play("tests/sound_test.wav", true);
     }
 
     #[test]
+    #[cfg(feature = "mp3")]
     fn test_play_mp3() {
         test_play("tests/sound_test.mp3", true);
     }
 
     #[test]
+    #[cfg(feature = "flac")]
     fn test_play_flac() {
         test_play("tests/sound_test.flac", true);
     }
 
     #[test]
+    #[cfg(feature = "vorbis")]
     fn test_play_ogg() {
         test_play("tests/sound_test.ogg", true);
     }

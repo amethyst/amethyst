@@ -25,7 +25,7 @@ amethyst_error = { path = "../amethyst_error", version = "0.4.0"}
 cpal = "0.10"
 derive-new = "0.5"
 log = "0.4.6"
-rodio = "0.10"
+rodio = { version = "0.10", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 smallvec = { version = "1.2", features = ["serde"] }
 thread_profiler = { version = "0.3", optional = true }
@@ -34,4 +34,9 @@ thread_profiler = { version = "0.3", optional = true }
 amethyst_utils = { path = "../amethyst_utils", version = "0.9.0"}
 
 [features]
+default = ["flac", "vorbis", "wav", "mp3"]
+flac = ["rodio/flac"]
+vorbis = ["rodio/vorbis"]
+wav = ["rodio/wav"]
+mp3 = ["rodio/mp3"]
 profiler = [ "thread_profiler/thread_profiler" ]
