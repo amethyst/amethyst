@@ -9,6 +9,10 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[cfg(feature = "system_font")]
+pub use self::font::systemfont::{
+    default_system_font, get_all_font_handles, list_system_font_families,
+};
 pub use self::{
     blink::BlinkSystem,
     bundle::UiBundle,
@@ -24,10 +28,7 @@ pub use self::{
     event_retrigger::{
         EventReceiver, EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc,
     },
-    font::{
-        default::get_default_font,
-        systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
-    },
+    font::default::get_default_font,
     format::{FontAsset, FontHandle, TtfFormat},
     glyphs::{UiGlyphsSystem, UiGlyphsSystemDesc},
     image::UiImage,

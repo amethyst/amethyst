@@ -33,7 +33,9 @@ unicode-normalization = "0.1"
 unicode-segmentation = "1.6"
 winit = { version = "0.22.0", features = ["serde"] }
 log = "0.4.6"
-font-kit = "0.5"
+# `font-kit 0.5.0` does not allow disabling the `freetype` dependency, which does not support WASM.
+# https://github.com/servo/font-kit/blob/febf5b76f70a75de5757b6f95dde9f11e4016d2e/Cargo.toml
+font-kit = { version = "0.5", optional = true }
 paste = "0.1"
 rand = "0.7"
 lazy_static = "1.4"
@@ -42,4 +44,6 @@ glyph_brush = "0.6.0"
 thread_profiler = { version = "0.3", optional = true }
 
 [features]
+default = ["system_font"]
 profiler = [ "thread_profiler/thread_profiler" ]
+system_font = ["font-kit"]

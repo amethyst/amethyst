@@ -1,20 +1,22 @@
 use std::fs;
 
+#[cfg(feature = "system_font")]
 use font_kit::handle::Handle as FontKitHandle;
 use log::{error, warn};
 
 use amethyst_assets::{AssetStorage, Format, Loader};
 
-use crate::{
-    font::systemfont::default_system_font,
-    format::{FontAsset, FontHandle, TtfFormat},
-};
+#[cfg(feature = "system_font")]
+use crate::font::systemfont::default_system_font;
+use crate::format::{FontAsset, FontHandle, TtfFormat};
 
 /// Get the system default fonts.
 /// If unable to, gets the local square.ttf font.
 pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> FontHandle {
+    #[cfg(feature = "system_font")]
     let system_font = default_system_font();
 
+    #[cfg(feature = "system_font")]
     match system_font {
         Ok(handle) => match handle {
             FontKitHandle::Path { path, .. } => {
