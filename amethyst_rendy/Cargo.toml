@@ -41,7 +41,7 @@ approx = "0.3.2"
 rayon = "1.3.0"
 more-asserts = "0.2.1"
 criterion = "0.3.0"
-winit = "0.21.0"
+winit = "0.22.0"
 approx = "0.3"
 
 [features]
