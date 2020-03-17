@@ -43,7 +43,7 @@ use amethyst::{
         fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
-    window::{ScreenDimensions, Window, WindowBundle},
+    window::{DisplayConfig, EventLoop, ScreenDimensions, Window, WindowBundle},
     Error,
 };
 use amethyst_rendy::rendy;
@@ -206,6 +206,8 @@ fn main() -> Result<(), Error> {
         .join("config")
         .join("display.ron");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])

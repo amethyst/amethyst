@@ -4,7 +4,7 @@ use amethyst::{
     prelude::*,
     shrev::EventChannel,
     ui::{UiCreator, UiEvent, UiEventType, UiFinder},
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
     TransEvent,
 };
 

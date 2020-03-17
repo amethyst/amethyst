@@ -3,7 +3,7 @@ use amethyst::{
     input::{is_close_requested, is_key_down},
     prelude::*,
     ui::{UiCreator, UiEvent, UiEventType, UiFinder},
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
 };
 
 use crate::{credits::CreditsScreen, game::Game, welcome::WelcomeScreen};

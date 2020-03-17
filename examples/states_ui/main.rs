@@ -4,9 +4,13 @@ use amethyst::{
     core::transform::TransformBundle,
     input::{InputBundle, StringBindings},
     prelude::*,
-    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
+    renderer::{
+        plugins::RenderToWindow, rendy::hal::command::ClearColor, types::DefaultBackend,
+        RenderingBundle,
+    },
     ui::{RenderUi, UiBundle},
     utils::{application_root_dir, fps_counter::FpsCounterBundle},
+    window::{DisplayConfig, EventLoop},
 };
 
 mod credits;
@@ -37,6 +41,8 @@ pub fn main() -> amethyst::Result<()> {
     // other assets ('*.ron' files, '*.png' textures, '*.ogg' audio files, ui prefab files, ...) are here
     let assets_dir = app_root.join("examples/assets");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         // a lot of other bundles/systems depend on this (without it being explicitly clear), so it
         // makes sense to add it early on
@@ -66,13 +72,12 @@ pub fn main() -> amethyst::Result<()> {
         .with_bundle(FpsCounterBundle)?
         // Without this, we would not get a picture.
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 // This creates the window and draws a background, if we don't specify a
                 // background in the loaded ui prefab file.
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.005, 0.005, 0.005, 1.0]),
-                )
+                .with_plugin(RenderToWindow::new().with_clear(ClearColor {
+                    float32: [0.005, 0.005, 0.005, 1.0],
+                }))
                 // Without this, all of our beautiful UI would not get drawn.
                 // It will work, but we won't see a thing.
                 .with_plugin(RenderUi::default()),

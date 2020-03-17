@@ -603,22 +603,22 @@ fn main() -> amethyst::Result<()> {
     bindings.insert_axis(
         "vertical",
         Axis::Emulated {
-            pos: Button::Key(winit::VirtualKeyCode::S),
-            neg: Button::Key(winit::VirtualKeyCode::W),
+            pos: Button::Key(winit::event::VirtualKeyCode::S),
+            neg: Button::Key(winit::event::VirtualKeyCode::W),
         },
     )?;
     bindings.insert_axis(
         "horizontal",
         Axis::Emulated {
-            pos: Button::Key(winit::VirtualKeyCode::D),
-            neg: Button::Key(winit::VirtualKeyCode::A),
+            pos: Button::Key(winit::event::VirtualKeyCode::D),
+            neg: Button::Key(winit::event::VirtualKeyCode::A),
         },
     )?;
     bindings.insert_axis(
         "horizontal",
         Axis::Emulated {
-            pos: Button::Key(winit::VirtualKeyCode::D),
-            neg: Button::Key(winit::VirtualKeyCode::A),
+            pos: Button::Key(winit::event::VirtualKeyCode::D),
+            neg: Button::Key(winit::event::VirtualKeyCode::A),
         },
     )?;
 

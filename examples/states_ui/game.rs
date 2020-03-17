@@ -8,7 +8,7 @@ use amethyst::{
     prelude::*,
     ui::{UiCreator, UiFinder, UiText},
     utils::fps_counter::FpsCounter,
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
 };
 
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.

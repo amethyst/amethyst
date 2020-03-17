@@ -13,11 +13,13 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
     ui::{RenderUi, UiBundle},
     utils::application_root_dir,
+    window::{DisplayConfig, EventLoop},
 };
 
 use crate::{audio::Music, bundle::PongBundle};
@@ -59,6 +61,8 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = app_root.join("examples/assets/");
 
+    let event_loop = EventLoop::new();
+    let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
@@ -74,13 +78,12 @@ fn main() -> amethyst::Result<()> {
         )
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
-                )
+                .with_plugin(RenderToWindow::new().with_clear(ClearColor {
+                    float32: [0.34, 0.36, 0.52, 1.0],
+                }))
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderUi::default()),
         )?;
