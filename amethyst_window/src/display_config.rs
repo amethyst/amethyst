@@ -7,7 +7,7 @@ use winit::{
 };
 
 /// Configuration for a window display.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DisplayConfig {
     /// Name of the application window.
     #[serde(default = "default_title")]
@@ -79,6 +79,28 @@ pub struct DisplayConfig {
     /// ```
     #[serde(skip)]
     pub loaded_icon: Option<Icon>,
+}
+
+/// **Note:** This ignores the `loaded_icon` field.
+///
+/// This manual implementation ignores the `loaded_icon` field as `winit::window::Icon` does not
+/// impl `PartialEq`.
+impl PartialEq for DisplayConfig {
+    fn eq(&self, other: &DisplayConfig) -> bool {
+        self.title == other.title
+            && self.fullscreen == other.fullscreen
+            && self.dimensions == other.dimensions
+            && self.min_dimensions == other.min_dimensions
+            && self.max_dimensions == other.max_dimensions
+            && self.visibility == other.visibility
+            && self.icon == other.icon
+            && self.always_on_top == other.always_on_top
+            && self.decorations == other.decorations
+            && self.maximized == other.maximized
+            && self.multitouch == other.multitouch
+            && self.resizable == other.resizable
+            && self.transparent == other.transparent
+    }
 }
 
 impl Default for DisplayConfig {
