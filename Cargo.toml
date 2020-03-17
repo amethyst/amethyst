@@ -341,3 +341,4 @@ features = ["animation", "audio", "gltf", "tiles", "json", "locale", "network", 
 
 [patch.crates-io]
 rendy = { git = "https://github.com/jaynus/rendy.git", branch = "jaynus-fixes" }
+winit = { git = "https://github.com/amethyst/winit.git", branch = "clone-events" }
