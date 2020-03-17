@@ -11,6 +11,7 @@ use amethyst::{
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::mesh::{Normal, Position, TexCoord},
         types::DefaultBackend,
+        visibility::BoundingSphere,
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
@@ -31,6 +32,7 @@ impl SimpleState for ExampleState {
             .create_entity()
             .named("Fly Camera Scene")
             .with(prefab_handle)
+            .with(BoundingSphere::origin(1.0))
             .build();
     }
 
