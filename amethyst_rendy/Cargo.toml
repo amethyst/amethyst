@@ -45,6 +45,7 @@ winit = "0.22.0"
 approx = "0.3"
 
 [features]
+gl = ["rendy/gl"]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
 empty = ["rendy/empty"]
@@ -54,6 +55,7 @@ shader-compiler =  ["rendy/shader-compiler"]
 test-support =  []
 experimental-spirv-reflection = ["rendy/spirv-reflection"]
 window = ["rendy/init-winit", "amethyst_window"]
+wasm = ["winit/web-sys"]
 
 [[bench]]
 name = "camera"

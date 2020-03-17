@@ -35,6 +35,7 @@ default = [
 ]
 
 # Renderer backend
+gl = ["amethyst_rendy/gl"]
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
@@ -110,6 +111,7 @@ test-support = [
   "amethyst_window/test-support",
 ]
 experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
+wasm = ["amethyst_rendy/wasm"]
 
 [workspace]
 members = [
