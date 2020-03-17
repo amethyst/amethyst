@@ -111,7 +111,10 @@ test-support = [
   "amethyst_window/test-support",
 ]
 experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
-wasm = ["amethyst_rendy/wasm"]
+wasm = [
+  "amethyst_rendy/wasm",
+  "amethyst_window/wasm",
+]
 
 [workspace]
 members = [

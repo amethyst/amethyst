@@ -3,6 +3,9 @@
 //!
 //! This particular example use a custom `RenderGraph`.
 
+#[cfg(feature = "wasm")]
+use std::sync::{Arc, Mutex};
+
 use amethyst::{
     assets::{
         Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystemDesc,
@@ -325,12 +328,19 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         self.dirty = false;
 
         // Retrieve a reference to the target window, which is created by the WindowBundle
+        #[cfg(not(feature = "wasm"))]
         let window = <ReadExpect<'_, Window>>::fetch(world);
+        #[cfg(feature = "wasm")]
+        let window = {
+            let window = <ReadExpect<'_, Arc<Mutex<Window>>>>::fetch(world);
+            window.lock().expect("Failed to acquire window lock.")
+        };
+
         let dimensions = self.dimensions.as_ref().unwrap();
         let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         // Create a new drawing surface in our window
-        let surface = factory.create_surface(window.deref()).unwrap();
+        let surface = factory.create_surface(&*window).unwrap();
         let surface_format = factory.get_surface_format(&surface);
 
         // Begin building our RenderGraph

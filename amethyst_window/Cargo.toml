@@ -25,3 +25,4 @@ winit = { version = "0.22.0", features = ["serde"] }
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 test-support =  []
+wasm = ["winit/web-sys"]

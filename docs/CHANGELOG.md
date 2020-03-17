@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
+## WASM
+
+### Changed
+
+* ***Breaking:*** MP3 loading is now behind the `"mp3"` feature, disabled by default.
+* ***Breaking:*** System fonts support is now behind the `"system_font"` feature, disabled by default.
 
 ## [Unreleased]
 

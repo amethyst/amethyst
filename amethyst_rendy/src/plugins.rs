@@ -17,6 +17,9 @@ pub use window::RenderToWindow;
 
 #[cfg(feature = "window")]
 mod window {
+    #[cfg(feature = "wasm")]
+    use std::sync::{Arc, Mutex};
+
     use super::*;
     use crate::{
         bundle::{ImageOptions, OutputColor},
@@ -90,7 +93,13 @@ mod window {
         ) -> Result<(), Error> {
             self.dirty = false;
 
+            #[cfg(not(feature = "wasm"))]
             let window = <ReadExpect<'_, Window>>::fetch(world);
+            #[cfg(feature = "wasm")]
+            let window = {
+                let window = <ReadExpect<'_, Arc<Mutex<Window>>>>::fetch(world);
+                window.lock().expect("Failed to acquire window lock.")
+            };
             let surface = factory.create_surface(&*window)?;
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);

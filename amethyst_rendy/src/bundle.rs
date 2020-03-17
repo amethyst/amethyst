@@ -1,5 +1,8 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
+#[cfg(feature = "wasm")]
+use std::sync::{Arc, Mutex};
+
 use crate::{
     mtl::Material,
     rendy::{
@@ -97,7 +100,11 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
             let hidpi = window.scale_factor();
             let (width, height) = window.inner_size().into();
             world.insert(ScreenDimensions::new(width, height, hidpi));
+
+            #[cfg(not(feature = "wasm"))]
             world.insert(window);
+            #[cfg(feature = "wasm")]
+            world.insert(Arc::new(Mutex::new(window)));
         }
 
         if let Some(factory) = self.factory.take() {

@@ -55,7 +55,7 @@ shader-compiler =  ["rendy/shader-compiler"]
 test-support =  []
 experimental-spirv-reflection = ["rendy/spirv-reflection"]
 window = ["rendy/init-winit", "amethyst_window"]
-wasm = ["winit/web-sys"]
+wasm = ["amethyst_window/wasm"]
 
 [[bench]]
 name = "camera"
