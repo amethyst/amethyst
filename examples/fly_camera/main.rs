@@ -32,7 +32,7 @@ impl SimpleState for ExampleState {
             .create_entity()
             .named("Fly Camera Scene")
             .with(prefab_handle)
-            .with(BoundingSphere::origin(1.0))
+            .with(BoundingSphere::origin(1.732))
             .build();
     }
 
