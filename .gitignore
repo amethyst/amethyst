@@ -7,6 +7,9 @@ target
 Cargo.lock
 *.log
 
+# wasmpack output
+/www
+
 # Backup files
 .DS_Store
 thumbs.db
