@@ -23,7 +23,8 @@ amethyst_input = { path = "../amethyst_input", version = "0.10.0" }
 amethyst_window = { path = "../amethyst_window", version = "0.4.0" }
 derive-new = "0.5"
 serde = { version = "1.0", features = ["derive"] }
-winit = { version = "0.22.0", features = ["serde"] }
+# winit = { version = "0.22.0", features = ["serde"] }
+winit = { git = "https://github.com/amethyst/winit.git", branch = "clone-events", features = ["serde"] }
 log = "0.4.6"
 
 thread_profiler = { version = "0.3", optional = true }
