@@ -34,8 +34,18 @@ struct PerImageSkinningSub<B: Backend> {
 impl<B: Backend> SkinningSub<B> {
     /// Create a new `SkinningSub`, allocating using the provided `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+        let storage_buffer = hal::pso::DescriptorType::Buffer {
+            ty: hal::pso::BufferDescriptorType::Storage { read_only: false },
+            format: hal::pso::BufferDescriptorFormat::Structured {
+                dynamic_offset: false,
+            },
+        };
+
         Ok(Self {
-            layout: set_layout! {factory, [1] StorageBuffer hal::pso::ShaderStageFlags::VERTEX},
+            layout: set_layout! {
+                factory,
+                (1, storage_buffer, hal::pso::ShaderStageFlags::VERTEX)
+            },
             skin_offset_map: Default::default(),
             staging: Vec::new(),
             per_image: Vec::new(),

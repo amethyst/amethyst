@@ -151,11 +151,21 @@ pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
 impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Create a new `MaterialSub` using the provided rendy `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+        let uniform_buffer = hal::pso::DescriptorType::Buffer {
+            ty: hal::pso::BufferDescriptorType::Uniform,
+            format: hal::pso::BufferDescriptorFormat::Structured {
+                dynamic_offset: false,
+            },
+        };
+        let combined_image_sampler = hal::pso::DescriptorType::Image {
+            ty: hal::pso::ImageDescriptorType::Sampled { with_sampler: true },
+        };
+
         Ok(Self {
             layout: set_layout! {
                 factory,
-                [1] UniformBuffer hal::pso::ShaderStageFlags::FRAGMENT,
-                [T::len()] CombinedImageSampler hal::pso::ShaderStageFlags::FRAGMENT
+                (1, uniform_buffer, hal::pso::ShaderStageFlags::FRAGMENT),
+                (T::len(), combined_image_sampler, hal::pso::ShaderStageFlags::FRAGMENT)
             },
             lookup: util::LookupBuilder::new(),
             allocator: SlotAllocator::new(1024),

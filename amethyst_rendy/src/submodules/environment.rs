@@ -53,8 +53,18 @@ impl<B: Backend> EnvironmentSub<B> {
         factory: &Factory<B>,
         flags: [hal::pso::ShaderStageFlags; 2],
     ) -> Result<Self, failure::Error> {
+        let uniform_buffer = hal::pso::DescriptorType::Buffer {
+            ty: hal::pso::BufferDescriptorType::Uniform,
+            format: hal::pso::BufferDescriptorFormat::Structured {
+                dynamic_offset: false,
+            },
+        };
         Ok(Self {
-            layout: set_layout! {factory, [1] UniformBuffer flags[0], [4] UniformBuffer flags[1]},
+            layout: set_layout! {
+                factory,
+                (1, uniform_buffer, flags[0]),
+                (4, uniform_buffer, flags[1])
+            },
             per_image: Vec::new(),
         })
     }

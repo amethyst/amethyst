@@ -45,8 +45,15 @@ pub struct TextureSub<B: Backend> {
 impl<B: Backend> TextureSub<B> {
     /// Create a new Texture for submission, allocated using the provided `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+        let combined_image_sampler = hal::pso::DescriptorType::Image {
+            ty: hal::pso::ImageDescriptorType::Sampled { with_sampler: true },
+        };
+
         Ok(Self {
-            layout: set_layout! {factory, [1] CombinedImageSampler hal::pso::ShaderStageFlags::FRAGMENT},
+            layout: set_layout! {
+                factory,
+                (1, combined_image_sampler, hal::pso::ShaderStageFlags::FRAGMENT)
+            },
             lookup: util::LookupBuilder::new(),
             textures: Vec::with_capacity(1024),
             generation: 0,

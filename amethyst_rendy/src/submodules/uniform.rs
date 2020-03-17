@@ -45,11 +45,18 @@ where
         factory: &Factory<B>,
         flags: hal::pso::ShaderStageFlags,
     ) -> Result<Self, hal::pso::CreationError> {
+        let uniform_buffer = hal::pso::DescriptorType::Buffer {
+            ty: hal::pso::BufferDescriptorType::Uniform,
+            format: hal::pso::BufferDescriptorFormat::Structured {
+                dynamic_offset: false,
+            },
+        };
+
         Ok(Self {
             layout: factory
                 .create_descriptor_set_layout(util::set_layout_bindings(Some((
                     1,
-                    hal::pso::DescriptorType::UniformBuffer,
+                    uniform_buffer,
                     flags,
                 ))))?
                 .into(),
