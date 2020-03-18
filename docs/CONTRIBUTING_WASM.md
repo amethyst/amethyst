@@ -2,11 +2,11 @@
 
 ## Links
 
-* [Contribution guide](https://github.com/amethyst/amethyst/tree/wasm/docs/CONTRIBUTING_WASM.md)
-* [WASM Issues](https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22feat%3A+WASM+support%22)
-* [WASM Rush (Project Board)](https://github.com/amethyst/amethyst/projects/20)
+* [Contribution guide](https://github.com/amethyst/amethyst/tree/wasm/docs/CONTRIBUTING_WASM.md) -- Guide on how to set up your development environment, and commands to run.
+* [WASM Issues](https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22feat%3A+WASM+support%22) -- Pick something from here to do.
+* [WASM Rush (Project Board)](https://github.com/amethyst/amethyst/projects/20) -- Bird's eye view, who's working on what.
 * [WASM Effort (Forum Thread)](https://community.amethyst.rs/t/wasm-effort/1336)
-* [Discord](https://discord.gg/amethyst)
+* [Discord](https://discord.gg/amethyst) -- Chat with other people on this.
 
 Repositories and branches:
 
