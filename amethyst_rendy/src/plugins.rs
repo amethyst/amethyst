@@ -91,6 +91,9 @@ mod window {
             self.dirty = false;
 
             let window = <ReadExpect<'_, WindowRes>>::fetch(world);
+            #[cfg(not(feature = "wasm"))]
+            let surface = factory.create_surface(&*window)?;
+            #[cfg(feature = "wasm")]
             let surface = factory.create_surface(&**window)?;
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
