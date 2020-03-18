@@ -54,8 +54,10 @@ impl MonitorIdent {
     /// Get the identifier for specific monitor id.
     #[cfg(not(feature = "wasm"))]
     pub fn from_monitor_id(monitors: &impl MonitorsAccess, monitor: MonitorHandle) -> Option<Self> {
+        #[cfg(target_os = "ios")]
+        use winit::platform::ios::MonitorHandleExtIOS;
         #[cfg(target_os = "macos")]
-        use winit::platform::macos::MonitorIdExt;
+        use winit::platform::macos::MonitorHandleExtMacOS;
         #[cfg(any(
             target_os = "linux",
             target_os = "dragonfly",
@@ -64,10 +66,8 @@ impl MonitorIdent {
             target_os = "openbsd"
         ))]
         use winit::platform::unix::MonitorHandleExtUnix;
-        #[cfg(target_os = "ios")]
-        use winit::platform::windows::MonitorIdExt;
         #[cfg(target_os = "windows")]
-        use winit::platform::windows::MonitorIdExt;
+        use winit::platform::windows::MonitorHandleExtWindows;
 
         let native_id = monitor.native_id();
         monitors
