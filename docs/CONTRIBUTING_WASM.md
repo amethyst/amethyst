@@ -10,9 +10,22 @@
 
 Repositories and branches:
 
+```bash
+# End to end POC repository
+git clone git@github.com:amethyst/pong_wasm.git
+
+# Crates
+git clone git@github.com:amethyst/amethyst.git && (cd amethyst && git checkout wasm)
+git clone git@github.com:amethyst/rendy.git && (cd rendy && git checkout wasm)
+git clone git@github.com:amethyst/winit.git && (cd winit && git checkout wasm)
+git clone git@github.com:amethyst/gfx.git && (cd gfx && git checkout wasm)
+git clone git@github.com:amethyst/glutin.git && (cd glutin && git checkout wasm)
+```
+
+* [pong_wasm](https://github.com/amethyst/pong_wasm)
 * [amethyst:wasm](https://github.com/amethyst/amethyst/tree/wasm)
-* [rendy:jaynus-fixes](https://github.com/amethyst/rendy/tree/jaynus-fixes)
-* [winit:clone-events](https://github.com/amethyst/winit/tree/clone-events)
+* [rendy:wasm](https://github.com/amethyst/rendy/tree/wasm)
+* [winit:wasm](https://github.com/amethyst/winit/tree/wasm)
 * [gfx:wasm](https://github.com/amethyst/gfx/tree/wasm)
 * [glutin:wasm](https://github.com/amethyst/glutin/tree/wasm)
 
