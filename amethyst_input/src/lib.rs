@@ -31,8 +31,6 @@ pub use winit::event::{ElementState, VirtualKeyCode};
 
 use std::iter::Iterator;
 
-use winit;
-
 mod axis;
 mod bindings;
 mod bundle;

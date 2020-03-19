@@ -12,7 +12,7 @@ use amethyst_rendy::{
     sprite::SpriteSheet,
     Texture,
 };
-use glsl_layout::*;
+use glsl_layout::{mat4, uvec3, vec2, vec4, AsStd140};
 
 /// `TileMapArgs`
 /// ```glsl,ignore

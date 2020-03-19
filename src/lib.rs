@@ -51,9 +51,8 @@
 //!     let app_root = application_root_dir()?;
 //!     let assets_dir = app_root.join("assets");
 //!     let event_loop = EventLoop::new();
-//!     let mut game = Application::new(assets_dir, GameState, GameDataBuilder::default())?;
+//!     let game = Application::new(assets_dir, GameState, GameDataBuilder::default())?;
 //!     game.run_winit_loop(event_loop);
-//!     Ok(())
 //! }
 //! ```
 

@@ -23,8 +23,6 @@ pub use num_traits as num;
 pub use specs as ecs;
 pub use specs::{shred, shrev};
 
-use rayon;
-
 use std::sync::Arc;
 
 pub use crate::{

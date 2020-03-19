@@ -150,7 +150,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Example::default())?
+    let game = Application::build(assets_dir, Example::default())?
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;
