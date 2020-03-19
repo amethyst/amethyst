@@ -40,9 +40,9 @@ pipeline {
                     steps {
                         sh 'cargo update'
                         // Perform actual check
-                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"'
+                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
                         echo 'Running Cargo clippy...'
-                        sh 'cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"'
+                        sh 'cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
                     }
                 }
                 stage("nightly") {
@@ -59,7 +59,7 @@ pipeline {
                         sh 'cargo update'
                         // Perform actual check
                         echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"'
+                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
                     }
                 }
             }
@@ -96,7 +96,7 @@ pipeline {
                     steps {
                         bat 'C:\\Users\\root\\.cargo\\bin\\cargo update'
                         echo 'Beginning tests...'
-                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan json saveload tiles storage-event-control"'
+                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan json saveload tiles storage-event-control mp3 system_font"'
                         echo 'Tests done!'
                     }
                 }
@@ -114,7 +114,7 @@ pipeline {
                         // built libraries found.
                         sh './scripts/book_library_clean.sh'
 
-                        sh 'cargo test --all --features "vulkan sdl_controller json saveload storage-event-control"'
+                        sh 'cargo test --all --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
                         sh 'mdbook test -L ./target/debug/deps book'
 
                         echo 'Tests done!'
