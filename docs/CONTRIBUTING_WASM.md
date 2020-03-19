@@ -6,7 +6,7 @@
 * [WASM Issues](https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22feat%3A+WASM+support%22) -- Pick something from here to do.
 * [WASM Rush (Project Board)](https://github.com/amethyst/amethyst/projects/20) -- Bird's eye view, who's working on what.
 * [WASM Effort (Forum Thread)](https://community.amethyst.rs/t/wasm-effort/1336)
-* [Discord](https://discord.gg/amethyst) -- Chat with other people on this.
+* [Discord](https://discord.gg/amethyst) -- Chat with other people on the [`#engine-general` channel](https://discordapp.com/channels/425678876929163284/425679992244928512).
 
 Repositories and branches:
 
@@ -34,7 +34,7 @@ git clone git@github.com:amethyst/glutin.git && (cd glutin && git checkout wasm)
 ### Environment Setup
 
 1. Install Rust: https://www.rust-lang.org/tools/install
-2. `rustup component add wasm32-unknown-unknown`
+2. `rustup target add wasm32-unknown-unknown`
 3. Install `wasm-pack`: https://rustwasm.github.io/wasm-pack/installer/
 4. Install `npm`: https://www.npmjs.com/get-npm
 
