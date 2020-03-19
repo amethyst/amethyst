@@ -27,12 +27,18 @@ pub struct TextEditingInputSystem {
     /// A reader for winit events.
     #[system_desc(event_channel_reader)]
     reader: ReaderId<Event<'static, ()>>,
+    /// Cache state for keyboard modifiers.
+    #[system_desc(skip)]
+    modifiers_state: ModifiersState,
 }
 
 impl TextEditingInputSystem {
     /// Creates a new instance of this system
     pub fn new(reader: ReaderId<Event<'static, ()>>) -> Self {
-        Self { reader }
+        Self {
+            reader,
+            modifiers_state: ModifiersState::default(),
+        }
     }
 }
 
@@ -65,6 +71,10 @@ impl<'a> System<'a> for TextEditingInputSystem {
                     .next()
             {
                 match *event {
+                    Event::WindowEvent {
+                        event: WindowEvent::ModifiersChanged(modifiers_state),
+                        ..
+                    } => self.modifiers_state = modifiers_state,
                     Event::WindowEvent {
                         event: WindowEvent::ReceivedCharacter(input),
                         ..
@@ -99,7 +109,6 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                     KeyboardInput {
                                         state: ElementState::Pressed,
                                         virtual_keycode: Some(v_keycode),
-                                        modifiers,
                                         ..
                                     },
                                 ..
@@ -107,7 +116,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                         ..
                     } => match v_keycode {
                         VirtualKeyCode::Home | VirtualKeyCode::Up => {
-                            focused_edit.highlight_vector = if modifiers.shift() {
+                            focused_edit.highlight_vector = if self.modifiers_state.shift() {
                                 focused_edit.cursor_position
                             } else {
                                 0
@@ -117,7 +126,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                         }
                         VirtualKeyCode::End | VirtualKeyCode::Down => {
                             let glyph_len = focused_text.text.graphemes(true).count() as isize;
-                            focused_edit.highlight_vector = if modifiers.shift() {
+                            focused_edit.highlight_vector = if self.modifiers_state.shift() {
                                 focused_edit.cursor_position - glyph_len
                             } else {
                                 0
@@ -156,9 +165,9 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::Left => {
-                            if focused_edit.highlight_vector == 0 || modifiers.shift() {
+                            if focused_edit.highlight_vector == 0 || self.modifiers_state.shift() {
                                 if focused_edit.cursor_position > 0 {
-                                    let delta = if ctrl_or_cmd(modifiers) {
+                                    let delta = if ctrl_or_cmd(self.modifiers_state) {
                                         let mut graphemes = 0;
                                         for word in focused_text.text.split_word_bounds() {
                                             let word_graphemes =
@@ -175,7 +184,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                         1
                                     };
                                     focused_edit.cursor_position -= delta;
-                                    if modifiers.shift() {
+                                    if self.modifiers_state.shift() {
                                         focused_edit.highlight_vector += delta;
                                     }
                                     focused_edit.cursor_blink_timer = 0.0;
@@ -188,10 +197,10 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::Right => {
-                            if focused_edit.highlight_vector == 0 || modifiers.shift() {
+                            if focused_edit.highlight_vector == 0 || self.modifiers_state.shift() {
                                 let glyph_len = focused_text.text.graphemes(true).count();
                                 if (focused_edit.cursor_position as usize) < glyph_len {
-                                    let delta = if ctrl_or_cmd(modifiers) {
+                                    let delta = if ctrl_or_cmd(self.modifiers_state) {
                                         let mut graphemes = 0;
                                         for word in focused_text.text.split_word_bounds() {
                                             graphemes += word.graphemes(true).count() as isize;
@@ -204,7 +213,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                         1
                                     };
                                     focused_edit.cursor_position += delta;
-                                    if modifiers.shift() {
+                                    if self.modifiers_state.shift() {
                                         focused_edit.highlight_vector -= delta;
                                     }
                                     focused_edit.cursor_blink_timer = 0.0;
@@ -217,14 +226,14 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::A => {
-                            if ctrl_or_cmd(modifiers) {
+                            if ctrl_or_cmd(self.modifiers_state) {
                                 let glyph_len = focused_text.text.graphemes(true).count() as isize;
                                 focused_edit.cursor_position = glyph_len;
                                 focused_edit.highlight_vector = -glyph_len;
                             }
                         }
                         VirtualKeyCode::X => {
-                            if ctrl_or_cmd(modifiers) {
+                            if ctrl_or_cmd(self.modifiers_state) {
                                 let new_clip = extract_highlighted(focused_edit, focused_text);
                                 if !new_clip.is_empty() {
                                     match ClipboardProvider::new().and_then(
@@ -243,7 +252,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::C => {
-                            if ctrl_or_cmd(modifiers) {
+                            if ctrl_or_cmd(self.modifiers_state) {
                                 let new_clip = read_highlighted(focused_edit, focused_text);
                                 if !new_clip.is_empty() {
                                     if let Err(e) = ClipboardProvider::new().and_then(
@@ -257,7 +266,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::V => {
-                            if ctrl_or_cmd(modifiers) {
+                            if ctrl_or_cmd(self.modifiers_state) {
                                 delete_highlighted(focused_edit, focused_text);
 
                                 match ClipboardProvider::new()
@@ -299,7 +308,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                     ));
                                 }
                                 LineMode::Wrap => {
-                                    if modifiers.shift() {
+                                    if self.modifiers_state.shift() {
                                         if focused_text.text.graphemes(true).count()
                                             < focused_edit.max_length
                                         {
