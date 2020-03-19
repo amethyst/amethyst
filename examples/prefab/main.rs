@@ -11,7 +11,7 @@ use amethyst::{
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
+    window::{DisplayConfig, EventLoop},
     Error,
 };
 use amethyst_rendy::rendy;
@@ -55,6 +55,6 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, AssetsExample, game_data)?;
+    let game = Application::new(assets_dir, AssetsExample, game_data)?;
     game.run_winit_loop(event_loop);
 }

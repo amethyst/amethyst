@@ -88,7 +88,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Pong::default())?
+    let game = Application::build(assets_dir, Pong::default())?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
@@ -96,7 +96,6 @@ fn main() -> amethyst::Result<()> {
         .build(game_data)?;
 
     game.run_winit_loop(event_loop);
-    Ok(())
 }
 
 pub struct Ball {

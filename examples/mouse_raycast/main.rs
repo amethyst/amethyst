@@ -282,6 +282,6 @@ fn main() -> amethyst::Result<()> {
         )?
         .with(MouseRaycastSystem, "MouseRaycastSystem", &["input_system"]);
 
-    let mut game = Application::new(assets_dir, Example::default(), game_data)?;
+    let game = Application::new(assets_dir, Example::default(), game_data)?;
     game.run_winit_loop(event_loop);
 }

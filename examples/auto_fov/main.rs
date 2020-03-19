@@ -67,7 +67,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Loading::new())?.build(game_data)?;
+    let game = Application::build(assets_dir, Loading::new())?.build(game_data)?;
     game.run_winit_loop(event_loop);
 }
 

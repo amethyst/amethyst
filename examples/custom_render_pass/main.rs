@@ -10,7 +10,7 @@ use amethyst::{
     prelude::*,
     renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
+    window::{DisplayConfig, EventLoop},
     winit::event::VirtualKeyCode,
 };
 use amethyst_rendy::rendy;
@@ -109,6 +109,6 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderCustom::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, CustomShaderState, game_data)?;
+    let game = Application::new(assets_dir, CustomShaderState, game_data)?;
     game.run_winit_loop(event_loop);
 }

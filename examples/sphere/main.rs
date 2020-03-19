@@ -12,7 +12,7 @@ use amethyst::{
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
+    window::{DisplayConfig, EventLoop},
 };
 use amethyst_rendy::rendy;
 

@@ -29,7 +29,7 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/window/config/display.ron");
+    let _display_config_path = app_root.join("examples/window/config/display.ron");
 
     let assets_dir = app_root.join("examples/window/assets/");
 

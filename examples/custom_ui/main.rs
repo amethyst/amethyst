@@ -115,6 +115,6 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, Example, game_data)?;
+    let game = Application::new(assets_dir, Example, game_data)?;
     game.run_winit_loop(event_loop);
 }

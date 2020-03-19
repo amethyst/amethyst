@@ -25,7 +25,7 @@ use amethyst::{
     },
     ui::{RenderUi, UiBundle, UiCreator, UiLoader, UiPrefab},
     utils::{application_root_dir, fps_counter::FpsCounterBundle, scene::BasicScenePrefab},
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
+    window::{DisplayConfig, EventLoop},
     winit::event::VirtualKeyCode,
     Error,
 };
@@ -227,6 +227,6 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderUi::default()),
         );
 
-    let mut game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
+    let game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
     game.run_winit_loop(event_loop);
 }

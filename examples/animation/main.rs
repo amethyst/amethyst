@@ -14,7 +14,7 @@ use amethyst::{
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
+    window::{DisplayConfig, EventLoop},
     winit::event::{ElementState, VirtualKeyCode},
 };
 use amethyst_rendy::rendy;
@@ -242,7 +242,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderPbr3D::default()),
         )?;
     let state: Example = Default::default();
-    let mut game = Application::new(assets_dir, state, game_data)?;
+    let game = Application::new(assets_dir, state, game_data)?;
     game.run_winit_loop(event_loop);
 }
 

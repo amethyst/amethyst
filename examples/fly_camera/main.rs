@@ -14,7 +14,7 @@ use amethyst::{
         RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
+    window::{DisplayConfig, EventLoop},
     winit::event::{MouseButton, VirtualKeyCode},
     Error,
 };
@@ -92,6 +92,6 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
+    let game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
     game.run_winit_loop(event_loop);
 }
