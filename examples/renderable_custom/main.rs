@@ -301,7 +301,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = world.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+        if self.dimensions.as_ref() != new_dimensions.as_deref() {
             self.dirty = true;
             self.dimensions = new_dimensions.map(|d| d.deref().clone());
             return false;
