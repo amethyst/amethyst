@@ -180,7 +180,7 @@ First, let's add the UI rendering in `main.rs`. Add the following imports:
 use amethyst::ui::{RenderUi, UiBundle};
 ```
 
-Then, add a `RenderUi` plugin to your `RenderBundle` like so:
+Then, add a `RenderUi` plugin to your `RenderingBundle` like so:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -191,11 +191,20 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 #         types::DefaultBackend,
 #         RenderingBundle,
 #     },
+#     window::{DisplayConfig, EventLoop},
 #     ui::RenderUi,
+#     utils::application_root_dir,
+#     Error,
 # };
-# fn main() -> Result<(), amethyst::Error>{
+# fn main() -> Result<(), Error>{
+# let app_root = application_root_dir()?;
+#
+# let display_config_path = app_root.join("config").join("display.ron");
+#
+# let event_loop = EventLoop::new();
+# let display_config = DisplayConfig::load(display_config_path)?;
 # let game_data = GameDataBuilder::default()
-    .with_bundle(RenderingBundle::<DefaultBackend>::new()
+    .with_bundle(RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
         // ...
             .with_plugin(RenderUi::default()),
     )?;
@@ -223,7 +232,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # }
 ```
 
-We're adding a `RenderUi` to our `RenderBundle`, and we're also adding the
+We're adding a `RenderUi` to our `RenderingBundle`, and we're also adding the
 `UiBundle` to our game data. This allows us to start
 rendering UI visuals to our game in addition to the existing background and
 sprites.

@@ -48,7 +48,7 @@ If you want to tweak the sampling, you can change `ImageFormat::default()` to
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::renderer::rendy::hal::image::{Filter, SamplerInfo, WrapMode};
+use amethyst::renderer::rendy::hal::image::{Filter, SamplerDesc, WrapMode};
 use amethyst::renderer::rendy::texture::image::{ImageTextureConfig, Repr, TextureKind};
 
 let my_config = ImageTextureConfig {
@@ -58,7 +58,7 @@ let my_config = ImageTextureConfig {
     repr: Repr::Srgb,
     // Two-dimensional texture
     kind: TextureKind::D2,
-    sampler_info: SamplerInfo::new(Filter::Linear, WrapMode::Clamp),
+    sampler_info: SamplerDesc::new(Filter::Linear, WrapMode::Clamp),
     // Don't generate mipmaps for this image
     generate_mips: false,
     premultiply_alpha: true,
