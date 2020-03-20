@@ -120,6 +120,21 @@ pipeline {
                         echo 'Tests done!'
                     }
                 }
+                stage("Compile to WASM") {
+                    agent {
+                        docker {
+                            image 'amethystrs/builder-linux:stable'
+                            label 'docker'
+                        }
+                    }
+                    steps {
+                        echo 'Beginning WASM compilation.'
+
+                        sh 'wasm-pack build -- --features "wasm gl"'
+
+                        echo 'WASM compilation done!'
+                    }
+                }
                 // macOS is commented out due to needing to upgrade the OS, but MacStadium did not do the original install with APFS so we cannot upgrade easily
                 // stage("Test on macOS") {
                 //     environment {
