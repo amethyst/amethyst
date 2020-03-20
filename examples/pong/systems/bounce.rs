@@ -9,7 +9,6 @@ use amethyst::{
     derive::SystemDesc,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, WriteStorage},
 };
-use std::ops::Deref;
 
 /// This system is responsible for detecting collisions between balls and
 /// paddles, as well as balls and the top and bottom edges of the arena.
@@ -45,7 +44,7 @@ impl<'s> System<'s> for BounceSystem {
                 || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
             {
                 ball.velocity[1] = -ball.velocity[1];
-                play_bounce(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
+                play_bounce(&*sounds, &storage, audio_output.as_deref());
             }
 
             // Bounce at the paddles.
@@ -69,7 +68,7 @@ impl<'s> System<'s> for BounceSystem {
                     || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
                 {
                     ball.velocity[0] = -ball.velocity[0];
-                    play_bounce(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
+                    play_bounce(&*sounds, &storage, audio_output.as_deref());
                 }
             }
         }
