@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - `amethyst::ui::LineMode` is now `Copy`. ([#2148])
 - `UiButtonBuilder::build` takes in `&mut UiButtonBuilderResources`. ([#2148])
 - ***Breaking:*** `UiBundle` depends on `InputBundle` being registered with the dispatcher first. ([#2151])
+- Re-export `UiImageLoadPrefab` from `amethyst_ui`. ([#2169], [#2181])
 
 ### Deprecated
 
@@ -59,6 +60,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2151]: https://github.com/amethyst/amethyst/pull/2151
 [#2152]: https://github.com/amethyst/amethyst/pull/2152
 [#2153]: https://github.com/amethyst/amethyst/pull/2153
+[#2169]: https://github.com/amethyst/amethyst/pull/2169
+[#2181]: https://github.com/amethyst/amethyst/pull/2181
 
 
 ## [0.14.0] - 2020-01-30
