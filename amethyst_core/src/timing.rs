@@ -1,6 +1,7 @@
 //! Utilities for working with time.
 
-use std::time::{Duration, Instant};
+use instant::Instant;
+use std::time::Duration;
 
 /// Frame timing values.
 #[derive(Clone, Copy, Debug, PartialEq)]
