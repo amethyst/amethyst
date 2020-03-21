@@ -45,23 +45,24 @@ pipeline {
                         sh 'cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
                     }
                 }
-                stage("nightly") {
-                    environment {
-                        RUSTFLAGS = "-D warnings"
-                    }
-                    agent {
-                        docker {
-                            image 'amethystrs/builder-linux:nightly'
-                            label 'docker'
-                        }
-                    }
-                    steps {
-                        sh 'cargo update'
-                        // Perform actual check
-                        echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
-                    }
-                }
+                // Disabled for wasm branch -- `stable` branch check is sufficient.
+                // stage("nightly") {
+                //     environment {
+                //         RUSTFLAGS = "-D warnings"
+                //     }
+                //     agent {
+                //         docker {
+                //             image 'amethystrs/builder-linux:nightly'
+                //             label 'docker'
+                //         }
+                //     }
+                //     steps {
+                //         sh 'cargo update'
+                //         // Perform actual check
+                //         echo 'Running Cargo check...'
+                //         sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
+                //     }
+                // }
             }
         }
         // Separate stage for coverage to prevent race condition with the linux test stage (repo lock contention).
