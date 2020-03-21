@@ -352,37 +352,41 @@ pub enum UiImageLoadPrefab {
     /// A textured image
     Texture(TexturePrefab),
     /// A partial textured image
+    ///
+    /// Coordinates are texture coordinates -- between `0.0` and `1.0` inclusive.
     PartialTexture {
         /// Texture prefab.
         tex: TexturePrefab,
-        /// Left.
+        /// Coordinate of the left edge of the texture.
         left: f32,
-        /// Right.
+        /// Coordinate of the right edge of the texture.
         right: f32,
-        /// Bottom.
+        /// Coordinate of the bottom edge of the texture.
         bottom: f32,
-        /// Top.
+        /// Coordinate of the top edge of the texture.
         top: f32,
     },
     /// Solid color image
     SolidColor(f32, f32, f32, f32),
     /// 9-Slice image
+    ///
+    /// Coordinates are in pixels.
     NineSlice {
-        /// X start.
+        /// Coordinate of the left edge of the left slice.
         x_start: u32,
-        /// Y start.
+        /// Coordinate of the top edge of the top slice.
         y_start: u32,
-        /// Width.
+        /// Width of the nine slice (exclude padding pixels).
         width: u32,
-        /// Height.
+        /// Height of the nine slice (exclude padding pixels).
         height: u32,
-        /// Left distance.
+        /// Width of the left slice.
         left_dist: u32,
-        /// Right distance.
+        /// Width of the right slice.
         right_dist: u32,
-        /// Top distance.
+        /// Height of the top slice.
         top_dist: u32,
-        /// Bottom distance.
+        /// Height of the bottom slice.
         bottom_dist: u32,
         /// Texture prefab.
         tex: TexturePrefab,
