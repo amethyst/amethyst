@@ -11,7 +11,7 @@ use thread_profiler::profile_scope;
 use crate::{
     error::Error,
     storage::{AssetStorage, Handle, Processed},
-    Asset, Directory, Format, FormatValue, Progress, Source,
+    Asset, Format, FormatValue, Progress, Source,
 };
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
@@ -28,7 +28,10 @@ impl Loader {
     where
         P: Into<PathBuf>,
     {
-        Self::with_default_source(Directory::new(directory), pool)
+        #[cfg(not(feature = "wasm"))]
+        return Self::with_default_source(crate::source::Directory::new(directory), pool);
+        #[cfg(feature = "wasm")]
+        return Self::with_default_source(crate::source::HTTP::new(directory), pool);
     }
 
     /// Creates a new asset loader, using the provided source

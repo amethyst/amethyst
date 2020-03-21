@@ -23,9 +23,14 @@ pub use crate::{
     },
     progress::{Completion, Progress, ProgressCounter, Tracker},
     reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
-    source::{Directory, Source},
+    source::Source,
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
+
+#[cfg(not(feature = "wasm"))]
+pub use crate::source::Directory;
+#[cfg(feature = "wasm")]
+pub use crate::source::HTTP;
 
 pub use rayon::ThreadPool;
 
