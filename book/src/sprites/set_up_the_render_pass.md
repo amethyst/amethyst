@@ -13,15 +13,22 @@ use amethyst::{
         plugins::RenderFlat2D,
         types::DefaultBackend,
         RenderingBundle,
-    }
+    },
+    window::{DisplayConfig, EventLoop},
+    utils::application_root_dir,
 };
 # fn main() -> Result<(), amethyst::Error> {
+# let app_root = application_root_dir()?;
 #
+# let display_config_path = app_root.join("config").join("display.ron");
+#
+# let event_loop = EventLoop::new();
+# let display_config = DisplayConfig::load(display_config_path)?;
 # let game_data = GameDataBuilder::default()
 #     .with_bundle(
 #
 // inside your rendering bundle setup
-RenderingBundle::<DefaultBackend>::new()
+RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
     .with_plugin(RenderFlat2D::default())
 
 # )?;

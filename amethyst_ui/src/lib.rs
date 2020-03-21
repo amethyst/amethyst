@@ -56,7 +56,6 @@ pub use self::{
 };
 
 pub(crate) use amethyst_core::ecs::prelude::Entity;
-pub(crate) use paste;
 
 mod blink;
 mod bundle;

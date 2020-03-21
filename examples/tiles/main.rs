@@ -456,6 +456,6 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderTiles2D::<ExampleTile, MortonEncoder>::default()),
         )?;
 
-    let mut game = Application::new(assets_directory, Example, game_data)?;
+    let game = Application::new(assets_directory, Example, game_data)?;
     game.run_winit_loop(event_loop);
 }

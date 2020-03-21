@@ -67,8 +67,8 @@
 
 * `amethyst::renderer::VirtualKeyCode` is now `amethyst::input::VirtualKeyCode`
 * `amethyst::renderer::DisplayConfig` is now `amethyst::window::DisplayConfig`
-* `amethyst::renderer::WindowEvent` is now `amethyst::winit::WindowEvent`
-* `amethyst::renderer::Event` is no longer re-exported. Use `amethyst::winit::Event`
+* `amethyst::renderer::WindowEvent` is now `amethyst::winit::event::WindowEvent`
+* `amethyst::renderer::Event` is no longer re-exported. Use `amethyst::winit::event::Event`
 * `amethyst::renderer::Transparent` is now under `amethyst::renderer::transparent::Transparent`.
 * `amethyst::renderer::Visibility` is now under `amethyst::renderer::visibility::Visibility`.
 * `TextureHandle` type alias no longer exists, use `Handle<Texture>`.

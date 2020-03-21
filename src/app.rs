@@ -92,7 +92,7 @@ where
 ///
 ///     // Build the application instance to initialize the default logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
+///     let game = Application::build(assets_dir, NullState)?
 ///         .build(())?;
 ///
 ///     // Now logging can be performed as normal.
@@ -122,7 +122,7 @@ where
 ///     // The default logger will be automatically disabled and any logging amethyst does
 ///     // will go through your custom logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
+///     let game = Application::build(assets_dir, NullState)?
 ///         .build(())?;
 ///
 ///     Ok(())
@@ -263,10 +263,8 @@ where
     ///
     /// let event_loop = EventLoop::new();
     /// let game_data = ();
-    /// let mut game = Application::new(assets_dir, Example, game_data)?;
+    /// let game = Application::new(assets_dir, Example, game_data)?;
     /// game.run_winit_loop(event_loop);
-    ///
-    /// Ok(())
     /// # }
     /// ~~~
     pub fn run_winit_loop(mut self, event_loop: EventLoop<()>) -> !
@@ -587,7 +585,7 @@ where
     /// // returning a new object with the modified configuration.
     /// let app_root = application_root_dir()?;
     /// let assets_dir = app_root.join("assets");
-    /// let mut game = Application::build(assets_dir, NullState)?
+    /// let game = Application::build(assets_dir, NullState)?
     ///
     /// // components can be registered at this stage
     ///     .register::<Parent>()
@@ -725,7 +723,7 @@ where
     /// // using the register method.
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?
+    /// let game = Application::build(assets_dir, NullState)?
     ///     .register::<Velocity>();
     /// #     Ok(())
     /// # }
@@ -781,7 +779,7 @@ where
     /// # fn main() -> amethyst::Result<()> {
     /// let score_board = HighScores(Vec::new());
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?
+    /// let game = Application::build(assets_dir, NullState)?
     ///     .with_resource(score_board);
     /// #     Ok(())
     /// # }
@@ -826,7 +824,7 @@ where
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, LoadingState)?
+    /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" under the name "resources".
     ///     .with_source("custom_store", Directory::new("custom_directory"))
     ///     .build(GameDataBuilder::default())?
@@ -882,7 +880,7 @@ where
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, LoadingState)?
+    /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" as default source for the loader.
     ///     .with_default_source(Directory::new("custom_directory"))
     ///     .build(GameDataBuilder::default())?

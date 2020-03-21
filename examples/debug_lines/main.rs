@@ -197,6 +197,6 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderSkybox::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, ExampleState, game_data)?;
+    let game = Application::new(assets_dir, ExampleState, game_data)?;
     game.run_winit_loop(event_loop);
 }

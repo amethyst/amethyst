@@ -682,7 +682,7 @@ fn main() -> amethyst::Result<()> {
                 )),
         )?;
 
-    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
+    let game = Application::new(assets_dir, Example::new(), game_data)?;
     game.run_winit_loop(event_loop);
 }
 

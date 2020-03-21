@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * ***Breaking:*** MP3 loading is now behind the `"mp3"` feature, disabled by default.
 * ***Breaking:*** System fonts support is now behind the `"system_font"` feature, disabled by default.
 
+### Fixed
+
+* Use `WindowEvent::ModifiersChanged` to track keyboard modifiers state.
+
 ## [Unreleased]
 
 ### Added

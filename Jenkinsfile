@@ -40,28 +40,29 @@ pipeline {
                     steps {
                         sh 'cargo update'
                         // Perform actual check
-                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"'
+                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
                         echo 'Running Cargo clippy...'
-                        sh 'cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"'
+                        sh 'cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
                     }
                 }
-                stage("nightly") {
-                    environment {
-                        RUSTFLAGS = "-D warnings"
-                    }
-                    agent {
-                        docker {
-                            image 'amethystrs/builder-linux:nightly'
-                            label 'docker'
-                        }
-                    }
-                    steps {
-                        sh 'cargo update'
-                        // Perform actual check
-                        echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"'
-                    }
-                }
+                // Disabled for wasm branch -- `stable` branch check is sufficient.
+                // stage("nightly") {
+                //     environment {
+                //         RUSTFLAGS = "-D warnings"
+                //     }
+                //     agent {
+                //         docker {
+                //             image 'amethystrs/builder-linux:nightly'
+                //             label 'docker'
+                //         }
+                //     }
+                //     steps {
+                //         sh 'cargo update'
+                //         // Perform actual check
+                //         echo 'Running Cargo check...'
+                //         sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
+                //     }
+                // }
             }
         }
         // Separate stage for coverage to prevent race condition with the linux test stage (repo lock contention).
@@ -96,7 +97,7 @@ pipeline {
                     steps {
                         bat 'C:\\Users\\root\\.cargo\\bin\\cargo update'
                         echo 'Beginning tests...'
-                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan json saveload tiles storage-event-control"'
+                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan json saveload tiles storage-event-control mp3 system_font"'
                         echo 'Tests done!'
                     }
                 }
@@ -114,7 +115,7 @@ pipeline {
                         // built libraries found.
                         sh './scripts/book_library_clean.sh'
 
-                        sh 'cargo test --all --features "vulkan sdl_controller json saveload storage-event-control"'
+                        sh 'cargo test --all --features "vulkan sdl_controller json saveload tiles storage-event-control mp3 system_font"'
                         sh 'mdbook test -L ./target/debug/deps book'
 
                         echo 'Tests done!'
@@ -135,6 +136,21 @@ pipeline {
                 //         echo 'Tests done!'
                 //     }
                 // }
+            }
+        }
+        stage("Compile to WASM") {
+            agent {
+                docker {
+                    image 'amethystrs/builder-linux:stable'
+                    label 'docker'
+                }
+            }
+            steps {
+                echo 'Beginning WASM compilation.'
+
+                sh 'wasm-pack build -- --features "wasm gl"'
+
+                echo 'WASM compilation done!'
             }
         }
     }

@@ -27,7 +27,7 @@
 //! # impl SimpleState for GameState {}
 //! # fn main() -> amethyst::Result<()> {
 //! let assets_dir = "./";
-//! let mut game = Application::build(assets_dir, GameState)?
+//! let game = Application::build(assets_dir, GameState)?
 //!     .with_frame_limit(
 //!         FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
 //!         144,

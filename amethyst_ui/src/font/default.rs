@@ -1,7 +1,9 @@
+#[cfg(feature = "system_font")]
 use std::fs;
 
 #[cfg(feature = "system_font")]
 use font_kit::handle::Handle as FontKitHandle;
+#[cfg(feature = "system_font")]
 use log::{error, warn};
 
 use amethyst_assets::{AssetStorage, Format, Loader};

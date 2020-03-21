@@ -1,6 +1,9 @@
 use crate::CoordinateEncoder;
 use amethyst_core::math::Vector3;
-use luts::*;
+use luts::{
+    MORTON256_X, MORTON256_Y, MORTON256_Z, MORTON512_DECODE_X, MORTON512_DECODE_Y,
+    MORTON512_DECODE_Z,
+};
 use std::cmp::Ordering;
 
 mod luts;

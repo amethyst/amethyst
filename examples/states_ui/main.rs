@@ -87,13 +87,11 @@ pub fn main() -> amethyst::Result<()> {
 
     // creating the Application with the assets_dir, the first Screen, and the game_data with it's
     // systems.
-    let mut game = Application::new(
+    let game = Application::new(
         assets_dir,
         crate::welcome::WelcomeScreen::default(),
         game_data,
     )?;
     log::info!("Starting with WelcomeScreen!");
     game.run_winit_loop(event_loop);
-
-    Ok(())
 }

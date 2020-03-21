@@ -184,7 +184,7 @@ To change the set of events that the state receives, you create a new event enum
 # use amethyst::prelude::*;
 # use amethyst::ui::UiEvent;
 # use amethyst::input::{VirtualKeyCode, is_key_down};
-# use amethyst::winit::Event;
+# use amethyst::winit::event::Event;
 
 // These imports are required for the #[derive(EventReader)] code to build
 use amethyst::core::{
@@ -201,7 +201,7 @@ pub struct AppEvent {
 #[derive(Debug, EventReader, Clone)]
 #[reader(MyEventReader)]
 pub enum MyEvent {
-    Window(Event),
+    Window(Event<'static, ()>),
     Ui(UiEvent),
     App(AppEvent),
 }

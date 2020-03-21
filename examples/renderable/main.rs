@@ -219,7 +219,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
         )?;
-    let mut game = Application::new(assets_dir, Loading::default(), game_data)?;
+    let game = Application::new(assets_dir, Loading::default(), game_data)?;
     game.run_winit_loop(event_loop);
 }
 

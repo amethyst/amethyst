@@ -3,7 +3,9 @@ use std::marker::PhantomData;
 use derivative::Derivative;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event::{
+    ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent,
+};
 
 use amethyst_core::{
     ecs::{
@@ -67,6 +69,9 @@ where
 {
     #[system_desc(event_channel_reader)]
     window_reader_id: ReaderId<Event<'static, ()>>,
+    #[system_desc(skip)]
+    /// Cache state for keyboard modifiers.
+    modifiers_state: ModifiersState,
     phantom: PhantomData<G>,
 }
 
@@ -78,6 +83,7 @@ where
     pub fn new(window_reader_id: ReaderId<Event<'static, ()>>) -> Self {
         Self {
             window_reader_id,
+            modifiers_state: ModifiersState::default(),
             phantom: PhantomData,
         }
     }
@@ -121,60 +127,65 @@ where
         // Checks if tab was pressed.
         // TODO: Controller support/Use InputEvent in addition to keys.
         for event in window_events.read(&mut self.window_reader_id) {
-            if let Event::WindowEvent {
-                event:
-                    WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Tab),
-                                modifiers,
-                                ..
-                            },
-                        ..
-                    },
-                ..
-            } = *event
-            {
-                // Get index of highest selected ui element
-                let highest = cached.highest_order_selected_index(&selecteds);
+            match *event {
+                Event::WindowEvent {
+                    event: WindowEvent::ModifiersChanged(modifiers_state),
+                    ..
+                } => self.modifiers_state = modifiers_state,
+                Event::WindowEvent {
+                    event:
+                        WindowEvent::KeyboardInput {
+                            input:
+                                KeyboardInput {
+                                    state: ElementState::Pressed,
+                                    virtual_keycode: Some(VirtualKeyCode::Tab),
+                                    ..
+                                },
+                            ..
+                        },
+                    ..
+                } => {
+                    // Get index of highest selected ui element
+                    let highest = cached.highest_order_selected_index(&selecteds);
 
-                if let Some(highest) = highest {
-                    // If Some, an element was currently selected. We move the cursor to the next or previous element depending if Shift was pressed.
-                    // Select Replace
-                    for (entity, _) in (&*entities, &selecteds).join() {
-                        ui_events.single_write(UiEvent::new(UiEventType::Blur, entity));
-                    }
-                    selecteds.clear();
-
-                    let target = if !modifiers.shift() {
-                        // Up
-                        if highest > 0 {
-                            cached.cache.get(highest - 1).unwrap_or_else(|| cached.cache.last()
-                                .expect("unreachable: A highest ui element was selected, but none exist in the cache."))
-                        } else {
-                            cached.cache.last()
-                                .expect("unreachable: A highest ui element was selected, but none exist in the cache.")
+                    if let Some(highest) = highest {
+                        // If Some, an element was currently selected. We move the cursor to the next or previous element depending if Shift was pressed.
+                        // Select Replace
+                        for (entity, _) in (&*entities, &selecteds).join() {
+                            ui_events.single_write(UiEvent::new(UiEventType::Blur, entity));
                         }
-                    } else {
-                        // Down
-                        cached.cache.get(highest + 1).unwrap_or_else(|| cached.cache.first()
-                        .expect("unreachable: A highest ui element was selected, but none exist in the cache."))
-                    };
+                        selecteds.clear();
 
-                    selecteds
-                        .insert(target.1, Selected)
-                        .expect("unreachable: We are inserting");
+                        let target = if !self.modifiers_state.shift() {
+                            // Up
+                            if highest > 0 {
+                                cached.cache.get(highest - 1).unwrap_or_else(|| cached.cache.last()
+                                    .expect("unreachable: A highest ui element was selected, but none exist in the cache."))
+                            } else {
+                                cached.cache.last()
+                                    .expect("unreachable: A highest ui element was selected, but none exist in the cache.")
+                            }
+                        } else {
+                            // Down
+                            cached.cache.get(highest + 1).unwrap_or_else(|| cached.cache.first()
+                            .expect("unreachable: A highest ui element was selected, but none exist in the cache."))
+                        };
 
-                    ui_events.single_write(UiEvent::new(UiEventType::Focus, target.1));
-                } else if let Some(lowest) = cached.cache.first() {
-                    // If None, nothing was selected. Try to take lowest if it exists.
-                    selecteds
-                        .insert(lowest.1, Selected)
-                        .expect("unreachable: We are inserting");
+                        selecteds
+                            .insert(target.1, Selected)
+                            .expect("unreachable: We are inserting");
 
-                    ui_events.single_write(UiEvent::new(UiEventType::Focus, lowest.1));
+                        ui_events.single_write(UiEvent::new(UiEventType::Focus, target.1));
+                    } else if let Some(lowest) = cached.cache.first() {
+                        // If None, nothing was selected. Try to take lowest if it exists.
+                        selecteds
+                            .insert(lowest.1, Selected)
+                            .expect("unreachable: We are inserting");
+
+                        ui_events.single_write(UiEvent::new(UiEventType::Focus, lowest.1));
+                    }
                 }
+                _ => {}
             }
         }
     }

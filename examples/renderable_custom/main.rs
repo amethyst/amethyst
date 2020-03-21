@@ -30,15 +30,12 @@ use amethyst::{
         mtl::Material,
         palette::{Srgb, Srgba},
         pass::DrawShadedDesc,
-        rendy::{
-            command::Families,
-            mesh::{Normal, Position, TexCoord},
-        },
+        rendy::mesh::{Normal, Position, TexCoord},
         resources::AmbientColor,
         types::DefaultBackend,
         visibility::VisibilitySortingSystem,
         Camera, Factory, Format, GraphBuilder, GraphCreator, Kind, MeshProcessorSystem,
-        RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder, TextureProcessorSystem,
+        RenderGroupDesc, SpriteSheet, SubpassBuilder, TextureProcessorSystem,
     },
     ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiGlyphsSystemDesc, UiText},
     utils::{
@@ -210,7 +207,7 @@ fn main() -> Result<(), Error> {
         .join("display.ron");
 
     let event_loop = EventLoop::new();
-    let display_config = DisplayConfig::load(display_config_path)?;
+    let _display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
@@ -258,7 +255,7 @@ fn main() -> Result<(), Error> {
     ));
     */
 
-    let mut game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
+    let game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
     game.run_winit_loop(event_loop);
 }
 
@@ -304,7 +301,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = world.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+        if self.dimensions.as_ref() != new_dimensions.as_deref() {
             self.dirty = true;
             self.dimensions = new_dimensions.map(|d| d.deref().clone());
             return false;
@@ -323,7 +320,6 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             graph::present::PresentNode,
             hal::command::{ClearDepthStencil, ClearValue},
         };
-        use std::ops::Deref;
 
         self.dirty = false;
 

@@ -22,7 +22,7 @@ use amethyst::{
         RenderingBundle,
     },
     utils::application_root_dir,
-    window::{DisplayConfig, EventLoop, ScreenDimensions},
+    window::{DisplayConfig, EventLoop},
 };
 
 #[derive(Clone, Debug)]
@@ -137,7 +137,7 @@ fn main() -> Result<(), Error> {
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
         )?;
-    let mut game = Application::new(assets_dir, AssetsExample, game_data)?;
+    let game = Application::new(assets_dir, AssetsExample, game_data)?;
     game.run_winit_loop(event_loop);
 }
 

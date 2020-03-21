@@ -41,10 +41,13 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
     utils::application_root_dir,
+    window::{DisplayConfig, EventLoop},
+    Error,
 };
 ```
 
@@ -154,6 +157,7 @@ the display configuration:
 #
 # use amethyst::{
 #     utils::application_root_dir,
+#     window::{DisplayConfig, EventLoop},
 #     Error,
 # };
 #
@@ -173,8 +177,10 @@ In `main()` in `main.rs` we are going to add the basic application setup:
 # use amethyst::{
 #     prelude::*,
 #     utils::application_root_dir,
+#     window::{DisplayConfig, EventLoop},
+#     Error,
 # };
-# fn main() -> Result<(), amethyst::Error> {
+# fn main() -> Result<(), Error> {
 # struct Pong; impl SimpleState for Pong {}
 let game_data = GameDataBuilder::default();
 
@@ -220,24 +226,28 @@ Last time we left our `GameDataBuilder` instance empty, now we'll add some syste
 #     prelude::*,
 #     renderer::{
 #         plugins::{RenderFlat2D, RenderToWindow},
+#         rendy::hal::command::ClearColor,
 #         types::DefaultBackend,
 #         RenderingBundle,
 #     },
 #     utils::application_root_dir,
+#     window::{DisplayConfig, EventLoop},
+#     Error,
 # };
-# fn main() -> Result<(), amethyst::Error>{
+# fn main() -> Result<(), Error>{
 let app_root = application_root_dir()?;
 
 let display_config_path = app_root.join("config").join("display.ron");
 
+let event_loop = EventLoop::new();
+let display_config = DisplayConfig::load(display_config_path)?;
 let game_data = GameDataBuilder::default()
     .with_bundle(
-        RenderingBundle::<DefaultBackend>::new()
+        RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
             // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.0, 0.0, 0.0, 1.0]),
-            )
+            .with_plugin(RenderToWindow::new().with_clear(ClearColor {
+                float32: [0.0, 0.0, 0.0, 1.0],
+            }))
             // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
             .with_plugin(RenderFlat2D::default()),
     )?;

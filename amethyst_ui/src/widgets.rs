@@ -125,7 +125,7 @@ where
 #[macro_export]
 macro_rules! define_widget_component_fn_impl {
     ( (has $t:ty as $name:ident on $entity:ident) ) => {
-        $crate::paste::item! {
+        paste::item! {
             /// Get a reference to the $t component for this widget.
             pub fn [<get_ $name>]<'a>(
                 &self,
@@ -137,7 +137,7 @@ macro_rules! define_widget_component_fn_impl {
             }
         }
 
-        $crate::paste::item! {
+        paste::item! {
             /// Get a mutable reference to the $t component for this widget.
             pub fn [<get_ $name _mut>]<'a>(
                 &self,
@@ -151,7 +151,7 @@ macro_rules! define_widget_component_fn_impl {
     };
 
     ( (maybe_has $t:ty as $name:ident on $entity:ident) ) => {
-        $crate::paste::item! {
+        paste::item! {
             /// Get a reference to the $t component for this widget if it exists,
             /// `None` otherwise.
             pub fn [<get_ $name _maybe>]<'a>(
@@ -162,7 +162,7 @@ macro_rules! define_widget_component_fn_impl {
             }
         }
 
-        $crate::paste::item! {
+        paste::item! {
             /// Get a mutable reference to the $t component for this widget
             /// if it exists, `None` otherwise.
             pub fn [<get_ $name _mut_maybe>]<'a>(
