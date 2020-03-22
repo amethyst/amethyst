@@ -1,9 +1,10 @@
 //! Provides the directory of the executable.
 
-use std::{env, io, path};
+use std::{io, path};
 
 /// Returns the cargo manifest directory when running the executable with cargo or the directory in
-/// which the executable resides otherwise, traversing symlinks if necessary.
+/// which the executable resides otherwise, traversing symlinks if necessary. For wasm builds
+/// returns empty path (translates into relative path for HttpSource).
 ///
 /// The algorithm used is:
 ///
@@ -18,21 +19,27 @@ use std::{env, io, path};
 /// [cargo-ref]: https://doc.rust-lang.org/cargo/reference/environment-variables.html
 /// [`std::env::current_exe`]: https://doc.rust-lang.org/std/env/fn.current_exe.html
 pub fn application_root_dir() -> Result<path::PathBuf, io::Error> {
-    if let Some(manifest_dir) = env::var_os("CARGO_MANIFEST_DIR") {
-        return Ok(path::PathBuf::from(manifest_dir));
+    #[cfg(not(feature = "wasm"))]
+    {
+        if let Some(manifest_dir) = std::env::var_os("CARGO_MANIFEST_DIR") {
+            return Ok(path::PathBuf::from(manifest_dir));
+        }
+
+        let mut exe = std::env::current_exe()?.canonicalize()?;
+
+        // Modify in-place to avoid an extra copy.
+        if exe.pop() {
+            return Ok(exe);
+        }
+
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            "Failed to find an application root",
+        ))
     }
-
-    let mut exe = env::current_exe()?.canonicalize()?;
-
-    // Modify in-place to avoid an extra copy.
-    if exe.pop() {
-        return Ok(exe);
-    }
-
-    Err(io::Error::new(
-        io::ErrorKind::Other,
-        "Failed to find an application root",
-    ))
+    // Juts use relative paths for wasm. In the future this path could be set by the bundler.
+    #[cfg(feature = "wasm")]
+    Ok(path::PathBuf::new())
 }
 
 /// Same as `application_root_dir`, but extends the root directory with the given path.

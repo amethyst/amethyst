@@ -31,7 +31,7 @@ impl Loader {
         #[cfg(not(feature = "wasm"))]
         return Self::with_default_source(crate::source::Directory::new(directory), pool);
         #[cfg(feature = "wasm")]
-        return Self::with_default_source(crate::source::HTTP::new(directory), pool);
+        return Self::with_default_source(crate::source::HttpSource::new(directory), pool);
     }
 
     /// Creates a new asset loader, using the provided source

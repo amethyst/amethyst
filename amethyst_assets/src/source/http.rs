@@ -14,17 +14,17 @@ use crate::{error, source::Source};
 /// Loads assets inside web worker using XmlHttpRequest.
 /// Used as a default source for WASM target.
 #[derive(Debug)]
-pub struct HTTP {
+pub struct HttpSource {
     loc: PathBuf,
 }
 
-impl HTTP {
+impl HttpSource {
     /// Creates a new http source.
     pub fn new<P>(loc: P) -> Self
     where
         P: Into<PathBuf>,
     {
-        HTTP { loc: loc.into() }
+        HttpSource { loc: loc.into() }
     }
 
     fn path(&self, s_path: &str) -> PathBuf {
@@ -35,7 +35,7 @@ impl HTTP {
     }
 }
 
-impl Source for HTTP {
+impl Source for HttpSource {
     fn modified(&self, _path: &str) -> Result<u64, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("http_modified_asset");
@@ -59,7 +59,9 @@ impl Source for HTTP {
             .with_context(|_| error::Error::Source)?;
 
         // Synchronous GET request. Should only be run in web worker.
-        xhr.open_with_async("GET", path_str, false).unwrap();
+        xhr.open_with_async("GET", path_str, false)
+            .map_err(|_| format_err!("XmlHttpRequest open failed"))
+            .with_context(|_| error::Error::Source)?;
         xhr.set_response_type(XmlHttpRequestResponseType::Arraybuffer);
 
         // We block here and wait for http fetch to complete
@@ -71,7 +73,7 @@ impl Source for HTTP {
         // Returns 0 if request was not completed.
         let status = xhr.status().unwrap();
         if status != 200 {
-            let msg = xhr.status_text().unwrap_or_else(|_| "".to_string());
+            let msg = xhr.status_text().unwrap();
             return Err(format_err!(
                 "XmlHttpRequest failed with code {}. Error: {}",
                 status,

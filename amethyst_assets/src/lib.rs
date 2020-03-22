@@ -30,7 +30,7 @@ pub use crate::{
 #[cfg(not(feature = "wasm"))]
 pub use crate::source::Directory;
 #[cfg(feature = "wasm")]
-pub use crate::source::HTTP;
+pub use crate::source::HttpSource;
 
 pub use rayon::ThreadPool;
 
