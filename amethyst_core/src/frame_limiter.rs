@@ -69,8 +69,10 @@
 
 use std::{
     thread::{sleep, yield_now},
-    time::{Duration, Instant},
+    time::Duration,
 };
+
+use instant::Instant;
 
 use derive_new::new;
 use serde::{Deserialize, Serialize};

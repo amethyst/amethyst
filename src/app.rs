@@ -222,6 +222,7 @@ where
         self.world.write_resource::<Stopwatch>().start();
         while self.states.is_running() {
             self.advance_frame();
+            #[cfg(not(feature = "wasm"))]
             {
                 #[cfg(feature = "profiler")]
                 profile_scope!("frame_limiter wait");
@@ -341,6 +342,7 @@ where
                 return;
             }
             self.advance_frame();
+            #[cfg(not(feature = "wasm"))]
             {
                 #[cfg(feature = "profiler")]
                 profile_scope!("frame_limiter wait");
