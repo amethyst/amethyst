@@ -108,6 +108,10 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
             world.insert(factory);
         }
 
+        if let Some(surface) = self.surface.take() {
+            world.insert(Some(surface));
+        }
+
         if let Some(families) = self.families.as_ref() {
             let queue_id = QueueId {
                 family: families.family_by_index(0).id(),

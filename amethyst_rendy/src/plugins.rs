@@ -8,9 +8,10 @@ use crate::{
     Backend, Factory,
 };
 use amethyst_core::ecs::{DispatcherBuilder, World};
-use amethyst_error::Error;
+use amethyst_error::{format_err, Error};
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
+use rendy::wsi::Surface;
 
 #[cfg(feature = "window")]
 pub use window::RenderToWindow;
@@ -22,11 +23,8 @@ mod window {
         bundle::{ImageOptions, OutputColor},
         Format, Kind,
     };
-    use amethyst_core::{
-        ecs::{ReadExpect, SystemData},
-        SystemBundle,
-    };
-    use amethyst_window::{ScreenDimensions, WindowBundle, WindowRes};
+    use amethyst_core::SystemBundle;
+    use amethyst_window::{ScreenDimensions, WindowBundle};
     use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
 
     /// A [RenderPlugin] for opening a window and displaying a render target to it.
@@ -90,11 +88,10 @@ mod window {
         ) -> Result<(), Error> {
             self.dirty = false;
 
-            let window = <ReadExpect<'_, WindowRes>>::fetch(world);
-            #[cfg(not(feature = "wasm"))]
-            let surface = factory.create_surface(&*window)?;
-            #[cfg(feature = "wasm")]
-            let surface = factory.create_surface(&**window)?;
+            let surface = world.fetch_mut::<Option<Surface<B>>>().take().ok_or_else(|| {
+                format_err!("Surface not found in resources! Did someone already take it?")
+            })?;
+
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
