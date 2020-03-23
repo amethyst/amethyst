@@ -5,7 +5,6 @@ use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 use crate::shred::Resource;
 use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
-use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
 use winit::{event::Event, event_loop::ControlFlow};
@@ -23,7 +22,7 @@ use crate::{
         ArcThreadPool, EventReader, Named,
     },
     ecs::prelude::{Component, Read, World, WorldExt, Write},
-    error::Error,
+    error::{format_err, Error},
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventReader},
@@ -641,21 +640,32 @@ where
 
         let mut world = World::new();
 
-        let thread_pool_builder = ThreadPoolBuilder::new();
-        #[cfg(feature = "profiler")]
-        let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
-            register_thread_with_profiler();
-        });
         let pool: ArcThreadPool;
-        if let Some(thread_count) = thread_count {
-            debug!("Running Amethyst with fixed thread pool: {}", thread_count);
-            pool = thread_pool_builder
-                .num_threads(thread_count)
-                .build()
-                .map(Arc::new)?;
-        } else {
-            pool = thread_pool_builder.build().map(Arc::new)?;
+        #[cfg(not(feature = "wasm"))]
+        {
+            use rayon::ThreadPoolBuilder;
+            let thread_pool_builder = ThreadPoolBuilder::new();
+            #[cfg(feature = "profiler")]
+            let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
+                register_thread_with_profiler();
+            });
+            if let Some(thread_count) = thread_count {
+                debug!("Running Amethyst with fixed thread pool: {}", thread_count);
+                pool = thread_pool_builder
+                    .num_threads(thread_count)
+                    .build()
+                    .map(Arc::new)?;
+            } else {
+                pool = thread_pool_builder.build().map(Arc::new)?;
+            }
         }
+        #[cfg(feature = "wasm")]
+        {
+            pool = web_worker::default_thread_pool(thread_count)
+                .ok_or(format_err!("Failed to construct web worker thread pool."))
+                .map(Arc::new)?;
+        }
+
         world.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.insert(pool);
         world.insert(EventChannel::<Event<'static, ()>>::with_capacity(2000));
