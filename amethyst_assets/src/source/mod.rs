@@ -1,11 +1,17 @@
 use amethyst_error::Error;
 
+#[cfg(not(feature = "wasm"))]
 pub use self::dir::Directory;
+#[cfg(feature = "wasm")]
+pub use self::http::HttpSource;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
+#[cfg(not(feature = "wasm"))]
 mod dir;
+#[cfg(feature = "wasm")]
+mod http;
 
 /// A trait for asset sources, which provides
 /// methods for loading bytes.

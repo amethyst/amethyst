@@ -39,6 +39,16 @@ objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
+wasm-bindgen = { version = "0.2.59", optional = true }
+js-sys = { version = "0.3.36", optional = true }
+
+[dependencies.web-sys]
+version = "0.3.36"
+optional = true
+features = [
+  'XmlHttpRequest',
+  'XmlHttpRequestResponseType',
+]
 
 [dev-dependencies]
 serde_json = "1"
@@ -46,3 +56,8 @@ serde_json = "1"
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 json = [ "serde_json" ]
+wasm = [
+  "web-sys",
+  "wasm-bindgen",
+  "js-sys",
+]
