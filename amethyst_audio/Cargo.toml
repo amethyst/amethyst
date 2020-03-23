@@ -30,8 +30,8 @@ serde = { version = "1.0", features = ["derive"] }
 smallvec = { version = "1.2", features = ["serde"] }
 thread_profiler = { version = "0.3", optional = true }
 
-[dev-dependencies]
-amethyst_utils = { path = "../amethyst_utils", version = "0.10.0" }
+# [dev-dependencies]
+# amethyst_utils = { path = "../amethyst_utils", version = "0.10.0" }
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
