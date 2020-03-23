@@ -116,7 +116,7 @@ amethyst_animation = { path = "amethyst_animation", version = "0.9.0", optional 
 amethyst_assets = { path = "amethyst_assets", version = "0.10.0" }
 amethyst_audio = { path = "amethyst_audio", version = "0.9.0", optional = true }
 amethyst_config = { path = "amethyst_config", version = "0.14.0" }
-amethyst_core = { path = "amethyst_core", version = "0.9.0" }
+amethyst_core = { path = "amethyst_core", version = "0.10.0" }
 amethyst_error = { path = "amethyst_error", version = "0.5.0" }
 amethyst_controls = { path = "amethyst_controls", version = "0.8.0" }
 amethyst_derive = { path = "amethyst_derive", version = "0.8.0" }
