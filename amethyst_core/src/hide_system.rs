@@ -106,8 +106,8 @@ impl<'a> System<'a> for HideHierarchySystem {
         for entity in hierarchy.all() {
             {
                 let self_hidden = hidden.get(*entity);
-                let mut self_is_manually_hidden =
-                    self_hidden.as_ref().map_or(false, |p| !p.was_propagated);
+                let self_is_manually_hidden =
+                    self_hidden.as_ref().map_or(false, |p| !p.is_propagated);
                 if self_is_manually_hidden {
                     self_manually_hidden.add(entity.id());
                 }
@@ -122,7 +122,7 @@ impl<'a> System<'a> for HideHierarchySystem {
                 let parent_dirty = self_marked_as_modified.contains(parent_entity.id());
                 let parent_hidden = hidden.get(parent_entity);
                 let parent_is_manually_hidden =
-                    parent_hidden.as_ref().map_or(false, |p| !p.was_propagated);
+                    parent_hidden.as_ref().map_or(false, |p| !p.is_propagated);
                 if parent_is_manually_hidden {
                     self_manually_hidden.add(parent_entity.id());
                     self_manually_hidden.add(entity.id());

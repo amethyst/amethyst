@@ -16,7 +16,7 @@ impl Component for Hidden {
 /// is enabled in the [RenderBundle](struct.RenderBundle.html).
 #[derive(Clone, Debug)]
 pub struct HiddenPropagate {
-    pub(crate) was_propagated: bool,
+    pub(crate) is_propagated: bool,
 }
 
 impl Component for HiddenPropagate {
@@ -27,19 +27,19 @@ impl HiddenPropagate {
     /// Creates an instance of HiddenPropagate.
     pub fn new() -> Self {
         Self {
-            was_propagated: false,
+            is_propagated: false,
         }
     }
 
     /// Is meant to be used only by HideHierarchySystem.
     pub(crate) fn new_propagated() -> Self {
         Self {
-            was_propagated: true,
+            is_propagated: true,
         }
     }
 
     /// Returns true if this component was propagated by [HideHierarchySystem](struct.HideHierarchySystem.html) automatically.
-    pub fn was_propagated(&self) -> bool {
-        self.was_propagated
+    pub fn is_propagated(&self) -> bool {
+        self.is_propagated
     }
 }
