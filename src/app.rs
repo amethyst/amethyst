@@ -22,7 +22,7 @@ use crate::{
         ArcThreadPool, EventReader, Named,
     },
     ecs::prelude::{Component, Read, World, WorldExt, Write},
-    error::{format_err, Error},
+    error::Error,
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventReader},
@@ -664,7 +664,7 @@ where
         #[cfg(feature = "wasm")]
         {
             pool = web_worker::default_thread_pool(thread_count)
-                .ok_or(format_err!("Failed to construct web worker thread pool."))
+                .ok_or(crate::error::format_err!("Failed to construct web worker thread pool."))
                 .map(Arc::new)?;
         }
 
