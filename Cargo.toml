@@ -369,3 +369,6 @@ required-features = [ "tiles" ]
 
 [package.metadata.docs.rs]
 features = ["animation", "audio", "gltf", "tiles", "json", "locale", "network", "sdl_controller", "vulkan"]
+
+[patch.crates-io]
+shred = { git = "https://github.com/amethyst/shred.git", branch = "wasm" }
