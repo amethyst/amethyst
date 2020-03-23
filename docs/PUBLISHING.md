@@ -1,6 +1,6 @@
 # Publishing Amethyst
 
-Publishing a version of Amethyst requires incrementing all modified sub-crates 
+Publishing a version of Amethyst requires incrementing all modified sub-crates
 and then publishing the sub-crates in the following order. You must comment out
 dev-dependencies when publishing.
 
@@ -28,7 +28,7 @@ dev-dependencies when publishing.
   - Amethyst Core
   - Amethyst Config
   - Amethyst Error
-  
+
 ### Fourth Group
 
 - `amethyst_audio` <br/> dependencies:
@@ -44,7 +44,7 @@ dev-dependencies when publishing.
   - Amethyst Error
   - Amethyst Config
   - Amethyst Window
-  
+
 ### Fifth Group
 
 - `amethyst_controls` <br/> dependencies:
@@ -59,7 +59,7 @@ dev-dependencies when publishing.
   - Amethyst Derive
   - Amethyst Error
   - Amethyst Window
-  
+
 ### Sixth Group
 
 - `amethyst_tiles` <br/> dependencies:
@@ -77,7 +77,7 @@ dev-dependencies when publishing.
   - Amethyst Input
   - Amethyst Rendy
   - Amethyst Window
-- `amethyst_util` <br/> dependencies:
+- `amethyst_utils` <br/> dependencies:
   - Amethyst Assets
   - Amethyst Controls
   - Amethyst Core
@@ -85,7 +85,7 @@ dev-dependencies when publishing.
   - Amethyst Derive
   - Amethyst Rendy
   - Amethyst Window
-  
+
 ### Seventh Group
 
 - `amethyst_animation` <br/> dependencies:
