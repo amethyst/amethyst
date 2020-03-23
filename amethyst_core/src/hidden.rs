@@ -1,6 +1,6 @@
 use crate::ecs::{
     prelude::Component,
-    storage::{FlaggedStorage, NullStorage},
+    storage::{DenseVecStorage, FlaggedStorage, NullStorage},
 };
 
 /// Hidden mesh component
@@ -20,7 +20,7 @@ pub struct HiddenPropagate {
 }
 
 impl Component for HiddenPropagate {
-    type Storage = FlaggedStorage<Self>;
+    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
 impl HiddenPropagate {
