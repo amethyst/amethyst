@@ -16,6 +16,10 @@ impl Component for Hidden {
 /// is enabled in the [RenderBundle](struct.RenderBundle.html).
 #[derive(Clone, Debug)]
 pub struct HiddenPropagate {
+    /// Whether this is inserted automatically by propagation though the `ParentHierarchy`.
+    ///
+    /// If true, then the `HideHierarchySystem` should manage (insert / remove) the component.
+    /// If the user inserts it themselves, then the `HideHierarchySystem` should not remove it.
     pub(crate) is_propagated: bool,
 }
 
