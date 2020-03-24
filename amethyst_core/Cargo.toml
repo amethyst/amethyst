@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_core"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst core"
@@ -19,7 +19,7 @@ nalgebra = { version = "0.19.0", features = ["serde-serialize", "mint"] }
 alga = { version = "0.9.2", default-features = false }
 alga_derive = "0.9.1"
 approx = "0.3.2"
-amethyst_error = { path = "../amethyst_error", version = "0.4.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.5.0" }
 fnv = "1.0.6"
 log = "0.4.8"
 num-traits = "0.2.11"
@@ -34,7 +34,7 @@ derivative = "1.0.3"
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-amethyst = { path = "..", version = "0.14.0" }
+amethyst = { path = "..", version = "0.15.0" }
 ron = "0.5.1"
 
 [features]
