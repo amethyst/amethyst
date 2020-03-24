@@ -148,7 +148,7 @@ pipeline {
             steps {
                 echo 'Beginning WASM compilation.'
 
-                sh 'wasm-pack build -- --features "wasm gl"'
+                sh 'wasm-pack build --target no-modules -- --features "wasm gl"'
 
                 echo 'WASM compilation done!'
             }

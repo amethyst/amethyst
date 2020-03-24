@@ -640,6 +640,10 @@ where
             })
             .ok();
 
+        if let Some(thread_count) = thread_count {
+            debug!("Running Amethyst with fixed thread pool: {}", thread_count);
+        }
+
         let mut world = World::new();
 
         let pool: ArcThreadPool;
@@ -652,7 +656,6 @@ where
                 register_thread_with_profiler();
             });
             if let Some(thread_count) = thread_count {
-                debug!("Running Amethyst with fixed thread pool: {}", thread_count);
                 pool = thread_pool_builder
                     .num_threads(thread_count)
                     .build()
