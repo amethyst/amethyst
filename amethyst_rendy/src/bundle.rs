@@ -108,6 +108,10 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
             world.insert(factory);
         }
 
+        if let Some(surface) = self.surface.take() {
+            world.insert(Some(surface));
+        }
+
         if let Some(families) = self.families.as_ref() {
             let queue_id = QueueId {
                 family: families.family_by_index(0).id(),
@@ -116,12 +120,21 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
             world.insert(queue_id);
         }
 
-        builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
-        builder.add(
-            TextureProcessorSystem::<B>::default(),
-            "texture_processor",
-            &[],
-        );
+        #[cfg(feature = "gl")]
+        {
+            builder.add_thread_local(MeshProcessorSystem::<B>::default());
+            builder.add_thread_local(TextureProcessorSystem::<B>::default());
+        }
+        #[cfg(not(feature = "gl"))]
+        {
+            builder.add(MeshProcessorSystem::<B>::default(), "mesh_processor", &[]);
+            builder.add(
+                TextureProcessorSystem::<B>::default(),
+                "texture_processor",
+                &[],
+            );
+        }
+
         builder.add(Processor::<Material>::new(), "material_processor", &[]);
         builder.add(
             Processor::<SpriteSheet>::new(),

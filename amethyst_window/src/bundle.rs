@@ -21,35 +21,8 @@ impl WindowBundle {
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for WindowBundle {
-    #[cfg(not(feature = "wasm"))]
     fn build(self, _: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add_thread_local(WindowSystem::new());
-        Ok(())
-    }
-
-    #[cfg(feature = "wasm")]
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        builder.add_thread_local(WindowSystem::new());
-
-        use crate::WindowRes;
-        use amethyst_core::{ecs::ReadExpect, shred::SystemData};
-        use winit::platform::web::WindowExtWebSys;
-
-        let window = <ReadExpect<'_, WindowRes>>::fetch(world);
-        let window = &**window;
-        let canvas = window.canvas();
-
-        let window = web_sys::window().unwrap();
-        let document = window.document().unwrap();
-        let body = document.body().unwrap();
-
-        body.append_child(&canvas)
-            .expect("Append canvas to HTML body");
-
         Ok(())
     }
 }
