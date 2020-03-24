@@ -26,7 +26,7 @@ proc-macro-crate = "0.1"
 amethyst_core = { path = "../amethyst_core", version = "0.10.0" }
 amethyst_assets = { path = "../amethyst_assets", version = "0.11.0" }
 amethyst_error = { path = "../amethyst_error", version = "0.5.0" }
-amethyst_test = { path = "../amethyst_test", version = "0.5.0" }
+amethyst_test = { path = "../amethyst_test", version = "0.6.0" }
 
 [lib]
 name = "amethyst_derive"
