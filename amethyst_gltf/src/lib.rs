@@ -22,7 +22,8 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use amethyst_rendy::{
-    formats::mtl::MaterialPrefab, rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere,
+    camera::CameraPrefab, formats::mtl::MaterialPrefab, rendy::mesh::MeshBuilder, types::Mesh,
+    visibility::BoundingSphere,
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
@@ -48,6 +49,8 @@ pub struct GltfPrefab {
     /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
     /// certain scenarios (based on the data in the Gltf file)
     pub transform: Option<Transform>,
+    /// `Camera` will always be placed
+    pub camera: Option<CameraPrefab>,
     /// `MeshData` is placed on all `Entity`s with graphics primitives
     pub mesh: Option<MeshBuilder<'static>>,
     /// Mesh handle after sub asset loading is done
@@ -214,6 +217,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
     type SystemData = (
         <Transform as PrefabData<'a>>::SystemData,
         <Named as PrefabData<'a>>::SystemData,
+        <CameraPrefab as PrefabData<'a>>::SystemData,
         <MaterialPrefab as PrefabData<'a>>::SystemData,
         <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
         <SkinnablePrefab as PrefabData<'a>>::SystemData,
@@ -232,13 +236,27 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         entities: &[Entity],
         children: &[Entity],
     ) -> Result<(), Error> {
-        let (transforms, names, materials, animatables, skinnables, bound, meshes, _, _, _) =
-            system_data;
+        let (
+            transforms,
+            names,
+            cameras,
+            materials,
+            animatables,
+            skinnables,
+            bound,
+            meshes,
+            _,
+            _,
+            _,
+        ) = system_data;
         if let Some(transform) = &self.transform {
             transform.add_to_entity(entity, transforms, entities, children)?;
         }
         if let Some(mesh) = &self.mesh_handle {
             meshes.insert(entity, mesh.clone())?;
+        }
+        if let Some(camera) = &self.camera {
+            camera.add_to_entity(entity, cameras, entities, children)?;
         }
         if let Some(name) = &self.name {
             name.add_to_entity(entity, names, entities, children)?;
@@ -263,7 +281,8 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let (_, _, materials, animatables, _, _, _, meshes_storage, loader, mat_set) = system_data;
+        let (_, _, _, materials, animatables, _, _, _, meshes_storage, loader, mat_set) =
+            system_data;
 
         let mut ret = false;
         if let Some(mut mats) = self.materials.take() {

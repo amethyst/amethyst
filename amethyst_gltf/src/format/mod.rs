@@ -13,6 +13,7 @@ use amethyst_core::{
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};
+use amethyst_rendy::camera::CameraPrefab;
 
 use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, Named};
 
@@ -220,6 +221,36 @@ fn load_node(
     ));
     *local_transform.scale_mut() = convert::<_, Vector3<f32>>(Vector3::from(scale));
     prefab.data_or_default(entity_index).transform = Some(local_transform);
+
+    // Load camera
+    if let Some(camera) = node.camera() {
+        prefab.data_or_default(entity_index).camera = Some(match camera.projection() {
+            gltf::camera::Projection::Orthographic(proj) => CameraPrefab::Orthographic {
+                left: -proj.xmag(),
+                right: proj.xmag(),
+                bottom: -proj.ymag(),
+                top: proj.ymag(),
+                znear: proj.znear(),
+                zfar: proj.zfar(),
+            },
+            gltf::camera::Projection::Perspective(proj) => CameraPrefab::Perspective {
+                aspect: proj.aspect_ratio().ok_or_else(|| {
+                    format_err!(
+                        "Camera {} is a perspective projection, but has no aspect ratio",
+                        camera.index()
+                    )
+                })?,
+                fovy: proj.yfov(),
+                znear: proj.znear(),
+                zfar: proj.zfar().ok_or_else(|| {
+                    format_err!(
+                        "Camera {} is perspective projection, but has no far plane",
+                        camera.index()
+                    )
+                })?,
+            },
+        });
+    }
 
     // check for skinning
     let mut skin = node.skin().map(|skin| SkinInfo {
