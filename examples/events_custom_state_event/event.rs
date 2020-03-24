@@ -8,7 +8,7 @@ use amethyst::{
 };
 use amethyst_input::{BindingTypes, InputEvent, StringBindings};
 use amethyst_ui::UiEvent;
-use winit::Event;
+use winit::event::Event;
 
 /// Here's a copy of the original StateEvent with our own type added
 #[derive(Clone, Debug, EventReader)]
@@ -18,7 +18,7 @@ where
     T: BindingTypes + Clone,
 {
     /// Events sent by the winit window.
-    Window(Event),
+    Window(Event<'static, ()>),
     /// Events sent by the ui system.
     Ui(UiEvent),
     /// Events sent by the input system.
