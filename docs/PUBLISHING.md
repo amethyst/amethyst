@@ -4,6 +4,13 @@ Publishing a version of Amethyst requires incrementing all modified sub-crates
 and then publishing the sub-crates in the following order. You must comment out
 dev-dependencies when publishing.
 
+Steps:
+
+1. Bump crate versions and dependencies and commit.
+2. Comment out dev-dependencies and commit: `git cherry-pick ebf45081`.
+3. Run `scripts/publish.sh` from the workspace root.
+4. Revert the dev-dependencies commit: `git revert HEAD`.
+
 ### Basic Crates
 
 - `amethyst_config`
