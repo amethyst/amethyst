@@ -664,7 +664,9 @@ where
         #[cfg(feature = "wasm")]
         {
             pool = web_worker::default_thread_pool(thread_count)
-                .ok_or(crate::error::format_err!("Failed to construct web worker thread pool."))
+                .ok_or(crate::error::format_err!(
+                    "Failed to construct web worker thread pool."
+                ))
                 .map(Arc::new)?;
         }
 

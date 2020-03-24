@@ -10,8 +10,7 @@ use crate::{
 use amethyst_core::ecs::{DispatcherBuilder, World};
 use amethyst_error::{format_err, Error};
 use palette::Srgb;
-use rendy::graph::render::RenderGroupDesc;
-use rendy::wsi::Surface;
+use rendy::{graph::render::RenderGroupDesc, wsi::Surface};
 
 #[cfg(feature = "window")]
 pub use window::RenderToWindow;
@@ -88,9 +87,12 @@ mod window {
         ) -> Result<(), Error> {
             self.dirty = false;
 
-            let surface = world.fetch_mut::<Option<Surface<B>>>().take().ok_or_else(|| {
-                format_err!("Surface not found in resources! Did someone already take it?")
-            })?;
+            let surface = world
+                .fetch_mut::<Option<Surface<B>>>()
+                .take()
+                .ok_or_else(|| {
+                    format_err!("Surface not found in resources! Did someone already take it?")
+                })?;
 
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
