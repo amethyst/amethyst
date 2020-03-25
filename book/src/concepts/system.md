@@ -359,8 +359,8 @@ struct GameplayState;
 
 impl SimpleState for GameplayState {
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        // If the `Game` resource has been set up to go back to the menu, pop
-        // the state so that we go back.
+        // If the `Game` resource has been set up to go back to the menu, push
+        // the menu state so that we go back.
 
         let mut game = data.world.write_resource::<Game>();
 

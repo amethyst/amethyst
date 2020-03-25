@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * Use `WindowEvent::ModifiersChanged` to track keyboard modifiers state.
 
-## [Unreleased]
+## [0.15.0] - 2020-03-24
 
 ### Added
 
@@ -36,8 +36,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - `amethyst::ui::LineMode` is now `Copy`. ([#2148])
 - `UiButtonBuilder::build` takes in `&mut UiButtonBuilderResources`. ([#2148])
 - ***Breaking:*** `UiBundle` depends on `InputBundle` being registered with the dispatcher first. ([#2151])
-
-### Deprecated
+- Re-export `UiImageLoadPrefab` from `amethyst_ui`. ([#2169], [#2181])
+- Don't remove `HiddenPropagate` components set by users manually. ([#2155])
 
 ### Removed
 
@@ -51,8 +51,6 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Caret for editable text box is positioned correctly on first click. ([#2151])
 - Editable text is correctly blurred / unfocused when clicking outside its bounds. ([#2091], [#2151])
 - `amethyst_test` crate features now map 1-1 to `amethyst` features. ([#2153])
-
-### Security
 
 [#2091]: https://github.com/amethyst/amethyst/issues/2091
 [#2108]: https://github.com/amethyst/amethyst/issues/2108
@@ -69,6 +67,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2151]: https://github.com/amethyst/amethyst/pull/2151
 [#2152]: https://github.com/amethyst/amethyst/pull/2152
 [#2153]: https://github.com/amethyst/amethyst/pull/2153
+[#2155]: https://github.com/amethyst/amethyst/pull/2155
+[#2169]: https://github.com/amethyst/amethyst/pull/2169
+[#2181]: https://github.com/amethyst/amethyst/pull/2181
 
 
 ## [0.14.0] - 2020-01-30
@@ -1208,8 +1209,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Initial release
 
-[unreleased]: https://github.com/amethyst/amethyst/compare/v0.13.2...HEAD
-[0.13.1]: https://github.com/amethyst/amethyst/compare/v0.13.1...v0.13.2
+[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/amethyst/amethyst/compare/v0.14.0...v0.15.0
+[0.14.0]: https://github.com/amethyst/amethyst/compare/v0.13.3...v0.14.0
+[0.13.3]: https://github.com/amethyst/amethyst/compare/v0.13.2...v0.13.3
+[0.13.2]: https://github.com/amethyst/amethyst/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/amethyst/amethyst/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/amethyst/amethyst/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/amethyst/amethyst/compare/v0.11.0...v0.12.0

@@ -187,7 +187,7 @@ where
         }
 
         if self.hidden {
-            system_data.2.insert(entity, HiddenPropagate)?;
+            system_data.2.insert(entity, HiddenPropagate::new())?;
         }
 
         if let Some(u) = self.selectable {
@@ -343,7 +343,7 @@ impl<'a> PrefabData<'a> for UiTextData {
 /// Loadable `UiImage` data. Adds UiImage component to the entity.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(transparent)]
-pub struct UiImagePrefab(UiImageLoadPrefab);
+pub struct UiImagePrefab(pub UiImageLoadPrefab);
 
 /// Loadable `UiImage` data. Returns image component from `add_to_entity` instead of adding it.
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -352,26 +352,45 @@ pub enum UiImageLoadPrefab {
     /// A textured image
     Texture(TexturePrefab),
     /// A partial textured image
+    ///
+    /// Coordinates are texture coordinates -- between `0.0` and `1.0` inclusive.
     PartialTexture {
+        /// Texture prefab.
         tex: TexturePrefab,
+        /// Coordinate of the left edge of the texture.
         left: f32,
+        /// Coordinate of the right edge of the texture.
         right: f32,
+        /// Coordinate of the bottom edge of the texture.
         bottom: f32,
+        /// Coordinate of the top edge of the texture.
         top: f32,
     },
     /// Solid color image
     SolidColor(f32, f32, f32, f32),
     /// 9-Slice image
+    ///
+    /// Coordinates are in pixels.
     NineSlice {
+        /// Coordinate of the left edge of the left slice.
         x_start: u32,
+        /// Coordinate of the top edge of the top slice.
         y_start: u32,
+        /// Width of the nine slice (exclude padding pixels).
         width: u32,
+        /// Height of the nine slice (exclude padding pixels).
         height: u32,
+        /// Width of the left slice.
         left_dist: u32,
+        /// Width of the right slice.
         right_dist: u32,
+        /// Height of the top slice.
         top_dist: u32,
+        /// Height of the bottom slice.
         bottom_dist: u32,
+        /// Texture prefab.
         tex: TexturePrefab,
+        /// Texture dimensions.
         texture_dimensions: (u32, u32),
     },
 }
