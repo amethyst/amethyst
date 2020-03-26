@@ -571,7 +571,11 @@ pub enum OutputColor<B: Backend> {
     /// Render to image with specified options
     Image(ImageOptions),
     /// Render directly to a window surface.
-    Surface(Surface<B>, Option<hal::command::ClearValue>),
+    Surface(
+        Surface<B>,
+        hal::window::Extent2D,
+        Option<hal::command::ClearValue>,
+    ),
 }
 
 /// Definition for set of outputs for a given render target.
@@ -614,18 +618,10 @@ impl<B: Backend> TargetPlan<B> {
 
                 for color in colors {
                     match color {
-                        OutputColor::Surface(surface, _) => {
-                            if let Some(extent) = surface.extent(physical_device) {
-                                framebuffer_width = min(framebuffer_width, extent.width);
-                                framebuffer_height = min(framebuffer_height, extent.height);
-                                framebuffer_layers = min(framebuffer_layers, 1);
-                            } else {
-                                // Window was just closed, using size of 1 is the least bad option
-                                // to default to. The output won't be used, things won't crash and
-                                // graph is either going to be destroyed or rebuilt next frame.
-                                framebuffer_width = min(framebuffer_width, 1);
-                                framebuffer_height = min(framebuffer_height, 1);
-                            }
+                        OutputColor::Surface(surface, extent, _) => {
+                            let extent = surface.extent(physical_device).unwrap_or(*extent);
+                            framebuffer_width = min(framebuffer_width, extent.width);
+                            framebuffer_height = min(framebuffer_height, extent.height);
                             framebuffer_layers = min(framebuffer_layers, 1);
                         }
                         OutputColor::Image(options) => {
@@ -707,7 +703,7 @@ impl<B: Backend> TargetPlan<B> {
 
         for (i, color) in outputs.colors.drain(..).enumerate() {
             match color {
-                OutputColor::Surface(surface, clear) => {
+                OutputColor::Surface(surface, _, clear) => {
                     let target_metadata = ctx.target_metadata[&self.key];
                     let suggested_extend = hal::window::Extent2D {
                         width: target_metadata.width,
@@ -847,6 +843,7 @@ mod tests {
                 render::{RenderGroup, RenderGroupDesc},
                 GraphContext, NodeBuffer, NodeImage,
             },
+            hal::window::Extent2D,
             init::Rendy,
         },
         types::{Backend, DefaultBackend},
@@ -1001,7 +998,14 @@ mod tests {
         plan.define_pass(
             Target::Main,
             TargetPlanOutputs {
-                colors: vec![OutputColor::Surface(surface1, None)],
+                colors: vec![OutputColor::Surface(
+                    surface1,
+                    Extent2D {
+                        width: size.width as _,
+                        height: size.height as _,
+                    },
+                    None,
+                )],
                 depth: Some(ImageOptions {
                     kind: window_kind,
                     levels: 1,
