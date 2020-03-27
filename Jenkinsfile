@@ -141,7 +141,7 @@ pipeline {
         stage("Compile to WASM") {
             agent {
                 docker {
-                    image 'amethystrs/builder-linux:stable'
+                    image 'amethystrs/builder-linux:nightly'
                     label 'docker'
                 }
             }
