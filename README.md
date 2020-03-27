@@ -217,6 +217,18 @@ $ cargo doc
 
 The API reference can be found in `target/doc/amethyst/index.html`.
 
+## Compiling Shaders
+
+1. Download the Shaderc tools from [`shaderc`](https://github.com/google/shaderc#downloads).
+2. Extract the files into an appropriate location, and add the `bin` directory to your `PATH`.
+3. Compile shaders using the command:
+
+    ```bash
+    glslc -c -o <output> <input>
+    # e.g.
+    # glslc -c -o amethyst_rendy/compiled/vertex/sprite.vert.spv amethyst_rendy/shaders/vertex/sprite.vert
+    ```
+
 ## Questions/Help
 
 Amethyst supports _only_ the latest stable release of Rust. Use the nightly and beta channels with this project at your own risk.
