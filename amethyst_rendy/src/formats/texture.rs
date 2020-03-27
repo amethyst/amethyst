@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 ///        },
 ///        comparison: None,
 ///        border: PackedColor(0),
-///        anisotropic: Anisotropic::Off,
+///        anisotropy_clamp: None,
 ///        })
 ///        .with_raw_data(handle.pixels, Format::Rgba8Unorm);
 ///
@@ -56,7 +56,7 @@ pub struct ImageFormat(pub ImageTextureConfig);
 impl Default for ImageFormat {
     fn default() -> Self {
         use rendy::{
-            hal::image::{Anisotropic, PackedColor, SamplerDesc, WrapMode},
+            hal::image::{PackedColor, SamplerDesc, WrapMode},
             texture::image::{Repr, TextureKind},
         };
 
@@ -77,7 +77,7 @@ impl Default for ImageFormat {
                 comparison: None,
                 border: PackedColor(0),
                 normalized: true,
-                anisotropic: Anisotropic::Off,
+                anisotropy_clamp: None,
             },
             generate_mips: false,
             premultiply_alpha: true,
