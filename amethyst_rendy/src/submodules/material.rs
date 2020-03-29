@@ -5,7 +5,7 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, adapter::PhysicalDevice, buffer::SubRange, device::Device, pso::Descriptor},
+        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor},
         memory::Write as _,
         resource::{
             Buffer, BufferInfo, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle,
@@ -101,10 +101,7 @@ impl<B: Backend> SlottedBuffer<B> {
         let offset = (id as u64) * self.elem_size;
         Descriptor::Buffer(
             self.buffer.raw(),
-            SubRange {
-                offset,
-                size: Some(self.elem_size),
-            },
+            Some(offset)..Some(offset + self.elem_size),
         )
     }
 

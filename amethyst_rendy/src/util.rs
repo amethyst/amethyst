@@ -11,11 +11,7 @@ use glsl_layout::*;
 use rendy::{
     factory::Factory,
     graph::render::PrepareResult,
-    hal::{
-        self,
-        buffer::{SubRange, Usage},
-        format, pso,
-    },
+    hal::{self, buffer::Usage, format, pso},
     memory::MemoryUsage,
     mesh::VertexFormat,
     resource::{BufferInfo, Escape},
@@ -31,13 +27,10 @@ pub fn next_range<T: Add<Output = T> + Clone>(prev: &Range<T>, length: T) -> Ran
     prev.end.clone()..prev.end.clone() + length
 }
 
-/// Helper function to convert `Range` to a SubRange.
+/// Helper function to convert `Range` to an `Option` range.
 #[inline]
-pub fn sub_range(range: Range<u64>) -> SubRange {
-    SubRange {
-        offset: range.start,
-        size: Some(range.end - range.start),
-    }
+pub fn opt_range<T>(range: Range<T>) -> Range<Option<T>> {
+    Some(range.start)..Some(range.end)
 }
 
 /// Helper function to convert `Range` types.
