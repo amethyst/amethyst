@@ -5,5 +5,5 @@
 
 (
   title: "Ordered sprites example",
-  dimensions: Some((400, 75)),
+  dimensions: Some((400, 150)),
 )
