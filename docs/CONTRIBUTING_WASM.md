@@ -44,7 +44,7 @@ git clone git@github.com:amethyst/glutin.git && (cd glutin && git checkout wasm)
 
 1. Update: `cargo update`
 2. Build and test (native): `cargo test --workspace --features "gl"`
-3. Build (wasm): `./scripts/build_wasm.sh`
+3. Build (wasm): `wasm-pack build --target no-modules -- --features "wasm gl"`
 
 ## Please Read
 
