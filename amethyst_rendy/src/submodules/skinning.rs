@@ -3,7 +3,7 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, device::Device, pso::Descriptor},
+        hal::{self, buffer::SubRange, device::Device, pso::Descriptor},
         memory::Write as _,
         resource::{Buffer, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     },
@@ -133,7 +133,7 @@ impl<B: Backend> PerImageSkinningSub<B> {
                     factory.write_descriptor_sets(Some(util::desc_write(
                         self.set.raw(),
                         0,
-                        Descriptor::Buffer(buffer.raw(), Some(0)..None),
+                        Descriptor::Buffer(buffer.raw(), SubRange::WHOLE),
                     )));
                 }
             }

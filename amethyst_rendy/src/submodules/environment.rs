@@ -157,15 +157,15 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         .unwrap();
         if let Some(buffer) = self.buffer.as_mut() {
             if new_buffer {
-                use util::{desc_write, opt_range};
+                use util::{desc_write, sub_range};
                 let buffer = buffer.raw();
                 let env_set = self.set.raw();
 
-                let desc_projview = Descriptor::Buffer(buffer, opt_range(projview_range.clone()));
-                let desc_env = Descriptor::Buffer(buffer, opt_range(env_range.clone()));
-                let desc_plight = Descriptor::Buffer(buffer, opt_range(plight_range.clone()));
-                let desc_dlight = Descriptor::Buffer(buffer, opt_range(dlight_range.clone()));
-                let desc_slight = Descriptor::Buffer(buffer, opt_range(slight_range.clone()));
+                let desc_projview = Descriptor::Buffer(buffer, sub_range(projview_range.clone()));
+                let desc_env = Descriptor::Buffer(buffer, sub_range(env_range.clone()));
+                let desc_plight = Descriptor::Buffer(buffer, sub_range(plight_range.clone()));
+                let desc_dlight = Descriptor::Buffer(buffer, sub_range(dlight_range.clone()));
+                let desc_slight = Descriptor::Buffer(buffer, sub_range(slight_range.clone()));
 
                 unsafe {
                     factory.write_descriptor_sets(vec![
