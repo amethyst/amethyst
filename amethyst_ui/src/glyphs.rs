@@ -632,6 +632,21 @@ fn create_glyph_texture<B: Backend>(
     use hal::format::{Component as C, Swizzle};
     log::trace!("Creating new glyph texture with size ({}, {})", w, h);
 
+    // thread 'main' panicked at 'assertion failed: `(left == right)`
+    //   left: `Swizzle(Zero, Zero, Zero, R)`,
+    //   right: `Swizzle(R, G, B, A)`', gfx/src/backend/gl/src/device.rs:1469:9
+    let swizzle = {
+        #[cfg(not(feature = "gl"))]
+        {
+            Swizzle(C::Zero, C::Zero, C::Zero, C::R)
+        }
+
+        #[cfg(feature = "gl")]
+        {
+            Swizzle(C::R, C::G, C::B, C::A)
+        }
+    };
+
     TextureBuilder::new()
         .with_kind(hal::image::Kind::D2(w, h, 1, 1))
         .with_view_kind(hal::image::ViewKind::D2)
@@ -640,7 +655,7 @@ fn create_glyph_texture<B: Backend>(
         .with_data(vec![R8Unorm { repr: [0] }; (w * h) as _])
         // This swizzle is required when working with `R8Unorm` on metal.
         // Glyph texture is biased towards 1.0 using "color_bias" attribute instead.
-        .with_swizzle(Swizzle(C::Zero, C::Zero, C::Zero, C::R))
+        .with_swizzle(swizzle)
         .build(
             ImageState {
                 queue,

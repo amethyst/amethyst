@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## WASM
 
+### Added
+
+* Basic GL rendering. ([#2192], [#2198])
+
 ### Changed
 
 * ***Breaking:*** MP3 loading is now behind the `"mp3"` feature, disabled by default.
@@ -18,6 +22,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Fixed
 
 * Use `WindowEvent::ModifiersChanged` to track keyboard modifiers state.
+
+[#2192]: https://github.com/amethyst/amethyst/issues/2192
+[#2198]: https://github.com/amethyst/amethyst/pull/2198
+
 
 ## [0.15.0] - 2020-03-24
 

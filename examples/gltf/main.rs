@@ -27,6 +27,7 @@ use amethyst::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
+    window::{DisplayConfig, EventLoop},
     Error,
 };
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystemDesc};
@@ -180,8 +181,10 @@ fn main() -> Result<(), amethyst::Error> {
     let app_root = application_root_dir()?;
 
     let display_config_path = app_root.join("examples/gltf/config/display.ron");
+    let display_config = DisplayConfig::load(display_config_path)?;
     let assets_dir = app_root.join("examples/assets/");
 
+    let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_system_desc(
@@ -219,8 +222,8 @@ fn main() -> Result<(), amethyst::Error> {
         // There is currently no way to pass the dependencies to that system. However, since that
         // system is thread local as part of rendering, it runs after all of the systems anyway.
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
+            RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
+                .with_plugin(RenderToWindow::new())
                 .with_plugin(RenderPbr3D::default().with_skinning())
                 .with_plugin(RenderSkybox::default()),
         )?;

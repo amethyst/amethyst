@@ -35,7 +35,7 @@ default = [
 ]
 
 # Renderer backend
-gl = ["amethyst_rendy/gl"]
+gl = ["amethyst_rendy/gl", "amethyst_ui/gl"]
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]

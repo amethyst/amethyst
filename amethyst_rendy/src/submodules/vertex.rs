@@ -53,7 +53,10 @@ impl<B: Backend, T: 'static> VertexData<B, T> {
     ) -> bool {
         if let Some(buffer) = buffer.as_ref() {
             unsafe {
-                encoder.bind_vertex_buffers(binding_id, Some((buffer.raw(), offset)));
+                encoder.bind_vertex_buffers(
+                    binding_id,
+                    Some((buffer.raw(), hal::buffer::SubRange { offset, size: None })),
+                );
             }
             return true;
         }

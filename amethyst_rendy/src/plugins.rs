@@ -24,7 +24,10 @@ mod window {
     };
     use amethyst_core::SystemBundle;
     use amethyst_window::{ScreenDimensions, WindowBundle};
-    use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
+    use rendy::hal::{
+        command::{ClearColor, ClearDepthStencil, ClearValue},
+        window::Extent2D,
+    };
 
     /// A [RenderPlugin] for opening a window and displaying a render target to it.
     ///
@@ -115,6 +118,10 @@ mod window {
                 crate::bundle::TargetPlanOutputs {
                     colors: vec![OutputColor::Surface(
                         surface,
+                        Extent2D {
+                            width: dimensions.width() as _,
+                            height: dimensions.height() as _,
+                        },
                         self.clear.map(|c| ClearValue { color: c }),
                     )],
                     depth: Some(depth_options),

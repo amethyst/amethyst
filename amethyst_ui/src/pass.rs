@@ -67,11 +67,18 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        builder.add(
-            UiGlyphsSystemDesc::<B>::default().build(world),
-            "ui_glyphs_system",
-            &[],
-        );
+        #[cfg(not(feature = "gl"))]
+        {
+            builder.add(
+                UiGlyphsSystemDesc::<B>::default().build(world),
+                "ui_glyphs_system",
+                &[],
+            );
+        }
+        #[cfg(feature = "gl")]
+        {
+            builder.add_thread_local(UiGlyphsSystemDesc::<B>::default().build(world));
+        }
         Ok(())
     }
 

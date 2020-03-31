@@ -46,6 +46,7 @@ thread_profiler = { version = "0.3", optional = true }
 [features]
 default = ["system_font"]
 
+gl = ["amethyst_rendy/gl"]
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]

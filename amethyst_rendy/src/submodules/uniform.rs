@@ -3,7 +3,7 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, device::Device},
+        hal::{self, buffer::SubRange, device::Device},
         memory::{MappedRange, Write},
         resource::{
             Buffer, BufferInfo, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle,
@@ -122,7 +122,7 @@ where
             .unwrap();
 
         let set = factory.create_descriptor_set(layout.clone()).unwrap();
-        let desc = hal::pso::Descriptor::Buffer(buffer.raw(), None..None);
+        let desc = hal::pso::Descriptor::Buffer(buffer.raw(), SubRange::WHOLE);
         unsafe {
             let set = set.raw();
             factory.write_descriptor_sets(Some(util::desc_write(set, 0, desc)));
