@@ -1,5 +1,17 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
+use std::collections::HashMap;
+
+use amethyst_assets::Processor;
+use amethyst_core::{
+    ecs::{DispatcherBuilder, World},
+    SystemBundle,
+};
+use amethyst_error::{format_err, Error};
+use amethyst_window::{DisplayConfig, EventLoop, ScreenDimensions, Window};
+#[cfg(target_arch = "wasm32")]
+use web_sys::HtmlCanvasElement;
+
 use crate::{
     mtl::Material,
     rendy::{
@@ -16,14 +28,6 @@ use crate::{
     types::Backend,
     SpriteSheet,
 };
-use amethyst_assets::Processor;
-use amethyst_core::{
-    ecs::{DispatcherBuilder, World},
-    SystemBundle,
-};
-use amethyst_error::{format_err, Error};
-use amethyst_window::{DisplayConfig, EventLoop, ScreenDimensions, Window};
-use std::collections::HashMap;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -49,10 +53,38 @@ pub struct RenderingBundle<B: Backend> {
 impl<B: Backend> RenderingBundle<B> {
     /// Create empty `RenderingBundle`. You must register a plugin using
     /// [`with_plugin`] in order to actually display anything.
+    #[cfg(not(feature = "wasm"))]
     pub fn new(display_config: DisplayConfig, event_loop: &EventLoop<()>) -> Self {
         log::debug!("Intializing Rendy");
         let config: rendy::factory::Config = Default::default();
         let window_builder = display_config.into_window_builder();
+        let rendy = rendy::init::WindowedRendy::init(&config, window_builder, event_loop)
+            .expect("Failed to initialize graphics backend.");
+
+        Self {
+            plugins: Vec::new(),
+            factory: Some(rendy.factory),
+            families: Some(rendy.families),
+            surface: Some(rendy.surface),
+            window: Some(rendy.window),
+        }
+    }
+
+    /// Create empty `RenderingBundle`. You must register a plugin using
+    /// [`with_plugin`] in order to actually display anything.
+    #[cfg(feature = "wasm")]
+    pub fn new(
+        display_config: DisplayConfig,
+        event_loop: &EventLoop<()>,
+        canvas: Option<HtmlCanvasElement>,
+    ) -> Self {
+        #[cfg(feature = "wasm")]
+        use amethyst_window::winit::platform::web::WindowBuilderExtWebSys;
+
+        log::debug!("Intializing Rendy");
+        let config: rendy::factory::Config = Default::default();
+        let window_builder = display_config.into_window_builder().with_canvas(canvas);
+
         let rendy = rendy::init::WindowedRendy::init(&config, window_builder, event_loop)
             .expect("Failed to initialize graphics backend.");
 
