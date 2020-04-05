@@ -18,7 +18,7 @@ use amethyst_rendy::{
         command::QueueId,
         factory::{Factory, ImageState},
         hal,
-        texture::{pixel::R8Unorm, TextureBuilder},
+        texture::{pixel::Rgba8Srgb, TextureBuilder},
     },
     resources::Tint,
     Backend, Texture,
@@ -368,6 +368,16 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
             let action = glyph_brush_ref.process_queued(
                 |rect, data| unsafe {
                     log::trace!("Upload glyph image at {:?}", rect);
+
+                    // Build Rgba8Srgb texture. Glyph data goes into alpha channel
+                    // This could be R8Unorm instead but GL backend does not
+                    // support texture swizzling
+                    let tex_size = (rect.width() * rect.height()) as usize;
+                    let mut tex_data = vec![255; tex_size * 4];
+                    for i in 0..tex_size {
+                        tex_data[i * 4 + 3] = data[i];
+                    }
+
                     factory
                         .upload_image(
                             tex.image().clone(),
@@ -388,7 +398,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                                 height: rect.height(),
                                 depth: 1,
                             },
-                            data,
+                            &tex_data,
                             ImageState {
                                 queue: *queue,
                                 stage: hal::pso::PipelineStage::FRAGMENT_SHADER,
@@ -459,7 +469,6 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                             dimensions: dims.into(),
                             tex_coord_bounds: tex_coord_bounds.into(),
                             color: glyph.color.into(),
-                            color_bias: [1., 1., 1., 0.].into(),
                         },
                     )
                 },
@@ -544,7 +553,6 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                                 dimensions: [g.advance_width, height].into(),
                                 tex_coord_bounds: [0., 0., 1., 1.].into(),
                                 color: bg_color.into(),
-                                color_bias: [1., 1., 1., 0.].into(),
                             });
                             let mut glyph_data = glyphs.get_mut(entity).unwrap();
                             glyph_data.sel_vertices.extend(iter);
@@ -629,26 +637,14 @@ fn create_glyph_texture<B: Backend>(
     w: u32,
     h: u32,
 ) -> Texture {
-    use hal::format::{Component as C, Swizzle};
     log::trace!("Creating new glyph texture with size ({}, {})", w, h);
-
-    // This swizzle is required when working with `R8Unorm` on metal.
-    // Glyph texture is biased towards 1.0 using "color_bias" attribute instead.
-    #[cfg(not(feature = "gl"))]
-    let swizzle = Swizzle(C::Zero, C::Zero, C::Zero, C::R);
-
-    // GL doesn't support swizzling apart from `Swizzle(C::R, C::G, C::B, C::A)`.
-    // However, we don't need to swizzle for UI. The above swizzle is simply for `metal`.
-    #[cfg(feature = "gl")]
-    let swizzle = Swizzle::NO;
 
     TextureBuilder::new()
         .with_kind(hal::image::Kind::D2(w, h, 1, 1))
         .with_view_kind(hal::image::ViewKind::D2)
         .with_data_width(w)
         .with_data_height(h)
-        .with_data(vec![R8Unorm { repr: [0] }; (w * h) as _])
-        .with_swizzle(swizzle)
+        .with_data(vec![Rgba8Srgb { repr: [0; 4] }; (w * h) as _])
         .build(
             ImageState {
                 queue,
