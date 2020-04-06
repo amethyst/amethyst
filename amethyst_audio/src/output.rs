@@ -194,13 +194,21 @@ pub fn outputs() -> OutputIterator {
 
 /// Initialize default output
 pub fn init_output(world: &mut World) {
-    if let Some(o) = default_output_device() {
+    if let Some(output) = world.try_fetch::<Output>().map(|output| (*output).clone()) {
         world
             .entry::<AudioSink>()
-            .or_insert_with(|| AudioSink::new(&o.output));
-        world.entry::<Output>().or_insert_with(|| o.output.clone());
+            .or_insert_with(|| AudioSink::new(&output));
     } else {
-        error!("Failed finding a default audio output to hook AudioSink to, audio will not work!")
+        if let Some(o) = default_output_device() {
+            world
+                .entry::<AudioSink>()
+                .or_insert_with(|| AudioSink::new(&o.output));
+            world.entry::<Output>().or_insert_with(|| o.output.clone());
+        } else {
+            error!(
+                "Failed finding a default audio output to hook AudioSink to, audio will not work!"
+            )
+        }
     }
 }
 
