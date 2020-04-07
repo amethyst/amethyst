@@ -27,7 +27,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for AudioBundle {
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         builder.add_thread_local(AudioSystemDesc::new().build(world));
-        builder.add_thread_local(Processor::<Source>::new());
+        builder.add(Processor::<Source>::new(), "source_processor", &[]);
         Ok(())
     }
 }

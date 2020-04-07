@@ -50,19 +50,9 @@ impl OutputDevice {
         })
     }
 
-    /// Returns the rodio device.
-    pub fn device(&self) -> &Device {
-        &self.device
-    }
-
     /// Returns the output stream.
     pub fn stream(&self) -> &OutputStream {
         &self.stream
-    }
-
-    /// Returns the output.
-    pub fn output(&self) -> &Output {
-        &self.output
     }
 }
 

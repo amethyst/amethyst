@@ -9,11 +9,11 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::prelude::{Read, System, SystemData, World, WriteExpect},
     shred::Resource,
-    RunNowDesc, SystemDesc,
+    SystemDesc,
 };
 
 use crate::{
-    output::OutputDevice,
+    output::init_output,
     sink::AudioSink,
     source::{Source, SourceHandle},
 };
@@ -36,36 +36,15 @@ where
     fn build(self, world: &mut World) -> DjSystem<F, R> {
         <DjSystem<F, R> as System<'_>>::SystemData::setup(world);
 
-        let output_device = OutputDevice::default();
-        world
-            .entry::<AudioSink>()
-            .or_insert_with(|| AudioSink::new(output_device.output()));
+        init_output(world);
 
-        DjSystem::new(output_device, self.f)
-    }
-}
-
-impl<'a, 'b, F, R> RunNowDesc<'a, 'b, DjSystem<F, R>> for DjSystemDesc<F, R>
-where
-    F: FnMut(&mut R) -> Option<SourceHandle>,
-    R: Resource,
-{
-    fn build(self, world: &mut World) -> DjSystem<F, R> {
-        <DjSystem<F, R> as System<'_>>::SystemData::setup(world);
-
-        let output_device = OutputDevice::default();
-        world
-            .entry::<AudioSink>()
-            .or_insert_with(|| AudioSink::new(output_device.output()));
-
-        DjSystem::new(output_device, self.f)
+        DjSystem::new(self.f)
     }
 }
 
 /// Calls a closure if the `AudioSink` is empty.
 #[derive(Debug, new)]
 pub struct DjSystem<F, R> {
-    output_device: OutputDevice,
     f: F,
     marker: PhantomData<R>,
 }

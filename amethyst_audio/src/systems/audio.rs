@@ -26,7 +26,7 @@ use amethyst_core::{
 use crate::{
     components::{AudioEmitter, AudioListener},
     end_signal::EndSignalSource,
-    output::OutputDevice,
+    output::{Output, OutputDevice},
 };
 
 /// Builds an `AudioSystem`.
@@ -57,6 +57,7 @@ pub struct SelectedListener(pub Entity);
 
 impl<'a> System<'a> for AudioSystem {
     type SystemData = (
+        Option<Read<'a, Output>>,
         Option<Read<'a, SelectedListener>>,
         Entities<'a>,
         ReadStorage<'a, Transform>,
@@ -66,7 +67,7 @@ impl<'a> System<'a> for AudioSystem {
 
     fn run(
         &mut self,
-        (select_listener, entities, transform, listener, mut audio_emitter): Self::SystemData,
+        (output, select_listener, entities, transform, listener, mut audio_emitter): Self::SystemData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("audio_system");
@@ -118,22 +119,24 @@ impl<'a> System<'a> for AudioSystem {
                         }
                     }
                     while let Some(source) = audio_emitter.sound_queue.pop() {
-                        match SpatialSink::try_new(
-                            self.0.output(),
-                            emitter_position,
-                            left_ear_position,
-                            right_ear_position,
-                        ) {
-                            Ok(sink) => {
-                                let atomic_bool = Arc::new(AtomicBool::new(false));
-                                let clone = atomic_bool.clone();
-                                sink.append(EndSignalSource::new(source, move || {
-                                    clone.store(true, Ordering::Relaxed);
-                                }));
-                                audio_emitter.sinks.push((sink, atomic_bool));
-                            }
-                            Err(e) => {
-                                error!("Failed to initialize audio sink: {:?}", e);
+                        if let Some(output) = &output {
+                            match SpatialSink::try_new(
+                                &output,
+                                emitter_position,
+                                left_ear_position,
+                                right_ear_position,
+                            ) {
+                                Ok(sink) => {
+                                    let atomic_bool = Arc::new(AtomicBool::new(false));
+                                    let clone = atomic_bool.clone();
+                                    sink.append(EndSignalSource::new(source, move || {
+                                        clone.store(true, Ordering::Relaxed);
+                                    }));
+                                    audio_emitter.sinks.push((sink, atomic_bool));
+                                }
+                                Err(e) => {
+                                    error!("Failed to initialize audio sink: {:?}", e);
+                                }
                             }
                         }
                     }
