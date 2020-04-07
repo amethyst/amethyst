@@ -39,7 +39,7 @@ where
         let output_device = OutputDevice::default();
         world
             .entry::<AudioSink>()
-            .or_insert_with(|| AudioSink::new(output_device.output()));
+            .or_insert_with(|| AudioSink::new(&output_device.output()));
 
         DjSystem::new(output_device, self.f)
     }
@@ -56,7 +56,7 @@ where
         let output_device = OutputDevice::default();
         world
             .entry::<AudioSink>()
-            .or_insert_with(|| AudioSink::new(output_device.output()));
+            .or_insert_with(|| AudioSink::new(&output_device.output()));
 
         DjSystem::new(output_device, self.f)
     }
