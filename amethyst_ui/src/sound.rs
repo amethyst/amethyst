@@ -1,5 +1,5 @@
 use amethyst_assets::AssetStorage;
-use amethyst_audio::{output::Output, Source, SourceHandle};
+use amethyst_audio::{output::OutputDevice, Source, SourceHandle};
 use amethyst_core::{
     ecs::{
         prelude::{Component, DenseVecStorage},
@@ -75,6 +75,8 @@ impl EventRetrigger for UiSoundRetrigger {
 #[derive(Debug, SystemDesc)]
 #[system_desc(name(UiSoundSystemDesc))]
 pub struct UiSoundSystem {
+    #[system_desc(skip)]
+    output_device: OutputDevice,
     #[system_desc(event_channel_reader)]
     event_reader: ReaderId<UiPlaySoundAction>,
 }
@@ -84,7 +86,11 @@ impl UiSoundSystem {
     /// will automatically be fetched when the system is set up, this should
     /// always be used to construct the `UiSoundSystem`.
     pub fn new(event_reader: ReaderId<UiPlaySoundAction>) -> Self {
-        Self { event_reader }
+        let output_device = OutputDevice::default();
+        Self {
+            output_device,
+            event_reader,
+        }
     }
 }
 
@@ -92,19 +98,18 @@ impl<'s> System<'s> for UiSoundSystem {
     type SystemData = (
         Write<'s, EventChannel<UiPlaySoundAction>>,
         Read<'s, AssetStorage<Source>>,
-        Option<Read<'s, Output>>,
     );
 
-    fn run(&mut self, (sound_events, audio_storage, audio_output): Self::SystemData) {
+    fn run(&mut self, (sound_events, audio_storage): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("ui_sound_system");
 
         let event_reader = &mut self.event_reader;
 
         for event in sound_events.read(event_reader) {
-            let audio_output = audio_output.as_ref();
+            let audio_output = self.output_device.output();
             let sound = audio_storage.get(&event.0);
-            if let (Some(audio_output), Some(sound)) = (audio_output, sound) {
+            if let Some(sound) = sound {
                 audio_output.play_once(&sound, 1.0);
             }
         }
