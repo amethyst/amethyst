@@ -88,8 +88,7 @@ mod tests {
 
         // Create a Output and AudioSink
         let output_device = OutputDevice::default();
-        let output = output_device.output();
-        let output = &output;
+        let output = &output_device.output;
         let sink = AudioSink::new(output);
 
         // Call play

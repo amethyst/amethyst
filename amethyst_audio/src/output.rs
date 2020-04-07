@@ -8,21 +8,22 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use cpal::{
-    traits::{DeviceTrait, HostTrait},
-    Device,
-};
+use cpal::traits::{DeviceTrait, HostTrait};
 use log::error;
 use rodio::{
-    Decoder, Devices, OutputDevices, OutputStream, OutputStreamHandle, Sink, Source as RSource,
-    StreamError,
+    Decoder, Device, Devices, OutputDevices, OutputStream, OutputStreamHandle, Sink,
+    Source as RSource, StreamError,
 };
 
-use crate::{source::Source, DecoderError};
+use amethyst_core::ecs::World;
+
+use crate::{sink::AudioSink, source::Source, DecoderError};
 
 /// Non-Send/Sync type to store the audio device and output stream.
 pub struct OutputDevice {
     pub(crate) device: Device,
+    pub(crate) stream: OutputStream,
+    pub(crate) output: Output,
 }
 
 /// Convenience method for opening the default output device.
@@ -41,11 +42,6 @@ impl Default for OutputDevice {
 }
 
 impl OutputDevice {
-    /// Returns a new `OutputDevice`.
-    pub fn new(device: Device) -> Self {
-        OutputDevice { device }
-    }
-
     /// Gets the name of the output
     pub fn name(&self) -> String {
         self.device.name().unwrap_or_else(|e| {
@@ -59,9 +55,14 @@ impl OutputDevice {
         &self.device
     }
 
-    /// Returns a new `Output` from this device.
-    pub fn output(&self) -> Output {
-        Output::try_from(&self.device).expect("Failed to create output device.")
+    /// Returns the output stream.
+    pub fn stream(&self) -> &OutputStream {
+        &self.stream
+    }
+
+    /// Returns the output.
+    pub fn output(&self) -> &Output {
+        &self.output
     }
 }
 
@@ -76,9 +77,8 @@ impl Debug for OutputDevice {
 /// A speaker(s) through which audio can be played.
 ///
 /// By convention, the default output is stored as a resource in the `World`.
+#[derive(Clone)]
 pub struct Output {
-    #[allow(unused)]
-    pub(crate) stream: OutputStream,
     pub(crate) stream_handle: OutputStreamHandle,
 }
 
@@ -151,12 +151,18 @@ impl Debug for Output {
     }
 }
 
-impl TryFrom<&Device> for Output {
+impl TryFrom<cpal::Device> for OutputDevice {
     type Error = StreamError;
-    fn try_from(device: &Device) -> Result<Self, StreamError> {
-        rodio::OutputStream::try_from_device(device).map(|(stream, stream_handle)| Output {
-            stream,
-            stream_handle,
+    fn try_from(cpal_device: cpal::Device) -> Result<Self, StreamError> {
+        rodio::OutputStream::try_from_device(&cpal_device).map(move |(stream, stream_handle)| {
+            let device = Device::from(cpal_device);
+            let output = Output { stream_handle };
+
+            OutputDevice {
+                device,
+                stream,
+                output,
+            }
         })
     }
 }
@@ -171,7 +177,11 @@ impl Iterator for OutputIterator {
     type Item = OutputDevice;
 
     fn next(&mut self) -> Option<OutputDevice> {
-        self.devices.next().map(OutputDevice::new)
+        self.devices
+            .next()
+            .map(TryFrom::try_from)
+            .map(Result::ok)
+            .flatten()
     }
 }
 
@@ -179,7 +189,9 @@ impl Iterator for OutputIterator {
 pub fn default_output_device() -> Option<OutputDevice> {
     cpal::default_host()
         .default_output_device()
-        .map(OutputDevice::new)
+        .map(TryFrom::try_from)
+        .map(Result::ok)
+        .flatten()
 }
 
 /// Get a list of outputs available to the system.
@@ -188,6 +200,26 @@ pub fn outputs() -> OutputIterator {
         .output_devices()
         .unwrap_or_else(|e| panic!("Error retrieving output devices: `{}`", e));
     OutputIterator { devices }
+}
+
+/// Initialize default output
+pub fn init_output(world: &mut World) {
+    if let Some(output) = world.try_fetch::<Output>().map(|output| (*output).clone()) {
+        world
+            .entry::<AudioSink>()
+            .or_insert_with(|| AudioSink::new(&output));
+    } else {
+        if let Some(o) = default_output_device() {
+            world
+                .entry::<AudioSink>()
+                .or_insert_with(|| AudioSink::new(&o.output));
+            world.entry::<Output>().or_insert_with(|| o.output.clone());
+        } else {
+            error!(
+                "Failed finding a default audio output to hook AudioSink to, audio will not work!"
+            )
+        }
+    }
 }
 
 #[cfg(test)]
@@ -250,8 +282,7 @@ mod tests {
 
         // Test each of the play APIs
         let output_device = OutputDevice::default();
-        let output = output_device.output();
-        let output = &output;
+        let output = &output_device.output;
 
         output.play_once(&src, vol);
 

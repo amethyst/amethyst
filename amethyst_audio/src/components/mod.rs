@@ -4,12 +4,14 @@ pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    ecs::prelude::{Entity, WriteStorage},
+    ecs::prelude::{Entity, Read, WriteStorage},
     math::Point3,
 };
 use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
+
+use crate::output::Output;
 
 mod audio_emitter;
 mod audio_listener;
@@ -28,6 +30,7 @@ impl<'a> PrefabData<'a> for AudioPrefab {
     type SystemData = (
         WriteStorage<'a, AudioEmitter>,
         WriteStorage<'a, AudioListener>,
+        Option<Read<'a, Output>>,
     );
     type Result = ();
 

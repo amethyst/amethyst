@@ -39,6 +39,8 @@ impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
 
         let output_device = OutputDevice::default();
 
+        world.insert(output_device.output.clone());
+
         AudioSystem::new(output_device)
     }
 }
@@ -117,7 +119,7 @@ impl<'a> System<'a> for AudioSystem {
                     }
                     while let Some(source) = audio_emitter.sound_queue.pop() {
                         match SpatialSink::try_new(
-                            &self.0.output(),
+                            self.0.output(),
                             emitter_position,
                             left_ear_position,
                             right_ear_position,
