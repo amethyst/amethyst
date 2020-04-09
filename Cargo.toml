@@ -199,11 +199,6 @@ path = "examples/ui/main.rs"
 required-features = ["audio"]
 
 [[example]]
-name = "ui_tutorial_01"
-path = "examples/ui_tutorial_01/main.rs"
-required-features = ["audio"]
-
-[[example]]
 name = "states_ui"
 path = "examples/states_ui/main.rs"
 required-features = ["audio"]
