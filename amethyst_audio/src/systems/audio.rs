@@ -8,6 +8,7 @@ use std::{
 };
 
 use derive_new::new;
+use log::error;
 use rodio::SpatialSink;
 
 #[cfg(feature = "profiler")]
@@ -25,29 +26,28 @@ use amethyst_core::{
 use crate::{
     components::{AudioEmitter, AudioListener},
     end_signal::EndSignalSource,
-    output::Output,
+    output::{Output, OutputDevice},
 };
 
 /// Builds an `AudioSystem`.
 #[derive(Default, Debug, new)]
-pub struct AudioSystemDesc {
-    /// Audio `Output`.
-    pub output: Output,
-}
+pub struct AudioSystemDesc;
 
 impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
     fn build(self, world: &mut World) -> AudioSystem {
         <AudioSystem as System<'_>>::SystemData::setup(world);
 
-        world.insert(self.output.clone());
+        let output_device = OutputDevice::default();
 
-        AudioSystem::new(self.output)
+        world.insert(output_device.output.clone());
+
+        AudioSystem::new(output_device)
     }
 }
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
 #[derive(Debug, Default, new)]
-pub struct AudioSystem(Output);
+pub struct AudioSystem(OutputDevice);
 
 /// Add this structure to world as a resource with ID 0 to select an entity whose AudioListener
 /// component will be used.  If this resource isn't found then the system will arbitrarily select
@@ -120,18 +120,24 @@ impl<'a> System<'a> for AudioSystem {
                     }
                     while let Some(source) = audio_emitter.sound_queue.pop() {
                         if let Some(output) = &output {
-                            let sink = SpatialSink::new(
-                                &output.device,
+                            match SpatialSink::try_new(
+                                &output,
                                 emitter_position,
                                 left_ear_position,
                                 right_ear_position,
-                            );
-                            let atomic_bool = Arc::new(AtomicBool::new(false));
-                            let clone = atomic_bool.clone();
-                            sink.append(EndSignalSource::new(source, move || {
-                                clone.store(true, Ordering::Relaxed);
-                            }));
-                            audio_emitter.sinks.push((sink, atomic_bool));
+                            ) {
+                                Ok(sink) => {
+                                    let atomic_bool = Arc::new(AtomicBool::new(false));
+                                    let clone = atomic_bool.clone();
+                                    sink.append(EndSignalSource::new(source, move || {
+                                        clone.store(true, Ordering::Relaxed);
+                                    }));
+                                    audio_emitter.sinks.push((sink, atomic_bool));
+                                }
+                                Err(e) => {
+                                    error!("Failed to initialize audio sink: {:?}", e);
+                                }
+                            }
                         }
                     }
                 }

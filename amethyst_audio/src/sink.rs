@@ -15,9 +15,8 @@ pub struct AudioSink {
 impl AudioSink {
     /// Creates a new `AudioSink` using the given audio output.
     pub fn new(output: &Output) -> AudioSink {
-        AudioSink {
-            sink: Sink::new(&output.device),
-        }
+        let sink = Sink::try_new(&output.stream_handle).expect("Failed to initialize audio sink.");
+        AudioSink { sink }
     }
 
     /// Adds a source to the sink's queue of music to play.
@@ -67,7 +66,7 @@ impl AudioSink {
 mod tests {
     #[cfg(target_os = "linux")]
     use {
-        crate::{output::Output, source::Source, AudioSink},
+        crate::{output::OutputDevice, source::Source, AudioSink},
         amethyst_utils::app_root_dir::application_root_dir,
         std::{fs::File, io::Read, vec::Vec},
     };
@@ -88,8 +87,9 @@ mod tests {
         let src = Source { bytes: buffer };
 
         // Create a Output and AudioSink
-        let output = Output::default();
-        let sink = AudioSink::new(&output);
+        let output_device = OutputDevice::default();
+        let output = &output_device.output;
+        let sink = AudioSink::new(output);
 
         // Call play
         match sink.append(&src) {

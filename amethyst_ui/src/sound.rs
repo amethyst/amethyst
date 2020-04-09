@@ -102,10 +102,10 @@ impl<'s> System<'s> for UiSoundSystem {
         let event_reader = &mut self.event_reader;
 
         for event in sound_events.read(event_reader) {
-            if let Some(output) = audio_output.as_ref() {
-                if let Some(sound) = audio_storage.get(&event.0) {
-                    output.play_once(sound, 1.0);
-                }
+            let audio_output = audio_output.as_ref();
+            let sound = audio_storage.get(&event.0);
+            if let (Some(audio_output), Some(sound)) = (audio_output, sound) {
+                audio_output.play_once(&sound, 1.0);
             }
         }
     }
