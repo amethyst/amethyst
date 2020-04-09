@@ -199,7 +199,7 @@ impl<B: Backend> DynamicVertexData<B, IndexData<B, u32>, u32> {
     #[inline]
     pub fn bind(&self, index: usize, offset: u64, encoder: &mut RenderPassEncoder<'_, B>) -> bool {
         self.per_image.get(index).map_or(false, |i| {
-            IndexData::<B, u32>::bind(_, encoder, &i.buffer, offset)
+            IndexData::<B, u32>::bind(0, encoder, &i.buffer, offset)
         })
     }
 }
