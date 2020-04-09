@@ -18,14 +18,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * ***Breaking:*** MP3 loading is now behind the `"mp3"` feature, disabled by default.
 * ***Breaking:*** System fonts support is now behind the `"system_font"` feature, disabled by default.
+* Support audio playback in WASM target. ([#2195], [#2219])
 
 ### Fixed
 
 * Use `WindowEvent::ModifiersChanged` to track keyboard modifiers state.
 
 [#2192]: https://github.com/amethyst/amethyst/issues/2192
+[#2195]: https://github.com/amethyst/amethyst/issues/2195
 [#2198]: https://github.com/amethyst/amethyst/pull/2198
-
+[#2219]: https://github.com/amethyst/amethyst/pull/2219
 
 ## [0.15.0] - 2020-03-24
 
