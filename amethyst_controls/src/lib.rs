@@ -20,8 +20,6 @@ pub use self::{
     },
 };
 
-use amethyst_core;
-
 mod bundles;
 mod components;
 mod resources;

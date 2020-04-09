@@ -6,8 +6,6 @@ use amethyst::{
     winit::{MouseButton, VirtualKeyCode},
 };
 
-use crate::util::delete_hierarchy;
-
 #[derive(Default, Debug)]
 pub struct WelcomeScreen {
     ui_handle: Option<Entity>,
@@ -43,9 +41,12 @@ impl SimpleState for WelcomeScreen {
     }
 
     fn on_stop(&mut self, data: StateData<GameData>) {
-        if let Some(handler) = self.ui_handle {
-            delete_hierarchy(handler, data.world).expect("Failed to remove WelcomeScreen");
+        if let Some(root_entity) = self.ui_handle {
+            data.world
+                .delete_entity(root_entity)
+                .expect("Failed to remove WelcomeScreen");
         }
+
         self.ui_handle = None;
     }
 }

@@ -1,4 +1,5 @@
-use crate::{pause::PauseMenuState, util::delete_hierarchy};
+use crate::pause::PauseMenuState;
+
 use amethyst::{
     audio::output::init_output,
     core::Time,
@@ -46,9 +47,12 @@ impl SimpleState for Game {
     }
 
     fn on_stop(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        if let Some(entity) = self.ui_root {
-            delete_hierarchy(entity, data.world).expect("Failed to remove Game Screen");
+        if let Some(root_entity) = self.ui_root {
+            data.world
+                .delete_entity(root_entity)
+                .expect("Failed to remove Game Screen");
         }
+
         self.ui_root = None;
         self.fps_display = None;
         self.random_text = None;

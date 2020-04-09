@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.14.0"
+version = "0.15.0"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Data-oriented game engine written in Rust"
@@ -78,6 +78,9 @@ server = [
     "locale",
     "network"
 ]
+storage-event-control = [
+    "amethyst_core/storage-event-control"
+]
 no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
 shader-compiler = ["amethyst_rendy/shader-compiler"]
 test-support = [
@@ -109,23 +112,23 @@ members = [
 ]
 
 [dependencies]
-amethyst_animation = { path = "amethyst_animation", version = "0.9.0", optional = true }
-amethyst_assets = { path = "amethyst_assets", version = "0.10.0" }
-amethyst_audio = { path = "amethyst_audio", version = "0.9.0", optional = true }
-amethyst_config = { path = "amethyst_config", version = "0.13.0" }
-amethyst_core = { path = "amethyst_core", version = "0.9.0" }
-amethyst_error = { path = "amethyst_error", version = "0.4.0" }
-amethyst_controls = { path = "amethyst_controls", version = "0.8.0" }
-amethyst_derive = { path = "amethyst_derive", version = "0.7.0" }
-amethyst_gltf = { path = "amethyst_gltf", version = "0.9.0", optional = true }
-amethyst_network = { path = "amethyst_network", version = "0.7.0", optional = true }
-amethyst_locale = { path = "amethyst_locale", version = "0.8.0", optional = true }
-amethyst_rendy = { path = "amethyst_rendy", version = "0.4.0", features = ["window"], optional = true }
-amethyst_input = { path = "amethyst_input", version = "0.10.0" }
-amethyst_ui = { path = "amethyst_ui", version = "0.9.0" }
-amethyst_utils = { path = "amethyst_utils", version = "0.9.0" }
-amethyst_window = { path = "amethyst_window", version = "0.4.0" }
-amethyst_tiles = { path = "amethyst_tiles", version = "0.2.0", optional = true }
+amethyst_animation = { path = "amethyst_animation", version = "0.10.0", optional = true }
+amethyst_assets = { path = "amethyst_assets", version = "0.11.0" }
+amethyst_audio = { path = "amethyst_audio", version = "0.10.0", optional = true }
+amethyst_config = { path = "amethyst_config", version = "0.14.0" }
+amethyst_core = { path = "amethyst_core", version = "0.10.0" }
+amethyst_error = { path = "amethyst_error", version = "0.5.0" }
+amethyst_controls = { path = "amethyst_controls", version = "0.9.0" }
+amethyst_derive = { path = "amethyst_derive", version = "0.8.0" }
+amethyst_gltf = { path = "amethyst_gltf", version = "0.10.0", optional = true }
+amethyst_network = { path = "amethyst_network", version = "0.8.0", optional = true }
+amethyst_locale = { path = "amethyst_locale", version = "0.9.0", optional = true }
+amethyst_rendy = { path = "amethyst_rendy", version = "0.5.0", features = ["window"], optional = true }
+amethyst_input = { path = "amethyst_input", version = "0.11.0" }
+amethyst_ui = { path = "amethyst_ui", version = "0.10.0" }
+amethyst_utils = { path = "amethyst_utils", version = "0.10.0" }
+amethyst_window = { path = "amethyst_window", version = "0.5.0" }
+amethyst_tiles = { path = "amethyst_tiles", version = "0.3.0", optional = true }
 crossbeam-channel = "0.4.0"
 derivative = "1.0.3"
 fern = { version = "0.5.9", features = ["colored"] }
@@ -136,7 +139,7 @@ sentry = { version = "0.17.0", optional = true }
 winit = { version = "0.19", features = ["serde", "icon_loading"] }
 serde = { version = "1.0.104", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
-failure = "0.1.6"
+failure = "0.1.7"
 thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"
 glsl-layout = "0.3.2"

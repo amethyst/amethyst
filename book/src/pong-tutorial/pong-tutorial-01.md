@@ -19,7 +19,7 @@ authors = []
 edition = "2018"
 
 [dependencies.amethyst]
-version = "0.13"
+version = "0.14"
 features = ["vulkan"]
 ```
 
@@ -27,7 +27,7 @@ Alternatively, if you are developing on macOS, you might want to use the `metal`
 
 ```toml
 [dependencies.amethyst]
-version = "0.13"
+version = "0.14"
 features = ["metal"]
 ```
 
@@ -180,7 +180,6 @@ let game_data = GameDataBuilder::default();
 
 # let app_root = application_root_dir()?;
 let assets_dir = app_root.join("assets");
-let mut world = World::new();
 let mut game = Application::new(assets_dir, Pong, game_data)?;
 game.run();
 #     Ok(())

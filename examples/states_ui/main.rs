@@ -14,7 +14,6 @@ mod events;
 mod game;
 mod menu;
 mod pause;
-mod util;
 mod welcome;
 
 /// Quick overview what you can do when running this example:
@@ -42,6 +41,9 @@ pub fn main() -> amethyst::Result<()> {
         // a lot of other bundles/systems depend on this (without it being explicitly clear), so it
         // makes sense to add it early on
         .with_bundle(TransformBundle::new())?
+        // This system is in 'events.rs'. Basically, it registers UI events that
+        // happen. Without it, the buttons will not react.
+        .with_bundle(InputBundle::<StringBindings>::new())?
         // this bundle allows us to 'find' the Buttons and other UI elements later on
         .with_bundle(UiBundle::<StringBindings>::new())?
         // this allows us to reload '*.ron' files during execution
@@ -58,9 +60,6 @@ pub fn main() -> amethyst::Result<()> {
             "ui_event_handler",
             &[],
         )
-        // This system is in 'events.rs'. Basically, it registers UI events that
-        // happen. Without it, the buttons will not react.
-        .with_bundle(InputBundle::<StringBindings>::new())?
         // Necessary for the FPS counter in the upper left corner to work.
         // (simply uncommenting will fail at runtime, since the resource is expected to exist, you
         // need to uncomment line 107-114 in game.rs for it to still work)

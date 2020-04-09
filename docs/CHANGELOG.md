@@ -9,14 +9,15 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 
-## [Unreleased]
+## [0.15.0] - 2020-03-24
 
 ### Added
 
-- Support settings module log levels from a RON file ([#2115])
-- Export the `get_parent_pixel_size` functions from the ui module ([[#2128])
-- Export the `pixel_width` and `pixel_height` methods on the `UiTransform` ([[#2128])
-- Support UiEvents targeting multiple overlapping entities ([#2138])
+- Support settings module log levels from a RON file. ([#2115])
+- Export the `get_parent_pixel_size` functions from the ui module. ([[#2128])
+- Export the `pixel_width` and `pixel_height` methods on the `UiTransform`. ([[#2128])
+- Support UiEvents targeting multiple overlapping entities. ([#2138])
+- `"storage-event-control"` feature enables the `specs` `"storage-event-control"` feature. ([#2152])
 
 ### Changed
 
@@ -25,8 +26,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - `amethyst::ui::LineMode` is now `Copy`. ([#2148])
 - `UiButtonBuilder::build` takes in `&mut UiButtonBuilderResources`. ([#2148])
 - ***Breaking:*** `UiBundle` depends on `InputBundle` being registered with the dispatcher first. ([#2151])
-
-### Deprecated
+- Re-export `UiImageLoadPrefab` from `amethyst_ui`. ([#2169], [#2181])
+- Don't remove `HiddenPropagate` components set by users manually. ([#2155])
 
 ### Removed
 
@@ -34,17 +35,18 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+- Fixed an issue with `states_ui` example loading items incorrectly. ([#2117])
 - Editable text fields now correctly highlight strings containing spaces. ([#2108], [#2143])
 - Caret for editable text box is drawn in correct position. ([#2146], [#2149])
 - Caret for editable text box is positioned correctly on first click. ([#2151])
 - Editable text is correctly blurred / unfocused when clicking outside its bounds. ([#2091], [#2151])
-
-### Security
+- `amethyst_test` crate features now map 1-1 to `amethyst` features. ([#2153])
 
 [#2091]: https://github.com/amethyst/amethyst/issues/2091
 [#2108]: https://github.com/amethyst/amethyst/issues/2108
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
 [#2115]: https://github.com/amethyst/amethyst/pull/2115
+[#2117]: https://github.com/amethyst/amethyst/pull/2117
 [#2128]: https://github.com/amethyst/amethyst/pull/2128
 [#2136]: https://github.com/amethyst/amethyst/pull/2136
 [#2138]: https://github.com/amethyst/amethyst/pull/2138
@@ -53,6 +55,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2148]: https://github.com/amethyst/amethyst/pull/2148
 [#2149]: https://github.com/amethyst/amethyst/pull/2149
 [#2151]: https://github.com/amethyst/amethyst/pull/2151
+[#2152]: https://github.com/amethyst/amethyst/pull/2152
+[#2153]: https://github.com/amethyst/amethyst/pull/2153
+[#2155]: https://github.com/amethyst/amethyst/pull/2155
+[#2169]: https://github.com/amethyst/amethyst/pull/2169
+[#2181]: https://github.com/amethyst/amethyst/pull/2181
+
 
 ## [0.14.0] - 2020-01-30
 
@@ -1191,8 +1199,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Initial release
 
-[unreleased]: https://github.com/amethyst/amethyst/compare/v0.13.2...HEAD
-[0.13.1]: https://github.com/amethyst/amethyst/compare/v0.13.1...v0.13.2
+[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/amethyst/amethyst/compare/v0.14.0...v0.15.0
+[0.14.0]: https://github.com/amethyst/amethyst/compare/v0.13.3...v0.14.0
+[0.13.3]: https://github.com/amethyst/amethyst/compare/v0.13.2...v0.13.3
+[0.13.2]: https://github.com/amethyst/amethyst/compare/v0.13.1...v0.13.2
 [0.13.1]: https://github.com/amethyst/amethyst/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/amethyst/amethyst/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/amethyst/amethyst/compare/v0.11.0...v0.12.0

@@ -35,8 +35,9 @@ pub use self::{
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem, UiTransformSystemDesc},
     pass::{DrawUi, DrawUiDesc, RenderUi},
     prefab::{
-        NoCustomUi, ToNativeWidget, UiButtonData, UiCreator, UiFormat, UiImagePrefab, UiLoader,
-        UiLoaderSystem, UiLoaderSystemDesc, UiPrefab, UiTextData, UiTransformData, UiWidget,
+        NoCustomUi, ToNativeWidget, UiButtonData, UiCreator, UiFormat, UiImageLoadPrefab,
+        UiImagePrefab, UiLoader, UiLoaderSystem, UiLoaderSystemDesc, UiPrefab, UiTextData,
+        UiTransformData, UiWidget,
     },
     resize::{ResizeSystem, ResizeSystemDesc, UiResize},
     selection::{
@@ -55,7 +56,6 @@ pub use self::{
 };
 
 pub(crate) use amethyst_core::ecs::prelude::Entity;
-pub(crate) use paste;
 
 mod blink;
 mod bundle;

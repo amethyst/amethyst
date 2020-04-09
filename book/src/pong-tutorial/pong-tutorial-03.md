@@ -71,7 +71,6 @@ let input_bundle = InputBundle::<StringBindings>::new()
 # let assets_dir = "assets";
 # struct Pong;
 # impl SimpleState for Pong { }
-let mut world = World::new();
 let game_data = GameDataBuilder::default()
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?
@@ -231,7 +230,6 @@ fn main() -> amethyst::Result<()> {
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-let mut world = World::new();
 let game_data = GameDataBuilder::default()
     // ...
     .with_bundle(TransformBundle::new())?
