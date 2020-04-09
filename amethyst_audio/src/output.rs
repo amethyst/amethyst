@@ -9,7 +9,7 @@ use std::{
 };
 
 use cpal::traits::{DeviceTrait, HostTrait};
-use log::error;
+use log::{debug, error};
 use rodio::{
     Decoder, Device, Devices, OutputDevices, OutputStream, OutputStreamHandle, Sink,
     Source as RSource, StreamError,
@@ -35,7 +35,7 @@ impl Default for OutputDevice {
     fn default() -> Self {
         let output_device = default_output_device().expect("Failed to get default output device.");
 
-        error!("Using: {}", output_device.device.name().unwrap());
+        debug!("Using: {}", output_device.device.name().unwrap());
 
         output_device
     }
