@@ -54,6 +54,11 @@ impl OutputDevice {
     pub fn stream(&self) -> &OutputStream {
         &self.stream
     }
+
+    /// Returns the `Output` wrapper for the `OutputStreamHandle`.
+    pub fn output(&self) -> &Output {
+        &self.output
+    }
 }
 
 impl Debug for OutputDevice {

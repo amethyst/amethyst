@@ -8,14 +8,14 @@ implemented manually:
 # extern crate amethyst;
 #
 use amethyst::{
-    audio::output::Output,
+    audio::output::OutputDevice,
     core::SystemDesc,
     ecs::{System, SystemData, World},
 };
 
 # /// Syncs 3D transform data with the audio engine to provide 3D audio.
 # #[derive(Debug, Default)]
-# pub struct AudioSystem(Output);
+# pub struct AudioSystem(OutputDevice);
 # impl<'a> System<'a> for AudioSystem {
 #     type SystemData = ();
 #     fn run(&mut self, _: Self::SystemData) {}
@@ -23,18 +23,17 @@ use amethyst::{
 #
 /// Builds an `AudioSystem`.
 #[derive(Default, Debug)]
-pub struct AudioSystemDesc {
-    /// Audio `Output`.
-    pub output: Output,
-}
+pub struct AudioSystemDesc;
 
 impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
     fn build(self, world: &mut World) -> AudioSystem {
         <AudioSystem as System<'_>>::SystemData::setup(world);
 
-        world.insert(self.output.clone());
+        let output_device = OutputDevice::default();
 
-        AudioSystem(self.output)
+        world.insert(output_device.output().clone());
+
+        AudioSystem(output_device)
     }
 }
 
