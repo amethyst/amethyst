@@ -108,6 +108,22 @@ impl Ball {
     pub fn reverse_y(&mut self) {
         self.velocity[1] = -self.velocity[1];
     }
+
+    pub fn heads_up(&self) -> bool {
+        self.velocity[1] > 0
+    }
+
+    pub fn heads_down(&self) -> bool {
+        self.velocity[0] < 0
+    }
+
+    pub fn heads_right(&self) -> bool {
+        self.velocity[0] > 0
+    }
+
+    pub fn heads_left(&self) -> bool {
+        self.velocity[0] < 0
+    }
 }
 
 impl Component for Ball {
