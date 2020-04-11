@@ -1,10 +1,11 @@
-use crate::Paddle;
 use amethyst::{
     core::{timing::Time, transform::Transform},
     derive::SystemDesc,
     ecs::prelude::{Join, Read, ReadStorage, System, SystemData, WriteStorage},
     input::{InputHandler, StringBindings},
 };
+
+use crate::components::Paddle;
 
 /// This system is responsible for moving all the paddles according to the user
 /// provided input.
@@ -20,7 +21,7 @@ impl<'s> System<'s> for PaddleSystem {
     );
 
     fn run(&mut self, (paddles, mut transforms, time, input): Self::SystemData) {
-        use crate::Side;
+        use crate::components::Side;
 
         // Iterate over all paddles and move them according to the input the user
         // provided.
@@ -32,6 +33,8 @@ impl<'s> System<'s> for PaddleSystem {
 
             if let Some(movement) = opt_movement {
                 use crate::ARENA_HEIGHT;
+
+                // Update paddle position only when necessary
                 if movement != 0.0 {
                     let paddle_y = transform.translation().y;
                     let scaled_amount = paddle.velocity * time.delta_seconds() * movement as f32;

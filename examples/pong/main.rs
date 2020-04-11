@@ -2,13 +2,13 @@
 
 mod audio;
 mod bundle;
+mod components;
 mod pong;
 mod systems;
 
 use amethyst::{
     audio::{AudioBundle, DjSystemDesc},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
-    ecs::{Component, DenseVecStorage},
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -21,6 +21,7 @@ use amethyst::{
 };
 
 use crate::{audio::Music, bundle::PongBundle, pong::Pong};
+
 use std::time::Duration;
 
 const ARENA_HEIGHT: f32 = 100.0;
@@ -88,81 +89,6 @@ fn main() -> amethyst::Result<()> {
 
     game.run();
     Ok(())
-}
-
-pub struct Ball {
-    /// Rate of change of ball's position.
-    /// ```
-    /// let x = ball.velocity[0];
-    /// let y = ball.velocity[1];
-    /// ```
-    pub velocity: [f32; 2],
-    pub radius: f32,
-}
-
-impl Ball {
-    pub fn new() -> Ball {
-        Ball {
-            velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
-            radius: BALL_RADIUS,
-        }
-    }
-
-    pub fn reverse_x(&mut self) {
-        self.velocity[0] = -self.velocity[0];
-    }
-
-    pub fn reverse_y(&mut self) {
-        self.velocity[1] = -self.velocity[1];
-    }
-
-    pub fn heads_up(&self) -> bool {
-        self.velocity[1] > 0.0
-    }
-
-    pub fn heads_down(&self) -> bool {
-        self.velocity[1] < 0.0
-    }
-
-    pub fn heads_right(&self) -> bool {
-        self.velocity[0] > 0.0
-    }
-
-    pub fn heads_left(&self) -> bool {
-        self.velocity[0] < 0.0
-    }
-}
-
-impl Component for Ball {
-    type Storage = DenseVecStorage<Self>;
-}
-
-#[derive(PartialEq, Eq)]
-pub enum Side {
-    Left,
-    Right,
-}
-
-pub struct Paddle {
-    pub velocity: f32,
-    pub side: Side,
-    pub width: f32,
-    pub height: f32,
-}
-
-impl Paddle {
-    pub fn new(side: Side) -> Paddle {
-        Paddle {
-            velocity: PADDLE_VELOCITY,
-            side,
-            width: PADDLE_WIDTH,
-            height: PADDLE_HEIGHT,
-        }
-    }
-}
-
-impl Component for Paddle {
-    type Storage = DenseVecStorage<Self>;
 }
 
 #[derive(Default)]

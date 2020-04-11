@@ -3,6 +3,7 @@ use amethyst::{
     audio::{output::Output, AudioSink, OggFormat, Source, SourceHandle},
     ecs::{World, WorldExt},
 };
+
 use std::{iter::Cycle, vec::IntoIter};
 
 pub struct Sounds {
@@ -52,9 +53,9 @@ pub fn initialise_audio(world: &mut World) {
     world.insert(music);
 }
 
-pub fn play_sound(sounds: &SourceHandle, storage: &AssetStorage<Source>, output: Option<&Output>) {
+pub fn play_sound(handle: &SourceHandle, storage: &AssetStorage<Source>, output: Option<&Output>) {
     if let Some(output) = output {
-        if let Some(sound) = storage.get(sounds) {
+        if let Some(sound) = storage.get(handle) {
             output.play_once(sound, 1.0);
         }
     }

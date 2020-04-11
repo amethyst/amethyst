@@ -1,4 +1,3 @@
-use crate::{systems::ScoreText, Ball, Paddle, Side, ARENA_HEIGHT, ARENA_WIDTH};
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     core::{timing::Time, transform::Transform},
@@ -6,6 +5,12 @@ use amethyst::{
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     ui::{Anchor, TtfFormat, UiText, UiTransform},
+};
+
+use crate::{
+    components::{Ball, Paddle, Side},
+    systems::ScoreText,
+    ARENA_HEIGHT, ARENA_WIDTH,
 };
 
 #[derive(Default)]

@@ -1,7 +1,3 @@
-use crate::{
-    audio::{play_sound, Sounds},
-    Ball, ScoreBoard, ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS,
-};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
@@ -9,6 +5,12 @@ use amethyst::{
     derive::SystemDesc,
     ecs::prelude::{Entity, Join, Read, ReadExpect, System, SystemData, Write, WriteStorage},
     ui::UiText,
+};
+
+use crate::{
+    audio::{play_sound, Sounds},
+    components::Ball,
+    ScoreBoard, ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS,
 };
 
 const BALL_BOUNDARY_RIGHT: f32 = ARENA_HEIGHT - BALL_RADIUS;
@@ -73,12 +75,6 @@ impl<'s> System<'s> for WinnerSystem {
 
                 // Play audio.
                 play_sound(&sounds.score, &storage, audio_output.as_deref());
-
-                // Print the score board.
-                println!(
-                    "Score: | {:^3} | {:^3} |",
-                    score_board.score_left, score_board.score_right
-                );
             }
         }
     }

@@ -1,13 +1,15 @@
-use crate::{
-    audio::{play_sound, Sounds},
-    Ball, Paddle, Side, ARENA_HEIGHT, BALL_RADIUS, PADDLE_HEIGHT, PADDLE_WIDTH,
-};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
     core::transform::Transform,
     derive::SystemDesc,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, WriteStorage},
+};
+
+use crate::{
+    audio::{play_sound, Sounds},
+    components::{Ball, Paddle, Side},
+    ARENA_HEIGHT, BALL_RADIUS, PADDLE_HEIGHT, PADDLE_WIDTH,
 };
 
 const BALL_BOUNDARY_TOP: f32 = ARENA_HEIGHT - BALL_RADIUS;
