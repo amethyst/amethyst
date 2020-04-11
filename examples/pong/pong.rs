@@ -16,8 +16,8 @@ pub struct Pong {
 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let StateData { world, .. } = data;
         use crate::audio::initialise_audio;
+        let world = data.world;
 
         // Wait one second before spawning the ball.
         self.ball_spawn_timer.replace(1.0);
@@ -34,11 +34,12 @@ impl SimpleState for Pong {
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
+            // If the timer isn't expired yet, substract the time that passed since last update.
             {
-                // If the timer isn't expired yet, substract the time that passed since last update.
                 let time = data.world.fetch::<Time>();
                 timer -= time.delta_seconds();
             }
+
             if timer <= 0.0 {
                 // When timer expire, spawn the ball
                 initialise_ball(data.world, self.sprite_sheet_handle.clone().unwrap());
@@ -96,7 +97,7 @@ fn initialise_camera(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
-    use crate::{PADDLE_HEIGHT, PADDLE_VELOCITY, PADDLE_WIDTH};
+    use crate::PADDLE_WIDTH;
 
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
@@ -112,37 +113,25 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
     };
 
-    // Create a left plank entity.
+    // Create a left paddle entity.
     world
         .create_entity()
         .with(sprite_render.clone())
-        .with(Paddle {
-            velocity: PADDLE_VELOCITY,
-            side: Side::Left,
-            width: PADDLE_WIDTH,
-            height: PADDLE_HEIGHT,
-        })
+        .with(Paddle::new(Side::Left))
         .with(left_transform)
         .build();
 
-    // Create right plank entity.
+    // Create right paddle entity.
     world
         .create_entity()
         .with(sprite_render)
-        .with(Paddle {
-            velocity: PADDLE_VELOCITY,
-            side: Side::Right,
-            width: PADDLE_WIDTH,
-            height: PADDLE_HEIGHT,
-        })
+        .with(Paddle::new(Side::Right))
         .with(right_transform)
         .build();
 }
 
 /// Initialises one ball in the middle-ish of the arena.
 fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
-    use crate::{BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
-
     // Create the translation.
     let mut local_transform = Transform::default();
     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
@@ -156,10 +145,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
     world
         .create_entity()
         .with(sprite_render)
-        .with(Ball {
-            radius: BALL_RADIUS,
-            velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
-        })
+        .with(Ball::new())
         .with(local_transform)
         .build();
 }
@@ -213,5 +199,6 @@ fn initialise_score(world: &mut World) {
             50.,
         ))
         .build();
+
     world.insert(ScoreText { p1_score, p2_score });
 }

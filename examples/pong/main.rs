@@ -101,6 +101,13 @@ pub struct Ball {
 }
 
 impl Ball {
+    pub fn new() -> Ball {
+        Ball {
+            velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
+            radius: BALL_RADIUS,
+        }
+    }
+
     pub fn reverse_x(&mut self) {
         self.velocity[0] = -self.velocity[0];
     }
@@ -146,10 +153,10 @@ pub struct Paddle {
 impl Paddle {
     pub fn new(side: Side) -> Paddle {
         Paddle {
-            velocity: 1.0,
+            velocity: PADDLE_VELOCITY,
             side,
-            width: 1.0,
-            height: 1.0,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
         }
     }
 }
