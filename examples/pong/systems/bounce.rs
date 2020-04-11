@@ -1,6 +1,6 @@
 use crate::{
     audio::{play_sound, Sounds},
-    Ball, Paddle, Side, ARENA_HEIGHT, BALL_RADIUS,
+    Ball, Paddle, Side, ARENA_HEIGHT, BALL_RADIUS, PADDLE_HEIGHT, PADDLE_WIDTH,
 };
 use amethyst::{
     assets::AssetStorage,
