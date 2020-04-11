@@ -17,11 +17,11 @@ impl<'s> System<'s> for MoveBallsSystem {
         Read<'s, Time>,
     );
 
-    fn run(&mut self, (balls, mut locals, time): Self::SystemData) {
+    fn run(&mut self, (balls, mut transforms, time): Self::SystemData) {
         // Move every ball according to its speed, and the time passed.
-        for (ball, local) in (&balls, &mut locals).join() {
-            local.prepend_translation_x(ball.velocity[0] * time.delta_seconds());
-            local.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
+        for (ball, transform) in (&balls, &mut transforms).join() {
+            transform.prepend_translation_x(ball.velocity[0] * time.delta_seconds());
+            transform.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
         }
     }
 }
