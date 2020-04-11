@@ -91,8 +91,23 @@ fn main() -> amethyst::Result<()> {
 }
 
 pub struct Ball {
+    /// Rate of change of ball's position.
+    /// ```
+    /// let x = ball.velocity[0];
+    /// let y = ball.velocity[1];
+    /// ```
     pub velocity: [f32; 2],
     pub radius: f32,
+}
+
+impl Ball {
+    pub fn reverse_x(&mut self) {
+        self.velocity[0] = -self.velocity[0];
+    }
+
+    pub fn reverse_y(&mut self) {
+        self.velocity[1] = -self.velocity[1];
+    }
 }
 
 impl Component for Ball {

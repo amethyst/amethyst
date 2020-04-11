@@ -43,7 +43,7 @@ impl<'s> System<'s> for BounceSystem {
             if (ball_y <= ball.radius && ball.velocity[1] < 0.0)
                 || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
             {
-                ball.velocity[1] = -ball.velocity[1];
+                ball.reverse_y();
                 play_sound(&sounds.bounce, &storage, audio_output.as_deref());
             }
 
@@ -67,7 +67,7 @@ impl<'s> System<'s> for BounceSystem {
                 ) && ((paddle.side == Side::Left && ball.velocity[0] < 0.0)
                     || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
                 {
-                    ball.velocity[0] = -ball.velocity[0];
+                    ball.reverse_x();
                     play_sound(&sounds.bounce, &storage, audio_output.as_deref());
                 }
             }
