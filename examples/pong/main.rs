@@ -114,7 +114,7 @@ impl Ball {
     }
 
     pub fn heads_down(&self) -> bool {
-        self.velocity[0] < 0.0
+        self.velocity[1] < 0.0
     }
 
     pub fn heads_right(&self) -> bool {

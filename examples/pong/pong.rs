@@ -34,8 +34,8 @@ impl SimpleState for Pong {
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
-            // If the timer isn't expired yet, substract the time that passed since last update.
             {
+                // If the timer isn't expired yet, substract the time that passed since last update.
                 let time = data.world.fetch::<Time>();
                 timer -= time.delta_seconds();
             }
@@ -56,9 +56,9 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // The texture is the pixel data
     // `sprite_sheet` is the layout of the sprites on the image
     // `texture_handle` is a cloneable reference to the texture
+    let loader = world.read_resource::<Loader>();
 
     let texture_handle = {
-        let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
             "texture/pong_spritesheet.png",
@@ -68,14 +68,17 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
         )
     };
 
-    let loader = world.read_resource::<Loader>();
-    let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
-    loader.load(
-        "texture/pong_spritesheet.ron", // Here we load the associated ron file
-        SpriteSheetFormat(texture_handle), // We pass it the texture we want it to use
-        (),
-        &sprite_sheet_store,
-    )
+    let sprite_sheet_handle = {
+        let sprite_sheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
+        loader.load(
+            "texture/pong_spritesheet.ron", // Here we load the associated ron file
+            SpriteSheetFormat(texture_handle), // We pass it the texture we want it to use
+            (),
+            &sprite_sheet_storage,
+        )
+    };
+
+    sprite_sheet_handle
 }
 
 /// Initialise the camera.

@@ -10,8 +10,8 @@ use amethyst::{
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, WriteStorage},
 };
 
-const BOUNDARY_TOP: f32 = ARENA_HEIGHT - BALL_RADIUS;
-const BOUNDARY_BOTTOM: f32 = BALL_RADIUS;
+const BALL_BOUNDARY_TOP: f32 = ARENA_HEIGHT - BALL_RADIUS;
+const BALL_BOUNDARY_BOTTOM: f32 = BALL_RADIUS;
 
 /// This system is responsible for detecting collisions between balls and
 /// paddles, as well as balls and the top and bottom edges of the arena.
@@ -41,8 +41,8 @@ impl<'s> System<'s> for BounceSystem {
             let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if (ball_y <= BOUNDARY_BOTTOM && ball.heads_down())
-                || (ball_y >= BOUNDARY_TOP && ball.heads_up())
+            if (ball_y <= BALL_BOUNDARY_BOTTOM && ball.heads_down())
+                || (ball_y >= BALL_BOUNDARY_TOP && ball.heads_up())
             {
                 ball.reverse_y();
                 play_sound(&sounds.bounce, &storage, audio_output.as_deref());

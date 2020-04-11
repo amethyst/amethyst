@@ -22,7 +22,7 @@ impl<'s> System<'s> for PaddleSystem {
     fn run(&mut self, (paddles, mut transforms, time, input): Self::SystemData) {
         use crate::Side;
 
-        // Iterate over all planks and move them according to the input the user
+        // Iterate over all paddles and move them according to the input the user
         // provided.
         for (paddle, transform) in (&paddles, &mut transforms).join() {
             let opt_movement = match paddle.side {
@@ -32,14 +32,17 @@ impl<'s> System<'s> for PaddleSystem {
 
             if let Some(movement) = opt_movement {
                 use crate::ARENA_HEIGHT;
-                transform.prepend_translation_y(
-                    paddle.velocity * time.delta_seconds() * movement as f32,
-                );
+                if movement != 0.0 {
+                    let paddle_y = transform.translation().y;
+                    let scaled_amount = paddle.velocity * time.delta_seconds() * movement as f32;
 
-                // We make sure the paddle remains in the arena.
-                let paddle_y = transform.translation().y;
-                transform
-                    .set_translation_y(paddle_y.max(paddle.height / 2.0).min(ARENA_HEIGHT / 2.0));
+                    transform.set_translation_y(
+                        (paddle_y + scaled_amount)
+                            // We make sure the paddle remains in the arena.
+                            .max(paddle.height / 2.0)
+                            .min(ARENA_HEIGHT - paddle.height / 2.0),
+                    );
+                }
             }
         }
     }
