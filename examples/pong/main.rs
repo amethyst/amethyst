@@ -20,11 +20,12 @@ use amethyst::{
     utils::application_root_dir,
 };
 
-use crate::{audio::Music, bundle::PongBundle};
+use crate::{audio::Music, bundle::PongBundle, pong::Pong};
 use std::time::Duration;
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
+
 const PADDLE_HEIGHT: f32 = 16.0;
 const PADDLE_WIDTH: f32 = 4.0;
 const PADDLE_VELOCITY: f32 = 75.0;
@@ -40,50 +41,43 @@ const AUDIO_MUSIC: &[&str] = &[
 const AUDIO_BOUNCE: &str = "audio/bounce.ogg";
 const AUDIO_SCORE: &str = "audio/score.ogg";
 
+const BG_COLOR: [f32; 4] = [0.34, 0.36, 0.52, 1.0];
+
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    use crate::pong::Pong;
-
     let app_root = application_root_dir()?;
 
+    let assets_dir = app_root.join("examples/assets/");
     let display_config_path = app_root.join("examples/pong/config/display.ron");
 
-    let key_bindings_path = {
-        if cfg!(feature = "sdl_controller") {
-            app_root.join("examples/pong/config/input_controller.ron")
-        } else {
-            app_root.join("examples/pong/config/input.ron")
-        }
+    let key_bindings_path = match cfg!(feature = "sdl_controller") {
+        true => app_root.join("examples/pong/config/input_controller.ron"),
+        false => app_root.join("examples/pong/config/input.ron"),
     };
 
-    let assets_dir = app_root.join("examples/assets/");
+    let input_bundle =
+        InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?;
+    let render_bundle = RenderingBundle::<DefaultBackend>::new()
+        // The RenderToWindow plugin provides all the scaffolding for opening a window and
+        // drawing on it
+        .with_plugin(RenderToWindow::from_config_path(display_config_path)?.with_clear(BG_COLOR))
+        .with_plugin(RenderFlat2D::default())
+        .with_plugin(RenderUi::default());
 
     let game_data = GameDataBuilder::default()
-        // Add the transform bundle which handles tracking entity positions
+        // Add the transform bundle which handles entity positions
         .with_bundle(TransformBundle::new())?
-        .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
-        )?
+        .with_bundle(render_bundle)?
+        .with_bundle(input_bundle)?
         .with_bundle(PongBundle)?
         .with_bundle(AudioBundle::default())?
+        .with_bundle(UiBundle::<StringBindings>::new())?
         .with_system_desc(
             DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],
-        )
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                // The RenderToWindow plugin provides all the scaffolding for opening a window and
-                // drawing on it
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
-                )
-                .with_plugin(RenderFlat2D::default())
-                .with_plugin(RenderUi::default()),
-        )?;
+        );
 
     let mut game = Application::build(assets_dir, Pong::default())?
         .with_frame_limit(
