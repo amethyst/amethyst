@@ -82,7 +82,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 fn initialise_camera(world: &mut World) {
     // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
     let mut transform = Transform::default();
-    transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
+    transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 1.0);
 
     world
         .create_entity()
@@ -100,8 +100,8 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
-    left_transform.set_translation_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
-    right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+    left_transform.set_translation_xyz(PADDLE_WIDTH / 2.0, y, 0.0);
+    right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH / 2.0, y, 0.0);
 
     // Assign the sprites for the paddles
     let sprite_render = SpriteRender {
