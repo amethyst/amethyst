@@ -1,5 +1,5 @@
 use crate::{
-    audio::{play_bounce, Sounds},
+    audio::{play_sound, Sounds},
     Ball, Paddle, Side,
 };
 use amethyst::{
@@ -44,7 +44,7 @@ impl<'s> System<'s> for BounceSystem {
                 || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
             {
                 ball.velocity[1] = -ball.velocity[1];
-                play_bounce(&*sounds, &storage, audio_output.as_deref());
+                play_sound(&sounds.bounce, &storage, audio_output.as_deref());
             }
 
             // Bounce at the paddles.
@@ -68,7 +68,7 @@ impl<'s> System<'s> for BounceSystem {
                     || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
                 {
                     ball.velocity[0] = -ball.velocity[0];
-                    play_bounce(&*sounds, &storage, audio_output.as_deref());
+                    play_sound(&sounds.bounce, &storage, audio_output.as_deref());
                 }
             }
         }

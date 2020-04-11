@@ -6,8 +6,8 @@ use amethyst::{
 use std::{iter::Cycle, vec::IntoIter};
 
 pub struct Sounds {
-    pub score_sfx: SourceHandle,
-    pub bounce_sfx: SourceHandle,
+    pub score: SourceHandle,
+    pub bounce: SourceHandle,
 }
 
 pub struct Music {
@@ -39,8 +39,8 @@ pub fn initialise_audio(world: &mut World) {
         let music = Music { music };
 
         let sound = Sounds {
-            bounce_sfx: load_audio_track(&loader, &world, AUDIO_BOUNCE),
-            score_sfx: load_audio_track(&loader, &world, AUDIO_SCORE),
+            bounce: load_audio_track(&loader, &world, AUDIO_BOUNCE),
+            score: load_audio_track(&loader, &world, AUDIO_SCORE),
         };
 
         (sound, music)
@@ -52,10 +52,9 @@ pub fn initialise_audio(world: &mut World) {
     world.insert(music);
 }
 
-/// Plays the bounce sound when a ball hits a side or a paddle.
-pub fn play_bounce(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
-    if let Some(ref output) = output.as_ref() {
-        if let Some(sound) = storage.get(&sounds.bounce_sfx) {
+pub fn play_sound(sounds: &SourceHandle, storage: &AssetStorage<Source>, output: Option<&Output>) {
+    if let Some(output) = output {
+        if let Some(sound) = storage.get(sounds) {
             output.play_once(sound, 1.0);
         }
     }

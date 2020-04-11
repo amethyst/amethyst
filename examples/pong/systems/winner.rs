@@ -1,4 +1,7 @@
-use crate::{audio::Sounds, Ball, ScoreBoard};
+use crate::{
+    audio::{play_sound, Sounds},
+    Ball, ScoreBoard,
+};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
@@ -76,11 +79,7 @@ impl<'s> System<'s> for WinnerSystem {
                 );
 
                 // Play audio.
-                if let Some(ref output) = audio_output {
-                    if let Some(sound) = storage.get(&sounds.score_sfx) {
-                        output.play_once(sound, 1.0);
-                    }
-                }
+                play_sound(&sounds.score, &storage, audio_output.as_deref());
             }
         }
     }
