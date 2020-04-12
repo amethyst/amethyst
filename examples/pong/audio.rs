@@ -6,6 +6,8 @@ use amethyst::{
 
 use std::{iter::Cycle, vec::IntoIter};
 
+use crate::{AUDIO_BOUNCE, AUDIO_MUSIC, AUDIO_SCORE};
+
 pub struct Sounds {
     pub score: SourceHandle,
     pub bounce: SourceHandle,
@@ -23,8 +25,6 @@ fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle 
 /// Initialise audio in the world. This includes the background track and the
 /// sound effects.
 pub fn initialise_audio(world: &mut World) {
-    use crate::{AUDIO_BOUNCE, AUDIO_MUSIC, AUDIO_SCORE};
-
     let (sound_effects, music) = {
         let loader = world.read_resource::<Loader>();
 

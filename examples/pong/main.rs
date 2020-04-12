@@ -50,15 +50,16 @@ fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
 
     let assets_dir = app_root.join("examples/assets/");
-    let display_config_path = app_root.join("examples/pong/config/display.ron");
+    let config_dir = app_root.join("examples/pong/config");
 
-    let key_bindings_path = match cfg!(feature = "sdl_controller") {
-        true => app_root.join("examples/pong/config/input_controller.ron"),
-        false => app_root.join("examples/pong/config/input.ron"),
+    let display_config_path = config_dir.join("display.ron");
+    let key_bindings_config_path = match cfg!(feature = "sdl_controller") {
+        true => config_dir.join("input_controller.ron"),
+        false => config_dir.join("input.ron"),
     };
 
     let input_bundle =
-        InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?;
+        InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_config_path)?;
     let render_bundle = RenderingBundle::<DefaultBackend>::new()
         // The RenderToWindow plugin provides all the scaffolding for opening a window and
         // drawing on it
@@ -89,19 +90,4 @@ fn main() -> amethyst::Result<()> {
 
     game.run();
     Ok(())
-}
-
-#[derive(Default)]
-pub struct ScoreBoard {
-    score_left: i32,
-    score_right: i32,
-}
-
-impl ScoreBoard {
-    pub fn new() -> ScoreBoard {
-        ScoreBoard {
-            score_left: 0,
-            score_right: 0,
-        }
-    }
 }

@@ -1,7 +1,7 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     core::{timing::Time, transform::Transform},
-    ecs::prelude::World,
+    ecs::prelude::{Entity, World},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     ui::{Anchor, TtfFormat, UiText, UiTransform},
@@ -9,7 +9,6 @@ use amethyst::{
 
 use crate::{
     components::{Ball, Paddle, Side},
-    systems::ScoreText,
     ARENA_HEIGHT, ARENA_WIDTH,
 };
 
@@ -162,26 +161,27 @@ fn initialise_score(world: &mut World) {
         (),
         &world.read_resource(),
     );
+
     let p1_transform = UiTransform::new(
-        "P1".to_string(),
+        String::from("P1"),
         Anchor::TopMiddle,
         Anchor::Middle,
-        -50.,
-        -50.,
-        1.,
-        200.,
-        50.,
+        -50.0,
+        -50.0,
+        1.0,
+        200.0,
+        50.0,
     );
 
     let p2_transform = UiTransform::new(
-        "P2".to_string(),
+        String::from("P2"),
         Anchor::TopMiddle,
         Anchor::Middle,
-        50.,
-        -50.,
-        1.,
-        200.,
-        50.,
+        50.0,
+        -50.0,
+        1.0,
+        200.0,
+        50.0,
     );
 
     let p1_score = world
@@ -189,21 +189,33 @@ fn initialise_score(world: &mut World) {
         .with(p1_transform)
         .with(UiText::new(
             font.clone(),
-            "0".to_string(),
+            String::from("0"),
             [1.0, 1.0, 1.0, 1.0],
-            50.,
+            50.0,
         ))
         .build();
+
     let p2_score = world
         .create_entity()
         .with(p2_transform)
         .with(UiText::new(
             font,
-            "0".to_string(),
+            String::from("0"),
             [1.0, 1.0, 1.0, 1.0],
-            50.,
+            50.0,
         ))
         .build();
 
     world.insert(ScoreText { p1_score, p2_score });
+}
+/// ScoreBoard contains the actual score data
+#[derive(Default)]
+pub struct ScoreBoard {
+    pub score_left: i32,
+    pub score_right: i32,
+}
+/// Stores the entities that are displaying the player score with UiText.
+pub struct ScoreText {
+    pub p1_score: Entity,
+    pub p2_score: Entity,
 }

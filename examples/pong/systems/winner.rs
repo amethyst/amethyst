@@ -3,14 +3,15 @@ use amethyst::{
     audio::{output::Output, Source},
     core::Transform,
     derive::SystemDesc,
-    ecs::prelude::{Entity, Join, Read, ReadExpect, System, SystemData, Write, WriteStorage},
+    ecs::prelude::{Join, Read, ReadExpect, System, SystemData, Write, WriteStorage},
     ui::UiText,
 };
 
 use crate::{
     audio::{play_sound, Sounds},
     components::Ball,
-    ScoreBoard, ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS,
+    pong::{ScoreBoard, ScoreText},
+    ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS,
 };
 
 const BALL_BOUNDARY_RIGHT: f32 = ARENA_HEIGHT - BALL_RADIUS;
@@ -78,10 +79,4 @@ impl<'s> System<'s> for WinnerSystem {
             }
         }
     }
-}
-
-/// Stores the entities that are displaying the player score with UiText.
-pub struct ScoreText {
-    pub p1_score: Entity,
-    pub p2_score: Entity,
 }
