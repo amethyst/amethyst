@@ -10,25 +10,27 @@ Next, we'll create a Resource to store our sound effects in. In `main.rs`, add:
 
 ```rust,edition2018,no_run,noplaypen
 mod audio;
+
+/* ... */
+
+const AUDIO_BOUNCE: &str = "audio/bounce.ogg";
+const AUDIO_SCORE: &str = "audio/score.ogg";
 ```
 
 Create a file called `audio.rs`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
 use amethyst::{
     assets::Loader,
     audio::{OggFormat, SourceHandle},
     ecs::{World, WorldExt},
 };
 
-const BOUNCE_SOUND: &str = "audio/bounce.ogg";
-const SCORE_SOUND: &str = "audio/score.ogg";
+use crate::{AUDIO_BOUNCE, AUDIO_SCORE};
 
 pub struct Sounds {
-    pub score_sfx: SourceHandle,
-    pub bounce_sfx: SourceHandle,
+    pub score: SourceHandle,
+    pub bounce: SourceHandle,
 }
 
 /// Loads an ogg audio track.
@@ -44,8 +46,8 @@ pub fn initialise_audio(world: &mut World) {
         let loader = world.read_resource::<Loader>();
 
         let sound = Sounds {
-            bounce_sfx: load_audio_track(&loader, &world, BOUNCE_SOUND),
-            score_sfx: load_audio_track(&loader, &world, SCORE_SOUND),
+            bounce: load_audio_track(&loader, &world, BOUNCE_SOUND),
+            score: load_audio_track(&loader, &world, SCORE_SOUND),
         };
 
         sound
@@ -59,12 +61,17 @@ pub fn initialise_audio(world: &mut World) {
 
 Then, we'll need to add the Sounds Resource to our World. Update `pong.rs`:
 
-```rust,ignore
-use crate::audio::initialise_audio;
+```rust,edition2018,no_run,noplaypen
+use crate::{
+    /* ... */
+    audio::initialise_audio
+};
+
+/* ... */
 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        // --snip--
+        /* ... */
 
         initialise_audio(world);
     }
@@ -74,63 +81,49 @@ impl SimpleState for Pong {
 Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
-# use amethyst::GameDataBuilder;
-use amethyst::audio::AudioBundle;
+use amethyst::{
+    /* ... */
+    audio::AudioBundle
+};
 
 fn main() -> amethyst::Result<()> {
-    // --snip--
+    /* ... */
 
     let game_data = GameDataBuilder::default()
-        // ... other bundles
+        /* ... other bundles */
         .with_bundle(AudioBundle::default())?
-        // ... systems
+        /* ... systems */
     ;
 
-    // --snip--
+    /* ... */
 # Ok(())
 }
 ```
 
 ## Playing the bounce sound
 
-Let's start by creating a function to play the bounce sound. In `audio.rs`, add:
+Let's start by creating a function to play sounds. In `audio.rs`, add:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
-use amethyst::{
-    assets::AssetStorage,
-    audio::{output::Output, Source, SourceHandle},
-};
-#
-# pub struct Sounds {
-#     pub score_sfx: SourceHandle,
-#     pub bounce_sfx: SourceHandle,
-# }
-#
-pub fn play_bounce_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
-    if let Some(ref output) = output.as_ref() {
-        if let Some(sound) = storage.get(&sounds.bounce_sfx) {
-            output.play_once(sound, 1.0);
-        }
-    }
-}
-```
-
-Then, we'll update the Bounce System to play the sound whenever the ball bounces. Update `systems/bounce.rs`:
-
-```rust,ignore
-use std::ops::Deref;
-
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
-    ecs::{Read, ReadExpect},
+    core::transform::Transform,
+    derive::SystemDesc,
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, WriteStorage},
 };
 
-use crate::audio::{play_bounce_sound, Sounds};
+use crate::{
+    audio::{play_sound, Sounds},
+    components::{Ball, Paddle, Side},
+    ARENA_HEIGHT, BALL_RADIUS, PADDLE_HEIGHT, PADDLE_WIDTH,
+};
+
+const BALL_BOUNDARY_TOP: f32 = ARENA_HEIGHT - BALL_RADIUS;
+const BALL_BOUNDARY_BOTTOM: f32 = BALL_RADIUS;
+
+#[derive(SystemDesc)]
+pub struct BounceSystem;
 
 impl<'s> System<'s> for BounceSystem {
     type SystemData = (
@@ -146,75 +139,74 @@ impl<'s> System<'s> for BounceSystem {
         &mut self,
         (mut balls, paddles, transforms, storage, sounds, audio_output): Self::SystemData,
     ) {
+        // Check whether a ball collided, and bounce off accordingly.
+        //
+        // We also check for the velocity of the ball every time, to prevent multiple collisions
+        // from occurring.
         for (ball, transform) in (&mut balls, &transforms).join() {
-            // --snip--
+            let ball_x = transform.translation().x;
+            let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if (ball_y <= ball.radius && ball.velocity[1] < 0.0)
-                || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
+            if (ball_y <= BALL_BOUNDARY_BOTTOM && ball.heads_down())
+                || (ball_y >= BALL_BOUNDARY_TOP && ball.heads_up())
             {
-                ball.velocity[1] = -ball.velocity[1];
-                play_bounce_sound(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
+                ball.reverse_y()
+                play_sound(&sounds.bounce, &storage, audio_output.as_deref());
             }
 
             // Bounce at the paddles.
             for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                // --snip--
+                let paddle_x = paddle_transform.translation().x - (paddle.width / 2.0);
+                let paddle_y = paddle_transform.translation().y - (paddle.height / 2.0);
 
-                if point_in_rect(
-                    // --snip--
-                ) {
-                    if (paddle.side == Side::Left && ball.velocity[0] < 0.0)
-                        || (paddle.side == Side::Right && ball.velocity[0] > 0.0)
-                    {
-                        ball.velocity[0] = -ball.velocity[0];
-                        play_bounce_sound(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
-                    }
+                if point_in_rect(ball_x, ball_y, paddle_x, paddle_y)
+                    && ((paddle.side == Side::Left && ball.heads_left())
+                        || (paddle.side == Side::Right && ball.heads_right()))
+                {
+                    ball.reverse_x();
+                    play_sound(&sounds.bounce, &storage, audio_output.as_deref());
                 }
             }
         }
     }
 }
-```
 
+fn point_in_rect(ball_x: f32, ball_y: f32, paddle_x: f32, paddle_y: f32) -> bool {
+    /* ... */
+}
+```
 Now try running your game (`cargo run`). Don't forget to turn up your volume!
 
 ## Playing the score sound
 
-Just as we did for the bounce sound, let's create a function to play the score sound. Update `audio.rs`:
+Let's update our Winner System to play the score sound whenever a player scores. Update `systems/winner.rs`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
-# use amethyst::{
-#     audio::{output::Output, Source, SourceHandle},
-#     assets::AssetStorage,
-# };
-#
-# pub struct Sounds {
-#     pub score_sfx: SourceHandle,
-#     pub bounce_sfx: SourceHandle,
-# }
-#
-pub fn play_score_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
-    if let Some(ref output) = output.as_ref() {
-        if let Some(sound) = storage.get(&sounds.score_sfx) {
-            output.play_once(sound, 1.0);
-        }
-    }
-}
-```
-
-Then, we'll update our Winner System to play the score sound whenever a player scores. Update `systems/winner.rs`:
-
-```rust,ignore
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
-    ecs::Read,
+    core::Transform,
+    derive::SystemDesc,
+    ecs::prelude::{Join, Read, ReadExpect, System, SystemData, Write, WriteStorage},
+    ui::UiText,
 };
-use crate::audio::{play_score_sound, Sounds};
-use std::ops::Deref;
+
+use crate::{
+    audio::{play_sound, Sounds},
+    components::Ball,
+    pong::{ScoreBoard, ScoreText},
+    ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS,
+};
+
+const BALL_BOUNDARY_RIGHT: f32 = ARENA_HEIGHT - BALL_RADIUS;
+const BALL_BOUNDARY_LEFT: f32 = BALL_RADIUS;
+
+/// This system is responsible for checking if a ball has moved into a left or
+/// a right edge. Points are distributed to the player on the other side, and
+/// the ball is reset.
+#[derive(SystemDesc)]
+pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
@@ -222,43 +214,40 @@ impl<'s> System<'s> for WinnerSystem {
         WriteStorage<'s, Transform>,
         WriteStorage<'s, UiText>,
         Write<'s, ScoreBoard>,
-        ReadExpect<'s, ScoreText>,
         Read<'s, AssetStorage<Source>>,
         ReadExpect<'s, Sounds>,
+        ReadExpect<'s, ScoreText>,
         Option<Read<'s, Output>>,
     );
 
+    fn run(
+        &mut self,
+        (
+            mut balls,
+            mut transforms,
+            mut text,
+            mut score_board,
+            storage,
+            sounds,
+            score_text,
+            audio_output,
+        ): Self::SystemData,
+    ) {
+        for (ball, transform) in (&mut balls, &mut transforms).join() {
+            /* ... */
 
-    fn run(&mut self, (
-        mut balls,
-        mut locals,
-        mut ui_text,
-        mut scores,
-        score_text,
-        storage,
-        sounds,
-        audio_output,
-    ): Self::SystemData)  {
-        for (ball, transform) in (&mut balls, &mut locals).join() {
-            // --snip--
+            if scored {
+                /* ... */
 
-            if did_hit {
-                ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
-                transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
-                play_score_sound(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
-
-                // Print the scoreboard.
-                println!(
-                    "Score: | {:^3} | {:^3} |",
-                    scores.score_left, scores.score_right
-                );
+                // Play audio.
+                play_sound(&sounds.score, &storage, audio_output.as_deref());
             }
         }
     }
 }
-```
 
-Now try running your game. Yay, we successfully added sound effects to our game! 🎉
+```
+Now try running your game. We successfully added sound effects to our game! 🎉
 
 Next, let's take our game to the next level by adding some background music.
 
@@ -266,26 +255,26 @@ Next, let's take our game to the next level by adding some background music.
 
 Let's start by downloading [Albatross][albatross] and [Where's My Jetpack?][wheres-my-jetpack] Put these files in the `assets/audio` directory.
 
-In `audio.rs`, add the paths to the music tracks below the paths to the sound effects:
+In `main.rs`, add the paths to the music tracks:
 
 ```rust,edition2018,no_run,noplaypen
-const BOUNCE_SOUND: &str = "audio/bounce.ogg";
-const SCORE_SOUND: &str = "audio/score.ogg";
-
 const MUSIC_TRACKS: &[&str] = &[
     "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
     "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
 ];
 ```
 
+And use them in `audio.rs`:
+```rust,edition2018,no_run,noplaypen
+use crate::{MUSIC_TRACKS, /* ... */}
+```
+
 Then, create a Music Resource:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
 use std::{iter::Cycle, vec::IntoIter};
-#
-# use amethyst::audio::SourceHandle;
+
+/* ... */
 
 pub struct Music {
     pub music: Cycle<IntoIter<SourceHandle>>,
@@ -297,36 +286,15 @@ Since we only have two music tracks, we use a `Cycle` to infinitely alternate be
 Next, we need to add the Music Resource to our World. Update `initialise_audio`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
-# use std::{iter::Cycle, vec::IntoIter};
-#
 use amethyst::{
-    audio::{AudioSink, SourceHandle},
-    assets::Loader,
+    assets::{AssetStorage, Loader},
+    audio::{output::Output, AudioSink, OggFormat, Source, SourceHandle},
     ecs::{World, WorldExt},
 };
 #
-# const BOUNCE_SOUND: &str = "audio/bounce.ogg";
-# const SCORE_SOUND: &str = "audio/score.ogg";
-#
-# const MUSIC_TRACKS: &[&str] = &[
-#     "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
-#     "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
-# ];
-#
-# fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
-#     unimplemented!()
-# }
-#
-# pub struct Music {
-#     pub music: Cycle<IntoIter<SourceHandle>>,
-# }
-#
-# pub struct Sounds {
-#     pub score_sfx: SourceHandle,
-#     pub bounce_sfx: SourceHandle,
-# }
+# use std::{iter::Cycle, vec::IntoIter};
+
+/* ... */
 
 pub fn initialise_audio(world: &mut World) {
     let (sound_effects, music) = {
@@ -344,8 +312,8 @@ pub fn initialise_audio(world: &mut World) {
         let music = Music { music };
 
         let sound = Sounds {
-            bounce_sfx: load_audio_track(&loader, &world, BOUNCE_SOUND),
-            score_sfx: load_audio_track(&loader, &world, SCORE_SOUND),
+            bounce: load_audio_track(&loader, &world, BOUNCE_SOUND),
+            score: load_audio_track(&loader, &world, SCORE_SOUND),
         };
 
         (sound, music)
@@ -360,24 +328,25 @@ pub fn initialise_audio(world: &mut World) {
 
 Finally, let's add a DJ System to our game to play the music. In `main.rs`:
 
-```rust,ignore
+```rust,edition2018,no_run,noplaypen
 use amethyst::audio::DjSystemDesc;
+
 use crate::audio::Music;
 
-fn main() -> amethyst::Result<()> {
-    // --snip--
+fn main() -> Result<()> {
+    /* ... */
 
     let game_data = GameDataBuilder::default()
-        // ... bundles
+        /* ... other bundles */
         .with_system_desc(
             DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )
-        // ... other systems
+        /* ... other systems */
         ;
 
-    // --snip--
+    /* ... */
 # Ok(())
 }
 ```

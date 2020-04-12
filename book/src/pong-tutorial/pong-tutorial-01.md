@@ -19,15 +19,15 @@ authors = []
 edition = "2018"
 
 [dependencies.amethyst]
-version = "0.14"
+version = "0.15"
 features = ["vulkan"]
 ```
 
-Alternatively, if you are developing on macOS, you might want to use the `metal` rendering backend instead of `vulkan`. In this case, you should change the `features` entry in the `amethyst` dependency table.
+Alternatively, if you are developing on macOS, you might want to use the metal rendering backend instead of vulkan. In this case, you should change the `features` entry in the `amethyst` dependency table.
 
 ```toml
 [dependencies.amethyst]
-version = "0.14"
+version = "0.15"
 features = ["metal"]
 ```
 
@@ -80,8 +80,9 @@ started! We'll start with our `main()` function, and we'll have it return a
 if any errors occur during setup.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+
 # use amethyst::prelude::*;
+#
 fn main() -> amethyst::Result<()> {
 
     // We'll put the rest of the code here.
@@ -102,8 +103,6 @@ Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
 so we can see errors, warnings and debug messages while the program is running.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
 # fn main() {
 amethyst::start_logger(Default::default());
 # }
@@ -150,16 +149,14 @@ In `main()` in `main.rs`, we will prepare the path to a file containing
 the display configuration:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+# use amethyst::utils::application_root_dir;
 #
-# use amethyst::{
-#     utils::application_root_dir,
-#     Error,
-# };
-#
-# fn main() -> Result<(), Error>{
+# fn main() -> Result<()> {
 let app_root = application_root_dir()?;
-let display_config_path = app_root.join("config").join("display.ron");
+
+let config_dir = app_root.join("config");
+
+let display_config_path = config_dir.join("display.ron");
 #     Ok(())
 # }
 ```
@@ -169,26 +166,34 @@ let display_config_path = app_root.join("config").join("display.ron");
 In `main()` in `main.rs` we are going to add the basic application setup:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #     prelude::*,
 #     utils::application_root_dir,
 # };
-# fn main() -> Result<(), amethyst::Error> {
-# struct Pong; impl SimpleState for Pong {}
-let game_data = GameDataBuilder::default();
-
+#
+# struct Pong; 
+#
+# impl SimpleState for Pong {}
+#
+# fn main() -> Result<()> {
+#
 # let app_root = application_root_dir()?;
+#
+# let config_dir = app_root.join("config");
 let assets_dir = app_root.join("assets");
+
+# let display_config_path = config_dir.join("display.ron");
+#
+let game_data = GameDataBuilder::default();
 let mut game = Application::new(assets_dir, Pong, game_data)?;
 game.run();
-#     Ok(())
+# Ok(())
 # }
 ```
 
 Here we're creating a new instance of `GameDataBuilder`, a central repository
 of all the game logic that runs periodically during the game runtime. Right now it's empty,
-but soon we will start adding all sorts of systems and bundles to it - which will run our game code.
+but soon we will start adding all sorts of systems and bundles to it &ndash; which will run our game code.
 
 That builder is then combined with the game state struct (`Pong`), creating the overarching
 Amethyst's root object: [Application][ap]. It binds the OS event loop, state machines,
@@ -215,7 +220,6 @@ After preparing the display config and application scaffolding, it's time to act
 Last time we left our `GameDataBuilder` instance empty, now we'll add some systems to it.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #     prelude::*,
 #     renderer::{
@@ -225,23 +229,23 @@ Last time we left our `GameDataBuilder` instance empty, now we'll add some syste
 #     },
 #     utils::application_root_dir,
 # };
-# fn main() -> Result<(), amethyst::Error>{
-let app_root = application_root_dir()?;
+#
+const BG_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
-let display_config_path = app_root.join("config").join("display.ron");
+ fn main() -> Result<()> {
+    /* ... */
 
-let game_data = GameDataBuilder::default()
-    .with_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.0, 0.0, 0.0, 1.0]),
-            )
-            // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
-            .with_plugin(RenderFlat2D::default()),
-    )?;
-# Ok(()) }
+    let render_bundle = RenderingBundle::<DefaultBackend>::new()
+            // The RenderToWindow plugin provides all the scaffolding for opening a window and
+            // drawing on it
+            .with_plugin(RenderToWindow::from_config_path(display_config_path)?.with_clear(BG_COLOR))
+            .with_plugin(RenderFlat2D::default());
+
+    let game_data = GameDataBuilder::default()
+        .with_bundle(render_bundle)?;
+
+    Ok(()) 
+ }
 ```
 
 Here we are adding a `RenderingBundle`. Bundles are essentially sets of systems

@@ -26,12 +26,9 @@ initialization code from the Pong code.
    following `use` statements. These are needed to make it through this chapter:
 
     ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    #
     use amethyst::{
         assets::{AssetStorage, Loader, Handle},
         core::transform::Transform,
-        ecs::prelude::{Component, DenseVecStorage},
         prelude::*,
         renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     };
@@ -51,15 +48,16 @@ initialization code from the Pong code.
 ## Get around the World
 
 First, in `pong.rs`, let's add a new method to our `State` implementation: `on_start`.
-This method is called when the State starts. We will leave it empty for now.
+This method is called when the State starts.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::prelude::*;
 # struct Pong;
+#
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-
+        let world = data.world;
+        
     }
 }
 ```
@@ -67,7 +65,7 @@ impl SimpleState for Pong {
 The `StateData<'_, GameData<'_, '_>>` is a structure given to all State methods.
 The important part of its content here is its `world` field.
 
-The `World` structure stores all of the game's runtime data -- entities and components.
+The `World` structure stores all of the game's runtime data &ndash; entities and components.
 
 ## Rendering the game using the Camera
 
@@ -76,32 +74,36 @@ will determine what is rendered on screen. It behaves just like a real-life
 camera: it looks at a specific part of the world and can be moved around at
 will.
 
-1. Define the size of the playable area at the top of `pong.rs`.
+1. Define the size of the playable area at the top of `main.rs`,
 
     ```rust,edition2018,no_run,noplaypen
-    pub const ARENA_HEIGHT: f32 = 100.0;
-    pub const ARENA_WIDTH: f32 = 100.0;
+    const ARENA_HEIGHT: f32 = 100.0;
+    const ARENA_WIDTH: f32 = 100.0;
     ```
+    and add following `use` statements to the `pong.rs`.
 
-    These are public as they will be used in other modules.
+    ```rust,edition2018,no_run,noplaypen
+    use crate::{ARENA_HEIGHT, ARENA_WIDTH};
+    ```
 
 2. Create the camera entity.
 
     In pong, we want the camera to cover the entire arena. Let's do it in a new function `initialise_camera`:
 
     ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
+    # use amethyst::{
+    #     core::Transform,
+    #     ecs::World,
+    #     prelude::*,
+    #     renderer::Camera,
+    # };
     #
-    # const ARENA_HEIGHT: f32 = 100.0;
-    # const ARENA_WIDTH: f32 = 100.0;
-    # use amethyst::prelude::*;
-    # use amethyst::ecs::World;
-    # use amethyst::renderer::Camera;
-    # use amethyst::core::Transform;
+    # use crate::{ARENA_HEIGHT, ARENA_WIDTH};
+    #
     fn initialise_camera(world: &mut World) {
         // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left. 
         let mut transform = Transform::default();
-        transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
+        transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 1.0);
 
         world
             .create_entity()
@@ -115,17 +117,17 @@ will.
     representing its position in the world.
 
     The `Camera::standard_2d` function creates a default 2D camera that is
-    pointed along the world's **Z** axis. The area in front of the camera has a
-    horizontal **X** axis, and a vertical **Y** axis. The **X** axis increases
-    moving to the right, and the **Y** axis increases moving up. The camera's
+    pointed along the world's *Z* axis. The area in front of the camera has a
+    horizontal *X* axis, and a vertical *Y* axis. The *X* axis increases
+    moving to the right, and the *Y* axis increases moving up. The camera's
     position is the center of the viewable area. We position the camera with
     `set_translation_xyz` to the middle of our game arena so that `(0, 0)` is
     the bottom left of the viewable area, and `(ARENA_WIDTH, ARENA_HEIGHT)` is
     the top right.
 
-    Notice that we also shifted the camera `1.0` along the **Z** axis. This is
+    Notice that we also shifted the camera `1.0` along the *Z* axis. This is
     to make sure that the camera is able to see the sprites that sit on the
-    **XY** plane where **Z** is 0.0:
+    *XY* plane where *Z* is 0.0:
 
     ![Camera Z shift](../images/pong_tutorial/camera.png)
 
@@ -138,38 +140,55 @@ will.
    Pong state's `on_start` method:
 
     ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    # use amethyst::prelude::*;
-    # use amethyst::ecs::World;
-    # fn initialise_camera(world: &mut World) { }
-    # struct MyState;
-    # impl SimpleState for MyState {
+    # use amethyst::{
+    #     ecs::World,
+    #     prelude::*,
+    # };
+    # 
+    # struct Pong;
+    #
+    # impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
         initialise_camera(world);
     }
     # }
+    #
+    # fn initialise_camera(world: &mut World) { // ... }
     ```
 
 Now that our camera is set up, it's time to add the paddles.
 
 ## Our first Component
+First, we'll create a directory called `components` under `src` to hold all our components. We'll use a module to collect and export each of our components to the rest of the application. Here's our `mod.rs` for `src/components.rs`:
 
-Now, we will create the `Paddle` component, all in `pong.rs`.
+```rust,edition2018,no_run,noplaypen
+pub use self::paddle::Paddle;
 
-1. Define constants for the paddle width and height.
+mod paddle;
+```
+
+Now, we will create the `Paddle` component, in `components/paddle.rs`.
+
+1. Define the constants for the paddle width, height and velocity at the top of `main.rs`,
+    ```rust,edition2018,no_run,noplaypen
+    const PADDLE_HEIGHT: f32 = 16.0;
+    const PADDLE_WIDTH: f32 = 4.0;
+    const PADDLE_VELOCITY: f32 = 1.2;
+    ```
+    and add following `use` statements to the `components/paddle.rs`.
 
     ```rust,edition2018,no_run,noplaypen
-    pub const PADDLE_HEIGHT: f32 = 16.0;
-    pub const PADDLE_WIDTH: f32 = 4.0;
+    use amethyst::ecs::{Component, DenseVecStorage};
+
+    use crate::{PADDLE_HEIGHT, PADDLE_WIDTH, PADDLE_VELOCITY};
     ```
 
 2. Define the `Side` enum and `Paddle` struct:
 
     ```rust,edition2018,no_run,noplaypen
-    # pub const PADDLE_HEIGHT: f32 = 16.0;
-    # pub const PADDLE_WIDTH: f32 = 4.0;
+    # use crate::{PADDLE_HEIGHT, PADDLE_WIDTH, PADDLE_VELOCITY};
     #
     #[derive(PartialEq, Eq)]
     pub enum Side {
@@ -178,34 +197,34 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
     }
 
     pub struct Paddle {
-        pub side: Side,
         pub width: f32,
         pub height: f32,
+        pub velocity: f32,
+        pub side: Side,
     }
 
     impl Paddle {
         fn new(side: Side) -> Paddle {
             Paddle {
-                side,
                 width: PADDLE_WIDTH,
                 height: PADDLE_HEIGHT,
+                velocity: PADDLE_VELOCITY,
+                side,
             }
         }
     }
     ```
 
-    *"But that just looks like a regular struct!"* you might say.
-
-    And you're right, the special sauce comes next.
-
 3. Implement the `Component` trait for `Paddle`:
 
     ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    #
     # use amethyst::ecs::{Component, DenseVecStorage};
     #
+    # use crate::{PADDLE_HEIGHT, PADDLE_WIDTH, PADDLE_VELOCITY};
+    #
     # struct Paddle;
+    #
+    # impl Paddle { /* ... */ }
     #
     impl Component for Paddle {
         type Storage = DenseVecStorage<Self>;
@@ -222,13 +241,12 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
 
 ## Initialise some entities
 
-Now that we have a `Paddle` component, let's define some paddle entities that
+Now that we have a `Paddle` component, let's define in `pong.rs` some paddle entities that
 include that component and add them to our `World`.
 
 First let's look at our imports:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 use amethyst::core::transform::Transform;
 ```
 
@@ -246,34 +264,17 @@ image we will want to render on top of them. This is a good rule to follow in
 general, as it makes operations like rotation easier.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::prelude::*;
-# use amethyst::core::Transform;
-# use amethyst::ecs::World;
-# enum Side {
-#   Left,
-#   Right,
-# }
-# struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
-# impl Paddle {
-#   fn new(side: Side) -> Paddle { Paddle }
-# }
-# const PADDLE_HEIGHT: f32 = 16.0;
-# const PADDLE_WIDTH: f32 = 4.0;
-# const ARENA_HEIGHT: f32 = 100.0;
-# const ARENA_WIDTH: f32 = 100.0;
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
+    use crate::{Paddle, Side, PADDLE_WIDTH};
+
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
-    left_transform.set_translation_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
-    right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+    left_transform.set_translation_xyz(PADDLE_WIDTH / 2.0, y, 0.0);
+    right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH / 2.0, y, 0.0);
 
     // Create a left plank entity.
     world
@@ -298,13 +299,18 @@ As a sanity check, let's make sure the code for initialising the paddles
 compiles. Update the `on_start` method to the following:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::prelude::*;
-# use amethyst::ecs::World;
-# fn initialise_paddles(world: &mut World) { }
-# fn initialise_camera(world: &mut World) { }
-# struct MyState;
-# impl SimpleState for MyState {
+# use amethyst::{
+#     core::Transform,
+#     ecs::World,
+#     prelude::*,
+#     renderer::Camera,
+# };
+#
+# use crate::{ARENA_HEIGHT, ARENA_WIDTH};
+#
+# struct Pong;
+#
+# impl SimpleState for Pong {
 fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     let world = data.world;
 
@@ -312,6 +318,10 @@ fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     initialise_camera(world);
 }
 # }
+#
+# fn initialise_paddles(world: &mut World) { /* ... */  }
+#
+# fn initialise_camera(world: &mut World) { //* ... */ }
 ```
 
 Let's run our blank screen game!
@@ -337,24 +347,21 @@ this by adding the following line before `initialise_paddles(world)` in the
 `on_start` method:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::ecs::{World, WorldExt};
-# struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
-# fn register() {
-#   let mut world = World::new();
-world.register::<Paddle>();
+# use amethyst::{
+#     ecs::{World, WorldExt}
+#     /* ... */
+# };
+#
+# struct Pong;
+#
+# impl SimpleState for Pong {
+# fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+#    let world = data.world;
+    world.register::<Paddle>();
 # }
 ```
 
-This is rather inconvenient &mdash; to need to manually register each component
-before it can be used. There *must* be a better way. **Hint:** there is.
-
-When we add systems to our application, any component that a `System` uses is
-automatically registered. However, as we haven't got any `System`s, we have to
-live with registering the `Paddle` component manually.
+When we add systems to our application, any component that a `System` uses is automatically registered. However, as we haven't got any `System`s, we have to live with registering the `Paddle` component manually.
 
 Let's run the game again.
 
@@ -367,40 +374,24 @@ registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
-use amethyst::core::transform::TransformBundle;
-#
-# use amethyst::{
-#     prelude::*,
-#     utils::application_root_dir,
-# };
+# use amethyst::{ /* ... */ };
 #
 # struct Pong;
-# impl SimpleState for Pong { }
+# impl SimpleState for Pong { /* ... */  }
 #
-fn main() -> amethyst::Result<()> {
-#   amethyst::start_logger(Default::default());
-#
-#   let app_root = application_root_dir()?;
-#   let display_config_path =
-#       app_root.join("examples/pong_tutorial_02/config/display.ron");
-#
-    // ...
+fn main() -> Result<()> {
+#   /* ... */ 
     let game_data = GameDataBuilder::default()
-        // ...
-
+        /* ... */ 
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?;
 
-#   let assets_dir = "/";
 #   let mut game = Application::new(assets_dir, Pong, game_data)?;
 #   Ok(())
 }
 ```
 
 This time, when you run the game you should see the familiar black screen.
-Hooray!
 
 ## Drawing
 
@@ -415,12 +406,9 @@ function in `pong.rs` called `load_sprite_sheet`.
 First, let's declare the function and load the sprite sheet's image data.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
 # use amethyst::{
 #     assets::{AssetStorage, Loader, Handle},
 #     core::transform::Transform,
-#     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
 #         camera::{Camera, Projection},
@@ -430,12 +418,15 @@ First, let's declare the function and load the sprite sheet's image data.
 #     },
 # };
 #
+# /* ... */ 
+#
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
     // `texture_handle` is a cloneable reference to the texture
+    let loader = world.read_resource::<Loader>();
+
     let texture_handle = {
-        let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
             "texture/pong_spritesheet.png",
@@ -445,7 +436,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
         )
     };
 
-    //...
+    /* ... */ 
 #   unimplemented!()
 }
 ```
@@ -503,12 +494,9 @@ List((
 Finally, we load the file containing the position of each sprite on the sheet.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
 # use amethyst::{
 #     assets::{AssetStorage, Handle, Loader},
 #     core::transform::Transform,
-#     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
 #         camera::{Camera, Projection},
@@ -519,9 +507,9 @@ Finally, we load the file containing the position of each sprite on the sheet.
 # };
 #
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
+#   let loader = world.read_resource::<Loader>();
 #
 #   let texture_handle = {
-#       let loader = world.read_resource::<Loader>();
 #       let texture_storage = world.read_resource::<AssetStorage<Texture>>();
 #       loader.load(
 #           "texture/pong_spritesheet.png",
@@ -530,17 +518,20 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #           &texture_storage,
 #       )
 #   };
-#
-    // ...
+    /* ... */
+    
+    let sprite_sheet_handle = {
+        let sprite_sheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
+        loader.load(
+            "texture/pong_spritesheet.ron", // Here we load the associated ron file
+            SpriteSheetFormat(texture_handle), // We pass it the texture we want it to use
+            (),
+            &sprite_sheet_storage,
+        )
+    };
 
-    let loader = world.read_resource::<Loader>();
-    let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
-    loader.load(
-        "texture/pong_spritesheet.ron", // Here we load the associated ron file
-        SpriteSheetFormat(texture_handle),
-        (),
-        &sprite_sheet_store,
-    )
+    // Return handle to the sprite sheet
+    sprite_sheet_handle
 # }
 ```
 
@@ -559,11 +550,15 @@ to the paddles. We update the `initialise_paddles` function by changing its
 signature to:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::ecs::World;
-# use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
+# use amethyst::{
+#     /* ... */
+#     assets::Handle, renderer::sprite::SpriteSheet
+# };
+#
+# /* ... */
+#
 fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>)
-# { }
+# { /* ... */ }
 ```
 
 Inside `initialise_paddles`, we construct a `SpriteRender` for a paddle. We
@@ -571,10 +566,16 @@ only need one here, since the only difference between the two paddles is that
 the right one is flipped horizontally.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::ecs::World;
-# use amethyst::{assets::Handle, renderer::{SpriteRender, SpriteSheet}};
+# use amethyst::{
+#     /* ... */
+#     assets::Handle, renderer::sprite::SpriteSheet
+# };
+#
+# /* ... */
+#
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+# /* ... */
+#
 // Assign the sprites for the paddles
 let sprite_render = SpriteRender {
     sprite_sheet: sprite_sheet_handle,
@@ -590,28 +591,33 @@ sprite in the sprite sheet, we use `0` for the `sprite_number`.
 Next we simply add the components to the paddle entities:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::ecs::World;
-# use amethyst::assets::Handle;
-# use amethyst::renderer::sprite::{SpriteSheet, SpriteRender};
-# use amethyst::prelude::*;
-# fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
-# let sprite_render = SpriteRender {
-#   sprite_sheet: sprite_sheet_handle,
-#   sprite_number: 0, // paddle is the first sprite in the sprite_sheet
+# use amethyst::{
+#     /* ... */
 # };
-// Create a left plank entity.
+#
+# /* ... */
+#
+# fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+# /* ... */
+#
+# // Assign the sprites for the paddles
+# let sprite_render = SpriteRender {
+#     sprite_sheet: sprite_sheet_handle,
+#     sprite_number: 0, // paddle is the first sprite in the sprite_sheet
+# };
+#
+// Create a left paddle entity.
 world
     .create_entity()
     .with(sprite_render.clone())
-    // ... other components
+    /* ... */
     .build();
 
-// Create right plank entity.
+// Create right paddle entity.
 world
     .create_entity()
     .with(sprite_render)
-    // ... other components
+    /* ... */
     .build();
 # }
 ```
@@ -620,20 +626,15 @@ We're nearly there, we just have to wire up the sprite to the paddles. We put it
 all together in the `on_start()` method:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::assets::Handle;
-# use amethyst::prelude::*;
-# use amethyst::renderer::{sprite::SpriteSheet, Texture};
-# use amethyst::ecs::World;
-# struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
-# fn initialise_camera(world: &mut World) { }
-# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
-# struct MyState;
-# impl SimpleState for MyState {
+# use amethyst::{
+#     /* ... */
+# };
+#
+# /* ... */
+#
+# struct Pong;
+#
+# impl SimpleState for Pong {
 fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     let world = data.world;
 
@@ -646,9 +647,11 @@ fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     initialise_camera(world);
 }
 # }
+#
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { /* ... */ }
+# fn initialise_camera(world: &mut World) { /* ... */ }
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { /* ... */ }
 ```
-
-And we're done. Let's run our game and have fun!
 
 If all is well, we should get something that looks like this:
 
@@ -661,4 +664,3 @@ moving!
 [sb-storage]: https://specs.amethyst.rs/docs/tutorials/05_storages.html#densevecstorage
 [2d]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.Camera.html#method.standard_2d
 [ss]: ../images/pong_tutorial/pong_spritesheet.png
-
