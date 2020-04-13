@@ -88,7 +88,7 @@ Then in `pong.rs` add an `initialise_ball` function the same way we wrote the
 
 ```rust,edition2018,no_run,noplaypen
 use crate::{
-    components::{Ball, /* ... */}, // Add Ball here
+    components::{/* ... */, Ball}, // Add Ball here
     /* ... */
 };
 
@@ -389,7 +389,7 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 ```rust,edition2018,no_run,noplaypen
 use amethyst::{
     /* ... */
-    core::{timing::Time, /* ... */}, // add timing:Time
+    core::{/* ... */, timing::Time}, // add timing:Time
 };
 
 # #[derive(Default)] pub struct Pong {

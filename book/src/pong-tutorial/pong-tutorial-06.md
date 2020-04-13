@@ -119,7 +119,7 @@ Let's start by creating a function to play sounds. In `audio.rs`, add:
 use amethyst::{
     /* ... */
     assets::{AssetStorage, Loader},
-    audio::{output::Output, AudioSink, Source, /* ... */},
+    audio::{/* ... */, output::Output, AudioSink, Source},
 };
 
 /* ... */
@@ -218,9 +218,7 @@ impl<'s> System<'s> for WinnerSystem {
         Option<Read<'s, Output>>,
     );
 
-    fn run(
-        &mut self,
-        ( /* ... */, sounds, storage, audio_output): Self::SystemData) {
+    fn run(&mut self, ( /* ... */, sounds, storage, audio_output): Self::SystemData) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
             /* ... */
 
@@ -320,7 +318,7 @@ use amethyst::{
     /* ... */
 };
 
-use audio::Music;
+use crate::{/* ... */, audio::Music};
 
 fn main() -> amethyst::Result<()> {
     /* ... */

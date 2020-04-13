@@ -324,10 +324,7 @@ impl<'s> System<'s> for WinnerSystem {
         ReadExpect<'s, ScoreText>,
     );
 
-    fn run(
-        &mut self,
-        (/* ... */, mut text, mut score_board, score_text): Self::SystemData,
-    ) {
+    fn run(&mut self, (/* ... */, mut text, mut score_board, score_text): Self::SystemData) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
             /* ... */
 

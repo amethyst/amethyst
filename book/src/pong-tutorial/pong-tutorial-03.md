@@ -106,7 +106,7 @@ use amethyst::{
     input::{InputHandler, StringBindings},
 };
 
-use crate::components::Paddle;
+use crate::components::{Paddle, Side};
 
 #[derive(SystemDesc)]
 pub struct PaddleSystem;
@@ -119,8 +119,6 @@ impl<'s> System<'s> for PaddleSystem {
     );
 
     fn run(&mut self, (paddles, mut transforms, input): Self::SystemData) {
-        use crate::components::Side;
-
         for (paddle, transform) in (&paddles, &mut transforms).join() {
             let opt_movement = match paddle.side {
                 Side::Left => input.axis_value("left_paddle"),
@@ -260,7 +258,6 @@ Our run function should now look something like this:
 
 ```rust,edition2018,no_run,noplaypen
 fn run(&mut self, (paddles, mut transforms, input): Self::SystemData) {
-    use crate::components::Side;
     // Iterate over all paddles and move them according to the input the user
     // provided.
     for (paddle, transform) in (&paddles, &mut transforms).join() {
@@ -299,18 +296,6 @@ we no longer need to manually register it with the `world`: the system
 will take care of that for us, as well as set up the storage.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::assets::Handle;
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
-# use amethyst::renderer::SpriteSheet;
-# struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
-# fn initialise_camera(world: &mut World) { }
-# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
 fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
@@ -325,6 +310,10 @@ fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     initialise_paddles(world, sprite_sheet_handle);
 }
 # }
+#
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
+# fn initialise_camera(world: &mut World) { }
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 ```
 
 ## Summary

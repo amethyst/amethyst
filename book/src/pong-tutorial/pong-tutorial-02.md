@@ -42,7 +42,7 @@ initialization code from the Pong code.
     ```rust,ignore
     mod pong;
 
-    use pong::Pong;
+    use crate::pong::Pong;
     ```
 
 ## Get around the World
@@ -268,7 +268,7 @@ general, as it makes operations like rotation easier.
 ```rust,edition2018,no_run,noplaypen
 use crate::{
     components::{Paddle, Side},
-    {/* ... */ PADDLE_WIDTH},
+    /* ... */, PADDLE_WIDTH,
 };
 
 /// Initialises one paddle on the left, and one paddle on the right.
@@ -281,14 +281,14 @@ fn initialise_paddles(world: &mut World) {
     left_transform.set_translation_xyz(PADDLE_WIDTH / 2.0, y, 0.0);
     right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH / 2.0, y, 0.0);
 
-    // Create a left plank entity.
+    // Create a left paddle entity.
     world
         .create_entity()
         .with(Paddle::new(Side::Left))
         .with(left_transform)
         .build();
 
-    // Create right plank entity.
+    // Create right paddle entity.
     world
         .create_entity()
         .with(Paddle::new(Side::Right))
@@ -313,7 +313,7 @@ compiles. Update the `on_start` method to the following:
 #
 # use crate::{
 #     components::{Paddle, Side},
-#     {ARENA_HEIGHT, ARENA_WIDTH, PADDLE_WIDTH},
+#     ARENA_HEIGHT, ARENA_WIDTH, PADDLE_WIDTH,
 # };
 #
 # struct Pong;
@@ -418,20 +418,20 @@ function in `pong.rs` called `load_sprite_sheet`.
 First, let's declare the function and load the sprite sheet's image data.
 
 ```rust,edition2018,no_run,noplaypen
-# use amethyst::{
-#     assets::{AssetStorage, Loader, Handle},
-#     core::transform::Transform,
-#     prelude::*,
-#     renderer::{
-#         camera::{Camera, Projection},
-#         formats::texture::ImageFormat,
-#         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
-#         Texture,
-#     },
-# };
-#
-# /* ... */ 
-#
+ use amethyst::{
+     assets::{AssetStorage, Loader, Handle},
+     core::transform::Transform,
+     prelude::*,
+     renderer::{
+         camera::{Camera, Projection},
+         formats::texture::ImageFormat,
+         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
+         Texture,
+     },
+ };
+
+/* ... */ 
+
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
