@@ -19,7 +19,7 @@ First, we'll add a new module to `systems/mod.rs`
 ```rust,ignore
 mod winner;
 
-pub use self::winner::WinnerSystem;
+pub use winner::WinnerSystem;
 ```
 
 Then, we'll create `systems/winner.rs`:

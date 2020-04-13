@@ -77,10 +77,8 @@ Now let's update the `components/mod.rs`
 mod ball;
 mod paddle;
 
-pub use self::{
-    ball::Ball,
-    paddle::{Paddle, Side},
-};
+pub use ball::Ball;
+pub use paddle::{Paddle, Side};
 ```
 
 Then in `pong.rs` add an `initialise_ball` function the same way we wrote the
@@ -288,12 +286,11 @@ mod bounce;
 mod move_balls;
 mod paddle;
 
-pub use self::bounce::BounceSystem;
-pub use self::move_balls::MoveBallsSystem;
-pub use self::paddle::PaddleSystem;
+pub use bounce::BounceSystem;
+pub use move_balls::MoveBallsSystem;
+pub use paddle::PaddleSystem;
 ```
 Now, let's add our new systems to the game data:
-
 ```rust,edition2018,no_run,noplaypen
 fn main() -> amethyst::Result<()> {
 /* ... */

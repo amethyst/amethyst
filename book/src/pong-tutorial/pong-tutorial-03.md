@@ -93,7 +93,7 @@ application. Here's our `mod.rs` for `src/systems`:
 ```rust,edition2018,no_run,noplaypen
 mod paddle;
 
-pub use self::paddle::PaddleSystem;
+pub use paddle::PaddleSystem;
 ```
 
 We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
@@ -106,7 +106,10 @@ use amethyst::{
     input::{InputHandler, StringBindings},
 };
 
-use crate::components::{Paddle, Side};
+use crate::{
+    components::{Paddle, Side},
+    ARENA_HEIGHT,
+};
 
 #[derive(SystemDesc)]
 pub struct PaddleSystem;
@@ -185,7 +188,7 @@ mod systems; // Import the module
 
 /* ... */
 
-use systems::*; // Add direct access to systems
+use crate::{/* ... */, systems::*}; // Add direct access to systems
 
 fn main() -> amethyst::Result<()> {
 /* ... */
@@ -214,7 +217,6 @@ component of the transform's translation in `systems/paddle.rs`.
 
 ```rust,edition2018,no_run,noplaypen
 fn run(&mut self, (paddles, mut transforms, input): Self::SystemData) {
-    use crate::components::Side;
     // Iterate over all paddles and move them according to the input the user
     // provided.
     for (paddle, transform) in (&paddles, &mut transforms).join() {
@@ -267,8 +269,6 @@ fn run(&mut self, (paddles, mut transforms, input): Self::SystemData) {
         };
 
         if let Some(movement) = opt_movement {
-            use crate::ARENA_HEIGHT;
-
             // Update paddle position only when necessary
             if movement != 0.0 {
                 // Get current y position of the paddle

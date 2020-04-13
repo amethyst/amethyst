@@ -166,7 +166,7 @@ First, we'll create a directory called `components` under `src` to hold all our 
 ```rust,edition2018,no_run,noplaypen
 mod paddle;
 
-pub use self::paddle::Paddle;
+pub use paddle::Paddle;
 ```
 
 Now, we will create the `Paddle` component, in `components/paddle.rs`.
@@ -356,8 +356,8 @@ this by adding the following line before `initialise_paddles(world)` in the
 
 ```rust,edition2018,no_run,noplaypen
 # use amethyst::{
-#     ecs::{World, WorldExt}
 #     /* ... */
+#     ecs::{World, WorldExt}
 # };
 #
 # struct Pong;
@@ -386,20 +386,22 @@ registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
 
 ```rust,edition2018,no_run,noplaypen
-# use amethyst::{ /* ... */ };
-#
-# struct Pong;
-# impl SimpleState for Pong { /* ... */  }
-#
+ use amethyst::{ 
+    /* ... */
+    core::transform::TransformBundle,
+};
+
+/* ... */
+
 fn main() -> amethyst::Result<()> {
-#   /* ... */ 
+/* ... */ 
+
     let game_data = GameDataBuilder::default()
         .with_bundle(render_bundle)?
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?;
 
-#   let mut game = Application::new(assets_dir, Pong, game_data)?;
-#   Ok(())
+/* ... */
 }
 ```
 
