@@ -1,10 +1,13 @@
 use amethyst::{
+    assets::AssetStorage,
+    audio::{output::Output, Source},
     core::transform::Transform,
     derive::SystemDesc,
-    ecs::prelude::{Join, ReadStorage, System, SystemData, WriteStorage},
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, WriteStorage},
 };
 
 use crate::{
+    audio::{play_sound, Sounds},
     components::{Ball, Paddle, Side},
     ARENA_HEIGHT, BALL_RADIUS, PADDLE_HEIGHT, PADDLE_WIDTH,
 };
@@ -22,9 +25,15 @@ impl<'s> System<'s> for BounceSystem {
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
         ReadStorage<'s, Transform>,
+        ReadExpect<'s, Sounds>,
+        Read<'s, AssetStorage<Source>>,
+        Option<Read<'s, Output>>,
     );
 
-    fn run(&mut self, (mut balls, paddles, transforms): Self::SystemData) {
+    fn run(
+        &mut self,
+        (mut balls, paddles, transforms, sounds, storage, audio_output): Self::SystemData,
+    ) {
         // Check whether a ball collided, and bounce off accordingly.
         //
         // We also check for the velocity of the ball every time, to prevent multiple collisions
@@ -37,6 +46,7 @@ impl<'s> System<'s> for BounceSystem {
             if (ball_y <= BALL_BOUNDARY_BOTTOM && ball.heads_down())
                 || (ball_y >= BALL_BOUNDARY_TOP && ball.heads_up())
             {
+                play_sound(&sounds.bounce, &storage, audio_output.as_deref());
                 ball.reverse_y();
             }
 
@@ -49,6 +59,7 @@ impl<'s> System<'s> for BounceSystem {
                     && ((paddle.side == Side::Left && ball.heads_left())
                         || (paddle.side == Side::Right && ball.heads_right()))
                 {
+                    play_sound(&sounds.bounce, &storage, audio_output.as_deref());
                     ball.reverse_x();
                 }
             }

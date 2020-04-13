@@ -1,4 +1,3 @@
-use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 use amethyst::{
     core::transform::Transform,
     derive::SystemDesc,
@@ -6,30 +5,43 @@ use amethyst::{
     input::{InputHandler, StringBindings},
 };
 
+use crate::components::Paddle;
+
 #[derive(SystemDesc)]
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
-        WriteStorage<'s, Transform>,
         ReadStorage<'s, Paddle>,
+        WriteStorage<'s, Transform>,
         Read<'s, InputHandler<StringBindings>>,
     );
 
-    fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
+    fn run(&mut self, (paddles, mut transforms, input): Self::SystemData) {
+        use crate::components::Side;
+        // Iterate over all paddles and move them according to the input the user
+        // provided.
         for (paddle, transform) in (&paddles, &mut transforms).join() {
-            let movement = match paddle.side {
+            let opt_movement = match paddle.side {
                 Side::Left => input.axis_value("left_paddle"),
                 Side::Right => input.axis_value("right_paddle"),
             };
-            if let Some(mv_amount) = movement {
-                let scaled_amount = 1.2 * mv_amount;
-                let paddle_y = transform.translation().y;
-                transform.set_translation_y(
-                    (paddle_y + scaled_amount)
-                        .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
-                        .max(PADDLE_HEIGHT * 0.5),
-                );
+
+            if let Some(movement) = opt_movement {
+                use crate::ARENA_HEIGHT;
+
+                // Update paddle position only when necessary
+                if movement != 0.0 {
+                    // Get current y position of the paddle
+                    let paddle_y = transform.translation().y;
+                    let scaled_amount = paddle.velocity * movement as f32;
+
+                    transform.set_translation_y(
+                        (paddle_y + scaled_amount)
+                            .max(paddle.height / 2.0)
+                            .min(ARENA_HEIGHT - paddle.height / 2.0),
+                    );
+                }
             }
         }
     }

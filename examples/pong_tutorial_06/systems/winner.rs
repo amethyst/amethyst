@@ -1,11 +1,14 @@
 use amethyst::{
+    assets::AssetStorage,
+    audio::{output::Output, Source},
     core::Transform,
     derive::SystemDesc,
-    ecs::prelude::{Join, ReadExpect, System, SystemData, Write, WriteStorage},
+    ecs::prelude::{Join, Read, ReadExpect, System, SystemData, Write, WriteStorage},
     ui::UiText,
 };
 
 use crate::{
+    audio::{play_sound, Sounds},
     components::Ball,
     pong::{ScoreBoard, ScoreText},
     ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS,
@@ -27,11 +30,23 @@ impl<'s> System<'s> for WinnerSystem {
         WriteStorage<'s, UiText>,
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,
+        ReadExpect<'s, Sounds>,
+        Read<'s, AssetStorage<Source>>,
+        Option<Read<'s, Output>>,
     );
 
     fn run(
         &mut self,
-        (mut balls, mut transforms, mut text, mut score_board, score_text): Self::SystemData,
+        (
+            mut balls,
+            mut transforms,
+            mut text,
+            mut score_board,
+            score_text,
+            sounds,
+            storage,
+            audio_output,
+        ): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
             let ball_x = transform.translation().x;
@@ -58,6 +73,9 @@ impl<'s> System<'s> for WinnerSystem {
                 // Reset the ball.
                 ball.reverse_x();
                 transform.set_translation_x(ARENA_WIDTH / 2.0);
+
+                // Play audio.
+                play_sound(&sounds.score, &storage, audio_output.as_deref());
             }
         }
     }

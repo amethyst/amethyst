@@ -1,11 +1,14 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     core::{timing::Time, transform::Transform},
+    ecs::prelude::{Entity, World},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
 
 use crate::{
+    audio::initialise_audio,
     components::{Ball, Paddle, Side},
     {ARENA_HEIGHT, ARENA_WIDTH, PADDLE_WIDTH},
 };
@@ -29,6 +32,8 @@ impl SimpleState for Pong {
         self.sprite_sheet_handle.replace(load_sprite_sheet(world));
         initialise_camera(world);
         initialise_paddles(world, self.sprite_sheet_handle.clone().unwrap());
+        initialise_scoreboard(world);
+        initialise_audio(world);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
@@ -115,6 +120,59 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
         .build();
 }
 
+fn initialise_scoreboard(world: &mut World) {
+    let font = world.read_resource::<Loader>().load(
+        "font/square.ttf",
+        TtfFormat,
+        (),
+        &world.read_resource(),
+    );
+    let p1_transform = UiTransform::new(
+        String::from("P1"),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        -50.0,
+        -50.0,
+        1.0,
+        200.0,
+        50.0,
+    );
+    let p2_transform = UiTransform::new(
+        String::from("P2"),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        50.0,
+        -50.0,
+        1.0,
+        200.0,
+        50.0,
+    );
+
+    let p1_score = world
+        .create_entity()
+        .with(p1_transform)
+        .with(UiText::new(
+            font.clone(),
+            String::from("0"),
+            [1.0, 1.0, 1.0, 1.0],
+            50.0,
+        ))
+        .build();
+
+    let p2_score = world
+        .create_entity()
+        .with(p2_transform)
+        .with(UiText::new(
+            font,
+            String::from("0"),
+            [1.0, 1.0, 1.0, 1.0],
+            50.0,
+        ))
+        .build();
+
+    world.insert(ScoreText { p1_score, p2_score });
+}
+
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
@@ -143,4 +201,17 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 
     // Return handle to the sprite sheet
     sprite_sheet_handle
+}
+
+/// ScoreBoard contains the actual score data
+#[derive(Default)]
+pub struct ScoreBoard {
+    pub score_left: i32,
+    pub score_right: i32,
+}
+
+/// ScoreText contains the ui text components that display the score
+pub struct ScoreText {
+    pub p1_score: Entity,
+    pub p2_score: Entity,
 }
