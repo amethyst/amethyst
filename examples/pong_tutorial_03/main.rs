@@ -1,4 +1,4 @@
-//! Pong Tutorial 1
+//! Pong Tutorial 3
 
 mod components;
 mod pong;

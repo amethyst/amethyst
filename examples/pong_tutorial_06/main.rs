@@ -1,4 +1,4 @@
-//! Pong Tutorial 1
+//! Pong Tutorial 6
 
 mod audio;
 mod components;
