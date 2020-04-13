@@ -8,6 +8,7 @@ use amethyst::{
 };
 
 use crate::{
+    audio::initialise_audio,
     components::{Ball, Paddle, Side},
     ARENA_HEIGHT, ARENA_WIDTH,
 };
@@ -20,7 +21,6 @@ pub struct Pong {
 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        use crate::audio::initialise_audio;
         let world = data.world;
 
         // Wait one second before spawning the ball.

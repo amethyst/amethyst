@@ -7,7 +7,7 @@ use amethyst::{
 
 use crate::{
     components::{Ball, Paddle, Side},
-    {ARENA_HEIGHT, ARENA_WIDTH, PADDLE_WIDTH},
+    ARENA_HEIGHT, ARENA_WIDTH, PADDLE_WIDTH,
 };
 
 #[derive(Default)]

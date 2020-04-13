@@ -1,3 +1,3 @@
-pub use self::paddle::{Paddle, Side};
-
 mod paddle;
+
+pub use self::paddle::{Paddle, Side};

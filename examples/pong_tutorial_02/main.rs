@@ -14,7 +14,7 @@ use amethyst::{
     utils::application_root_dir,
 };
 
-use pong::Pong;
+use crate::pong::Pong;
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;

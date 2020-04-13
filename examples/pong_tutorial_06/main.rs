@@ -19,10 +19,7 @@ use amethyst::{
     utils::application_root_dir,
 };
 
-use audio::Music;
-
-use pong::Pong;
-use systems::*;
+use crate::{audio::Music, pong::Pong, systems::*};
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;

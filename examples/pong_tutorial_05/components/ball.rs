@@ -1,6 +1,6 @@
 use amethyst::ecs::{Component, DenseVecStorage};
 
-use crate::{BALL_VELOCITY_X, BALL_VELOCITY_Y, BALL_RADIUS};
+use crate::{BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
 
 pub struct Ball {
     pub velocity: [f32; 2],
