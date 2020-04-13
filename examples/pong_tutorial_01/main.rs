@@ -1,7 +1,6 @@
 //! Pong Tutorial 1
 
 use amethyst::{
-    core::transform::TransformBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
