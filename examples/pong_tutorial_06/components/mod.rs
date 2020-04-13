@@ -1,7 +1,5 @@
 mod ball;
 mod paddle;
 
-pub use self::{
-    ball::Ball,
-    paddle::{Paddle, Side},
-};
+pub use ball::Ball;
+pub use paddle::{Paddle, Side};
