@@ -87,12 +87,15 @@ Then in `pong.rs` add an `initialise_ball` function the same way we wrote the
 `initialise_paddles` function.
 
 ```rust,edition2018,no_run,noplaypen
+use crate::{
+    components::{Ball, /* ... */}, // Add Ball here
+    /* ... */
+};
+
 /* ... */
 
 /// Initialises one ball in the middle-ish of the arena.
 fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
-    use crate::components::Ball;
-
     // Create the translation.
     let mut transform = Transform::default();
     transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
@@ -133,9 +136,9 @@ fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 
     world.register::<Ball>(); // <- add this line temporarily
 
-    initialise_ball(world, sprite_sheet_handle.clone()); // <- add this line
-    initialise_paddles(world, sprite_sheet_handle);
     initialise_camera(world);
+    initialise_paddles(world, sprite_sheet_handle.clone()); // add .clone() here
+    initialise_ball(world, sprite_sheet_handle); // <- add this line
 }
 # }
 ```
@@ -178,8 +181,7 @@ impl<'s> System<'s> for MoveBallsSystem {
     }
 }
 ```
-
-This system is responsible for moving all balls according to their speed and
+`MoveBallsSystem` is responsible for moving all balls according to their speed and
 the elapsed time. Notice how the `join()` method is used to iterate over all
 ball entities. Here we only have one ball, but if we ever need multiple, the
 system will handle them out of the box.
@@ -200,15 +202,12 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 
 ```rust,edition2018,no_run,noplaypen
 use amethyst::{
-    assets::AssetStorage,
-    audio::{output::Output, Source},
     core::transform::Transform,
     derive::SystemDesc,
-    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, WriteStorage},
+    ecs::prelude::{Join, ReadStorage, System, SystemData, WriteStorage},
 };
 
 use crate::{
-    audio::{play_sound, Sounds},
     components::{Ball, Paddle, Side},
     ARENA_HEIGHT, BALL_RADIUS, PADDLE_HEIGHT, PADDLE_WIDTH,
 };
@@ -226,14 +225,11 @@ impl<'s> System<'s> for BounceSystem {
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
         ReadStorage<'s, Transform>,
-        Read<'s, AssetStorage<Source>>,
-        ReadExpect<'s, Sounds>,
-        Option<Read<'s, Output>>,
     );
 
     fn run(
         &mut self,
-        (mut balls, paddles, transforms, storage, sounds, audio_output): Self::SystemData,
+        (mut balls, paddles, transforms): Self::SystemData,
     ) {
         // Check whether a ball collided, and bounce off accordingly.
         //
@@ -248,7 +244,6 @@ impl<'s> System<'s> for BounceSystem {
                 || (ball_y >= BALL_BOUNDARY_TOP && ball.heads_up())
             {
                 ball.reverse_y();
-                play_sound(&sounds.bounce, &storage, audio_output.as_deref());
             }
 
             // Bounce at the paddles.
@@ -261,7 +256,6 @@ impl<'s> System<'s> for BounceSystem {
                         || (paddle.side == Side::Right && ball.heads_right()))
                 {
                     ball.reverse_x();
-                    play_sound(&sounds.bounce, &storage, audio_output.as_deref());
                 }
             }
         }
@@ -283,15 +277,22 @@ fn point_in_rect(ball_x: f32, ball_y: f32, paddle_x: f32, paddle_y: f32) -> bool
     // right and larger or equal than the bottom left.
     (ball_x >= left) && (ball_y >= bottom) && (ball_x <= right) && (ball_y <= top)
 }
-
 ```
-
 The following image illustrates how collisions with paddles are checked.
 
 ![Collision explanotary drawing](../images/pong_tutorial/pong_paddle_collision.png)
 
-Also, don't forget to add `mod move_balls` and `mod bounce` in `systems/mod.rs`
-as well as adding our new systems to the game data:
+Don't forget to update `systems/mod.rs`:
+```rust,edition2018,no_run,noplaypen
+mod bounce;
+mod move_balls;
+mod paddle;
+
+pub use self::bounce::BounceSystem;
+pub use self::move_balls::MoveBallsSystem;
+pub use self::paddle::PaddleSystem;
+```
+Now, let's add our new systems to the game data:
 
 ```rust,edition2018,no_run,noplaypen
 fn main() -> amethyst::Result<()> {
@@ -299,11 +300,16 @@ fn main() -> amethyst::Result<()> {
 
 let game_data = GameDataBuilder::default()
     /* ... */
+#     .with_bundle(render_bundle)?
 #     .with_bundle(TransformBundle::new())?
 #     .with_bundle(input_bundle)?
-#    .with(PaddleSystem, "paddle_system", &["input_system"]);
+#     .with(PaddleSystem, "paddle_system", &["input_system"]);
     .with(MoveBallsSystem, "ball_system", &[])
-    .with(BounceSystem, "collision_system", &["paddle_system", "ball_system"]);
+    .with(
+        BounceSystem,
+        "collision_system",
+        &["paddle_system", "ball_system"],
+    );
 /* ... */
 ```
 
@@ -326,11 +332,13 @@ Our pong game throws you right into the action, so we have to fix that problem.
 Let's delay the first time the ball spawns. This is also a good opportunity to use our game state
 struct to actually hold some data.
 
-First, let's add a new `update` method to our state.
+First, let's add a new `update` method to our state below the `on_start` in `pong.rs`.
 
 ```rust,edition2018,no_run,noplaypen
 # struct Pong;
 # impl SimpleState for Pong {
+# fn on_start() { /* ... */ }
+#
 fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
     Trans::None
 }
@@ -365,18 +373,13 @@ default empty state. Now let's use that inside our `Application` creation code i
 ```rust,edition2018,no_run,noplaypen
 # /* ... */
 #
-# #[derive(Default)] struct Pong { /* ... */ };
-#
-# impl SimpleState for Pong { }
-#
-# fn main() -> Result<()> {
+# fn main() -> amethyst::Result<()> {
 # /* ... */
 #
 let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
-# /* ... */
-# }
 #
 # /* ... */
+# }
 ```
 
 Now let's finish our timer and ball spawning code. We have to do two things:
@@ -384,13 +387,11 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 - then we have to `initialise_ball` once after the time has passed inside `update`:
 
 ```rust,edition2018,no_run,noplaypen
-# /* ... */
-#
-# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) { /* ... */ }
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { /* ... */ }
-# fn initialise_camera(world: &mut World) { /* ... */ }
-# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { /* ... */ }
-#
+use amethyst::{
+    /* ... */
+    core::{timing::Time, /* ... */}, // add timing:Time
+};
+
 # #[derive(Default)] pub struct Pong {
 #     ball_spawn_timer: Option<f32>,
 #     sprite_sheet_handle: Option<Handle<SpriteSheet>>,
@@ -407,8 +408,8 @@ impl SimpleState for Pong {
         // `spritesheet` is the layout of the sprites on the image;
         // `texture` is the pixel data.
         self.sprite_sheet_handle.replace(load_sprite_sheet(world));
-        initialise_paddles(world, self.sprite_sheet_handle.clone().unwrap());
         initialise_camera(world);
+        initialise_paddles(world, self.sprite_sheet_handle.unwrap());
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
@@ -429,6 +430,11 @@ impl SimpleState for Pong {
         Trans::None
     }
 }
+#
+# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) { /* ... */ }
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { /* ... */ }
+# fn initialise_camera(world: &mut World) { /* ... */ }
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { /* ... */ }
 ```
 
 Now our ball will only show up after a set delay, giving us some breathing room after startup.

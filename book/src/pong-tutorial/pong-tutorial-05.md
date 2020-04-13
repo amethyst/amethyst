@@ -17,25 +17,21 @@ make a note of who got the point for the round.
 
 First, we'll add a new module to `systems/mod.rs`
 ```rust,ignore
-pub use self::winner::WinnerSystem;
-
 mod winner;
+
+pub use self::winner::WinnerSystem;
 ```
 
 Then, we'll create `systems/winner.rs`:
 
 ```rust,edition2018,no_run,noplaypen
 use amethyst::{
-    assets::AssetStorage,
     core::Transform,
     derive::SystemDesc,
     ecs::prelude::{Join, System, SystemData, WriteStorage},
 };
 
-use crate::{
-    components::Ball,
-    ScoreBoard, ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS,
-};
+use crate::{components::Ball, ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS};
 
 const BALL_BOUNDARY_RIGHT: f32 = ARENA_HEIGHT - BALL_RADIUS;
 const BALL_BOUNDARY_LEFT: f32 = BALL_RADIUS;
@@ -90,13 +86,12 @@ fn main() -> amethyst::Result<()> {
 
 let game_data = GameDataBuilder::default()
     /* ... */
-#     .with_bundle(TransformBundle::new())?
-#     .with_bundle(input_bundle)?
+#    .with_bundle(TransformBundle::new())?
+#    .with_bundle(input_bundle)?
 #    .with(PaddleSystem, "paddle_system", &["input_system"]);
 #    .with(MoveBallsSystem, "ball_system", &[])
 #    .with(BounceSystem, "collision_system", &["paddle_system", "ball_system"])
      .with(WinnerSystem, "winner_system", &["ball_system"]);
-/* ... */
 ```
 
 ## Adding a Scoreboard
@@ -120,14 +115,14 @@ use amethyst::{
 Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
 ```rust,edition2018,no_run,noplaypen
-# /* ... */
-#
-fn main() -> Result<()> {
+fn main() -> amethyst::Result<()> {
    /* ... */
 
    let render_bundle = RenderingBundle::<DefaultBackend>::new()
            /* ... */
-           .with_plugin(RenderUi::default()),
+#            .with_plugin(RenderToWindow::from_config_path(display_config_path)?.with_clear(BG_COLOR))
+#            .with_plugin(RenderFlat2D::default())
+           .with_plugin(RenderUi::default());
     
     /* ... */
 }
@@ -136,16 +131,26 @@ fn main() -> Result<()> {
 Finally, add the `UiBundle` after the `InputBundle`:
 
 ```rust,edition2018,no_run,noplaypen
-# /* ... */
-#
-# fn main() -> Result<()> {
+# fn main() -> amethyst::Result<()> {
 # /* ... */
 #
 let game_data = GameDataBuilder::default()
-    /* ... */
-    .with_bundle(UiBundle::<StringBindings>::new())?;
+    /* ... other bundles */
+#     .with_bundle(render_bundle)?
+#     .with_bundle(TransformBundle::new())?
+#     .with_bundle(input_bundle)?
+    .with_bundle(UiBundle::<StringBindings>::new())?
+    /* ... other systems */
+#     .with(PaddleSystem, "paddle_system", &["input_system"])
+#     .with(MoveBallsSystem, "ball_system", &[])
+#     .with(
+#         BounceSystem,
+#         "collision_system",
+#         &["paddle_system", "ball_system"],
+#     )
+#     .with(WinnerSystem, "winner_system", &["ball_system"]);
 #
-# Ok(())
+# /* ... */
 # }
 ```
 
@@ -164,6 +169,14 @@ Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
 ```rust,edition2018,no_run,noplaypen
+use amethyst::{
+    /* ... */
+    ecs::prelude::{Entity, World},
+};
+
+
+/* ... */
+
 /// ScoreBoard contains the actual score data
 #[derive(Default)]
 pub struct ScoreBoard {
@@ -196,14 +209,23 @@ use amethyst::{
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         /* ... */
-        
+#         let world = data.world;
+# 
+#         // Wait one second before spawning the ball.
+#         self.ball_spawn_timer.replace(1.0);
+# 
+#         // Load the spritesheet necessary to render the graphics.
+#         // `spritesheet` is the layout of the sprites on the image;
+#         // `texture` is the pixel data.
+#         self.sprite_sheet_handle.replace(load_sprite_sheet(world));
+#         initialise_camera(world);
+#         initialise_paddles(world, self.sprite_sheet_handle.clone().unwrap());
         initialise_scoreboard(world);
     }
 }
 
 /* ... */
 
-/// Initialises a ui scoreboard
 fn initialise_scoreboard(world: &mut World) {
     let font = world.read_resource::<Loader>().load(
         "font/square.ttf",
@@ -282,33 +304,21 @@ accordingly:
 
 ```rust,edition2018,no_run,noplaypen
 use amethyst::{
-    assets::AssetStorage,
-    core::Transform,
-    derive::SystemDesc,
-    ecs::prelude::{Join, Read, ReadExpect, System, SystemData, Write, WriteStorage},
+    /* ... */
+    ecs::prelude::{/* ... */, ReadExpect, Write},
     ui::UiText,
 };
 
 use crate::{
-    audio::{play_sound, Sounds},
-    components::Ball,
+    /* ... */
     pong::{ScoreBoard, ScoreText},
-    ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS,
 };
 
-const BALL_BOUNDARY_RIGHT: f32 = ARENA_HEIGHT - BALL_RADIUS;
-const BALL_BOUNDARY_LEFT: f32 = BALL_RADIUS;
-
-/// This system is responsible for checking if a ball has moved into a left or
-/// a right edge. Points are distributed to the player on the other side, and
-/// the ball is reset.
-#[derive(SystemDesc)]
-pub struct WinnerSystem;
+/* ... */
 
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
-        WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+        /* ... */
         WriteStorage<'s, UiText>,
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,
@@ -316,18 +326,10 @@ impl<'s> System<'s> for WinnerSystem {
 
     fn run(
         &mut self,
-        (
-            mut balls,
-            mut transforms,
-            mut text,
-            mut score_board,
-            score_text,
-        ): Self::SystemData,
+        (/* ... */, mut text, mut score_board, score_text): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
-            let ball_x = transform.translation().x;
-
-            let scored = ball_x <= BALL_BOUNDARY_LEFT || ball_x >= BALL_BOUNDARY_RIGHT;
+            /* ... */
 
             if ball_x <= BALL_BOUNDARY_LEFT {
                 // Right player scored on the left side.
@@ -345,17 +347,7 @@ impl<'s> System<'s> for WinnerSystem {
                 }
             }
 
-            if scored {
-                // Reset the ball.
-                ball.reverse_x();
-                transform.set_translation_x(ARENA_WIDTH / 2.0);
-
-                // Print the scoreboard.
-                println!(
-                    "Score: | {:^3} | {:^3} |",
-                    score_board.score_left, score_board.score_right
-                );
-            }
+            /* ... */
         }
     }
 }

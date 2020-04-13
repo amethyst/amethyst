@@ -51,28 +51,33 @@ axes we defined. Let's make the following changes to `main.rs`.
 ```rust,edition2018,no_run,noplaypen
 use amethyst::{
     /* ... */
-    input::{InputBundle, StringBindings};
+    input::{InputBundle, StringBindings},
 };
 #
 # /* ... */
 
-fn main() -> Result<()> {
-/* ... */
-
-let bindings_config_path = config_dir.join("bindings.ron");
-
-let input_bundle = InputBundle::<StringBindings>::new()
-    .with_bindings_from_file(bindings_config_path)?;
-
-let game_data = GameDataBuilder::default()
+fn main() -> amethyst::Result<()> {
     /* ... */
-    .with_bundle(TransformBundle::new())?
-    .with_bundle(input_bundle)?;
+
+#   let display_config_path = config_dir.join("display.ron");
+    let bindings_config_path = config_dir.join("bindings.ron");
+
+#     let render_bundle = RenderingBundle::<DefaultBackend>::new()
+#         // The RenderToWindow plugin provides all the scaffolding for opening a window and
+#         // drawing on it
+#         .with_plugin(RenderToWindow::from_config_path(display_config_path)?.with_clear(BG_COLOR))
+#         .with_plugin(RenderFlat2D::default());
+    let input_bundle = InputBundle::<StringBindings>::new()
+       .with_bindings_from_file(bindings_config_path)?;
+
+    let game_data = GameDataBuilder::default()
+       /* ... */
+#        .with_bundle(render_bundle)?
+#        .with_bundle(TransformBundle::new())?
+       .with_bundle(input_bundle)?;
     
-let mut game = Application::new(assets_dir, Pong, game_data)?;
-game.run();
-# Ok(())
-# }
+    /* ... */
+}
 ```
 
 For `InputBundle<StringBindings>`, the parameter type determines how `axes` and `actions`
@@ -86,9 +91,9 @@ module to collect and export each of our systems to the rest of the
 application. Here's our `mod.rs` for `src/systems`:
 
 ```rust,edition2018,no_run,noplaypen
-pub use self::paddle::PaddleSystem;
-
 mod paddle;
+
+pub use self::paddle::PaddleSystem;
 ```
 
 We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
@@ -136,7 +141,6 @@ impl<'s> System<'s> for PaddleSystem {
         }
     }
 }
-
 ```
 Alright, there's quite a bit going on here!
 
@@ -208,7 +212,7 @@ data be prepared. The `input_system` key itself is defined in the standard `Inpu
 
 If we run the game now, we'll see the console print our keypresses.
 Let's make it update the position of the paddle. To do this, we'll modify the y
-component of the transform's translation.
+component of the transform's translation in `systems/paddle.rs`.
 
 ```rust,edition2018,no_run,noplaypen
 fn run(&mut self, (paddles, mut transforms, input): Self::SystemData) {
@@ -222,8 +226,6 @@ fn run(&mut self, (paddles, mut transforms, input): Self::SystemData) {
         };
 
         if let Some(movement) = opt_movement {
-            use crate::ARENA_HEIGHT;
-
             // Update paddle position only when necessary
             if movement != 0.0 {
                 // Get current y position of the paddle
@@ -319,8 +321,8 @@ fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 
     world.register::<Paddle>(); // <- No longer needed
 
-    initialise_paddles(world, sprite_sheet_handle);
     initialise_camera(world);
+    initialise_paddles(world, sprite_sheet_handle);
 }
 # }
 ```

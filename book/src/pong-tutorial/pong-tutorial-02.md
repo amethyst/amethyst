@@ -42,7 +42,7 @@ initialization code from the Pong code.
     ```rust,ignore
     mod pong;
 
-    use crate::pong::Pong;
+    use pong::Pong;
     ```
 
 ## Get around the World
@@ -74,7 +74,7 @@ will determine what is rendered on screen. It behaves just like a real-life
 camera: it looks at a specific part of the world and can be moved around at
 will.
 
-1. Define the size of the playable area at the top of `main.rs`,
+1. Define the size of the playable area above the `main()` in `main.rs`,
 
     ```rust,edition2018,no_run,noplaypen
     const ARENA_HEIGHT: f32 = 100.0;
@@ -88,7 +88,7 @@ will.
 
 2. Create the camera entity.
 
-    In pong, we want the camera to cover the entire arena. Let's do it in a new function `initialise_camera`:
+    Let's create a camera that covers the entire arena in a new function `initialise_camera` in `pong.rs`:
 
     ```rust,edition2018,no_run,noplaypen
     # use amethyst::{
@@ -155,7 +155,7 @@ will.
     }
     # }
     #
-    # fn initialise_camera(world: &mut World) { // ... }
+    # fn initialise_camera(world: &mut World) { /* ... */ }
     ```
 
 Now that our camera is set up, it's time to add the paddles.
@@ -164,20 +164,22 @@ Now that our camera is set up, it's time to add the paddles.
 First, we'll create a directory called `components` under `src` to hold all our components. We'll use a module to collect and export each of our components to the rest of the application. Here's our `mod.rs` for `src/components.rs`:
 
 ```rust,edition2018,no_run,noplaypen
-pub use self::paddle::Paddle;
-
 mod paddle;
+
+pub use self::paddle::Paddle;
 ```
 
 Now, we will create the `Paddle` component, in `components/paddle.rs`.
 
-1. Define the constants for the paddle width, height and velocity at the top of `main.rs`,
+1. Define add components module and the constants for the paddle width, height and velocity above the `main()` in `main.rs`,
     ```rust,edition2018,no_run,noplaypen
+    mod components; // Import the module
+
     const PADDLE_HEIGHT: f32 = 16.0;
     const PADDLE_WIDTH: f32 = 4.0;
     const PADDLE_VELOCITY: f32 = 1.2;
     ```
-    and add following `use` statements to the `components/paddle.rs`.
+    and add following `use` statements to the `paddle.rs`.
 
     ```rust,edition2018,no_run,noplaypen
     use amethyst::ecs::{Component, DenseVecStorage};
@@ -204,7 +206,7 @@ Now, we will create the `Paddle` component, in `components/paddle.rs`.
     }
 
     impl Paddle {
-        fn new(side: Side) -> Paddle {
+        pub fn new(side: Side) -> Paddle {
             Paddle {
                 width: PADDLE_WIDTH,
                 height: PADDLE_HEIGHT,
@@ -264,10 +266,13 @@ image we will want to render on top of them. This is a good rule to follow in
 general, as it makes operations like rotation easier.
 
 ```rust,edition2018,no_run,noplaypen
+use crate::{
+    components::{Paddle, Side},
+    {/* ... */ PADDLE_WIDTH},
+};
+
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
-    use crate::{Paddle, Side, PADDLE_WIDTH};
-
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
 
@@ -306,7 +311,10 @@ compiles. Update the `on_start` method to the following:
 #     renderer::Camera,
 # };
 #
-# use crate::{ARENA_HEIGHT, ARENA_WIDTH};
+# use crate::{
+#     components::{Paddle, Side},
+#     {ARENA_HEIGHT, ARENA_WIDTH, PADDLE_WIDTH},
+# };
 #
 # struct Pong;
 #
@@ -314,8 +322,8 @@ compiles. Update the `on_start` method to the following:
 fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     let world = data.world;
 
-    initialise_paddles(world);
     initialise_camera(world);
+    initialise_paddles(world);
 }
 # }
 #
@@ -357,7 +365,11 @@ this by adding the following line before `initialise_paddles(world)` in the
 # impl SimpleState for Pong {
 # fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 #    let world = data.world;
+#
     world.register::<Paddle>();
+#
+#    initialise_camera(world);
+#    initialise_paddles(world);
 # }
 ```
 
@@ -368,7 +380,7 @@ Let's run the game again.
 Amethyst has a lot of internal systems it uses to keep things running we need
 to bring into the context of the `World`. For simplicity, these have been
 grouped into "Bundles" which include related systems and resources. We can
-add these to our Application's `GameData` using the `with_bundle` method,
+add these to our Application's `GameData` in `main.rs` using the `with_bundle` method,
 similarly to how you would register a system. We already have `RenderBundle` in place,
 registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
@@ -379,10 +391,10 @@ registering another one will look similar. You have to first import
 # struct Pong;
 # impl SimpleState for Pong { /* ... */  }
 #
-fn main() -> Result<()> {
+fn main() -> amethyst::Result<()> {
 #   /* ... */ 
     let game_data = GameDataBuilder::default()
-        /* ... */ 
+        .with_bundle(render_bundle)?
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?;
 
@@ -561,9 +573,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
 # { /* ... */ }
 ```
 
-Inside `initialise_paddles`, we construct a `SpriteRender` for a paddle. We
-only need one here, since the only difference between the two paddles is that
-the right one is flipped horizontally.
+Inside `initialise_paddles`, above the entity builders, we construct a `SpriteRender` for a paddle. We only need one here, since the only difference between the two paddles is that the right one is flipped horizontally.
 
 ```rust,edition2018,no_run,noplaypen
 # use amethyst::{
@@ -643,8 +653,8 @@ fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 
     world.register::<Paddle>();
 
-    initialise_paddles(world, sprite_sheet_handle);
     initialise_camera(world);
+    initialise_paddles(world, sprite_sheet_handle);
 }
 # }
 #

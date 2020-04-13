@@ -38,6 +38,7 @@ You can delete everything in that file, then add these imports:
 //! Pong Tutorial 1
 
 use amethyst::{
+    core::transform::TransformBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
@@ -80,9 +81,6 @@ started! We'll start with our `main()` function, and we'll have it return a
 if any errors occur during setup.
 
 ```rust,edition2018,no_run,noplaypen
-
-# use amethyst::prelude::*;
-#
 fn main() -> amethyst::Result<()> {
 
     // We'll put the rest of the code here.
@@ -145,16 +143,16 @@ following:
 This will set the default window dimensions to 500 x 500, and make the title bar
 say "Pong!" instead of the sad, lowercase default of "pong".
 
-In `main()` in `main.rs`, we will prepare the path to a file containing
-the display configuration:
+In `main()` in `main.rs`, we will create bindings to default config and asset paths, and then prepare the path to a file containing the display configuration:
 
 ```rust,edition2018,no_run,noplaypen
 # use amethyst::utils::application_root_dir;
 #
-# fn main() -> Result<()> {
+# fn main() -> amethyst::Result<()> {
 let app_root = application_root_dir()?;
 
 let config_dir = app_root.join("config");
+let assets_dir = app_root.join("assets");
 
 let display_config_path = config_dir.join("display.ron");
 #     Ok(())
@@ -175,16 +173,17 @@ In `main()` in `main.rs` we are going to add the basic application setup:
 #
 # impl SimpleState for Pong {}
 #
-# fn main() -> Result<()> {
+# fn main() -> amethyst::Result<()> {
 #
 # let app_root = application_root_dir()?;
 #
 # let config_dir = app_root.join("config");
-let assets_dir = app_root.join("assets");
-
+# let assets_dir = app_root.join("assets");
+#
 # let display_config_path = config_dir.join("display.ron");
 #
 let game_data = GameDataBuilder::default();
+
 let mut game = Application::new(assets_dir, Pong, game_data)?;
 game.run();
 # Ok(())
@@ -230,9 +229,19 @@ Last time we left our `GameDataBuilder` instance empty, now we'll add some syste
 #     utils::application_root_dir,
 # };
 #
+/* ... */
+
 const BG_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
- fn main() -> Result<()> {
+ fn main() -> amethyst::Result<()> {
+#     amethyst::start_logger(Default::default());
+# 
+#     let app_root = application_root_dir()?;
+# 
+#     let config_dir = app_root.join("config");
+#     let assets_dir = app_root.join("assets");
+# 
+#     let display_config_path = config_dir.join("display.ron");
     /* ... */
 
     let render_bundle = RenderingBundle::<DefaultBackend>::new()
@@ -244,7 +253,11 @@ const BG_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
     let game_data = GameDataBuilder::default()
         .with_bundle(render_bundle)?;
 
-    Ok(()) 
+    /* ... */
+#     let mut game = Application::new(assets_dir, Pong, game_data)?;
+#     game.run();
+# 
+#     Ok(())
  }
 ```
 
@@ -263,7 +276,7 @@ Those plugins will equip our renderer with the ability to open a window and draw
 In this configuration, our window will have a black background.
 If you want to use a different color, you can tweak the RGBA
 values inside `with_clear`. Values range from `0.0` to `1.0`, try using for
-instance `[0.00196, 0.23726, 0.21765, 1.0]` to get a nice cyan-colored window.
+instance `[0.34, 0.36, 0.52, 1.0]` to get a nice cornflower blue window.
 
 > **Note:** This setup code is using Amethyst's `RenderPlugin` trait based system that
 > uses `rendy` crate to define the rendering. If you plan to go beyond the rendering
