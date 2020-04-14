@@ -462,7 +462,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
 
 impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
     fn build(self, mut world: &mut World) -> GameData<'a, 'b> {
-        #[cfg(not(no_threading))]
+        #[cfg(feature = "parallel")]
         let pool = (*world.read_resource::<ArcThreadPool>()).clone();
 
         let mut dispatcher_builder = self.disp_builder;
@@ -474,9 +474,9 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
             })
             .unwrap_or_else(|e| panic!("Failed to set up dispatcher: {}", e));
 
-        #[cfg(not(no_threading))]
+        #[cfg(feature = "parallel")]
         let mut dispatcher = dispatcher_builder.with_pool(pool).build();
-        #[cfg(no_threading)]
+        #[cfg(not(feature = "parallel"))]
         let mut dispatcher = dispatcher_builder.build();
         dispatcher.setup(&mut world);
         GameData::new(dispatcher)
