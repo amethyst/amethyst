@@ -13,7 +13,7 @@ impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Paddle>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
     );
 
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {

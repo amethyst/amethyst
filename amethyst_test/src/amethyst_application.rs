@@ -5,7 +5,7 @@ use amethyst::{
     core::{transform::TransformBundle, EventReader, RunNowDesc, SystemBundle, SystemDesc},
     ecs::prelude::*,
     error::Error,
-    input::{BindingTypes, InputBundle},
+    input::{BindingTypes, Context, InputBundle},
     prelude::*,
     shred::Resource,
     ui::UiBundle,
@@ -112,11 +112,11 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     ///
     /// This also adds a `ScreenDimensions` resource to the `World` so that UI calculations can be
     /// done.
-    pub fn ui_base<B: BindingTypes>(
+    pub fn ui_base<C: Context, B: BindingTypes>(
     ) -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
         AmethystApplication::blank()
             .with_bundle(TransformBundle::new())
-            .with_ui_bundles::<B>()
+            .with_ui_bundles::<C, B>()
             .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT, HIDPI))
     }
 
@@ -376,9 +376,9 @@ where
     /// # Type Parameters
     ///
     /// * `B`: Type representing the input binding types.
-    pub fn with_ui_bundles<B: BindingTypes>(self) -> Self {
-        self.with_bundle(InputBundle::<B>::new())
-            .with_bundle(UiBundle::<B>::new())
+    pub fn with_ui_bundles<C: Context, B: BindingTypes>(self) -> Self {
+        self.with_bundle(InputBundle::<C, B>::new())
+            .with_bundle(UiBundle::<C, B>::new())
     }
 
     /// Adds a resource to the `World`.
@@ -787,7 +787,7 @@ mod test {
             world.read_resource::<ScreenDimensions>();
         };
 
-        AmethystApplication::ui_base::<amethyst::input::StringBindings>()
+        AmethystApplication::ui_base::<(), amethyst::input::StringBindings>()
             .with_assertion(assertion_fn)
             .run()
     }

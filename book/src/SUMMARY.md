@@ -66,4 +66,5 @@
     * [`cgmath` to `nalgebra`](./appendices/b_migration_notes/cgmath_to_nalgebra.md)
     * [Rendy Migration](./appendices/b_migration_notes/rendy_migration.md)
     * [Specs Migration](./appendices/b_migration_notes/specs_migration.md)
+    * [Input Context Migration](./appendices/b_migration_notes/input_context_migration.md)
 * [Appendix C: Feature Gates](./appendices/c_feature_gates.md)

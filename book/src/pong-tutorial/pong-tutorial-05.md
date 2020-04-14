@@ -141,7 +141,7 @@ keep playing after someone scores and log who got the point.
 #
 # let path = "./config/display.ron";
 # let config = DisplayConfig::load(&path)?;
-# let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+# let input_bundle = amethyst::input::InputBundle::<(), StringBindings>::new();
 #
 let game_data = GameDataBuilder::default()
 #    .with_bundle(TransformBundle::new())?
@@ -216,7 +216,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # let display_config_path = "";
 # struct Pong;
 # let game_data = GameDataBuilder::default()
-.with_bundle(UiBundle::<StringBindings>::new())?
+.with_bundle(UiBundle::<(), StringBindings>::new())?
 # ;
 #
 # Ok(())
@@ -228,9 +228,9 @@ We're adding a `RenderUi` to our `RenderBundle`, and we're also adding the
 rendering UI visuals to our game in addition to the existing background and
 sprites.
 
-> **Note:** We're using a `UiBundle` with type `StringBindings` here because the
-`UiBundle` needs to know what types our `InputHandler` is using to map `actions`
-and `axes`. So just know that your `UiBundle` type should match your
+> **Note:** We're using a `UiBundle` with types `()` and `StringBindings` here because the
+`UiBundle` needs to know what types our `InputHandler` is using.
+So just know that your `UiBundle` type should match your
 `InputHandler` type. You can read more about those here: [UiBundle][ui-bundle],
 [InputHandler][input-handler].
 

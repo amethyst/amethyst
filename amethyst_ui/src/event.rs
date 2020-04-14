@@ -10,7 +10,7 @@ use amethyst_core::{
     shrev::EventChannel,
     Hidden, HiddenPropagate,
 };
-use amethyst_input::{BindingTypes, InputHandler};
+use amethyst_input::{BindingTypes, Context, InputHandler};
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, marker::PhantomData};
@@ -97,14 +97,14 @@ impl Component for Interactable {
 /// The system that generates events for `Interactable` enabled entities.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
 #[derive(Default, Debug)]
-pub struct UiMouseSystem<T: BindingTypes> {
+pub struct UiMouseSystem<C: Context, T: BindingTypes> {
     was_down: bool,
     click_started_on: HashSet<Entity>,
     last_targets: HashSet<Entity>,
-    _marker: PhantomData<T>,
+    _marker: PhantomData<(C, T)>,
 }
 
-impl<T: BindingTypes> UiMouseSystem<T> {
+impl<C: Context, T: BindingTypes> UiMouseSystem<C, T> {
     /// Creates a new UiMouseSystem.
     pub fn new() -> Self {
         UiMouseSystem {
@@ -116,14 +116,14 @@ impl<T: BindingTypes> UiMouseSystem<T> {
     }
 }
 
-impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
+impl<'a, C: Context, T: BindingTypes> System<'a> for UiMouseSystem<C, T> {
     type SystemData = (
         Entities<'a>,
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, UiTransform>,
         ReadStorage<'a, Interactable>,
-        Read<'a, InputHandler<T>>,
+        Read<'a, InputHandler<C, T>>,
         ReadExpect<'a, ScreenDimensions>,
         Write<'a, EventChannel<UiEvent>>,
     );

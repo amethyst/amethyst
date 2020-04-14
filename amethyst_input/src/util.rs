@@ -1,4 +1,4 @@
-use crate::{input_handler::InputHandler, BindingTypes};
+use crate::{input_handler::InputHandler, BindingTypes, Context};
 use winit::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 
 /// If this event was for manipulating a keyboard key then this will return the `VirtualKeyCode`
@@ -54,9 +54,9 @@ pub fn is_close_requested(event: &Event) -> bool {
 
 /// Gets the input axis value from the `InputHandler`.
 /// If the name is None, it will return the default value of the axis (0.0).
-pub fn get_input_axis_simple<T: BindingTypes>(
+pub fn get_input_axis_simple<C: Context, T: BindingTypes>(
     name: &Option<T::Axis>,
-    input: &InputHandler<T>,
+    input: &InputHandler<C, T>,
 ) -> f32 {
     name.as_ref()
         .and_then(|ref n| input.axis_value(n))

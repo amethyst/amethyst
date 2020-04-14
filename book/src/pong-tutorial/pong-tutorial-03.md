@@ -27,13 +27,15 @@ project, called `bindings.ron`, which will contain a RON representation
 of the [amethyst_input::Bindings][doc_bindings] struct:
 
 ```ron,ignore
-(
-  axes: {
-    "left_paddle": Emulated(pos: Key(W), neg: Key(S)),
-    "right_paddle": Emulated(pos: Key(Up), neg: Key(Down)),
-  },
-  actions: {},
-)
+{
+    (): (
+        axes: {
+            "left_paddle": Emulated(pos: Key(W), neg: Key(S)),
+            "right_paddle": Emulated(pos: Key(Up), neg: Key(Down)),
+        },
+        actions: {},
+    )
+}
 ```
 
 In Amethyst, inputs can either be axes (a range that represents an analog
@@ -63,7 +65,7 @@ use amethyst::input::{InputBundle, StringBindings};
 # let app_root = application_root_dir()?;
 let binding_path = app_root.join("config").join("bindings.ron");
 
-let input_bundle = InputBundle::<StringBindings>::new()
+let input_bundle = InputBundle::<(), StringBindings>::new()
     .with_bindings_from_file(binding_path)?;
 
 # let path = "./config/display.ron";
@@ -82,7 +84,13 @@ game.run();
 # }
 ```
 
-For `InputBundle<StringBindings>`, the parameter type determines how `axes` and `actions`
+For `InputBundle<(), StringBindings>`, the first parameter type is the `Context`
+value for the `InputSystem`, we've defined it as the unit type, `()` because we
+only have one context. If we had more, such as an inventory screen in an RPG, we
+could instead define the context as an enum, and switch the context of the `InputSystem`
+as needed.
+
+The second parameter type determines how `axes` and `actions`
 are identified in the `bindings.ron` file
 (in this example, `String`s are used; e.g. `"left_paddle"`).
 
@@ -136,7 +144,7 @@ impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Paddle>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
     );
 
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
@@ -177,10 +185,10 @@ operates on in the `SystemData` tuple: `WriteStorage`, `ReadStorage`, and
 `Read`. More specifically, the generic types we've used here tell us that the
 `PaddleSystem` mutates `Transform` components, `WriteStorage<'s, Transform>`, it
 reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
-`InputHandler<StringBindings>` resource we created earlier, using the `Read`
+`InputHandler<(), StringBindings>` resource we created earlier, using the `Read`
 structure.
 
-> For `InputHandler<StringBindings>`, make sure the parameter type is the same
+> For `InputHandler<(), StringBindings>`, make sure the parameter type is the same
 > as the one used to create the `InputBundle` earlier.
 
 Now that we have access to the storages of the components we want, we can iterate
@@ -229,7 +237,7 @@ fn main() -> amethyst::Result<()> {
 # fn run(&mut self, _: Self::SystemData) { }
 # }
 # }
-# let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+# let input_bundle = amethyst::input::InputBundle::<(), StringBindings>::new();
 let game_data = GameDataBuilder::default()
     // ...
     .with_bundle(TransformBundle::new())?
@@ -280,7 +288,7 @@ component of the transform's translation.
 #  type SystemData = (
 #    WriteStorage<'s, Transform>,
 #    ReadStorage<'s, Paddle>,
-#    Read<'s, InputHandler<StringBindings>>,
+#    Read<'s, InputHandler<(), StringBindings>>,
 #  );
 fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
     for (paddle, transform) in (&paddles, &mut transforms).join() {
@@ -343,7 +351,7 @@ Our run function should now look something like this:
 #  type SystemData = (
 #    WriteStorage<'s, Transform>,
 #    ReadStorage<'s, Paddle>,
-#    Read<'s, InputHandler<StringBindings>>,
+#    Read<'s, InputHandler<(), StringBindings>>,
 #  );
 fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
     for (paddle, transform) in (&paddles, &mut transforms).join() {

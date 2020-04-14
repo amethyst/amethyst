@@ -14,7 +14,7 @@ use amethyst_core::{
     SystemDesc,
 };
 use amethyst_derive::SystemDesc;
-use amethyst_input::{BindingTypes, InputHandler};
+use amethyst_input::{BindingTypes, Context, InputHandler};
 
 use crate::{CachedSelectionOrder, UiEvent, UiEventType};
 
@@ -183,21 +183,24 @@ where
 /// Builds a `SelectionMouseSystem`.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
-pub struct SelectionMouseSystemDesc<G, T>
+pub struct SelectionMouseSystemDesc<G, C, T>
 where
     G: Send + Sync + 'static + PartialEq,
+    C: Context,
     T: BindingTypes,
 {
-    marker: PhantomData<(G, T)>,
+    marker: PhantomData<(G, C, T)>,
 }
 
-impl<'a, 'b, G, T> SystemDesc<'a, 'b, SelectionMouseSystem<G, T>> for SelectionMouseSystemDesc<G, T>
+impl<'a, 'b, G, C, T> SystemDesc<'a, 'b, SelectionMouseSystem<G, C, T>>
+    for SelectionMouseSystemDesc<G, C, T>
 where
     G: Send + Sync + 'static + PartialEq,
+    C: Context,
     T: BindingTypes,
 {
-    fn build(self, world: &mut World) -> SelectionMouseSystem<G, T> {
-        <SelectionMouseSystem<G, T> as System<'_>>::SystemData::setup(world);
+    fn build(self, world: &mut World) -> SelectionMouseSystem<G, C, T> {
+        <SelectionMouseSystem<G, C, T> as System<'_>>::SystemData::setup(world);
 
         let ui_reader_id = world.fetch_mut::<EventChannel<UiEvent>>().register_reader();
 
@@ -207,15 +210,16 @@ where
 
 /// System handling the clicks on ui entities and selecting them, if applicable.
 #[derive(Debug)]
-pub struct SelectionMouseSystem<G, T>
+pub struct SelectionMouseSystem<G, C, T>
 where
+    C: Context,
     T: BindingTypes,
 {
     ui_reader_id: ReaderId<UiEvent>,
-    phantom: PhantomData<(G, T)>,
+    phantom: PhantomData<(G, C, T)>,
 }
 
-impl<G, T: BindingTypes> SelectionMouseSystem<G, T>
+impl<G, C: Context, T: BindingTypes> SelectionMouseSystem<G, C, T>
 where
     G: Send + Sync + 'static + PartialEq,
 {
@@ -228,7 +232,7 @@ where
     }
 }
 
-impl<'a, G, T: BindingTypes> System<'a> for SelectionMouseSystem<G, T>
+impl<'a, G, C: Context, T: BindingTypes> System<'a> for SelectionMouseSystem<G, C, T>
 where
     G: Send + Sync + 'static + PartialEq,
 {
@@ -237,7 +241,7 @@ where
         Read<'a, CachedSelectionOrder>,
         WriteStorage<'a, Selected>,
         ReadStorage<'a, Selectable<G>>,
-        Read<'a, InputHandler<T>>,
+        Read<'a, InputHandler<C, T>>,
         Entities<'a>,
     );
     fn run(

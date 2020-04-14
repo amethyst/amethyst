@@ -29,7 +29,8 @@ pub use self::{
 };
 pub use winit::{ElementState, VirtualKeyCode};
 
-use std::iter::Iterator;
+use serde::{Deserialize, Serialize};
+use std::{hash::Hash, iter::Iterator};
 
 mod axis;
 mod bindings;
@@ -70,4 +71,30 @@ impl Iterator for KeyThenCode {
             _ => None,
         }
     }
+}
+
+/// Combination trait for the `InputHandler` context. Contexts decide which set of input bindings is in use. If you have no interest in using
+/// this feature, you can use the unit type, `()` anywhere that a `Context` is needed. To use this feature, an enum type is recommended, such as
+///
+/// ```
+/// use std::hash::Hash;
+/// use serde::{Deserialize, Serialize};
+///
+/// #[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
+/// pub enum MyInputContext {
+///     Walking,
+///     Flying,
+/// }
+/// ```
+///
+/// You can then use the context with the `InputHandler` APIs to define and switch contexts as need arises. The `Context` trait is automatically
+/// implemented for anything which implements all of the traits `Context` requires.
+pub trait Context:
+    Default + Clone + Send + Sync + Hash + Eq + for<'a> Deserialize<'a> + Serialize + 'static
+{
+}
+
+impl<T> Context for T where
+    T: Default + Clone + Send + Sync + Hash + Eq + for<'a> Deserialize<'a> + Serialize + 'static
+{
 }

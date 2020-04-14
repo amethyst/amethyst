@@ -93,7 +93,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(InputBundle::<(), StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

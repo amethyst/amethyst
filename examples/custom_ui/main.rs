@@ -100,7 +100,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
-        .with_bundle(UiBundle::<StringBindings, CustomUi>::new())?
+        .with_bundle(UiBundle::<(), StringBindings, CustomUi>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

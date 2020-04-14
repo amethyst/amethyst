@@ -446,7 +446,7 @@ struct MyGameplaySystem;
 
 impl<'s> System<'s> for MyGameplaySystem {
     type SystemData = (
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
         Write<'s, Game>,
     );
 

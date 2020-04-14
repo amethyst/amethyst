@@ -123,7 +123,7 @@ fn main() -> Result<(), Error> {
     let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(InputBundle::<(), StringBindings>::new())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()

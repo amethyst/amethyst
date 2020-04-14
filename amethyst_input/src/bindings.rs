@@ -89,22 +89,24 @@ impl BindingTypes for StringBindings {
 ///
 /// Example Ron config file:
 /// ```ron
-/// (
-///     axes: {
-///         "updown": Emulated(
-///             pos: Key(Up),
-///             neg: Key(Down)
-///         ),
-///         "leftright": Emulated(
-///             pos: Key(Right),
-///             neg: Key(Left)
-///         )
-///     },
-///     actions: {
-///         "fire": [ [Mouse(Left)], [Key(X)] ], // Multiple bindings for one action
-///         "reload": [ [Key(LControl), Key(R)] ] // Combinations of multiple bindings possible
-///     }
-/// )
+/// {
+///     (): (
+///         axes: {
+///             "updown": Emulated(
+///                 pos: Key(Up),
+///                 neg: Key(Down)
+///             ),
+///             "leftright": Emulated(
+///                 pos: Key(Right),
+///                 neg: Key(Left)
+///             )
+///         },
+///         actions: {
+///             "fire": [ [Mouse(Left)], [Key(X)] ], // Multiple bindings for one action
+///             "reload": [ [Key(LControl), Key(R)] ] // Combinations of multiple bindings possible
+///         }
+///     )
+/// }
 /// ```
 #[derive(Derivative, Serialize, Deserialize)]
 #[derivative(Debug(bound = ""), Default(bound = ""), Clone(bound = ""))]

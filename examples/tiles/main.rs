@@ -45,7 +45,7 @@ impl<'s> System<'s> for DrawSelectionSystem {
         ReadStorage<'s, Camera>,
         ReadStorage<'s, Transform>,
         WriteStorage<'s, DebugLinesComponent>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
     );
 
     fn run(
@@ -123,7 +123,7 @@ impl<'s> System<'s> for CameraSwitchSystem {
         ReadStorage<'s, Camera>,
         ReadStorage<'s, Transform>,
         ReadStorage<'s, Parent>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
     );
 
     fn run(
@@ -178,7 +178,7 @@ impl<'s> System<'s> for CameraMovementSystem {
         Entities<'s>,
         ReadStorage<'s, Camera>,
         WriteStorage<'s, Transform>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
     );
 
     fn run(&mut self, (active_camera, entities, cameras, mut transforms, input): Self::SystemData) {
@@ -226,7 +226,7 @@ impl<'s> System<'s> for MapMovementSystem {
         Read<'s, Time>,
         WriteStorage<'s, Transform>,
         ReadStorage<'s, TileMap<ExampleTile>>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
     );
 
     fn run(&mut self, (time, mut transforms, tilemaps, input): Self::SystemData) {
@@ -419,7 +419,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<StringBindings>::new()
+            InputBundle::<(), StringBindings>::new()
                 .with_bindings_from_file("examples/tiles/resources/input.ron")?,
         )?
         .with(

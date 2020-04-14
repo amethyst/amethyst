@@ -43,9 +43,9 @@ pub fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         // This system is in 'events.rs'. Basically, it registers UI events that
         // happen. Without it, the buttons will not react.
-        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(InputBundle::<(), StringBindings>::new())?
         // this bundle allows us to 'find' the Buttons and other UI elements later on
-        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(UiBundle::<(), StringBindings>::new())?
         // this allows us to reload '*.ron' files during execution
         .with_bundle(HotReloadBundle::default())?
         // without this Bundle, our Program will silently (!) fail when trying to start the 'Game'.

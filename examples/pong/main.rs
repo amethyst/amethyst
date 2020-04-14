@@ -63,7 +63,7 @@ fn main() -> amethyst::Result<()> {
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
+            InputBundle::<(), StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
         )?
         .with_bundle(PongBundle)?
         .with_bundle(AudioBundle::default())?
@@ -72,7 +72,7 @@ fn main() -> amethyst::Result<()> {
             "dj_system",
             &[],
         )
-        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(UiBundle::<(), StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and

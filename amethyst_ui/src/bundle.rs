@@ -14,7 +14,7 @@ use amethyst_core::{
     SystemDesc,
 };
 use amethyst_error::Error;
-use amethyst_input::BindingTypes;
+use amethyst_input::{BindingTypes, Context};
 use derive_new::new;
 use std::marker::PhantomData;
 
@@ -25,13 +25,14 @@ use std::marker::PhantomData;
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new, Debug)]
-pub struct UiBundle<T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
+pub struct UiBundle<CT: Context, T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(T, C, W, G)>,
+    _marker: PhantomData<(CT, T, C, W, G)>,
 }
 
-impl<'a, 'b, T, C, W, G> SystemBundle<'a, 'b> for UiBundle<T, C, W, G>
+impl<'a, 'b, CT, T, C, W, G> SystemBundle<'a, 'b> for UiBundle<CT, T, C, W, G>
 where
+    CT: Context,
     T: BindingTypes,
     C: ToNativeWidget,
     W: WidgetId,
@@ -53,7 +54,7 @@ where
             &["transform_system"],
         );
         builder.add(
-            UiMouseSystem::<T>::new(),
+            UiMouseSystem::<CT, T>::new(),
             "ui_mouse_system",
             &["input_system", "ui_transform"],
         );
@@ -68,7 +69,7 @@ where
             &[],
         );
         builder.add(
-            SelectionMouseSystemDesc::<G, T>::default().build(world),
+            SelectionMouseSystemDesc::<G, CT, T>::default().build(world),
             "ui_mouse_selection",
             &["ui_mouse_system"],
         );
@@ -100,7 +101,7 @@ where
             &["ui_mouse_system"],
         );
         builder.add(
-            DragWidgetSystemDesc::<T>::default().build(world),
+            DragWidgetSystemDesc::<CT, T>::default().build(world),
             "ui_drag_system",
             &["ui_mouse_system"],
         );

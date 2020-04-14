@@ -7,7 +7,7 @@ use amethyst_core::{
     SystemDesc,
 };
 use amethyst_error::Error;
-use amethyst_input::BindingTypes;
+use amethyst_input::{BindingTypes, Context};
 
 use super::*;
 
@@ -33,16 +33,17 @@ use super::*;
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
 #[derive(Debug)]
-pub struct FlyControlBundle<T: BindingTypes> {
+pub struct FlyControlBundle<C: Context, T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     speed: f32,
     right_input_axis: Option<T::Axis>,
     up_input_axis: Option<T::Axis>,
     forward_input_axis: Option<T::Axis>,
+    phantom: PhantomData<C>,
 }
 
-impl<T: BindingTypes> FlyControlBundle<T> {
+impl<C: Context, T: BindingTypes> FlyControlBundle<C, T> {
     /// Builds a new fly control bundle using the provided axes as controls.
     pub fn new(
         right_input_axis: Option<T::Axis>,
@@ -56,6 +57,7 @@ impl<T: BindingTypes> FlyControlBundle<T> {
             right_input_axis,
             up_input_axis,
             forward_input_axis,
+            phantom: PhantomData,
         }
     }
 
@@ -73,14 +75,14 @@ impl<T: BindingTypes> FlyControlBundle<T> {
     }
 }
 
-impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
+impl<'a, 'b, C: Context, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<C, T> {
     fn build(
         self,
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         builder.add(
-            FlyMovementSystemDesc::<T>::new(
+            FlyMovementSystemDesc::<C, T>::new(
                 self.speed,
                 self.right_input_axis,
                 self.up_input_axis,

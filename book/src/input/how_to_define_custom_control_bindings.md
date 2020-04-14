@@ -82,18 +82,21 @@ We can now use this custom type in our `InputBundle` and create a RON config fil
 The config file might look something like this:
 
 ```ron,ignore
-(
-    axes: {
-        Vertical(0): Emulated(pos: Key(W), neg: Key(S)),
-        Horizontal(0): Emulated(pos: Key(D), neg: Key(A)),
-        Vertical(1): Emulated(pos: Key(Up), neg: Key(Down)),
-        Horizontal(1): Emulated(pos: Key(Right), neg: Key(Left)),
-    },
-    actions: {
-        Shoot(0): [[Key(Space)]],
-        Shoot(1): [[Key(Return)]],
-    },
-)
+{
+    (): (
+        axes: {
+            Vertical(0): Emulated(pos: Key(W), neg: Key(S)),
+            Horizontal(0): Emulated(pos: Key(D), neg: Key(A)),
+            Vertical(1): Emulated(pos: Key(Up), neg: Key(Down)),
+            Horizontal(1): Emulated(pos: Key(Right), neg: Key(Left)),
+        },
+        actions: {
+            Shoot(0): [[Key(Space)]],
+            Shoot(1): [[Key(Return)]],
+        },
+    )
+}
+
 ```
 
 Here the number after the binding type could be the ID of the player, but you can supply any other data as long as it derives the right traits.
@@ -110,7 +113,7 @@ use amethyst::input::InputBundle;
 # let input_config = "input.ron";
 #
 let input_bundle = 
-    InputBundle::<MovementBindingTypes>::new()
+    InputBundle::<(), MovementBindingTypes>::new()
         .with_bindings_from_file(input_config)?;
 #
 # Ok(())
@@ -125,7 +128,7 @@ And add the `InputBundle` to the game data just like before.
 # use amethyst::input::{InputBundle, StringBindings};
 #
 # fn main() -> amethyst::Result<()> {
-# let input_bundle = InputBundle::<StringBindings>::default();
+# let input_bundle = InputBundle::<(), StringBindings>::default();
 #
 let mut world = World::new();
 let game_data = GameDataBuilder::default()
@@ -172,7 +175,7 @@ impl<'s> System<'s> for MovementSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Player>,
-        Read<'s, InputHandler<MovementBindingTypes>>,
+        Read<'s, InputHandler<(), MovementBindingTypes>>,
     );
 
     fn run(&mut self, (mut transform, player, input): Self::SystemData) {

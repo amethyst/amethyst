@@ -12,7 +12,9 @@ use amethyst_core::{
     transform::Transform,
 };
 use amethyst_derive::SystemDesc;
-use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
+use amethyst_input::{get_input_axis_simple, BindingTypes, Context, InputHandler};
+
+use std::marker::PhantomData;
 
 use crate::{
     components::{ArcBallControlTag, FlyControlTag},
@@ -26,8 +28,9 @@ use crate::{
 /// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
 #[derive(Debug, SystemDesc)]
 #[system_desc(name(FlyMovementSystemDesc))]
-pub struct FlyMovementSystem<T>
+pub struct FlyMovementSystem<C, T>
 where
+    C: Context,
     T: BindingTypes,
 {
     /// The movement speed of the movement in units per second.
@@ -38,9 +41,10 @@ where
     up_input_axis: Option<T::Axis>,
     /// The name of the input axis to locally move in the z coordinates.
     forward_input_axis: Option<T::Axis>,
+    phantom: PhantomData<C>,
 }
 
-impl<T: BindingTypes> FlyMovementSystem<T> {
+impl<C: Context, T: BindingTypes> FlyMovementSystem<C, T> {
     /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
     pub fn new(
         speed: f32,
@@ -53,15 +57,16 @@ impl<T: BindingTypes> FlyMovementSystem<T> {
             right_input_axis,
             up_input_axis,
             forward_input_axis,
+            phantom: PhantomData,
         }
     }
 }
 
-impl<'a, T: BindingTypes> System<'a> for FlyMovementSystem<T> {
+impl<'a, C: Context, T: BindingTypes> System<'a> for FlyMovementSystem<C, T> {
     type SystemData = (
         Read<'a, Time>,
         WriteStorage<'a, Transform>,
-        Read<'a, InputHandler<T>>,
+        Read<'a, InputHandler<C, T>>,
         ReadStorage<'a, FlyControlTag>,
     );
 

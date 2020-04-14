@@ -1,6 +1,6 @@
 //! ECS input bundle
 
-use crate::{BindingError, BindingTypes, Bindings, InputSystemDesc};
+use crate::{BindingError, BindingTypes, Bindings, Context, InputSystemDesc};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
     ecs::prelude::{DispatcherBuilder, World},
@@ -8,7 +8,8 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use derivative::Derivative;
-use std::{error, fmt, path::Path};
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, error, fmt, path::Path};
 
 #[cfg(feature = "sdl_controller")]
 use crate::sdl_events_system::ControllerMappings;
@@ -30,20 +31,20 @@ use crate::sdl_events_system::ControllerMappings;
 ///
 #[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct InputBundle<T: BindingTypes> {
-    bindings: Option<Bindings<T>>,
+pub struct InputBundle<C: Context, T: BindingTypes> {
+    bindings: Option<HashMap<C, Bindings<T>>>,
     #[cfg(feature = "sdl_controller")]
     controller_mappings: Option<ControllerMappings>,
 }
 
-impl<T: BindingTypes> InputBundle<T> {
+impl<C: Context, T: BindingTypes> InputBundle<C, T> {
     /// Create a new input bundle with no bindings
     pub fn new() -> Self {
         Default::default()
     }
 
     /// Use the provided bindings with the `InputHandler`
-    pub fn with_bindings(mut self, bindings: Bindings<T>) -> Self {
+    pub fn with_bindings(mut self, bindings: HashMap<C, Bindings<T>>) -> Self {
         self.bindings = Some(bindings);
         self
     }
@@ -54,10 +55,19 @@ impl<T: BindingTypes> InputBundle<T> {
         file: P,
     ) -> Result<Self, BindingsFileError<T>>
     where
-        Bindings<T>: Config,
+        Bindings<T>: for<'de> Deserialize<'de> + Serialize,
     {
-        let mut bindings = Bindings::load(file)?;
-        bindings.check_invariants()?;
+        let mut bindings = match HashMap::<C, Bindings<T>>::load(&file) {
+            Ok(bindings) => bindings,
+            Err(e) => match Bindings::<T>::load(&file) {
+                Ok(_) => return Err(BindingsFileError::OldFormatInUse),
+                Err(_) => return Err(e.into()),
+            },
+        };
+
+        for bindings in bindings.values_mut() {
+            bindings.check_invariants()?;
+        }
         Ok(self.with_bindings(bindings))
     }
 
@@ -79,7 +89,7 @@ impl<T: BindingTypes> InputBundle<T> {
     }
 }
 
-impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for InputBundle<T> {
+impl<'a, 'b, C: Context, T: BindingTypes> SystemBundle<'a, 'b> for InputBundle<C, T> {
     fn build(
         self,
         world: &mut World,
@@ -90,11 +100,11 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for InputBundle<T> {
             use super::SdlEventsSystem;
             builder.add_thread_local(
                 // TODO: improve errors when migrating to failure
-                SdlEventsSystem::<T>::new(world, self.controller_mappings).unwrap(),
+                SdlEventsSystem::<C, T>::new(world, self.controller_mappings).unwrap(),
             );
         }
         builder.add(
-            InputSystemDesc::<T>::new(self.bindings).build(world),
+            InputSystemDesc::<C, T>::new(self.bindings).build(world),
             "input_system",
             &[],
         );
@@ -110,6 +120,8 @@ pub enum BindingsFileError<T: BindingTypes> {
     ConfigError(ConfigError),
     /// Problem with the bindings themselves.
     BindingError(BindingError<T>),
+    /// Old bindings format detected
+    OldFormatInUse,
 }
 
 impl<T: BindingTypes> fmt::Display for BindingsFileError<T>
@@ -121,6 +133,10 @@ where
         match self {
             BindingsFileError::ConfigError(..) => write!(f, "Configuration error"),
             BindingsFileError::BindingError(..) => write!(f, "Binding error"),
+            BindingsFileError::OldFormatInUse => write!(
+                f,
+                "Old input bindings file format detected, for help migrating please see https://book.amethyst.rs/stable/appendices/b_migration_notes/input_context_migration.html"
+            ),
         }
     }
 }
@@ -134,6 +150,7 @@ where
         match self {
             BindingsFileError::ConfigError(ref e) => Some(e),
             BindingsFileError::BindingError(ref e) => Some(e),
+            BindingsFileError::OldFormatInUse => None,
         }
     }
 }

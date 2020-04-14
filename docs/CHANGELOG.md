@@ -8,6 +8,25 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
+## Unreleased
+
+### Added
+
+
+### Changed
+
+- `InputHandler` has been refactored to support multiple input contexts.
+You'll need to adjust your input bindings files to use the new format. ([#2237])
+
+### Removed
+
+
+### Fixed
+
+
+
+[#2237]: https://github.com/amethyst/amethyst/pull/2237
+
 
 ## [0.15.0] - 2020-03-24
 

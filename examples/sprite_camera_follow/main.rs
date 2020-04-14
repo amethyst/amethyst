@@ -33,7 +33,7 @@ impl<'s> System<'s> for MovementSystem {
     type SystemData = (
         ReadStorage<'s, Player>,
         WriteStorage<'s, Transform>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
     );
 
     fn run(&mut self, (players, mut transforms, input): Self::SystemData) {
@@ -211,7 +211,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(
+            InputBundle::<(), StringBindings>::new().with_bindings_from_file(
                 app_root.join("examples/sprite_camera_follow/config/input.ron"),
             )?,
         )?

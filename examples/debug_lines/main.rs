@@ -173,7 +173,7 @@ fn main() -> amethyst::Result<()> {
     let key_bindings_path = app_root.join("examples/debug_lines/config/input.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-    let fly_control_bundle = FlyControlBundle::<StringBindings>::new(
+    let fly_control_bundle = FlyControlBundle::<(), StringBindings>::new(
         Some(String::from("move_x")),
         Some(String::from("move_y")),
         Some(String::from("move_z")),
@@ -182,7 +182,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
+            InputBundle::<(), StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?

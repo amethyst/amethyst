@@ -44,7 +44,7 @@ impl<'s> System<'s> for MouseRaycastSystem {
         Read<'s, AssetStorage<SpriteSheet>>,
         ReadExpect<'s, ScreenDimensions>,
         Read<'s, ActiveCamera>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
         UiFinder<'s>,
     );
 
@@ -264,8 +264,8 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(InputBundle::<(), StringBindings>::new())?
+        .with_bundle(UiBundle::<(), StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

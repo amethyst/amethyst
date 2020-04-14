@@ -30,7 +30,7 @@ fn main() -> amethyst::Result<()> {
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(
+            InputBundle::<(), StringBindings>::new().with_bindings_from_file(
                 app_root.join("examples/pong_tutorial_04/config/bindings.ron"),
             )?,
         )?

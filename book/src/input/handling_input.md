@@ -14,7 +14,7 @@ use amethyst::{
 # impl SimpleState for Example {}
 fn main() -> amethyst::Result<()> {
     // StringBindings is the default BindingTypes
-    let input_bundle = InputBundle::<StringBindings>::new();
+    let input_bundle = InputBundle::<(), StringBindings>::new();
 
     let mut world = World::new();
     let game_data = GameDataBuilder::default()
@@ -44,7 +44,7 @@ struct ExampleSystem;
 
 impl<'s> System<'s> for ExampleSystem {
     // The same BindingTypes from the InputBundle needs to be inside the InputHandler
-    type SystemData = Read<'s, InputHandler<StringBindings>>;
+    type SystemData = Read<'s, InputHandler<(), StringBindings>>;
 
     fn run(&mut self, input: Self::SystemData) {
         // Gets mouse coordinates
@@ -90,15 +90,17 @@ let game_data = GameDataBuilder::default()
 Instead of hard coding in all the key bindings, you can store all the bindings in a config file. A config file for key bindings with the RON format looks something like this:
 
 ```ron,ignore
-(
-    axes: {
-        "vertical": Emulated(pos: Key(W), neg: Key(S)),
-        "horizontal": Emulated(pos: Key(D), neg: Key(A)),
-    },
-    actions: {
-        "shoot": [[Key(Space)]],
-    },
-)
+{
+    (): (
+        axes: {
+            "vertical": Emulated(pos: Key(W), neg: Key(S)),
+            "horizontal": Emulated(pos: Key(D), neg: Key(A)),
+        },
+        actions: {
+            "shoot": [[Key(Space)]],
+        },
+    )
+}
 ```
 
 The axis values range from `-1.0` to `1.0`. For an `Emulated` axis controller such as keyboard buttons, the values are distinct:
@@ -118,6 +120,57 @@ The possible inputs you can specify for axes are listed [here](https://docs.amet
 
 To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the `InputBundle`.
 
+### Input Contexts
+
+You also may notice here the `(): (` used to introduce the axes and actions. The `()` in this instance is our input `Context` value.
+For this example, we're using the unit type here, because we only have a single input context. If however we wanted to define multiple distinct `Context`s
+we could instead use `InputHandler<MyInputContext, StringBindings>`. If `MyInputContext` was an enum like this
+
+```
+# extern crate serde;
+use std::hash::Hash;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
+pub enum MyInputContext {
+    Walking,
+    Flying,
+}
+
+// A default impl helps the InputHandler know which context should be used on startup
+impl Default for MyInputContext {
+    fn default() -> Self {
+        Self::Walking
+    }
+}
+```
+
+then our input file might instead look like
+
+```ron,ignore
+{
+    Walking: (
+        axes: {
+            "vertical": Emulated(pos: Key(W), neg: Key(S)),
+            "horizontal": Emulated(pos: Key(D), neg: Key(A)),
+        },
+        actions: {},
+    ),
+    Flying: (
+        axes: {
+            "pitch": Emulated(pos: Key(W), neg: Key(S)),
+            "yaw": Emulated(pos: Key(D), neg: Key(A)),
+            "roll": Emulated(pos: Key(Q), neg: Key(E)),
+        },
+        actions: {},
+    ),
+}
+```
+
+With a setup like this, we can switch between our various input contexts as needed by calling `InputHandler::set_context` and
+passing it the context we want to switch to. Contexts are mutually exclusive, and cannot contain duplicate bindings with the exception that
+axes are allowed to share bindings with single button combos.
+
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{prelude::*, input::*, utils::*};
@@ -125,7 +178,7 @@ To add these bindings to the `InputBundle` you simply need to call the `with_bin
 let root = application_root_dir()?;
 let bindings_config = root.join("config").join("bindings.ron");
 
-let input_bundle = InputBundle::<StringBindings>::new()
+let input_bundle = InputBundle::<(), StringBindings>::new()
     .with_bindings_from_file(bindings_config)?;
 
 //..
@@ -165,7 +218,7 @@ impl<'s> System<'s> for MovementSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Player>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler<(), StringBindings>>,
     );
     
     fn run(&mut self, (mut transforms, players, input): Self::SystemData) {

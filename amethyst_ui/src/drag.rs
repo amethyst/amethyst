@@ -14,7 +14,7 @@ use amethyst_core::{
     Hidden, HiddenPropagate, ParentHierarchy,
 };
 use amethyst_derive::SystemDesc;
-use amethyst_input::{BindingTypes, InputHandler};
+use amethyst_input::{BindingTypes, Context, InputHandler};
 use amethyst_window::ScreenDimensions;
 
 use crate::{
@@ -34,7 +34,7 @@ impl Component for Draggable {
 
 #[derive(Debug, SystemDesc)]
 #[system_desc(name(DragWidgetSystemDesc))]
-pub struct DragWidgetSystem<T: BindingTypes> {
+pub struct DragWidgetSystem<C: Context, T: BindingTypes> {
     #[system_desc(event_channel_reader)]
     ui_reader_id: ReaderId<UiEvent>,
 
@@ -45,11 +45,12 @@ pub struct DragWidgetSystem<T: BindingTypes> {
     #[system_desc(skip)]
     record: HashMap<Entity, (Vector2<f32>, Vector2<f32>)>,
 
-    phantom: PhantomData<T>,
+    phantom: PhantomData<(C, T)>,
 }
 
-impl<T> DragWidgetSystem<T>
+impl<C, T> DragWidgetSystem<C, T>
 where
+    C: Context,
     T: BindingTypes,
 {
     pub fn new(ui_reader_id: ReaderId<UiEvent>) -> Self {
@@ -61,13 +62,14 @@ where
     }
 }
 
-impl<'s, T> System<'s> for DragWidgetSystem<T>
+impl<'s, C, T> System<'s> for DragWidgetSystem<C, T>
 where
+    C: Context,
     T: BindingTypes,
 {
     type SystemData = (
         Entities<'s>,
-        Read<'s, InputHandler<T>>,
+        Read<'s, InputHandler<C, T>>,
         ReadExpect<'s, ScreenDimensions>,
         ReadExpect<'s, ParentHierarchy>,
         ReadStorage<'s, Hidden>,

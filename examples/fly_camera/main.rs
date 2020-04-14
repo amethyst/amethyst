@@ -67,7 +67,7 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
-            FlyControlBundle::<StringBindings>::new(
+            FlyControlBundle::<(), StringBindings>::new(
                 Some(String::from("move_x")),
                 Some(String::from("move_y")),
                 Some(String::from("move_z")),
@@ -76,7 +76,7 @@ fn main() -> Result<(), Error> {
         )?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
+            InputBundle::<(), StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()

@@ -351,7 +351,7 @@ as well as adding our new systems to the game data:
 # fn run(&mut self, _: Self::SystemData) { }
 # }
 # }
-# let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+# let input_bundle = amethyst::input::InputBundle::<(), StringBindings>::new();
 let game_data = GameDataBuilder::default()
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
