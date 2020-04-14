@@ -28,11 +28,17 @@ default = [
   "network",
   "renderer",
 
+  # Enable parallel execution by default.
+  # Currently not supported in WASM, so users have to disable default features if building for WASM.
+  "parallel",
+
   # mp3 not enabled by default as it requires `minimp3`, which cannot be compiled for WASM targets.
   "flac",
   "vorbis",
   "wav",
 ]
+
+parallel = ["amethyst_core/parallel"]
 
 # Renderer backend
 gl = ["amethyst_rendy/gl", "amethyst_ui/gl"]
@@ -147,7 +153,7 @@ amethyst_animation = { path = "amethyst_animation", version = "0.10.0", optional
 amethyst_assets = { path = "amethyst_assets", version = "0.11.0" }
 amethyst_audio = { path = "amethyst_audio", version = "0.10.0", default-features = false, optional = true }
 amethyst_config = { path = "amethyst_config", version = "0.14.0" }
-amethyst_core = { path = "amethyst_core", version = "0.10.0" }
+amethyst_core = { path = "amethyst_core", version = "0.10.0", default-features = false }
 amethyst_error = { path = "amethyst_error", version = "0.5.0" }
 amethyst_controls = { path = "amethyst_controls", version = "0.9.0" }
 amethyst_derive = { path = "amethyst_derive", version = "0.8.0" }
@@ -370,6 +376,3 @@ required-features = [ "tiles" ]
 
 [package.metadata.docs.rs]
 features = ["animation", "audio", "gltf", "tiles", "json", "locale", "network", "sdl_controller", "vulkan"]
-
-[patch.crates-io]
-shred = { git = "https://github.com/amethyst/shred.git", branch = "wasm" }
