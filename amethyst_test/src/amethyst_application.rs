@@ -10,7 +10,7 @@ use amethyst::{
     shred::Resource,
     ui::UiBundle,
     utils::application_root_dir,
-    window::ScreenDimensions,
+    window::{EventLoop, ScreenDimensions},
     StateEventReader,
 };
 use derivative::Derivative;
@@ -23,6 +23,12 @@ use crate::{
 
 type BundleAddFn = Box<
     dyn FnOnce(
+        GameDataBuilder<'static, 'static>,
+    ) -> Result<GameDataBuilder<'static, 'static>, Error>,
+>;
+type BundleEventFn = Box<
+    dyn FnOnce(
+        &EventLoop<()>,
         GameDataBuilder<'static, 'static>,
     ) -> Result<GameDataBuilder<'static, 'static>, Error>,
 >;
@@ -78,6 +84,10 @@ where
     /// segfault caused by mesa and the software GL renderer.
     #[derivative(Debug = "ignore")]
     bundle_add_fns: Vec<BundleAddFn>,
+    /// Functions to add bundles to the game data, where the bundles need a reference to the event
+    // loop.
+    #[derivative(Debug = "ignore")]
+    bundle_event_fns: Vec<BundleEventFn>,
     /// Functions to add bundles to the game data.
     ///
     /// This is necessary because `System`s are not `Send`, and so we cannot send `GameDataBuilder`
@@ -91,6 +101,8 @@ where
     /// States to run, in user specified order.
     #[derivative(Debug = "ignore")]
     state_fns: Vec<FnState<T, E>>,
+    /// Winit `EventLoop` to use.
+    event_loop: Option<EventLoop<()>>,
     /// Game data and event type.
     state_data: PhantomData<(T, E, R)>,
 }
@@ -101,9 +113,11 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     {
         AmethystApplication {
             bundle_add_fns: Vec::new(),
+            bundle_event_fns: Vec::new(),
             resource_add_fns: Vec::new(),
             setup_fns: Vec::new(),
             state_fns: Vec::new(),
+            event_loop: None,
             state_data: PhantomData,
         }
     }
@@ -129,7 +143,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
 impl<E, R> AmethystApplication<GameData<'static, 'static>, E, R>
 where
     E: Clone + Send + Sync + 'static,
-    R: Default,
+    R: Default + 'static,
 {
     /// Returns the built Application.
     ///
@@ -140,7 +154,9 @@ where
         for<'b> R: EventReader<'b, Event = E>,
     {
         let params = (
+            self.event_loop.as_ref(),
             self.bundle_add_fns,
+            self.bundle_event_fns,
             self.resource_add_fns,
             self.setup_fns,
             self.state_fns,
@@ -157,8 +173,10 @@ where
     // parameters which causes a compilation failure.
     #[allow(unknown_lints, clippy::type_complexity)]
     fn build_internal(
-        (bundle_add_fns, resource_add_fns, setup_fns, state_fns): (
+        (event_loop, bundle_add_fns, bundle_event_fns, resource_add_fns, setup_fns, state_fns): (
+            Option<&EventLoop<()>>,
             Vec<BundleAddFn>,
+            Vec<BundleEventFn>,
             Vec<FnResourceAdd>,
             Vec<FnSetup>,
             Vec<FnState<GameData<'static, 'static>, E>>,
@@ -167,12 +185,20 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let game_data = bundle_add_fns.into_iter().fold(
-            Ok(GameDataBuilder::default()),
-            |game_data: Result<GameDataBuilder<'_, '_>, Error>, function: BundleAddFn| {
-                game_data.and_then(function)
-            },
+        let mut game_data = bundle_add_fns.into_iter().try_fold(
+            GameDataBuilder::default(),
+            |game_data: GameDataBuilder<'_, '_>, function: BundleAddFn| function(game_data),
         )?;
+        if !bundle_event_fns.is_empty() {
+            let event_loop = event_loop
+                .expect("Bundles that require `EventLoop` exist, but `event_loop` not provided.");
+            game_data = bundle_event_fns.into_iter().try_fold(
+                game_data,
+                |game_data: GameDataBuilder<'_, '_>, function: BundleEventFn| {
+                    function(event_loop, game_data)
+                },
+            )?;
+        }
 
         let mut states = Vec::<Box<dyn State<GameData<'static, 'static>, E>>>::new();
         state_fns
@@ -213,12 +239,44 @@ where
     }
 
     /// Runs the application and returns `Ok(())` if nothing went wrong.
-    pub fn run(self) -> Result<(), Error>
+    pub fn run(mut self) -> Result<(), Error>
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
+        if let Some(event_loop) = self.event_loop.take() {
+            self.run_winit_loop(event_loop)
+        } else {
+            let params = (
+                self.event_loop.as_ref(),
+                self.bundle_add_fns,
+                self.bundle_event_fns,
+                self.resource_add_fns,
+                self.setup_fns,
+                self.state_fns,
+            );
+
+            // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
+            // recover from a panic.
+            let application = Mutex::new(Self::build_internal(params)?);
+            panic::catch_unwind(move || {
+                application
+                    .into_inner()
+                    .expect("Expected to get application lock")
+                    .run()
+            })
+            .map_err(Self::box_any_to_error)
+        }
+    }
+
+    /// Runs the application and returns `Ok(())` if nothing went wrong.
+    pub fn run_winit_loop(self, event_loop: EventLoop<()>) -> Result<(), Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
         let params = (
+            Some(&event_loop),
             self.bundle_add_fns,
+            self.bundle_event_fns,
             self.resource_add_fns,
             self.setup_fns,
             self.state_fns,
@@ -227,11 +285,19 @@ where
         // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
         // recover from a panic.
         let application = Mutex::new(Self::build_internal(params)?);
+
+        // Similar rationale for the `EventLoop`.
+        // This makes it safe to transfer the `EventLoop` across the `UnwindSafe` closure boundary.
+        let event_loop = Mutex::new(event_loop);
         panic::catch_unwind(move || {
+            let event_loop = event_loop
+                .into_inner()
+                .expect("Expected to get event_loop lock");
+
             application
-                .lock()
+                .into_inner()
                 .expect("Expected to get application lock")
-                .run()
+                .run_winit_loop(event_loop)
         })
         .map_err(Self::box_any_to_error)
     }
@@ -307,9 +373,11 @@ where
         }
         AmethystApplication {
             bundle_add_fns: self.bundle_add_fns,
+            bundle_event_fns: self.bundle_event_fns,
             resource_add_fns: self.resource_add_fns,
             setup_fns: self.setup_fns,
             state_fns: Vec::new(),
+            event_loop: self.event_loop,
             state_data: PhantomData,
         }
     }
@@ -368,6 +436,40 @@ where
         self
     }
 
+    /// Adds a bundle to the list of bundles.
+    ///
+    /// This provides an alternative to `.with_bundle(B)` where `B` is `!Send`. The function that
+    /// instantiates the bundle must be `Send`.
+    ///
+    /// This also sets the `event_loop` if it is not already set.
+    ///
+    /// # Parameters
+    ///
+    /// * `bundle_function`: Function to instantiate the Bundle.
+    pub fn with_bundle_event_fn<FnBundle, B>(mut self, bundle_function: FnBundle) -> Self
+    where
+        FnBundle: FnOnce(&EventLoop<()>) -> B + Send + 'static,
+        B: SystemBundle<'static, 'static> + 'static,
+    {
+        self.bundle_event_fns.push(Box::new(
+            move |event_loop: &EventLoop<()>, game_data: GameDataBuilder<'static, 'static>| {
+                game_data.with_bundle(bundle_function(event_loop))
+            },
+        ));
+
+        // TODO: This means we can't test on IOS
+        #[cfg(any(unix, windows))]
+        if self.event_loop.is_none() {
+            #[cfg(unix)]
+            use amethyst::winit::platform::unix::EventLoopExtUnix;
+            #[cfg(windows)]
+            use amethyst::winit::platform::windows::EventLoopExtWindows;
+
+            self.event_loop = Some(EventLoop::new_any_thread());
+        }
+        self
+    }
+
     /// Registers `InputBundle` and `UiBundle` with this application.
     ///
     /// This method is provided to avoid [stringly-typed][stringly] parameters for the Input and UI
@@ -388,7 +490,7 @@ where
     /// * `resource`: Bundle to add.
     pub fn with_resource<Res>(mut self, resource: Res) -> Self
     where
-        Res: Resource,
+        Res: Resource + Send,
     {
         let mut resource_opt = Some(resource);
         self.resource_add_fns
@@ -398,6 +500,33 @@ where
                     world.insert(resource);
                 }
             }));
+        self
+    }
+
+    /// Sets the winit event loop to use on `run()`.
+    ///
+    /// Note that to do this in a test, the event loop must be initialized using one of the
+    /// following:
+    ///
+    /// ```rust,ignore
+    /// #[cfg(any(unix, windows))]
+    /// let event_loop = {
+    ///     #[cfg(unix)]
+    ///     use amethyst::winit::platform::unix::EventLoopExtUnix;
+    ///     #[cfg(windows)]
+    ///     use amethyst::winit::platform::windows::EventLoopExtWindows;
+    ///
+    ///     EventLoop::new_any_thread()
+    /// };
+    ///
+    /// amethyst_application.with_event_loop(event_loop);
+    /// ```
+    ///
+    /// # Parameters
+    ///
+    /// * `event_loop`: winit event loop for the application.
+    pub fn with_event_loop(mut self, event_loop: EventLoop<()>) -> Self {
+        self.event_loop = Some(event_loop);
         self
     }
 

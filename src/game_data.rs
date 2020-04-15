@@ -6,11 +6,14 @@ use crate::{
             AddBarrier, AddBundle, AddSystem, AddSystemDesc, AddThreadLocal, AddThreadLocalDesc,
             DispatcherOperation,
         },
-        ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World, WorldExt},
-        ArcThreadPool, RunNowDesc, SystemBundle, SystemDesc,
+        ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
+        RunNowDesc, SystemBundle, SystemDesc,
     },
     error::Error,
 };
+
+#[cfg(feature = "parallel")]
+use crate::core::{ecs::WorldExt, ArcThreadPool};
 
 /// Initialise trait for game data
 pub trait DataInit<T> {
