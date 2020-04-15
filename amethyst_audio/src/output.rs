@@ -125,12 +125,18 @@ impl Output {
         n: u16,
     ) -> Result<(), DecoderError> {
         Sink::try_new(&self.stream_handle)
-            .map_err(|_| DecoderError)
+            .map_err(|e| {
+                log::error!("Failed to create stream handle {:?}", e);
+                DecoderError
+            })
             .and_then(|sink| {
                 for _ in 0..n {
                     sink.append(
                         Decoder::new(Cursor::new(source.clone()))
-                            .map_err(|_| DecoderError)?
+                            .map_err(|e| {
+                                log::error!("Failed to append to sink {:?}", e);
+                                DecoderError
+                            })?
                             .amplify(volume),
                     );
                 }
