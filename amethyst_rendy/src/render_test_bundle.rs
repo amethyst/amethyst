@@ -32,8 +32,15 @@ where
             visibility: false,
             ..Default::default()
         };
+
+        #[cfg(not(feature = "wasm"))]
         let mut rendering_bundle = RenderingBundle::<B>::new(display_config.clone(), event_loop)
             .with_plugin(crate::plugins::RenderFlat2D::default());
+
+        #[cfg(feature = "wasm")]
+        let mut rendering_bundle =
+            RenderingBundle::<B>::new(display_config.clone(), event_loop, None)
+                .with_plugin(crate::plugins::RenderFlat2D::default());
 
         #[cfg(feature = "window")]
         rendering_bundle.add_plugin(crate::plugins::RenderToWindow::new());
@@ -78,7 +85,11 @@ where
             visibility: false,
             ..Default::default()
         };
+
+        #[cfg(not(feature = "wasm"))]
         let rendering_bundle = RenderingBundle::<B>::new(display_config, event_loop);
+        #[cfg(feature = "wasm")]
+        let rendering_bundle = RenderingBundle::<B>::new(display_config, event_loop, None);
 
         Self { rendering_bundle }
     }
