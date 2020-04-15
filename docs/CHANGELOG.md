@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 * Basic GL rendering. ([#2192], [#2198])
+* `AmethystApplication::with_bundle_event_fn` takes in a bundle that needs a reference to the `EventLoop`. ([#2240])
 
 ### Changed
 
@@ -30,6 +31,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2198]: https://github.com/amethyst/amethyst/pull/2198
 [#2219]: https://github.com/amethyst/amethyst/pull/2219
 [#2238]: https://github.com/amethyst/amethyst/pull/2238
+[#2240]: https://github.com/amethyst/amethyst/pull/2240
 
 ## [0.15.0] - 2020-03-24
 

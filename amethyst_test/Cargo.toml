@@ -27,6 +27,7 @@ serde = "1.0"
 default = ["animation", "audio", "locale", "network", "renderer"]
 
 parallel = ["amethyst/parallel"]
+gl = ["amethyst/gl"]
 vulkan = ["amethyst/vulkan"]
 metal = ["amethyst/metal"]
 empty = ["amethyst/empty"]
@@ -46,6 +47,7 @@ no-slow-safety-checks = ["amethyst/no-slow-safety-checks"]
 shader-compiler = ["amethyst/shader-compiler"]
 test-support = ["amethyst/test-support"]
 experimental-spirv-reflection = ["amethyst/experimental-spirv-reflection"]
+wasm = ["amethyst/wasm"]
 
 # Used to tag tests that need an audio backend to run.
 test_audio = []

@@ -474,7 +474,7 @@ where
             {
                 self.world.write_resource::<Time>().start_fixed_update();
             }
-            while { self.world.write_resource::<Time>().step_fixed_update() } {
+            while self.world.write_resource::<Time>().step_fixed_update() {
                 self.states
                     .fixed_update(StateData::new(&mut self.world, &mut self.data));
             }
