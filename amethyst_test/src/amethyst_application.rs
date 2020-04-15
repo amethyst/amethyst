@@ -459,13 +459,15 @@ where
 
         // TODO: This means we can't test on IOS
         #[cfg(any(unix, windows))]
-        if self.event_loop.is_none() {
-            #[cfg(unix)]
-            use amethyst::winit::platform::unix::EventLoopExtUnix;
-            #[cfg(windows)]
-            use amethyst::winit::platform::windows::EventLoopExtWindows;
+        {
+            if self.event_loop.is_none() {
+                #[cfg(unix)]
+                use amethyst::winit::platform::unix::EventLoopExtUnix;
+                #[cfg(windows)]
+                use amethyst::winit::platform::windows::EventLoopExtWindows;
 
-            self.event_loop = Some(EventLoop::new_any_thread());
+                self.event_loop = Some(EventLoop::new_any_thread());
+            }
         }
         self
     }
