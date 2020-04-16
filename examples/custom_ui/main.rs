@@ -4,7 +4,7 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     core::transform::TransformBundle,
     ecs::prelude::WorldExt,
-    input::StringBindings,
+    input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
         plugins::RenderToWindow,
@@ -100,6 +100,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
+        .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<(), StringBindings, CustomUi>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
