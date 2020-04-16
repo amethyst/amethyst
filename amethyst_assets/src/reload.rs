@@ -1,8 +1,9 @@
 //! Defines the `Reload` trait.
 
-use std::{sync::Arc, time::Instant};
+use std::sync::Arc;
 
 use derive_new::new;
+use instant::Instant;
 
 use amethyst_core::{
     ecs::prelude::{DispatcherBuilder, Read, System, SystemData, World, Write},
