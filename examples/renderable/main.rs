@@ -202,10 +202,10 @@ fn main() -> Result<(), Error> {
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
