@@ -11,6 +11,7 @@ use amethyst::{
     ui::UiBundle,
     utils::application_root_dir,
     window::{EventLoop, ScreenDimensions},
+    winit::platform::desktop::EventLoopExtDesktop,
     StateEventReader,
 };
 use derivative::Derivative;
@@ -22,15 +23,17 @@ use crate::{
 };
 
 type BundleAddFn = Box<
-    dyn FnOnce(
-        GameDataBuilder<'static, 'static>,
-    ) -> Result<GameDataBuilder<'static, 'static>, Error>,
+    dyn (FnOnce(
+            GameDataBuilder<'static, 'static>,
+        ) -> Result<GameDataBuilder<'static, 'static>, Error>)
+        + Send,
 >;
 type BundleEventFn = Box<
-    dyn FnOnce(
-        &EventLoop<()>,
-        GameDataBuilder<'static, 'static>,
-    ) -> Result<GameDataBuilder<'static, 'static>, Error>,
+    dyn (FnOnce(
+            &EventLoop<()>,
+            GameDataBuilder<'static, 'static>,
+        ) -> Result<GameDataBuilder<'static, 'static>, Error>)
+        + Send,
 >;
 // Hack: Ideally we want a `SendBoxFnOnce`. However implementing it got too crazy:
 //
@@ -46,7 +49,7 @@ type BundleEventFn = Box<
 //   ergonomics of this test harness.
 type FnResourceAdd = Box<dyn FnMut(&mut World) + Send>;
 type FnSetup = Box<dyn FnOnce(&mut World) + Send>;
-type FnState<T, E> = Box<dyn FnOnce() -> Box<dyn State<T, E>>>;
+type FnState<T, E> = Box<dyn (FnOnce() -> Box<dyn State<T, E>>) + Send>;
 
 /// Screen width used in predefined display configuration.
 pub const SCREEN_WIDTH: u32 = 800;
@@ -101,8 +104,8 @@ where
     /// States to run, in user specified order.
     #[derivative(Debug = "ignore")]
     state_fns: Vec<FnState<T, E>>,
-    /// Winit `EventLoop` to use.
-    event_loop: Option<EventLoop<()>>,
+    /// Whether this needs to run within an `EventLoop`.
+    event_loop: bool,
     /// Game data and event type.
     state_data: PhantomData<(T, E, R)>,
 }
@@ -117,7 +120,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
             resource_add_fns: Vec::new(),
             setup_fns: Vec::new(),
             state_fns: Vec::new(),
-            event_loop: None,
+            event_loop: false,
             state_data: PhantomData,
         }
     }
@@ -143,7 +146,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
 impl<E, R> AmethystApplication<GameData<'static, 'static>, E, R>
 where
     E: Clone + Send + Sync + 'static,
-    R: Default + 'static,
+    R: Default + Send + 'static,
 {
     /// Returns the built Application.
     ///
@@ -153,8 +156,13 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
+        let event_loop = if self.event_loop {
+            Some(Self::spawn_event_loop())
+        } else {
+            None
+        };
         let params = (
-            self.event_loop.as_ref(),
+            event_loop.as_ref(),
             self.bundle_add_fns,
             self.bundle_event_fns,
             self.resource_add_fns,
@@ -162,6 +170,18 @@ where
             self.state_fns,
         );
         Self::build_internal(params)
+    }
+
+    fn spawn_event_loop() -> EventLoop<()> {
+        // TODO: This means we can't test on IOS
+        #[cfg(any(unix, windows))]
+        {
+            #[cfg(unix)]
+            use amethyst::winit::platform::unix::EventLoopExtUnix;
+            #[cfg(windows)]
+            use amethyst::winit::platform::windows::EventLoopExtWindows;
+            EventLoop::new_any_thread()
+        }
     }
 
     // Hack to get around `S` or `T` not being `Send`
@@ -239,15 +259,38 @@ where
     }
 
     /// Runs the application and returns `Ok(())` if nothing went wrong.
-    pub fn run(mut self) -> Result<(), Error>
+    pub fn run(self) -> Result<(), Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        if let Some(event_loop) = self.event_loop.take() {
-            self.run_winit_loop(event_loop)
-        } else {
+        self.run_winit_loop()
+    }
+
+    /// Runs the application and returns `Ok(())` if nothing went wrong.
+    pub fn run_winit_loop(self) -> Result<(), Error>
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
+        // Acquire a lock due to memory access issues when using Rendy:
+        //
+        // See: <https://github.com/amethyst/rendy/issues/151>
+        let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
+
+        use std::thread;
+
+        // We need to spawn the event loop in yet another layer of threading, because the X
+        // connection is only freed when the thread is joined.
+        //
+        // If we do not, then the current test thread will keep the X connection alive, and test
+        // binaries will (incorrectly) exit with exit code 0.
+        let thread_name = thread::current()
+            .name()
+            .map(String::from)
+            .unwrap_or_else(|| String::from("<unnamed-test>"));
+        let join_handle = thread::Builder::new().name(thread_name).spawn(|| {
+            let event_loop = Self::spawn_event_loop();
             let params = (
-                self.event_loop.as_ref(),
+                Some(&event_loop),
                 self.bundle_add_fns,
                 self.bundle_event_fns,
                 self.resource_add_fns,
@@ -258,48 +301,36 @@ where
             // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
             // recover from a panic.
             let application = Mutex::new(Self::build_internal(params)?);
+
+            // Similar rationale for the `EventLoop`.
+            // This makes it safe to transfer the `EventLoop` across the `UnwindSafe` closure boundary.
+            let event_loop = Mutex::new(event_loop);
             panic::catch_unwind(move || {
-                application
+                let mut event_loop = event_loop
                     .into_inner()
-                    .expect("Expected to get application lock")
-                    .run()
+                    .expect("Expected to get event_loop lock");
+
+                let mut application = application
+                    .into_inner()
+                    .expect("Expected to get application lock");
+
+                application.initialize();
+
+                event_loop.run_return(move |event, _, control_flow| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("run_event_loop");
+                    if let Some(event) = event.to_static() {
+                        application.handle_winit_event(event, control_flow)
+                    } else {
+                        println!("Non-static errors");
+                    }
+                });
             })
             .map_err(Self::box_any_to_error)
-        }
-    }
+        })?;
 
-    /// Runs the application and returns `Ok(())` if nothing went wrong.
-    pub fn run_winit_loop(self, event_loop: EventLoop<()>) -> Result<(), Error>
-    where
-        for<'b> R: EventReader<'b, Event = E>,
-    {
-        let params = (
-            Some(&event_loop),
-            self.bundle_add_fns,
-            self.bundle_event_fns,
-            self.resource_add_fns,
-            self.setup_fns,
-            self.state_fns,
-        );
-
-        // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
-        // recover from a panic.
-        let application = Mutex::new(Self::build_internal(params)?);
-
-        // Similar rationale for the `EventLoop`.
-        // This makes it safe to transfer the `EventLoop` across the `UnwindSafe` closure boundary.
-        let event_loop = Mutex::new(event_loop);
-        panic::catch_unwind(move || {
-            let event_loop = event_loop
-                .into_inner()
-                .expect("Expected to get event_loop lock");
-
-            application
-                .into_inner()
-                .expect("Expected to get application lock")
-                .run_winit_loop(event_loop)
-        })
-        .map_err(Self::box_any_to_error)
+        join_handle.join().map_err(Self::box_any_to_error)??;
+        Ok(())
     }
 
     /// Run the application in a sub thread.
@@ -319,10 +350,10 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        // Acquire a lock due to memory access issues when using Rendy:
-        //
-        // See: <https://github.com/amethyst/rendy/issues/151>
-        let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
+        // // Acquire a lock due to memory access issues when using Rendy:
+        // //
+        // // See: <https://github.com/amethyst/rendy/issues/151>
+        // let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
 
         self.run()
     }
@@ -441,7 +472,7 @@ where
     /// This provides an alternative to `.with_bundle(B)` where `B` is `!Send`. The function that
     /// instantiates the bundle must be `Send`.
     ///
-    /// This also sets the `event_loop` if it is not already set.
+    /// This also sets `event_loop` to true.
     ///
     /// # Parameters
     ///
@@ -457,18 +488,7 @@ where
             },
         ));
 
-        // TODO: This means we can't test on IOS
-        #[cfg(any(unix, windows))]
-        {
-            if self.event_loop.is_none() {
-                #[cfg(unix)]
-                use amethyst::winit::platform::unix::EventLoopExtUnix;
-                #[cfg(windows)]
-                use amethyst::winit::platform::windows::EventLoopExtWindows;
-
-                self.event_loop = Some(EventLoop::new_any_thread());
-            }
-        }
+        self.event_loop = true;
         self
     }
 
@@ -506,29 +526,8 @@ where
     }
 
     /// Sets the winit event loop to use on `run()`.
-    ///
-    /// Note that to do this in a test, the event loop must be initialized using one of the
-    /// following:
-    ///
-    /// ```rust,ignore
-    /// #[cfg(any(unix, windows))]
-    /// let event_loop = {
-    ///     #[cfg(unix)]
-    ///     use amethyst::winit::platform::unix::EventLoopExtUnix;
-    ///     #[cfg(windows)]
-    ///     use amethyst::winit::platform::windows::EventLoopExtWindows;
-    ///
-    ///     EventLoop::new_any_thread()
-    /// };
-    ///
-    /// amethyst_application.with_event_loop(event_loop);
-    /// ```
-    ///
-    /// # Parameters
-    ///
-    /// * `event_loop`: winit event loop for the application.
-    pub fn with_event_loop(mut self, event_loop: EventLoop<()>) -> Self {
-        self.event_loop = Some(event_loop);
+    pub fn with_event_loop(mut self) -> Self {
+        self.event_loop = true;
         self
     }
 
@@ -715,6 +714,19 @@ where
     {
         self.with_fn(assertion_fn)
     }
+}
+
+// This is necessary because in `AmethystApplication::run_winit_loop`, we move self into a thread
+// before instantiating the `EventLoop`.
+//
+// This is safe because even though `GameData<'_, '_>` is `!Send`, we have ensured that all of the
+// thread local systems (`RunNow`s) are constrained with `Send`.
+unsafe impl<T, E, R> Send for AmethystApplication<T, E, R>
+where
+    T: GameUpdate + 'static,
+    E: Send + Sync + 'static,
+    R: 'static,
+{
 }
 
 #[cfg(test)]
