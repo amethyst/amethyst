@@ -63,7 +63,7 @@ pub const HIDPI: f64 = 1.;
 //
 // <https://github.com/amethyst/rendy/issues/151>
 lazy_static! {
-    static ref RENDY_MEMORY_MUTEX: Mutex<()> = Mutex::new(());
+    static ref WINIT_MUTEX: Mutex<()> = Mutex::new(());
 }
 
 /// Builder for an Amethyst application.
@@ -150,7 +150,7 @@ where
 {
     /// Returns the built Application.
     ///
-    /// If you are intending to run the `Application`, you can use the `run()` or `run_isolated()`
+    /// If you are intending to run the `Application`, you can use the `run()` or `run_winit_loop()`
     /// methods instead.
     pub fn build(self) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
@@ -263,10 +263,47 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        self.run_winit_loop()
+        if self.event_loop {
+            self.run_winit_loop()
+        } else {
+            let params = (
+                None,
+                self.bundle_add_fns,
+                self.bundle_event_fns,
+                self.resource_add_fns,
+                self.setup_fns,
+                self.state_fns,
+            );
+
+            // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
+            // recover from a panic.
+            let application = Mutex::new(Self::build_internal(params)?);
+
+            // Similar rationale for the `EventLoop`.
+            // This makes it safe to transfer the `EventLoop` across the `UnwindSafe` closure boundary.
+            panic::catch_unwind(move || {
+                application
+                    .into_inner()
+                    .expect("Expected to get application lock")
+                    .run()
+            })
+            .map_err(Self::box_any_to_error)
+        }
     }
 
-    /// Runs the application and returns `Ok(())` if nothing went wrong.
+    /// Runs the application in a sub thread, isolated from other tests that run a winit loop.
+    ///
+    /// Historically this has been used for the following reasons:
+    ///
+    /// * To avoid segmentation faults using [X and mesa][mesa].
+    /// * To avoid multiple threads sharing the same memory in [Vulkan][vulkan].
+    ///
+    /// This must **NOT** be used when including the `AudioBundle` on Windows, as it causes a
+    /// [segfault][audio].
+    ///
+    /// [mesa]: <https://github.com/rust-windowing/glutin/issues/1038>
+    /// [vulkan]: <https://github.com/amethyst/rendy/issues/151>
+    /// [audio]: <https://github.com/amethyst/amethyst/issues/1595>
     pub fn run_winit_loop(self) -> Result<(), Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -274,7 +311,7 @@ where
         // Acquire a lock due to memory access issues when using Rendy:
         //
         // See: <https://github.com/amethyst/rendy/issues/151>
-        let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
+        let _guard = WINIT_MUTEX.lock().unwrap();
 
         use std::thread;
 
@@ -331,31 +368,6 @@ where
 
         join_handle.join().map_err(Self::box_any_to_error)??;
         Ok(())
-    }
-
-    /// Run the application in a sub thread.
-    ///
-    /// Historically this has been used for the following reasons:
-    ///
-    /// * To avoid segmentation faults using [X and mesa][mesa].
-    /// * To avoid multiple threads sharing the same memory in [Vulkan][vulkan].
-    ///
-    /// This must **NOT** be used when including the `AudioBundle` on Windows, as it causes a
-    /// [segfault][audio].
-    ///
-    /// [mesa]: <https://github.com/rust-windowing/glutin/issues/1038>
-    /// [vulkan]: <https://github.com/amethyst/rendy/issues/151>
-    /// [audio]: <https://github.com/amethyst/amethyst/issues/1595>
-    pub fn run_isolated(self) -> Result<(), Error>
-    where
-        for<'b> R: EventReader<'b, Event = E>,
-    {
-        // // Acquire a lock due to memory access issues when using Rendy:
-        // //
-        // // See: <https://github.com/amethyst/rendy/issues/151>
-        // let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
-
-        self.run()
     }
 
     fn box_any_to_error(error: Box<dyn Any + Send>) -> Error {
