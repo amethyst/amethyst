@@ -8,9 +8,9 @@ use crate::{
     Backend, Factory,
 };
 use amethyst_core::ecs::{DispatcherBuilder, World};
-use amethyst_error::{format_err, Error};
+use amethyst_error::Error;
 use palette::Srgb;
-use rendy::{graph::render::RenderGroupDesc, wsi::Surface};
+use rendy::graph::render::RenderGroupDesc;
 
 #[cfg(feature = "window")]
 pub use window::RenderToWindow;
@@ -23,10 +23,13 @@ mod window {
         Format, Kind,
     };
     use amethyst_core::SystemBundle;
-    use amethyst_window::{ScreenDimensions, WindowBundle};
-    use rendy::hal::{
-        command::{ClearColor, ClearDepthStencil, ClearValue},
-        window::Extent2D,
+    use amethyst_window::{ScreenDimensions, WindowBundle, WindowRes};
+    use rendy::{
+        hal::{
+            command::{ClearColor, ClearDepthStencil, ClearValue},
+            window::Extent2D,
+        },
+        wsi::Surface,
     };
 
     /// A [RenderPlugin] for opening a window and displaying a render target to it.
@@ -93,8 +96,22 @@ mod window {
             let surface = world
                 .fetch_mut::<Option<Surface<B>>>()
                 .take()
-                .ok_or_else(|| {
-                    format_err!("Surface not found in resources! Did someone already take it?")
+                .map(Result::Ok)
+                .unwrap_or_else(|| {
+                    let window = world.fetch::<WindowRes>();
+
+                    #[cfg(feature = "gl")]
+                    panic!("The `\"gl\"` backend does not support creating an additional surface.");
+
+                    #[cfg(not(feature = "wasm"))]
+                    {
+                        factory.create_surface(&*window)
+                    }
+
+                    #[cfg(feature = "wasm")]
+                    {
+                        factory.create_surface(&**window)
+                    }
                 })?;
 
             let dimensions = self.dimensions.as_ref().unwrap();
