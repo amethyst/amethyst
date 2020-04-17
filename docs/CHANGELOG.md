@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * ***Breaking:*** System fonts support is now behind the `"system_font"` feature, disabled by default.
 * Support audio playback in WASM target. ([#2195], [#2219])
 * Threading is toggle-able with `"parallel"` feature (enabled by default). ([#2238])
+* ***Breaking:*** `AmethystApplication::run_isolated` is renamed to `AmethystApplication::run_winit_loop`. ([#2241], [#2245])
 
 ### Fixed
 
@@ -32,6 +33,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2219]: https://github.com/amethyst/amethyst/pull/2219
 [#2238]: https://github.com/amethyst/amethyst/pull/2238
 [#2240]: https://github.com/amethyst/amethyst/pull/2240
+[#2241]: https://github.com/amethyst/amethyst/issues/2241
+[#2245]: https://github.com/amethyst/amethyst/pull/2245
 
 ## [0.15.0] - 2020-03-24
 
