@@ -27,7 +27,7 @@ mod window {
     use rendy::{
         hal::{
             command::{ClearColor, ClearDepthStencil, ClearValue},
-            window::Extent2D,
+            window::{Extent2D, InitError},
         },
         wsi::Surface,
     };
@@ -96,14 +96,14 @@ mod window {
             let surface = world
                 .fetch_mut::<Option<Surface<B>>>()
                 .take()
-                .map(Result::Ok)
+                .map(Result::<Surface<B>, InitError>::Ok)
                 .unwrap_or_else(|| {
                     let window = world.fetch::<WindowRes>();
 
-                    #[cfg(feature = "gl")]
+                    #[cfg(all(feature = "gl", not(feature = "wasm")))]
                     panic!("The `\"gl\"` backend does not support creating an additional surface.");
 
-                    #[cfg(not(feature = "wasm"))]
+                    #[cfg(all(not(feature = "gl"), not(feature = "wasm")))]
                     {
                         factory.create_surface(&*window)
                     }
