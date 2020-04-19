@@ -201,7 +201,7 @@ immutable for the `Paddle` and mutable for the `Transform`.
 
 Let's add this system to our `GameDataBuilder` in `main.rs`:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
 mod systems; // Import the module
 // --snip--
 
