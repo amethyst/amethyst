@@ -200,7 +200,12 @@ fn main() -> Result<(), Error> {
 
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .with(ExampleSystem::default(), "example_system", &[])
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with(
+            ExampleSystem::default(),
+            "example_system",
+            &["input_system"],
+        )
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
