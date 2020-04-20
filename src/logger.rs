@@ -76,6 +76,7 @@ pub struct Logger {
 
 impl Logger {
     fn new() -> Self {
+        #[cfg(not(feature = "wasm"))]
         let dispatch = fern::Dispatch::new().format(|out, message, record| {
             out.finish(format_args!(
                 "[{level}][{target}] {message}",
@@ -84,6 +85,11 @@ impl Logger {
                 message = message,
             ))
         });
+
+        #[cfg(feature = "wasm")]
+        let dispatch = fern::Dispatch::new()
+            .format(|out, message, _record| out.finish(format_args!("{}", message)));
+
         Self { dispatch }
     }
 
@@ -106,6 +112,11 @@ impl Logger {
         }
 
         logger.dispatch = logger.dispatch.level(config.level_filter);
+
+        #[cfg(feature = "wasm")]
+        {
+            logger.dispatch = logger.dispatch.chain(fern::Output::call(console_log::log));
+        }
 
         match config.stdout {
             StdoutLog::Plain => logger.dispatch = logger.dispatch.chain(io::stdout()),
