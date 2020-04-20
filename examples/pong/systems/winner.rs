@@ -40,7 +40,7 @@ impl<'s> System<'s> for WinnerSystem {
         ): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
-            use crate::{ARENA_WIDTH, ARENA_HEIGHT};
+            use crate::{ARENA_HEIGHT, ARENA_WIDTH};
 
             let ball_x = transform.translation().x;
 
