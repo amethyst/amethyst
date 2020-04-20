@@ -58,6 +58,7 @@ impl<'s> System<'s> for WinnerSystem {
                 // Reset the ball.
                 ball.reverse_x();
                 transform.set_translation_x(ARENA_WIDTH / 2.0);
+                transform.set_translation_y(ARENA_HEIGHT / 2.0);
             }
         }
     }
