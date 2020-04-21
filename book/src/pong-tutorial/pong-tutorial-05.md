@@ -49,7 +49,7 @@ use amethyst::{
     ecs::prelude::{Join, System, SystemData, World, WriteStorage},
 };
 
-use crate::pong::{Ball, ARENA_WIDTH};
+use crate::pong::{Ball, ARENA_WIDTH, ARENA_HEIGHT};
 
 #[derive(SystemDesc)]
 pub struct WinnerSystem;
@@ -394,6 +394,7 @@ accordingly:
 #     }
 #
 #     pub const ARENA_WIDTH: f32 = 100.0;
+#     pub const ARENA_HEIGHT: f32 = 100.0;
 # }
 #
 use amethyst::{
