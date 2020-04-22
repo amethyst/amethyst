@@ -31,7 +31,7 @@ use crate::simulation::{
     },
 };
 
-type WebSocketTcp = tungstenite::protocol::WebSocket<TcpStream>;
+type WebSocket = tungstenite::protocol::WebSocket<TcpStream>;
 
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "ws_connection_listener";
 const STREAM_MANAGEMENT_SYSTEM_NAME: &str = "ws_stream_management";
@@ -388,7 +388,7 @@ impl<'s> System<'s> for WebSocketNetworkRecvSystem {
 
 pub struct WebSocketNetworkResource {
     listener: Option<TcpListener>,
-    streams: HashMap<SocketAddr, (bool, WebSocketTcp)>,
+    streams: HashMap<SocketAddr, (bool, WebSocket)>,
 }
 
 impl WebSocketNetworkResource {
@@ -420,13 +420,13 @@ impl WebSocketNetworkResource {
     }
 
     /// Returns a tuple of an active WebSocket and whether ot not that stream is active
-    pub fn get_socket(&mut self, addr: SocketAddr) -> Option<&mut (bool, WebSocketTcp)> {
+    pub fn get_socket(&mut self, addr: SocketAddr) -> Option<&mut (bool, WebSocket)> {
         self.streams.get_mut(&addr)
     }
 
     /// Drops the stream with the given `SocketAddr`. This will be called when a peer seems to have
     /// been disconnected
-    pub fn drop_socket(&mut self, addr: SocketAddr) -> Option<(bool, WebSocketTcp)> {
+    pub fn drop_socket(&mut self, addr: SocketAddr) -> Option<(bool, WebSocket)> {
         self.streams.remove(&addr)
     }
 }
