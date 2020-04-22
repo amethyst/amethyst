@@ -39,6 +39,7 @@ Then, we'll create `systems/winner.rs`:
 #     }
 #
 #     pub const ARENA_WIDTH: f32 = 100.0;
+#     pub const ARENA_HEIGHT: f32 = 100.0;
 # }
 #
 use amethyst::{
@@ -48,7 +49,7 @@ use amethyst::{
     ecs::prelude::{Join, System, SystemData, World, WriteStorage},
 };
 
-use crate::pong::{Ball, ARENA_WIDTH};
+use crate::pong::{Ball, ARENA_WIDTH, ARENA_HEIGHT};
 
 #[derive(SystemDesc)]
 pub struct WinnerSystem;
@@ -78,6 +79,7 @@ impl<'s> System<'s> for WinnerSystem {
             if did_hit {
                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
+                transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
             }
         }
     }
@@ -392,6 +394,7 @@ accordingly:
 #     }
 #
 #     pub const ARENA_WIDTH: f32 = 100.0;
+#     pub const ARENA_HEIGHT: f32 = 100.0;
 # }
 #
 use amethyst::{
@@ -403,7 +406,7 @@ use amethyst::{
     ui::UiText,
 };
 
-use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
+use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH, ARENA_HEIGHT};
 
 #[derive(SystemDesc)]
 pub struct WinnerSystem;
@@ -454,6 +457,8 @@ impl<'s> System<'s> for WinnerSystem {
             if did_hit {
 #                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
 #                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
+#                 transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
+
                 // --snip--
 
                 // Print the scoreboard.
