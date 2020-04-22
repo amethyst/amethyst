@@ -7,6 +7,21 @@ use self::native::{
     WebSocketConnectionListenerSystem, WebSocketNetworkRecvSystem, WebSocketStreamManagementSystem,
 };
 
+#[cfg(target_arch = "x86_64")]
+use std::net::TcpStream;
+use std::{
+    collections::HashMap,
+    io,
+    net::{SocketAddr, TcpListener},
+};
+
+#[cfg(target_arch = "wasm32")]
+mod web_sys;
+#[cfg(target_arch = "wasm32")]
+use self::web_sys::{WebSocketNetworkRecvSystem, WebSocketStreamManagementSystemDesc};
+
+#[cfg(target_arch = "wasm32")]
+use amethyst_core::SystemDesc;
 use amethyst_core::{
     bundle::SystemBundle,
     ecs::{DispatcherBuilder, Read, System, World, Write},
@@ -14,11 +29,6 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use log::warn;
-use std::{
-    collections::HashMap,
-    io,
-    net::{SocketAddr, TcpListener, TcpStream},
-};
 
 use crate::simulation::{
     events::NetworkSimulationEvent,
@@ -31,8 +41,12 @@ use crate::simulation::{
     },
 };
 
+#[cfg(target_arch = "x86_64")]
 type WebSocket = tungstenite::protocol::WebSocket<TcpStream>;
+#[cfg(target_arch = "wasm32")]
+type WebSocket = ::web_sys::WebSocket;
 
+#[cfg(target_arch = "x86_64")]
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "ws_connection_listener";
 const STREAM_MANAGEMENT_SYSTEM_NAME: &str = "ws_stream_management";
 
@@ -53,9 +67,10 @@ impl<'a, 'b> SystemBundle<'a, 'b> for WebSocketNetworkBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
-        // NetworkSimulationTime should run first
-        // followed by WebSocketConnectionListenerSystem and WebSocketStreamManagementSystem
-        // then WebSocketNetworkSendSystem and WebSocketNetworkRecvSystem
+        // `NetworkSimulationTime` should run first
+        // followed by `WebSocketConnectionListenerSystem` (if present) and
+        // `WebSocketStreamManagementSystem`
+        // then `WebSocketNetworkSendSystem` and `WebSocketNetworkRecvSystem`
 
         builder.add(
             NetworkSimulationTimeSystem,
@@ -63,14 +78,34 @@ impl<'a, 'b> SystemBundle<'a, 'b> for WebSocketNetworkBundle {
             &[],
         );
 
+        // `wasm32` targets are not allowed to listen for connections.
+        #[cfg(target_arch = "x86_64")]
         builder.add(
             WebSocketConnectionListenerSystem,
             CONNECTION_LISTENER_SYSTEM_NAME,
             &[NETWORK_SIM_TIME_SYSTEM_NAME],
         );
 
+        #[cfg(target_arch = "x86_64")]
+        let (web_socket_stream_management_system, send_recv_deps) = {
+            (
+                WebSocketStreamManagementSystem,
+                &[
+                    STREAM_MANAGEMENT_SYSTEM_NAME,
+                    CONNECTION_LISTENER_SYSTEM_NAME,
+                ],
+            )
+        };
+        #[cfg(target_arch = "wasm32")]
+        let (web_socket_stream_management_system, send_recv_deps) = {
+            (
+                WebSocketStreamManagementSystemDesc::default().build(world),
+                &[STREAM_MANAGEMENT_SYSTEM_NAME],
+            )
+        };
+
         builder.add(
-            WebSocketStreamManagementSystem,
+            web_socket_stream_management_system,
             STREAM_MANAGEMENT_SYSTEM_NAME,
             &[NETWORK_SIM_TIME_SYSTEM_NAME],
         );
@@ -78,19 +113,13 @@ impl<'a, 'b> SystemBundle<'a, 'b> for WebSocketNetworkBundle {
         builder.add(
             WebSocketNetworkSendSystem,
             NETWORK_SEND_SYSTEM_NAME,
-            &[
-                STREAM_MANAGEMENT_SYSTEM_NAME,
-                CONNECTION_LISTENER_SYSTEM_NAME,
-            ],
+            send_recv_deps,
         );
 
         builder.add(
             WebSocketNetworkRecvSystem,
             NETWORK_RECV_SYSTEM_NAME,
-            &[
-                STREAM_MANAGEMENT_SYSTEM_NAME,
-                CONNECTION_LISTENER_SYSTEM_NAME,
-            ],
+            send_recv_deps,
         );
 
         world.insert(WebSocketNetworkResource::new(self.listener));
@@ -197,3 +226,9 @@ impl Default for WebSocketNetworkResource {
         }
     }
 }
+
+// TODO: Split implementation for `WebSocketNetworkResource`
+#[cfg(target_arch = "wasm32")]
+unsafe impl Send for WebSocketNetworkResource {}
+#[cfg(target_arch = "wasm32")]
+unsafe impl Sync for WebSocketNetworkResource {}
