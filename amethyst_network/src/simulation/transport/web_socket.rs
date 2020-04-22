@@ -147,41 +147,41 @@ impl<'s> System<'s> for WebSocketStreamManagementSystem {
                         .body(())
                         .expect("Failed to build empty request.")
                 };
-                match tungstenite::client::client(request, stream) {
-                    // We don't care about the handshake response
-                    Ok((web_socket, _response)) => {
-                        dbg!(format!("Connected to {}", &message.destination));
-                        web_socket_network_resource
-                            .streams
-                            .insert(message.destination, (true, web_socket));
-                    }
-                    Err(HandshakeError::Interrupted(_)) => {
-                        // TODO: retry connecting.
-                    }
-                    Err(HandshakeError::Failure(TgError::Io(io_error))) => {
-                        match io_error.kind() {
-                            io::ErrorKind::WouldBlock => {
-                                // TODO: retry connecting
-                            }
-                            _ => {
-                                network_simulation_ec.single_write(
-                                    NetworkSimulationEvent::ConnectionError(
-                                        io_error,
-                                        Some(message.destination),
-                                    ),
-                                );
-                            }
+                let mut handshake_result = tungstenite::client::client(request, stream);
+                loop {
+                    match handshake_result {
+                        Err(HandshakeError::Interrupted(client_handshake)) => {
+                            // This is the expected result when connecting with a non-blocking TCP stream.
+                            // Next, we start the client_handshake and try to get its final result.
+                            handshake_result = client_handshake.handshake();
                         }
-                    }
-                    Err(handshake_error) => {
-                        let error = io::Error::new(io::ErrorKind::Other, handshake_error);
-                        network_simulation_ec.single_write(
-                            NetworkSimulationEvent::ConnectionError(
-                                error,
-                                Some(message.destination),
-                            ),
-                        );
-                        return;
+                        // We don't care about the handshake response
+                        Ok((web_socket, _response)) => {
+                            dbg!(format!("Connected to {}", &message.destination));
+                            web_socket_network_resource
+                                .streams
+                                .insert(message.destination, (true, web_socket));
+                            break;
+                        }
+                        Err(HandshakeError::Failure(TgError::Io(io_error))) => {
+                            network_simulation_ec.single_write(
+                                NetworkSimulationEvent::ConnectionError(
+                                    io_error,
+                                    Some(message.destination),
+                                ),
+                            );
+                            break;
+                        }
+                        Err(handshake_error) => {
+                            let error = io::Error::new(io::ErrorKind::Other, handshake_error);
+                            network_simulation_ec.single_write(
+                                NetworkSimulationEvent::ConnectionError(
+                                    error,
+                                    Some(message.destination),
+                                ),
+                            );
+                            break;
+                        }
                     }
                 }
             }
