@@ -20,7 +20,9 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [features]
+default = ["web_socket"]
 profiler = [ "thread_profiler/thread_profiler" ]
+web_socket = ["tungstenite"]
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.10.0", default-features = false }
@@ -29,3 +31,4 @@ bytes = "0.5"
 laminar = "0.3"
 log = "0.4"
 thread_profiler = { version = "0.3" , optional = true }
+tungstenite = { version = "0.10.1", optional = true }

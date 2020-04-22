@@ -126,6 +126,7 @@ wasm = [
   "console_log",
   "web_worker",
 ]
+web_socket = ["amethyst_network/web_socket"]
 
 [workspace]
 members = [

@@ -5,6 +5,8 @@
 pub mod laminar;
 pub mod tcp;
 pub mod udp;
+#[cfg(feature = "web_socket")]
+pub mod web_socket;
 
 const NETWORK_SIM_TIME_SYSTEM_NAME: &str = "simulation_time";
 const NETWORK_SEND_SYSTEM_NAME: &str = "network_send";
