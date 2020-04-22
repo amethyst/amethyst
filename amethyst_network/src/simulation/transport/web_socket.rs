@@ -1,7 +1,6 @@
 //! Network systems implementation backed by the web socket protocol (over TCP).
 
 use tungstenite::{
-    client::AutoStream,
     error::Error as TgError,
     handshake::{client::Request, HandshakeError},
 };
@@ -17,7 +16,7 @@ use log::{error, warn};
 use std::{
     collections::HashMap,
     io,
-    net::{SocketAddr, TcpListener},
+    net::{SocketAddr, TcpListener, TcpStream},
     ops::DerefMut,
 };
 
@@ -32,7 +31,7 @@ use crate::simulation::{
     },
 };
 
-type WebSocketAuto = tungstenite::protocol::WebSocket<AutoStream>;
+type WebSocketTcp = tungstenite::protocol::WebSocket<TcpStream>;
 
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "ws_connection_listener";
 const STREAM_MANAGEMENT_SYSTEM_NAME: &str = "ws_stream_management";
@@ -109,7 +108,7 @@ impl<'s> System<'s> for WebSocketStreamManagementSystem {
         Write<'s, EventChannel<NetworkSimulationEvent>>,
     );
 
-    // We cannot use `web_socket_network_resource.sockets.entry(message.destination)`
+    // We cannot use `web_socket_network_resource.streams.entry(message.destination)`
     // `.or_insert_with(|| { .. })` because there is a `return;` statement for early exit, which is
     // not allowed within the closure.
     #[allow(clippy::map_entry)]
@@ -120,9 +119,23 @@ impl<'s> System<'s> for WebSocketStreamManagementSystem {
         // Make connections for each message in the channel if one hasn't yet been established
         transport.get_messages().iter().for_each(|message| {
             if !web_socket_network_resource
-                .sockets
+                .streams
                 .contains_key(&message.destination)
             {
+                let stream = match TcpStream::connect(message.destination) {
+                    Ok(stream) => stream,
+                    Err(e) => {
+                        network_simulation_ec.single_write(
+                            NetworkSimulationEvent::ConnectionError(e, Some(message.destination)),
+                        );
+                        return;
+                    }
+                };
+                stream
+                    .set_nonblocking(true)
+                    .expect("Setting non-blocking mode");
+                stream.set_nodelay(true).expect("Setting nodelay");
+
                 // We are simply establishing a connection for arbitrary data, so we use a blank
                 // `Request`.
                 //
@@ -134,19 +147,31 @@ impl<'s> System<'s> for WebSocketStreamManagementSystem {
                         .body(())
                         .expect("Failed to build empty request.")
                 };
-
-                // For now, we *do* block on connect, so we don't use the
-                // `tungstenite::client::client` method.
-                //
-                // Ideally we would use that, and if we hit `Err(HandshakeError::Interrupted(_))`,
-                // then we would try again later.
-                match tungstenite::client::connect(request) {
+                match tungstenite::client::client(request, stream) {
                     // We don't care about the handshake response
                     Ok((web_socket, _response)) => {
                         dbg!(format!("Connected to {}", &message.destination));
                         web_socket_network_resource
-                            .sockets
+                            .streams
                             .insert(message.destination, (true, web_socket));
+                    }
+                    Err(HandshakeError::Interrupted(_)) => {
+                        // TODO: retry connecting.
+                    }
+                    Err(HandshakeError::Failure(TgError::Io(io_error))) => {
+                        match io_error.kind() {
+                            io::ErrorKind::WouldBlock => {
+                                // TODO: retry connecting
+                            }
+                            _ => {
+                                network_simulation_ec.single_write(
+                                    NetworkSimulationEvent::ConnectionError(
+                                        io_error,
+                                        Some(message.destination),
+                                    ),
+                                );
+                            }
+                        }
                     }
                     Err(handshake_error) => {
                         let error = io::Error::new(io::ErrorKind::Other, handshake_error);
@@ -164,7 +189,7 @@ impl<'s> System<'s> for WebSocketStreamManagementSystem {
 
         // Remove inactive connections
         web_socket_network_resource
-            .sockets
+            .streams
             .retain(|addr, (active, _)| {
                 if !*active {
                     network_simulation_ec.single_write(NetworkSimulationEvent::Disconnect(*addr));
@@ -197,9 +222,9 @@ impl<'s> System<'s> for WebSocketConnectionListenerSystem {
                             .expect("Setting nonblocking mode");
                         stream.set_nodelay(true).expect("Setting nodelay");
 
-                        match tungstenite::server::accept(AutoStream::Plain(stream)) {
+                        match tungstenite::server::accept(stream) {
                             Ok(web_socket) => {
-                                resource.sockets.insert(addr, (true, web_socket));
+                                resource.streams.insert(addr, (true, web_socket));
                                 network_simulation_ec
                                     .single_write(NetworkSimulationEvent::Connect(addr));
                             }
@@ -286,17 +311,20 @@ impl<'s> System<'s> for WebSocketNetworkRecvSystem {
         (mut web_socket_network_resource, mut network_simulation_ec): Self::SystemData,
     ) {
         let web_socket_network_resource = web_socket_network_resource.deref_mut();
-        for (peer_addr, (active, web_socket)) in web_socket_network_resource.sockets.iter_mut() {
-            // If we can't read, the connection may have dropped so we'll mark it inactive.
-            let peer_addr = *peer_addr;
-            if !web_socket.can_read() {
-                warn!("Unable to read from `peer_addr`: `{}`", peer_addr);
-                *active = false;
-                continue;
-            }
+        for (_, (active, web_socket_tcp)) in web_socket_network_resource.streams.iter_mut() {
+            // If we can't get a peer_addr, there is likely something pretty wrong with the
+            // connection so we'll mark it inactive.
+            let peer_addr = match web_socket_tcp.get_ref().peer_addr() {
+                Ok(addr) => addr,
+                Err(e) => {
+                    warn!("Encountered an error getting peer_addr: {:?}", e);
+                    *active = false;
+                    continue;
+                }
+            };
 
             loop {
-                match web_socket.read_message() {
+                match web_socket_tcp.read_message() {
                     Ok(message) => {
                         // https://docs.rs/tungstenite/0.10.1/tungstenite/enum.Message.html
                         match message {
@@ -360,14 +388,14 @@ impl<'s> System<'s> for WebSocketNetworkRecvSystem {
 
 pub struct WebSocketNetworkResource {
     listener: Option<TcpListener>,
-    sockets: HashMap<SocketAddr, (bool, WebSocketAuto)>,
+    streams: HashMap<SocketAddr, (bool, WebSocketTcp)>,
 }
 
 impl WebSocketNetworkResource {
     pub fn new(listener: Option<TcpListener>) -> Self {
         Self {
             listener,
-            sockets: HashMap::new(),
+            streams: HashMap::new(),
         }
     }
 
@@ -392,14 +420,14 @@ impl WebSocketNetworkResource {
     }
 
     /// Returns a tuple of an active WebSocket and whether ot not that stream is active
-    pub fn get_socket(&mut self, addr: SocketAddr) -> Option<&mut (bool, WebSocketAuto)> {
-        self.sockets.get_mut(&addr)
+    pub fn get_socket(&mut self, addr: SocketAddr) -> Option<&mut (bool, WebSocketTcp)> {
+        self.streams.get_mut(&addr)
     }
 
     /// Drops the stream with the given `SocketAddr`. This will be called when a peer seems to have
     /// been disconnected
-    pub fn drop_socket(&mut self, addr: SocketAddr) -> Option<(bool, WebSocketAuto)> {
-        self.sockets.remove(&addr)
+    pub fn drop_socket(&mut self, addr: SocketAddr) -> Option<(bool, WebSocketTcp)> {
+        self.streams.remove(&addr)
     }
 }
 
@@ -407,7 +435,7 @@ impl Default for WebSocketNetworkResource {
     fn default() -> Self {
         Self {
             listener: None,
-            sockets: HashMap::new(),
+            streams: HashMap::new(),
         }
     }
 }
