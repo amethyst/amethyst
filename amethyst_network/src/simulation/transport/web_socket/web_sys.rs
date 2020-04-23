@@ -15,7 +15,7 @@ use crossbeam_channel::{Receiver, Sender};
 use js_sys::Uint8Array;
 use log::{debug, error, warn};
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::{Blob, CloseEvent, ErrorEvent, Event, MessageEvent, WebSocket};
+use web_sys::{Blob, CloseEvent, ErrorEvent, Event, FileReaderSync, MessageEvent, WebSocket};
 
 use crate::simulation::{
     events::NetworkSimulationEvent,
@@ -269,33 +269,52 @@ impl NseCallbacks {
 
             match Blob::instanceof(&data) {
                 true => {
+                    debug!("Websocket message is blob.");
+
                     let blob = Blob::unchecked_from_js(data);
-                    debug!("Websocket message is blob: {:?}", blob);
+                    // `blob` will not contain any data until it is read from by a `FileReader`
+                    // <https://developer.mozilla.org/en-US/docs/Web/API/FileReader>
+                    // `FileReaderSync` allows us to read from it synchronously, which is okay since
+                    // this is already inside an event handler.
+                    match FileReaderSync::new() {
+                        Ok(file_reader_sync) => {
+                            match file_reader_sync.read_as_array_buffer(&blob) {
+                                Ok(array_buffer) => {
+                                    let array =
+                                        Uint8Array::new(AsRef::<JsValue>::as_ref(&array_buffer));
+                                    if array.length() != 0 {
+                                        let mut bytes = Vec::with_capacity(array.length() as usize);
+                                        array.copy_to(&mut bytes);
 
-                    let array = Uint8Array::new(AsRef::<JsValue>::as_ref(&blob));
+                                        debug!("Blob bytes: {:?}", bytes);
 
-                    if array.length() != 0 {
-                        let mut bytes = Vec::with_capacity(array.length() as usize);
-                        array.copy_to(&mut bytes);
-
-                        debug!("Blob bytes: {:?}", bytes);
-
-                        let nse = NetworkSimulationEvent::Message(
-                            socket_addr,
-                            Bytes::copy_from_slice(&bytes),
-                        );
-                        let wse = WebSocketEvent {
-                            socket_addr,
-                            event_type: WebSocketEventType::NetworkSimulationEvent(nse),
-                        };
-                        tx.send(wse).unwrap_or_else(|error| {
-                            error!(
-                                "`WebSocket` `onmessage_callback` failed to send event: {:?}",
-                                error
-                            );
-                        });
-                    } else {
-                        debug!("Blob is empty.");
+                                        let nse = NetworkSimulationEvent::Message(
+                                            socket_addr,
+                                            Bytes::copy_from_slice(&bytes),
+                                        );
+                                        let wse = WebSocketEvent {
+                                            socket_addr,
+                                            event_type: WebSocketEventType::NetworkSimulationEvent(
+                                                nse,
+                                            ),
+                                        };
+                                        tx.send(wse).unwrap_or_else(|error| {
+                                            error!(
+                                                "`WebSocket` `onmessage_callback` failed to send \
+                                                event: {:?}",
+                                                error
+                                            );
+                                        });
+                                    } else {
+                                        debug!("Blob is empty.");
+                                    }
+                                }
+                                Err(e) => {
+                                    error!("Failed to read blob as array buffer: {:?}", e);
+                                }
+                            }
+                        }
+                        Err(e) => error!("Failed to construct `FileReaderSync`: {:?}", e),
                     }
                 }
                 false => {
