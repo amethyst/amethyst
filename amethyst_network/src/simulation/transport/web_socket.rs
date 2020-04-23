@@ -14,7 +14,7 @@ use std::net::TcpListener;
 #[cfg(target_arch = "wasm32")]
 mod web_sys;
 #[cfg(target_arch = "wasm32")]
-use self::web_sys::{
+pub use self::web_sys::{
     WebSocketNetworkRecvSystem, WebSocketNetworkResource, WebSocketNetworkSendSystem,
     WebSocketStreamManagementSystemDesc,
 };
@@ -36,14 +36,25 @@ use crate::simulation::{
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "ws_connection_listener";
 const STREAM_MANAGEMENT_SYSTEM_NAME: &str = "ws_stream_management";
 
-/// Use this network bundle to add the TCP transport layer to your game.
+/// Use this network bundle to add the `WebSocket` transport layer to your game.
+#[cfg(target_arch = "x86_64")]
 pub struct WebSocketNetworkBundle {
     listener: Option<TcpListener>,
 }
 
+/// Use this network bundle to add the `WebSocket` transport layer to your game.
+#[cfg(target_arch = "wasm32")]
+pub struct WebSocketNetworkBundle;
+
 impl WebSocketNetworkBundle {
+    #[cfg(target_arch = "x86_64")]
     pub fn new(listener: Option<TcpListener>) -> Self {
         Self { listener }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn new() -> Self {
+        Self
     }
 }
 
