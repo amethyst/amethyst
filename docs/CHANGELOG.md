@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Basic GL rendering. ([#2192], [#2198])
 * `AmethystApplication::with_bundle_event_fn` takes in a bundle that needs a reference to the `EventLoop`. ([#2240])
 * WASM logger is configurable though `LoggerConfig` when using [`console_log`]. ([#2249], [#2250])
+* `amethyst_network` supports `WebSocket`s behind the `"web_socket"` feature. ([#2251], [#2253])
 
 ### Changed
 
@@ -38,6 +39,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2245]: https://github.com/amethyst/amethyst/pull/2245
 [#2249]: https://github.com/amethyst/amethyst/issues/2249
 [#2250]: https://github.com/amethyst/amethyst/pull/2250
+[#2251]: https://github.com/amethyst/amethyst/issues/2251
+[#2253]: https://github.com/amethyst/amethyst/pull/2253
 [`console_log`]: https://crates.io/crates/console_log
 
 ## [0.15.0] - 2020-03-24
