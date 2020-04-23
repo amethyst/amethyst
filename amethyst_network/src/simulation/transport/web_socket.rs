@@ -3,12 +3,12 @@
 #[cfg(target_arch = "x86_64")]
 mod native;
 #[cfg(target_arch = "x86_64")]
-#[cfg(target_arch = "x86_64")]
 pub use self::native::{
     WebSocketConnectionListenerSystem, WebSocketNetworkRecvSystem, WebSocketNetworkResource,
     WebSocketNetworkSendSystem, WebSocketStreamManagementSystem,
 };
 
+#[cfg(target_arch = "x86_64")]
 use std::net::TcpListener;
 
 #[cfg(target_arch = "wasm32")]
