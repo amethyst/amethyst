@@ -12,4 +12,6 @@ pub use events::NetworkSimulationEvent;
 pub use message::Message;
 pub use requirements::{DeliveryRequirement, UrgencyRequirement};
 pub use timing::{NetworkSimulationTime, NetworkSimulationTimeSystem};
+#[cfg(feature = "web_socket")]
+pub use transport::web_socket;
 pub use transport::{laminar, tcp, udp, TransportResource};
