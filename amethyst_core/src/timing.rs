@@ -103,7 +103,6 @@ impl Time {
         self.interpolation_alpha
     }
 
-    /// Gets the total number of frames that have been played in this session.
     /// Sets both `delta_seconds` and `delta_time` based on the seconds given.
     ///
     /// This should only be called by the engine.  Bad things might happen if you call this in
@@ -169,7 +168,7 @@ impl Time {
     /// This should only be called by the engine.  Bad things might happen if you call this in
     /// your game.
     pub fn start_fixed_update(&mut self) {
-        self.fixed_time_accumulator += self.delta_seconds;
+        self.fixed_time_accumulator += self.delta_real_seconds;
     }
 
     /// Checks to see if we should perform another fixed update iteration, and if so, returns true
