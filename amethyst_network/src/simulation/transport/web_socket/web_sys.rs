@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     io,
     net::SocketAddr,
     ops::{Deref, DerefMut},
@@ -12,13 +13,95 @@ use amethyst_core::{
 use bytes::Bytes;
 use crossbeam_channel::{Receiver, Sender};
 use js_sys::Uint8Array;
-use log::error;
+use log::{debug, error, warn};
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::{CloseEvent, ErrorEvent, Event, MessageEvent, WebSocket};
+use web_sys::{Blob, CloseEvent, ErrorEvent, Event, MessageEvent, WebSocket};
 
-use crate::simulation::{events::NetworkSimulationEvent, transport::TransportResource};
+use crate::simulation::{
+    events::NetworkSimulationEvent,
+    message::Message,
+    requirements::{DeliveryRequirement, UrgencyRequirement},
+    timing::NetworkSimulationTime,
+    transport::TransportResource,
+};
 
-use super::WebSocketNetworkResource;
+#[wasm_bindgen]
+extern "C" {
+    fn web_socket_send(web_socket: &WebSocket, src: &[u8]);
+}
+
+/// System to send messages to a particular open `WebSocket`.
+pub struct WebSocketNetworkSendSystem;
+
+impl<'s> System<'s> for WebSocketNetworkSendSystem {
+    type SystemData = (
+        Write<'s, TransportResource>,
+        Write<'s, WebSocketNetworkResource>,
+        Read<'s, NetworkSimulationTime>,
+        Write<'s, EventChannel<NetworkSimulationEvent>>,
+    );
+
+    fn run(
+        &mut self,
+        (mut transport, mut web_socket_network_resource, sim_time, mut network_simulation_ec): Self::SystemData,
+    ) {
+        let messages = transport.drain_messages_to_send(|message| {
+            let web_socket_active = web_socket_network_resource
+                .streams
+                .get(&message.destination)
+                .map(|web_socket_and_status| {
+                    web_socket_and_status.status == WebSocketStatus::Active
+                })
+                // `true` because if the message destination does not exist, sendint the message
+                // will err, and that will bubble to the user.
+                .unwrap_or(true);
+
+            let should_end_now = sim_time.should_send_message_now();
+
+            web_socket_active && should_end_now
+        });
+
+        for message in messages {
+            match message.delivery {
+                DeliveryRequirement::ReliableOrdered(Some(_)) => {
+                    warn!("Streams are not supported by `WebSocket`s and will be ignored.");
+                    write_message(
+                        message,
+                        &mut web_socket_network_resource,
+                        &mut network_simulation_ec,
+                    );
+                }
+                DeliveryRequirement::ReliableOrdered(_) | DeliveryRequirement::Default => {
+                    write_message(
+                        message,
+                        &mut web_socket_network_resource,
+                        &mut network_simulation_ec,
+                    );
+                }
+                delivery => panic!(
+                    "{:?} is unsupported. `WebSocket` only supports ReliableOrdered by design.",
+                    delivery
+                ),
+            }
+        }
+    }
+}
+
+fn write_message(
+    message: Message,
+    web_socket_network_resource: &mut WebSocketNetworkResource,
+    _network_simulation_ec: &mut EventChannel<NetworkSimulationEvent>,
+) {
+    if let Some(WebSocketAndStatus { ref web_socket, .. }) =
+        web_socket_network_resource.get_socket(message.destination)
+    {
+        // We cannot use `AsRef::<[u8]>::as_ref(&message.payload)` because `send_with_u8_array`
+        // requires the memory not to be in a `SharedArrayBuffer`.
+        // let mut owned_bytes = vec![0; message.payload.len()];
+        // owned_bytes.copy_from_slice(AsRef::<[u8]>::as_ref(&message.payload));
+        web_socket_send(web_socket, AsRef::<[u8]>::as_ref(&message.payload));
+    }
+}
 
 /// System to receive messages from all open `WebSocket`s.
 pub struct WebSocketNetworkRecvSystem;
@@ -36,6 +119,7 @@ impl<'s> System<'s> for WebSocketNetworkRecvSystem {
     ) {
         // Transfer all `NetworkSimulationEvent`s from the `WebSocketWseBuffer` into the
         // `EventChannel<NetworkSimulationEvent>`.
+        let web_socket_network_resource = web_socket_network_resource.deref_mut();
         web_socket_nse_buffer
             .try_iter()
             .for_each(|web_socket_event| {
@@ -45,17 +129,30 @@ impl<'s> System<'s> for WebSocketNetworkRecvSystem {
                 } = web_socket_event;
 
                 match event_type {
+                    WebSocketEventType::Open => {
+                        // When the `onopen_callback` runs, we set the `WebSocketStatus` to `Active`.
+                        let web_socket_and_status =
+                            web_socket_network_resource.streams.get_mut(&socket_addr);
+                        if let Some(web_socket_and_status) = web_socket_and_status {
+                            debug!("`Websocket` `{}` is now `Active`", socket_addr);
+                            web_socket_and_status.status = WebSocketStatus::Active
+                        } else {
+                            warn!(
+                                "Received `WebSocketEventType::Open` for `{}`, \
+                                but no socket was tracked for that address.",
+                                socket_addr
+                            );
+                        }
+                    }
                     WebSocketEventType::Close => {
                         // Even though we could make the `onclose_callback` write
                         // `NetworkSimulationEvent::Disconnect`, we edit the `active` status and allow
                         // the `WebSocketStreamManagementSystem` to send the events, as that keeps the
                         // web implementation consistent with the native implementation.
-                        if let Some((active, _web_socket)) = web_socket_network_resource
-                            .deref_mut()
-                            .streams
-                            .get_mut(&socket_addr)
+                        if let Some(WebSocketAndStatus { ref mut status, .. }) =
+                            web_socket_network_resource.streams.get_mut(&socket_addr)
                         {
-                            *active = false;
+                            *status = WebSocketStatus::Inactive;
                         }
                     }
                     WebSocketEventType::NetworkSimulationEvent(nse) => {
@@ -115,14 +212,18 @@ impl<'s> System<'s> for WebSocketStreamManagementSystem {
                 .contains_key(&message.destination)
             {
                 // Create a WebSocket
-                match WebSocket::new("wss://echo.websocket.org") {
-                    Ok(ws) => {
+                match WebSocket::new(&format!("ws://{}/", message.destination)) {
+                    Ok(mut web_socket) => {
                         let wse_tx = web_socket_nse_buffer.tx.clone();
-                        NseCallbacks::setup(message.destination, &mut ws, wse_tx);
+                        NseCallbacks::setup(message.destination, &mut web_socket, wse_tx);
 
-                        web_socket_network_resource
-                            .streams
-                            .insert(message.destination, (true, ws));
+                        web_socket_network_resource.streams.insert(
+                            message.destination,
+                            WebSocketAndStatus {
+                                web_socket,
+                                status: WebSocketStatus::PendingOpen,
+                            },
+                        );
                     }
                     Err(e) => {
                         let event = Event::from(e);
@@ -141,11 +242,14 @@ impl<'s> System<'s> for WebSocketStreamManagementSystem {
         // Remove inactive connections
         web_socket_network_resource
             .streams
-            .retain(|addr, (active, _)| {
-                if !*active {
-                    network_simulation_ec.single_write(NetworkSimulationEvent::Disconnect(*addr));
+            .retain(|socket_addr, web_socket_and_status| {
+                if web_socket_and_status.status == WebSocketStatus::Inactive {
+                    network_simulation_ec
+                        .single_write(NetworkSimulationEvent::Disconnect(*socket_addr));
+                    false
+                } else {
+                    true
                 }
-                *active
             });
     }
 }
@@ -160,16 +264,56 @@ impl NseCallbacks {
         let onmessage_callback = Closure::wrap(Box::new(move |e: MessageEvent| {
             // Convert javascript ArrayBuffer into Vec<u8>
             let data = e.data();
-            let array = Uint8Array::new(&data);
-            let mut bytes = Vec::with_capacity(array.length() as usize);
-            array.copy_to(&mut bytes);
 
-            let nse = NetworkSimulationEvent::Message(peer_addr, Bytes::copy_from_slice(&bytes));
-            let wse = WebSocketEvent {
-                socket_addr,
-                event_type: WebSocketEventType::NetworkSimulationEvent(nse),
-            };
-            tx.send(wse);
+            debug!("Websocket received message: {:?}", data);
+
+            match Blob::instanceof(&data) {
+                true => {
+                    let blob = Blob::unchecked_from_js(data);
+                    debug!("Websocket message is blob: {:?}", blob);
+
+                    let array = Uint8Array::new(AsRef::<JsValue>::as_ref(&blob));
+
+                    if array.length() != 0 {
+                        let mut bytes = Vec::with_capacity(array.length() as usize);
+                        array.copy_to(&mut bytes);
+
+                        debug!("Blob bytes: {:?}", bytes);
+
+                        let nse = NetworkSimulationEvent::Message(
+                            socket_addr,
+                            Bytes::copy_from_slice(&bytes),
+                        );
+                        let wse = WebSocketEvent {
+                            socket_addr,
+                            event_type: WebSocketEventType::NetworkSimulationEvent(nse),
+                        };
+                        tx.send(wse).unwrap_or_else(|error| {
+                            error!(
+                                "`WebSocket` `onmessage_callback` failed to send event: {:?}",
+                                error
+                            );
+                        });
+                    } else {
+                        debug!("Blob is empty.");
+                    }
+                }
+                false => {
+                    warn!("Websocket message was not blob: {:?}", data);
+                    let error = io::Error::new(io::ErrorKind::Other, format!("{:?}", data));
+                    let nse = NetworkSimulationEvent::RecvError(error);
+                    let wse = WebSocketEvent {
+                        socket_addr,
+                        event_type: WebSocketEventType::NetworkSimulationEvent(nse),
+                    };
+                    tx.send(wse).unwrap_or_else(|error| {
+                        error!(
+                            "`WebSocket` `onmessage_callback` failed to send event: {:?}",
+                            error
+                        );
+                    });
+                }
+            }
         }) as Box<dyn FnMut(MessageEvent)>);
 
         // Set message event handler on `WebSocket`.
@@ -187,11 +331,17 @@ impl NseCallbacks {
                 socket_addr,
                 event_type: WebSocketEventType::Close,
             };
-            tx.send(wse);
-        }) as Box<dyn FnMut(ErrorEvent)>);
+            tx.send(wse).unwrap_or_else(|error| {
+                error!(
+                    "`WebSocket` `onclose_callback` failed to send event: {:?}",
+                    error
+                );
+            });
+        }) as Box<dyn FnMut(CloseEvent)>);
         ws.set_onclose(Some(onclose_callback.as_ref().unchecked_ref()));
         onclose_callback.forget();
 
+        let tx = wse_tx.clone();
         let onerror_callback = Closure::wrap(Box::new(move |e: ErrorEvent| {
             error!(
                 "error: {}, file: {}, line: {}, col: {}\n{:?}",
@@ -202,10 +352,47 @@ impl NseCallbacks {
                 e.error(),
             );
 
-            // TODO: send event?
+            // Attempt to reconstruct the message from what we know.
+            let error = io::Error::new(io::ErrorKind::Other, format!("{:?}", e));
+            let payload = {
+                let array = Uint8Array::new(&e.error());
+                let mut bytes = Vec::with_capacity(array.length() as usize);
+                array.copy_to(&mut bytes);
+                bytes
+            };
+            let delivery = DeliveryRequirement::ReliableOrdered(None);
+            let urgency = UrgencyRequirement::OnTick;
+            let message = Message::new(socket_addr, &payload, delivery, urgency);
+            let nse = NetworkSimulationEvent::SendError(error, message);
+            let wse = WebSocketEvent {
+                socket_addr,
+                event_type: WebSocketEventType::NetworkSimulationEvent(nse),
+            };
+            tx.send(wse).unwrap_or_else(|error| {
+                error!(
+                    "`WebSocket` `onmessage_callback` failed to send event: {:?}",
+                    error
+                );
+            });
         }) as Box<dyn FnMut(ErrorEvent)>);
         ws.set_onerror(Some(onerror_callback.as_ref().unchecked_ref()));
         onerror_callback.forget();
+
+        let tx = wse_tx;
+        let onopen_callback = Closure::wrap(Box::new(move |_| {
+            let wse = WebSocketEvent {
+                socket_addr,
+                event_type: WebSocketEventType::Open,
+            };
+            tx.send(wse).unwrap_or_else(|error| {
+                error!(
+                    "`WebSocket` `onopen_callback` failed to send event: {:?}",
+                    error
+                );
+            });
+        }) as Box<dyn FnMut(JsValue)>);
+        ws.set_onopen(Some(onopen_callback.as_ref().unchecked_ref()));
+        onopen_callback.forget();
     }
 }
 
@@ -213,7 +400,7 @@ impl NseCallbacks {
 ///
 /// This is an intermediate storage as the event handlers cannot each hold a mutable reference to
 /// the `EventChannel<NetworkSimulationEvent>`.
-struct WebSocketEventBuffer<T> {
+pub struct WebSocketEventBuffer<T> {
     /// Sender for `T` events.
     tx: Sender<T>,
     /// Receiver for `T` events.
@@ -235,15 +422,54 @@ impl<T> DerefMut for WebSocketEventBuffer<T> {
 }
 
 #[derive(Debug)]
-struct WebSocketEvent {
+pub struct WebSocketEvent {
     socket_addr: SocketAddr,
     event_type: WebSocketEventType,
 }
 
 #[derive(Debug)]
-enum WebSocketEventType {
+pub enum WebSocketEventType {
+    Open,
     Close,
     NetworkSimulationEvent(NetworkSimulationEvent),
 }
 
-type WebSocketWseBuffer = WebSocketEventBuffer<WebSocketEvent>;
+pub type WebSocketWseBuffer = WebSocketEventBuffer<WebSocketEvent>;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WebSocketStatus {
+    Inactive,
+    PendingOpen,
+    Active,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct WebSocketAndStatus {
+    web_socket: WebSocket,
+    status: WebSocketStatus,
+}
+
+#[derive(Default)]
+pub struct WebSocketNetworkResource {
+    streams: HashMap<SocketAddr, WebSocketAndStatus>,
+}
+
+impl WebSocketNetworkResource {
+    pub fn new() -> Self {
+        WebSocketNetworkResource::default()
+    }
+
+    /// Returns a tuple of an active WebSocket and whether ot not that stream is active
+    pub fn get_socket(&mut self, addr: SocketAddr) -> Option<&mut WebSocketAndStatus> {
+        self.streams.get_mut(&addr)
+    }
+
+    /// Drops the stream with the given `SocketAddr`. This will be called when a peer seems to have
+    /// been disconnected
+    pub fn drop_socket(&mut self, addr: SocketAddr) -> Option<WebSocketAndStatus> {
+        self.streams.remove(&addr)
+    }
+}
+
+unsafe impl Send for WebSocketNetworkResource {}
+unsafe impl Sync for WebSocketNetworkResource {}
