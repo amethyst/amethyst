@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
+## [Unreleased]
+
+### Fixed
+
+- Fixed asset handle reuse bug in renderer. ([#2258])
+
+[#2258]: https://github.com/amethyst/amethyst/pull/2258
+
 
 ## [0.15.0] - 2020-03-24
 
