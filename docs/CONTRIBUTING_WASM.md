@@ -37,8 +37,9 @@ git clone git@github.com:amethyst/glutin.git && (cd glutin && git checkout wasm)
 
 1. Install Rust: https://www.rust-lang.org/tools/install
 2. `rustup target add wasm32-unknown-unknown`
-3. Install `wasm-pack`: https://rustwasm.github.io/wasm-pack/installer/
-4. Install `npm`: https://www.npmjs.com/get-npm
+3. `cargo install wasm-bindgen-cli`
+4. Install `wasm-pack`: https://rustwasm.github.io/wasm-pack/installer/
+5. Install `npm`: https://www.npmjs.com/get-npm
 
 ### Ongoing Development
 
