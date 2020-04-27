@@ -614,9 +614,10 @@ pub(crate) enum Processed<A: Asset> {
 /// A weak handle, which is useful if you don't directly need the asset
 /// like in caches. This way, the asset can still get dropped (if you want that).
 #[derive(Derivative)]
-#[derivative(Clone(bound = ""))]
+#[derivative(Clone(bound = ""), Debug(bound = ""))]
 pub struct WeakHandle<A> {
     id: Weak<u32>,
+    #[derivative(Debug = "ignore")]
     marker: PhantomData<A>,
 }
 
@@ -633,6 +634,6 @@ impl<A> WeakHandle<A> {
     /// Returns `true` if the original handle is dead.
     #[inline]
     pub fn is_dead(&self) -> bool {
-        self.upgrade().is_none()
+        self.id.upgrade().is_none()
     }
 }
