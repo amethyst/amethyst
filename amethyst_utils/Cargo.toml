@@ -31,9 +31,10 @@ specs-hierarchy = { version = "0.6", default-features = false }
 thread_profiler = { version = "0.3", optional = true }
 
 [features]
+gl = ["amethyst_rendy/gl"]
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
-profiler = [ "thread_profiler/thread_profiler" ]
-wasm = [ ]
+profiler = ["thread_profiler/thread_profiler"]
+wasm = ["amethyst_window/wasm", "amethyst_rendy/wasm", "amethyst_rendy/window"]

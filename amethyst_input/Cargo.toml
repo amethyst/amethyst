@@ -35,3 +35,4 @@ approx = "0.3"
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 sdl_controller = ["sdl2"]
+wasm = ["amethyst_window/wasm", "winit/web-sys"]
