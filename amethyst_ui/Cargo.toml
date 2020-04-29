@@ -53,3 +53,12 @@ empty = ["amethyst_rendy/empty"]
 
 profiler = [ "thread_profiler/thread_profiler" ]
 system_font = ["font-kit"]
+
+wasm = [
+  "amethyst_audio/wasm",
+  "amethyst_core/wasm",
+  "amethyst_window/wasm",
+  "amethyst_rendy/wasm",
+  "amethyst_rendy/window",
+  "winit/web-sys",
+]

@@ -120,7 +120,9 @@ experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 wasm = [
   "amethyst_assets/wasm",
   "amethyst_audio/wasm",
+  "amethyst_input/wasm",
   "amethyst_rendy/wasm",
+  "amethyst_ui/wasm",
   "amethyst_utils/wasm",
   "amethyst_window/wasm",
   "console_log",

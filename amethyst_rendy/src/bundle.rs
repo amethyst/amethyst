@@ -53,7 +53,7 @@ pub struct RenderingBundle<B: Backend> {
 impl<B: Backend> RenderingBundle<B> {
     /// Create empty `RenderingBundle`. You must register a plugin using
     /// [`with_plugin`] in order to actually display anything.
-    #[cfg(not(feature = "wasm"))]
+    #[cfg(all(not(feature = "wasm"), feature = "window"))]
     pub fn new(display_config: DisplayConfig, event_loop: &EventLoop<()>) -> Self {
         log::debug!("Intializing Rendy");
         let config: rendy::factory::Config = Default::default();
@@ -72,7 +72,7 @@ impl<B: Backend> RenderingBundle<B> {
 
     /// Create empty `RenderingBundle`. You must register a plugin using
     /// [`with_plugin`] in order to actually display anything.
-    #[cfg(feature = "wasm")]
+    #[cfg(all(feature = "wasm", feature = "window"))]
     pub fn new(
         display_config: DisplayConfig,
         event_loop: &EventLoop<()>,
