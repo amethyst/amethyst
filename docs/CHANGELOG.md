@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
+## [Unreleased]
+
+### Fixed
+
+- Corrected an issue where fixed updates were tied to time scale. ([#2254])
+
+[#2254]: https://github.com/amethyst/amethyst/issues/2254
 
 ## [0.15.0] - 2020-03-24
 
