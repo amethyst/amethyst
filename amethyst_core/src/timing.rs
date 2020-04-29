@@ -383,12 +383,14 @@ mod tests {
 
     // Test that fixed_update methods accumulate and return correctly
     // Test confirms that with a fixed update of 120fps, we run fixed update twice with the timer
+    // Runs at 10 times game speed, which shouldn't affect fixed updates
     #[test]
     fn fixed_update_120fps() {
         use super::Time;
 
         let mut time = Time::default();
         time.set_fixed_seconds(1.0 / 120.0);
+        time.set_time_scale(10.0);
 
         let step = 1.0 / 60.0;
         let mut fixed_count = 0;

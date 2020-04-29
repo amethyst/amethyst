@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
+## [Unreleased]
+
+### Fixed
+
+- Corrected an issue where fixed updates were tied to time scale. ([#2254])
+
+[#2254]: https://github.com/amethyst/amethyst/issues/2254
 
 ## [0.15.0] - 2020-03-24
 
@@ -41,9 +48,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Caret for editable text box is positioned correctly on first click. ([#2151])
 - Editable text is correctly blurred / unfocused when clicking outside its bounds. ([#2091], [#2151])
 - `amethyst_test` crate features now map 1-1 to `amethyst` features. ([#2153])
-- Corrected an issue where fixed updates were tied to time scale. ([#2254])
 
-[#2254]: https://github.com/amethyst/amethyst/issues/2254
 [#2091]: https://github.com/amethyst/amethyst/issues/2091
 [#2108]: https://github.com/amethyst/amethyst/issues/2108
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
