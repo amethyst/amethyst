@@ -18,7 +18,7 @@ prepare:
 
     - if [[ -z "$TAG_STABLE" ]]; then echo "TAG_STABLE must be set!"; exit 1; fi;
     - if [[ -z "$TAG_LAST_STABLE" ]]; then echo "TAG_LAST_STABLE must be set!"; exit 1; fi;
-    - if [[ -z "$TAG_WASM" ]]; then echo "TAG_WASM must be set!"; exit 1; fi;
+    - if [[ -z "$BRANCH_WASM" ]]; then echo "BRANCH_WASM must be set!"; exit 1; fi;
 
     - if [[ -z "$DOCS_SERVER" ]]; then echo "DOCS_SERVER must be set!"; exit 1; fi;
     - if [[ -z "$DOCS_APP" ]]; then echo "DOCS_APP must be set!"; exit 1; fi;
@@ -94,6 +94,14 @@ deploy-docs:
   dependencies:
     - build-docs
   script:
+    - echo "Adding docs deploy SSH key..."
+
+    # See https://docs.gitlab.com/ee/ci/ssh_keys/
+    - eval $(ssh-agent -s)
+    - echo "$DOCS_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
     - echo "Deploying docs..."
     - tar c build-docs | ssh dokku@${DOCS_SERVER} tar:in ${DOCS_APP}
 
