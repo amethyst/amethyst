@@ -103,7 +103,6 @@ impl Time {
         self.interpolation_alpha
     }
 
-    /// Gets the total number of frames that have been played in this session.
     /// Sets both `delta_seconds` and `delta_time` based on the seconds given.
     ///
     /// This should only be called by the engine.  Bad things might happen if you call this in
@@ -169,7 +168,7 @@ impl Time {
     /// This should only be called by the engine.  Bad things might happen if you call this in
     /// your game.
     pub fn start_fixed_update(&mut self) {
-        self.fixed_time_accumulator += self.delta_seconds;
+        self.fixed_time_accumulator += self.delta_real_seconds;
     }
 
     /// Checks to see if we should perform another fixed update iteration, and if so, returns true
@@ -384,12 +383,14 @@ mod tests {
 
     // Test that fixed_update methods accumulate and return correctly
     // Test confirms that with a fixed update of 120fps, we run fixed update twice with the timer
+    // Runs at 10 times game speed, which shouldn't affect fixed updates
     #[test]
     fn fixed_update_120fps() {
         use super::Time;
 
         let mut time = Time::default();
         time.set_fixed_seconds(1.0 / 120.0);
+        time.set_time_scale(10.0);
 
         let step = 1.0 / 60.0;
         let mut fixed_count = 0;
