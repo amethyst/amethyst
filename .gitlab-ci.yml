@@ -92,7 +92,8 @@ deploy-docs:
   only:
     - build-docs-with-gitlab-ci
   dependencies:
-    - build-docs
+    - docs
+    - book
   script:
     - echo "Adding docs deploy SSH key..."
 
