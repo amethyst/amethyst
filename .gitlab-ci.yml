@@ -35,30 +35,33 @@ book:
   stage: build-docs
   only:
     - build-docs-with-gitlab-ci
+  cache:
+    paths:
+      - cargo/
   artifacts:
     untracked: true
   script:
     - cargo install mdbook --no-default-features --features output --vers "^0.3.7"
-    - mdbook --version
+    - ./cargo/bin/mdbook --version
     - mkdir book-public
 
     - echo "Building master book..."
     - mkdir book-public/master
-    - mdbook build book
+    - ./cargo/bin/mdbook build book
     - mv book/book/* book-public/master/
     - rm -rf book/book
 
     - echo "Building stable book ($TAG_STABLE)..."
     - git checkout $TAG_STABLE
     - mkdir book-public/stable
-    - mdbook build book
+    - ./cargo/bin/mdbook build book
     - mv book/book/* book-public/stable/
     - rm -rf book/book
 
     - echo "Building last stable book ($TAG_LAST_STABLE)..."
     - git checkout $TAG_LAST_STABLE
     - mkdir book-public/last-stable
-    - mdbook build book
+    - ./cargo/bin/mdbook build book
     - mv book/book/* book-public/last-stable/
     - rm -rf book/book
 
