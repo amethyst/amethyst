@@ -24,7 +24,6 @@ prepare:
     - rustc --version
 
     - if [[ -z "$TAG_STABLE" ]]; then echo "TAG_STABLE must be set!"; exit 1; fi;
-    - if [[ -z "$TAG_LAST_STABLE" ]]; then echo "TAG_LAST_STABLE must be set!"; exit 1; fi;
     - if [[ -z "$BRANCH_WASM" ]]; then echo "BRANCH_WASM must be set!"; exit 1; fi;
 
     - if [[ -z "$DOCS_SERVER" ]]; then echo "DOCS_SERVER must be set!"; exit 1; fi;
@@ -58,13 +57,6 @@ book:
     - mv book/book/* book-public/stable/
     - rm -rf book/book
 
-    - echo "Building last stable book ($TAG_LAST_STABLE)..."
-    - git checkout $TAG_LAST_STABLE
-    - mkdir book-public/last-stable
-    - ./cargo/bin/mdbook build book
-    - mv book/book/* book-public/last-stable/
-    - rm -rf book/book
-
     - touch book-public/.static
     - echo "/ amethyst" >> book-public/CHECKS
 
@@ -93,12 +85,6 @@ docs:
     - mkdir docs-public/stable
     - cargo doc --all --features="animation gltf vulkan"
     - cp -r target/doc/* docs-public/stable/
-
-    - echo "Building last stable docs ($TAG_LAST_STABLE)..."
-    - git checkout $TAG_LAST_STABLE
-    - mkdir docs-public/last-stable
-    - cargo doc --all --features="animation gltf vulkan"
-    - cp -r target/doc/* docs-public/last-stable/
 
     - touch docs-public/.static
     - echo "/ amethyst" >> docs-public/CHECKS
