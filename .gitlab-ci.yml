@@ -65,6 +65,9 @@ docs:
   artifacts:
     untracked: true
   script:
+    - echo "Installing dependencies..."
+    - apt-get update && apt-get install -y libasound2-dev libcurl4-openssl-dev libdw-dev libelf-dev libexpat1-dev libfreetype6-dev libiberty-dev libsdl2-dev libssl-dev libx11-xcb-dev libxcb1-dev && apt-get clean
+
     - mkdir docs-public
 
     - echo "Building master docs..."
