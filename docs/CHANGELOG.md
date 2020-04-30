@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- `amethyst_rendy::shape::Shape::upload` takes `&ShapeUpload`. ([#2264])
+
 ### Fixed
 
 - Corrected an issue where fixed updates were tied to time scale. ([#2254])
