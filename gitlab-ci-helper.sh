@@ -2,7 +2,7 @@
 set -euxo pipefail
 
 function build_book {
-  if [[ -z "$1" ]] || [[ -z "$2" ]] || [[ -z "$3" ]]; then
+  if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
     echo "Usage: build-book REF DIR INVALIDATION_PATH"
     exit 1
   fi
@@ -16,7 +16,7 @@ function build_book {
   HEAD_REV=$(git rev-parse HEAD)
 
   # Check if the existing ref matches
-  if [[ "$(cat ${DIR}/.rev 2>/dev/null || echo '')" = "$HEAD_REV" ]]; then
+  if [[ -f "$DIR" && -f "${DIR}/.rev" && "$(cat ${DIR}/.rev)" = "$HEAD_REV" ]]; then
     echo "Cached book build for $REF found in $DIR!"
     exit 0
   fi
@@ -34,7 +34,7 @@ function build_book {
 }
 
 function build_docs_wasm {
-  if [[ -z "$1" ]] || [[ -z "$2" ]] || [[ -z "$3" ]]; then
+  if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
     echo "Usage: build-book REF DIR INVALIDATION_PATH"
     exit 1
   fi
@@ -48,8 +48,7 @@ function build_docs_wasm {
   HEAD_REV=$(git rev-parse HEAD)
 
   # Check if the existing ref matches
-
-  if [[ "$(cat ${DIR}/.rev 2>/dev/null || echo '')" = "$HEAD_REV" ]]; then
+  if [[ -f "$DIR" && -f "${DIR}/.rev" && "$(cat ${DIR}/.rev)" = "$HEAD_REV" ]]; then
     echo "Cached docs build for $REF found in $DIR!"
     exit 0
   fi
@@ -93,7 +92,7 @@ function build_docs_wasm {
 }
 
 function build_docs {
-  if [[ -z "$1" ]] || [[ -z "$2" ]] || [[ -z "$3" ]]; then
+  if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
     echo "Usage: build-book REF DIR INVALIDATION_PATH"
     exit 1
   fi
@@ -107,7 +106,7 @@ function build_docs {
   HEAD_REV=$(git rev-parse HEAD)
 
   # Check if the existing ref matches
-  if [[ "$(cat ${DIR}/.rev 2>/dev/null || echo '')" = "$HEAD_REV" ]]; then
+  if [[ -f "$DIR" && -f "${DIR}/.rev" && "$(cat ${DIR}/.rev)" = "$HEAD_REV" ]]; then
     echo "Cached docs build for $REF found in $DIR!"
     exit 0
   fi
