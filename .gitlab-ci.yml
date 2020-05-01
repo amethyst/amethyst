@@ -103,7 +103,7 @@ deploy-docs:
     - chmod 700 ~/.ssh
 
     - echo "Deploying docs..."
-    - tar c docs-public | ssh dokku@${DOCS_SERVER} tar:in ${DOCS_APP}
+    - tar c docs-public | ssh -o StrictHostKeyChecking=no dokku@${DOCS_SERVER} tar:in ${DOCS_APP}
 
     - echo "Deploying book..."
-    - tar c book-public | ssh dokku@${DOCS_SERVER} tar:in ${BOOK_APP}
+    - tar c book-public | ssh -o StrictHostKeyChecking=no dokku@${DOCS_SERVER} tar:in ${BOOK_APP}
