@@ -79,7 +79,13 @@ book:
       - book-paths-updated
   script:
     # Install dependencies
-    - apt-get update && apt-get install git -y
+    - apt-get update && apt-get install git curl -y
+
+    # We need git lfs to clone all examples
+    # See https://github.com/git-lfs/git-lfs/wiki/Installation
+    - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+    - apt-get install git-lfs
+    - git lfs install
 
     # Build stable, master and wasm book
     - bash gitlab-ci-helper.sh build-book master book-public-master "/master/*"
