@@ -167,6 +167,7 @@ case $SUBCOMMAND in
     ;;
   "build-docs-wasm")
     build_docs_wasm $2 $3 $4
+    ;;
   "build-book")
     build_book $2 $3 $4
     ;;
