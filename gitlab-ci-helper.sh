@@ -82,13 +82,13 @@ function build_docs_wasm {
   # cargo doc --target wasm32-unknown-unknown --no-default-features --features="audio network renderer wasm vorbis wav gl web_socket" --no-deps
   # cd ..
 
-  mv target/doc/* $DIR/
+  # mv target/doc/* $DIR/
 
   # Write the newly built rev to the rev file
-  echo "$HEAD_REV" >> $DIR/.rev
+  # echo "$HEAD_REV" >> $DIR/.rev
 
   # Write the invalidation path since we just rebuilt
-  echo "$INVALIDATION_PATH" >> ./docs-paths-updated
+  # echo "$INVALIDATION_PATH" >> ./docs-paths-updated
 }
 
 function build_docs {
