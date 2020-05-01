@@ -18,7 +18,7 @@ http {
     port_in_redirect off;
 
     location = / {
-      return 301 /master;
+      return 301 /master/;
     }
 
     location = /master/.rev {
