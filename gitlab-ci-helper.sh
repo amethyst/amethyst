@@ -16,7 +16,7 @@ function build_book {
   HEAD_REV=$(git rev-parse HEAD)
 
   # Check if the existing ref matches
-  if [[ "$(cat ${DIR}/.rev)" = "$HEAD_REV" ]]; then
+  if [[ "$(cat ${DIR}/.rev 2>/dev/null || echo '')" = "$HEAD_REV" ]]; then
     echo "Cached book build for $REF found in $DIR!"
     exit 0
   fi
