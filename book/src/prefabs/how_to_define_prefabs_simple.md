@@ -1,6 +1,6 @@
 # How to Define Prefabs: Simple
 
-This guide explains how to enable a [[`Component`](https://docs.amethyst.rs/stable/specs/trait.Component.html)] to be used in a [[`Prefab`](https://docs.amethyst.rs/stable/amethyst_assets/struct.Prefab.html)]. This can be applied where the [[`Component`](https://docs.amethyst.rs/stable/specs/trait.Component.html)] type itself is completely serializable &ndash; the data is self-contained:
+This guide explains how to enable a [`[Component]`(https://docs.amethyst.rs/stable/specs/trait.Component.html)] to be used in a [`[Prefab]`(https://docs.amethyst.rs/stable/amethyst_assets/struct.Prefab.html)]. This can be applied where the [`[Component]`(https://docs.amethyst.rs/stable/specs/trait.Component.html)] type itself is completely serializable &ndash; the data is self-contained:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -72,7 +72,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     pub struct Position(pub f32, pub f32, pub f32);
     ```
 
-    The [[`PrefabData`](https://docs.amethyst.rs/stable/amethyst_assets/trait.PrefabData.html#impl-PrefabData)][api_pf_derive](https://docs.amethyst.rs/stable/amethyst_derive/derive.PrefabData.html) derive implements the [`PrefabData`] trait for the type. The `#[prefab(Component)]` attribute informs the [`PrefabData`] derive that this type is a [[`Component`](https://docs.amethyst.rs/stable/specs/trait.Component.html)], as opposed to being composed of fields which implement [`PrefabData`].
+    The [`[PrefabData]`(https://docs.amethyst.rs/stable/amethyst_assets/trait.PrefabData.html#impl-PrefabData)][api_pf_derive](https://docs.amethyst.rs/stable/amethyst_derive/derive.PrefabData.html) derive implements the `[PrefabData]` trait for the type. The `#[prefab(Component)]` attribute informs the `[PrefabData]` derive that this type is a [`[Component]`(https://docs.amethyst.rs/stable/specs/trait.Component.html)], as opposed to being composed of fields which implement `[PrefabData]`.
 
     The [[`#[serde(default)]`](https://serde.rs/container-attrs.html#default)] attribute allows fields to not be specified in the prefab, and the fields' default value will be used. If this attribute is not present, then all fields must be specified in the prefab.
 
