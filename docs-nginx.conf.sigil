@@ -1,0 +1,43 @@
+worker_processes 1;
+error_log stderr;
+pid nginx.pid;
+daemon off;
+
+events {
+  worker_connections 768;
+}
+
+http {
+  types_hash_max_size 2048;
+  include mime.types;
+  server {
+    listen {{ $.PORT }};
+    server_name  _;
+    root /app/www;
+    index index.html;
+    port_in_redirect off;
+
+    location = / {
+      return 301 /master/;
+    }
+
+    location = /master/.rev {
+      types {}
+      default_type text/plain;
+    }
+
+    location = /stable/.rev {
+      types {}
+      default_type text/plain;
+    }
+    
+    location = /wasm/.rev {
+      types {}
+      default_type text/plain;
+    }
+
+    location / {
+      try_files $uri $uri/ /index.html;
+    }
+  }
+}
