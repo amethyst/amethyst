@@ -12,7 +12,7 @@ before_script:
   # We need to make a copy of the script, in case we
   # checkout a branch somewhere that doesn't contain it
   - cp scripts/docs-ci-helper.bash scripts/.docs-ci-helper.bash
-  - chmod +x .docs-ci-helper.bash
+  - chmod +x scripts/.docs-ci-helper.bash
 
 prepare:
   stage: .pre
