@@ -8,13 +8,13 @@ stages:
 before_script:
   # We need to make a copy of the script, in case we
   # checkout a branch somewhere that doesn't contain it
-  - cp docs-ci-helper.bash .docs-ci-helper.bash
+  - cp scripts/docs-ci-helper.bash scripts/.docs-ci-helper.bash
   - chmod +x .docs-ci-helper.bash
 
 prepare:
   stage: .pre
   only:
-    - master
+    - move-ci-to-gitlab
   script:
     - cargo --version
     - rustc --version
@@ -39,7 +39,7 @@ prepare:
 docs:
   stage: build-docs
   only:
-    - master
+    - move-ci-to-gitlab
   cache:
     key: docs-cache
     paths:
@@ -64,15 +64,15 @@ docs:
     - apt-get update && apt-get install -y libasound2-dev libcurl4-openssl-dev libdw-dev libelf-dev libexpat1-dev libfreetype6-dev libiberty-dev libsdl2-dev libssl-dev libx11-xcb-dev libxcb1-dev && apt-get clean
 
     # Build stable, master and wasm docs
-    - ./.docs-ci-helper.bash build docs master docs-public-master "/master/*"
-    - ./.docs-ci-helper.bash build docs $TAG_STABLE docs-public-stable "/stable/*"
-    # - ./.docs-ci-helper.bash build docs-wasm $BRANCH_WASM docs-public-wasm "/wasm/*"
+    - ./scripts/.docs-ci-helper.bash build docs master docs-public-master "/master/*"
+    - ./scripts/.docs-ci-helper.bash build docs $TAG_STABLE docs-public-stable "/stable/*"
+    # - ./scripts/.docs-ci-helper.bash build docs-wasm $BRANCH_WASM docs-public-wasm "/wasm/*"
 
 book:
   image: hrektts/mdbook:latest
   stage: build-docs
   only:
-    - master
+    - move-ci-to-gitlab
   cache:
     key: book-cache
     paths:
@@ -96,15 +96,15 @@ book:
     - git lfs install
 
     # Build stable, master and wasm book
-    - ./.docs-ci-helper.bash build book master book-public-master "/master/*"
-    - ./.docs-ci-helper.bash build book $TAG_STABLE book-public-stable "/stable/*"
-    # - ./.docs-ci-helper.bash build book $BRANCH_WASM book-public-wasm "/wasm/*"
+    - ./scripts/.docs-ci-helper.bash build book master book-public-master "/master/*"
+    - ./scripts/.docs-ci-helper.bash build book $TAG_STABLE book-public-stable "/stable/*"
+    # - ./scripts/.docs-ci-helper.bash build book $BRANCH_WASM book-public-wasm "/wasm/*"
 
 deploy-docs:
   image: alpine:latest
   stage: deploy-docs
   only:
-    - master
+    - move-ci-to-gitlab
   dependencies:
     - docs
     - book
@@ -170,7 +170,7 @@ invalidate-aws:
   image: frolvlad/alpine-glibc:latest
   stage: invalidate-aws
   only:
-    - master
+    - move-ci-to-gitlab
   dependencies:
     - docs
     - book
@@ -184,4 +184,4 @@ invalidate-aws:
     - /usr/local/bin/aws --version
 
     # Create invalidations for changed paths
-    - ./.docs-ci-helper.bash invalidate-aws
+    - ./scripts/.docs-ci-helper.bash invalidate-aws
