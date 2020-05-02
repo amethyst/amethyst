@@ -207,7 +207,6 @@ fn main() -> Result<(), Error> {
             &["input_system"],
         )
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FpsCounterBundle::default())?
