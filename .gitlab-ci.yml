@@ -8,8 +8,8 @@ stages:
 before_script:
   # We need to make a copy of the script, in case we
   # checkout a branch somewhere that doesn't contain it
-  - cp gitlab-ci-helper.sh .gitlab-ci-helper.sh
-  - chmod +x .gitlab-ci-helper.sh
+  - cp docs-ci-helper.bash .docs-ci-helper.bash
+  - chmod +x .docs-ci-helper.bash
 
 prepare:
   stage: .pre
@@ -64,9 +64,9 @@ docs:
     - apt-get update && apt-get install -y libasound2-dev libcurl4-openssl-dev libdw-dev libelf-dev libexpat1-dev libfreetype6-dev libiberty-dev libsdl2-dev libssl-dev libx11-xcb-dev libxcb1-dev && apt-get clean
 
     # Build stable, master and wasm docs
-    - ./.gitlab-ci-helper.sh build-docs master docs-public-master "/master/*"
-    - ./.gitlab-ci-helper.sh build-docs $TAG_STABLE docs-public-stable "/stable/*"
-    - ./.gitlab-ci-helper.sh build-docs-wasm $BRANCH_WASM docs-public-wasm "/wasm/*"
+    - ./.docs-ci-helper.bash build docs master docs-public-master "/master/*"
+    - ./.docs-ci-helper.bash build docs $TAG_STABLE docs-public-stable "/stable/*"
+    # - ./.docs-ci-helper.bash build docs-wasm $BRANCH_WASM docs-public-wasm "/wasm/*"
 
 book:
   image: hrektts/mdbook:latest
@@ -96,9 +96,9 @@ book:
     - git lfs install
 
     # Build stable, master and wasm book
-    - ./.gitlab-ci-helper.sh build-book master book-public-master "/master/*"
-    - ./.gitlab-ci-helper.sh build-book $TAG_STABLE book-public-stable "/stable/*"
-    - ./.gitlab-ci-helper.sh build-book $BRANCH_WASM book-public-wasm "/wasm/*"
+    - ./.docs-ci-helper.bash build book master book-public-master "/master/*"
+    - ./.docs-ci-helper.bash build book $TAG_STABLE book-public-stable "/stable/*"
+    # - ./.docs-ci-helper.bash build book $BRANCH_WASM book-public-wasm "/wasm/*"
 
 deploy-docs:
   image: alpine:latest
@@ -127,7 +127,7 @@ deploy-docs:
     # by creating .static and copy our custom nginx config
     - mv docs-public-stable docs-public/stable
     - mv docs-public-master docs-public/master
-    - mv docs-public-wasm docs-public/wasm
+    # - mv docs-public-wasm docs-public/wasm
     - touch docs-public/.static
     - cp docs-nginx.conf.sigil docs-public/app-nginx.conf.sigil
 
@@ -145,7 +145,7 @@ deploy-docs:
     # by creating .static and copy our custom nginx config
     - mv book-public-stable book-public/stable
     - mv book-public-master book-public/master
-    - mv book-public-wasm book-public/wasm
+    # - mv book-public-wasm book-public/wasm
     - touch book-public/.static
     - cp docs-nginx.conf.sigil book-public/app-nginx.conf.sigil
 
@@ -184,4 +184,4 @@ invalidate-aws:
     - /usr/local/bin/aws --version
 
     # Create invalidations for changed paths
-    - ./.gitlab-ci-helper.sh invalidate-aws
+    - ./.docs-ci-helper.bash invalidate-aws
