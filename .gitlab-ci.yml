@@ -134,7 +134,7 @@ deploy-docs:
     # Check if the index file contains the package name to validate the deployment
     - echo "/stable/amethyst/ amethyst" >> docs-public/CHECKS
     - echo "/master/amethyst/ amethyst" >> docs-public/CHECKS
-    - echo "/wasm/amethyst/ amethyst" >> docs-public/CHECKS
+    # - echo "/wasm/amethyst/ amethyst" >> docs-public/CHECKS
 
     # Check if the revision file contains the revisions we just deployed
     - echo "/master/.rev $(cat docs-public/master/.rev)" >> docs-public/CHECKS
@@ -152,7 +152,7 @@ deploy-docs:
     # Check if the index file contains the package name to validate the deployment
     - echo "/stable/ Amethyst" >> book-public/CHECKS
     - echo "/master/ Amethyst" >> book-public/CHECKS
-    - echo "/wasm/ Amethyst" >> book-public/CHECKS
+    # - echo "/wasm/ Amethyst" >> book-public/CHECKS
 
     # Check if the revision file contains the revisions we just deployed
     - echo "/master/.rev $(cat book-public/master/.rev)" >> book-public/CHECKS
