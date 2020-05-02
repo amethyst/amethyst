@@ -14,7 +14,7 @@ before_script:
 prepare:
   stage: .pre
   only:
-    - build-docs-with-gitlab-ci
+    - master
   script:
     - cargo --version
     - rustc --version
@@ -39,7 +39,7 @@ prepare:
 docs:
   stage: build-docs
   only:
-    - build-docs-with-gitlab-ci
+    - master
   cache:
     key: docs-cache
     paths:
@@ -72,7 +72,7 @@ book:
   image: hrektts/mdbook:latest
   stage: build-docs
   only:
-    - build-docs-with-gitlab-ci
+    - master
   cache:
     key: book-cache
     paths:
@@ -104,7 +104,7 @@ deploy-docs:
   image: alpine:latest
   stage: deploy-docs
   only:
-    - build-docs-with-gitlab-ci
+    - master
   dependencies:
     - docs
     - book
@@ -170,7 +170,7 @@ invalidate-aws:
   image: frolvlad/alpine-glibc:latest
   stage: invalidate-aws
   only:
-    - build-docs-with-gitlab-ci
+    - master
   dependencies:
     - docs
     - book
