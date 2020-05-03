@@ -7,6 +7,7 @@ stages:
   - build-docs
   - deploy-docs
   - invalidate-aws
+  - windows
 
 before_script:
   # We need to make a copy of the script, in case we
