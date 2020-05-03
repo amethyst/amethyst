@@ -50,7 +50,11 @@ function build {
   echo "$HEAD_REV" >> "$DIR/.rev"
 
   # Write the invalidation path since we just rebuilt
-  echo "$INVALIDATION_PATH" >> ./book-paths-updated
+  if [[ $BUILD_TYPE = "docs" || $BUILD_TYPE = "docs-wasm" ]]; then
+    echo "$INVALIDATION_PATH" >> ./docs-paths-updated
+  elif [[ $BUILD_TYPE = "book" ]]; then
+    echo "$INVALIDATION_PATH" >> ./book-paths-updated
+  fi
 }
 
 function invalidate_aws {
