@@ -227,6 +227,7 @@ invalidate-aws:
     - ./scripts/.docs-ci-helper.bash invalidate-aws
 
 windows:
+  stage: windows
   tags:
     - shared-windows
     - windows
