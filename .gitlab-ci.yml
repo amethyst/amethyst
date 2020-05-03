@@ -224,3 +224,12 @@ invalidate-aws:
 
     # Create invalidations for changed paths
     - ./scripts/.docs-ci-helper.bash invalidate-aws
+
+windows:
+  tags:
+    - shared-windows
+    - windows
+    - windows-1809
+  script:
+    - wget.exe https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe
+    - ./rustup-init.exe -y --default-host=x86_64-pc-windows-msvc
