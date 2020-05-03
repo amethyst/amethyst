@@ -1,9 +1,9 @@
-image: rust:latest
+image: ${CI_REGISTRY}/amethyst/amethyst-ci/base:latest
 
 stages:
   - lint
   - check
-  - coverage
+  - test
   - build-docs
   - deploy-docs
   - invalidate-aws
@@ -39,30 +39,29 @@ lint:
     - cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"
 
 check-stable:
+  image: ${CI_REGISTRY}/amethyst/amethyst-ci/builder-stable:latest
   stage: check
   variables:
     RUSTFLAGS: "-D warnings"
   script:
-    # Install dependencies
-    - apt-get update && apt-get install -y libasound2-dev libcurl4-openssl-dev libdw-dev libelf-dev libexpat1-dev libfreetype6-dev libiberty-dev libsdl2-dev libssl-dev libx11-xcb-dev libxcb1-dev && apt-get clean
-
     - cargo update
     - cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"
 
 check-nightly:
+  image: ${CI_REGISTRY}/amethyst/amethyst-ci/builder-nightly:latest
   stage: check
   variables:
     RUSTFLAGS: "-D warnings"
   script:
-    # Install dependencies
-    - apt-get update && apt-get install -y libasound2-dev libcurl4-openssl-dev libdw-dev libelf-dev libexpat1-dev libfreetype6-dev libiberty-dev libsdl2-dev libssl-dev libx11-xcb-dev libxcb1-dev && apt-get clean
+    - cargo update
+    - cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"
 
-    - cargo +nightly update
-    - cargo +nightly check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"
-
-coverage:
-  stage: coverage
+test-stable:
+  image: ${CI_REGISTRY}/amethyst/amethyst-ci/builder-stable:latest
+  stage: test
   script:
+    # For the stable test, we're combining testing with coverage so
+    # we don't have to run the tests twice
     - ./scripts/coverage.sh
     - curl -s https://codecov.io/bash | bash -s ./target/coverage/merged -t "$CODECOV_TOKEN"
 
@@ -76,6 +75,7 @@ coverage:
 # the relevant paths.
 
 docs:
+  image: ${CI_REGISTRY}/amethyst/amethyst-ci/builder-stable:latest
   stage: build-docs
   only:
     - move-ci-to-gitlab
@@ -92,23 +92,13 @@ docs:
       - docs-public-wasm/
       - docs-paths-updated
   script:
-    # Install dependencies
-
-    # We need git lfs to clone all examples
-    # See https://github.com/git-lfs/git-lfs/wiki/Installation
-    - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-    - apt-get install git-lfs
-    - git lfs install
-
-    - apt-get update && apt-get install -y libasound2-dev libcurl4-openssl-dev libdw-dev libelf-dev libexpat1-dev libfreetype6-dev libiberty-dev libsdl2-dev libssl-dev libx11-xcb-dev libxcb1-dev && apt-get clean
-
     # Build stable, master and wasm docs
     - ./scripts/.docs-ci-helper.bash build docs master docs-public-master "/master/*"
     - ./scripts/.docs-ci-helper.bash build docs $TAG_STABLE docs-public-stable "/stable/*"
     # - ./scripts/.docs-ci-helper.bash build docs-wasm $BRANCH_WASM docs-public-wasm "/wasm/*"
 
 book:
-  image: hrektts/mdbook:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst-ci/mdbook:latest
   stage: build-docs
   only:
     - move-ci-to-gitlab
@@ -125,22 +115,13 @@ book:
       - book-public-wasm/
       - book-paths-updated
   script:
-    # Install dependencies
-    - apt-get update && apt-get install git curl -y
-
-    # We need git lfs to clone all examples
-    # See https://github.com/git-lfs/git-lfs/wiki/Installation
-    - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
-    - apt-get install git-lfs
-    - git lfs install
-
     # Build stable, master and wasm book
     - ./scripts/.docs-ci-helper.bash build book master book-public-master "/master/*"
     - ./scripts/.docs-ci-helper.bash build book $TAG_STABLE book-public-stable "/stable/*"
     # - ./scripts/.docs-ci-helper.bash build book $BRANCH_WASM book-public-wasm "/wasm/*"
 
 deploy-docs:
-  image: alpine:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst-ci/base:latest
   stage: deploy-docs
   only:
     - move-ci-to-gitlab
@@ -148,12 +129,9 @@ deploy-docs:
     - docs
     - book
   script:
-    # Install dependencies
-    - apk update && apk add --no-cache bash git openssh ca-certificates
-    - echo "Adding docs deploy SSH key..."
-
     # Add the key for dokku deployment and set permissions
     # See https://docs.gitlab.com/ee/ci/ssh_keys/
+    - echo "Adding docs deploy SSH key..."
     - eval $(ssh-agent -s)
     - echo "$DOCS_SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
@@ -206,7 +184,7 @@ deploy-docs:
     - tar c book-public | ssh -o StrictHostKeyChecking=no dokku@${DOCS_SERVER} tar:in ${BOOK_APP}
 
 invalidate-aws:
-  image: frolvlad/alpine-glibc:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst-ci/aws-cli:latest
   stage: invalidate-aws
   only:
     - move-ci-to-gitlab
@@ -215,12 +193,5 @@ invalidate-aws:
     - book
     - deploy-docs
   script:
-    # Install dependencies
-    - apk update && apk add --no-cache bash curl ca-certificates unzip
-    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    - unzip -qq awscliv2.zip
-    - ./aws/install
-    - /usr/local/bin/aws --version
-
     # Create invalidations for changed paths
     - ./scripts/.docs-ci-helper.bash invalidate-aws
