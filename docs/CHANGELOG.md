@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 [#2254]: https://github.com/amethyst/amethyst/issues/2254
 [#2258]: https://github.com/amethyst/amethyst/pull/2258
+[#2264]: https://github.com/amethyst/amethyst/pull/2264
 
 
 ## [0.15.0] - 2020-03-24
