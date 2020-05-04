@@ -14,9 +14,6 @@ before_script:
   - cp scripts/docs-ci-helper.bash scripts/.docs-ci-helper.bash
   - chmod +x scripts/.docs-ci-helper.bash
 
-  # Log in to the gitlab docker repo so we can use the custom build images
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-
 prepare:
   stage: .pre
   only:
