@@ -1,4 +1,4 @@
-image: ${CI_REGISTRY}/amethyst/amethyst-ci/base:latest
+image: ${CI_REGISTRY}/amethyst/amethyst/base:latest
 
 stages:
   - lint
@@ -42,7 +42,7 @@ lint:
     - cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"
 
 check-stable:
-  image: ${CI_REGISTRY}/amethyst/amethyst-ci/builder-stable:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst/builder-stable:latest
   stage: check
   variables:
     RUSTFLAGS: "-D warnings"
@@ -51,7 +51,7 @@ check-stable:
     - cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"
 
 check-nightly:
-  image: ${CI_REGISTRY}/amethyst/amethyst-ci/builder-nightly:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst/builder-nightly:latest
   stage: check
   variables:
     RUSTFLAGS: "-D warnings"
@@ -60,7 +60,7 @@ check-nightly:
     - cargo check --all --all-targets --features "vulkan sdl_controller json saveload tiles storage-event-control"
 
 test-stable:
-  image: ${CI_REGISTRY}/amethyst/amethyst-ci/builder-stable:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst/builder-stable:latest
   stage: test
   script:
     # For the stable test, we're combining testing with coverage so
@@ -78,7 +78,7 @@ test-stable:
 # the relevant paths.
 
 docs:
-  image: ${CI_REGISTRY}/amethyst/amethyst-ci/builder-stable:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst/builder-stable:latest
   stage: build-docs
   only:
     - move-ci-to-gitlab
@@ -101,7 +101,7 @@ docs:
     # - ./scripts/.docs-ci-helper.bash build docs-wasm $BRANCH_WASM docs-public-wasm "/wasm/*"
 
 book:
-  image: ${CI_REGISTRY}/amethyst/amethyst-ci/mdbook:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst/mdbook:latest
   stage: build-docs
   only:
     - move-ci-to-gitlab
@@ -124,7 +124,7 @@ book:
     # - ./scripts/.docs-ci-helper.bash build book $BRANCH_WASM book-public-wasm "/wasm/*"
 
 deploy-docs:
-  image: ${CI_REGISTRY}/amethyst/amethyst-ci/base:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst/base:latest
   stage: deploy-docs
   only:
     - move-ci-to-gitlab
@@ -187,7 +187,7 @@ deploy-docs:
     - tar c book-public | ssh -o StrictHostKeyChecking=no dokku@${DOCS_SERVER} tar:in ${BOOK_APP}
 
 invalidate-aws:
-  image: ${CI_REGISTRY}/amethyst/amethyst-ci/aws-cli:latest
+  image: ${CI_REGISTRY}/amethyst/amethyst/aws-cli:latest
   stage: invalidate-aws
   only:
     - move-ci-to-gitlab
