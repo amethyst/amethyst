@@ -153,7 +153,7 @@ specs-derive = "0.4.1"
 
 [build-dependencies]
 dirs = "2.0.2"
-vergen = "3.0.4"
+vergen = "3.1.0"
 
 [[example]]
 name = "hello_world"
