@@ -1,9 +1,7 @@
 image: ${CI_REGISTRY}/amethyst-engine/amethyst/base:latest
 
 stages:
-  - lint
-  - check
-  - test
+  - build-and-test
   - build-docs
   - deploy-docs
   - invalidate-aws
@@ -31,7 +29,7 @@ prepare:
     - if [[ -z "$BOOK_APP" ]]; then echo "BOOK_APP must be set!"; exit 1; fi;
 
 lint:
-  stage: lint
+  stage: build-and-test
   variables:
     RUSTFLAGS: "-D warnings"
   script:
@@ -40,7 +38,7 @@ lint:
 
 check-stable:
   image: ${CI_REGISTRY}/amethyst-engine/amethyst/builder-stable:latest
-  stage: check
+  stage: build-and-test
   variables:
     RUSTFLAGS: "-D warnings"
   script:
@@ -49,7 +47,7 @@ check-stable:
 
 check-nightly:
   image: ${CI_REGISTRY}/amethyst-engine/amethyst/builder-nightly:latest
-  stage: check
+  stage: build-and-test
   variables:
     RUSTFLAGS: "-D warnings"
   script:
@@ -58,7 +56,7 @@ check-nightly:
 
 test-stable:
   image: ${CI_REGISTRY}/amethyst-engine/amethyst/builder-stable:latest
-  stage: test
+  stage: build-and-test
   script:
     # For the stable test, we're combining testing with coverage so
     # we don't have to run the tests twice
