@@ -353,7 +353,10 @@ fn to_tile(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        create_transform, to_tile, to_world, CoordinateEncoder, MapStorage, Matrix4, Tile, TileMap,
+        Transform, Vector3, World,
+    };
     use crate::{
         morton::{MortonEncoder, MortonEncoder2D},
         FlatEncoder,

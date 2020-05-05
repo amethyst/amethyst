@@ -205,7 +205,7 @@ impl Iterator for RegionLinearIter {
 #[cfg(test)]
 #[allow(clippy::shadow_unrelated)]
 mod tests {
-    use super::*;
+    use super::{morton, MortonRegion, Point3, Region};
 
     #[test]
     fn morton_region_edge_cases() {
