@@ -170,7 +170,7 @@ impl Shape {
     pub fn upload<V, P>(
         &self,
         scale: Option<(f32, f32, f32)>,
-        upload: ShapeUpload<'_>,
+        upload: &ShapeUpload<'_>,
         progress: P,
     ) -> Handle<Mesh>
     where

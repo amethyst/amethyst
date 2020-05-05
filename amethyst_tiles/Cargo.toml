@@ -25,7 +25,7 @@ log = { version = "0.4.6", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
 fnv = "1"
-derivative = "1.0"
+derivative = "2.1.1"
 hibitset = { version = "0.6.2", features = ["parallel"] }
 smallvec = "1.2.0"
 failure = "0.1"

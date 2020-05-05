@@ -268,8 +268,8 @@ fn main() -> amethyst::Result<()> {
     let display_config = DisplayConfig::load(display_config_path)?;
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(

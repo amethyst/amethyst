@@ -9,7 +9,7 @@ use crate::{
     types::{Backend, Texture},
     util,
 };
-use amethyst_assets::{AssetStorage, Handle};
+use amethyst_assets::{AssetStorage, Handle, WeakHandle};
 use amethyst_core::ecs::{Read, SystemData, World};
 
 #[cfg(feature = "profiler")]
@@ -24,7 +24,7 @@ enum TextureState<B: Backend> {
         set: Escape<DescriptorSet<B>>,
         generation: u32,
         version: u32,
-        handle: Handle<Texture>,
+        handle: WeakHandle<Texture>,
         layout: hal::image::Layout,
     },
 }
@@ -82,19 +82,27 @@ impl<B: Backend> TextureSub<B> {
                     handle,
                     layout,
                 } if *generation == self.generation => {
-                    if let Some((new_tex, new_version)) = tex_storage.get_with_version(handle) {
-                        if version != new_version {
-                            if let Some(desc) = texture_desc(new_tex, *layout) {
-                                unsafe {
-                                    let set = set.raw();
-                                    factory.write_descriptor_sets(vec![desc_write(set, 0, desc)]);
+                    if let Some(handle) = handle.upgrade() {
+                        if let Some((new_tex, new_version)) = tex_storage.get_with_version(&handle)
+                        {
+                            if version != new_version {
+                                if let Some(desc) = texture_desc(new_tex, *layout) {
+                                    unsafe {
+                                        let set = set.raw();
+                                        factory
+                                            .write_descriptor_sets(vec![desc_write(set, 0, desc)]);
+                                    }
+                                    *version = *new_version;
+                                } else {
+                                    *state = TextureState::Unloaded {
+                                        generation: self.generation,
+                                    };
                                 }
-                                *version = *new_version;
-                            } else {
-                                *state = TextureState::Unloaded {
-                                    generation: self.generation,
-                                };
                             }
+                        } else {
+                            *state = TextureState::Unloaded {
+                                generation: self.generation,
+                            };
                         }
                     } else {
                         *state = TextureState::Unloaded {
@@ -102,7 +110,6 @@ impl<B: Backend> TextureSub<B> {
                         };
                     }
                 }
-                // Todo: cleanup long unused textures
                 _ => {}
             }
         }
@@ -134,7 +141,7 @@ impl<B: Backend> TextureSub<B> {
             set,
             generation: self.generation,
             version: *version,
-            handle: handle.clone(),
+            handle: handle.downgrade(),
             layout,
         })
     }
@@ -152,7 +159,8 @@ impl<B: Backend> TextureSub<B> {
 
         let id = self.lookup.forward(handle.id());
         match self.textures.get(id) {
-            Some(TextureState::Loaded { .. }) => {
+            // If handle is dead, new texture was loaded (handle id is reused)
+            Some(TextureState::Loaded { handle, .. }) if !handle.is_dead() => {
                 return Some((TextureId(id as u32), false));
             }
             Some(TextureState::Unloaded { generation }) if *generation == self.generation => {

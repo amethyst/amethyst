@@ -217,9 +217,9 @@ fn main() -> Result<(), Error> {
         .with_base(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_running(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(TransformBundle::new())
-        .with_base_bundle(UiBundle::<StringBindings>::new())
         .with_base_bundle(FpsCounterBundle::default())
         .with_base_bundle(InputBundle::<StringBindings>::new())
+        .with_base_bundle(UiBundle::<StringBindings>::new())
         .with_base_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(RenderToWindow::new().with_clear(CLEAR_COLOR))

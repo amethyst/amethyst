@@ -126,7 +126,7 @@ impl Asset for Mesh {
 }
 
 impl Asset for Texture {
-    const NAME: &'static str = "Mesh";
+    const NAME: &'static str = "Texture";
     type Data = TextureData;
     type HandleStorage = DenseVecStorage<Handle<Self>>;
 }

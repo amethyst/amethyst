@@ -22,7 +22,7 @@ amethyst_input = { path = "../amethyst_input", version = "0.11.0" }
 amethyst_rendy = { path = "../amethyst_rendy", version = "0.5.0" }
 amethyst_window = { path = "../amethyst_window", version = "0.5.0" }
 clipboard = "0.5"
-derivative = "1.0"
+derivative = "2.1.1"
 derive-new = "0.5.6"
 fnv = "1"
 glsl-layout = "0.3"

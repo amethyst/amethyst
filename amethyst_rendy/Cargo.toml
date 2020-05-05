@@ -29,7 +29,7 @@ rendy = { version = "0.5.1", git = "https://github.com/amethyst/rendy.git", bran
 ron = "0.5"
 serde = { version = "1", features = ["serde_derive"] }
 fnv = "1"
-derivative = "1.0"
+derivative = "2.1.1"
 smallvec = "1.2.0"
 static_assertions = "1.1"
 

@@ -205,12 +205,16 @@ fn main() -> amethyst::Result<()> {
     let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .with(ExampleSystem::default(), "example_system", &[])
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with(
+            ExampleSystem::default(),
+            "example_system",
+            &["input_system"],
+        )
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new(display_config, &event_loop)
                 .with_plugin(RenderToWindow::new().with_clear(ClearColor {

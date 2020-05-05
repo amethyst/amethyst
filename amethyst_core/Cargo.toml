@@ -30,7 +30,7 @@ specs = { version = "0.16.0", default-features = false, features = ["shred-deriv
 specs-hierarchy = { version = "0.6", default-features = false }
 getset = "0.0.9"
 derive-new = "0.5.8"
-derivative = "1.0.3"
+derivative = "2.1.1"
 
 thread_profiler = { version = "0.3", optional = true }
 

@@ -22,7 +22,7 @@ use thread_profiler::profile_scope;
 ///
 /// frame_fps will return the framerate of the current frame. That is, the framerate at which the
 /// game would be running if all frames were exactly like this one.
-/// sampled_fls will return the averaged framerate. This gives a better approximation of the "felt"
+/// sampled_fps will return the averaged framerate. This gives a better approximation of the "felt"
 /// framerate by the user.
 ///
 /// # Example

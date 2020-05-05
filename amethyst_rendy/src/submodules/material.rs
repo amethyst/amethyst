@@ -14,7 +14,7 @@ use crate::{
     types::{Backend, Texture},
     util,
 };
-use amethyst_assets::{AssetStorage, Handle};
+use amethyst_assets::{AssetStorage, Handle, WeakHandle};
 use amethyst_core::ecs::{Read, SystemData, World};
 use glsl_layout::*;
 
@@ -132,6 +132,7 @@ enum MaterialState<B: Backend> {
         set: Escape<DescriptorSet<B>>,
         slot: usize,
         generation: u32,
+        handle: WeakHandle<Material>,
     },
 }
 
@@ -281,6 +282,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
             set,
             slot,
             generation: self.generation,
+            handle: handle.downgrade(),
         })
     }
 
@@ -296,9 +298,20 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
 
         let id = self.lookup.forward(handle.id());
         match self.materials.get_mut(id) {
-            Some(MaterialState::Loaded { generation, .. }) => {
-                *generation = self.generation;
-                return Some((MaterialId(id as u32), false));
+            Some(MaterialState::Loaded {
+                slot,
+                generation,
+                handle,
+                ..
+            }) => {
+                // If handle is dead, new material was loaded (handle id reused)
+                if handle.is_dead() {
+                    self.allocator.release(*slot);
+                } else {
+                    // Material loaded and ready
+                    *generation = self.generation;
+                    return Some((MaterialId(id as u32), false));
+                }
             }
             Some(MaterialState::Unloaded { generation }) if *generation == self.generation => {
                 return None

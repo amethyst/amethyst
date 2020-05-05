@@ -24,7 +24,7 @@ amethyst_core = { path = "../amethyst_core", version = "0.10.0", default-feature
 amethyst_derive = { path = "../amethyst_derive", version = "0.8.0" }
 amethyst_error = { path = "../amethyst_error", version = "0.5.0" }
 crossbeam-queue = "0.1.2"
-derivative = "1.0"
+derivative = "2.1.1"
 derive-new = "0.5"
 fnv = "1"
 instant = "0.1"
