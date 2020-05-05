@@ -20,41 +20,42 @@ pub use alga;
 pub use approx;
 pub use nalgebra as math;
 pub use num_traits as num;
-pub use specs as ecs;
-pub use specs::{shred, shrev};
+pub use legion as ecs;
+pub use legion_transform as transform;
+pub use shrev;
 
 use std::sync::Arc;
 
 pub use crate::{
-    bundle::SystemBundle,
-    event::EventReader,
-    system_ext::{Pausable, SystemExt},
+    // event::EventReader,
+    // system_ext::{Pausable, SystemExt},
     timing::*,
-    transform::*,
 };
 
 pub use self::{
     axis::{Axis2, Axis3},
     hidden::{Hidden, HiddenPropagate},
-    hide_system::{HideHierarchySystem, HideHierarchySystemDesc},
-    named::{Named, WithNamed},
-    system_desc::{RunNowDesc, SystemDesc},
+    //hide_system::{HideHierarchySystem, HideHierarchySystemDesc},
+    named::Named,
+    // system_desc::{RunNowDesc, SystemDesc},
+    transform::*,
+    transform_bundle::*,
 };
 
-pub mod bundle;
-pub mod deferred_dispatcher_operation;
+//pub mod deferred_dispatcher_operation;
 pub mod frame_limiter;
 pub mod geometry;
 pub mod timing;
-pub mod transform;
+pub mod dispatcher;
 
 mod axis;
-mod event;
+//mod event;
 mod hidden;
-mod hide_system;
+//mod hide_system;
 mod named;
-mod system_desc;
-mod system_ext;
+//mod system_desc;
+//mod system_ext;
+mod transform_bundle;
 
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.
 pub type ArcThreadPool = Arc<rayon::ThreadPool>;

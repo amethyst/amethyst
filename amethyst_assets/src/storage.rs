@@ -10,14 +10,16 @@ use crossbeam_queue::SegQueue;
 use derivative::Derivative;
 use log::{debug, error, trace, warn};
 use rayon::ThreadPool;
+use specs::storage::{
+    VecStorage,
+    UnprotectedStorage,
+};
+use specs::hibitset::BitSet;
 
 use amethyst_core::{
-    ecs::{
-        hibitset::BitSet,
-        prelude::{Component, Read, ReadExpect, System, SystemData, VecStorage, World, Write},
-        storage::UnprotectedStorage,
-    },
-    SystemDesc, Time,
+    ArcThreadPool,
+    ecs::prelude::*,
+    Time,
 };
 use amethyst_error::{Error, ResultExt};
 
@@ -501,53 +503,28 @@ impl<A: Asset> Drop for AssetStorage<A> {
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
-#[derive(Default)]
-pub struct Processor<A> {
-    marker: PhantomData<A>,
-}
-
-impl<A> Processor<A> {
-    /// Creates a new asset processor for
-    /// assets of type `A`.
-    pub fn new() -> Self {
-        Processor {
-            marker: PhantomData,
-        }
-    }
-}
-
-impl<'a, 'b, A> SystemDesc<'a, 'b, Processor<A>> for Processor<A>
+pub fn build_processor_system<A>(_world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable>
 where
     A: Asset + ProcessableAsset,
 {
-    fn build(self, world: &mut World) -> Processor<A> {
-        <Processor<A> as System<'_>>::SystemData::setup(world);
-        self
-    }
-}
+    resources.insert(AssetStorage::<A>::default());
 
-impl<'a, A> System<'a> for Processor<A>
-where
-    A: Asset + ProcessableAsset,
-{
-    type SystemData = (
-        Write<'a, AssetStorage<A>>,
-        ReadExpect<'a, Arc<ThreadPool>>,
-        Read<'a, Time>,
-        Option<Read<'a, HotReloadStrategy>>,
-    );
+    SystemBuilder::<()>::new("AssetProcessor")
+        .write_resource::<AssetStorage<A>>()
+        .read_resource::<ArcThreadPool>()
+        .read_resource::<Time>()
+        //.read_resource::<HotReloadStrategy>() TODO: optional resources
+        .build(move |_commands, _world, (storage, pool, time), _query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("processor_system");
 
-    fn run(&mut self, (mut storage, pool, time, strategy): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("processor_system");
-
-        storage.process(
-            ProcessableAsset::process,
-            time.frame_number(),
-            &**pool,
-            strategy.as_deref(),
-        );
-    }
+            storage.process(
+                ProcessableAsset::process,
+                time.frame_number(),
+                &**pool,
+                None, //strategy.as_deref()
+            );
+        })
 }
 
 /// A handle to an asset. This is usually what the
@@ -587,13 +564,6 @@ impl<A> Handle<A> {
     fn is_unique(&self) -> bool {
         Arc::strong_count(&self.id) == 1
     }
-}
-
-impl<A> Component for Handle<A>
-where
-    A: Asset,
-{
-    type Storage = A::HandleStorage;
 }
 
 pub(crate) enum Processed<A: Asset> {

@@ -16,11 +16,11 @@ travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.11.0" }
-amethyst_controls = { path = "../amethyst_controls", version = "0.9.0" }
+#amethyst_controls = { path = "../amethyst_controls", version = "0.9.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.10.0" }
 amethyst_error = { path = "../amethyst_error", version = "0.5.0" }
 amethyst_derive = { path = "../amethyst_derive", version = "0.8.0" }
-amethyst_rendy = { path = "../amethyst_rendy", version = "0.5.0" }
+#amethyst_rendy = { path = "../amethyst_rendy", version = "0.5.0" }
 amethyst_window = { path = "../amethyst_window", version = "0.5.0" }
 derive-new = "0.5.8"
 log = "0.4.6"
@@ -31,8 +31,8 @@ specs-hierarchy = "0.6.0"
 thread_profiler = { version = "0.3", optional = true }
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
-metal = ["amethyst_rendy/metal"]
-empty = ["amethyst_rendy/empty"]
+#vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+#metal = ["amethyst_rendy/metal"]
+#empty = ["amethyst_rendy/empty"]
 
 profiler = [ "thread_profiler/thread_profiler" ]

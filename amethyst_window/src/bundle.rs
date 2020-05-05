@@ -1,6 +1,6 @@
-use crate::{DisplayConfig, EventsLoopSystem, WindowSystem};
+use crate::{DisplayConfig, build_window_system_from_config, build_events_loop_system};
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{bundle::SystemBundle, ecs::World, shred::DispatcherBuilder};
+use amethyst_core::{dispatcher::{SystemBundle, DispatcherBuilder, Stage}, ecs::prelude::*};
 use amethyst_error::Error;
 use winit::EventsLoop;
 
@@ -49,19 +49,13 @@ impl WindowBundle {
     }
 }
 
-impl<'a, 'b> SystemBundle<'a, 'b> for WindowBundle {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
+impl SystemBundle for WindowBundle {
+    fn build(self, _world: &mut World, _resources: &mut Resources, builder: &mut DispatcherBuilder<'_>) -> Result<(), Error> {
         let event_loop = EventsLoop::new();
-        builder.add(
-            WindowSystem::from_config(world, &event_loop, self.config),
-            "window",
-            &[],
-        );
-        builder.add_thread_local(EventsLoopSystem::new(event_loop));
+
+        builder.add_system(Stage::Begin, build_window_system_from_config(&event_loop, self.config));
+        builder.add_thread_local_system(build_events_loop_system(event_loop));
+
         Ok(())
     }
 }

@@ -1,5 +1,4 @@
-use crate::{storage::ProcessingState, FormatRegisteredData, Handle, Reload, SingleFile, Source};
-use amethyst_core::ecs::storage::UnprotectedStorage;
+use crate::{storage::ProcessingState, FormatRegisteredData, Reload, SingleFile, Source};
 use amethyst_error::{Error, ResultExt};
 use std::{fmt::Debug, ops::Deref, sync::Arc};
 
@@ -26,9 +25,6 @@ pub trait Asset: Send + Sync + 'static {
 
     /// The `Data` type the asset can be created from.
     type Data: Send + Sync + 'static;
-
-    /// The ECS storage type to be used. You'll want to use `DenseVecStorage` in most cases.
-    type HandleStorage: UnprotectedStorage<Handle<Self>> + Send + Sync;
 }
 
 /// Defines a way to process asset's data into the asset. This allows

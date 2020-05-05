@@ -2,11 +2,10 @@
 
 use std::{sync::Arc, time::Instant};
 
-use derive_new::new;
-
 use amethyst_core::{
-    ecs::prelude::{DispatcherBuilder, Read, System, SystemData, World, Write},
-    SystemBundle, SystemDesc, Time,
+    ecs::prelude::*,
+    Time,
+    dispatcher::{SystemBundle, DispatcherBuilder, Stage}
 };
 use amethyst_error::Error;
 
@@ -29,17 +28,15 @@ impl HotReloadBundle {
     }
 }
 
-impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
+impl SystemBundle for HotReloadBundle {
     fn build(
         self,
-        world: &mut World,
-        dispatcher: &mut DispatcherBuilder<'a, 'b>,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
-        dispatcher.add(
-            HotReloadSystemDesc::new(self.strategy).build(world),
-            "hot_reload",
-            &[],
-        );
+        resources.insert(self.strategy);
+        builder.add_system(Stage::Begin, build_hot_reload_system);
         Ok(())
     }
 }
@@ -137,58 +134,45 @@ enum HotReloadStrategyInner {
     Never,
 }
 
-/// Builds a `HotReloadSystem`.
-#[derive(Debug, new)]
-pub struct HotReloadSystemDesc {
-    /// The `HotReloadStrategy`.
-    pub strategy: HotReloadStrategy,
-}
-
-impl<'a, 'b> SystemDesc<'a, 'b, HotReloadSystem> for HotReloadSystemDesc {
-    fn build(self, world: &mut World) -> HotReloadSystem {
-        <HotReloadSystem as System<'_>>::SystemData::setup(world);
-
-        world.insert(self.strategy);
-        world.fetch_mut::<Loader>().set_hot_reload(true);
-
-        HotReloadSystem::new()
+/// Hot reload system that manages asset reload polling
+pub fn build_hot_reload_system(_world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable>
+{
+    if resources.get::<HotReloadStrategy>().is_none() {
+        resources.insert(HotReloadStrategy::default())
     }
-}
 
-/// System for updating `HotReloadStrategy`.
-#[derive(Debug, new)]
-pub struct HotReloadSystem;
+    resources.get_mut::<Loader>().unwrap().set_hot_reload(true);
 
-impl<'a> System<'a> for HotReloadSystem {
-    type SystemData = (Read<'a, Time>, Write<'a, HotReloadStrategy>);
+    SystemBuilder::<()>::new("HotReloadSystem")
+        .write_resource::<HotReloadStrategy>()
+        .read_resource::<Time>()
+        .build(move |_commands, _world, (strategy, time), _query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("hot_reload_system");
 
-    fn run(&mut self, (time, mut strategy): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("hot_reload_system");
-
-        match strategy.inner {
-            HotReloadStrategyInner::Trigger {
-                ref mut triggered,
-                ref mut frame_number,
-            } => {
-                if *triggered {
-                    *frame_number = time.frame_number() + 1;
+            match strategy.inner {
+                HotReloadStrategyInner::Trigger {
+                    ref mut triggered,
+                    ref mut frame_number,
+                } => {
+                    if *triggered {
+                        *frame_number = time.frame_number() + 1;
+                    }
+                    *triggered = false;
                 }
-                *triggered = false;
-            }
-            HotReloadStrategyInner::Every {
-                interval,
-                ref mut last,
-                ref mut frame_number,
-            } => {
-                if last.elapsed().as_secs() > u64::from(interval) {
-                    *frame_number = time.frame_number() + 1;
-                    *last = Instant::now();
+                HotReloadStrategyInner::Every {
+                    interval,
+                    ref mut last,
+                    ref mut frame_number,
+                } => {
+                    if last.elapsed().as_secs() > u64::from(interval) {
+                        *frame_number = time.frame_number() + 1;
+                        *last = Instant::now();
+                    }
                 }
+                HotReloadStrategyInner::Never => {}
             }
-            HotReloadStrategyInner::Never => {}
-        }
-    }
+        })
 }
 
 /// The `Reload` trait provides a method which checks if an asset needs to be reloaded.

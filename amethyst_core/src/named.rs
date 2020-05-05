@@ -1,7 +1,6 @@
 use std::borrow::Cow;
-
-use crate::ecs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, WriteStorage};
 use serde::{Deserialize, Serialize};
+use shrinkwraprs::Shrinkwrap;
 
 /// A component that gives a name to an [`Entity`].
 ///
@@ -77,76 +76,9 @@ use serde::{Deserialize, Serialize};
 ///     }
 /// }
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Shrinkwrap, Debug, Clone, Serialize, Deserialize)]
+#[shrinkwrap(mutable)]
 pub struct Named {
     /// The name of the entity this component is attached to.
     pub name: Cow<'static, str>,
-}
-
-impl Named {
-    /// Constructs a new `Named` from a string.
-    ///
-    /// # Examples
-    ///
-    /// From a string constant:
-    ///
-    /// ```
-    /// use amethyst::core::Named;
-    ///
-    /// let name_component = Named::new("Super Cool Entity");
-    /// ```
-    ///
-    /// From a dynamic string:
-    ///
-    /// ```
-    /// use amethyst::core::Named;
-    ///
-    /// let entity_num = 7;
-    /// let name_component = Named::new(format!("Entity Number {}", entity_num));
-    /// ```
-    pub fn new<S>(name: S) -> Self
-    where
-        S: Into<Cow<'static, str>>,
-    {
-        Named { name: name.into() }
-    }
-}
-
-impl Component for Named {
-    type Storage = DenseVecStorage<Self>;
-}
-
-/// An easy way to name an `Entity` and give it a `Named` `Component`.
-pub trait WithNamed
-where
-    Self: Sized,
-{
-    /// Adds a name to the entity being built.
-    fn named<S>(self, name: S) -> Self
-    where
-        S: Into<Cow<'static, str>>;
-}
-
-impl<'a> WithNamed for EntityBuilder<'a> {
-    fn named<S>(self, name: S) -> Self
-    where
-        S: Into<Cow<'static, str>>,
-    {
-        self.world
-            .system_data::<(WriteStorage<'a, Named>,)>()
-            .0
-            .insert(self.entity, Named::new(name))
-            .expect("Unreachable: Entities should always be valid when just created");
-        self
-    }
-}
-
-impl<'a> WithNamed for LazyBuilder<'a> {
-    fn named<S>(self, name: S) -> Self
-    where
-        S: Into<Cow<'static, str>>,
-    {
-        self.lazy.insert::<Named>(self.entity, Named::new(name));
-        self
-    }
 }

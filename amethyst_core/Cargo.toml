@@ -25,11 +25,14 @@ log = "0.4.8"
 num-traits = "0.2.11"
 rayon = "1.3.0"
 serde = { version = "1", features = ["derive"] }
-specs = { version = "0.16.0", default-features = false, features = ["shred-derive", "specs-derive"] }
-specs-hierarchy = { version = "0.6", default-features = false }
+#legion = { version = "0.2.1" }
+legion = { git = "https://github.com/TomGillen/legion" }
+legion_transform = { git = "https://github.com/chemicstry/legion_transform" }
 getset = "0.0.9"
 derive-new = "0.5.8"
 derivative = "1.0.3"
+shrinkwraprs = "0.2"
+shrev = "1.1"
 
 thread_profiler = { version = "0.3", optional = true }
 
@@ -38,7 +41,4 @@ amethyst = { path = "..", version = "0.15.0" }
 ron = "0.5.1"
 
 [features]
-default = ["specs/parallel", "specs-hierarchy/parallel"]
 profiler = ["thread_profiler/thread_profiler"]
-saveload = ["specs/serde"]
-storage-event-control = ["specs/storage-event-control"]

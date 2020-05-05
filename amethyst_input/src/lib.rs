@@ -21,7 +21,7 @@ pub use self::{
     input_handler::InputHandler,
     mouse::MouseAxis,
     scroll_direction::ScrollDirection,
-    system::{InputSystem, InputSystemDesc},
+    system::build_input_system,
     util::{
         get_input_axis_simple, get_key, get_mouse_button, is_close_requested, is_key_down,
         is_key_up, is_mouse_button_down,

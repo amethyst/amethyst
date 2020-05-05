@@ -39,6 +39,7 @@ objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
+specs = "0.16"
 
 [dev-dependencies]
 serde_json = "1"
