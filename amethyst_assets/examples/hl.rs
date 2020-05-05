@@ -108,7 +108,7 @@ impl<'a> System<'a> for RenderingSystem {
     fn run(&mut self, (mut mesh_storage, time, pool, strategy): Self::SystemData) {
         use std::ops::Deref;
 
-        let strategy = strategy.as_ref().map(Deref::deref);
+        let strategy = strategy.as_deref();
 
         mesh_storage.process(
             |vertex_data| {
