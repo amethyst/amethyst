@@ -96,7 +96,7 @@ function invalidate_aws {
 SUBCOMMAND="$1"
 case $SUBCOMMAND in
   "build")
-    build_docs "$2" "$3" "$4" "$5"
+    build "$2" "$3" "$4" "$5"
     ;;
   "invalidate-aws")
     invalidate_aws
