@@ -40,7 +40,7 @@ objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
-wasm-bindgen = { version = "0.2.59", optional = true }
+wasm-bindgen = { version = "0.2.62", optional = true }
 js-sys = { version = "0.3.36", optional = true }
 
 [dependencies.web-sys]
