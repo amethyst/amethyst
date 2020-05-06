@@ -160,19 +160,19 @@ deploy-docs:
     # by creating .static and copy our custom nginx config
     - mv book-public-stable book-public/stable
     - mv book-public-master book-public/master
-    # - mv book-public-wasm book-public/wasm
+    - mv book-public-wasm book-public/wasm
     - touch book-public/.static
     - cp docs-nginx.conf.sigil book-public/app-nginx.conf.sigil
 
     # Check if the index file contains the package name to validate the deployment
     - echo "/stable/ Amethyst" >> book-public/CHECKS
     - echo "/master/ Amethyst" >> book-public/CHECKS
-    # - echo "/wasm/ Amethyst" >> book-public/CHECKS
+    - echo "/wasm/ Amethyst" >> book-public/CHECKS
 
     # Check if the revision file contains the revisions we just deployed
     - echo "/master/.rev $(cat book-public/master/.rev)" >> book-public/CHECKS
     - echo "/stable/.rev $(cat book-public/stable/.rev)" >> book-public/CHECKS
-    # - echo "/wasm/.rev $(cat book-public/wasm/.rev)" >> book-public/CHECKS
+    - echo "/wasm/.rev $(cat book-public/wasm/.rev)" >> book-public/CHECKS
 
     # Deploy!
     - echo "Deploying docs..."
