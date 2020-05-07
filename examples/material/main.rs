@@ -5,7 +5,7 @@ use amethyst::{
     core::{
         ecs::prelude::*,
         TransformBundle,
-        transform::components::Translation,
+        transform::components::{Translation, Rotation, LocalToWorld},
     },
     renderer::{
         camera::Camera,
@@ -57,88 +57,79 @@ impl SimpleState for Example {
         };
 
         println!("Create spheres");
-        let j = 1;
-        let spheres: Vec<_> = (0..5).map(|i| {
-            // (0..5).map(|j| {
-                let roughness = 1.0f32 * (i as f32 / 4.0f32);
-                let metallic = 1.0f32 * (j as f32 / 4.0f32);
+        let spheres = (0..25).map(|n| {
+            let i = n / 5;
+            let j = n % 5;
 
-                let pos = Translation::new(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
+            let roughness = 1.0f32 * (i as f32 / 4.0f32);
+            let metallic = 1.0f32 * (j as f32 / 4.0f32);
 
-                let mtl = {
-                    let metallic_roughness = loader.load_from_data(
-                        load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0))
-                            .into(),
-                        (),
-                        &tex_storage,
-                    );
+            let pos = Translation::new(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
-                    loader.load_from_data(
-                        Material {
-                            albedo: albedo.clone(),
-                            metallic_roughness,
-                            ..mat_defaults.clone()
-                        },
-                        (),
-                        &mtl_storage,
-                    )
-                };
+            let mtl = {
+                let metallic_roughness = loader.load_from_data(
+                    load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0))
+                        .into(),
+                    (),
+                    &tex_storage,
+                );
 
-                (pos, mesh.clone(), mtl)
-            // })
-        }).collect();
+                loader.load_from_data(
+                    Material {
+                        albedo: albedo.clone(),
+                        metallic_roughness,
+                        ..mat_defaults.clone()
+                    },
+                    (),
+                    &mtl_storage,
+                )
+            };
+
+            (LocalToWorld::identity(), pos, mesh.clone(), mtl)
+        });
 
         world.insert((), spheres);
 
-        // println!("Create lights");
-        // let light1: Light = PointLight {
-        //     intensity: 6.0,
-        //     color: Srgb::new(0.8, 0.0, 0.0),
-        //     ..PointLight::default()
-        // }
-        // .into();
+        println!("Create lights");
+        let light1: Light = PointLight {
+            intensity: 6.0,
+            color: Srgb::new(0.8, 0.0, 0.0),
+            ..PointLight::default()
+        }
+        .into();
 
-        // let mut light1_transform = Transform::default();
-        // light1_transform.set_translation_xyz(6.0, 6.0, -6.0);
+        let mut light1_translation = Translation::new(6.0, 6.0, -6.0);
 
-        // let light2: Light = PointLight {
-        //     intensity: 5.0,
-        //     color: Srgb::new(0.0, 0.3, 0.7),
-        //     ..PointLight::default()
-        // }
-        // .into();
+        let light2: Light = PointLight {
+            intensity: 5.0,
+            color: Srgb::new(0.0, 0.3, 0.7),
+            ..PointLight::default()
+        }
+        .into();
 
-        // let mut light2_transform = Transform::default();
-        // light2_transform.set_translation_xyz(6.0, -6.0, -6.0);
+        let mut light2_translation = Translation::new(6.0, -6.0, -6.0);
 
-        // world
-        //     .create_entity()
-        //     .with(light1)
-        //     .with(light1_transform)
-        //     .build();
+        world.insert((), vec![
+            (LocalToWorld::identity(), light1, light1_translation),
+            (LocalToWorld::identity(), light2, light2_translation)
+        ]);
 
-        // world
-        //     .create_entity()
-        //     .with(light2)
-        //     .with(light2_transform)
-        //     .build();
+        println!("Put camera");
 
-        // println!("Put camera");
+        let mut translation = Translation::new(0.0, 0.0, -12.0);
+        let mut rotation = Rotation::from_euler_angles(0.0, std::f32::consts::PI, 0.0);
 
-        // let mut transform = Transform::default();
-        // transform.set_translation_xyz(0.0, 0.0, -12.0);
-        // transform.prepend_rotation_y_axis(std::f32::consts::PI);
+        let (width, height) = {
+            let dim = resources.get::<ScreenDimensions>().unwrap();
+            (dim.width(), dim.height())
+        };
 
-        // let (width, height) = {
-        //     let dim = world.read_resource::<ScreenDimensions>();
-        //     (dim.width(), dim.height())
-        // };
-
-        // world
-        //     .create_entity()
-        //     .with(Camera::standard_3d(width, height))
-        //     .with(transform)
-        //     .build();
+        world.insert((), vec![(
+            LocalToWorld::identity(),
+            Camera::standard_3d(width, height),
+            translation,
+            rotation,
+        )]);
     }
 }
 
