@@ -5,9 +5,9 @@ use crate::{
     resources::AmbientColor,
 };
 use amethyst_core::{
-    ecs::{Entities, Entity, Join, Read, ReadStorage, SystemData, World},
+    ecs::prelude::*,
     math::{convert, Matrix4, Vector3},
-    transform::Transform,
+    transform::components::LocalToWorld,
 };
 use glsl_layout::*;
 
@@ -31,32 +31,21 @@ impl CameraGatherer {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_camera (1st)");
 
-        let (active_camera, entities, cameras, transforms) = <(
-            Read<'_, ActiveCamera>,
-            Entities<'_>,
-            ReadStorage<'_, Camera>,
-            ReadStorage<'_, Transform>,
-        )>::fetch(world);
+        let entity= <Read<Camera>>::query()
+            .filter(tag::<ActiveCamera>())
+            .iter_entities(world)
+            .nth(0)
+            .map(|(e, _)| e);
 
-        match active_camera.entity {
-            Some(entity) => {
-                if transforms.contains(entity) && cameras.contains(entity) {
-                    Some(entity)
-                } else {
-                    log::error!(
-                        "The entity assigned to ActiveCamera is not a valid camera, which requires the \
-                        Transform and Camera components. Falling back on the first available camera which meets these requirements");
-
-                    (&entities, &cameras, &transforms)
-                        .join()
-                        .next()
-                        .map(|(entity, _, _)| entity)
-                }
+        match entity {
+            Some(entity) => Some(entity),
+            None => {
+                // Fetch first camera without `ActiveCamera`
+                <Read<Camera>>::query()
+                    .iter_entities(world)
+                    .nth(0)
+                    .map(|(e, _)| e)
             }
-            None => (&entities, &cameras, &transforms)
-                .join()
-                .next()
-                .map(|(entity, _, _)| entity),
         }
     }
 
@@ -69,39 +58,30 @@ impl CameraGatherer {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_cameras");
 
-        let (active_camera, cameras, transforms) = <(
-            Read<'_, ActiveCamera>,
-            ReadStorage<'_, Camera>,
-            ReadStorage<'_, Transform>,
-        )>::fetch(world);
-
         let defcam = Camera::standard_2d(1.0, 1.0);
-        let identity = Transform::default();
+        let identity = LocalToWorld::identity();
 
-        let (camera, transform) = active_camera
-            .entity
-            .as_ref()
-            .and_then(|ac| {
-                cameras
-                    .get(*ac)
-                    .map(|camera| (camera, transforms.get(*ac).unwrap_or(&identity)))
-            })
-            .unwrap_or_else(|| {
-                (&cameras, &transforms)
-                    .join()
-                    .next()
-                    .unwrap_or((&defcam, &identity))
-            });
+        let camera_entity = Self::gather_camera_entity(world);
+
+        let camera = camera_entity.map(|e| {
+            world.get_component::<Camera>(e)
+        }).flatten();
+        let camera = camera.as_deref().unwrap_or(&defcam);
+
+        let transform = camera_entity.map(|e| {
+            world.get_component::<LocalToWorld>(e)
+        }).flatten();
+        let transform = transform.as_deref().unwrap_or(&identity);
 
         let camera_position =
-            convert::<_, Vector3<f32>>(transform.global_matrix().column(3).xyz()).into_pod();
+            convert::<_, Vector3<f32>>(transform.column(3).xyz()).into_pod();
 
         let proj = camera.as_matrix();
-        let view = transform.global_view_matrix();
+        let view = &**transform;
 
         let proj_view: [[f32; 4]; 4] = ((*proj) * view).into();
         let proj: [[f32; 4]; 4] = (*proj).into();
-        let view: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(transform.global_view_matrix()).into();
+        let view: [[f32; 4]; 4] = (*view).into();
 
         let projview = pod::ViewArgs {
             proj: proj.into(),
@@ -117,16 +97,17 @@ impl CameraGatherer {
     }
 }
 
-/// If an `AmbientColor` exists in the world, return it - otherwise return pure white.
+/// If an `AmbientColor` exists in the resources, return it - otherwise return pure white.
 #[derive(Debug)]
 pub struct AmbientGatherer;
 impl AmbientGatherer {
-    /// If an `AmbientColor` exists in the world, return it - otherwise return pure white.
-    pub fn gather(world: &World) -> vec3 {
-        let ambient_color = <Option<Read<'_, AmbientColor>>>::fetch(world);
-        ambient_color.map_or([0.0, 0.0, 0.0].into(), |c| {
-            let (r, g, b, _) = c.0.into_components();
-            [r, g, b].into()
-        })
+    /// If an `AmbientColor` exists in the resources, return it - otherwise return pure white.
+    pub fn gather(resources: &Resources) -> vec3 {
+        resources
+            .get::<AmbientColor>()
+            .map_or([0.0, 0.0, 0.0].into(), |c| {
+                let (r, g, b, _) = c.0.into_components();
+                [r, g, b].into()
+            })
     }
 }

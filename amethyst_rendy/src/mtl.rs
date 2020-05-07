@@ -2,7 +2,6 @@
 
 use crate::types::Texture;
 use amethyst_assets::{Asset, Handle};
-use amethyst_core::ecs::prelude::DenseVecStorage;
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -46,7 +45,6 @@ pub struct Material {
 impl Asset for Material {
     const NAME: &'static str = "renderer::Material";
     type Data = Self;
-    type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
 /// A resource providing default textures for `Material`.

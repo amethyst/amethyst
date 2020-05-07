@@ -1,6 +1,5 @@
 //! 'Global' rendering type declarations
 use amethyst_assets::{Asset, Handle};
-use amethyst_core::ecs::DenseVecStorage;
 use serde::{Deserialize, Serialize};
 
 /// Extension of the rendy Backend trait.
@@ -121,13 +120,11 @@ impl_backends!(
 impl Asset for Mesh {
     const NAME: &'static str = "Mesh";
     type Data = MeshData;
-    type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
 impl Asset for Texture {
     const NAME: &'static str = "Texture";
     type Data = TextureData;
-    type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
 /// Newtype for MeshBuilder prefab usage.

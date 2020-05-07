@@ -3,11 +3,12 @@
 use crate::{
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
     pass::*,
-    sprite_visibility::SpriteVisibilitySortingSystem,
-    visibility::VisibilitySortingSystem,
+    sprite_visibility::build_sprite_visibility_sorting_system,
+    visibility::build_visibility_sorting_system,
     Backend, Factory,
 };
-use amethyst_core::ecs::{DispatcherBuilder, World};
+use amethyst_core::ecs::prelude::*;
+use amethyst_core::dispatcher::{DispatcherBuilder, Stage, SystemBundle};
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
@@ -23,10 +24,6 @@ mod window {
         Format, Kind,
     };
     use amethyst_config::{Config, ConfigError};
-    use amethyst_core::{
-        ecs::{ReadExpect, SystemData},
-        SystemBundle,
-    };
     use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
     use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
     use std::path::Path;
@@ -71,21 +68,22 @@ mod window {
     }
 
     impl<B: Backend> RenderPlugin<B> for RenderToWindow {
-        fn on_build<'a, 'b>(
+        fn on_build(
             &mut self,
             world: &mut World,
-            builder: &mut DispatcherBuilder<'a, 'b>,
+            resources: &mut Resources,
+            builder: &mut DispatcherBuilder<'_>,
         ) -> Result<(), Error> {
             if let Some(config) = self.config.take() {
-                WindowBundle::from_config(config).build(world, builder)?;
+                WindowBundle::from_config(config).build(world, resources, builder)?;
             }
 
             Ok(())
         }
 
         #[allow(clippy::map_clone)]
-        fn should_rebuild(&mut self, world: &World) -> bool {
-            let new_dimensions = world.try_fetch::<ScreenDimensions>();
+        fn should_rebuild(&mut self, world: &World, resources: &Resources) -> bool {
+            let new_dimensions = resources.get::<ScreenDimensions>();
             if self.dimensions.as_ref() != new_dimensions.as_deref() {
                 self.dirty = true;
                 self.dimensions = new_dimensions.map(|d| (*d).clone());
@@ -99,10 +97,11 @@ mod window {
             plan: &mut RenderPlan<B>,
             factory: &mut Factory<B>,
             world: &World,
+            resources: &Resources,
         ) -> Result<(), Error> {
             self.dirty = false;
 
-            let window = <ReadExpect<'_, Window>>::fetch(world);
+            let window = resources.get::<Window>().unwrap();
             let surface = factory.create_surface(&window);
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
@@ -165,12 +164,13 @@ impl<D: Base3DPassDef> RenderBase3D<D> {
 }
 
 impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
-    fn on_build<'a, 'b>(
+    fn on_build(
         &mut self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
-        builder.add(VisibilitySortingSystem::new(), "visibility_system", &[]);
+        builder.add_system(Stage::Render, build_visibility_sorting_system);
         Ok(())
     }
 
@@ -179,6 +179,7 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
         _world: &World,
+        _resources: &Resources,
     ) -> Result<(), Error> {
         let skinning = self.skinning;
         plan.extend_target(self.target, move |ctx| {
@@ -216,16 +217,13 @@ impl RenderFlat2D {
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
-    fn on_build<'a, 'b>(
+    fn on_build(
         &mut self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
-        builder.add(
-            SpriteVisibilitySortingSystem::new(),
-            "sprite_visibility_system",
-            &[],
-        );
+        builder.add_system(Stage::Render, build_sprite_visibility_sorting_system);
         Ok(())
     }
 
@@ -234,6 +232,7 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
         _world: &World,
+        _resources: &Resources,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(RenderOrder::Opaque, DrawFlat2DDesc::new().builder())?;
@@ -268,6 +267,7 @@ impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
         _world: &World,
+        _resources: &Resources,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(
@@ -309,6 +309,7 @@ impl<B: Backend> RenderPlugin<B> for RenderSkybox {
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
         _world: &World,
+        _resources: &Resources,
     ) -> Result<(), Error> {
         let colors = self.colors;
         plan.extend_target(self.target, move |ctx| {

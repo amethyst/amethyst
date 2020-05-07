@@ -8,7 +8,7 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     math::{convert, Matrix4, Vector4},
-    Transform,
+    transform::components::LocalToWorld,
 };
 use glsl_layout::*;
 use rendy::{
@@ -92,11 +92,11 @@ pub struct VertexArgs {
 }
 
 impl VertexArgs {
-    /// Populates a `VertexArgs` instance-rate structure with the information from a `Transform`
+    /// Populates a `VertexArgs` instance-rate structure with the information from a `LocalToWorld`
     /// and `TintComponent` components.
     #[inline]
-    pub fn from_object_data(transform: &Transform, tint: Option<&TintComponent>) -> Self {
-        let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*transform.global_matrix()).into();
+    pub fn from_object_data(transform: &LocalToWorld, tint: Option<&TintComponent>) -> Self {
+        let model: [[f32; 4]; 4] = transform.0.into();
         VertexArgs {
             model: model.into(),
             tint: tint.map_or([1.0; 4].into(), |t| t.0.into_pod()),
@@ -150,14 +150,14 @@ impl AsVertex for SkinnedVertexArgs {
 }
 
 impl SkinnedVertexArgs {
-    /// Populate `SkinnedVertexArgs` from the supplied `Transform` and `TintComponent`
+    /// Populate `SkinnedVertexArgs` from the supplied `LocalToWorld` and `TintComponent`
     #[inline]
     pub fn from_object_data(
-        transform: &Transform,
+        transform: &LocalToWorld,
         tint: Option<&TintComponent>,
         joints_offset: u32,
     ) -> Self {
-        let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*transform.global_matrix()).into();
+        let model: [[f32; 4]; 4] = transform.0.into();
         SkinnedVertexArgs {
             model: model.into(),
             tint: tint.map_or([1.0; 4].into(), |t| t.0.into_pod()),
@@ -332,12 +332,12 @@ impl SpriteArgs {
     /// * `tex_storage` - `Texture` Storage
     /// * `sprite_storage` - `SpriteSheet` Storage
     /// * `sprite_render` - `SpriteRender` component reference
-    /// * `transform` - 'Transform' component reference
+    /// * `transform` - 'LocalToWorld' component reference
     pub fn from_data<'a>(
         tex_storage: &AssetStorage<Texture>,
         sprite_storage: &'a AssetStorage<SpriteSheet>,
         sprite_render: &SpriteRender,
-        transform: &Transform,
+        transform: &LocalToWorld,
         tint: Option<&TintComponent>,
     ) -> Option<(Self, &'a Handle<Texture>)> {
         let sprite_sheet = sprite_storage.get(&sprite_render.sprite_sheet)?;
@@ -347,10 +347,9 @@ impl SpriteArgs {
 
         let sprite = &sprite_sheet.sprites[sprite_render.sprite_number];
 
-        let transform = convert::<_, Matrix4<f32>>(*transform.global_matrix());
         let dir_x = transform.column(0) * sprite.width;
         let dir_y = transform.column(1) * -sprite.height;
-        let pos = transform * Vector4::new(-sprite.offsets[0], -sprite.offsets[1], 0.0, 1.0);
+        let pos = (**transform) * Vector4::new(-sprite.offsets[0], -sprite.offsets[1], 0.0, 1.0);
 
         Some((
             SpriteArgs {

@@ -4,10 +4,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error, types::Texture};
 use amethyst_assets::{Asset, Format, Handle};
-use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
 use amethyst_error::Error;
 
-pub mod prefab;
+// pub mod prefab;
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
@@ -26,7 +25,6 @@ pub struct SpriteSheet {
 impl Asset for SpriteSheet {
     const NAME: &'static str = "renderer::SpriteSheet";
     type Data = Self;
-    type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
 /// Dimensions and texture coordinates of each sprite in a sprite sheet.
@@ -191,10 +189,6 @@ pub struct SpriteRender {
     pub sprite_sheet: Handle<SpriteSheet>,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
-}
-
-impl Component for SpriteRender {
-    type Storage = DenseVecStorage<Self>;
 }
 
 /// Represents one sprite in `SpriteList`.

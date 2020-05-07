@@ -1,14 +1,9 @@
 //! Basic shape prefabs.
 use crate::types::Mesh;
-use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
+use amethyst_assets::{AssetStorage, Handle, Loader, Progress};
 use amethyst_core::{
-    ecs::{
-        prelude::{Entity, Read, ReadExpect, World, WriteStorage},
-        shred::{ResourceId, SystemData},
-    },
     math::Vector3,
 };
-use amethyst_error::Error;
 use genmesh::{
     generators::{
         Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv,
@@ -47,46 +42,46 @@ pub struct ShapePrefab<V> {
     _m: PhantomData<V>,
 }
 
-impl<'a, V> PrefabData<'a> for ShapePrefab<V>
-where
-    V: FromShape + Into<MeshBuilder<'static>>,
-{
-    type SystemData = (
-        ReadExpect<'a, Loader>,
-        WriteStorage<'a, Handle<Mesh>>,
-        Read<'a, AssetStorage<Mesh>>,
-    );
-    type Result = ();
+// impl<'a, V> PrefabData<'a> for ShapePrefab<V>
+// where
+//     V: FromShape + Into<MeshBuilder<'static>>,
+// {
+//     type SystemData = (
+//         ReadExpect<'a, Loader>,
+//         WriteStorage<'a, Handle<Mesh>>,
+//         Read<'a, AssetStorage<Mesh>>,
+//     );
+//     type Result = ();
 
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        system_data: &mut Self::SystemData,
-        _: &[Entity],
-        _: &[Entity],
-    ) -> Result<(), Error> {
-        let (_, ref mut meshes, _) = system_data;
-        let self_handle = self.handle.as_ref().expect(
-            "`ShapePrefab::load_sub_assets` was not called before `ShapePrefab::add_to_entity`",
-        );
-        meshes.insert(entity, self_handle.clone())?;
-        Ok(())
-    }
+//     fn add_to_entity(
+//         &self,
+//         entity: Entity,
+//         system_data: &mut Self::SystemData,
+//         _: &[Entity],
+//         _: &[Entity],
+//     ) -> Result<(), Error> {
+//         let (_, ref mut meshes, _) = system_data;
+//         let self_handle = self.handle.as_ref().expect(
+//             "`ShapePrefab::load_sub_assets` was not called before `ShapePrefab::add_to_entity`",
+//         );
+//         meshes.insert(entity, self_handle.clone())?;
+//         Ok(())
+//     }
 
-    fn load_sub_assets(
-        &mut self,
-        progress: &mut ProgressCounter,
-        system_data: &mut <Self as PrefabData<'_>>::SystemData,
-    ) -> Result<bool, Error> {
-        let (loader, _, mesh_storage) = system_data;
-        self.handle = Some(loader.load_from_data(
-            self.shape.generate::<V>(self.shape_scale).into(),
-            progress,
-            &mesh_storage,
-        ));
-        Ok(true)
-    }
-}
+//     fn load_sub_assets(
+//         &mut self,
+//         progress: &mut ProgressCounter,
+//         system_data: &mut <Self as PrefabData<'_>>::SystemData,
+//     ) -> Result<bool, Error> {
+//         let (loader, _, mesh_storage) = system_data;
+//         self.handle = Some(loader.load_from_data(
+//             self.shape.generate::<V>(self.shape_scale).into(),
+//             progress,
+//             &mesh_storage,
+//         ));
+//         Ok(true)
+//     }
+// }
 
 /// Shape generators
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -111,12 +106,11 @@ pub enum Shape {
     Circle(usize),
 }
 
-/// `SystemData` needed to upload a `Shape` directly to create a `Handle<Mesh>`
-#[derive(SystemData)]
+/// Required resource access to upload shape
 #[allow(missing_debug_implementations)]
 pub struct ShapeUpload<'a> {
-    loader: ReadExpect<'a, Loader>,
-    storage: Read<'a, AssetStorage<Mesh>>,
+    loader: &'a Loader,
+    storage: &'a mut AssetStorage<Mesh>,
 }
 
 /// Vertex data for a basic shape.

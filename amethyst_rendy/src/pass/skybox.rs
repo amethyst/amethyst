@@ -5,9 +5,10 @@ use crate::{
     shape::Shape,
     submodules::{DynamicUniform, FlatEnvironmentSub},
     types::Backend,
+    system::GraphAuxData,
     util,
 };
-use amethyst_core::ecs::{Read, SystemData, World};
+use amethyst_core::ecs::prelude::*;
 use derivative::Derivative;
 use glsl_layout::{vec3, AsStd140};
 use rendy::{
@@ -80,19 +81,19 @@ impl DrawSkyboxDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawSkyboxDesc {
+impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawSkyboxDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         queue: QueueId,
-        _resources: &World,
+        _aux: &GraphAuxData,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -132,23 +133,23 @@ pub struct DrawSkybox<B: Backend> {
     default_settings: SkyboxSettings,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
+impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawSkybox<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        aux: &GraphAuxData,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
-        let settings = <Option<Read<'_, SkyboxSettings>>>::fetch(resources)
+        let settings = aux.resources.get::<SkyboxSettings>()
             .map(|s| s.uniform())
             .unwrap_or_else(|| self.default_settings.uniform());
 
-        self.env.process(factory, index, resources);
+        self.env.process(factory, index, aux.world);
         let changed = self.colors.write(factory, index, settings);
 
         if changed {
@@ -163,7 +164,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &World,
+        _aux: &GraphAuxData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -179,7 +180,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &GraphAuxData) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory

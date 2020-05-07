@@ -1,7 +1,6 @@
 //! Debug Drawing library
 use crate::pod::IntoPod;
 use amethyst_core::{
-    ecs::{Component, DenseVecStorage},
     math::{Point2, Point3, UnitQuaternion, Vector2, Vector3},
 };
 use palette::Srgba;
@@ -46,10 +45,6 @@ impl Default for DebugLinesParams {
 pub struct DebugLinesComponent {
     /// Lines to be rendered
     lines: Vec<DebugLine>,
-}
-
-impl Component for DebugLinesComponent {
-    type Storage = DenseVecStorage<Self>;
 }
 
 impl DebugLinesComponent {

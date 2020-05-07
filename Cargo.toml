@@ -20,11 +20,11 @@ travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
 #default = ["animation", "audio", "locale", "network", "renderer"]
-default = []
+default = ["renderer"]
 
-#vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
-#metal = ["amethyst_rendy/metal"]
-#empty = ["amethyst_rendy/empty"]
+vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+metal = ["amethyst_rendy/metal"]
+empty = ["amethyst_rendy/empty"]
 
 tiles = [
 #    "amethyst_tiles"
@@ -47,7 +47,7 @@ network = [
 ]
 
 renderer = [
-#    "amethyst_rendy",
+    "amethyst_rendy",
 ]
 
 profiler = [
@@ -61,7 +61,7 @@ profiler = [
 #    "amethyst_controls/profiler",
     "amethyst_input/profiler",
 #    "amethyst_locale/profiler",
-#    "amethyst_rendy/profiler",
+    "amethyst_rendy/profiler",
 #    "amethyst_ui/profiler",
     "amethyst_utils/profiler",
 #    "amethyst_tiles/profiler",
@@ -78,13 +78,13 @@ server = [
     "locale",
     "network"
 ]
-#no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
-#shader-compiler = ["amethyst_rendy/shader-compiler"]
+no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
+shader-compiler = ["amethyst_rendy/shader-compiler"]
 test-support = [
-#  "amethyst_rendy/test-support",
-#  "amethyst_window/test-support",
+  "amethyst_rendy/test-support",
+  "amethyst_window/test-support",
 ]
-#experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
+experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 
 [workspace]
 members = [
@@ -120,7 +120,7 @@ amethyst_derive = { path = "amethyst_derive", version = "0.8.0" }
 #amethyst_gltf = { path = "amethyst_gltf", version = "0.10.0", optional = true }
 #amethyst_network = { path = "amethyst_network", version = "0.8.0", optional = true }
 #amethyst_locale = { path = "amethyst_locale", version = "0.9.0", optional = true }
-#amethyst_rendy = { path = "amethyst_rendy", version = "0.5.0", features = ["window"], optional = true }
+amethyst_rendy = { path = "amethyst_rendy", version = "0.5.0", features = ["window"], optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.11.0" }
 #amethyst_ui = { path = "amethyst_ui", version = "0.10.0" }
 amethyst_utils = { path = "amethyst_utils", version = "0.10.0" }

@@ -2,17 +2,16 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use crate::resources::AmbientColor;
-use amethyst_assets::{PrefabData, ProgressCounter};
+//use crate::resources::AmbientColor;
+//use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
-    ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
     math::Vector3,
 };
-use amethyst_error::Error;
+//use amethyst_error::Error;
 
 /// A light source.
-#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, PrefabData)]
-#[prefab(Component)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize/*, PrefabData*/)]
+// #[prefab(Component)]
 pub enum Light {
     /// An area light.
     /// FIXME: Missing implementation!
@@ -183,14 +182,10 @@ impl From<SunLight> for Light {
     }
 }
 
-impl Component for Light {
-    type Storage = DenseVecStorage<Self>;
-}
-
-/// Prefab for lighting
-#[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize, PrefabData)]
-#[serde(default)]
-pub struct LightPrefab {
-    light: Option<Light>,
-    ambient_color: Option<AmbientColor>,
-}
+// /// Prefab for lighting
+// #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize, PrefabData)]
+// #[serde(default)]
+// pub struct LightPrefab {
+//     light: Option<Light>,
+//     ambient_color: Option<AmbientColor>,
+// }

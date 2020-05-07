@@ -15,7 +15,7 @@ use crate::{
     util,
 };
 use amethyst_assets::{AssetStorage, Handle, WeakHandle};
-use amethyst_core::ecs::{Read, SystemData, World};
+use amethyst_core::ecs::prelude::*;
 use glsl_layout::*;
 
 #[cfg(feature = "profiler")]
@@ -207,17 +207,16 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     fn try_insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        resources: &Resources,
         handle: &Handle<Material>,
     ) -> Option<MaterialState<B>> {
         #[cfg(feature = "profiler")]
         profile_scope!("try_insert");
 
         use util::{desc_write, slice_as_bytes, texture_desc};
-        let (mat_storage, tex_storage) = <(
-            Read<'_, AssetStorage<Material>>,
-            Read<'_, AssetStorage<Texture>>,
-        )>::fetch(world);
+
+        let mat_storage = resources.get::<AssetStorage<Material>>().unwrap();
+        let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
 
         let mat = mat_storage.get(handle)?;
 
@@ -277,7 +276,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     pub fn insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        resources: &Resources,
         handle: &Handle<Material>,
     ) -> Option<(MaterialId, bool)> {
         #[cfg(feature = "profiler")]
@@ -308,7 +307,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
 
         debug_assert!(self.materials.len() >= id);
         let (new_state, loaded) = self
-            .try_insert(factory, world, handle)
+            .try_insert(factory, resources, handle)
             .map(|s| (s, true))
             .unwrap_or_else(|| {
                 (

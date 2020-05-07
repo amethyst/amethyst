@@ -91,13 +91,13 @@ pub use crate::{
     bundle::{RenderPlugin, RenderingBundle},
     camera::{ActiveCamera, Camera},
     formats::{
-        mesh::MeshPrefab,
-        texture::{ImageFormat, TexturePrefab},
+        /*mesh::MeshPrefab,*/
+        texture::{ImageFormat, /*TexturePrefab*/},
     },
     mtl::{Material, MaterialDefaults},
     plugins::*,
     sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
-    system::{GraphCreator, MeshProcessorSystem, RenderingSystem, TextureProcessorSystem},
+    system::{GraphCreator, build_mesh_processor, build_rendering_system, build_texture_processor},
     transparent::Transparent,
     types::{Backend, Mesh, Texture},
     util::{simple_shader_set, ChangeDetection},

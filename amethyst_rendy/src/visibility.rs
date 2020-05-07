@@ -4,17 +4,14 @@ use crate::{
     transparent::Transparent,
 };
 use amethyst_core::{
-    ecs::{
-        hibitset::BitSet,
-        prelude::{
-            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadStorage, System, Write,
-        },
-    },
+    ecs::prelude::*,
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
-    Hidden, HiddenPropagate, Transform,
+    Hidden, HiddenPropagate,
+    transform::components::LocalToWorld,
 };
 
 use serde::{Deserialize, Serialize};
+use indexmap::IndexSet;
 use std::cmp::Ordering;
 
 #[cfg(feature = "profiler")]
@@ -25,18 +22,14 @@ use thread_profiler::profile_scope;
 #[derive(Default, Debug)]
 pub struct Visibility {
     /// Visible entities that can be drawn in any order
-    pub visible_unordered: BitSet,
+    pub visible_unordered: IndexSet<Entity>,
     /// Visible entities that need to be drawn in the given order
     pub visible_ordered: Vec<Entity>,
 }
 
-/// Determine what entities are visible to the camera, and which are not. Will also sort transparent
-/// entities back to front based on distance from camera.
-///
-/// Note that this should run after `Transform` has been updated for the current frame, and
-/// before rendering occurs.
+/// Holds internal state of the visibility sorting system
 #[derive(Default, Debug)]
-pub struct VisibilitySortingSystem {
+struct VisibilitySortingSystemState {
     centroids: Vec<Internals>,
     transparent: Vec<Internals>,
 }
@@ -74,10 +67,6 @@ impl BoundingSphere {
     }
 }
 
-impl Component for BoundingSphere {
-    type Storage = DenseVecStorage<Self>;
-}
-
 #[derive(Debug, Clone)]
 struct Internals {
     entity: Entity,
@@ -86,111 +75,113 @@ struct Internals {
     camera_distance: f32,
 }
 
-impl VisibilitySortingSystem {
-    /// Create new sorting system
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
+/// Determine what entities are visible to the camera, and which are not. Will also sort transparent
+/// entities back to front based on distance from camera.
+///
+/// Note that this should run after `Transform` has been updated for the current frame, and
+/// before rendering occurs.
+pub fn build_visibility_sorting_system(world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable> {
+    resources.insert(Visibility::default());
 
-impl<'a> System<'a> for VisibilitySortingSystem {
-    type SystemData = (
-        Entities<'a>,
-        Write<'a, Visibility>,
-        ReadStorage<'a, Hidden>,
-        ReadStorage<'a, HiddenPropagate>,
-        Read<'a, ActiveCamera>,
-        ReadStorage<'a, Camera>,
-        ReadStorage<'a, Transparent>,
-        ReadStorage<'a, Transform>,
-        ReadStorage<'a, BoundingSphere>,
-    );
+    let mut state = VisibilitySortingSystemState::default();
 
-    fn run(
-        &mut self,
-        (
-            entities,
-            mut visibility,
-            hidden,
-            hidden_prop,
-            active,
-            camera,
-            transparent,
-            transform,
-            bound,
-        ): Self::SystemData,
-    ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("visibility_sorting_system");
+    SystemBuilder::<()>::new("VisibilitySortingSystem")
+        .read_resource::<ActiveCamera>()
+        .write_resource::<Visibility>()
+        .read_component::<BoundingSphere>()
+        .read_component::<Transparent>()
+        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
+        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
+        .with_query(<Read<LocalToWorld>>::query()
+            .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
+        )
+        .build(
+            move |commands,
+             world,
+             (active_camera, visibility),
+             (camera_query1, camera_query2, entity_query)| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("visibility_sorting_system");
 
-        let origin = Point3::origin();
-        let defcam = Camera::standard_2d(1.0, 1.0);
-        let identity = Transform::default();
+                visibility.visible_unordered.clear();
+                visibility.visible_ordered.clear();
+                state.transparent.clear();
+                state.centroids.clear();
 
-        let mut camera_join = (&camera, &transform).join();
-        let (camera, camera_transform) = active
-            .entity
-            .and_then(|a| camera_join.get(a, &entities))
-            .or_else(|| camera_join.next())
-            .unwrap_or((&defcam, &identity));
+                let origin = Point3::origin();
 
-        let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
-        let frustum = Frustum::new(
-            convert::<_, Matrix4<f32>>(*camera.as_matrix())
-                * camera_transform.global_matrix().try_inverse().unwrap(),
-        );
+                let (camera, camera_transform) = match active_camera.entity.map_or_else(
+                    || {
+                        camera_query1
+                            .iter_entities(world)
+                            .nth(0)
+                            .map(|args| args.1)
+                    },
+                    |e| {
+                        camera_query2
+                            .iter_entities(world)
+                            .find(|(camera_entity, (_, _))| *camera_entity == e)
+                            .map(|args| args.1)
+                    },
+                ) {
+                    Some(r) => r,
+                    None => return,
+                };
 
-        self.centroids.clear();
-        self.centroids.extend(
-            (
-                &*entities,
-                &transform,
-                bound.maybe(),
-                !&hidden,
-                !&hidden_prop,
-            )
-                .join()
-                .map(|(entity, transform, sphere, _, _)| {
-                    let pos = sphere.map_or(&origin, |s| &s.center);
-                    let matrix = transform.global_matrix();
-                    (
-                        entity,
-                        matrix.transform_point(&pos),
-                        sphere.map_or(1.0, |s| s.radius)
-                            * matrix[(0, 0)].max(matrix[(1, 1)]).max(matrix[(2, 2)]),
-                    )
-                })
-                .filter(|(_, centroid, radius)| frustum.check_sphere(centroid, *radius))
-                .map(|(entity, centroid, _)| Internals {
-                    entity,
-                    transparent: transparent.contains(entity),
-                    centroid,
-                    camera_distance: distance_squared(&centroid, &camera_centroid),
-                }),
-        );
-        self.transparent.clear();
-        self.transparent
-            .extend(self.centroids.iter().filter(|c| c.transparent).cloned());
+                let camera_centroid = camera_transform.transform_point(&origin);
+                let frustum = Frustum::new(
+                    convert::<_, Matrix4<f32>>(*camera.as_matrix())
+                        * camera_transform.try_inverse().unwrap(),
+                );
 
-        self.transparent.sort_by(|a, b| {
-            b.camera_distance
-                .partial_cmp(&a.camera_distance)
-                .unwrap_or(Ordering::Equal)
-        });
+                state.centroids.extend(
+                    entity_query
+                        .iter_entities(world)
+                        .map(|(entity, transform)| {
+                            let sphere = world.get_component::<BoundingSphere>(entity);
 
-        visibility.visible_unordered.clear();
-        visibility.visible_unordered.extend(
-            self.centroids
-                .iter()
-                .filter(|c| !c.transparent)
-                .map(|c| c.entity.id()),
-        );
+                            let pos = sphere.clone().map_or(origin, |s| s.center);
+                            (
+                                entity,
+                                transform.transform_point(&pos),
+                                sphere.map_or(1.0, |s| s.radius)
+                                    * transform[(0, 0)]
+                                        .max(transform[(1, 1)])
+                                        .max(transform[(2, 2)]),
+                            )
+                        })
+                        .filter(|(_, centroid, radius)| frustum.check_sphere(centroid, *radius))
+                        .map(|(entity, centroid, _)| Internals {
+                            entity,
+                            transparent: world.get_component::<Transparent>(entity).is_some(),
+                            centroid,
+                            camera_distance: distance_squared(&centroid, &camera_centroid),
+                        }),
+                );
 
-        visibility.visible_ordered.clear();
-        visibility
-            .visible_ordered
-            .extend(self.transparent.iter().map(|c| c.entity));
-    }
+                state
+                    .transparent
+                    .extend(state.centroids.iter().filter(|c| c.transparent).cloned());
+
+                state.transparent.sort_by(|a, b| {
+                    b.camera_distance
+                        .partial_cmp(&a.camera_distance)
+                        .unwrap_or(Ordering::Equal)
+                });
+
+                visibility.visible_unordered.extend(
+                    state
+                        .centroids
+                        .iter()
+                        .filter(|c| !c.transparent)
+                        .map(|c| c.entity),
+                );
+
+                visibility
+                    .visible_ordered
+                    .extend(state.transparent.iter().map(|c| c.entity));
+            }
+        )
 }
 
 /// Simple view Frustum implementation

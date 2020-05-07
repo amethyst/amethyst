@@ -10,7 +10,7 @@ use crate::{
     util,
 };
 use amethyst_assets::{AssetStorage, Handle, WeakHandle};
-use amethyst_core::ecs::{Read, SystemData, World};
+use amethyst_core::ecs::prelude::*;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -60,12 +60,12 @@ impl<B: Backend> TextureSub<B> {
 
     /// Generationally track our currently allocated vs. used textures and release memory for any
     /// textures which have been removed from this submission set.
-    pub fn maintain(&mut self, factory: &Factory<B>, world: &World) {
+    pub fn maintain(&mut self, factory: &Factory<B>, resources: &Resources) {
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
 
         use util::{desc_write, texture_desc};
-        let tex_storage = <Read<'_, AssetStorage<Texture>>>::fetch(world);
+        let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
         for state in self.textures.iter_mut() {
             match state {
                 TextureState::Loaded {
@@ -113,7 +113,7 @@ impl<B: Backend> TextureSub<B> {
     fn try_insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        resources: &Resources,
         handle: &Handle<Texture>,
         layout: hal::image::Layout,
     ) -> Option<TextureState<B>> {
@@ -121,7 +121,7 @@ impl<B: Backend> TextureSub<B> {
         profile_scope!("try_insert");
 
         use util::{desc_write, texture_desc};
-        let tex_storage = <Read<'_, AssetStorage<Texture>>>::fetch(world);
+        let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
 
         let (tex, version) = tex_storage.get_with_version(handle)?;
         let desc = texture_desc(tex, layout)?;
@@ -143,7 +143,7 @@ impl<B: Backend> TextureSub<B> {
     pub fn insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        resources: &Resources,
         handle: &Handle<Texture>,
         layout: hal::image::Layout,
     ) -> Option<(TextureId, bool)> {
@@ -163,7 +163,7 @@ impl<B: Backend> TextureSub<B> {
         };
 
         let (new_state, loaded) = self
-            .try_insert(factory, world, handle, layout)
+            .try_insert(factory, resources, handle, layout)
             .map(|s| (s, true))
             .unwrap_or_else(|| {
                 (

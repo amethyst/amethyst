@@ -6,7 +6,7 @@ use crate::{
     submodules::{gather::CameraGatherer, uniform::DynamicUniform},
     types::Backend,
 };
-use amethyst_core::ecs::World;
+use amethyst_core::ecs::prelude::*;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;

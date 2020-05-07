@@ -394,17 +394,17 @@ impl<'a> DispatcherBuilder<'a> {
             dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
         }
 
-        for desc in self.thread_locals.drain(..) {
-            let mut recursive_builder = DispatcherBuilder::default();
-            desc.consume(world, resources, &mut dispatcher_data, &mut recursive_builder)
-                .unwrap();
-            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
-        }
-
         for desc in self.systems.drain(..) {
             let mut recursive_builder = DispatcherBuilder::default();
             desc.1
                 .consume(world, resources, &mut dispatcher_data, &mut recursive_builder)
+                .unwrap();
+            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
+        }
+
+        for desc in self.thread_locals.drain(..) {
+            let mut recursive_builder = DispatcherBuilder::default();
+            desc.consume(world, resources, &mut dispatcher_data, &mut recursive_builder)
                 .unwrap();
             dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
         }

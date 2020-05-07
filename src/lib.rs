@@ -80,7 +80,8 @@ pub use amethyst_input as input;
 pub use amethyst_locale as locale;
 #[cfg(feature = "network")]
 pub use amethyst_network as network;
-//pub use amethyst_rendy as renderer;
+#[cfg(feature = "renderer")]
+pub use amethyst_rendy as renderer;
 #[cfg(feature = "tiles")]
 pub use amethyst_tiles as tiles;
 //pub use amethyst_ui as ui;

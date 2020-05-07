@@ -15,9 +15,9 @@ use crate::{
     util::{self, TapCountIter},
 };
 use amethyst_core::{
-    ecs::{Join, ReadStorage, SystemData, World},
+    ecs::prelude::*,
     math::{convert, Vector3},
-    transform::Transform,
+    transform::components::LocalToWorld,
 };
 use glsl_layout::*;
 
@@ -65,7 +65,7 @@ impl<B: Backend> EnvironmentSub<B> {
     }
 
     /// Performs any re-allocation and GPU memory writing required for this environment set.
-    pub fn process(&mut self, factory: &Factory<B>, index: usize, world: &World) -> bool {
+    pub fn process(&mut self, factory: &Factory<B>, index: usize, world: &World, resources: &Resources) -> bool {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
 
@@ -76,7 +76,7 @@ impl<B: Backend> EnvironmentSub<B> {
             }
             &mut self.per_image[index]
         };
-        this_image.process(factory, world)
+        this_image.process(factory, world, resources)
     }
 
     /// Binds this environment set for all images.
@@ -117,7 +117,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         }
     }
 
-    fn process(&mut self, factory: &Factory<B>, world: &World) -> bool {
+    fn process(&mut self, factory: &Factory<B>, world: &World, resources: &Resources) -> bool {
         let align = factory
             .physical()
             .limits()
@@ -178,7 +178,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             let dst_slice = unsafe { writer.slice() };
 
             let mut env = pod::Environment {
-                ambient_color: AmbientGatherer::gather(world),
+                ambient_color: AmbientGatherer::gather(resources),
                 camera_position,
                 point_light_count: 0,
                 directional_light_count: 0,
@@ -186,16 +186,14 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             }
             .std140();
 
-            let (lights, transforms) =
-                <(ReadStorage<'_, Light>, ReadStorage<'_, Transform>)>::fetch(world);
-
-            let point_lights = (&lights, &transforms)
-                .join()
-                .filter_map(|(light, transform)| match light {
+            let point_lights_query = <(Read<Light>, Read<LocalToWorld>)>::query();
+            let point_lights = point_lights_query
+                .iter(world)
+                .filter_map(|(light, transform)| match &*light {
                     Light::Point(light) => Some(
                         pod::PointLight {
                             position: convert::<_, Vector3<f32>>(
-                                transform.global_matrix().column(3).xyz(),
+                                transform.column(3).xyz(),
                             )
                             .into_pod(),
                             color: light.color.into_pod(),
@@ -207,10 +205,11 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 })
                 .take(MAX_POINT_LIGHTS);
 
-            let dir_lights = lights
-                .join()
-                .filter_map(|light| match light {
-                    Light::Directional(ref light) => Some(
+            let dir_lights_query = <Read<Light>>::query();
+            let dir_lights = dir_lights_query
+                .iter(world)
+                .filter_map(|light| match &*light {
+                    Light::Directional(light) => Some(
                         pod::DirectionalLight {
                             color: light.color.into_pod(),
                             intensity: light.intensity,
@@ -222,28 +221,26 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 })
                 .take(MAX_DIR_LIGHTS);
 
-            let spot_lights = (&lights, &transforms)
-                .join()
-                .filter_map(|(light, transform)| {
-                    if let Light::Spot(ref light) = *light {
-                        Some(
-                            pod::SpotLight {
-                                position: convert::<_, Vector3<f32>>(
-                                    transform.global_matrix().column(3).xyz(),
-                                )
-                                .into_pod(),
-                                color: light.color.into_pod(),
-                                direction: light.direction.into_pod(),
-                                angle: light.angle.cos(),
-                                intensity: light.intensity,
-                                range: light.range,
-                                smoothness: light.smoothness,
-                            }
-                            .std140(),
-                        )
-                    } else {
-                        None
-                    }
+            let spot_lights_query = <(Read<Light>, Read<LocalToWorld>)>::query();
+            let spot_lights = spot_lights_query
+                .iter(world)
+                .filter_map(|(light, transform)| match &*light {
+                    Light::Spot(light) => Some(
+                        pod::SpotLight {
+                            position: convert::<_, Vector3<f32>>(
+                                transform.column(3).xyz(),
+                            )
+                            .into_pod(),
+                            color: light.color.into_pod(),
+                            direction: light.direction.into_pod(),
+                            angle: light.angle.cos(),
+                            intensity: light.intensity,
+                            range: light.range,
+                            smoothness: light.smoothness,
+                        }
+                        .std140(),
+                    ),
+                    _ => None,
                 })
                 .take(MAX_SPOT_LIGHTS);
 

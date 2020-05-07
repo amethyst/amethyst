@@ -1,13 +1,13 @@
 //! Camera type with support for perspective and orthographic projections.
 
-use amethyst_assets::PrefabData;
+//use amethyst_assets::PrefabData;
 use amethyst_core::{
-    ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
+    ecs::prelude::*,
     geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
-    transform::components::Transform,
+    transform::components::LocalToWorld,
 };
-use amethyst_error::Error;
+//use amethyst_error::Error;
 use derivative::Derivative;
 
 /// Provide a custom matrix implementation for various experimental or custom needs. Note that multiple constraints
@@ -523,12 +523,12 @@ impl Projection {
         &self,
         screen_position: Point2<f32>,
         screen_diagonal: Vector2<f32>,
-        camera_transform: &Transform,
+        camera_transform: &LocalToWorld,
     ) -> Ray<f32> {
         let screen_x = 2.0 * screen_position.x / screen_diagonal.x - 1.0;
         let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
 
-        let matrix = *camera_transform.global_matrix() * self.as_inverse_matrix();
+        let matrix = **camera_transform * self.as_inverse_matrix();
 
         let near = Point3::new(screen_x, screen_y, 0.0);
         let far = Point3::new(screen_x, screen_y, 1.0);
@@ -549,7 +549,7 @@ impl Projection {
         &self,
         screen_position: Point3<f32>,
         screen_diagonal: Vector2<f32>,
-        camera_transform: &Transform,
+        camera_transform: &LocalToWorld,
     ) -> Point3<f32> {
         self.screen_ray(screen_position.xy(), screen_diagonal, camera_transform)
             .at_distance(screen_position.z)
@@ -560,9 +560,9 @@ impl Projection {
         &self,
         world_position: Point3<f32>,
         screen_diagonal: Vector2<f32>,
-        camera_transform: &Transform,
+        camera_transform: &LocalToWorld,
     ) -> Point2<f32> {
-        let transformation_matrix = camera_transform.global_matrix().try_inverse().unwrap();
+        let transformation_matrix = camera_transform.try_inverse().unwrap();
         let screen_pos =
             (self.as_matrix() * transformation_matrix).transform_point(&world_position);
 
@@ -693,10 +693,6 @@ impl Camera {
     }
 }
 
-impl Component for Camera {
-    type Storage = HashMapStorage<Self>;
-}
-
 /// Active camera resource, used by the renderer to choose which camera to get the view matrix from.
 /// If no active camera is found, the first camera will be used as a fallback.
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -736,64 +732,64 @@ pub enum CameraPrefab {
     },
 }
 
-impl<'a> PrefabData<'a> for CameraPrefab {
-    type SystemData = WriteStorage<'a, Camera>;
-    type Result = ();
+// impl<'a> PrefabData<'a> for CameraPrefab {
+//     type SystemData = WriteStorage<'a, Camera>;
+//     type Result = ();
 
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        storage: &mut Self::SystemData,
-        _: &[Entity],
-        _: &[Entity],
-    ) -> Result<(), Error> {
-        storage.insert(
-            entity,
-            Camera {
-                inner: match *self {
-                    CameraPrefab::Orthographic {
-                        left,
-                        right,
-                        bottom,
-                        top,
-                        znear,
-                        zfar,
-                    } => Projection::orthographic(left, right, bottom, top, znear, zfar),
-                    CameraPrefab::Perspective {
-                        aspect,
-                        fovy,
-                        znear,
-                        zfar,
-                    } => Projection::perspective(aspect, fovy, znear, zfar),
-                },
-            },
-        )?;
-        Ok(())
-    }
-}
+//     fn add_to_entity(
+//         &self,
+//         entity: Entity,
+//         storage: &mut Self::SystemData,
+//         _: &[Entity],
+//         _: &[Entity],
+//     ) -> Result<(), Error> {
+//         storage.insert(
+//             entity,
+//             Camera {
+//                 inner: match *self {
+//                     CameraPrefab::Orthographic {
+//                         left,
+//                         right,
+//                         bottom,
+//                         top,
+//                         znear,
+//                         zfar,
+//                     } => Projection::orthographic(left, right, bottom, top, znear, zfar),
+//                     CameraPrefab::Perspective {
+//                         aspect,
+//                         fovy,
+//                         znear,
+//                         zfar,
+//                     } => Projection::perspective(aspect, fovy, znear, zfar),
+//                 },
+//             },
+//         )?;
+//         Ok(())
+//     }
+// }
 
-/// Active camera prefab
-#[derive(Debug, serde::Deserialize, Clone)]
-pub struct ActiveCameraPrefab(Option<usize>);
+// /// Active camera prefab
+// #[derive(Debug, serde::Deserialize, Clone)]
+// pub struct ActiveCameraPrefab(Option<usize>);
 
-impl<'a> PrefabData<'a> for ActiveCameraPrefab {
-    type SystemData = (Write<'a, ActiveCamera>,);
-    type Result = ();
+// impl<'a> PrefabData<'a> for ActiveCameraPrefab {
+//     type SystemData = (Write<'a, ActiveCamera>,);
+//     type Result = ();
 
-    fn add_to_entity(
-        &self,
-        _: Entity,
-        system_data: &mut Self::SystemData,
-        entities: &[Entity],
-        _: &[Entity],
-    ) -> Result<(), Error> {
-        if let Some(ref ent) = self.0 {
-            system_data.0.entity = Some(entities[*ent]);
-        }
-        // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
-        Ok(())
-    }
-}
+//     fn add_to_entity(
+//         &self,
+//         _: Entity,
+//         system_data: &mut Self::SystemData,
+//         entities: &[Entity],
+//         _: &[Entity],
+//     ) -> Result<(), Error> {
+//         if let Some(ref ent) = self.0 {
+//             system_data.0.entity = Some(entities[*ent]);
+//         }
+//         // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
+//         Ok(())
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -807,7 +803,7 @@ mod tests {
     use super::*;
     use amethyst_core::{
         math::{convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3},
-        Transform,
+        transform::components::LocalToWorld,
     };
     use ron::{de::from_str, ser::to_string_pretty};
 
@@ -819,7 +815,7 @@ mod tests {
         let diagonal = Vector2::new(1024.0, 768.0);
 
         let camera = Camera::standard_3d(diagonal.x, diagonal.y);
-        let mut transform = Transform::default();
+        let mut transform = LocalToWorld::default();
 
         let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
         let top_left = Point3::new(0.0, 0.0, 0.0);
@@ -862,7 +858,7 @@ mod tests {
         let diagonal = Vector2::new(1024.0, 768.0);
 
         let camera = Camera::standard_2d(diagonal.x, diagonal.y);
-        let mut transform = Transform::default();
+        let mut transform = LocalToWorld::default();
 
         let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
         let top_left = Point3::new(0.0, 0.0, 0.0);
@@ -905,7 +901,7 @@ mod tests {
         let diagonal = Vector2::new(1024.0, 768.0);
 
         let ortho = Camera::standard_2d(diagonal.x, diagonal.y);
-        let transform = Transform::default();
+        let transform = LocalToWorld::default();
 
         let center_screen = Point2::new(diagonal.x / 2.0, diagonal.y / 2.0);
         let top_left = Point2::new(0.0, 0.0);
@@ -1023,14 +1019,14 @@ mod tests {
 
     // Our world-space is +Y Up, +X Right and -Z Away
     // Current render target is +Y Down, +X Right and +Z Away
-    fn setup() -> (Transform, [Point3<f32>; 3], [Point3<f32>; 3]) {
+    fn setup() -> (LocalToWorld, [Point3<f32>; 3], [Point3<f32>; 3]) {
         // Setup common inputs for most of the tests.
         //
         // Sets up a test camera is positioned at (0,0,3) in world space.
         // A camera without rotation is pointing in the (0,0,-1) direction.
         //
         // Sets up basic points.
-        let camera_transform: Transform = Transform::new(
+        let camera_transform = LocalToWorld::new(
             Translation3::new(0.0, 0.0, 3.0),
             // Apply _no_ rotation
             UnitQuaternion::identity(),
@@ -1051,7 +1047,7 @@ mod tests {
         (camera_transform, simple_points, simple_points_clipped)
     }
 
-    fn gatherer_calc_view_matrix(transform: Transform) -> Matrix4<f32> {
+    fn gatherer_calc_view_matrix(transform: LocalToWorld) -> Matrix4<f32> {
         convert(transform.view_matrix())
     }
 

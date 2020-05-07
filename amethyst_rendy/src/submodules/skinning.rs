@@ -16,11 +16,13 @@ use fnv::FnvHashMap;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
+use amethyst_core::ecs::prelude::*;
+
 /// Provides per-image abstraction for submitting skinned mesh skeletal information.
 #[derive(Debug)]
 pub struct SkinningSub<B: Backend> {
     layout: RendyHandle<DescriptorSetLayout<B>>,
-    skin_offset_map: FnvHashMap<u32, u32>,
+    skin_offset_map: FnvHashMap<Entity, u32>,
     staging: Vec<[[f32; 4]; 4]>,
     per_image: Vec<PerImageSkinningSub<B>>,
 }
@@ -69,7 +71,7 @@ impl<B: Backend> SkinningSub<B> {
         let staging = &mut self.staging;
         *self
             .skin_offset_map
-            .entry(joints.skin.id())
+            .entry(joints.skin)
             .or_insert_with(|| {
                 let len = staging.len();
                 staging.extend(

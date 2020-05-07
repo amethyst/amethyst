@@ -503,13 +503,13 @@ impl<A: Asset> Drop for AssetStorage<A> {
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
-pub fn build_processor_system<A>(_world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable>
+pub fn build_asset_processor_system<A>(_world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable>
 where
     A: Asset + ProcessableAsset,
 {
     resources.insert(AssetStorage::<A>::default());
 
-    SystemBuilder::<()>::new("AssetProcessor")
+    SystemBuilder::<()>::new("AssetProcessorSystem")
         .write_resource::<AssetStorage<A>>()
         .read_resource::<ArcThreadPool>()
         .read_resource::<Time>()
