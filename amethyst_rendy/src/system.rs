@@ -21,10 +21,29 @@ use rendy::{
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-pub struct GraphAuxData {
-    pub world: &'static World,
-    pub resources: &'static Resources,
+/// Auxiliary data for render graph.
+pub struct InternalGraphAuxData<'a> {
+    pub world: &'a World,
+    pub resources: &'a Resources,
 }
+
+// FIXME: It is currently impossible to pass types with lifetimes (except for a single reference)
+// to auxiliary data structures. It worked before when passing just `World`, but with legion we
+// also need to pass `Resources`. To do this we have to transmute `InternalGraphAuxData<'a>` into
+// `InternalGraphAuxData<'static>` and ensure that none of the graph nodes store the references.
+// Simplified issue: https://github.com/rust-lang/rust/issues/51567
+fn make_graph_aux_data(world: &World, resources: &Resources) -> GraphAuxData {
+    unsafe { std::mem::transmute(
+        InternalGraphAuxData { 
+            world,
+            resources,
+        }
+    )}
+}
+
+/// Auxiliary data for render graph. Even though it is `'static` any reference inside it must not
+/// be saved in any render node. See comments on `make_graph_aux_data`. 
+pub type GraphAuxData = InternalGraphAuxData<'static>;
 
 /// Graph trait implementation required by consumers. Builds a graph and manages signaling when
 /// the graph needs to be rebuilt.
@@ -39,8 +58,6 @@ pub trait GraphCreator<B: Backend> {
 
 /// Holds internal state of the rendering system
 struct RenderState<B: Backend, G> {
-    // FIXME: GraphAuxData is not static, but it's impossible to satisfy this otherwise
-    // https://github.com/rust-lang/rust/issues/51567
     graph: Option<Graph<B, GraphAuxData>>,
     families: Families<B>,
     graph_creator: G,
@@ -59,11 +76,8 @@ where
     if let Some(graph) = state.graph.take() {
         #[cfg(feature = "profiler")]
         profile_scope!("dispose_graph");
-        graph.dispose(&mut *factory, &GraphAuxData { 
-                world: unsafe { std::mem::transmute(&world) },
-                resources: unsafe { std::mem::transmute(&resources) },
-            }
-        );
+        let aux = make_graph_aux_data(world, resources);
+        graph.dispose(&mut *factory, &aux);
     }
 
     let builder = {
@@ -75,11 +89,9 @@ where
     let graph = {
         #[cfg(feature = "profiler")]
         profile_scope!("build_graph");
+        let aux = make_graph_aux_data(world, resources);
         builder
-            .build(&mut factory, &mut state.families, &GraphAuxData { 
-                world: unsafe { std::mem::transmute(&world) },
-                resources: unsafe { std::mem::transmute(&resources) },
-            })
+            .build(&mut factory, &mut state.families, &aux)
             .unwrap()
     };
 
@@ -93,14 +105,12 @@ where
 {
     let mut factory = resources.get_mut::<Factory<B>>().unwrap();
     factory.maintain(&mut state.families);
+    let aux = make_graph_aux_data(world, resources);
     state
         .graph
         .as_mut()
         .unwrap()
-        .run(&mut factory, &mut state.families, &GraphAuxData { 
-            world: unsafe { std::mem::transmute(&world) },
-            resources: unsafe { std::mem::transmute(&resources) },
-        })
+        .run(&mut factory, &mut state.families, &aux)
 }
 
 pub fn build_rendering_system<B, G>(
@@ -135,10 +145,8 @@ where
                 let mut factory = resources.get_mut::<Factory<B>>().unwrap();
                 log::debug!("Dispose graph");
 
-                graph.dispose(&mut factory, &GraphAuxData { 
-                    world: unsafe { std::mem::transmute(&world) },
-                    resources: unsafe { std::mem::transmute(&resources) },
-                });
+                let aux = make_graph_aux_data(world, resources);
+                graph.dispose(&mut factory, &aux);
             }
 
             log::debug!("Unload resources");
