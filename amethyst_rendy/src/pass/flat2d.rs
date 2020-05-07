@@ -13,7 +13,7 @@ use crate::{
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::prelude::*,
-    transform::components::LocalToWorld,
+    transform::LocalToWorld,
     Hidden, HiddenPropagate,
 };
 use derivative::Derivative;

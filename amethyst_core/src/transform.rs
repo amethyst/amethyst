@@ -4,8 +4,9 @@ use crate::dispatcher::{
     DispatcherBuilder,
     Stage,
 };
-use legion_transform::*;
 use amethyst_error::Error;
+
+pub use legion_transform::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct TransformBundle;

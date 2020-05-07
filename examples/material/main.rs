@@ -4,8 +4,7 @@ use amethyst::{
     assets::{Loader, AssetStorage},
     core::{
         ecs::prelude::*,
-        TransformBundle,
-        transform::components::{Translation, Rotation, LocalToWorld},
+        transform::{TransformBundle, Translation, Rotation, LocalToWorld},
     },
     renderer::{
         camera::Camera,

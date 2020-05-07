@@ -15,7 +15,7 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::prelude::*,
-    transform::components::LocalToWorld,
+    transform::LocalToWorld,
     Hidden, HiddenPropagate,
 };
 use derivative::Derivative;

@@ -5,7 +5,7 @@ use amethyst_core::{
     ecs::prelude::*,
     geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
-    transform::components::LocalToWorld,
+    transform::LocalToWorld,
 };
 //use amethyst_error::Error;
 use derivative::Derivative;

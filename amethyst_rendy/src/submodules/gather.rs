@@ -7,7 +7,7 @@ use crate::{
 use amethyst_core::{
     ecs::prelude::*,
     math::{convert, Matrix4, Vector3},
-    transform::components::LocalToWorld,
+    transform::LocalToWorld,
 };
 use glsl_layout::*;
 

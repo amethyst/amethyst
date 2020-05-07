@@ -7,7 +7,7 @@ use amethyst_core::{
     ecs::prelude::*,
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
     Hidden, HiddenPropagate,
-    transform::components::LocalToWorld,
+    transform::LocalToWorld,
 };
 
 use serde::{Deserialize, Serialize};

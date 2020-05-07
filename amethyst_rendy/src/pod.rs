@@ -8,7 +8,7 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     math::{convert, Matrix4, Vector4},
-    transform::components::LocalToWorld,
+    transform::LocalToWorld,
 };
 use glsl_layout::*;
 use rendy::{

@@ -8,7 +8,7 @@ use amethyst_core::{
     ecs::prelude::*,
     math::{Point3, Vector3},
     Hidden, HiddenPropagate,
-    transform::components::LocalToWorld,
+    transform::LocalToWorld,
 };
 use std::cmp::Ordering;
 
