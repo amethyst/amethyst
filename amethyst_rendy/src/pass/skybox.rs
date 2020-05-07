@@ -149,7 +149,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawSkybox<B> {
             .map(|s| s.uniform())
             .unwrap_or_else(|| self.default_settings.uniform());
 
-        self.env.process(factory, index, aux.world);
+        self.env.process(factory, index, aux.world, aux.resources);
         let changed = self.colors.write(factory, index, settings);
 
         if changed {

@@ -124,7 +124,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawDebugLines<B> {
             self.lines.extend(lines_res.drain());
         };
 
-        let cam = CameraGatherer::gather(world);
+        let cam = CameraGatherer::gather(world, resources);
         let line_width = resources
             .get::<DebugLinesParams>()
             .map(|p| p.line_width)

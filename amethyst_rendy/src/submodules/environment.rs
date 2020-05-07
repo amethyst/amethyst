@@ -171,7 +171,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             let CameraGatherer {
                 camera_position,
                 projview,
-            } = CameraGatherer::gather(world);
+            } = CameraGatherer::gather(world, resources);
 
             let mut mapped = buffer.map(factory, whole_range.clone()).unwrap();
             let mut writer = unsafe { mapped.write::<u8>(factory, whole_range).unwrap() };

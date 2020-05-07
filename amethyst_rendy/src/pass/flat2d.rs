@@ -115,7 +115,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
             Read<SpriteVisibility>,
         )>::fetch(resources);
 
-        self.env.process(factory, index, world);
+        self.env.process(factory, index, world, resources);
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
@@ -307,7 +307,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
             Read<SpriteVisibility>,
         )>::fetch(resources);
 
-        self.env.process(factory, index, world);
+        self.env.process(factory, index, world, resources);
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;

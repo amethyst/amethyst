@@ -27,20 +27,30 @@ pub struct CameraGatherer {
 
 impl CameraGatherer {
     /// Collect just the entity which has the current `ActiveCamera`
-    pub fn gather_camera_entity(world: &World) -> Option<Entity> {
+    pub fn gather_camera_entity(world: &World, resources: &Resources) -> Option<Entity> {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_camera (1st)");
 
-        let entity= <Read<Camera>>::query()
-            .filter(tag::<ActiveCamera>())
-            .iter_entities(world)
-            .nth(0)
-            .map(|(e, _)| e);
+        // Get camera entity from `ActiveCamera` resource
+        let active_camera = resources.get::<ActiveCamera>()
+            .map(|r| r.entity)
+            .flatten();
 
+        // Find if such camera exists
+        let entity = active_camera
+            .and_then(|active_camera| {
+                <Read<Camera>>::query()
+                    .iter_entities(world)
+                    .map(|(e,_)| e)
+                    .find(|e| active_camera == *e)
+            })
+            .or_else(|| None);
+
+        // Return active camera or fetch first available
         match entity {
             Some(entity) => Some(entity),
             None => {
-                // Fetch first camera without `ActiveCamera`
+                // Fetch first available camera
                 <Read<Camera>>::query()
                     .iter_entities(world)
                     .nth(0)
@@ -54,14 +64,14 @@ impl CameraGatherer {
     /// projection matrix.
     ///
     /// The matrix returned is the camera's `Projection` matrix and the camera `Transform::global_view_matrix`
-    pub fn gather(world: &World) -> Self {
+    pub fn gather(world: &World, resources: &Resources) -> Self {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_cameras");
 
         let defcam = Camera::standard_2d(1.0, 1.0);
         let identity = LocalToWorld::identity();
 
-        let camera_entity = Self::gather_camera_entity(world);
+        let camera_entity = Self::gather_camera_entity(world, resources);
 
         let camera = camera_entity.map(|e| {
             world.get_component::<Camera>(e)
