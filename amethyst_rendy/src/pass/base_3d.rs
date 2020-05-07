@@ -6,18 +6,14 @@ use crate::{
     resources::Tint,
     skinning::JointTransforms,
     submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
+    system::GraphAuxData,
     transparent::Transparent,
     types::{Backend, Mesh},
     util,
     visibility::Visibility,
-    system::GraphAuxData,
 };
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{
-    ecs::prelude::*,
-    transform::LocalToWorld,
-    Hidden, HiddenPropagate,
-};
+use amethyst_core::{ecs::prelude::*, transform::LocalToWorld, Hidden, HiddenPropagate};
 use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
@@ -194,7 +190,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
     ) -> PrepareResult {
         profile_scope_impl!("prepare opaque");
 
-        let GraphAuxData {world, resources} = aux;
+        let GraphAuxData { world, resources } = aux;
 
         let visibility = resources.get::<Visibility>().unwrap();
         let mesh_storage = resources.get::<AssetStorage<Mesh>>().unwrap();
@@ -444,7 +440,9 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData> for DrawBase3DTransparentDesc<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData>
+    for DrawBase3DTransparentDesc<B, T>
+{
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -540,7 +538,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
     ) -> PrepareResult {
         profile_scope_impl!("prepare transparent");
 
-        let GraphAuxData {world, resources} = aux;
+        let GraphAuxData { world, resources } = aux;
 
         let visibility = resources.get::<Visibility>().unwrap();
         let mesh_storage = resources.get::<AssetStorage<Mesh>>().unwrap();

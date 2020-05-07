@@ -45,7 +45,11 @@ where
 {
     /// Create a new state data
     pub fn new(world: &'a mut World, resources: &'a mut Resources, data: &'a mut T) -> Self {
-        StateData { world, resources, data }
+        StateData {
+            world,
+            resources,
+            data,
+        }
     }
 }
 
@@ -264,11 +268,7 @@ pub trait SimpleState {
     fn on_resume(&mut self, _data: StateData<'_, GameData>) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(
-        &mut self,
-        _data: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, _data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) {
                 Trans::Quit
@@ -325,11 +325,7 @@ impl<T: SimpleState> State<GameData, StateEvent> for T {
     }
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         self.handle_event(data, event)
     }
 
@@ -400,64 +396,120 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
 
     /// Passes a single event to the active state to handle.
     pub fn handle_event(&mut self, data: StateData<'_, T>, event: E) {
-        let StateData { world, resources, data } = data;
+        let StateData {
+            world,
+            resources,
+            data,
+        } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.handle_event(StateData { world, resources, data }, event),
+                Some(state) => state.handle_event(
+                    StateData {
+                        world,
+                        resources,
+                        data,
+                    },
+                    event,
+                ),
                 None => Trans::None,
             };
 
-            self.transition(trans, StateData { world, resources, data });
+            self.transition(
+                trans,
+                StateData {
+                    world,
+                    resources,
+                    data,
+                },
+            );
         }
     }
 
     /// Updates the currently active state at a steady, fixed interval.
     pub fn fixed_update(&mut self, data: StateData<'_, T>) {
-        let StateData { world, resources, data } = data;
+        let StateData {
+            world,
+            resources,
+            data,
+        } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => {
                     #[cfg(feature = "profiler")]
                     profile_scope!("stack fixed_update");
-                    state.fixed_update(StateData { world, resources, data })
+                    state.fixed_update(StateData {
+                        world,
+                        resources,
+                        data,
+                    })
                 }
                 None => Trans::None,
             };
             for state in &mut self.state_stack {
                 #[cfg(feature = "profiler")]
                 profile_scope!("stack shadow_fixed_update");
-                state.shadow_fixed_update(StateData { world, resources, data });
+                state.shadow_fixed_update(StateData {
+                    world,
+                    resources,
+                    data,
+                });
             }
             {
                 #[cfg(feature = "profiler")]
                 profile_scope!("stack fixed transition");
-                self.transition(trans, StateData { world, resources, data });
+                self.transition(
+                    trans,
+                    StateData {
+                        world,
+                        resources,
+                        data,
+                    },
+                );
             }
         }
     }
 
     /// Updates the currently active state immediately.
     pub fn update(&mut self, data: StateData<'_, T>) {
-        let StateData { world, resources, data } = data;
+        let StateData {
+            world,
+            resources,
+            data,
+        } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => {
                     #[cfg(feature = "profiler")]
                     profile_scope!("stack update");
-                    state.update(StateData { world, resources, data })
+                    state.update(StateData {
+                        world,
+                        resources,
+                        data,
+                    })
                 }
                 None => Trans::None,
             };
             for state in &mut self.state_stack {
                 #[cfg(feature = "profiler")]
                 profile_scope!("stack shadow_update");
-                state.shadow_update(StateData { world, resources, data });
+                state.shadow_update(StateData {
+                    world,
+                    resources,
+                    data,
+                });
             }
 
             {
                 #[cfg(feature = "profiler")]
                 profile_scope!("stack transition");
-                self.transition(trans, StateData { world, resources, data });
+                self.transition(
+                    trans,
+                    StateData {
+                        world,
+                        resources,
+                        data,
+                    },
+                );
             }
         }
     }
@@ -494,32 +546,56 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     /// Removes the current state on the stack and inserts a different one.
     fn switch(&mut self, state: Box<dyn State<T, E>>, data: StateData<'_, T>) {
         if self.running {
-            let StateData { world, resources, data } = data;
+            let StateData {
+                world,
+                resources,
+                data,
+            } = data;
             if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(StateData { world, resources, data });
+                state.on_stop(StateData {
+                    world,
+                    resources,
+                    data,
+                });
             }
 
             self.state_stack.push(state);
 
             //State was just pushed, thus pop will always succeed
             let new_state = self.state_stack.last_mut().unwrap();
-            new_state.on_start(StateData { world, resources, data });
+            new_state.on_start(StateData {
+                world,
+                resources,
+                data,
+            });
         }
     }
 
     /// Pauses the active state and pushes a new state onto the state stack.
     fn push(&mut self, state: Box<dyn State<T, E>>, data: StateData<'_, T>) {
         if self.running {
-            let StateData { world, resources, data } = data;
+            let StateData {
+                world,
+                resources,
+                data,
+            } = data;
             if let Some(state) = self.state_stack.last_mut() {
-                state.on_pause(StateData { world, resources, data });
+                state.on_pause(StateData {
+                    world,
+                    resources,
+                    data,
+                });
             }
 
             self.state_stack.push(state);
 
             //State was just pushed, thus pop will always succeed
             let new_state = self.state_stack.last_mut().unwrap();
-            new_state.on_start(StateData { world, resources, data });
+            new_state.on_start(StateData {
+                world,
+                resources,
+                data,
+            });
         }
     }
 
@@ -527,13 +603,25 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     /// stack (if any).
     fn pop(&mut self, data: StateData<'_, T>) {
         if self.running {
-            let StateData { world, resources, data } = data;
+            let StateData {
+                world,
+                resources,
+                data,
+            } = data;
             if let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(StateData { world, resources, data });
+                state.on_stop(StateData {
+                    world,
+                    resources,
+                    data,
+                });
             }
 
             if let Some(state) = self.state_stack.last_mut() {
-                state.on_resume(StateData { world, resources, data });
+                state.on_resume(StateData {
+                    world,
+                    resources,
+                    data,
+                });
             } else {
                 self.running = false;
             }
@@ -544,9 +632,17 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     pub(crate) fn replace(&mut self, state: Box<dyn State<T, E>>, data: StateData<'_, T>) {
         if self.running {
             //Pemove all current states
-            let StateData { world, resources, data } = data;
+            let StateData {
+                world,
+                resources,
+                data,
+            } = data;
             while let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(StateData { world, resources, data });
+                state.on_stop(StateData {
+                    world,
+                    resources,
+                    data,
+                });
             }
 
             //Push the new state
@@ -554,7 +650,11 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
 
             //State was just pushed, thus pop will always succeed
             let new_state = self.state_stack.last_mut().unwrap();
-            new_state.on_start(StateData { world, resources, data });
+            new_state.on_start(StateData {
+                world,
+                resources,
+                data,
+            });
         }
     }
 
@@ -562,9 +662,17 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     pub(crate) fn new_stack(&mut self, states: Vec<Box<dyn State<T, E>>>, data: StateData<'_, T>) {
         if self.running {
             //remove all current states
-            let StateData { world, resources, data } = data;
+            let StateData {
+                world,
+                resources,
+                data,
+            } = data;
             while let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(StateData { world, resources, data });
+                state.on_stop(StateData {
+                    world,
+                    resources,
+                    data,
+                });
             }
 
             //push the new states
@@ -574,10 +682,18 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
 
                 //State was just pushed, thus pop will always succeed
                 let new_state = self.state_stack.last_mut().unwrap();
-                new_state.on_start(StateData { world, resources, data });
+                new_state.on_start(StateData {
+                    world,
+                    resources,
+                    data,
+                });
                 if count != state_count - 1 {
                     //pause on each state but the last
-                    new_state.on_pause(StateData { world, resources, data });
+                    new_state.on_pause(StateData {
+                        world,
+                        resources,
+                        data,
+                    });
                 }
             }
         }
@@ -586,9 +702,17 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     /// Shuts the state machine down.
     pub(crate) fn stop(&mut self, data: StateData<'_, T>) {
         if self.running {
-            let StateData { world, resources, data } = data;
+            let StateData {
+                world,
+                resources,
+                data,
+            } = data;
             while let Some(mut state) = self.state_stack.pop() {
-                state.on_stop(StateData { world, resources, data });
+                state.on_stop(StateData {
+                    world,
+                    resources,
+                    data,
+                });
             }
 
             self.running = false;

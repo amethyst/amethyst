@@ -1,8 +1,6 @@
 //! Debug Drawing library
 use crate::pod::IntoPod;
-use amethyst_core::{
-    math::{Point2, Point3, UnitQuaternion, Vector2, Vector3},
-};
+use amethyst_core::math::{Point2, Point3, UnitQuaternion, Vector2, Vector3};
 use palette::Srgba;
 use rendy::mesh::{AsVertex, Color, PosColor, VertexFormat};
 

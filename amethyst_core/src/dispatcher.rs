@@ -1,7 +1,4 @@
-use crate::{
-    ecs::prelude::*,
-    ArcThreadPool,
-};
+use crate::{ecs::prelude::*, ArcThreadPool};
 use std::collections::BTreeMap;
 
 pub trait SystemBundle {
@@ -14,7 +11,13 @@ pub trait SystemBundle {
 }
 
 impl SystemBundle
-    for Box<dyn FnMut(&mut World, &mut Resources, &mut DispatcherBuilder<'_>) -> Result<(), amethyst_error::Error>>
+    for Box<
+        dyn FnMut(
+            &mut World,
+            &mut Resources,
+            &mut DispatcherBuilder<'_>,
+        ) -> Result<(), amethyst_error::Error>,
+    >
 {
     fn build(
         mut self,
@@ -318,7 +321,9 @@ impl<'a> DispatcherBuilder<'a> {
         self
     }
 
-    pub fn add_thread_local_system<T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a>(
+    pub fn add_thread_local_system<
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a,
+    >(
         &mut self,
         desc: T,
     ) {
@@ -326,7 +331,9 @@ impl<'a> DispatcherBuilder<'a> {
             .push((Box::new(DispatcherThreadLocalSystem(desc)) as Box<dyn ConsumeDesc>));
     }
 
-    pub fn with_thread_local_system<T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a>(
+    pub fn with_thread_local_system<
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a,
+    >(
         mut self,
         desc: T,
     ) -> Self {
@@ -335,7 +342,10 @@ impl<'a> DispatcherBuilder<'a> {
         self
     }
 
-    pub fn add_system<S: IntoRelativeStage, T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a>(
+    pub fn add_system<
+        S: IntoRelativeStage,
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a,
+    >(
         &mut self,
         stage: S,
         desc: T,
@@ -346,7 +356,10 @@ impl<'a> DispatcherBuilder<'a> {
         ));
     }
 
-    pub fn with_system<S: IntoRelativeStage, T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a>(
+    pub fn with_system<
+        S: IntoRelativeStage,
+        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a,
+    >(
         mut self,
         stage: S,
         desc: T,
@@ -389,7 +402,12 @@ impl<'a> DispatcherBuilder<'a> {
         for bundle in self.bundles.drain(..) {
             let mut recursive_builder = DispatcherBuilder::default();
             bundle
-                .consume(world, resources, &mut dispatcher_data, &mut recursive_builder)
+                .consume(
+                    world,
+                    resources,
+                    &mut dispatcher_data,
+                    &mut recursive_builder,
+                )
                 .unwrap();
             dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
         }
@@ -397,15 +415,25 @@ impl<'a> DispatcherBuilder<'a> {
         for desc in self.systems.drain(..) {
             let mut recursive_builder = DispatcherBuilder::default();
             desc.1
-                .consume(world, resources, &mut dispatcher_data, &mut recursive_builder)
+                .consume(
+                    world,
+                    resources,
+                    &mut dispatcher_data,
+                    &mut recursive_builder,
+                )
                 .unwrap();
             dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
         }
 
         for desc in self.thread_locals.drain(..) {
             let mut recursive_builder = DispatcherBuilder::default();
-            desc.consume(world, resources, &mut dispatcher_data, &mut recursive_builder)
-                .unwrap();
+            desc.consume(
+                world,
+                resources,
+                &mut dispatcher_data,
+                &mut recursive_builder,
+            )
+            .unwrap();
             dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
         }
 

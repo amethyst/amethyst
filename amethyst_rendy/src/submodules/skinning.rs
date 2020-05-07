@@ -69,19 +69,16 @@ impl<B: Backend> SkinningSub<B> {
         profile_scope!("insert");
 
         let staging = &mut self.staging;
-        *self
-            .skin_offset_map
-            .entry(joints.skin)
-            .or_insert_with(|| {
-                let len = staging.len();
-                staging.extend(
-                    joints
-                        .matrices
-                        .iter()
-                        .map(|m| -> [[f32; 4]; 4] { (*m).into() }),
-                );
-                len as u32
-            })
+        *self.skin_offset_map.entry(joints.skin).or_insert_with(|| {
+            let len = staging.len();
+            staging.extend(
+                joints
+                    .matrices
+                    .iter()
+                    .map(|m| -> [[f32; 4]; 4] { (*m).into() }),
+            );
+            len as u32
+        })
     }
 
     /// Bind the skinned skeletal information.

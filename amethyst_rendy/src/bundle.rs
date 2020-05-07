@@ -1,6 +1,7 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
 use crate::{
+    camera::ActiveCamera,
     mtl::Material,
     rendy::{
         command::QueueId,
@@ -12,15 +13,17 @@ use crate::{
         hal,
         wsi::Surface,
     },
-    system::{GraphCreator, GraphAuxData, build_mesh_processor, build_rendering_system, build_texture_processor},
+    system::{
+        build_mesh_processor, build_rendering_system, build_texture_processor, GraphAuxData,
+        GraphCreator,
+    },
     types::Backend,
-    camera::ActiveCamera,
     SpriteSheet,
 };
 use amethyst_assets::build_asset_processor_system;
 use amethyst_core::{
+    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
     ecs::prelude::*,
-    dispatcher::{SystemBundle, DispatcherBuilder, Stage},
 };
 use amethyst_error::{format_err, Error};
 use std::collections::HashMap;
@@ -122,14 +125,21 @@ impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
         rebuild
     }
 
-    fn builder(&mut self, factory: &mut Factory<B>, world: &World, resources: &Resources) -> GraphBuilder<B, GraphAuxData> {
+    fn builder(
+        &mut self,
+        factory: &mut Factory<B>,
+        world: &World,
+        resources: &Resources,
+    ) -> GraphBuilder<B, GraphAuxData> {
         if self.plugins.is_empty() {
             log::warn!("RenderingBundle is configured to display nothing. Use `with_plugin` to add functionality.");
         }
 
         let mut plan = RenderPlan::new();
         for plugin in self.plugins.iter_mut() {
-            plugin.on_plan(&mut plan, factory, world, resources).unwrap();
+            plugin
+                .on_plan(&mut plan, factory, world, resources)
+                .unwrap();
         }
         plan.build(factory).unwrap()
     }

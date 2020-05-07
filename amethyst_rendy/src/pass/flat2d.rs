@@ -6,16 +6,12 @@ use crate::{
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
     submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
-    types::{Backend, Texture},
     system::GraphAuxData,
+    types::{Backend, Texture},
     util,
 };
 use amethyst_assets::AssetStorage;
-use amethyst_core::{
-    ecs::prelude::*,
-    transform::LocalToWorld,
-    Hidden, HiddenPropagate,
-};
+use amethyst_core::{ecs::prelude::*, transform::LocalToWorld, Hidden, HiddenPropagate};
 use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
@@ -107,7 +103,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare opaque");
 
-        let GraphAuxData {world, resources} = aux;
+        let GraphAuxData { world, resources } = aux;
 
         let (sprite_sheet_storage, tex_storage, visibility) = <(
             Read<AssetStorage<SpriteSheet>>,
@@ -299,7 +295,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare transparent");
 
-        let GraphAuxData {world, resources} = aux;
+        let GraphAuxData { world, resources } = aux;
 
         let (sprite_sheet_storage, tex_storage, visibility) = <(
             Read<AssetStorage<SpriteSheet>>,

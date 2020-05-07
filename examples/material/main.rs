@@ -1,10 +1,9 @@
 //! Displays spheres with physically based materials.
 use amethyst::{
-//    assets::AssetLoaderSystemData,
-    assets::{Loader, AssetStorage},
+    assets::{AssetStorage, Loader},
     core::{
         ecs::prelude::*,
-        transform::{TransformBundle, Translation, Rotation, LocalToWorld},
+        transform::{LocalToWorld, Rotation, TransformBundle, Translation},
     },
     renderer::{
         camera::Camera,
@@ -29,7 +28,9 @@ struct Example;
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let StateData { world, resources, .. } = data;
+        let StateData {
+            world, resources, ..
+        } = data;
         let mat_defaults = resources.get::<MaterialDefaults>().unwrap().0.clone();
         let loader = resources.get::<Loader>().unwrap();
         let mesh_storage = resources.get::<AssetStorage<Mesh>>().unwrap();
@@ -49,7 +50,7 @@ impl SimpleState for Example {
             let albedo = loader.load_from_data(
                 load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 0.5)).into(),
                 (),
-                &tex_storage
+                &tex_storage,
             );
 
             (mesh, albedo)
@@ -67,8 +68,7 @@ impl SimpleState for Example {
 
             let mtl = {
                 let metallic_roughness = loader.load_from_data(
-                    load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0))
-                        .into(),
+                    load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0)).into(),
                     (),
                     &tex_storage,
                 );
@@ -108,10 +108,13 @@ impl SimpleState for Example {
 
         let mut light2_translation = Translation::new(6.0, -6.0, -6.0);
 
-        world.insert((), vec![
-            (LocalToWorld::identity(), light1, light1_translation),
-            (LocalToWorld::identity(), light2, light2_translation)
-        ]);
+        world.insert(
+            (),
+            vec![
+                (LocalToWorld::identity(), light1, light1_translation),
+                (LocalToWorld::identity(), light2, light2_translation),
+            ],
+        );
 
         println!("Put camera");
 
@@ -123,12 +126,15 @@ impl SimpleState for Example {
             (dim.width(), dim.height())
         };
 
-        world.insert((), vec![(
-            LocalToWorld::identity(),
-            Camera::standard_3d(width, height),
-            translation,
-            rotation,
-        )]);
+        world.insert(
+            (),
+            vec![(
+                LocalToWorld::identity(),
+                Camera::standard_3d(width, height),
+                translation,
+                rotation,
+            )],
+        );
     }
 }
 

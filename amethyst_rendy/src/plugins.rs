@@ -7,8 +7,10 @@ use crate::{
     visibility::build_visibility_sorting_system,
     Backend, Factory,
 };
-use amethyst_core::ecs::prelude::*;
-use amethyst_core::dispatcher::{DispatcherBuilder, Stage, SystemBundle};
+use amethyst_core::{
+    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
+    ecs::prelude::*,
+};
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;

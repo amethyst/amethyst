@@ -5,9 +5,9 @@ use crate::{
 };
 use amethyst_assets::{AssetStorage, ProcessingState};
 use amethyst_core::{
+    dispatcher::{ThreadLocal, ThreadLocalObject},
     ecs::prelude::*,
     timing::Time,
-    dispatcher::{ThreadLocal, ThreadLocalObject},
     ArcThreadPool,
 };
 use palette::{LinSrgba, Srgba};
@@ -33,16 +33,11 @@ pub struct InternalGraphAuxData<'a> {
 // `InternalGraphAuxData<'static>` and ensure that none of the graph nodes store the references.
 // Simplified issue: https://github.com/rust-lang/rust/issues/51567
 fn make_graph_aux_data(world: &World, resources: &Resources) -> GraphAuxData {
-    unsafe { std::mem::transmute(
-        InternalGraphAuxData { 
-            world,
-            resources,
-        }
-    )}
+    unsafe { std::mem::transmute(InternalGraphAuxData { world, resources }) }
 }
 
 /// Auxiliary data for render graph. Even though it is `'static` any reference inside it must not
-/// be saved in any render node. See comments on `make_graph_aux_data`. 
+/// be saved in any render node. See comments on `make_graph_aux_data`.
 pub type GraphAuxData = InternalGraphAuxData<'static>;
 
 /// Graph trait implementation required by consumers. Builds a graph and manages signaling when
@@ -53,7 +48,12 @@ pub trait GraphCreator<B: Backend> {
     fn rebuild(&mut self, world: &World, resources: &Resources) -> bool;
 
     /// Retrieve configured complete graph builder.
-    fn builder(&mut self, factory: &mut Factory<B>, world: &World, resources: &Resources) -> GraphBuilder<B, GraphAuxData>;
+    fn builder(
+        &mut self,
+        factory: &mut Factory<B>,
+        world: &World,
+        resources: &Resources,
+    ) -> GraphBuilder<B, GraphAuxData>;
 }
 
 /// Holds internal state of the rendering system
@@ -166,7 +166,7 @@ where
 /// Asset processing system for `Mesh` asset type.
 pub fn build_mesh_processor<B: Backend>(
     world: &mut World,
-    resources: &mut Resources
+    resources: &mut Resources,
 ) -> Box<dyn Schedulable> {
     resources.insert(AssetStorage::<Mesh>::default());
 
@@ -205,7 +205,7 @@ pub fn build_mesh_processor<B: Backend>(
 /// Asset processing system for `Mesh` asset type.
 pub fn build_texture_processor<B: Backend>(
     world: &mut World,
-    resources: &mut Resources
+    resources: &mut Resources,
 ) -> Box<dyn Schedulable> {
     resources.insert(AssetStorage::<Texture>::default());
 

@@ -18,31 +18,26 @@ extern crate derive_new;
 
 pub use alga;
 pub use approx;
+pub use legion as ecs;
 pub use nalgebra as math;
 pub use num_traits as num;
-pub use legion as ecs;
 pub use shrev;
 
 use std::sync::Arc;
 
-pub use crate::{
-    // event::EventReader,
-    // system_ext::{Pausable, SystemExt},
-    timing::*,
-};
+pub use crate::timing::*;
 
 pub use self::{
     axis::{Axis2, Axis3},
     hidden::{Hidden, HiddenPropagate},
-    //hide_system::{HideHierarchySystem, HideHierarchySystemDesc},
     named::Named,
 };
 
 //pub mod deferred_dispatcher_operation;
+pub mod dispatcher;
 pub mod frame_limiter;
 pub mod geometry;
 pub mod timing;
-pub mod dispatcher;
 pub mod transform;
 
 mod axis;

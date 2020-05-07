@@ -4,13 +4,11 @@
 
 //use crate::resources::AmbientColor;
 //use amethyst_assets::{PrefabData, ProgressCounter};
-use amethyst_core::{
-    math::Vector3,
-};
+use amethyst_core::math::Vector3;
 //use amethyst_error::Error;
 
 /// A light source.
-#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize/*, PrefabData*/)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 // #[prefab(Component)]
 pub enum Light {
     /// An area light.

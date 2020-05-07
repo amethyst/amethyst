@@ -3,9 +3,9 @@
 use std::{sync::Arc, time::Instant};
 
 use amethyst_core::{
+    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
     ecs::prelude::*,
     Time,
-    dispatcher::{SystemBundle, DispatcherBuilder, Stage}
 };
 use amethyst_error::Error;
 
@@ -135,8 +135,10 @@ enum HotReloadStrategyInner {
 }
 
 /// Hot reload system that manages asset reload polling
-pub fn build_hot_reload_system(_world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable>
-{
+pub fn build_hot_reload_system(
+    _world: &mut World,
+    resources: &mut Resources,
+) -> Box<dyn Schedulable> {
     if resources.get::<HotReloadStrategy>().is_none() {
         resources.insert(HotReloadStrategy::default())
     }

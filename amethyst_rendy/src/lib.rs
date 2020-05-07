@@ -90,14 +90,11 @@ mod render_test_bundle;
 pub use crate::{
     bundle::{RenderPlugin, RenderingBundle},
     camera::{ActiveCamera, Camera},
-    formats::{
-        /*mesh::MeshPrefab,*/
-        texture::{ImageFormat, /*TexturePrefab*/},
-    },
+    formats::texture::ImageFormat,
     mtl::{Material, MaterialDefaults},
     plugins::*,
     sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
-    system::{GraphCreator, build_mesh_processor, build_rendering_system, build_texture_processor},
+    system::{build_mesh_processor, build_rendering_system, build_texture_processor, GraphCreator},
     transparent::Transparent,
     types::{Backend, Mesh, Texture},
     util::{simple_shader_set, ChangeDetection},

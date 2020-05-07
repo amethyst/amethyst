@@ -16,15 +16,11 @@ pub use crate::{
     cache::Cache,
     dyn_format::FormatRegisteredData,
     formats::RonFormat,
-    // helper::AssetLoaderSystemData,
     loader::Loader,
-    // prefab::{
-    //     AssetPrefab, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, PrefabLoaderSystemDesc,
-    // },
     progress::{Completion, Progress, ProgressCounter, Tracker},
-    reload::{HotReloadBundle, HotReloadStrategy, build_hot_reload_system, Reload, SingleFile},
+    reload::{build_hot_reload_system, HotReloadBundle, HotReloadStrategy, Reload, SingleFile},
     source::{Directory, Source},
-    storage::{AssetStorage, Handle, ProcessingState, build_asset_processor_system, WeakHandle},
+    storage::{build_asset_processor_system, AssetStorage, Handle, ProcessingState, WeakHandle},
 };
 
 pub use rayon::ThreadPool;

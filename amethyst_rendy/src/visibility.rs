@@ -6,12 +6,12 @@ use crate::{
 use amethyst_core::{
     ecs::prelude::*,
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
-    Hidden, HiddenPropagate,
     transform::LocalToWorld,
+    Hidden, HiddenPropagate,
 };
 
-use serde::{Deserialize, Serialize};
 use indexmap::IndexSet;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
 #[cfg(feature = "profiler")]
@@ -80,7 +80,10 @@ struct Internals {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-pub fn build_visibility_sorting_system(world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable> {
+pub fn build_visibility_sorting_system(
+    world: &mut World,
+    resources: &mut Resources,
+) -> Box<dyn Schedulable> {
     resources.insert(Visibility::default());
 
     let mut state = VisibilitySortingSystemState::default();
@@ -92,14 +95,15 @@ pub fn build_visibility_sorting_system(world: &mut World, resources: &mut Resour
         .read_component::<Transparent>()
         .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
         .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
-        .with_query(<Read<LocalToWorld>>::query()
-            .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
+        .with_query(
+            <Read<LocalToWorld>>::query()
+                .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
         )
         .build(
             move |commands,
-             world,
-             (active_camera, visibility),
-             (camera_query1, camera_query2, entity_query)| {
+                  world,
+                  (active_camera, visibility),
+                  (camera_query1, camera_query2, entity_query)| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("visibility_sorting_system");
 
@@ -111,12 +115,7 @@ pub fn build_visibility_sorting_system(world: &mut World, resources: &mut Resour
                 let origin = Point3::origin();
 
                 let (camera, camera_transform) = match active_camera.entity.map_or_else(
-                    || {
-                        camera_query1
-                            .iter_entities(world)
-                            .nth(0)
-                            .map(|args| args.1)
-                    },
+                    || camera_query1.iter_entities(world).nth(0).map(|args| args.1),
                     |e| {
                         camera_query2
                             .iter_entities(world)
@@ -180,7 +179,7 @@ pub fn build_visibility_sorting_system(world: &mut World, resources: &mut Resour
                 visibility
                     .visible_ordered
                     .extend(state.transparent.iter().map(|c| c.entity));
-            }
+            },
         )
 }
 

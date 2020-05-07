@@ -2,11 +2,8 @@ use derivative::Derivative;
 use winit::Event;
 
 use crate::{
-    core::{
-        shrev::{EventChannel, ReaderId},
-    },
+    core::shrev::{EventChannel, ReaderId},
     input::{BindingTypes, InputEvent, StringBindings},
-    // ui::UiEvent,
 };
 
 /// The enum holding the different types of event that can be received in a `State` in the

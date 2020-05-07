@@ -65,7 +65,13 @@ impl<B: Backend> EnvironmentSub<B> {
     }
 
     /// Performs any re-allocation and GPU memory writing required for this environment set.
-    pub fn process(&mut self, factory: &Factory<B>, index: usize, world: &World, resources: &Resources) -> bool {
+    pub fn process(
+        &mut self,
+        factory: &Factory<B>,
+        index: usize,
+        world: &World,
+        resources: &Resources,
+    ) -> bool {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
 
@@ -192,10 +198,8 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 .filter_map(|(light, transform)| match &*light {
                     Light::Point(light) => Some(
                         pod::PointLight {
-                            position: convert::<_, Vector3<f32>>(
-                                transform.column(3).xyz(),
-                            )
-                            .into_pod(),
+                            position: convert::<_, Vector3<f32>>(transform.column(3).xyz())
+                                .into_pod(),
                             color: light.color.into_pod(),
                             intensity: light.intensity,
                         }
@@ -227,10 +231,8 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 .filter_map(|(light, transform)| match &*light {
                     Light::Spot(light) => Some(
                         pod::SpotLight {
-                            position: convert::<_, Vector3<f32>>(
-                                transform.column(3).xyz(),
-                            )
-                            .into_pod(),
+                            position: convert::<_, Vector3<f32>>(transform.column(3).xyz())
+                                .into_pod(),
                             color: light.color.into_pod(),
                             direction: light.direction.into_pod(),
                             angle: light.angle.cos(),

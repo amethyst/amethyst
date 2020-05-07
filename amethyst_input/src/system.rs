@@ -15,22 +15,29 @@ use thread_profiler::profile_scope;
 ///
 /// Will read `winit::Event` from `EventHandler<winit::Event>`, process them with `InputHandler`,
 /// and push the results in `EventHandler<InputEvent>`.
-pub fn build_input_system<T: BindingTypes>(world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable>
-{
-    let mut reader = resources.get_mut::<EventChannel<Event>>().unwrap().register_reader();
+pub fn build_input_system<T: BindingTypes>(
+    world: &mut World,
+    resources: &mut Resources,
+) -> Box<dyn Schedulable> {
+    let mut reader = resources
+        .get_mut::<EventChannel<Event>>()
+        .unwrap()
+        .register_reader();
 
     SystemBuilder::<()>::new("InputSystem")
         .read_resource::<EventChannel<Event>>()
         .write_resource::<InputHandler<T>>()
         .write_resource::<EventChannel<InputEvent<T>>>()
         .read_resource::<ScreenDimensions>()
-        .build(move |_commands, _world, (input, handler, output, screen_dimensions), _query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("input_system");
+        .build(
+            move |_commands, _world, (input, handler, output, screen_dimensions), _query| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("input_system");
 
-            handler.send_frame_begin();
-            for event in input.read(&mut reader) {
-                handler.send_event(event, output, screen_dimensions.hidpi_factor() as f32);
-            }
-        })
+                handler.send_frame_begin();
+                for event in input.read(&mut reader) {
+                    handler.send_event(event, output, screen_dimensions.hidpi_factor() as f32);
+                }
+            },
+        )
 }

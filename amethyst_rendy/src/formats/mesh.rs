@@ -3,9 +3,7 @@ use crate::{
     shape::{FromShape, ShapePrefab},
     types::{Mesh, MeshData},
 };
-use amethyst_assets::{
-    /*AssetPrefab, */AssetStorage, Format, Handle, Loader, /*PrefabData, */ProgressCounter,
-};
+use amethyst_assets::{AssetStorage, Format, Handle, Loader, ProgressCounter};
 use amethyst_error::Error;
 use rendy::mesh::MeshBuilder;
 use serde::{Deserialize, Serialize};

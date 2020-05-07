@@ -1,14 +1,14 @@
 //! Transparency, visibility sorting and camera centroid culling for 2D Sprites.
 use crate::{
     camera::{ActiveCamera, Camera},
-    transparent::Transparent,
     sprite::SpriteRender,
+    transparent::Transparent,
 };
 use amethyst_core::{
     ecs::prelude::*,
     math::{Point3, Vector3},
-    Hidden, HiddenPropagate,
     transform::LocalToWorld,
+    Hidden, HiddenPropagate,
 };
 use std::cmp::Ordering;
 
@@ -41,7 +41,10 @@ struct Internals {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-pub fn build_sprite_visibility_sorting_system(world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable> {
+pub fn build_sprite_visibility_sorting_system(
+    world: &mut World,
+    resources: &mut Resources,
+) -> Box<dyn Schedulable> {
     resources.insert(SpriteVisibility::default());
 
     let mut transparent_centroids: Vec<Internals> = Vec::default();

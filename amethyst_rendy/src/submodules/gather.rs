@@ -32,16 +32,14 @@ impl CameraGatherer {
         profile_scope!("gather_camera (1st)");
 
         // Get camera entity from `ActiveCamera` resource
-        let active_camera = resources.get::<ActiveCamera>()
-            .map(|r| r.entity)
-            .flatten();
+        let active_camera = resources.get::<ActiveCamera>().map(|r| r.entity).flatten();
 
         // Find if such camera exists
         let entity = active_camera
             .and_then(|active_camera| {
                 <Read<Camera>>::query()
                     .iter_entities(world)
-                    .map(|(e,_)| e)
+                    .map(|(e, _)| e)
                     .find(|e| active_camera == *e)
             })
             .or_else(|| None);
@@ -73,18 +71,17 @@ impl CameraGatherer {
 
         let camera_entity = Self::gather_camera_entity(world, resources);
 
-        let camera = camera_entity.map(|e| {
-            world.get_component::<Camera>(e)
-        }).flatten();
+        let camera = camera_entity
+            .map(|e| world.get_component::<Camera>(e))
+            .flatten();
         let camera = camera.as_deref().unwrap_or(&defcam);
 
-        let transform = camera_entity.map(|e| {
-            world.get_component::<LocalToWorld>(e)
-        }).flatten();
+        let transform = camera_entity
+            .map(|e| world.get_component::<LocalToWorld>(e))
+            .flatten();
         let transform = transform.as_deref().unwrap_or(&identity);
 
-        let camera_position =
-            convert::<_, Vector3<f32>>(transform.column(3).xyz()).into_pod();
+        let camera_position = convert::<_, Vector3<f32>>(transform.column(3).xyz()).into_pod();
 
         let proj = camera.as_matrix();
         let view = &**transform;

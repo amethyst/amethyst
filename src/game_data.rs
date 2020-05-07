@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 
 use crate::{
     core::{
+        dispatcher::{Dispatcher, DispatcherBuilder, IntoRelativeStage, SystemBundle, ThreadLocal},
         ecs::prelude::*,
-        dispatcher::{DispatcherBuilder, SystemBundle, Dispatcher, IntoRelativeStage, ThreadLocal},
         ArcThreadPool,
     },
     error::Error,
@@ -120,7 +120,9 @@ impl<'a> DataInit<GameData> for GameDataBuilder<'a> {
         let mut dispatcher_builder = self.disp_builder;
 
         #[cfg(not(no_threading))]
-        let mut dispatcher = dispatcher_builder.with_pool(Some(pool)).build(world, resources);
+        let mut dispatcher = dispatcher_builder
+            .with_pool(Some(pool))
+            .build(world, resources);
         #[cfg(no_threading)]
         let mut dispatcher = dispatcher_builder.build(world, resources);
 

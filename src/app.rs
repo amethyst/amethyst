@@ -21,13 +21,11 @@ use crate::{
         timing::{Stopwatch, Time},
         ArcThreadPool, Named,
     },
-    ecs::prelude::*,
-    ecs::systems::resource::Resource,
+    ecs::{prelude::*, systems::resource::Resource},
     error::Error,
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventChannel},
-    // ui::UiEvent,
 };
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
@@ -222,8 +220,7 @@ where
     ///
     /// See the example supplied in the
     /// [`new`](struct.Application.html#examples) method.
-    pub fn run(&mut self)
-    {
+    pub fn run(&mut self) {
         #[cfg(feature = "sentry")]
         let _sentry_guard = if let Some(dsn) = option_env!("SENTRY_DSN") {
             let guard = sentry::init(dsn);
@@ -261,7 +258,11 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
         self.states
-            .start(StateData::new(&mut self.world, &mut self.resources, &mut self.data))
+            .start(StateData::new(
+                &mut self.world,
+                &mut self.resources,
+                &mut self.data,
+            ))
             .expect("Tried to start state machine without any states present");
     }
 
@@ -272,10 +273,23 @@ where
         } else {
             use crate::winit::WindowEvent;
             let reader_id = &mut self.event_reader_id;
-            self.resources.get_mut::<EventChannel<Event>>().unwrap().read(reader_id).any(|e| {
-                if cfg!(target_os = "ios") {
-                    if let Event::WindowEvent {
-                        event: WindowEvent::Destroyed,
+            self.resources
+                .get_mut::<EventChannel<Event>>()
+                .unwrap()
+                .read(reader_id)
+                .any(|e| {
+                    if cfg!(target_os = "ios") {
+                        if let Event::WindowEvent {
+                            event: WindowEvent::Destroyed,
+                            ..
+                        } = e
+                        {
+                            true
+                        } else {
+                            false
+                        }
+                    } else if let Event::WindowEvent {
+                        event: WindowEvent::CloseRequested,
                         ..
                     } = e
                     {
@@ -283,22 +297,12 @@ where
                     } else {
                         false
                     }
-                } else if let Event::WindowEvent {
-                    event: WindowEvent::CloseRequested,
-                    ..
-                } = e
-                {
-                    true
-                } else {
-                    false
-                }
-            })
+                })
         }
     }
 
     /// Advances the game world by one tick.
-    fn advance_frame(&mut self)
-    {
+    fn advance_frame(&mut self) {
         trace!("Advancing frame (`Application::advance_frame`)");
         if self.should_close() {
             let world = &mut self.world;
@@ -330,7 +334,11 @@ where
             profile_scope!("run_callback_queue");
             let world = &mut self.world;
             let resources = &mut self.resources;
-            let receiver = resources.get_mut::<CallbackQueue>().unwrap().receiver.clone();
+            let receiver = resources
+                .get_mut::<CallbackQueue>()
+                .unwrap()
+                .receiver
+                .clone();
             while let Ok(func) = receiver.try_recv() {
                 func(world, resources);
             }
@@ -342,7 +350,8 @@ where
 
             {
                 let channel = self.resources.get_mut::<EventChannel<E>>().unwrap();
-                self.events.extend(channel.read(&mut self.reader_id).cloned());
+                self.events
+                    .extend(channel.read(&mut self.reader_id).cloned());
             }
 
             {
@@ -359,21 +368,38 @@ where
             profile_scope!("fixed_update");
 
             {
-                self.resources.get_mut::<Time>().unwrap().start_fixed_update();
+                self.resources
+                    .get_mut::<Time>()
+                    .unwrap()
+                    .start_fixed_update();
             }
-            while { self.resources.get_mut::<Time>().unwrap().step_fixed_update() } {
-                self.states
-                    .fixed_update(StateData::new(&mut self.world, &mut self.resources, &mut self.data));
+            while {
+                self.resources
+                    .get_mut::<Time>()
+                    .unwrap()
+                    .step_fixed_update()
+            } {
+                self.states.fixed_update(StateData::new(
+                    &mut self.world,
+                    &mut self.resources,
+                    &mut self.data,
+                ));
             }
             {
-                self.resources.get_mut::<Time>().unwrap().finish_fixed_update();
+                self.resources
+                    .get_mut::<Time>()
+                    .unwrap()
+                    .finish_fixed_update();
             }
         }
         {
             #[cfg(feature = "profiler")]
             profile_scope!("update");
-            self.states
-                .update(StateData::new(&mut self.world, &mut self.resources, &mut self.data));
+            self.states.update(StateData::new(
+                &mut self.world,
+                &mut self.resources,
+                &mut self.data,
+            ));
         }
 
         #[cfg(feature = "profiler")]
@@ -607,8 +633,7 @@ where
     /// # }
     ///
     /// ~~~
-    pub fn with_resource<R: Resource>(mut self, resource: R) -> Self
-    {
+    pub fn with_resource<R: Resource>(mut self, resource: R) -> Self {
         self.resources.insert(resource);
         self
     }
@@ -769,7 +794,10 @@ where
     ///
     /// This function returns the ApplicationBuilder after modifying it.
     pub fn with_fixed_step_length(self, duration: Duration) -> Self {
-        self.resources.get_mut::<Time>().unwrap().set_fixed_time(duration);
+        self.resources
+            .get_mut::<Time>()
+            .unwrap()
+            .set_fixed_time(duration);
         self
     }
 
@@ -824,15 +852,24 @@ where
 
         self.resources.insert(EventChannel::<E>::default());
         let reader_id = self
-            .resources.get_mut::<EventChannel<E>>().unwrap().register_reader();
+            .resources
+            .get_mut::<EventChannel<E>>()
+            .unwrap()
+            .register_reader();
 
         let data = init.build(&mut self.world, &mut self.resources);
 
         let event_reader_id = self
-            .resources.get_mut::<EventChannel<Event>>().unwrap().register_reader();
+            .resources
+            .get_mut::<EventChannel<Event>>()
+            .unwrap()
+            .register_reader();
 
         let trans_reader_id = self
-            .resources.get_mut::<EventChannel<TransEvent<T, E>>>().unwrap().register_reader();
+            .resources
+            .get_mut::<EventChannel<TransEvent<T, E>>>()
+            .unwrap()
+            .register_reader();
 
         Ok(CoreApplication {
             world: self.world,

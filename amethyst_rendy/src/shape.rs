@@ -1,9 +1,7 @@
 //! Basic shape prefabs.
 use crate::types::Mesh;
 use amethyst_assets::{AssetStorage, Handle, Loader, Progress};
-use amethyst_core::{
-    math::Vector3,
-};
+use amethyst_core::math::Vector3;
 use genmesh::{
     generators::{
         Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv,

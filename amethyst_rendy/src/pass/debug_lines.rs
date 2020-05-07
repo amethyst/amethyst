@@ -3,8 +3,8 @@ use crate::{
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::ViewArgs,
     submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertexBuffer},
-    types::Backend,
     system::GraphAuxData,
+    types::Backend,
     util,
 };
 use amethyst_core::ecs::prelude::*;
@@ -110,7 +110,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawDebugLines<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
-        let GraphAuxData {world, resources} = aux;
+        let GraphAuxData { world, resources } = aux;
 
         let lines_query = <Read<DebugLinesComponent>>::query();
 

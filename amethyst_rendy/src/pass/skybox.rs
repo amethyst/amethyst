@@ -4,8 +4,8 @@ use crate::{
     pod::IntoPod,
     shape::Shape,
     submodules::{DynamicUniform, FlatEnvironmentSub},
-    types::Backend,
     system::GraphAuxData,
+    types::Backend,
     util,
 };
 use amethyst_core::ecs::prelude::*;
@@ -145,7 +145,9 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawSkybox<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
-        let settings = aux.resources.get::<SkyboxSettings>()
+        let settings = aux
+            .resources
+            .get::<SkyboxSettings>()
             .map(|s| s.uniform())
             .unwrap_or_else(|| self.default_settings.uniform());
 

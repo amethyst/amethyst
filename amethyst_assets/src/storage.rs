@@ -10,17 +10,12 @@ use crossbeam_queue::SegQueue;
 use derivative::Derivative;
 use log::{debug, error, trace, warn};
 use rayon::ThreadPool;
-use specs::storage::{
-    VecStorage,
-    UnprotectedStorage,
+use specs::{
+    hibitset::BitSet,
+    storage::{UnprotectedStorage, VecStorage},
 };
-use specs::hibitset::BitSet;
 
-use amethyst_core::{
-    ArcThreadPool,
-    ecs::prelude::*,
-    Time,
-};
+use amethyst_core::{ecs::prelude::*, ArcThreadPool, Time};
 use amethyst_error::{Error, ResultExt};
 
 #[cfg(feature = "profiler")]
@@ -503,7 +498,10 @@ impl<A: Asset> Drop for AssetStorage<A> {
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
-pub fn build_asset_processor_system<A>(_world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable>
+pub fn build_asset_processor_system<A>(
+    _world: &mut World,
+    resources: &mut Resources,
+) -> Box<dyn Schedulable>
 where
     A: Asset + ProcessableAsset,
 {

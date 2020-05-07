@@ -1,10 +1,10 @@
 //! ECS input bundle
 
-use crate::{BindingError, BindingTypes, Bindings, build_input_system};
+use crate::{build_input_system, BindingError, BindingTypes, Bindings};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
+    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
     ecs::prelude::*,
-    dispatcher::{SystemBundle, DispatcherBuilder, Stage},
 };
 use amethyst_error::Error;
 use derivative::Derivative;
