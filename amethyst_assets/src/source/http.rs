@@ -60,20 +60,27 @@ impl Source for HttpSource {
 
         // Synchronous GET request. Should only be run in web worker.
         xhr.open_with_async("GET", path_str, false)
-            .map_err(|_| format_err!("XmlHttpRequest open failed"))
+            .map_err(|e| format_err!("XmlHttpRequest open failed: `{:?}`", e))
             .with_context(|_| error::Error::Source)?;
         xhr.set_response_type(XmlHttpRequestResponseType::Arraybuffer);
 
         // We block here and wait for http fetch to complete
         xhr.send()
-            .map_err(|_| format_err!("XmlHttpRequest send failed"))
+            .map_err(|e| format_err!("XmlHttpRequest send failed: `{:?}`", e))
             .with_context(|_| error::Error::Source)?;
 
         // Status returns a result but according to javascript spec it should never return error.
         // Returns 0 if request was not completed.
-        let status = xhr.status().unwrap();
+        let status = xhr
+            .status()
+            .map_err(|e| format_err!("XmlHttpRequest `status` read failed: `{:?}`", e))
+            .with_context(|_| error::Error::Source)?;
+
         if status != 200 {
-            let msg = xhr.status_text().unwrap();
+            let msg = xhr
+                .status_text()
+                .map_err(|e| format_err!("XmlHttpRequest `status_text` read failed: `{:?}`", e))
+                .with_context(|_| error::Error::Source)?;
             return Err(format_err!(
                 "XmlHttpRequest failed with code {}. Error: {}",
                 status,
@@ -82,7 +89,10 @@ impl Source for HttpSource {
             .with_context(|_| error::Error::Source);
         }
 
-        let resp = xhr.response().unwrap();
+        let resp = xhr
+            .response()
+            .map_err(|e| format_err!("XmlHttpRequest `response` read failed: `{:?}`", e))
+            .with_context(|_| error::Error::Source)?;
 
         // Convert javascript ArrayBuffer into Vec<u8>
         let arr = Uint8Array::new(&resp);
