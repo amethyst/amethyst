@@ -85,11 +85,19 @@ where
     ((size + align - 1) / align) * align
 }
 
+type GraphicsShaderSet<'a, B> = (
+    pso::EntryPoint<'a, B>,
+    Option<pso::EntryPoint<'a, B>>,
+    Option<pso::EntryPoint<'a, B>>,
+    Option<pso::EntryPoint<'a, B>>,
+    Option<pso::EntryPoint<'a, B>>,
+);
+
 /// Helper function to create a `GraphicsShaderSet`
 pub fn simple_shader_set<'a, B: Backend>(
     vertex: &'a B::ShaderModule,
     fragment: Option<&'a B::ShaderModule>,
-) -> pso::GraphicsShaderSet<'a, B> {
+) -> GraphicsShaderSet<'a, B> {
     simple_shader_set_ext(vertex, fragment, None, None, None)
 }
 
@@ -100,7 +108,7 @@ pub fn simple_shader_set_ext<'a, B: Backend>(
     hull: Option<&'a B::ShaderModule>,
     domain: Option<&'a B::ShaderModule>,
     geometry: Option<&'a B::ShaderModule>,
-) -> pso::GraphicsShaderSet<'a, B> {
+) -> GraphicsShaderSet<'a, B> {
     fn map_entry_point<B: Backend>(module: &B::ShaderModule) -> pso::EntryPoint<'_, B> {
         pso::EntryPoint {
             entry: "main",
@@ -109,13 +117,13 @@ pub fn simple_shader_set_ext<'a, B: Backend>(
         }
     }
 
-    pso::GraphicsShaderSet {
-        vertex: map_entry_point(vertex),
-        fragment: fragment.map(map_entry_point),
-        hull: hull.map(map_entry_point),
-        domain: domain.map(map_entry_point),
-        geometry: geometry.map(map_entry_point),
-    }
+    (
+        map_entry_point(vertex),
+        fragment.map(map_entry_point),
+        hull.map(map_entry_point),
+        domain.map(map_entry_point),
+        geometry.map(map_entry_point),
+    )
 }
 
 /// Helper function which takes an array of vertex format information and returns allocated

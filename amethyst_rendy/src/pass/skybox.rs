@@ -211,7 +211,7 @@ fn build_skybox_pipeline<B: Backend>(
         .with_pipeline(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(PosTex::vertex(), pso::VertexInputRate::Vertex)])
-                .with_shaders(util::simple_shader_set(
+                .with_shaders(util::simple_shader_set::<B>(
                     &shader_vertex,
                     Some(&shader_fragment),
                 ))
