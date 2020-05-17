@@ -43,10 +43,11 @@ web-sys = { version = "0.3.36" }
 rayon = "1.3.0"
 more-asserts = "0.2.1"
 criterion = "0.3.0"
-winit = { version = "0.22.0", git = "https://github.com/amethyst/winit.git", branch = "wasm" }
+winit = { version = "0.22.2" }
 approx = "0.3"
 
 [features]
+default = ["gl", "window"]
 gl = ["rendy/gl"]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
