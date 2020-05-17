@@ -2,8 +2,6 @@
 
 use amethyst_input::is_close_requested;
 
-use derivative::Derivative;
-
 use crate::{ecs::World, GameData, StateEvent};
 
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
@@ -363,12 +361,17 @@ impl<T: SimpleState> State<GameData<'static, 'static>, StateEvent> for T {
 }
 
 /// A simple stack-based state machine (pushdown automaton).
-#[derive(Derivative)]
-#[derivative(Debug)]
 pub struct StateMachine<'a, T, E> {
     running: bool,
-    #[derivative(Debug = "ignore")]
     state_stack: Vec<Box<dyn State<T, E> + 'a>>,
+}
+
+impl<'a, T, E> Debug for StateMachine<'a, T, E> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.debug_struct("StateMachine")
+            .field("running", &self.running)
+            .finish()
+    }
 }
 
 impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
