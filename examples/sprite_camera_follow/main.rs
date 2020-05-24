@@ -205,7 +205,7 @@ fn main() -> amethyst::Result<()> {
         .start();
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/assets");
+    let assets_directory = app_root.join("examples/sprite_camera_follow/assets");
     let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
 
     let game_data = GameDataBuilder::default()

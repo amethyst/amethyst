@@ -55,7 +55,7 @@ impl<'a> SimpleState for StateB<'a> {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/state_dispatcher/assets");
     let mut game = Application::build(assets_dir, StateA)?.build(GameDataBuilder::default())?;
     game.run();
     Ok(())
