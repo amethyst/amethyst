@@ -2,4 +2,4 @@
 
 Showcases the `amethyst_tiles` crate.
 
-![tiles example screenshot](../assets/img/tiles.png)
+![tiles example screenshot](./screenshot.png)
