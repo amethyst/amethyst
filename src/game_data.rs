@@ -458,10 +458,10 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     //         self.with_bundle(RenderBundle::new(pipe, Some(config)))
     //     }
     // }
-}
 
-impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
-    fn build(self, mut world: &mut World) -> GameData<'a, 'b> {
+    /// Instead of using `DataInit` for constructing `GameData`, build a standalone `Dispatcher`,
+    /// which will be the same dispatcher that would have been created for the `GameData`.
+    pub fn build_dispatcher(self, mut world: &mut World) -> Dispatcher<'a, 'b> {
         #[cfg(not(no_threading))]
         let pool = (*world.read_resource::<ArcThreadPool>()).clone();
 
@@ -479,7 +479,14 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
         #[cfg(no_threading)]
         let mut dispatcher = dispatcher_builder.build();
         dispatcher.setup(&mut world);
-        GameData::new(dispatcher)
+
+        dispatcher
+    }
+}
+
+impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
+    fn build(self, world: &mut World) -> GameData<'a, 'b> {
+        GameData::new(self.build_dispatcher(world))
     }
 }
 
