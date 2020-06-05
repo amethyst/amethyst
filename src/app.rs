@@ -72,9 +72,10 @@ where
 ///
 /// # Logging
 ///
-/// Amethyst performs logging internally using the [log] crate. By default, `Application` will
-/// initialize a global logger that simply sends logs to the console. You can take advantage of
-/// this and use the logging macros in `log` once you've created your `Application` instance:
+/// Amethyst performs logging internally using the [log] crate. By default, `CoreApplication`
+/// will initialize a global logger that simply sends logs to the console.
+/// You can take advantage of this and use the logging macros in `log` once
+/// you've created your `CoreApplication` instance:
 ///
 /// ```
 /// use amethyst::prelude::*;
@@ -136,11 +137,11 @@ where
     T: DataDispose + 'static,
     E: Clone + Send + Sync + 'static,
 {
-    /// Creates a new Application with the given initial game state.
+    /// Creates a new CoreApplication with the given initial game state.
     /// This will create and allocate all the needed resources for
     /// the event loop of the game engine. It is a shortcut for convenience
     /// if you need more control over how the engine is configured you should
-    /// be using [build](struct.Application.html#method.build) instead.
+    /// be using [build](struct.CoreApplication.html#method.build) instead.
     ///
     /// # Parameters
     ///
@@ -151,8 +152,8 @@ where
     ///
     /// # Returns
     ///
-    /// Returns a `Result` type wrapping the `Application` type. See
-    /// [errors](struct.Application.html#errors) for a full list of
+    /// Returns a `Result` type wrapping the `CoreApplication` type. See
+    /// [errors](struct.CoreApplication.html#errors) for a full list of
     /// possible errors that can happen in the creation of a Application object.
     ///
     /// # Type Parameters
@@ -166,7 +167,7 @@ where
     ///
     /// - `a`: The lifetime of the `State` objects.
     /// - `b`: This lifetime is inherited from `specs` and `shred`, it is
-    ///        the minimum lifetime of the systems used by `Application`
+    ///        the minimum lifetime of the systems used by `CoreApplication`
     ///
     /// # Errors
     ///
@@ -222,7 +223,7 @@ where
     /// # Examples
     ///
     /// See the example supplied in the
-    /// [`new`](struct.Application.html#examples) method.
+    /// [`new`](struct.CoreApplication.html#examples) method.
     pub fn run(&mut self)
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -406,9 +407,9 @@ where
 }
 
 /// `ApplicationBuilder` is an interface that allows for creation of an
-/// [`Application`](struct.Application.html)
+/// [`CoreApplication`](struct.CoreApplication.html)
 /// using a custom set of configuration. This is the normal way an
-/// [`Application`](struct.Application.html)
+/// [`CoreApplication`](struct.CoreApplication.html)
 /// object is created.
 #[allow(missing_debug_implementations)]
 pub struct ApplicationBuilder<S, T, E, R> {
@@ -435,8 +436,8 @@ where
     ///
     /// # Returns
     ///
-    /// Returns a `Result` type wrapping the `Application` type. See
-    /// [errors](struct.Application.html#errors) for a full list of
+    /// Returns a `Result` type wrapping the `CoreApplication` type. See
+    /// [errors](struct.CoreApplication.html#errors) for a full list of
     /// possible errors that can happen in the creation of a Application object.
     ///
     /// # Type parameters
@@ -448,11 +449,11 @@ where
     ///
     /// - `a`: The lifetime of the `State` objects.
     /// - `b`: This lifetime is inherited from `specs` and `shred`, it is
-    ///        the minimum lifetime of the systems used by `Application`
+    ///        the minimum lifetime of the systems used by `CoreApplication`
     ///
     /// # Errors
     ///
-    /// Application will return an error if the internal threadpool fails
+    /// CoreApplication will return an error if the internal threadpool fails
     /// to initialize correctly because of systems resource limitations
     ///
     /// # Examples

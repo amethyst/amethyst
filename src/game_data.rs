@@ -204,7 +204,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
 
     /// Adds a system descriptor.
     ///
-    /// This differs from the [`with`] System call by deferring instantiation of the `System` to
+    /// This differs from the `with` System call by deferring instantiation of the `System` to
     /// when the dispatcher is built. This allows system instatiation to access resources in the
     /// `World` if necessary.
     ///
