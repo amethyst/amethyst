@@ -428,7 +428,7 @@ mod tests {
 
         let center_screen = Point2::new(diagonal.x / 2.0, diagonal.y / 2.0);
         let top_left = Point2::new(0.0, 0.0);
-        let bottom_right = Point2::new(diagonal.x - 1.0, diagonal.y - 1.0);
+        let bottom_right = Point2::new(diagonal.x, diagonal.y);
 
         let top_left_world = Point3::new(-diagonal.x / 2.0, diagonal.y / 2.0, -0.1);
         let bottom_right_world = Point3::new(diagonal.x / 2.0, -diagonal.y / 2.0, -0.1);
