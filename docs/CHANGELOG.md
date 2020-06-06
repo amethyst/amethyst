@@ -23,12 +23,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Corrected an issue where fixed updates were tied to time scale. ([#2254])
 - Fixed asset handle reuse bug in renderer. ([#2258])
+- Fixed UiButtonBuilder incorrect UiImage creation ([#2299])
 
 [#2294]: https://github.com/amethyst/amethyst/pull/2294
 [#2254]: https://github.com/amethyst/amethyst/issues/2254
 [#2258]: https://github.com/amethyst/amethyst/pull/2258
 [#2264]: https://github.com/amethyst/amethyst/pull/2264
-
+[#2299]: https://github.com/amethyst/amethyst/pull/2299
 
 ## [0.15.0] - 2020-03-24
 
