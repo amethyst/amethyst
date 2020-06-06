@@ -1,6 +1,6 @@
 use smallvec::{smallvec, SmallVec};
 
-use amethyst_assets::{AssetStorage, Handle, Loader};
+use amethyst_assets::{AssetStorage, Loader};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
     ecs::{
@@ -36,7 +36,7 @@ pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I:
     texture_asset: Read<'a, AssetStorage<Texture>>,
     loader: ReadExpect<'a, Loader>,
     entities: Entities<'a>,
-    image: WriteStorage<'a, Handle<Texture>>,
+    image: WriteStorage<'a, UiImage>,
     mouse_reactive: WriteStorage<'a, Interactable>,
     parent: WriteStorage<'a, Parent>,
     text: WriteStorage<'a, UiText>,
@@ -63,7 +63,7 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
-    image: Option<Handle<Texture>>,
+    image: Option<UiImage>,
     parent: Option<Entity>,
     on_click_start_sound: Option<UiPlaySoundAction>,
     on_click_stop_sound: Option<UiPlaySoundAction>,
@@ -159,7 +159,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Replace the default Handle<Texture> with `image`.
-    pub fn with_image(mut self, image: Handle<Texture>) -> Self {
+    pub fn with_image(mut self, image: UiImage) -> Self {
         self.image = Some(image);
         self
     }
@@ -340,22 +340,24 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         res.selectables
             .insert(image_entity, Selectable::<G>::new(self.tab_order))
             .expect("Unreachable: Inserting newly created entity");
-        let image_handle = self.image.unwrap_or_else(|| {
-            res.loader.load_from_data(
-                load_from_srgba(Srgba::new(
-                    DEFAULT_BKGD_COLOR[0],
-                    DEFAULT_BKGD_COLOR[1],
-                    DEFAULT_BKGD_COLOR[2],
-                    DEFAULT_BKGD_COLOR[3],
-                ))
-                .into(),
-                (),
-                &res.texture_asset,
+        let image = self.image.unwrap_or_else(|| {
+            UiImage::Texture(
+                res.loader.load_from_data(
+                    load_from_srgba(Srgba::new(
+                        DEFAULT_BKGD_COLOR[0],
+                        DEFAULT_BKGD_COLOR[1],
+                        DEFAULT_BKGD_COLOR[2],
+                        DEFAULT_BKGD_COLOR[3],
+                    ))
+                    .into(),
+                    (),
+                    &res.texture_asset,
+                ),
             )
         });
 
         res.image
-            .insert(image_entity, image_handle)
+            .insert(image_entity, image)
             .expect("Unreachable: Inserting newly created entity");
         res.mouse_reactive
             .insert(image_entity, Interactable)
