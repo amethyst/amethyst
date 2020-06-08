@@ -63,7 +63,7 @@ where
 {
     /// Asset is not fully loaded yet, need to wait longer
     Loading(A::Data),
-    /// Asset have finished loading, can now be inserted into storage and tracker notified
+    /// Asset has finished loading, can now be inserted into storage and tracker notified
     Loaded(A),
 }
 
@@ -148,7 +148,7 @@ impl<A: Asset> AssetStorage<A> {
         }
     }
 
-    /// Get an asset by it's handle id.
+    /// Get an asset by its handle id.
     pub fn get_by_id(&self, id: u32) -> Option<&A> {
         if self.bitset.contains(id) {
             Some(unsafe { &self.assets.get(id).0 })
@@ -196,7 +196,7 @@ impl<A: Asset> AssetStorage<A> {
         self.bitset.contains(id)
     }
 
-    /// Get an asset by it's handle id without checking the internal bitset.
+    /// Get an asset by its handle id without checking the internal bitset.
     /// Use `contains_id` to manually check it's status before access.
     ///
     /// # Safety
