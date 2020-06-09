@@ -113,6 +113,43 @@ impl<'a> GameDataBuilder<'a> {
 }
 
 impl<'a> DataInit<GameData> for GameDataBuilder<'a> {
+    // /// Create a basic renderer with a single given `Pass`, and optional support for the `DrawUi` pass.
+    // ///
+    // /// Will set the clear color to black.
+    // ///
+    // /// ### Parameters:
+    // ///
+    // /// - `path`: Path to the `DisplayConfig` configuration file
+    // /// - `pass`: The single pass in the render graph
+    // /// - `with_ui`: If set to true, will add the UI render pass
+    // pub fn with_basic_renderer<A, P>(self, path: A, pass: P, with_ui: bool) -> Result<Self, Error>
+    // where
+    //     A: AsRef<Path>,
+    //     P: Pass + 'b,
+    // {
+    //     use crate::{
+    //         config::Config,
+    //         renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
+    //         ui::DrawUi,
+    //     };
+    //     let config = DisplayConfig::load(path);
+    //     if with_ui {
+    //         let pipe = Pipeline::build().with_stage(
+    //             Stage::with_backbuffer()
+    //                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+    //                 .with_pass(pass)
+    //                 .with_pass(DrawUi::new()),
+    //         );
+    //         self.with_bundle(RenderBundle::new(pipe, Some(config)))
+    //     } else {
+    //         let pipe = Pipeline::build().with_stage(
+    //             Stage::with_backbuffer()
+    //                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+    //                 .with_pass(pass),
+    //         );
+    //         self.with_bundle(RenderBundle::new(pipe, Some(config)))
+    //     }
+    // }
     fn build(self, world: &mut World, resources: &mut Resources) -> GameData {
         #[cfg(not(no_threading))]
         let pool = (*resources.get::<ArcThreadPool>().unwrap()).clone();

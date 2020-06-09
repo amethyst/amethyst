@@ -225,7 +225,7 @@ impl<'s> System<'s> for MapMovementSystem {
     type SystemData = (
         Read<'s, Time>,
         WriteStorage<'s, Transform>,
-        ReadStorage<'s, TileMap<ExampleTile>>,
+        ReadStorage<'s, TileMap<ExampleTile, MortonEncoder>>,
         Read<'s, InputHandler<StringBindings>>,
     );
 
