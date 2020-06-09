@@ -51,5 +51,6 @@ cargo run --example {{name}} --features "{{backend}}"
    4. [Sprite Camera Follow](sprite_camera_follow)
    5. [Locale](locale)
    6. [Tiles](tiles)
+   7. [Optional graphics](optional_graphics)
 8. Games
    1. [Pong](pong)

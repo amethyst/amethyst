@@ -30,9 +30,9 @@ legion = { git = "https://github.com/TomGillen/legion" }
 legion_transform = { git = "https://github.com/chemicstry/legion_transform" }
 getset = "0.0.9"
 derive-new = "0.5.8"
-derivative = "1.0.3"
 shrinkwraprs = "0.2"
 shrev = "1.1"
+derivative = "2.1.1"
 
 thread_profiler = { version = "0.3", optional = true }
 
