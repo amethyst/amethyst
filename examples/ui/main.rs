@@ -15,7 +15,9 @@ use amethyst::{
         RenderingBundle,
     },
     shrev::{EventChannel, ReaderId},
-    ui::{RenderUi, UiBundle, UiCreator, UiEvent, UiFinder, UiText},
+    ui::{
+        Anchor, RenderUi, UiBundle, UiButtonBuilder, UiCreator, UiEvent, UiFinder, UiImage, UiText,
+    },
     utils::{
         application_root_dir,
         fps_counter::{FpsCounter, FpsCounterBundle},
@@ -36,6 +38,18 @@ struct Example {
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { mut world, .. } = data;
+
+        // Make a button using the UiButtonBuilder.
+        let (_button_id, _label) =
+            UiButtonBuilder::<(), u32>::new("Made with UiButtonBuilder".to_string())
+                .with_font_size(32.0)
+                .with_position(0.0, -256.0)
+                .with_size(64.0 * 6.0, 64.0)
+                .with_anchor(Anchor::TopMiddle)
+                .with_image(UiImage::SolidColor([0.8, 0.6, 0.3, 1.0]))
+                .with_hover_image(UiImage::SolidColor([0.1, 0.1, 0.1, 0.5]))
+                .build_from_world(&world);
+
         // Initialise the scene with an object, a light and a camera.
         let handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, ())
