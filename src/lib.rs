@@ -69,7 +69,7 @@ pub use amethyst_assets as assets;
 #[cfg(feature = "audio")]
 pub use amethyst_audio as audio;
 pub use amethyst_config as config;
-//pub use amethyst_controls as controls;
+pub use amethyst_controls as controls;
 pub use amethyst_core as core;
 pub use amethyst_derive as derive;
 pub use amethyst_error as error;
@@ -84,7 +84,7 @@ pub use amethyst_network as network;
 pub use amethyst_rendy as renderer;
 #[cfg(feature = "tiles")]
 pub use amethyst_tiles as tiles;
-//pub use amethyst_ui as ui;
+pub use amethyst_ui as ui;
 pub use amethyst_utils as utils;
 pub use amethyst_window as window;
 pub use winit;
