@@ -408,9 +408,9 @@ impl SimpleState for Example {
 }
 
 fn main() -> amethyst::Result<()> {
-    amethyst::Logger::from_config(Default::default())
-        .level_for("amethyst_tiles", log::LevelFilter::Warn)
-        .start();
+    // amethyst::Logger::from_config(Default::default())
+    //     .level_for("amethyst_tiles", log::LevelFilter::Warn)
+    //     .start();
 
     let app_root = application_root_dir()?;
     let assets_directory = app_root.join("examples/assets");
