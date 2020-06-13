@@ -22,7 +22,7 @@ fn main() -> amethyst::Result<()> {
 
     // This line is not mentioned in the pong tutorial as it is specific to the context
     // of the git repository. It only is a different location to load the assets from.
-    let assets_dir = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/pong_tutorial_01/assets/");
 
     let game_data = GameDataBuilder::default().with_bundle(
         RenderingBundle::<DefaultBackend>::new()
