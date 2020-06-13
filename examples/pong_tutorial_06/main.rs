@@ -47,17 +47,17 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/pong/config/display.ron");
+    let display_config_path = app_root.join("examples/pong_tutorial_06/config/display.ron");
 
     let key_bindings_path = {
         if cfg!(feature = "sdl_controller") {
-            app_root.join("examples/pong/config/input_controller.ron")
+            app_root.join("examples/pong_tutorial_06/config/input_controller.ron")
         } else {
-            app_root.join("examples/pong/config/input.ron")
+            app_root.join("examples/pong_tutorial_06/config/input.ron")
         }
     };
 
-    let assets_dir = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/pong_tutorial_06/assets/");
 
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
