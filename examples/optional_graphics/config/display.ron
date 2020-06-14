@@ -4,6 +4,6 @@
 */
 
 (
-  title: "Windowing example",
+  title: "Optional graphics example",
   icon: Some("examples/window/assets/logo.png"),
 )
