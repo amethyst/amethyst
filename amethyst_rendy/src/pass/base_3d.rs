@@ -743,7 +743,7 @@ fn build_pipelines<B: Backend, T: Base3DPassDef>(
         .with_framebuffer_size(framebuffer_width, framebuffer_height)
         .with_face_culling(pso::Face::BACK)
         .with_depth_test(pso::DepthTest {
-            fun: pso::Comparison::Less,
+            fun: pso::Comparison::Greater,
             write: !transparent,
         })
         .with_blend_targets(vec![pso::ColorBlendDesc {

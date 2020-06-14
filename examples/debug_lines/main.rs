@@ -12,7 +12,7 @@ use amethyst::{
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        camera::{Camera, Projection},
+        camera::Camera,
         debug_drawing::{DebugLines, DebugLinesComponent, DebugLinesParams},
         palette::Srgba,
         plugins::{RenderDebugLines, RenderSkybox, RenderToWindow},
@@ -137,12 +137,11 @@ impl SimpleState for ExampleState {
         data.world
             .create_entity()
             .with(FlyControlTag)
-            .with(Camera::from(Projection::perspective(
+            .with(Camera::perspective(
                 1.33333,
                 std::f32::consts::FRAC_PI_2,
                 0.1,
-                1000.0,
-            )))
+            ))
             .with(local_transform)
             .build();
     }

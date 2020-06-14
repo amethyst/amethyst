@@ -8,7 +8,7 @@ Let's get started by creating an `audio` subdirectory under `assets`. Then downl
 
 Next, we'll create a Resource to store our sound effects in. In `main.rs`, add:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
 mod audio;
 ```
 
