@@ -58,7 +58,7 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let assets_dir = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/fly_camera/assets");
 
     let display_config_path = app_root.join("examples/fly_camera/config/display.ron");
 
