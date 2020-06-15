@@ -180,7 +180,7 @@ fn main() -> Result<(), amethyst::Error> {
     let app_root = application_root_dir()?;
 
     let display_config_path = app_root.join("examples/gltf/config/display.ron");
-    let assets_dir = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/gltf/assets/");
 
     let game_data = GameDataBuilder::default()
         .with(AutoFovSystem::default(), "auto_fov", &[])

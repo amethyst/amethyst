@@ -4,6 +4,6 @@ Showcases the using a custom shader, pipeline, and renderer to display triangles
 
 Input:
 
-* `Mouse Wheel' - Changes the scaling of the triangle.
+* `Mouse Wheel` - Changes the scaling of the triangles.
 
-![rendy example screenshot](../assets/img/custom_render_pass.png)
+![custom render pass example screenshot](./screenshot.png)

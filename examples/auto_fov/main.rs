@@ -39,7 +39,7 @@ fn main() -> Result<(), Error> {
 
     let app_dir = amethyst::utils::application_dir("examples")?;
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
-    let assets_dir = app_dir.join("assets");
+    let assets_dir = app_dir.join("auto_fov/assets");
 
     let game_data = GameDataBuilder::new()
         .with_system_desc(

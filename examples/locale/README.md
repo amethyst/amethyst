@@ -1,6 +1,6 @@
 ## Locale
 
-Shows basic localization for strings used in a game. Prints the following:
+Shows basic localization for strings used in a game. Prints a greeting and parting phrase first in English, and then in French.
 
 ```
 Hello, world!

@@ -170,7 +170,7 @@ fn main() -> amethyst::Result<()> {
 
     let display_config_path = app_root.join("examples/debug_lines/config/display.ron");
     let key_bindings_path = app_root.join("examples/debug_lines/config/input.ron");
-    let assets_dir = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/debug_lines/assets/");
 
     let fly_control_bundle = FlyControlBundle::<StringBindings>::new(
         Some(String::from("move_x")),

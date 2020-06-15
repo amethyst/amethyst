@@ -1,4 +1,4 @@
-//! Demonstrates how to use the fly camera
+//! Demonstrates the arc ball camera
 
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
@@ -99,7 +99,7 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let assets_dir = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/arc_ball_camera/assets");
     let display_config_path = app_root.join("examples/arc_ball_camera/config/display.ron");
 
     let key_bindings_path = app_root.join("examples/arc_ball_camera/config/input.ron");

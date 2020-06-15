@@ -1,5 +1,5 @@
 ## Auto FOV
 
-Adjusts FOV based on render resolution.
+Adjusts the field-of-view automatically when the screen is resized .
 
-![Fly Camera example screenshot](../assets/img/auto-fov.png)
+![auto fov example screenshot](./screenshot.png)

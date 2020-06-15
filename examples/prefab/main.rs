@@ -34,7 +34,7 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/prefab/assets");
 
     let display_config_path = app_root.join("examples/prefab/config/display.ron");
 

@@ -17,7 +17,7 @@ use log::{error, info};
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-    let assets_dir = application_root_dir()?.join("./");
+    let assets_dir = application_root_dir()?.join("examples/net_client/");
 
     //    // UDP
     //    let socket = UdpSocket::bind("0.0.0.0:3455")?;
