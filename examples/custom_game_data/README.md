@@ -7,4 +7,4 @@ Keybindings:
 * `Space` - Toggle the `Pause` state
 * `Esc` - Quit
 
-![game data example screenshot](./screenshot.png)
+![custom game data example screenshot](./screenshot.png)
