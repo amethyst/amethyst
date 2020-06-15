@@ -4,9 +4,10 @@ use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy, prelude::*, utils::application_root_dir,
 };
 
-use crate::event::MyExtendedStateEvent;
-use crate::event::MyExtendedStateEventReader;
-use crate::state::GameplayState;
+use crate::{
+    event::{MyExtendedStateEvent, MyExtendedStateEventReader},
+    state::GameplayState,
+};
 
 mod event;
 mod state;
