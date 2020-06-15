@@ -1,0 +1,146 @@
+#![enable(implicit_some)]
+/*!
+    @import /amethyst_assets/src/prefab/mod.rs#Prefab
+    @import ../../auto_fov/main.rs#ScenePrefab
+    Prefab<ScenePrefab>
+*/
+
+Prefab (
+    entities: [
+        (
+            data: (
+                light: (ambient_color: ((0.01, 0.01, 0.01, 1.0))),
+            ),
+        ),
+        (
+            data: (
+                graphics: (
+                    mesh: Asset(File("mesh/lid.obj", ("OBJ", ()))),
+                    material: (
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0,)),
+                    ),
+                ),
+                transform: (
+                    translation: (5.0, 5.0, 0.0),
+                    rotation: (0.5, -0.5, -0.5, 0.5),
+                ),
+            ),
+        ),
+        (
+            data: (
+                graphics: (
+                    mesh: Asset(File("mesh/teapot.obj", ("OBJ", ()))),
+                    material: (
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0,)),
+                    ),
+                ),
+                transform: (
+                    translation: (5.0, 5.0, 0.0),
+                    rotation: (0.5, -0.5, -0.5, 0.5),
+                ),
+            ),
+        ),
+        (
+            data: (
+                graphics: (
+                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ()))),
+                    material: (
+                        albedo: File("texture/logo.png", ("IMAGE", (channel: Srgb))),
+                    ),
+                ),
+                transform: (
+                    translation: (5.0, -5.0, 2.0),
+                    scale: (2.0, 2.0, 2.0),
+                ),
+            ),
+        ),
+        (
+            data: (
+                graphics: (
+                    mesh: Asset(File("mesh/cone.obj", ("OBJ", ()))),
+                    material: (
+                        albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0,)),
+                        //albedo: Data(Rgba((1.0, 1.0, 1.0, 1.0,), (channel: Srgb),)),
+                    ),
+                ),
+                transform: (
+                    translation: (-5.0, 5.0, 0.0),
+                    scale: (2.0, 2.0, 2.0),
+                    rotation: (0.0, 0.0, 1.0, 0.0),
+                ),
+            ),
+        ),
+        (
+            data: (
+                graphics: (
+                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ()))),
+                    material: (
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0,)),
+                        //albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb),)),
+                    ),
+                ),
+                transform: (
+                    translation: (-5.0, -5.0, 1.0),
+                    scale: (2.0, 2.0, 2.0),
+                ),
+            ),
+        ),
+        (
+            data: (
+                graphics: (
+                    mesh: Asset(File("mesh/rectangle.obj", ("OBJ", ()))),
+                    material: (
+                        albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0,)),
+                        //albedo: Data(Rgba((1.0, 1.0, 1.0, 1.0,), (channel: Srgb),)),
+                    ),
+                ),
+                transform: (
+                    scale: (10.0, 10.0, 10.0),
+                    rotation: (0.0, 0.0, 1.0, 0.0),
+                ),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (1.0, 1.0, 6.0),
+                ),
+                light: (
+                    light: Point((
+                        intensity: 50.0,
+                        color: (1.0, 1.0, 1.0),
+                    )),
+                ),
+            ),
+        ),
+        (
+            data: (
+                light: (
+                    light: Directional((
+                        color: (0.2, 0.2, 0.2),
+                        //direction: (-1.0, -1.0, -1.0),
+                    )),
+                ),
+            ),
+        ),
+        (
+            data: (
+                transform: Transform (
+                    translation: (0.0, -20.0, 10.0),
+                    rotation: (0.6087614, 0.0, 0.0, 0.7933533),
+                ),
+                camera: Perspective(
+                    aspect: 1.3,
+                    fovy: 1.0471975512,
+                    znear: 0.1,
+                    zfar: 2000.0,
+                ),
+                auto_fov: (
+                    base_fovx: 1.361356817,
+                    base_aspect_ratio: (13, 10),
+                ),
+                show_fov_tag: (),
+            ),
+        ),
+    ],
+)

@@ -1,0 +1,69 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "fov_container",
+        anchor: TopLeft,
+        x: 370.0,
+        y: -80.0,
+        width: 350.0,
+        height: 80.0,
+        transparent: true,
+    ),
+    background: None,
+    children: [
+        Label(
+            transform: (
+                id: "screen_aspect",
+                anchor: TopLeft,
+                x: 0.0,
+                y: 0.0,
+                width: 350.0,
+                height: 25.0,
+                transparent: true,
+            ),
+            text: (
+                text: "Screen Aspect Ratio: N/A",
+                align: MiddleLeft,
+                font_size: 25.0,
+                color: (1.0, 1.0, 1.0, 1.0),
+                font: File("font/square.ttf", ("TTF", ())),
+            ),
+        ),
+        Label(
+            transform: (
+                id: "camera_aspect",
+                anchor: MiddleLeft,
+                x: 0.0,
+                y: 0.0,
+                width: 350.0,
+                height: 25.0,
+                transparent: true,
+            ),
+            text: (
+                text: "Camera Aspect Ratio: N/A",
+                align: MiddleLeft,
+                font_size: 25.0,
+                color: (1.0, 1.0, 1.0, 1.0),
+                font: File("font/square.ttf", ("TTF", ())),
+            ),
+        ),
+        Label(
+            transform: (
+                id: "camera_fov",
+                anchor: BottomLeft,
+                x: 0.0,
+                y: 0.0,
+                width: 350.0,
+                height: 25.0,
+                transparent: true,
+            ),
+            text: (
+                text: "Camera Fov: N/A",
+                align: MiddleLeft,
+                font_size: 25.0,
+                color: (1.0, 1.0, 1.0, 1.0),
+                font: File("font/square.ttf", ("TTF", ())),
+            ),
+        ),
+    ],
+)
