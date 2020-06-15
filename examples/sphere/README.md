@@ -2,4 +2,4 @@
 
 Renders a basic sphere.
 
-![sphere example screenshot](../assets/img/sphere.png)
+![sphere example screenshot](./screenshot.png)
