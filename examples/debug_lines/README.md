@@ -1,5 +1,15 @@
 ## Debug Lines
 
-Renders debug lines with a 3D perspective. 
+Renders debug lines with a 3D perspective.
 
-![debug lines example screenshot](../assets/img/debug-lines.png)
+Keybindings:
+
+* `w` - Move forward
+* `a` - Move left
+* `s` - Move backwards
+* `d` - Move left
+* `e` - Move upwards
+* `q` - Move downwards
+* `mouse` - Rotate view
+
+![debug lines example screenshot](./screenshot.png)
