@@ -172,11 +172,6 @@ name = "renderable"
 path = "examples/renderable/main.rs"
 
 [[example]]
-name = "pong"
-path = "examples/pong/main.rs"
-required-features = ["audio"]
-
-[[example]]
 name = "asset_custom"
 path = "examples/asset_custom/main.rs"
 
@@ -253,6 +248,11 @@ required-features = ["audio"]
 [[example]]
 name = "pong_tutorial_05"
 path = "examples/pong_tutorial_05/main.rs"
+required-features = ["audio"]
+
+[[example]]
+name = "pong_tutorial_06"
+path = "examples/pong_tutorial_06/main.rs"
 required-features = ["audio"]
 
 [[example]]
