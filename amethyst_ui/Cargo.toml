@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_ui"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Jacob Kiesel <kieseljake@gmail.com>", "Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst UI crate"

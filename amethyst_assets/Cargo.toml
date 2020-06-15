@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_assets"
-version = "0.11.0"
+version = "0.11.1"
 authors = ["torkleyy <torkleyy@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 readme = "README.md"
 edition = "2018"

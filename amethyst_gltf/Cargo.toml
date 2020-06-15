@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_gltf"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Rhuagh <seamonr@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "GLTF asset loading"
