@@ -89,6 +89,7 @@ component to our button:
 
 ```rust 
 fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+	let world = data.world;	
 	let hiddens = world.write_storage::<Hidden>();
 	
 	if let Some(btn) = self.button {
@@ -101,6 +102,7 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 
 ```rust 
 fn on_resume(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+	let world = data.world; 	
 	let hiddens = world.write_storage::<Hidden>();
 	
 	if let Some(btn) = self.button {
