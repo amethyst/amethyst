@@ -2,7 +2,7 @@
 
 Now that we have a button we can interact with, let's see how we actually do this.
 We will show you how to do this in two ways. One way will be interaction through a system,
-and the latter interaction through `on_update` method of your active state.
+and the latter interaction through `handle_event` method of your active state.
 
 ## Creating the system
 
@@ -125,7 +125,17 @@ for which button the event is generated.
 We haven't performed any here since we only have one button, so all generated 
 events are tied to that button.
 
+---
+ 
+Basically you want all the magic happening in the systems, like fading
+effects, scaling effect and such. 
 
+In theory you could set up a connection between the system and the state
+like a resource, which will determine the change of the state.
+Eventhough possible, it is not recommended. That's why now 
+we will go through managing input through the state.
+
+---
 
 
 
