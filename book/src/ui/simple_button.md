@@ -23,16 +23,16 @@ You don't have to use all three at the same time of course but variations of two
 One way of defining a `UiTransform` is like so: 
 
 ```rust 
-let ui_transfrom = UiTransform {
-	id: String::from("simple_button"),
-	anchor: Anchor::Middle,
-	pivot: Anchor::Middle,
-	x: 0f32,
-	y: 0f32,
-	z: 0f32,
-	width: 100f32,
-	height: 30f32,
-};
+let ui_transfrom = UiTransform::new(
+    String::from("simple_button"), // id
+	Anchor::Middle, 			   // anchor 
+	Anchor::Middle, 			   // pivot 
+	0f32, 						   // x 
+	0f32, 						   // y 
+	0f32,						   // z 
+	100f32,						   // width
+	30f32, 						   // height
+);
 ```
 
 The `id` field of the transform is basically like the name. You can use this in combination with the
@@ -52,15 +52,12 @@ to set the area big enough for the text to fit in!
 ### Creating the `UiText` 
 
 ```rust
-let ui_text = UiText {
-    text: String::from("Simple Button"),
-    font_size: 25f32,
-    color: [1.0, 1.0, 1.0, 0.5],
-    font: Handle<Font>,
-    password: false,
-    line_mode: LineMode::Single,
-    align: Anchor::Middle,
-};
+let ui_text = UiText::new(
+	font_handle, 				   // font
+    String::from("Simple Button"), // text
+    font_size: 25f32, 			   // font_size
+    color: [1.0, 1.0, 1.0, 0.5],   // color
+);
 ```
 The `text` field of this struct is pretty self explanatory. It's what you would want to access if 
 you were to dynamically change the text on the screen through systems.
