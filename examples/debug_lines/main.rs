@@ -1,4 +1,7 @@
-//! Displays several lines with both methods.
+//! Displays dynamic and static debug lines via the resource and component
+//! methods respectively. A pendulum of sorts is drawn using the resource
+//! method, while a grid pattern is drawn on the floor using the component
+//! method.
 
 use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
@@ -33,7 +36,7 @@ impl<'s> System<'s> for ExampleLinesSystem {
     );
 
     fn run(&mut self, (mut debug_lines_resource, time): Self::SystemData) {
-        // Drawing debug lines, as a resource
+        // Drawing debug lines as a resource
         let t = (time.absolute_time_seconds() as f32).cos();
 
         debug_lines_resource.draw_direction(
@@ -58,18 +61,24 @@ impl SimpleState for ExampleState {
         // Configure width of lines. Optional step
         data.world.insert(DebugLinesParams { line_width: 2.0 });
 
-        // Setup debug lines as a component and add lines to render axis&grid
+        // Setup debug lines as a component and add lines to render axes & grid
         let mut debug_lines_component = DebugLinesComponent::with_capacity(100);
+
+        // X-axis (red)
         debug_lines_component.add_direction(
             [0.0, 0.0001, 0.0].into(),
             [0.2, 0.0, 0.0].into(),
             Srgba::new(1.0, 0.0, 0.23, 1.0),
         );
+
+        // Y-axis (yellowish-green)
         debug_lines_component.add_direction(
             [0.0, 0.0, 0.0].into(),
             [0.0, 0.2, 0.0].into(),
             Srgba::new(0.5, 0.85, 0.1, 1.0),
         );
+
+        // Z-axis (blue)
         debug_lines_component.add_direction(
             [0.0, 0.0001, 0.0].into(),
             [0.0, 0.0, 0.2].into(),
@@ -125,6 +134,9 @@ impl SimpleState for ExampleState {
                 }
             }
         }
+
+        // Debug lines are automatically rendered by including the debug lines
+        // rendering plugin
         data.world.register::<DebugLinesComponent>();
         data.world
             .create_entity()
