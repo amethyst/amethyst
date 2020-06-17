@@ -40,14 +40,14 @@ impl<'s> System<'s> for ExampleLinesSystem {
         let t = (time.absolute_time_seconds() as f32).cos();
 
         debug_lines_resource.draw_direction(
-            [t, 0.0, 0.5].into(),
-            [0.0, 0.3, 0.0].into(),
+            Point3::new(t, 0.0, 0.5),
+            Vector3::new(0.0, 0.3, 0.0),
             Srgba::new(0.5, 0.05, 0.65, 1.0),
         );
 
         debug_lines_resource.draw_line(
-            [t, 0.0, 0.5].into(),
-            [0.0, 0.0, 0.2].into(),
+            Point3::new(t, 0.0, 0.5),
+            Point3::new(0.0, 0.0, 0.2),
             Srgba::new(0.5, 0.05, 0.65, 1.0),
         );
     }
@@ -66,22 +66,22 @@ impl SimpleState for ExampleState {
 
         // X-axis (red)
         debug_lines_component.add_direction(
-            [0.0, 0.0001, 0.0].into(),
-            [0.2, 0.0, 0.0].into(),
+            Point3::new(0.0, 0.0001, 0.0),
+            Vector3::new(0.2, 0.0, 0.0),
             Srgba::new(1.0, 0.0, 0.23, 1.0),
         );
 
         // Y-axis (yellowish-green)
         debug_lines_component.add_direction(
-            [0.0, 0.0, 0.0].into(),
-            [0.0, 0.2, 0.0].into(),
+            Point3::new(0.0, 0.0, 0.0),
+            Vector3::new(0.0, 0.2, 0.0),
             Srgba::new(0.5, 0.85, 0.1, 1.0),
         );
 
         // Z-axis (blue)
         debug_lines_component.add_direction(
-            [0.0, 0.0001, 0.0].into(),
-            [0.0, 0.0, 0.2].into(),
+            Point3::new(0.0, 0.0001, 0.0),
+            Vector3::new(0.0, 0.0, 0.2),
             Srgba::new(0.2, 0.75, 0.93, 1.0),
         );
 
