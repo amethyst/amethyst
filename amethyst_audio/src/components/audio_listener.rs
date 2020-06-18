@@ -1,5 +1,4 @@
 use amethyst_core::{
-    ecs::{prelude::Component, storage::HashMapStorage},
     math::Point3,
 };
 
@@ -21,6 +20,3 @@ impl Default for AudioListener {
     }
 }
 
-impl Component for AudioListener {
-    type Storage = HashMapStorage<Self>;
-}
