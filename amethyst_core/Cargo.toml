@@ -27,7 +27,7 @@ rayon = "1.3.0"
 serde = { version = "1", features = ["derive"] }
 #legion = { version = "0.2.1" }
 legion = { git = "https://github.com/TomGillen/legion" }
-legion_transform = { git = "https://github.com/chemicstry/legion_transform" }
+legion_transform = { git = "https://github.com/jojolepro/legion_transform" }
 getset = "0.0.9"
 derive-new = "0.5.8"
 shrinkwraprs = "0.2"
