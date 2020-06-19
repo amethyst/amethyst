@@ -2,10 +2,12 @@
 
 Let's declare our state, and call it `MenuState`: 
 
-```rust
+```rust,edition2018,no_run,noplaypen
+# use amethyst::ecs::Entity;
+
 #[derive(Default)]
 pub sturct MenuState {
-	button: Option<Entity>,
+    button: Option<Entity>,
 }
 ```
 
@@ -19,7 +21,9 @@ It will also serve to hold our ui entitiy.
 In our `on_start` method of this state we can create the button as shown in
 previous chapters, but here we will save the entitiy in our struct: 
 
-```rust
+```rust,edition2018,no_run,noplaypen
+# use amethyst::ui::{UiTransform, UiText, Interactable};
+
 fn on_start(&mut self, data: StateData<()>) {
     let world = data.world; 
 
@@ -44,17 +48,19 @@ fn on_start(&mut self, data: StateData<()>) {
 All the input received will be handled in the [handle_event](https://docs.amethyst.rs/master/amethyst/trait.State.html#method.handle_event)
 method of our state: 
 
-```rust
+```rust,edition2018,no_run,noplaypen
+# use amethyst::{StateData, GameData, SimpleTrans};
+
 fn handle_event(
 	&mut self, 
 	_data: StateData<'_, GameData<'_, '_>>, 
 	event: StateEvent) -> SimpleTrans {
 	if let StateEvent::Ui(ui_event) = event {
 
-		let cond = ui_event.target == self.button.unwrap();
+		let is_target = ui_event.target == self.button.unwrap();
 
 		match ui_event.event_type {
-			UiEventType::Click if cond => { 
+			UiEventType::Click if is_target => { 
 				/* . . . */
 			},
 			_ => {
@@ -66,7 +72,7 @@ fn handle_event(
 	SimpleTrans::None
 }
 ```
-We only care about the `UiEvent`s here, that's why there's no match statment.
+We only care about the `UiEvent`s here, that's why we can use the `if-let` pattern.
 Then we check if the ui target is the same as our saved entity, in this case it
 surely is since we've only built one entity. After there's a check for click
 event and an additional if statment for our button entity. If it goes well it will
@@ -87,7 +93,9 @@ Upon pushing another state the `on_pause` method will run - here we can hide our
 The way we do that is by adding a [Hidden](https://docs.amethyst.rs/master/amethyst_core/struct.Hidden.html)
 component to our button:
 
-```rust 
+```rust,edition2018,no_run,noplaypen
+# use amethyst::core::Hidden;
+
 fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 	let world = data.world;	
 	let hiddens = world.write_storage::<Hidden>();
@@ -100,14 +108,17 @@ fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 
 The same goes for `on_resume` if we actually want to redisplay the button:
 
-```rust 
+```rust,edition2018,no_run,noplaypen
+# use amethyst::{StateData, GameData};
+# use amethyst::core::Hidden;
+
 fn on_resume(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-	let world = data.world; 	
-	let hiddens = world.write_storage::<Hidden>();
+    let world = data.world; 	
+    let hiddens = world.write_storage::<Hidden>();
 	
-	if let Some(btn) = self.button {
-		let _ = hiddens.remove(btn);
-	}
+    if let Some(btn) = self.button {
+        let _ = hiddens.remove(btn);
+    }
 }
 ```
 

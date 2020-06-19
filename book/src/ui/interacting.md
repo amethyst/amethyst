@@ -8,19 +8,23 @@ and the latter interaction through `handle_event` method of your active state.
 
 Let's start of with some boilerplate code: 
 
-```rust 
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::System;
+
 pub struct SimpleButtonSystem;
 
 impl System for SimpleButtonSystem {
-	type SystemData = ();
+    type SystemData = ();
 
-	fn run(&mut self, data: Self::SystemData) {
+    fn run(&mut self, data: Self::SystemData) {
 	
-	}
+    }
 }
 ```
 
-This was shown in previous chapters. The way you will be able to read the generated 
+This was shown in previous [chapters](../concepts/system/system_initialization.html).
+The way you will be able to read the generated 
 events is with a [ReaderId](https://docs.amethyst.rs/master/specs/prelude/struct.ReaderId.html).
 The `ReaderId` is added as a field to the system struct.
 
@@ -30,39 +34,50 @@ since the `ReaderId` actually pulls (reads) information  from the `EventChannel`
 
 Adding it up, it should look like this: 
 
-```rust
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::System;
+# use amethyst::shrev::ReaderId;
+# use amethyst::ui::UiEvent;
+
 pub struct SimpleButtonSystem {
-	reader_id: ReaderId<UiEvent>,
+    reader_id: ReaderId<UiEvent>,
 }
 
 impl<'s> System<'s> for SimpleButtonSystem {
-	type SystemData = Write<'s, EventChannel<UiEvent>>;
+    type SystemData = Write<'s, EventChannel<UiEvent>>;
 
-	fn run(&mut self, events: Self::SystemData) {
-	}
+    fn run(&mut self, events: Self::SystemData) {
+
+    }
 }
 ```
 
 We also need a constructor for our system:
 
-```rust
+```rust,edition2018,no_run,noplaypen
 impl SimpleButtonSystem {
-	pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
-		Self {
-			reader_id,	
-		}
-	}
+    pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
+        Self {
+            reader_id,	
+        }
+    }
 }
 ```
 
 To add the system to our game data we actually need a `SystemDesc` implementation for our system:
 
-```rust
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{ System, World, };
+# use amethyst::shrev::{EventChannel, ReaderId};
+# use amethyst::ui::UiEvent;
+
 pub struct SimpleButtonSystemDesc;
 
 impl<'a, 'b> SystemDesc<'a, 'b, SimpleButtonSystem> for SimpleButtonSystemDesc {
     fn build(self, world: &mut World) -> SimpleButtonSystem {
-        let mut event_channel = <Write<EventChannel<UiEvent>>>::fetch(world);
+        let mut event_channel = Write<EventChannel<UiEvent>>::fetch(world);
         let reader_id = event_channel.register_reader();
 
         SimpleButtonSystem::new(reader_id)
@@ -73,44 +88,44 @@ Now that this is done we can start reading our events!
 
 In our systems `run` method we are going to loop through all the events:
 
-```rust
+```rust,edition2018,no_run,noplaypen
 fn run(&mut self, events: Self::SystemData) {
-	for event in events.read(&mut self.reader_id) {
-		info!("{:?}", event);	
-	}
+    for event in events.read(&mut self.reader_id) {
+        info!("{:?}", event);	
+    }
 }
 ```
 
-Let's try and change the text color when the button recieves a hovered event!
+Let's try and change the text color when the button receives a hovered event!
 
 Firstly we need to fetch two more components that 
-we used for our entity - `UiTransfrom` and `UiText`.
+we used for our entity - `UiTransform` and `UiText`.
 
-```rust
+```rust,edition2018,no_run,noplaypen
 type SystemData: (
-	Write<'s, EventChannel<UiEvent>>,
-	ReadStorage<'s, UiTransfrom>,
-	WriteStorage<'s, UiText>,
+    Write<'s, EventChannel<UiEvent>>,
+    ReadStorage<'s, UiTransfrom>,
+    WriteStorage<'s, UiText>,
 );
 ```
 
 Usage of `WriteStorage<'s, UiText>` is needed since we will be changing 
 the color that is the property of the `UiText` component.
 
-```rust
+```rust,edition2018,no_run,noplaypen
 fn run(&mut self, (events, transforms, texts): Self::SystemData) {
     for event in events.read(&mut self.reader_id) {
-		let button_text = texts.get_mut(event.target).unwrap();
+        let button_text = texts.get_mut(event.target).unwrap();
 
         match event.event_type {
-			UiEventType::HoverStart => { 
-				button_text.color = [1.0, 1.0, 1.0, 1.0]; 
-			},
-			UiEventType::HoverStop  => { 
-				button_text.color = [1.0, 1.0, 1.0, 0.5]; 
-			},
-			_ => {},
-		}   
+            UiEventType::HoverStart => { 
+                button_text.color = [1.0, 1.0, 1.0, 1.0]; 
+            },
+            UiEventType::HoverStop  => { 
+                button_text.color = [1.0, 1.0, 1.0, 0.5]; 
+            },
+            _ => {},
+        }   
     }
 }
 ```
@@ -125,7 +140,6 @@ for which button the event is generated.
 We haven't performed any here since we only have one button, so all generated 
 events are tied to that button.
 
----
  
 Basically you want all the magic happening in the systems, like fading
 effects, scaling effect and such. 
@@ -134,8 +148,6 @@ In theory you could set up a connection between the system and the state
 like a resource, which will determine the change of the state.
 Eventhough possible, it is not recommended. That's why now 
 we will go through managing input through the state.
-
----
 
 
 

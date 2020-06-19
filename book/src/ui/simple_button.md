@@ -22,21 +22,23 @@ You don't have to use all three at the same time of course but variations of two
 
 One way of defining a `UiTransform` is like so: 
 
-```rust 
+```rust,edition2018,no_run,noplaypen
+# use amethyst::ui::UiTransform;
+
 let ui_transfrom = UiTransform::new(
     String::from("simple_button"), // id
-	Anchor::Middle, 			   // anchor 
-	Anchor::Middle, 			   // pivot 
-	0f32, 						   // x 
-	0f32, 						   // y 
-	0f32,						   // z 
-	100f32,						   // width
-	30f32, 						   // height
+    Anchor::Middle,                // anchor
+    Anchor::Middle,				   // pivot
+    0f32, 						   // x
+    0f32, 						   // y
+    0f32,						   // z
+    100f32,						   // width
+    30f32, 						   // height
 );
 ```
 
 The `id` field of the transform is basically like the name. You can use this in combination with the
-[UiFinder](https://docs.amethyst.rs/master/amethyst_ui/struct.UiFinder.html) to fetch the transfroms through the systems.
+[UiFinder](https://docs.amethyst.rs/master/amethyst_ui/struct.UiFinder.html) to fetch the transfrom through a system.
 
 Assuming the entity has no parent, whatever is set as the `anchor` field will be placed relative to the screen. In our case
 we set it to `Anchor::Middle` and it will be drawn in the middle of the screen. The `pivot` field will center the widget
@@ -51,12 +53,14 @@ to set the area big enough for the text to fit in!
 
 ### Creating the `UiText` 
 
-```rust
+```rust,edition2018,no_run,noplaypen
+# use amethyst::ui::UiText;
+
 let ui_text = UiText::new(
-	font_handle, 				   // font
+    font_handle, 				   // font
     String::from("Simple Button"), // text
-    font_size: 25f32, 			   // font_size
-    color: [1.0, 1.0, 1.0, 0.5],   // color
+    25f32, 			   			   // font_size
+    [1.0, 1.0, 1.0, 0.5],          // color
 );
 ```
 The `text` field of this struct is pretty self explanatory. It's what you would want to access if 
@@ -64,25 +68,28 @@ you were to dynamically change the text on the screen through systems.
 
 You also need to load a specific font handle and provide it for the text.
 
+If you had some state implemented you can create the button on its `on_start` method: 
 
-If you had some state implemented you can create the button on it's `on_start` method: 
+```rust,edition2018,no_run,noplaypen
+# use amethyst::ui::{
+#     UiText, UiTransform,
+# };
+# use amethyst::ecs::World;
 
-
-```rust 
 fn on_start(&mut self, data: StateData<()>) {
-	let world = data.world; 
+    let world = data.world; 
 
-	/* Create the transform */ 
-	let ui_transform = UiTransform { . . . };
-	
-	/* Create the text */
-	let ui_text = UiText { . . . };
+    /* Create the transform */ 
+    let ui_transform = UiTransform { . . . };
 
-	/* Building the entity */
-	let _ = world.create_entity()
-		.with(ui_transform)
-		.with(ui_text)
-		.build();
+    /* Create the text */
+    let ui_text = UiText { . . . };
+
+    /* Building the entity */
+    let _ = world.create_entity()
+        .with(ui_transform)
+        .with(ui_text)
+        .build();
 }
 ```
 
@@ -102,10 +109,15 @@ have a `UiTransform` component!
 
 The code snippet would look like this now: 
 
-```rust
+```rust,edition2018,no_run,noplaypen
+# use amethyst::ui::{
+#     UiText, UiTransform, Interactable,
+# };
+# use amethyst::ecs::World;
+
 let _ = world.create_entity()
     .with(ui_transform)
     .with(ui_text)
-	.with(Interactable)    
-	.build();
+    .with(Interactable)    
+    .build();
 ```

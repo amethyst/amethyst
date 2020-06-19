@@ -1,11 +1,13 @@
 # Introduction 
 
-The most usuall way to have your players interact with your game is through your user interface or UI.
-The UI includes all kinds of widgets from images, buttons, progress bars, text, sliders, popup menus, etc.
+The most usual way to have your players interact with your game is through your user interface or UI.
+In general UI includes all kinds of widgets from images, buttons, progress bars, text, sliders, popup menus, etc.
 
 The API in Amethyst was designed more to provide users with building blocks for the UI and without 
 a specific layout system. The reason is that you don't often see, if any, layout systems 
-used in games, although are very popular GUI frameworks.
+used in games, although are very popular GUI frameworks. 
+
+Please note that not all forementinoted widgets exist in Amethyst yet.
 
 ## Setting up the UI
 
@@ -15,7 +17,7 @@ is that you want to add the [InputBundle](https://docs.amethyst.rs/master/amethy
 **before** the `UiBundle`,
 otherwise the application will panic, since it is a dependency for the `UiBundle`!
 
-Now you are able to create your widgets! Unfortunatelly you won't be able to see them. That's why you also need 
+Now you are able to create your widgets! Unfortunately you won't be able to see them. That's why you also need 
 to add a plugin to your rendering bundle called [RenderUi](https://docs.amethyst.rs/master/amethyst_ui/struct.RenderUi.html) in order
 to draw these widgets.
 
