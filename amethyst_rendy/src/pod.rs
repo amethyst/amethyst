@@ -99,7 +99,11 @@ impl VertexArgs {
         let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*transform.global_matrix()).into();
         VertexArgs {
             model: model.into(),
-            tint: tint.map_or([1.0; 4].into(), |t| t.0.into_pod()),
+            tint: tint.map_or([1.0; 4].into(), |t| {
+                // Shaders expect linear RGBA; convert sRGBA to linear RGBA
+                let (r, g, b, a) = t.0.into_linear().into_components();
+                [r, g, b, a].into()
+            }),
         }
     }
 }
@@ -160,7 +164,11 @@ impl SkinnedVertexArgs {
         let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*transform.global_matrix()).into();
         SkinnedVertexArgs {
             model: model.into(),
-            tint: tint.map_or([1.0; 4].into(), |t| t.0.into_pod()),
+            tint: tint.map_or([1.0; 4].into(), |t| {
+                // Shaders expect linear RGBA; convert sRGBA to linear RGBA
+                let (r, g, b, a) = t.0.into_linear().into_components();
+                [r, g, b, a].into()
+            }),
             joints_offset,
         }
     }
@@ -361,7 +369,8 @@ impl SpriteArgs {
                 v_offset: [sprite.tex_coords.top, sprite.tex_coords.bottom].into(),
                 depth: pos.z,
                 tint: tint.map_or([1.0; 4].into(), |t| {
-                    let (r, g, b, a) = t.0.into_components();
+                    // Shaders expect linear RGBA; convert sRGBA to linear RGBA
+                    let (r, g, b, a) = t.0.into_linear().into_components();
                     [r, g, b, a].into()
                 }),
             },
