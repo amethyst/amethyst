@@ -28,12 +28,12 @@ One way of defining a `UiTransform` is like so:
 let ui_transfrom = UiTransform::new(
     String::from("simple_button"), // id
     Anchor::Middle,                // anchor
-    Anchor::Middle,				   // pivot
-    0f32, 						   // x
-    0f32, 						   // y
-    0f32,						   // z
-    100f32,						   // width
-    30f32, 						   // height
+    Anchor::Middle,                // pivot
+    0f32,                          // x
+    0f32,                          // y
+    0f32,                          // z
+    100f32,                        // width
+    30f32,                         // height
 );
 ```
 
@@ -57,9 +57,9 @@ to set the area big enough for the text to fit in!
 # use amethyst::ui::UiText;
 
 let ui_text = UiText::new(
-    font_handle, 				   // font
+    font_handle,                   // font
     String::from("Simple Button"), // text
-    25f32, 			   			   // font_size
+    25f32,                         // font_size
     [1.0, 1.0, 1.0, 0.5],          // color
 );
 ```
