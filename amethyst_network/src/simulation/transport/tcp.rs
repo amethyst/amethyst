@@ -11,8 +11,8 @@ use crate::simulation::{
     },
 };
 use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::{DispatcherBuilder, Read, System, World, Write},
+    dispatcher::*,
+    ecs::prelude::*,
     shrev::EventChannel,
 };
 use amethyst_error::Error;
@@ -43,53 +43,24 @@ impl TcpNetworkBundle {
     }
 }
 
-impl<'a, 'b> SystemBundle<'a, 'b> for TcpNetworkBundle {
+impl SystemBundle for TcpNetworkBundle {
     fn build(
         self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'_, '_>,
+        _resources: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         // NetworkSimulationTime should run first
         // followed by TcpConnectionListenerSystem and TcpStreamManagementSystem
         // then TcpNetworkSendSystem and TcpNetworkRecvSystem
 
-        builder.add(
-            NetworkSimulationTimeSystem,
-            NETWORK_SIM_TIME_SYSTEM_NAME,
-            &[],
-        );
+        builder.add_system(Stage::Begin, build_network_simulation_time_system);
+        builder.add_system(Stage::Begin, build_tcp_connection_listener_system);
+        builder.add_system(Stage::Begin, build_tcp_stream_management_system);
+        builder.add_system(Stage::Begin, build_tcp_network_send_system);
+        builder.add_system(Stage::Begin, build_tcp_network_recv_system);
 
-        builder.add(
-            TcpConnectionListenerSystem,
-            CONNECTION_LISTENER_SYSTEM_NAME,
-            &[NETWORK_SIM_TIME_SYSTEM_NAME],
-        );
-
-        builder.add(
-            TcpStreamManagementSystem,
-            STREAM_MANAGEMENT_SYSTEM_NAME,
-            &[NETWORK_SIM_TIME_SYSTEM_NAME],
-        );
-
-        builder.add(
-            TcpNetworkSendSystem,
-            NETWORK_SEND_SYSTEM_NAME,
-            &[
-                STREAM_MANAGEMENT_SYSTEM_NAME,
-                CONNECTION_LISTENER_SYSTEM_NAME,
-            ],
-        );
-
-        builder.add(
-            TcpNetworkRecvSystem,
-            NETWORK_RECV_SYSTEM_NAME,
-            &[
-                STREAM_MANAGEMENT_SYSTEM_NAME,
-                CONNECTION_LISTENER_SYSTEM_NAME,
-            ],
-        );
-
-        world.insert(TcpNetworkResource::new(
+        world.insert_resource(TcpNetworkResource::new(
             self.listener,
             self.recv_buffer_size_bytes,
         ));
@@ -274,6 +245,7 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
     }
 }
 
+#[derive(Default)]
 pub struct TcpNetworkResource {
     listener: Option<TcpListener>,
     streams: HashMap<SocketAddr, (bool, TcpStream)>,
@@ -321,12 +293,3 @@ impl TcpNetworkResource {
     }
 }
 
-impl Default for TcpNetworkResource {
-    fn default() -> Self {
-        Self {
-            listener: None,
-            streams: HashMap::new(),
-            recv_buffer: Vec::new(),
-        }
-    }
-}
