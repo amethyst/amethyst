@@ -4,10 +4,7 @@ use crate::simulation::{
     events::NetworkSimulationEvent,
     requirements::DeliveryRequirement,
     timing::{NetworkSimulationTime, build_network_simulation_time_system},
-    transport::{
-        TransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
-        NETWORK_SIM_TIME_SYSTEM_NAME,
-    },
+    transport::TransportResource,
 };
 use amethyst_core::{
     dispatcher::*,
@@ -28,15 +25,16 @@ pub struct UdpNetworkBundle {
 impl SystemBundle for UdpNetworkBundle {
     fn build(
         self,
-        world: &mut World,
-        _resources: &mut Resources,
+        _world: &mut World,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         builder.add_system(Stage::Begin, build_network_simulation_time_system);
         builder.add_system(Stage::Begin, build_udp_network_receive_system);
         builder.add_system(Stage::Begin, build_udp_network_send_system);
 
-        world.insert_resource(UdpSocketResource::new(self.socket, self.recv_buffer_size_bytes));
+        resources.insert(UdpSocketResource::new(self.socket));
+        resources.insert(UdpSocketBuffer::new(self.recv_buffer_size_bytes));
         Ok(())
     }
 }
@@ -77,19 +75,22 @@ pub fn build_udp_network_send_system(_world: &mut World, _res: &mut Resources) -
 pub fn build_udp_network_receive_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("AudioSystem")
         .write_resource::<UdpSocketResource>()
+        .write_resource::<UdpSocketBuffer>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
             move |_commands,
                   world,
-                  (socket, event_channel),
+                  (socket, buffer, event_channel),
                   _| {
+            //let UdpSocketResource{ mut socket, mut recv_buffer } = **sock;
+            let mut recv_buffer = &mut buffer.recv_buffer;
             if let Some(socket) = socket.get_mut() {
                 loop {
-                    match socket.recv_from(&mut socket.recv_buffer) {
+                    match socket.recv_from(&mut recv_buffer) {
                         Ok((recv_len, address)) => {
                             let event = NetworkSimulationEvent::Message(
                                 address,
-                                Bytes::copy_from_slice(&socket.recv_buffer[..recv_len]),
+                                Bytes::copy_from_slice(&recv_buffer[..recv_len]),
                             );
                             // TODO: Handle other types of events.
                             event_channel.single_write(event);
@@ -107,23 +108,12 @@ pub fn build_udp_network_receive_system(_world: &mut World, _res: &mut Resources
 }
 
 /// Resource to own the UDP socket.
+#[derive(Default, new)]
 pub struct UdpSocketResource {
     socket: Option<UdpSocket>,
-    recv_buffer: Vec<u8>,
-}
-
-impl Default for UdpSocketResource {
-    fn default() -> Self {
-        Self { socket: None, ..Default::default() }
-    }
 }
 
 impl UdpSocketResource {
-    /// Create a new instance of the `UdpSocketResource`
-    pub fn new(socket: Option<UdpSocket>, size: usize) -> Self {
-        Self { socket, recv_buffer: Vec::with_capacity(size) }
-    }
-
     /// Returns an immutable reference to the socket if there is one configured.
     pub fn get(&self) -> Option<&UdpSocket> {
         self.socket.as_ref()
@@ -145,3 +135,15 @@ impl UdpSocketResource {
     }
 }
 
+/// Resource to own the UDP socket.
+#[derive(Default)]
+pub struct UdpSocketBuffer {
+    pub recv_buffer: Vec<u8>,
+}
+
+impl UdpSocketBuffer {
+    /// Create a new instance of the `UdpSocketBuffer`
+    pub fn new(size: usize) -> Self {
+        Self { recv_buffer: Vec::with_capacity(size) }
+    }
+}

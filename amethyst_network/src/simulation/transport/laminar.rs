@@ -3,11 +3,8 @@
 use crate::simulation::{
     events::NetworkSimulationEvent,
     requirements::DeliveryRequirement,
-    timing::{NetworkSimulationTime, NetworkSimulationTimeSystem},
-    transport::{
-        TransportResource, NETWORK_POLL_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME,
-        NETWORK_SEND_SYSTEM_NAME, NETWORK_SIM_TIME_SYSTEM_NAME,
-    },
+    timing::{NetworkSimulationTime, build_network_simulation_time_system},
+    transport::TransportResource,
 };
 use amethyst_core::{
     dispatcher::*,
@@ -37,7 +34,7 @@ impl SystemBundle for LaminarNetworkBundle {
     fn build(
         self,
         _world: &mut World,
-        _resources: &mut Resources,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         builder.add_system(Stage::Begin, build_network_simulation_time_system);
@@ -45,7 +42,7 @@ impl SystemBundle for LaminarNetworkBundle {
         builder.add_system(Stage::Begin, build_laminar_network_poll_system);
         builder.add_system(Stage::Begin, build_laminar_network_recv_system);
 
-        world.insert_resource(LaminarSocketResource::new(self.socket));
+        resources.insert(LaminarSocketResource::new(self.socket));
         Ok(())
     }
 }
@@ -120,7 +117,7 @@ pub fn build_laminar_network_poll_system(_world: &mut World, _res: &mut Resource
         .build(
             move |_commands,
                   world,
-                  (socket,),
+                  socket,
                   _| {
             if let Some(socket) = socket.get_mut() {
                 socket.manual_poll(Instant::now());

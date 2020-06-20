@@ -5,10 +5,7 @@ use crate::simulation::{
     message::Message,
     requirements::DeliveryRequirement,
     timing::{NetworkSimulationTime, build_network_simulation_time_system},
-    transport::{
-        TransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
-        NETWORK_SIM_TIME_SYSTEM_NAME,
-    },
+    transport::TransportResource,
 };
 use amethyst_core::{
     dispatcher::*,
@@ -46,8 +43,8 @@ impl TcpNetworkBundle {
 impl SystemBundle for TcpNetworkBundle {
     fn build(
         self,
-        world: &mut World,
-        _resources: &mut Resources,
+        _world: &mut World,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         // NetworkSimulationTime should run first
@@ -60,7 +57,7 @@ impl SystemBundle for TcpNetworkBundle {
         builder.add_system(Stage::Begin, build_tcp_network_send_system);
         builder.add_system(Stage::Begin, build_tcp_network_recv_system);
 
-        world.insert_resource(TcpNetworkResource::new(
+        resources.insert(TcpNetworkResource::new(
             self.listener,
             self.recv_buffer_size_bytes,
         ));
@@ -118,7 +115,7 @@ pub fn build_tcp_stream_management_system(_world: &mut World, _res: &mut Resourc
 pub fn build_tcp_connection_listener_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("TcpConnectionListenerSystem")
         .write_resource::<TcpNetworkResource>()
-        .write_resource::<EventChannel<NetworkSimulationEvent>()
+        .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
             move |_commands,
                   world,
@@ -167,10 +164,10 @@ pub fn build_tcp_network_send_system(_world: &mut World, _res: &mut Resources) -
                 match message.delivery {
                     DeliveryRequirement::ReliableOrdered(Some(_)) => {
                         warn!("Streams are not supported by TCP and will be ignored.");
-                        write_message(message, &mut net, &mut channel);
+                        write_message(message, net, channel);
                     }
                     DeliveryRequirement::ReliableOrdered(_) | DeliveryRequirement::Default => {
-                        write_message(message, &mut net, &mut channel);
+                        write_message(message, net, channel);
                     }
                     delivery => panic!(
                         "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
