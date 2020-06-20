@@ -23,7 +23,7 @@ impl SystemBundle for AudioBundle {
     fn build(
         self,
         _world: &mut World,
-        resources: &mut Resources,
+        _resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         builder.add_system(Stage::Begin, build_audio_system);

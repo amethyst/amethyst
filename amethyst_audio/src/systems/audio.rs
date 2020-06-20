@@ -35,26 +35,26 @@ pub struct AudioSystem(Output);
 #[derive(Debug)]
 pub struct SelectedListener(pub Entity);
 
-
-pub fn build_audio_system(world: &mut World, res: &mut Resources) -> Box<dyn Schedulable> {
+/// Creates a new audio system.
+pub fn build_audio_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("AudioSystem")
         .read_resource::<Option<Output>>()
         .read_resource::<Option<SelectedListener>>()
         .with_query(<Read<AudioListener>>::query())
-        .with_query(<(Read<LocalToWorld>, Write<AudioEmitter>)>::query())
-        .build(move |commands, world, (output, select_listener), (q_audio_listener, q_audio_emitter)| {
+        .with_query(<(Write<AudioEmitter>, Read<LocalToWorld>)>::query())
+        .build(move |_commands, world, (output, select_listener), (q_audio_listener, q_audio_emitter)| {
             #[cfg(feature = "profiler")]
             profile_scope!("audio_system");
             // Process emitters and listener.
             if let Some((entity, listener)) = select_listener
                 .as_ref()
-                .and_then(|sl| Some((sl.0, world.get_component::<AudioListener>(sl.0).expect("Failed to find AudioListener Component for SelectedListener."))))
-                .or_else(|| q_audio_listener.iter_entities_mut(world).next())
+                .and_then(|sl| world.get_component::<AudioListener>(sl.0).map(|c| (sl.0, (*c).clone())))
+                .or_else(|| q_audio_listener.iter_entities(world).next().map(|(e,c)| (e,(*c).clone())))
             {
                 if let Some(listener_transform) = select_listener
                     .as_ref()
-                    .and_then(|sl| world.get_component::<LocalToWorld>(sl.0))
-                    .or_else(|| world.get_component::<LocalToWorld>(entity))
+                    .and_then(|sl| world.get_component::<LocalToWorld>(sl.0).map(|c| (*c).clone()))
+                    .or_else(|| world.get_component::<LocalToWorld>(entity).map(|c| (*c).clone()))
                 {
                     let listener_transform = listener_transform.0;
                     let left_ear_position: [f32; 3] = {
@@ -71,7 +71,7 @@ pub fn build_audio_system(world: &mut World, res: &mut Resources) -> Box<dyn Sch
                             .xyz();
                         [convert(pos.x), convert(pos.y), convert(pos.z)]
                     };
-                    for (transform, mut audio_emitter) in q_audio_emitter.iter(&mut world) {
+                    q_audio_emitter.for_each_mut(world, |(mut audio_emitter, transform)| {
                         let emitter_position: [f32; 3] = {
                             let x = transform.0[(0, 3)];
                             let y = transform.0[(1, 3)];
@@ -93,7 +93,7 @@ pub fn build_audio_system(world: &mut World, res: &mut Resources) -> Box<dyn Sch
                             }
                         }
                         while let Some(source) = audio_emitter.sound_queue.pop() {
-                            if let Some(output) = **output {
+                            if let Some(output) = &**output {
                                 let sink = SpatialSink::new(
                                     &output.device,
                                     emitter_position,
@@ -108,7 +108,7 @@ pub fn build_audio_system(world: &mut World, res: &mut Resources) -> Box<dyn Sch
                                 audio_emitter.sinks.push((sink, atomic_bool));
                             }
                         }
-                    }
+                    });
                 }
             }
         })

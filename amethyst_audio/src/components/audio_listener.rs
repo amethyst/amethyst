@@ -3,7 +3,7 @@ use amethyst_core::{
 };
 
 /// An audio listener, add this component to the local player character.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct AudioListener {
     /// Position of the left ear relative to the global transform on this entity.
     pub left_ear: Point3<f32>,
