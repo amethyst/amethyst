@@ -3,9 +3,7 @@ use log::error;
 use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::{
-    ecs::prelude::*,
-};
+use amethyst_core::ecs::prelude::*;
 
 use crate::{
     output::init_output,
@@ -14,7 +12,9 @@ use crate::{
 };
 
 /// Calls a closure if the `AudioSink` is empty.
-pub fn build_dj_system<F, R>(mut f: F) -> Box<dyn FnOnce (&mut World, &mut Resources) -> Box<dyn Schedulable>>
+pub fn build_dj_system<F, R>(
+    mut f: F,
+) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>>
 where
     F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
     R: Send + Sync + 'static,

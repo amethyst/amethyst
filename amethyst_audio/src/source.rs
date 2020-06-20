@@ -1,8 +1,6 @@
 //! Provides structures used to load audio files.
 //!
-use amethyst_assets::{
-    Asset, Handle, ProcessableAsset, ProcessingState,
-};
+use amethyst_assets::{Asset, Handle, ProcessableAsset, ProcessingState};
 use amethyst_error::Error;
 
 use crate::formats::AudioData;
@@ -38,7 +36,7 @@ impl ProcessableAsset for Source {
 // impl<'a> PrefabData<'a> for AudioData {
 //     type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Source>>);
 //     type Result = Handle<Source>;
-// 
+//
 //     fn add_to_entity(
 //         &self,
 //         _: Entity,

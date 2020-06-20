@@ -24,7 +24,7 @@ mod audio_listener;
 //     /// Left, Right
 //     listener: Option<(Point3<f32>, Point3<f32>)>,
 // }
-// 
+//
 // impl<'a> PrefabData<'a> for AudioPrefab {
 //     type SystemData = (
 //         WriteStorage<'a, AudioEmitter>,
@@ -32,7 +32,7 @@ mod audio_listener;
 //         Option<Read<'a, Output>>,
 //     );
 //     type Result = ();
-// 
+//
 //     fn add_to_entity(
 //         &self,
 //         entity: Entity,

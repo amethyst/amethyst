@@ -1,6 +1,4 @@
-use amethyst_core::{
-    math::Point3,
-};
+use amethyst_core::math::Point3;
 
 /// An audio listener, add this component to the local player character.
 #[derive(Clone, Debug)]
@@ -19,4 +17,3 @@ impl Default for AudioListener {
         }
     }
 }
-
