@@ -55,7 +55,7 @@ where
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
-	 align: Option<Anchor>,
+    align: Option<Anchor>,
     parent: Option<Entity>,
 }
 
@@ -77,7 +77,7 @@ where
             text_color: DEFAULT_TXT_COLOR,
             font: None,
             font_size: 32.,
-			 align: None,
+            align: None,
             parent: None,
         }
     }
@@ -162,13 +162,13 @@ where
         self
     }
 
-	 /// Set text align
-	 pub fn with_align(mut self, align: Option<Anchor>) -> Self {
-	 	 if Some(align).is_some() {
-			  self.align = align;
-		 }
-	  	 self
-	 }
+    /// Set text align
+    pub fn with_align(mut self, align: Option<Anchor>) -> Self {
+        if Some(align).is_some() {
+            self.align = align;
+        }
+        self
+    }
 
     /// Add a parent to the button.
     pub fn with_parent(mut self, parent: Entity) -> Self {
