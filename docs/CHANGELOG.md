@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - `GameDataBuilder::build_dispatcher` method returns a standalone `Dispatcher`
   instead of using `DataInit` to build a `GameData` ([#2294])
+- Support for text alignment in UiButton and UiLabel ([#2316])
 
 ### Changed
 
