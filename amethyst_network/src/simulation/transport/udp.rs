@@ -46,7 +46,7 @@ pub fn build_udp_network_send_system(
         .read_resource::<NetworkSimulationTime>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
-            move |_commands, world, (transport, socket, sim_time, channel), _| {
+            move |_commands, _world, (transport, socket, sim_time, channel), _| {
                 if let Some(socket) = socket.get_mut() {
                     let messages =
                         transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
@@ -82,7 +82,7 @@ pub fn build_udp_network_receive_system(
         .write_resource::<UdpSocketBuffer>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
-            move |_commands, world, (socket, buffer, event_channel), _| {
+            move |_commands, _world, (socket, buffer, event_channel), _| {
                 //let UdpSocketResource{ mut socket, mut recv_buffer } = **sock;
                 let mut recv_buffer = &mut buffer.recv_buffer;
                 if let Some(socket) = socket.get_mut() {

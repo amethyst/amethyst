@@ -18,7 +18,7 @@ pub fn build_network_simulation_time_system(
     SystemBuilder::<()>::new("NetworkSimulationTimeSystem")
         .write_resource::<NetworkSimulationTime>()
         .read_resource::<Time>()
-        .build(move |_commands, world, (sim_time, game_time), _| {
+        .build(move |_commands, _world, (sim_time, game_time), _| {
             sim_time.update_elapsed(game_time.delta_time());
             sim_time.reset_frame_lag();
             while sim_time.elapsed_duration() > sim_time.per_frame_duration() {

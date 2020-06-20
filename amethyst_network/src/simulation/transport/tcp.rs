@@ -18,9 +18,6 @@ use std::{
     ops::DerefMut,
 };
 
-const CONNECTION_LISTENER_SYSTEM_NAME: &str = "connection_listener";
-const STREAM_MANAGEMENT_SYSTEM_NAME: &str = "stream_management";
-
 /// Use this network bundle to add the TCP transport layer to your game.
 pub struct TcpNetworkBundle {
     listener: Option<TcpListener>,
@@ -77,7 +74,7 @@ pub fn build_tcp_stream_management_system(
         .read_resource::<TransportResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
-            move |_commands, world, (net, transport, event_channel), _| {
+            move |_commands, _world, (net, transport, event_channel), _| {
                 // Make connections for each message in the channel if one hasn't yet been established
                 transport.get_messages().iter().for_each(|message| {
                     if !net.streams.contains_key(&message.destination) {
@@ -118,7 +115,7 @@ pub fn build_tcp_connection_listener_system(
     SystemBuilder::<()>::new("TcpConnectionListenerSystem")
         .write_resource::<TcpNetworkResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
-        .build(move |_commands, world, (net, event_channel), _| {
+        .build(move |_commands, _world, (net, event_channel), _| {
             let resource = net.deref_mut();
             if let Some(ref listener) = resource.listener {
                 loop {
@@ -156,7 +153,7 @@ pub fn build_tcp_network_send_system(
         .read_resource::<NetworkSimulationTime>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
-            move |_commands, world, (transport, net, sim_time, channel), _| {
+            move |_commands, _world, (transport, net, sim_time, channel), _| {
                 let messages =
                     transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
                 for message in messages {
@@ -198,7 +195,7 @@ pub fn build_tcp_network_recv_system(
     SystemBuilder::<()>::new("TcpNetworkRecvSystem")
         .write_resource::<TcpNetworkResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
-        .build(move |_commands, world, (net, event_channel), _| {
+        .build(move |_commands, _world, (net, event_channel), _| {
             let resource = net.deref_mut();
             for (_, (active, stream)) in resource.streams.iter_mut() {
                 // If we can't get a peer_addr, there is likely something pretty wrong with the

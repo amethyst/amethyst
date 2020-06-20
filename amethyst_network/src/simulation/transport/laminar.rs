@@ -54,7 +54,7 @@ pub fn build_laminar_network_send_system(
         .read_resource::<NetworkSimulationTime>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
-            move |_commands, world, (transport, socket, sim_time, event_channel), _| {
+            move |_commands, _world, (transport, socket, sim_time, event_channel), _| {
                 if let Some(socket) = socket.get_mut() {
                     let messages =
                         transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
@@ -119,7 +119,7 @@ pub fn build_laminar_network_poll_system(
 ) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("LaminarNetworkPollSystem")
         .write_resource::<LaminarSocketResource>()
-        .build(move |_commands, world, socket, _| {
+        .build(move |_commands, _world, socket, _| {
             if let Some(socket) = socket.get_mut() {
                 socket.manual_poll(Instant::now());
             }
@@ -134,7 +134,7 @@ pub fn build_laminar_network_recv_system(
     SystemBuilder::<()>::new("LaminarNetworkRecvSystem")
         .write_resource::<LaminarSocketResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
-        .build(move |_commands, world, (socket, event_channel), _| {
+        .build(move |_commands, _world, (socket, event_channel), _| {
             if let Some(socket) = socket.get_mut() {
                 while let Some(event) = socket.recv() {
                     let event = match event {
