@@ -4,14 +4,10 @@ use crate::simulation::{
     events::NetworkSimulationEvent,
     message::Message,
     requirements::DeliveryRequirement,
-    timing::{NetworkSimulationTime, build_network_simulation_time_system},
+    timing::{build_network_simulation_time_system, NetworkSimulationTime},
     transport::TransportResource,
 };
-use amethyst_core::{
-    dispatcher::*,
-    ecs::prelude::*,
-    shrev::EventChannel,
-};
+use amethyst_core::{dispatcher::*, ecs::prelude::*, shrev::EventChannel};
 use amethyst_error::Error;
 use bytes::Bytes;
 use log::warn;
@@ -72,55 +68,57 @@ pub struct TcpStreamManagementSystem;
 // We cannot use `net.streams.entry(message.destination).or_insert_with(|| { .. })` because
 // there is a `return;` statement for early exit, which is not allowed within the closure.
 #[allow(clippy::map_entry)]
-pub fn build_tcp_stream_management_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+pub fn build_tcp_stream_management_system(
+    _world: &mut World,
+    _res: &mut Resources,
+) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("TcpStreamManagementSystem")
         .write_resource::<TcpNetworkResource>()
         .read_resource::<TransportResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
-            move |_commands,
-                  world,
-                  (net, transport, event_channel),
-                  _| {
-        // Make connections for each message in the channel if one hasn't yet been established
-            transport.get_messages().iter().for_each(|message| {
-                if !net.streams.contains_key(&message.destination) {
-                    let s = match TcpStream::connect(message.destination) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            event_channel.single_write(NetworkSimulationEvent::ConnectionError(
-                                e,
-                                Some(message.destination),
-                            ));
-                            return;
-                        }
-                    };
-                    s.set_nonblocking(true).expect("Setting non-blocking mode");
-                    s.set_nodelay(true).expect("Setting nodelay");
-                    net.streams.insert(message.destination, (true, s));
-                }
-            });
+            move |_commands, world, (net, transport, event_channel), _| {
+                // Make connections for each message in the channel if one hasn't yet been established
+                transport.get_messages().iter().for_each(|message| {
+                    if !net.streams.contains_key(&message.destination) {
+                        let s = match TcpStream::connect(message.destination) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                event_channel.single_write(
+                                    NetworkSimulationEvent::ConnectionError(
+                                        e,
+                                        Some(message.destination),
+                                    ),
+                                );
+                                return;
+                            }
+                        };
+                        s.set_nonblocking(true).expect("Setting non-blocking mode");
+                        s.set_nodelay(true).expect("Setting nodelay");
+                        net.streams.insert(message.destination, (true, s));
+                    }
+                });
 
-            // Remove inactive connections
-            net.streams.retain(|addr, (active, _)| {
-                if !*active {
-                    event_channel.single_write(NetworkSimulationEvent::Disconnect(*addr));
-                }
-                *active
-            });
-    })
+                // Remove inactive connections
+                net.streams.retain(|addr, (active, _)| {
+                    if !*active {
+                        event_channel.single_write(NetworkSimulationEvent::Disconnect(*addr));
+                    }
+                    *active
+                });
+            },
+        )
 }
 
 /// System to listen for incoming connections and cache them to the resource.
-pub fn build_tcp_connection_listener_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+pub fn build_tcp_connection_listener_system(
+    _world: &mut World,
+    _res: &mut Resources,
+) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("TcpConnectionListenerSystem")
         .write_resource::<TcpNetworkResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
-        .build(
-            move |_commands,
-                  world,
-                  (net, event_channel),
-                  _| {
+        .build(move |_commands, world, (net, event_channel), _| {
             let resource = net.deref_mut();
             if let Some(ref listener) = resource.listener {
                 loop {
@@ -144,38 +142,40 @@ pub fn build_tcp_connection_listener_system(_world: &mut World, _res: &mut Resou
                     };
                 }
             }
-    })
+        })
 }
 
 /// System to send messages to a particular open `TcpStream`.
-pub fn build_tcp_network_send_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+pub fn build_tcp_network_send_system(
+    _world: &mut World,
+    _res: &mut Resources,
+) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("TcpNetworkSendSystem")
         .write_resource::<TransportResource>()
         .write_resource::<TcpNetworkResource>()
         .read_resource::<NetworkSimulationTime>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
-            move |_commands,
-                  world,
-                  (transport, net, sim_time, channel),
-                  _| {
-            let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
-            for message in messages {
-                match message.delivery {
-                    DeliveryRequirement::ReliableOrdered(Some(_)) => {
-                        warn!("Streams are not supported by TCP and will be ignored.");
-                        write_message(message, net, channel);
+            move |_commands, world, (transport, net, sim_time, channel), _| {
+                let messages =
+                    transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
+                for message in messages {
+                    match message.delivery {
+                        DeliveryRequirement::ReliableOrdered(Some(_)) => {
+                            warn!("Streams are not supported by TCP and will be ignored.");
+                            write_message(message, net, channel);
+                        }
+                        DeliveryRequirement::ReliableOrdered(_) | DeliveryRequirement::Default => {
+                            write_message(message, net, channel);
+                        }
+                        delivery => panic!(
+                            "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
+                            delivery
+                        ),
                     }
-                    DeliveryRequirement::ReliableOrdered(_) | DeliveryRequirement::Default => {
-                        write_message(message, net, channel);
-                    }
-                    delivery => panic!(
-                        "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
-                        delivery
-                    ),
                 }
-            }
-    })
+            },
+        )
 }
 
 fn write_message(
@@ -191,15 +191,14 @@ fn write_message(
 }
 
 /// System to receive messages from all open `TcpStream`s.
-pub fn build_tcp_network_recv_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+pub fn build_tcp_network_recv_system(
+    _world: &mut World,
+    _res: &mut Resources,
+) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("TcpNetworkRecvSystem")
         .write_resource::<TcpNetworkResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
-        .build(
-            move |_commands,
-                  world,
-                  (net, event_channel),
-                  _| {
+        .build(move |_commands, world, (net, event_channel), _| {
             let resource = net.deref_mut();
             for (_, (active, stream)) in resource.streams.iter_mut() {
                 // If we can't get a peer_addr, there is likely something pretty wrong with the
@@ -234,7 +233,8 @@ pub fn build_tcp_network_recv_system(_world: &mut World, _res: &mut Resources) -
                                 }
                                 io::ErrorKind::WouldBlock => {}
                                 _ => {
-                                    event_channel.single_write(NetworkSimulationEvent::RecvError(e));
+                                    event_channel
+                                        .single_write(NetworkSimulationEvent::RecvError(e));
                                 }
                             }
                             break;
@@ -242,7 +242,7 @@ pub fn build_tcp_network_recv_system(_world: &mut World, _res: &mut Resources) -
                     }
                 }
             }
-    })
+        })
 }
 
 #[derive(Default)]
@@ -292,4 +292,3 @@ impl TcpNetworkResource {
         self.streams.remove(&addr)
     }
 }
-

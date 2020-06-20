@@ -1,10 +1,7 @@
 //! Systems and resources to have a consistent, separate simulation frame rate from the ECS
 //! frame rate.
 
-use amethyst_core::{
-    ecs::prelude::*,
-    timing::Time,
-};
+use amethyst_core::{ecs::prelude::*, timing::Time};
 use std::{ops::RangeInclusive, time::Duration};
 
 /// Default number of network simulation frames per second.
@@ -14,21 +11,20 @@ const DEFAULT_SIM_FRAME_RATE: u32 = 30;
 pub struct NetworkSimulationTimeSystem;
 
 /// Creates a new audio system.
-pub fn build_network_simulation_time_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+pub fn build_network_simulation_time_system(
+    _world: &mut World,
+    _res: &mut Resources,
+) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("NetworkSimulationTimeSystem")
         .write_resource::<NetworkSimulationTime>()
         .read_resource::<Time>()
-        .build(
-            move |_commands,
-                  world,
-                  (sim_time, game_time),
-                  _| {
+        .build(move |_commands, world, (sim_time, game_time), _| {
             sim_time.update_elapsed(game_time.delta_time());
             sim_time.reset_frame_lag();
             while sim_time.elapsed_duration() > sim_time.per_frame_duration() {
                 sim_time.increment_frame_number();
             }
-    })
+        })
 }
 
 /// Resource to track the state of the network simulation separately from the ECS frame timings
