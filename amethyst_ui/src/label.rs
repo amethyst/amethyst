@@ -163,10 +163,8 @@ where
     }
 
     /// Set text align
-    pub fn with_align(mut self, align: Option<Anchor>) -> Self {
-        if Some(align).is_some() {
-            self.align = align;
-        }
+    pub fn with_align(mut self, align: Anchor) -> Self {
+        self.align = Some(align);
         self
     }
 
