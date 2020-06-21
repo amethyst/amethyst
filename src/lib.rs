@@ -95,7 +95,6 @@ pub use crate::derive::*;
 
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
-    callback_queue::{Callback, CallbackQueue},
     error::Error,
     game_data::{DataDispose, DataInit, GameData, GameDataBuilder},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
@@ -112,7 +111,6 @@ pub type Result<T> = std::result::Result<T, error::Error>;
 pub mod prelude;
 
 mod app;
-mod callback_queue;
 mod game_data;
 mod logger;
 mod state;
