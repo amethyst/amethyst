@@ -1,10 +1,9 @@
 use std::marker::PhantomData;
 
 use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::prelude::{DispatcherBuilder, World},
+    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
+    ecs::prelude::*,
     math::one,
-    SystemDesc,
 };
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
@@ -73,102 +72,73 @@ impl<T: BindingTypes> FlyControlBundle<T> {
     }
 }
 
-impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
+impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
     fn build(
         self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
-        builder.add(
-            FlyMovementSystemDesc::<T>::new(
-                self.speed,
-                self.right_input_axis,
-                self.up_input_axis,
-                self.forward_input_axis,
-            )
-            .build(world),
-            "fly_movement",
-            &[],
-        );
-        builder.add(
-            FreeRotationSystemDesc::new(self.sensitivity_x, self.sensitivity_y).build(world),
-            "free_rotation",
-            &[],
-        );
-        builder.add(
-            MouseFocusUpdateSystemDesc::default().build(world),
-            "mouse_focus",
-            &["free_rotation"],
-        );
-        builder.add(
-            CursorHideSystemDesc::default().build(world),
-            "cursor_hide",
-            &["mouse_focus"],
-        );
+        builder.add_system(Stage::Begin, build_fly_movement_system::<T>(self.speed, self.right_input_axis, self.up_input_axis, self.forward_input_axis));
+        //builder.add_system(Stage::Begin, build_free_rotation_system(self.sensitivity_x, self.sensitivity_y));
+        builder.add_system(Stage::Begin, build_mouse_focus_update_system);
+        builder.add_system(Stage::Begin, build_cursor_hide_system);
         Ok(())
     }
 }
 
-/// The bundle that creates an arc ball movement system.
-/// Note: Will not actually create a moving entity. It will only register the needed resources and systems.
-/// The generic parameters A and B are the ones used in InputHandler<A,B>.
-/// You might want to add "fly_movement" and "free_rotation" as dependencies of the TransformSystem.
-/// Adding this bundle will grab the mouse, hide it and keep it centered.
-///
-/// See the `arc_ball_camera` example to see how to use the arc ball camera.
-#[derive(Debug)]
-pub struct ArcBallControlBundle<T: BindingTypes> {
-    sensitivity_x: f32,
-    sensitivity_y: f32,
-    _marker: PhantomData<T>,
-}
 
-impl<T: BindingTypes> ArcBallControlBundle<T> {
-    /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
-    pub fn new() -> Self {
-        ArcBallControlBundle {
-            sensitivity_x: 1.0,
-            sensitivity_y: 1.0,
-            _marker: PhantomData,
-        }
-    }
 
-    /// Builds a new `ArcBallControlBundle` with the provided mouse sensitivity values.
-    pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
-        self.sensitivity_x = x;
-        self.sensitivity_y = y;
-        self
-    }
-}
-
-impl<T: BindingTypes> Default for ArcBallControlBundle<T> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for ArcBallControlBundle<T> {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
-        builder.add(
-            FreeRotationSystemDesc::new(self.sensitivity_x, self.sensitivity_y).build(world),
-            "free_rotation",
-            &[],
-        );
-        builder.add(
-            MouseFocusUpdateSystemDesc::default().build(world),
-            "mouse_focus",
-            &["free_rotation"],
-        );
-        builder.add(
-            CursorHideSystemDesc::default().build(world),
-            "cursor_hide",
-            &["mouse_focus"],
-        );
-        Ok(())
-    }
-}
+///// The bundle that creates an arc ball movement system.
+///// Note: Will not actually create a moving entity. It will only register the needed resources and systems.
+///// The generic parameters A and B are the ones used in InputHandler<A,B>.
+///// You might want to add "fly_movement" and "free_rotation" as dependencies of the TransformSystem.
+///// Adding this bundle will grab the mouse, hide it and keep it centered.
+/////
+///// See the `arc_ball_camera` example to see how to use the arc ball camera.
+//#[derive(Debug)]
+//pub struct ArcBallControlBundle<T: BindingTypes> {
+//    sensitivity_x: f32,
+//    sensitivity_y: f32,
+//    _marker: PhantomData<T>,
+//}
+//
+//impl<T: BindingTypes> ArcBallControlBundle<T> {
+//    /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
+//    pub fn new() -> Self {
+//        ArcBallControlBundle {
+//            sensitivity_x: 1.0,
+//            sensitivity_y: 1.0,
+//            _marker: PhantomData,
+//        }
+//    }
+//
+//    /// Builds a new `ArcBallControlBundle` with the provided mouse sensitivity values.
+//    pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
+//        self.sensitivity_x = x;
+//        self.sensitivity_y = y;
+//        self
+//    }
+//}
+//
+//impl<T: BindingTypes> Default for ArcBallControlBundle<T> {
+//    fn default() -> Self {
+//        Self::new()
+//    }
+//}
+//
+//impl<T: BindingTypes> SystemBundle for ArcBallControlBundle<T> {
+//    fn build(
+//        self,
+//        world: &mut World,
+//        resources: &mut Resources,
+//        builder: &mut DispatcherBuilder<'_>,
+//    ) -> Result<(), Error> {
+//        builder.add_system(Stage::Begin, build_arc_ball_rotation_system);
+//        builder.add_system(Stage::Begin, build_free_rotation_system(self.sensitivity_x, self.sensitivity_y));
+//        builder.add_system(Stage::Begin, build_mouse_focus_update_system);
+//        builder.add_system(Stage::Begin, build_cursor_hide_system(true));
+//        Ok(())
+//    }
+//}
+//

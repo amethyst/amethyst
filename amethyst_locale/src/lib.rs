@@ -11,7 +11,7 @@
 #![warn(clippy::all)]
 
 use amethyst_assets::{Asset, Format, Handle};
-use amethyst_core::ecs::prelude::VecStorage;
+use amethyst_core::ecs::prelude::*;
 use amethyst_error::Error;
 pub use fluent::{concurrent::FluentBundle, FluentResource};
 use serde::{Deserialize, Serialize};
@@ -57,5 +57,4 @@ pub struct Locale {
 impl Asset for Locale {
     const NAME: &'static str = "locale::Locale";
     type Data = Locale;
-    type HandleStorage = VecStorage<LocaleHandle>;
 }

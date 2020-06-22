@@ -116,7 +116,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawDebugLines<B> {
 
         let old_len = self.lines.len();
         self.lines.clear();
-        for lines_component in lines_query.iter(world) {
+        for lines_component in lines_query.iter(*world) {
             self.lines.extend_from_slice(lines_component.lines());
         }
 

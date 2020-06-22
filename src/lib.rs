@@ -84,7 +84,7 @@ pub use amethyst_network as network;
 pub use amethyst_rendy as renderer;
 #[cfg(feature = "tiles")]
 pub use amethyst_tiles as tiles;
-pub use amethyst_ui as ui;
+//pub use amethyst_ui as ui;
 pub use amethyst_utils as utils;
 pub use amethyst_window as window;
 pub use winit;
