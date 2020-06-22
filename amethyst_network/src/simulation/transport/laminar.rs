@@ -3,17 +3,10 @@
 use crate::simulation::{
     events::NetworkSimulationEvent,
     requirements::DeliveryRequirement,
-    timing::*,
-    transport::{
-        TransportResource, NETWORK_POLL_SYSTEM_NAME, NETWORK_RECV_SYSTEM_NAME,
-        NETWORK_SEND_SYSTEM_NAME, NETWORK_SIM_TIME_SYSTEM_NAME,
-    },
+    timing::{build_network_simulation_time_system, NetworkSimulationTime},
+    transport::TransportResource,
 };
-use amethyst_core::{
-    ecs::prelude::*,
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    shrev::EventChannel,
-};
+use amethyst_core::{dispatcher::*, ecs::prelude::*, shrev::EventChannel};
 use amethyst_error::Error;
 pub use laminar::{Config as LaminarConfig, ErrorKind, Socket as LaminarSocket};
 use laminar::{Packet, SocketEvent};
@@ -36,8 +29,8 @@ impl LaminarNetworkBundle {
 impl SystemBundle for LaminarNetworkBundle {
     fn build(
         self,
-        world: &mut World,
-        resources: &mut Resources, 
+        _world: &mut World,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         builder.add_system(Stage::Begin, build_network_simulation_time_system);
@@ -50,16 +43,21 @@ impl SystemBundle for LaminarNetworkBundle {
     }
 }
 
-pub fn build_laminar_network_send_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+/// Creates a new laminar network send system.
+pub fn build_laminar_network_send_system(
+    _world: &mut World,
+    _res: &mut Resources,
+) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("LaminarNetworkSendSystem")
         .write_resource::<TransportResource>()
         .write_resource::<LaminarSocketResource>()
         .read_resource::<NetworkSimulationTime>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(
-            move |_commands, world, (transport, socket, sim_time, event_channel), ()| {
+            move |_commands, _world, (transport, socket, sim_time, event_channel), _| {
                 if let Some(socket) = socket.get_mut() {
-                    let messages = transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
+                    let messages =
+                        transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
 
                     for message in messages {
                         let packet = match message.delivery {
@@ -73,9 +71,10 @@ pub fn build_laminar_network_send_system(_world: &mut World, _res: &mut Resource
                                     stream_id,
                                 )
                             }
-                            DeliveryRequirement::Reliable => {
-                                Packet::reliable_unordered(message.destination, message.payload.to_vec())
-                            }
+                            DeliveryRequirement::Reliable => Packet::reliable_unordered(
+                                message.destination,
+                                message.payload.to_vec(),
+                            ),
                             DeliveryRequirement::ReliableSequenced(stream_id) => {
                                 Packet::reliable_sequenced(
                                     message.destination,
@@ -83,11 +82,13 @@ pub fn build_laminar_network_send_system(_world: &mut World, _res: &mut Resource
                                     stream_id,
                                 )
                             }
-                            DeliveryRequirement::ReliableOrdered(stream_id) => Packet::reliable_ordered(
-                                message.destination,
-                                message.payload.to_vec(),
-                                stream_id,
-                            ),
+                            DeliveryRequirement::ReliableOrdered(stream_id) => {
+                                Packet::reliable_ordered(
+                                    message.destination,
+                                    message.payload.to_vec(),
+                                    stream_id,
+                                )
+                            }
                             DeliveryRequirement::Default => Packet::reliable_ordered(
                                 message.destination,
                                 message.payload.to_vec(),
@@ -97,7 +98,8 @@ pub fn build_laminar_network_send_system(_world: &mut World, _res: &mut Resource
 
                         match socket.send(packet) {
                             Err(ErrorKind::IOError(e)) => {
-                                event_channel.single_write(NetworkSimulationEvent::SendError(e, message));
+                                event_channel
+                                    .single_write(NetworkSimulationEvent::SendError(e, message));
                             }
                             Err(e) => {
                                 error!("Error sending message: {:?}", e);
@@ -106,25 +108,33 @@ pub fn build_laminar_network_send_system(_world: &mut World, _res: &mut Resource
                         }
                     }
                 }
-            }
+            },
         )
 }
 
-pub fn build_laminar_network_poll_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+/// Creates a new laminar network poll system.
+pub fn build_laminar_network_poll_system(
+    _world: &mut World,
+    _res: &mut Resources,
+) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("LaminarNetworkPollSystem")
         .write_resource::<LaminarSocketResource>()
-        .build(move |_commands, world, socket, ()| {
+        .build(move |_commands, _world, socket, _| {
             if let Some(socket) = socket.get_mut() {
                 socket.manual_poll(Instant::now());
             }
         })
 }
 
-pub fn build_laminar_network_recv_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("LaminarNetworkReceiveSystem")
+/// Creates a new laminar receive system.
+pub fn build_laminar_network_recv_system(
+    _world: &mut World,
+    _res: &mut Resources,
+) -> Box<dyn Schedulable> {
+    SystemBuilder::<()>::new("LaminarNetworkRecvSystem")
         .write_resource::<LaminarSocketResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
-        .build(move |_commands, world, (socket, event_channel), ()| {
+        .build(move |_commands, _world, (socket, event_channel), _| {
             if let Some(socket) = socket.get_mut() {
                 while let Some(event) = socket.recv() {
                     let event = match event {

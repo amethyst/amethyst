@@ -29,3 +29,4 @@ bytes = "0.5"
 laminar = "0.3"
 log = "0.4"
 thread_profiler = { version = "0.3" , optional = true }
+derive-new = "0.5.8"
