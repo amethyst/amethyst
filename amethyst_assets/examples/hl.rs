@@ -9,8 +9,9 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
 use amethyst_core::{
+    dispatcher::{DispatcherBuilder, Stage},
     ecs::prelude::*,
-    Time, dispatcher::{Stage, DispatcherBuilder},
+    Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -49,13 +50,18 @@ impl App {
     }
 
     fn update(&mut self) {
-        self.scheduler.execute(&mut self.world, &mut self.resources);        
+        self.scheduler.execute(&mut self.world, &mut self.resources);
     }
 
     fn run(&mut self) {
         loop {
             self.update();
-            match self.state.take().unwrap().update(&mut self.world, &mut self.resources) {
+            match self
+                .state
+                .take()
+                .unwrap()
+                .update(&mut self.world, &mut self.resources)
+            {
                 Some(state) => self.state = Some(state),
                 None => return,
             }
@@ -73,7 +79,7 @@ pub struct MeshAsset {
 
 impl Asset for MeshAsset {
     const NAME: &'static str = "example::Mesh";
-    type Data = VertexData;    
+    type Data = VertexData;
 }
 
 /// A format the mesh data could be stored with.
@@ -97,28 +103,30 @@ impl Format<VertexData> for Ron {
 
 pub fn build_rendering_system(
     world: &mut World,
-    resources: &mut Resources
+    resources: &mut Resources,
 ) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("RenderingSystem")
         .read_resource::<Time>()
         .read_resource::<Arc<ThreadPool>>()
         .read_resource::<Option<HotReloadStrategy>>()
-        .write_resource::<AssetStorage<MeshAsset>>()        
-        .build(move |_commands, _world, (time, pool, strategy, mesh_storage), _query| {
-            use std::ops::Deref;
-            let strategy = strategy.as_ref();
+        .write_resource::<AssetStorage<MeshAsset>>()
+        .build(
+            move |_commands, _world, (time, pool, strategy, mesh_storage), _query| {
+                use std::ops::Deref;
+                let strategy = strategy.as_ref();
 
-            mesh_storage.process(
-                |vertex_data| {
-                    // Upload vertex data to GPU and give back an asset
-    
-                    Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
-                },
-                time.frame_number(),
-                &**pool,
-                strategy,
-            );
-        })
+                mesh_storage.process(
+                    |vertex_data| {
+                        // Upload vertex data to GPU and give back an asset
+
+                        Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
+                    },
+                    time.frame_number(),
+                    &**pool,
+                    strategy,
+                );
+            },
+        )
 }
 
 enum State {
@@ -134,16 +142,16 @@ impl State {
             State::Start => {
                 let (mesh, progress) = {
                     let mut progress = ProgressCounter::new();
-                    let loader = resources.get::<Loader>().expect("Could not get Loader resource");
+                    let loader = resources
+                        .get::<Loader>()
+                        .expect("Could not get Loader resource");
                     let a: MeshHandle =
                         loader.load("mesh.ron", Ron, &mut progress, &resources.get().unwrap());
 
                     (a, progress)
                 };
 
-                world.insert((), vec![
-                    (mesh,)
-                ]);
+                world.insert((), vec![(mesh,)]);
 
                 Some(State::Loading(progress))
             }
