@@ -79,8 +79,9 @@ impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
+
         builder.add_system(Stage::Begin, build_fly_movement_system::<T>(self.speed, self.right_input_axis, self.up_input_axis, self.forward_input_axis));
-        //builder.add_system(Stage::Begin, build_free_rotation_system(self.sensitivity_x, self.sensitivity_y));
+        builder.add_system(Stage::Begin, build_free_rotation_system(self.sensitivity_x, self.sensitivity_y));
         builder.add_system(Stage::Begin, build_mouse_focus_update_system);
         builder.add_system(Stage::Begin, build_cursor_hide_system);
         Ok(())

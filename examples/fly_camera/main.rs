@@ -2,8 +2,9 @@
 
 use amethyst::{
     assets::{AssetStorage, Loader},
-    controls::{FlyControlBundle, HideCursor},
+    controls::{FlyControlBundle, HideCursor, FlyControl},
     core::{
+        frame_limiter::FrameRateLimitStrategy,
         ecs::prelude::*,
         transform::{LocalToWorld, Rotation, Translation, TransformBundle},
     },
@@ -141,6 +142,7 @@ impl SimpleState for ExampleState {
                 Camera::standard_3d(width, height),
                 translation,
                 rotation,
+                FlyControl,
             )],
         );
 
@@ -174,6 +176,7 @@ fn main() -> Result<(), Error> {
     let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?)
         .with_bundle(
             FlyControlBundle::<StringBindings>::new(
                 Some(String::from("move_x")),
@@ -183,7 +186,6 @@ fn main() -> Result<(), Error> {
             .with_sensitivity(0.1, 0.1),
         )
         .with_bundle(TransformBundle)
-        .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?)
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -193,7 +195,10 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         );
 
-    let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
+    let mut game = Application::build(assets_dir, ExampleState)?
+        .with_frame_limit(FrameRateLimitStrategy::Sleep, 60)
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

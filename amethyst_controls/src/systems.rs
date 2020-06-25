@@ -8,7 +8,7 @@ use amethyst_core::{
     transform::{Translation, Rotation},
     ecs::prelude::*,
     dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    math::{convert, Unit, Vector3, Translation3},
+    math::{convert, Unit, Vector3, Translation3, UnitQuaternion},
     shrev::{EventChannel, ReaderId},
     timing::Time,
 };
@@ -55,12 +55,12 @@ pub fn build_fly_movement_system<T: BindingTypes>(
     })
 }
 
-///// The system that manages the arc ball movement;
-///// In essence, the system will align the camera with its target while keeping the distance to it
-///// and while keeping the orientation of the camera.
-/////
-///// To modify the orientation of the camera in accordance with the mouse input, please use the
-///// `FreeRotationSystem`.
+/// The system that manages the arc ball movement;
+/// In essence, the system will align the camera with its target while keeping the distance to it
+/// and while keeping the orientation of the camera.
+///
+/// To modify the orientation of the camera in accordance with the mouse input, please use the
+/// `FreeRotationSystem`.
 //pub fn build_arc_ball_rotation_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
 //    SystemBuilder::<()>::new("ArcBallRotationSystem")
 //        .with_query(<(Read<ArcBallControl>, Read<Rotation>, Write<Translation>)>::query())
@@ -76,56 +76,59 @@ pub fn build_fly_movement_system<T: BindingTypes>(
 //            }
 //        })
 //}
-//
-///// The system that manages the view rotation.
-/////
-///// Controlled by the mouse.
-///// Goes into an inactive state if the window is not focused (`WindowFocus` resource).
-/////
-///// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
-///// `HideCursor.hide = false`
-//pub fn build_free_rotation_system(
-//    sensitivity_x: f32, 
-//    sensitivity_y: f32, 
-//) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>> {
-//    Box::new(|_world, resources| {
-//        let reader_id = resources
-//            .get_mut::<EventChannel<Event>>()
-//            .unwrap()
-//            .register_reader();
-//
-//        SystemBuilder::<()>::new("FreeRotationSystem")
-//            .read_resource::<EventChannel<Event>>()
-//            .read_resource::<WindowFocus>()
-//            .read_resource::<HideCursor>()
-//            .with_query(<(Read<FlyControl>, Write<Transform>)>::query())
-//            .build(move |commands, world, (events, focus, hide), controls| {
-//                #[cfg(feature = "profiler")]
-//                profile_scope!("free_rotation_system");
-//
-//                let focused = focus.is_focused;
-//                for event in events.read(&mut reader_id) {
-//                    if focused && hide.hide {
-//                        if let Event::DeviceEvent { ref event, .. } = *event {
-//                            if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
-//                                for (_, transform) in controls.iter_mut(world) {
-//                                    transform.append_rotation_x_axis(
-//                                        (-(y as f32) * sensitivity_y).to_radians(),
-//                                    );
-//                                    transform.prepend_rotation_y_axis(
-//                                        (-(x as f32) * sensitivity_x).to_radians(),
-//                                    );
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            })
-//        })
-//}
+
+/// The system that manages the view rotation.
+///
+/// Controlled by the mouse.
+/// Goes into an inactive state if the window is not focused (`WindowFocus` resource).
+///
+/// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
+/// `HideCursor.hide = false`
+pub fn build_free_rotation_system(
+    sensitivity_x: f32, 
+    sensitivity_y: f32, 
+) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>> {
+    Box::new(move |_world, resources| {
+        let mut reader = resources
+            .get_mut::<EventChannel<Event>>()
+            .unwrap()
+            .register_reader();
+
+        SystemBuilder::<()>::new("FreeRotationSystem")
+            .read_resource::<EventChannel<Event>>()
+            .read_resource::<WindowFocus>()
+            .read_resource::<HideCursor>()
+            .with_query(<(Read<FlyControl>, Write<Rotation>)>::query())
+            .build(move |commands, world, (events, focus, hide), controls| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("free_rotation_system");
+
+                let focused = focus.is_focused;
+                for event in events.read(&mut reader) {
+                    if focused && hide.hide {
+                        if let Event::DeviceEvent { ref event, .. } = *event {
+                            if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
+                                for (_, mut rotation) in controls.iter_mut(world) {
+                                    let delta = UnitQuaternion::from_euler_angles(
+                                        0.0, 
+                                        (-(y as f32) * sensitivity_y).to_radians(),
+                                        (-(x as f32) * sensitivity_x).to_radians(),
+                                    );
+
+                                    rotation.0 *= delta;
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+        })
+}
 
 pub fn build_mouse_focus_update_system(_world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable> {
-    let mut reader_id = resources
+    resources.insert(WindowFocus::new());
+
+    let mut reader = resources
         .get_mut::<EventChannel<Event>>()
         .unwrap()
         .register_reader();
@@ -137,7 +140,7 @@ pub fn build_mouse_focus_update_system(_world: &mut World, resources: &mut Resou
             #[cfg(feature = "profiler")]
             profile_scope!("mouse_focus_update_system");
 
-            for event in events.read(&mut reader_id) {
+            for event in events.read(&mut reader) {
                 if let Event::WindowEvent { ref event, .. } = *event {
                     if let WindowEvent::Focused(focused) = *event {
                         focus.is_focused = focused;
@@ -152,9 +155,12 @@ pub fn build_mouse_focus_update_system(_world: &mut World, resources: &mut Resou
 /// Requires the usage MouseFocusUpdateSystem at the same time.
 pub fn build_cursor_hide_system(
     _world: &mut World, 
-    _resources: &mut Resources,
+    resources: &mut Resources,
 ) -> Box<dyn Schedulable> {
     let mut is_hidden = false;
+
+    resources.insert(HideCursor::default());
+
     SystemBuilder::<()>::new("CursorHideSystem")
         .read_resource::<HideCursor>()
         .read_resource::<WindowFocus>()
