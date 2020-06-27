@@ -43,3 +43,62 @@ pub enum Axis {
         horizontal: bool,
     },
 }
+
+pub(super) enum Conflict {
+    Button,
+    ControllerAxis,
+    MouseAxis,
+    MouseWheelAxis,
+}
+
+impl Axis {
+    pub(super) fn conflicts_with_axis(&self, other: &Axis) -> Option<Conflict> {
+        match self {
+            Axis::Emulated {
+                pos: ref self_pos,
+                neg: ref self_neg,
+            } => {
+                if let Axis::Emulated { pos, neg } = other {
+                    if self_pos == pos || self_pos == neg || self_neg == pos || self_neg == neg {
+                        return Some(Conflict::Button);
+                    }
+                }
+            }
+            Axis::Controller {
+                controller_id: ref self_controller_id,
+                axis: ref self_axis,
+                ..
+            } => {
+                if let Axis::Controller {
+                    controller_id,
+                    axis,
+                    ..
+                } = other
+                {
+                    if self_controller_id == controller_id && self_axis == axis {
+                        return Some(Conflict::ControllerAxis);
+                    }
+                }
+            }
+            Axis::Mouse {
+                axis: self_axis, ..
+            } => {
+                if let Axis::Mouse { axis, .. } = other {
+                    if self_axis == axis {
+                        return Some(Conflict::MouseAxis);
+                    }
+                }
+            }
+            Axis::MouseWheel {
+                horizontal: self_horizontal,
+            } => {
+                if let Axis::MouseWheel { horizontal } = other {
+                    if self_horizontal == horizontal {
+                        return Some(Conflict::MouseWheelAxis);
+                    }
+                }
+            }
+        }
+        None
+    }
+}

@@ -12,7 +12,7 @@ use fnv::FnvHashMap as HashMap;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 
-use super::{Axis, Button};
+use super::{axis, Axis, Button};
 
 /// Define a set of types used for bindings configuration.
 /// Usually defaulted to `StringBindings`, which uses `String`s.
@@ -444,72 +444,36 @@ impl<T: BindingTypes> Bindings<T> {
     }
 
     fn check_axis_invariants(&self, id: &T::Axis, axis: &Axis) -> Result<(), BindingError<T>> {
-        match axis {
-            Axis::Emulated {
-                pos: ref axis_pos,
-                neg: ref axis_neg,
-            } => {
-                for (k, a) in self.axes.iter().filter(|(k, _a)| *k != id) {
-                    if let Axis::Emulated { pos, neg } = a {
-                        if axis_pos == pos || axis_pos == neg || axis_neg == pos || axis_neg == neg
-                        {
-                            return Err(BindingError::AxisButtonAlreadyBoundToAxis(
-                                k.clone(),
-                                a.clone(),
-                            ));
-                        }
+        for (k, a) in self.axes.iter().filter(|(k, _a)| *k != id) {
+            if let Some(conflict_type) = axis.conflicts_with_axis(a) {
+                return Err(match conflict_type {
+                    axis::Conflict::Button => {
+                        BindingError::AxisButtonAlreadyBoundToAxis(k.clone(), a.clone())
                     }
-                }
-                for (k, a) in self.actions.iter() {
-                    for c in a {
-                        // Since you can't bind combos to an axis we only need to check combos with length 1.
-                        if c.len() == 1 && (c[0] == *axis_pos || c[0] == *axis_neg) {
-                            return Err(BindingError::AxisButtonAlreadyBoundToAction(
-                                k.clone(),
-                                c[0],
-                            ));
-                        }
+                    axis::Conflict::ControllerAxis => {
+                        BindingError::ControllerAxisAlreadyBound(k.clone())
                     }
-                }
+                    axis::Conflict::MouseAxis => BindingError::MouseAxisAlreadyBound(k.clone()),
+                    axis::Conflict::MouseWheelAxis => {
+                        BindingError::MouseWheelAxisAlreadyBound(k.clone())
+                    }
+                });
             }
-            Axis::Controller {
-                controller_id: ref input_controller_id,
-                axis: ref input_axis,
-                ..
-            } => {
-                for (k, a) in self.axes.iter().filter(|(k, _a)| *k != id) {
-                    if let Axis::Controller {
-                        controller_id,
-                        axis,
-                        ..
-                    } = a
-                    {
-                        if controller_id == input_controller_id && axis == input_axis {
-                            return Err(BindingError::ControllerAxisAlreadyBound(k.clone()));
-                        }
-                    }
-                }
-            }
-            Axis::Mouse { axis, .. } => {
-                for (k, a) in self.axes.iter().filter(|(k, _a)| *k != id) {
-                    if let Axis::Mouse {
-                        axis: mouse_axis, ..
-                    } = a
-                    {
-                        if axis == mouse_axis {
-                            return Err(BindingError::MouseAxisAlreadyBound(k.clone()));
-                        }
-                    }
-                }
-            }
-            Axis::MouseWheel {
-                horizontal: ref input_horizontal,
-            } => {
-                for (k, a) in self.axes.iter().filter(|(k, _a)| *k != id) {
-                    if let Axis::MouseWheel { horizontal } = a {
-                        if input_horizontal == horizontal {
-                            return Err(BindingError::MouseWheelAxisAlreadyBound(k.clone()));
-                        }
+        }
+
+        if let Axis::Emulated {
+            pos: ref axis_pos,
+            neg: ref axis_neg,
+        } = axis
+        {
+            for (k, a) in self.actions.iter() {
+                for c in a {
+                    // Since you can't bind combos to an axis we only need to check combos with length 1.
+                    if c.len() == 1 && (c[0] == *axis_pos || c[0] == *axis_neg) {
+                        return Err(BindingError::AxisButtonAlreadyBoundToAction(
+                            k.clone(),
+                            c[0],
+                        ));
                     }
                 }
             }
