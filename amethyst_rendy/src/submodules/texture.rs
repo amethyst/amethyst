@@ -191,7 +191,7 @@ impl<B: Backend> TextureSub<B> {
     #[inline]
     pub fn loaded(&self, texture_id: TextureId) -> bool {
         match &self.textures[texture_id.0 as usize] {
-            TextureState::Loaded { .. } => true,
+            TextureState::Loaded { handle, .. } if !handle.is_dead() => true,
             _ => false,
         }
     }
