@@ -106,7 +106,7 @@ impl<B: Backend> TextureSub<B> {
                 _ => {}
             }
         }
-        self.generation += self.generation.wrapping_add(1);
+        self.generation = self.generation.wrapping_add(1);
     }
 
     /// Try to insert a new texture for submission in this texture batch. Returns None if it fails.
