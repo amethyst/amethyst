@@ -14,4 +14,4 @@ Keybindings:
 * `Right` - Increase the depth (Z distance) that the camera can see.
 * `Left` - Decrease the depth (Z distance) that the camera can see.
 
-![Fly Camera example screenshot](../assets/img/sprites-ordered.png)
+![sprites ordered example screenshot](./screenshot.png)

@@ -39,7 +39,7 @@ pub fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/states_ui/config/display.ron");
 
     // other assets ('*.ron' files, '*.png' textures, '*.ogg' audio files, ui prefab files, ...) are here
-    let assets_dir = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/states_ui/assets");
 
     let event_loop = EventLoop::new();
     let display_config = DisplayConfig::load(display_config_path)?;

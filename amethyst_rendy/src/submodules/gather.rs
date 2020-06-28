@@ -96,7 +96,7 @@ impl CameraGatherer {
         let camera_position =
             convert::<_, Vector3<f32>>(transform.global_matrix().column(3).xyz()).into_pod();
 
-        let proj = camera.as_matrix();
+        let proj = &camera.matrix;
         let view = transform.global_view_matrix();
 
         let proj_view: [[f32; 4]; 4] = ((*proj) * view).into();

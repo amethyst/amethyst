@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_audio"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Xaeroxe <kieseljake@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Audio support for Amethyst"

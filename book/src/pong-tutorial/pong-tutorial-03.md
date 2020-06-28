@@ -203,8 +203,9 @@ Let's add this system to our `GameDataBuilder` in `main.rs`:
 
 ```rust,ignore
 mod systems; // Import the module
-// --snip--
+```
 
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;

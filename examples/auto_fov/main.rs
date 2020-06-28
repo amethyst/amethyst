@@ -43,7 +43,7 @@ fn main() -> Result<(), Error> {
 
     let app_dir = amethyst::utils::application_dir("examples")?;
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
-    let assets_dir = app_dir.join("assets");
+    let assets_dir = app_dir.join("auto_fov/assets");
 
     let event_loop = EventLoop::new();
     let display_config = DisplayConfig::load(display_config_path)?;
@@ -214,9 +214,9 @@ impl<'a> System<'a> for ShowFovSystem {
 }
 
 fn get_fovy(camera: &Camera) -> f32 {
-    (-1.0 / camera.as_matrix()[(1, 1)]).atan() * 2.0
+    (-1.0 / camera.matrix[(1, 1)]).atan() * 2.0
 }
 
 fn get_aspect(camera: &Camera) -> f32 {
-    (camera.as_matrix()[(1, 1)] / camera.as_matrix()[(0, 0)]).abs()
+    (camera.matrix[(1, 1)] / camera.matrix[(0, 0)]).abs()
 }

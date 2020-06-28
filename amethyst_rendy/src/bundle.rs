@@ -954,7 +954,7 @@ mod tests {
                     format: Format::D32Sfloat,
                     clear: Some(ClearValue {
                         depth_stencil: ClearDepthStencil {
-                            depth: 1.0,
+                            depth: 0.0,
                             stencil: 0,
                         },
                     }),
@@ -973,7 +973,7 @@ mod tests {
             Format::D32Sfloat,
             Some(ClearValue {
                 depth_stencil: ClearDepthStencil {
-                    depth: 1.0,
+                    depth: 0.0,
                     stencil: 0,
                 },
             }),
@@ -1044,7 +1044,7 @@ mod tests {
                     format: Format::D32Sfloat,
                     clear: Some(ClearValue {
                         depth_stencil: ClearDepthStencil {
-                            depth: 1.0,
+                            depth: 0.0,
                             stencil: 0,
                         },
                     }),
@@ -1067,7 +1067,7 @@ mod tests {
             Format::D32Sfloat,
             Some(ClearValue {
                 depth_stencil: ClearDepthStencil {
-                    depth: 1.0,
+                    depth: 0.0,
                     stencil: 0,
                 },
             }),

@@ -1,0 +1,9 @@
+/*!
+    @import /amethyst_window/src/config.rs#DisplayConfig
+    DisplayConfig
+*/
+
+(
+  title: "Optional graphics example",
+  icon: Some("examples/window/assets/logo.png"),
+)

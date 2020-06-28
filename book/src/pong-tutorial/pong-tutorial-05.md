@@ -365,7 +365,7 @@ game window. You'll notice that the scores don't update yet when the ball makes
 it to either side, so we'll add that next!
 
 
-[font-download]: https://github.com/amethyst/amethyst/raw/master/examples/assets/font/square.ttf
+[font-download]: https://github.com/amethyst/amethyst/raw/master/examples/pong_tutorial_05/assets/font/square.ttf
 [input-handler]: https://docs.amethyst.rs/stable/amethyst_input/struct.InputHandler.html
 [ui-bundle]: https://docs.amethyst.rs/stable/amethyst_ui/struct.UiBundle.html
 

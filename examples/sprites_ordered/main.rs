@@ -13,7 +13,6 @@ use amethyst::{
     input::{get_key, is_close_requested, is_key_down, ElementState, VirtualKeyCode},
     prelude::*,
     renderer::{
-        camera::Projection,
         plugins::{RenderFlat2D, RenderToWindow},
         rendy::hal::command::ClearColor,
         types::DefaultBackend,
@@ -216,14 +215,14 @@ impl Example {
             // Define the view that the camera can see. It makes sense to keep the `near` value as
             // 0.0, as this means it starts seeing anything that is 0 units in front of it. The
             // `far` value is the distance the camera can see facing the origin.
-            .with(Camera::from(Projection::orthographic(
+            .with(Camera::orthographic(
                 -width / 2.0,
                 width / 2.0,
                 -height / 2.0,
                 height / 2.0,
                 0.0,
                 self.camera_depth_vision,
-            )))
+            ))
             .build();
 
         self.camera = Some(camera);
@@ -366,7 +365,7 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/sprites_ordered/config/display.ron");
     let display_config = DisplayConfig::load(display_config_path)?;
 
-    let assets_dir = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/sprites_ordered/assets/");
 
     let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()

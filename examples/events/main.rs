@@ -93,7 +93,7 @@ impl SimpleState for GameplayState {}
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let assets_dir = application_root_dir()?.join("./");
+    let assets_dir = application_root_dir()?.join("examples/events/assets");
 
     let game_data = GameDataBuilder::default().with_bundle(MyBundle)?;
 

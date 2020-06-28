@@ -242,12 +242,6 @@ fn load_node(
                 })?,
                 fovy: proj.yfov(),
                 znear: proj.znear(),
-                zfar: proj.zfar().ok_or_else(|| {
-                    format_err!(
-                        "Camera {} is perspective projection, but has no far plane",
-                        camera.index()
-                    )
-                })?,
             },
         });
     }

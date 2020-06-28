@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_window"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Frizi <frizi09@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Windowing support for Amethyst engine."

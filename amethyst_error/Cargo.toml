@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_error"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["John-John Tedro <udoprog@tedro.se>", "Amethyst Foundation <contact@amethyst.rs>"]
 readme = "README.md"
 edition = "2018"

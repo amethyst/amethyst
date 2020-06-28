@@ -27,7 +27,7 @@ fn main() -> Result<()> {
     //    // Laminar
     //    let socket = LaminarSocket::bind("0.0.0.0:3457")?;
 
-    let assets_dir = application_root_dir()?.join("./");
+    let assets_dir = application_root_dir()?.join("examples/net_server");
 
     let game_data = GameDataBuilder::default()
         //        // UDP

@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_derive"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Simon Rönnberg <seamonr@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst derive"

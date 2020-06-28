@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_tiles"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Walter Pearce <jaynus@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "2D and 3D Tile Support Library"

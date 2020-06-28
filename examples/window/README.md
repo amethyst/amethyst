@@ -2,4 +2,4 @@
 
 Opens a window and creates a render context. Additionally, shows basic raw input handling.
 
-![window example screenshot](../assets/img/window.png)
+![window example screenshot](./screenshot.png)

@@ -2,4 +2,4 @@
 
 Renders a custom UI.
 
-![custom ui example screenshot](../assets/img/custom-ui.png)
+![custom ui example screenshot](./screenshot.png)

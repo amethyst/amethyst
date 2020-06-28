@@ -1,5 +1,9 @@
 ## Arc ball Camera
 
-Shows the Arc Ball Camera.
+Demonstrates the Arc Ball Camera centered on a red teapot. A red cube is also in the scene.
 
-![Fly Camera example screenshot](../assets/img/arc-ball-camera.png)
+Keybindings:
+
+* `mouse` - Move the mouse to rotate the camera around the teapot
+
+![arc ball camera example screenshot](./screenshot.png)

@@ -16,7 +16,7 @@ mod system;
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let assets_dir = application_root_dir()?.join("./");
+    let assets_dir = application_root_dir()?.join("examples/events_custom_state_event/assets");
 
     let game_data = GameDataBuilder::default().with(system::IncreaseGameDifficultySystem, "", &[]);
 

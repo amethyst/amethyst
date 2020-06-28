@@ -430,7 +430,7 @@ fn build_sprite_pipeline<B: Backend>(
                     },
                 }])
                 .with_depth_test(pso::DepthTest {
-                    fun: pso::Comparison::Less,
+                    fun: pso::Comparison::Greater,
                     write: !transparent,
                 }),
         )

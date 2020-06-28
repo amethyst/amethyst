@@ -198,7 +198,10 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_directory = app_root.join("examples").join("assets");
+    let assets_directory = app_root
+        .join("examples")
+        .join("renderable_custom")
+        .join("assets");
 
     let display_config_path = app_root
         .join("examples")
@@ -349,14 +352,17 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             Some(clear),
         );
 
-        let clear = ClearValue {
-            depth_stencil: ClearDepthStencil {
-                depth: 1.0,
-                stencil: 0,
-            },
-        };
-
-        let depth = graph_builder.create_image(window_kind, 1, Format::D32Sfloat, Some(clear));
+        let depth = graph_builder.create_image(
+            window_kind,
+            1,
+            Format::D32Sfloat,
+            Some(ClearValue {
+                depth_stencil: ClearDepthStencil {
+                    depth: 0.0,
+                    stencil: 0,
+                },
+            }),
+        );
 
         // Create our first `Subpass`, which contains the DrawShaded and DrawUi render groups.
         // We pass the subpass builder a description of our groups for construction

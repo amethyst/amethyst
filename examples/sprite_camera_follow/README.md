@@ -2,4 +2,4 @@
 
 Camera follows an entity with sprites.
 
-![sprite camera example screenshot](../assets/img/sprite-camera-follow.png)
+![sprite camera follow example screenshot](./screenshot.png)

@@ -99,7 +99,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/custom_ui/config/display.ron");
-    let assets_dir = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/custom_ui/assets");
 
     let event_loop = EventLoop::new();
     let display_config = DisplayConfig::load(display_config_path)?;

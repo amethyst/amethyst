@@ -353,10 +353,13 @@ This is rather inconvenient &mdash; to need to manually register each component
 before it can be used. There *must* be a better way. **Hint:** there is.
 
 When we add systems to our application, any component that a `System` uses is
-automatically registered. However, as we haven't got any `System`s, we have to
+automatically registered. 
+However, as we haven't got any `System`s, we have to
 live with registering the `Paddle` component manually.
 
 Let's run the game again.
+
+## Bundles
 
 Amethyst has a lot of internal systems it uses to keep things running we need
 to bring into the context of the `World`. For simplicity, these have been
@@ -423,7 +426,7 @@ First, let's declare the function and load the sprite sheet's image data.
 #     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
-#         camera::{Camera, Projection},
+#         camera::Camera,
 #         formats::texture::ImageFormat,
 #         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
 #         Texture,
@@ -511,7 +514,7 @@ Finally, we load the file containing the position of each sprite on the sheet.
 #     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
-#         camera::{Camera, Projection},
+#         camera::Camera,
 #         formats::texture::ImageFormat,
 #         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
 #         Texture,

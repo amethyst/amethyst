@@ -182,7 +182,7 @@ fn main() -> Result<(), amethyst::Error> {
 
     let display_config_path = app_root.join("examples/gltf/config/display.ron");
     let display_config = DisplayConfig::load(display_config_path)?;
-    let assets_dir = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/gltf/assets/");
 
     let event_loop = EventLoop::new();
     let game_data = GameDataBuilder::default()

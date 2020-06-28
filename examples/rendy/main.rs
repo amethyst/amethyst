@@ -595,7 +595,7 @@ fn main() -> amethyst::Result<()> {
         .join("config")
         .join("display.ron");
     let display_config = DisplayConfig::load(display_config_path)?;
-    let assets_dir = app_root.join("examples").join("assets");
+    let assets_dir = app_root.join("examples").join("rendy").join("assets");
 
     let event_loop = EventLoop::new();
 

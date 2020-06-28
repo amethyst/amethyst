@@ -123,7 +123,7 @@ mod window {
                 format: Format::D32Sfloat,
                 clear: Some(ClearValue {
                     depth_stencil: ClearDepthStencil {
-                        depth: 1.0,
+                        depth: 0.0,
                         stencil: 0,
                     },
                 }),

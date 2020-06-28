@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_test"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Azriel Hoh <azriel91@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst test utilities crate"
