@@ -27,6 +27,7 @@ log = "0.4.6"
 serde = { version = "1.0", features = ["derive"] }
 specs-derive = "0.4.1"
 specs-hierarchy = "0.6.0"
+dunce = "1"
 
 thread_profiler = { version = "0.3", optional = true }
 
