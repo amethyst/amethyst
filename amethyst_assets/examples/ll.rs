@@ -5,7 +5,7 @@ use std::{str::from_utf8, sync::Arc, thread::sleep, time::Duration};
 use rayon::ThreadPoolBuilder;
 
 use amethyst_assets::*;
-use amethyst_core::ecs::prelude::VecStorage;
+
 use amethyst_error::Error;
 
 #[derive(Clone, Debug)]
@@ -14,7 +14,6 @@ struct DummyAsset(String);
 impl Asset for DummyAsset {
     const NAME: &'static str = "example::DummyAsset";
     type Data = String;
-    type HandleStorage = VecStorage<Handle<DummyAsset>>;
 }
 
 #[derive(Clone, Debug)]
