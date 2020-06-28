@@ -5,14 +5,13 @@ use amethyst::{
     controls::{FlyControlBundle, HideCursor, FlyControl},
     core::{
         frame_limiter::FrameRateLimitStrategy,
-        ecs::prelude::*,
         transform::{LocalToWorld, Rotation, Translation, TransformBundle},
     },
     input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
         camera::Camera,
-        plugins::{RenderShaded3D, RenderToWindow},
+        plugins::{RenderShaded3D, RenderToWindow, RenderDebugLines},
         mtl::{Material, MaterialDefaults},
         palette::{LinSrgba, Srgb},
         light::{Light, PointLight},
@@ -106,7 +105,7 @@ impl SimpleState for ExampleState {
         }
         .into();
 
-        let mut light1_translation = Translation::new(6.0, 6.0, -6.0);
+        let light1_translation = Translation::new(6.0, 6.0, -6.0);
 
         let light2: Light = PointLight {
             intensity: 5.0,
@@ -115,7 +114,7 @@ impl SimpleState for ExampleState {
         }
         .into();
 
-        let mut light2_translation = Translation::new(6.0, -6.0, -6.0);
+        let light2_translation = Translation::new(6.0, -6.0, -6.0);
 
         world.insert(
             (),
@@ -127,8 +126,8 @@ impl SimpleState for ExampleState {
 
         println!("Put camera");
 
-        let mut translation = Translation::new(0.0, 0.0, -12.0);
-        let mut rotation = Rotation::from_euler_angles(0.0, std::f32::consts::PI, 0.0);
+        let translation = Translation::new(0.0, 0.0, -12.0);
+        let rotation = Rotation::from_euler_angles(0.0, 0.0, 0.0);
 
         let (width, height) = {
             let dim = resources.get::<ScreenDimensions>().unwrap();
@@ -153,7 +152,7 @@ impl SimpleState for ExampleState {
         data: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
-        let StateData { world, resources, .. } = data;
+        let StateData { resources, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
                 let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
@@ -190,7 +189,7 @@ fn main() -> Result<(), Error> {
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                        .with_clear([0.0, 0.0, 0.0, 1.0]),
                 )
                 .with_plugin(RenderShaded3D::default()),
         );
