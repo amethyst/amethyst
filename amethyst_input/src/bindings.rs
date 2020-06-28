@@ -95,10 +95,16 @@ impl BindingTypes for StringBindings {
 ///             pos: Key(Up),
 ///             neg: Key(Down)
 ///         ),
-///         "leftright": Emulated(
-///             pos: Key(Right),
-///             neg: Key(Left)
-///         )
+///         "leftright": Multiple([ // Multiple bindings for one axis
+///             Emulated(
+///                 pos: Key(Right),
+///                 neg: Key(Left)
+///             ),
+///             Emulated(
+///                 pos: Key(D),
+///                 neg: Key(A)
+///             )
+///         ])
 ///     },
 ///     actions: {
 ///         "fire": [ [Mouse(Left)], [Key(X)] ], // Multiple bindings for one action
@@ -426,10 +432,8 @@ impl<T: BindingTypes> Bindings<T> {
         }
         if bind.len() == 1 {
             for (k, a) in self.axes.iter() {
-                if let Axis::Emulated { pos, neg } = a {
-                    if bind[0] == *pos || bind[0] == *neg {
-                        return Err(BindingError::ButtonBoundToAxis(k.clone(), a.clone()));
-                    }
+                if a.conflicts_with_button(&bind[0]) {
+                    return Err(BindingError::ButtonBoundToAxis(k.clone(), a.clone()));
                 }
             }
         }

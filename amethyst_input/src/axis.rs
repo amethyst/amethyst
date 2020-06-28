@@ -42,6 +42,8 @@ pub enum Axis {
         /// You almost always want this false.
         horizontal: bool,
     },
+    /// Represents multiple input alternatives. Allows to bind more than one input to a single axis.
+    Multiple(Vec<Axis>),
 }
 
 pub(super) enum Conflict {
@@ -52,6 +54,14 @@ pub(super) enum Conflict {
 }
 
 impl Axis {
+    pub(super) fn conflicts_with_button(&self, other: &Button) -> bool {
+        match self {
+            Axis::Emulated { pos, neg } => other == pos || other == neg,
+            Axis::Multiple(axes) => axes.iter().any(|a| a.conflicts_with_button(other)),
+            _ => false,
+        }
+    }
+
     pub(super) fn conflicts_with_axis(&self, other: &Axis) -> Option<Conflict> {
         match self {
             Axis::Emulated {
@@ -96,6 +106,15 @@ impl Axis {
                     if self_horizontal == horizontal {
                         return Some(Conflict::MouseWheelAxis);
                     }
+                }
+            }
+            Axis::Multiple(axes) => {
+                if let Some(inner_conflict) = axes
+                    .iter()
+                    .map(|a| a.conflicts_with_axis(other))
+                    .find(|x| x.is_some())
+                {
+                    return inner_conflict;
                 }
             }
         }

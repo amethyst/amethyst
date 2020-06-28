@@ -518,15 +518,10 @@ where
         }
     }
 
-    /// Returns the value of an axis by the id, if the id doesn't exist this returns None.
-    pub fn axis_value<A>(&self, id: &A) -> Option<f32>
-    where
-        T::Axis: Borrow<A>,
-        A: Hash + Eq + ?Sized,
-    {
-        self.bindings.axes.get(id).map(|a| match *a {
+    fn axis_value_impl(&self, a: &Axis) -> f32 {
+        match a {
             Axis::Emulated { pos, neg, .. } => {
-                match (self.button_is_down(pos), self.button_is_down(neg)) {
+                match (self.button_is_down(*pos), self.button_is_down(*neg)) {
                     (true, false) => 1.0,
                     (false, true) => -1.0,
                     _ => 0.0,
@@ -541,10 +536,10 @@ where
             } => self
                 .controller_axes
                 .iter()
-                .find(|&&(id, a, _)| id == controller_id && a == axis)
-                .map(|&(_, _, val)| if invert { -val } else { val })
+                .find(|&&(id, a, _)| id == *controller_id && a == *axis)
+                .map(|&(_, _, val)| if *invert { -val } else { val })
                 .map(|val| {
-                    let dead_zone = dead_zone as f32;
+                    let dead_zone = *dead_zone as f32;
                     if val < -dead_zone {
                         (val + dead_zone) / (1.0 - dead_zone)
                     } else if val > dead_zone {
@@ -569,7 +564,7 @@ where
 
                 let rel_delta = delta / radius;
 
-                if over_extendable {
+                if *over_extendable {
                     rel_delta
                 } else if rel_delta > 1. {
                     1.
@@ -579,8 +574,22 @@ where
                     rel_delta
                 }
             }
-            Axis::MouseWheel { horizontal } => self.mouse_wheel_value(horizontal),
-        })
+            Axis::MouseWheel { horizontal } => self.mouse_wheel_value(*horizontal),
+            Axis::Multiple(axes) => axes
+                .iter()
+                .map(|a| self.axis_value_impl(a))
+                .max_by(|x, y| x.abs().partial_cmp(&y.abs()).unwrap())
+                .unwrap_or(0.0),
+        }
+    }
+
+    /// Returns the value of an axis by the id, if the id doesn't exist this returns None.
+    pub fn axis_value<A>(&self, id: &A) -> Option<f32>
+    where
+        T::Axis: Borrow<A>,
+        A: Hash + Eq + ?Sized,
+    {
+        self.bindings.axes.get(id).map(|a| self.axis_value_impl(a))
     }
 
     /// Returns true if any of the actions bindings is down.
