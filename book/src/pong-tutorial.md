@@ -43,6 +43,6 @@ let display_config_path = app_root.join("config/display.ron");
 let assets_dir = app_root.join("assets/");
 ```
 
-[pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong
+[pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong_tutorial_06
 [examples]: https://github.com/amethyst/amethyst/tree/master/examples
 
