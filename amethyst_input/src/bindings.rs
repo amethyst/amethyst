@@ -465,20 +465,14 @@ impl<T: BindingTypes> Bindings<T> {
             }
         }
 
-        if let Axis::Emulated {
-            pos: ref axis_pos,
-            neg: ref axis_neg,
-        } = axis
-        {
-            for (k, a) in self.actions.iter() {
-                for c in a {
-                    // Since you can't bind combos to an axis we only need to check combos with length 1.
-                    if c.len() == 1 && (c[0] == *axis_pos || c[0] == *axis_neg) {
-                        return Err(BindingError::AxisButtonAlreadyBoundToAction(
-                            k.clone(),
-                            c[0],
-                        ));
-                    }
+        for (k, a) in self.actions.iter() {
+            for c in a {
+                // Since you can't bind combos to an axis we only need to check combos with length 1.
+                if c.len() == 1 && axis.conflicts_with_button(&c[0]) {
+                    return Err(BindingError::AxisButtonAlreadyBoundToAction(
+                        k.clone(),
+                        c[0],
+                    ));
                 }
             }
         }
@@ -669,6 +663,21 @@ mod tests {
             bindings
                 .insert_axis(
                     String::from("test_axis"),
+                    Axis::Multiple(vec![Axis::Emulated {
+                        pos: Button::Mouse(MouseButton::Left),
+                        neg: Button::Mouse(MouseButton::Right),
+                    }])
+                )
+                .unwrap_err(),
+            BindingError::AxisButtonAlreadyBoundToAction(
+                String::from("test_action"),
+                Button::Mouse(MouseButton::Left)
+            )
+        );
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("test_axis"),
                     Axis::Emulated {
                         pos: Button::Key(VirtualKeyCode::Left),
                         neg: Button::Key(VirtualKeyCode::Right),
@@ -798,6 +807,149 @@ mod tests {
                 )
                 .unwrap_err(),
             BindingError::MouseWheelAxisAlreadyBound(String::from("test_mouse_wheel_axis"))
+        );
+    }
+
+    #[test]
+    fn multiple_axis_conflicts() {
+        let mut bindings = Bindings::<StringBindings>::new();
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("normal_axis"),
+                    Axis::Emulated {
+                        pos: Button::Key(VirtualKeyCode::A),
+                        neg: Button::Key(VirtualKeyCode::B)
+                    },
+                )
+                .unwrap(),
+            None
+        );
+
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("multiple_axis"),
+                    Axis::Multiple(vec![
+                        Axis::Emulated {
+                            pos: Button::Key(VirtualKeyCode::C),
+                            neg: Button::Key(VirtualKeyCode::D)
+                        },
+                        Axis::Emulated {
+                            pos: Button::Key(VirtualKeyCode::A),
+                            neg: Button::Key(VirtualKeyCode::E)
+                        }
+                    ])
+                )
+                .unwrap_err(),
+            BindingError::AxisButtonAlreadyBoundToAxis(
+                String::from("normal_axis"),
+                Axis::Emulated {
+                    pos: Button::Key(VirtualKeyCode::A),
+                    neg: Button::Key(VirtualKeyCode::B)
+                }
+            )
+        );
+
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("multiple_axis"),
+                    Axis::Multiple(vec![
+                        Axis::Emulated {
+                            pos: Button::Key(VirtualKeyCode::C),
+                            neg: Button::Key(VirtualKeyCode::D)
+                        },
+                        Axis::Emulated {
+                            pos: Button::Key(VirtualKeyCode::E),
+                            neg: Button::Key(VirtualKeyCode::F)
+                        }
+                    ])
+                )
+                .unwrap(),
+            None
+        );
+
+        assert_eq!(
+            bindings
+                .insert_action_binding(
+                    String::from("test_action"),
+                    [Button::Key(VirtualKeyCode::C),].iter().cloned(),
+                )
+                .unwrap_err(),
+            BindingError::ButtonBoundToAxis(
+                String::from("multiple_axis"),
+                Axis::Multiple(vec![
+                    Axis::Emulated {
+                        pos: Button::Key(VirtualKeyCode::C),
+                        neg: Button::Key(VirtualKeyCode::D)
+                    },
+                    Axis::Emulated {
+                        pos: Button::Key(VirtualKeyCode::E),
+                        neg: Button::Key(VirtualKeyCode::F)
+                    }
+                ])
+            )
+        );
+
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("normal_controller_axis"),
+                    Axis::Controller {
+                        controller_id: 0,
+                        axis: ControllerAxis::RightX,
+                        invert: false,
+                        dead_zone: 0.25,
+                    }
+                )
+                .unwrap(),
+            None
+        );
+
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("multiple_controller_axis"),
+                    Axis::Multiple(vec![Axis::Controller {
+                        controller_id: 0,
+                        axis: ControllerAxis::RightX,
+                        invert: false,
+                        dead_zone: 0.25,
+                    }])
+                )
+                .unwrap_err(),
+            BindingError::ControllerAxisAlreadyBound(String::from("normal_controller_axis"))
+        );
+
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("multiple_controller_axis"),
+                    Axis::Multiple(vec![Axis::Controller {
+                        controller_id: 0,
+                        axis: ControllerAxis::LeftX,
+                        invert: false,
+                        dead_zone: 0.25,
+                    }])
+                )
+                .unwrap(),
+            None
+        );
+
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("multiple_controller_axis2"),
+                    Axis::Multiple(vec![Axis::Controller {
+                        controller_id: 0,
+                        axis: ControllerAxis::LeftX,
+                        invert: false,
+                        dead_zone: 0.25,
+                    }])
+                )
+                .unwrap_err(),
+            BindingError::ControllerAxisAlreadyBound(String::from("multiple_controller_axis"))
         );
     }
 

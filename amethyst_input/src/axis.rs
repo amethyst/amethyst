@@ -63,6 +63,16 @@ impl Axis {
     }
 
     pub(super) fn conflicts_with_axis(&self, other: &Axis) -> Option<Conflict> {
+        if let Axis::Multiple(axes) = other {
+            if let Some(inner_conflict) = axes
+                .iter()
+                .map(|a| self.conflicts_with_axis(a))
+                .find(|x| x.is_some())
+            {
+                return inner_conflict;
+            }
+        }
+
         match self {
             Axis::Emulated {
                 pos: ref self_pos,
