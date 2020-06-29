@@ -48,6 +48,9 @@ pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I:
 }
 
 /// Convenience structure for building a button
+/// Note that since there can only be one "ui_loader" in use, and WidgetId of the UiBundle and
+/// UiButtonBuilder should match, you can only use one type of WidgetId, e.g. you cant use both
+/// UiButtonBuilder<(), u32> and UiButtonBuilder<(), String>.
 #[derive(Debug, Clone)]
 pub struct UiButtonBuilder<G, I: WidgetId> {
     id: Option<I>,
