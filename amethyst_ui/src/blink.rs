@@ -1,9 +1,6 @@
 //! Module for the Blink component and BlinkSystem.
 
-use amethyst_core::{
-    ecs::{Component, DenseVecStorage, Entities, Join, Read, System, WriteStorage},
-    Hidden, Time,
-};
+use amethyst_core::{ecs::prelude::*, Hidden, Time};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -27,52 +24,45 @@ pub struct Blink {
     pub absolute_time: bool,
 }
 
-impl Component for Blink {
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// System updating the `Blink` component.
 #[derive(Debug)]
 pub struct BlinkSystem;
 
-impl<'a> System<'a> for BlinkSystem {
-    type SystemData = (
-        Entities<'a>,
-        WriteStorage<'a, Hidden>,
-        WriteStorage<'a, Blink>,
-        Read<'a, Time>,
-    );
+pub fn build_blink_system() -> Box<dyn Schedulable> {
+    SystemBuilder::<()>::new("BlinkSystem")
+        .read_resource::<Time>()
+        .read_component::<Hidden>()
+        .with_query(Write::<Blink>::query())
+        .build(move |commands, world, time, query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("blink_system");
 
-    fn run(&mut self, (entities, mut hiddens, mut blinks, time): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("blink_system");
+            let abs_sec = time.delta_seconds();
+            let abs_unscaled_sec = time.delta_real_seconds();
 
-        let abs_sec = time.delta_seconds();
-        let abs_unscaled_sec = time.delta_real_seconds();
+            let (mut query_world, world) = world.split_for_query(&query);
+            for (entity, mut blink) in query.iter_entities_mut(&mut query_world) {
+                if blink.absolute_time {
+                    blink.timer += abs_unscaled_sec;
+                } else {
+                    blink.timer += abs_sec;
+                }
 
-        for (entity, blink) in (&*entities, &mut blinks).join() {
-            if blink.absolute_time {
-                blink.timer += abs_unscaled_sec;
-            } else {
-                blink.timer += abs_sec;
+                // Reset timer because we ended the last cycle.
+                // Keeps the overflow time.
+                if blink.timer > blink.delay {
+                    blink.timer -= blink.delay;
+                }
+
+                // We could cache the division, but that would require a stricter api on Blink.
+                let on = blink.timer < blink.delay / 2.0;
+                let hidden = world.get_component::<Hidden>(entity);
+
+                match (on, hidden.is_some()) {
+                    (true, false) => commands.add_component(entity, Hidden),
+                    (false, true) => commands.remove_component::<Hidden>(entity),
+                    _ => {}
+                };
             }
-
-            // Reset timer because we ended the last cycle.
-            // Keeps the overflow time.
-            if blink.timer > blink.delay {
-                blink.timer -= blink.delay;
-            }
-
-            // We could cache the division, but that would require a stricter api on Blink.
-            let on = blink.timer < blink.delay / 2.0;
-
-            match (on, hiddens.contains(entity)) {
-                (true, false) => hiddens.insert(entity, Hidden).unwrap_or_else(|_| {
-                    panic!("Failed to insert Hidden component for {:?}", entity)
-                }),
-                (false, true) => hiddens.remove(entity),
-                _ => None,
-            };
-        }
-    }
+        })
 }
