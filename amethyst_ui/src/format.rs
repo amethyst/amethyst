@@ -2,7 +2,6 @@ use glyph_brush::rusttype::Font;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{Asset, Format, Handle, ProcessableAsset, ProcessingState};
-use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::{format_err, Error, ResultExt};
 
 /// A loaded set of fonts from a file.
@@ -22,7 +21,7 @@ amethyst_assets::register_format_type!(FontData);
 impl Asset for FontAsset {
     const NAME: &'static str = "ui::Font";
     type Data = FontData;
-    type HandleStorage = VecStorage<Handle<Self>>;
+    type HandleStorage = Vec<Handle<Self>>;
 }
 
 impl ProcessableAsset for FontAsset {

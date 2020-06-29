@@ -6,10 +6,7 @@ use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use winit::{ElementState, Event, MouseButton, WindowEvent};
 
 use amethyst_core::{
-    ecs::prelude::{
-        Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, System, SystemData,
-        WriteStorage,
-    },
+    ecs::prelude::*,
     shrev::{EventChannel, ReaderId},
     timing::Time,
 };
@@ -81,10 +78,6 @@ impl UiText {
     }
 }
 
-impl Component for UiText {
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// If this component is attached to an entity with a UiText then that UiText is editable.
 /// This component also controls how that editing works.
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -129,10 +122,6 @@ impl TextEditing {
             cursor_blink_timer: 0.0,
         }
     }
-}
-
-impl Component for TextEditing {
-    type Storage = DenseVecStorage<Self>;
 }
 
 /// This system processes the underlying UI data as needed.
