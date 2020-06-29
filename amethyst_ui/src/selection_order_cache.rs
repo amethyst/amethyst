@@ -1,7 +1,4 @@
-use amethyst_core::ecs::{
-    hibitset::BitSet, storage::GenericReadStorage, Entities, Entity, Join, ReadStorage, System,
-    Write,
-};
+use amethyst_core::ecs::prelude::*;
 use derive_new::new;
 use std::{cmp::Ordering, marker::PhantomData};
 
@@ -46,78 +43,72 @@ impl CachedSelectionOrder {
 }
 
 /// System in charge of updating the CachedSelectionOrder resource on each frame.
-#[derive(Debug, Default, new)]
-pub struct CacheSelectionOrderSystem<G> {
-    phantom: PhantomData<G>,
-}
-
-impl<'a, G> System<'a> for CacheSelectionOrderSystem<G>
-where
-    G: PartialEq + Send + Sync + 'static,
+pub fn build_cache_selection_order_system<G>() -> Box<dyn Schedulable> 
+where 
+    G:  PartialEq + Send + Sync + 'static,
 {
-    type SystemData = (
-        Entities<'a>,
-        Write<'a, CachedSelectionOrder>,
-        ReadStorage<'a, Selectable<G>>,
-    );
-    fn run(&mut self, (entities, mut cache, selectables): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("cache_selection_order_system");
-
-        {
-            let mut rm = vec![];
-            cache.cache.retain(|&(_t, entity)| {
-                let keep = selectables.contains(entity);
-                if !keep {
-                    rm.push(entity.id());
-                }
-                keep
-            });
-            rm.iter().for_each(|e| {
-                cache.cached.remove(*e);
-            });
-        }
-
-        for &mut (ref mut t, entity) in &mut cache.cache {
-            *t = selectables.get(entity).unwrap().order;
-        }
-
-        // Attempt to insert the new entities in sorted position.  Should reduce work during
-        // the sorting step.
-        let transform_set = selectables.mask().clone();
-        {
-            let mut inserts = vec![];
-            let mut pushes = vec![];
+    SystemBuilder::<()>::new("CacheSelectionOrderSystem")
+        .write_resource::<CachedSelectionOrder>()
+        .read_component::<Selectable<G>>()
+        .with_query(Read::<Selectable<G>>::query())
+        .build(move |commands, world, cache, query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("cache_selection_order_system");
+    
             {
-                // Create a bitset containing only the new indices.
-                let new = (&transform_set ^ &cache.cached) & &transform_set;
-                for (entity, selectable, _new) in (&*entities, &selectables, &new).join() {
-                    let pos = cache
-                        .cache
-                        .iter()
-                        .position(|&(cached_t, _)| selectable.order < cached_t);
-                    match pos {
-                        Some(pos) => inserts.push((pos, (selectable.order, entity))),
-                        None => pushes.push((selectable.order, entity)),
+                let mut rm = vec![];
+                cache.cache.retain(|&(_t, entity)| {
+                    let keep = world.get_component::<Selectable<G>>(entity).is_some();
+                    if !keep {
+                        rm.push(entity.id());
                     }
-                }
+                    keep
+                });
+                rm.iter().for_each(|e| {
+                    cache.cached.remove(*e);
+                });
             }
-            inserts.iter().for_each(|e| cache.cache.insert(e.0, e.1));
-            pushes.iter().for_each(|e| cache.cache.push(*e));
-        }
-        cache.cached = transform_set;
 
-        // Sort from smallest tab order to largest tab order, then by entity creation time.
-        // Most of the time this shouldn't do anything but you still need it for if the tab orders
-        // change.
-        cache
-            .cache
-            .sort_unstable_by(|&(t1, ref e1), &(t2, ref e2)| {
-                let ret = t1.cmp(&t2);
-                if ret == Ordering::Equal {
-                    return e1.cmp(e2);
+            for &mut (ref mut t, entity) in &mut cache.cache {
+                *t = selectables.get(entity).unwrap().order;
+            }
+
+            // Attempt to insert the new entities in sorted position.  Should reduce work during
+            // the sorting step.
+            let transform_set = selectables.mask().clone();
+            {
+                let mut inserts = vec![];
+                let mut pushes = vec![];
+                {
+                    // Create a bitset containing only the new indices.
+                    for (entity, selectable, _new) in query.iter_entities(world) {
+                        let pos = cache
+                            .cache
+                            .iter()
+                            .position(|&(cached_t, _)| selectable.order < cached_t);
+                        match pos {
+                            Some(pos) => inserts.push((pos, (selectable.order, entity))),
+                            None => pushes.push((selectable.order, entity)),
+                        }
+                    }
+
                 }
-                ret
-            });
-    }
+                inserts.iter().for_each(|e| cache.cache.insert(e.0, e.1));
+                pushes.iter().for_each(|e| cache.cache.push(*e));
+            }
+            cache.cached = transform_set;
+    
+            // Sort from smallest tab order to largest tab order, then by entity creation time.
+            // Most of the time this shouldn't do anything but you still need it for if the tab orders
+            // change.
+            cache
+                .cache
+                .sort_unstable_by(|&(t1, ref e1), &(t2, ref e2)| {
+                    let ret = t1.cmp(&t2);
+                    if ret == Ordering::Equal {
+                        return e1.cmp(e2);
+                    }
+                    ret
+                });
+        })
 }
