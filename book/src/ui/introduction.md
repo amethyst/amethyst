@@ -23,7 +23,7 @@ to draw these widgets.
 
 A minimalistic game data would now look like this:  
 
-```rust
+```rust,edition2018,no_run,noplaypen
 let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
