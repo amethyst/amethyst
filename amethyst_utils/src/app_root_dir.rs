@@ -22,7 +22,7 @@ pub fn application_root_dir() -> Result<path::PathBuf, io::Error> {
         return Ok(path::PathBuf::from(manifest_dir));
     }
 
-    let mut exe = env::current_exe()?.canonicalize()?;
+    let mut exe = dunce::canonicalize(env::current_exe()?)?;
 
     // Modify in-place to avoid an extra copy.
     if exe.pop() {

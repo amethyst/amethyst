@@ -27,7 +27,7 @@ impl ScreenDimensions {
         }
     }
 
-    /// Retursn the current logical size of window as diagonal vector.
+    /// Returns the current logical size of window as diagonal vector.
     pub fn diagonal(&self) -> Vector2<f32> {
         Vector2::new(self.width(), self.height())
     }
