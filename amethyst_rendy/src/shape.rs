@@ -30,10 +30,11 @@ fn option_none<T>() -> Option<T> {
 /// ### Type parameters:
 ///
 /// `V`: Vertex format to use, must be one of:
-///     * `Vec<PosTex>`
-///     * `Vec<PosNormTex>`
-///     * `Vec<PosNormTangTex>`
-///     * `ComboMeshCreator`
+///
+/// - `Vec<PosTex>`
+/// - `Vec<PosNormTex>`
+/// - `Vec<PosNormTangTex>`
+/// - `ComboMeshCreator`
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(bound = "")]
 pub struct ShapePrefab<V> {
@@ -162,10 +163,11 @@ impl Shape {
     /// ### Type parameters:
     ///
     /// `V`: Vertex format to use, must to be one of:
-    ///     * `Vec<PosTex>`
-    ///     * `Vec<PosNormTex>`
-    ///     * `Vec<PosNormTangTex>`
-    ///     * `ComboMeshCreator`
+    ///
+    /// - `Vec<PosTex>`
+    /// - `Vec<PosNormTex>`
+    /// - `Vec<PosNormTangTex>`
+    /// - `ComboMeshCreator`
     /// `P`: Progress tracker type
     pub fn upload<V, P>(
         &self,
@@ -191,10 +193,11 @@ impl Shape {
     /// ### Type parameters:
     ///
     /// `V`: Vertex format to use, must to be one of:
-    ///     * `Vec<PosTex>`
-    ///     * `Vec<PosNormTex>`
-    ///     * `Vec<PosNormTangTex>`
-    ///     * `ComboMeshCreator`
+    ///
+    /// - `Vec<PosTex>`
+    /// - `Vec<PosNormTex>`
+    /// - `Vec<PosNormTangTex>`
+    /// - `ComboMeshCreator`
     pub fn generate<V>(&self, scale: Option<(f32, f32, f32)>) -> MeshBuilder<'static>
     where
         V: FromShape + Into<MeshBuilder<'static>>,
@@ -211,10 +214,11 @@ impl Shape {
     /// ### Type parameters:
     ///
     /// `V`: Vertex format to use, must to be one of:
-    ///     * `Vec<PosTex>`
-    ///     * `Vec<PosNormTex>`
-    ///     * `Vec<PosNormTangTex>`
-    ///     * `ComboMeshCreator`
+    ///
+    /// - `Vec<PosTex>`
+    /// - `Vec<PosNormTex>`
+    /// - `Vec<PosNormTangTex>`
+    /// - `ComboMeshCreator`
     pub fn generate_vertices<V>(&self, scale: Option<(f32, f32, f32)>) -> V
     where
         V: FromShape,
