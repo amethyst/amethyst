@@ -55,6 +55,7 @@ where
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
+    align: Option<Anchor>,
     parent: Option<Entity>,
 }
 
@@ -76,6 +77,7 @@ where
             text_color: DEFAULT_TXT_COLOR,
             font: None,
             font_size: 32.,
+            align: None,
             parent: None,
         }
     }
@@ -157,6 +159,12 @@ where
     /// Set font size
     pub fn with_font_size(mut self, size: f32) -> Self {
         self.font_size = size;
+        self
+    }
+
+    /// Set text align
+    pub fn with_align(mut self, align: Anchor) -> Self {
+        self.align = Some(align);
         self
     }
 

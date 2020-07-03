@@ -1,5 +1,7 @@
 //! Module holding the components related to text and text editing.
 
+use crate::Anchor;
+
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};

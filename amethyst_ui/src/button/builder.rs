@@ -63,6 +63,7 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
+    align: Option<Anchor>,
     image: Option<UiImage>,
     parent: Option<Entity>,
     on_click_start_sound: Option<UiPlaySoundAction>,
@@ -96,6 +97,7 @@ where
             text_color: DEFAULT_TXT_COLOR,
             font: None,
             font_size: 32.,
+            align: None,
             image: None,
             parent: None,
             on_click_start_sound: None,
@@ -209,6 +211,12 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     /// Set text color
     pub fn with_text_color(mut self, text_color: [f32; 4]) -> Self {
         self.text_color = text_color;
+        self
+    }
+
+    /// Set text align
+    pub fn with_align(mut self, align: Anchor) -> Self {
+        self.align = Some(align);
         self
     }
 
