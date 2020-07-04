@@ -2,30 +2,30 @@
 
 use amethyst::{
     assets::{AssetStorage, Loader},
-    controls::{FlyControlBundle, HideCursor, FlyControl},
+    controls::{FlyControl, FlyControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,
-        transform::{LocalToWorld, Rotation, Translation, TransformBundle},
+        transform::{LocalToWorld, Rotation, TransformBundle, Translation},
     },
     input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
         camera::Camera,
-        plugins::{RenderShaded3D, RenderToWindow, RenderDebugLines},
+        light::{Light, PointLight},
         mtl::{Material, MaterialDefaults},
         palette::{LinSrgba, Srgb},
-        light::{Light, PointLight},
+        plugins::{RenderDebugLines, RenderShaded3D, RenderToWindow},
         rendy::{
             mesh::{Normal, Position, Tangent, TexCoord},
             texture::palette::load_from_linear_rgba,
         },
         shape::Shape,
         types::DefaultBackend,
-        RenderingBundle, Mesh, Texture,
+        Mesh, RenderingBundle, Texture,
     },
     utils::application_root_dir,
-    winit::{MouseButton, VirtualKeyCode},
     window::ScreenDimensions,
+    winit::{MouseButton, VirtualKeyCode},
     Error,
 };
 
@@ -144,14 +144,9 @@ impl SimpleState for ExampleState {
                 FlyControl,
             )],
         );
-
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { resources, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
@@ -175,7 +170,9 @@ fn main() -> Result<(), Error> {
     let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?)
+        .with_bundle(
+            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
+        )
         .with_bundle(
             FlyControlBundle::<StringBindings>::new(
                 Some(String::from("move_x")),

@@ -1,11 +1,11 @@
 //! ECS input bundle
 
-use crate::{build_input_system, BindingError, BindingTypes, InputHandler, InputEvent, Bindings};
+use crate::{build_input_system, BindingError, BindingTypes, Bindings, InputEvent, InputHandler};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
-    shrev::EventChannel,
     dispatcher::{DispatcherBuilder, Stage, SystemBundle},
     ecs::prelude::*,
+    shrev::EventChannel,
 };
 use amethyst_error::Error;
 use derivative::Derivative;

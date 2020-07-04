@@ -10,15 +10,12 @@
 #![allow(clippy::new_without_default)]
 
 pub use self::{
-    bundles::{FlyControlBundle, ArcBallControlBundle},
+    bundles::{ArcBallControlBundle, FlyControlBundle},
     components::{ArcBallControl, FlyControl},
     resources::{HideCursor, WindowFocus},
     systems::{
-        build_free_rotation_system,
-        build_fly_movement_system,
-        build_arc_ball_rotation_system,
-        build_mouse_focus_update_system,
-        build_cursor_hide_system,
+        build_arc_ball_rotation_system, build_cursor_hide_system, build_fly_movement_system,
+        build_free_rotation_system, build_mouse_focus_update_system,
     },
 };
 

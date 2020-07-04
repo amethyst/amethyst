@@ -1,7 +1,7 @@
 //! Input system
 use winit::Event;
 
-use crate::{BindingTypes, InputEvent, InputHandler, Bindings};
+use crate::{BindingTypes, Bindings, InputEvent, InputHandler};
 use amethyst_core::{
     ecs::prelude::*,
     shrev::{EventChannel, ReaderId},

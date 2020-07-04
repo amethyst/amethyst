@@ -36,8 +36,8 @@ pub struct FlyControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     speed: f32,
-    horizontal_axis: Option<T::Axis>, 
-    vertical_axis: Option<T::Axis>, 
+    horizontal_axis: Option<T::Axis>,
+    vertical_axis: Option<T::Axis>,
     longitudinal_axis: Option<T::Axis>,
 }
 
@@ -48,7 +48,7 @@ impl<T: BindingTypes> FlyControlBundle<T> {
         vertical_axis: Option<T::Axis>,
         longitudinal_axis: Option<T::Axis>,
     ) -> Self {
-        FlyControlBundle{
+        FlyControlBundle {
             sensitivity_x: 1.0,
             sensitivity_y: 1.0,
             speed: one(),
@@ -79,20 +79,24 @@ impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Begin, build_fly_movement_system::<T>(
-            self.speed, 
-            self.horizontal_axis,
-            self.vertical_axis,
-            self.longitudinal_axis,
-        ));
-        builder.add_system(Stage::Begin, build_free_rotation_system(self.sensitivity_x, self.sensitivity_y));
+        builder.add_system(
+            Stage::Begin,
+            build_fly_movement_system::<T>(
+                self.speed,
+                self.horizontal_axis,
+                self.vertical_axis,
+                self.longitudinal_axis,
+            ),
+        );
+        builder.add_system(
+            Stage::Begin,
+            build_free_rotation_system(self.sensitivity_x, self.sensitivity_y),
+        );
         builder.add_system(Stage::Begin, build_mouse_focus_update_system);
         builder.add_system(Stage::Begin, build_cursor_hide_system);
         Ok(())
     }
 }
-
-
 
 /// The bundle that creates an arc ball movement system.
 /// Note: Will not actually create a moving entity. It will only register the needed resources and systems.
@@ -139,7 +143,10 @@ impl<T: BindingTypes> SystemBundle for ArcBallControlBundle<T> {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Begin, build_free_rotation_system(self.sensitivity_x, self.sensitivity_y));
+        builder.add_system(
+            Stage::Begin,
+            build_free_rotation_system(self.sensitivity_x, self.sensitivity_y),
+        );
         builder.add_system(Stage::Begin, build_arc_ball_rotation_system);
         builder.add_system(Stage::Begin, build_mouse_focus_update_system);
         builder.add_system(Stage::Begin, build_cursor_hide_system);
