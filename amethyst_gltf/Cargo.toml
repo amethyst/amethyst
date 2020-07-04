@@ -23,7 +23,7 @@ amethyst_rendy = { path = "../amethyst_rendy", version = "0.5.0" }
 err-derive = "0.2.3"
 base64 = "0.11"
 fnv = "1"
-gltf = "0.15"
+gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
 hibitset = { version = "0.6.2", features = ["parallel"] }
 itertools = "0.8"
 log = "0.4.6"

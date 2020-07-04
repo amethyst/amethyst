@@ -22,6 +22,7 @@ derive-new = "0.5.6"
 failure = "0.1"
 genmesh = "0.6"
 glsl-layout = "0.3"
+gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
 lazy_static = "1.4"
 log = "0.4"
 palette = { version = "0.4", features = ["serde"] }
