@@ -736,7 +736,7 @@ fn build_pipelines<B: Backend, T: Base3DPassDef>(
     let shader_fragment = unsafe { T::fragment_shader().module(factory).unwrap() };
     let pipe_desc = PipelineDescBuilder::new()
         .with_vertex_desc(&vertex_desc)
-        .with_shaders(util::simple_shader_set(
+        .with_shaders(util::simple_shader_set::<B>(
             &shader_vertex_basic,
             Some(&shader_fragment),
         ))

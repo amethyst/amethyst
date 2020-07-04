@@ -212,7 +212,7 @@ fn build_lines_pipeline<B: Backend>(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(DebugLine::vertex(), pso::VertexInputRate::Instance(1))])
                 .with_input_assembler(pso::InputAssemblerDesc::new(pso::Primitive::TriangleStrip))
-                .with_shaders(util::simple_shader_set(
+                .with_shaders(util::simple_shader_set::<B>(
                     &shader_vertex,
                     Some(&shader_fragment),
                 ))

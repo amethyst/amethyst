@@ -8,9 +8,9 @@ use rendy::{
         pass::Subpass,
         pso::{
             AttributeDesc, BakedStates, BasePipeline, BlendDesc, ColorBlendDesc, CreationError,
-            DepthStencilDesc, DepthTest, Face, GraphicsPipelineDesc, GraphicsShaderSet,
-            InputAssemblerDesc, Multisampling, PipelineCreationFlags, Primitive, Rasterizer, Rect,
-            VertexBufferDesc, VertexInputRate, Viewport,
+            DepthStencilDesc, DepthTest, EntryPoint, Face, GraphicsPipelineDesc,
+            InputAssemblerDesc, Multisampling, PipelineCreationFlags, Primitive,
+            PrimitiveAssembler, Rasterizer, Rect, VertexBufferDesc, VertexInputRate, Viewport,
         },
     },
     mesh::VertexFormat,
@@ -29,6 +29,14 @@ enum LocalBasePipeline<'a, P> {
 }
 
 /// Builder abstraction for constructing a backend-agnostic rendy `GraphicsPipeline`
+
+type GraphicsShaderSet<'a, B> = (
+    EntryPoint<'a, B>,
+    Option<EntryPoint<'a, B>>,
+    Option<EntryPoint<'a, B>>,
+    Option<EntryPoint<'a, B>>,
+    Option<EntryPoint<'a, B>>,
+);
 
 #[derive(Derivative, Debug)]
 #[derivative(Clone(bound = ""))]
@@ -255,12 +263,28 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
     /// Finalize and construct the `GraphicsPipelineDesc`
     pub fn build(self) -> GraphicsPipelineDesc<'a, B> {
-        GraphicsPipelineDesc {
-            shaders: self.shaders.expect("Pipeline is missing shaders"),
-            rasterizer: self.rasterizer,
-            vertex_buffers: self.vertex_buffers,
+        let (vertex, fragment, domain, hull, geometry) =
+            self.shaders.expect("Pipeline is missing shaders");
+
+        let tessellation = if hull.is_some() && domain.is_some() {
+            Some((hull.unwrap(), domain.unwrap()))
+        } else {
+            None
+        };
+
+        let primitive_assembler = PrimitiveAssembler::Vertex {
+            buffers: self.vertex_buffers,
             attributes: self.attributes,
             input_assembler: self.input_assembler,
+            vertex,
+            geometry,
+            tessellation,
+        };
+
+        GraphicsPipelineDesc {
+            primitive_assembler,
+            rasterizer: self.rasterizer,
+            fragment,
             blender: self.blender,
             depth_stencil: self.depth_stencil,
             multisampling: self.multisampling,

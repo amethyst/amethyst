@@ -1,9 +1,15 @@
 //! The core engine framework.
 
-use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
+use std::{
+    env,
+    fmt::{Debug, Formatter, Result as FmtResult},
+    marker::PhantomData,
+    path::Path,
+    sync::Arc,
+    time::Duration,
+};
 
 use crate::shred::Resource;
-use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
@@ -41,26 +47,35 @@ use winit::event_loop::EventLoop;
 /// - `T`: `State`
 /// - `E`: `Event` type that should be sent to the states
 /// - `R`: `EventReader` implementation for the given event type `E`
-#[derive(Derivative)]
-#[derivative(Debug)]
 pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader>
 where
     T: DataDispose + 'static,
     E: 'static,
 {
     /// The world
-    #[derivative(Debug = "ignore")]
     world: World,
-    #[derivative(Debug = "ignore")]
     reader: R,
-    #[derivative(Debug = "ignore")]
     events: Vec<E>,
     event_reader_id: ReaderId<Event<'static, ()>>,
-    #[derivative(Debug = "ignore")]
     trans_reader_id: ReaderId<TransEvent<T, E>>,
     states: StateMachine<'a, T, E>,
     ignore_window_close: bool,
     data: T,
+}
+
+impl<'a, T, E, R> Debug for CoreApplication<'a, T, E, R>
+where
+    T: DataDispose + Debug + 'static,
+    E: Debug + 'static,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.debug_struct("CoreApplication")
+            .field("event_reader_id", &self.event_reader_id)
+            .field("states", &self.states)
+            .field("ignore_window_close", &self.ignore_window_close)
+            .field("data", &self.data)
+            .finish()
+    }
 }
 
 /// An Application is the root object of the game engine. It binds the OS
