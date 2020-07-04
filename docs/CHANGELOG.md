@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Changed
 
 - `amethyst_rendy::shape::Shape::upload` takes `&ShapeUpload`. ([#2264])
+- Examples now have assets colocated in the individual example directiories ([#2289], [#2305])
 
 ### Fixed
 
