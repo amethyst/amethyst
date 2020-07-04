@@ -12,6 +12,7 @@ use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     timing::Time,
 };
+use std::collections::HashMap;
 
 use amethyst_derive::SystemDesc;
 use amethyst_input::{get_input_axis_simple, get_action_simple, BindingTypes, InputHandler};
@@ -62,20 +63,33 @@ pub fn build_fly_movement_system<T: BindingTypes>(
 ///
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
 /// `FreeRotationSystem`.
-pub fn build_arc_ball_rotation_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+pub fn build_arc_ball_rotation_system(_: &mut World, _: &mut Resources) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("ArcBallRotationSystem")
+        .with_query(<(Read<ArcBallControl>)>::query())
         .with_query(<(Read<ArcBallControl>, Read<Rotation>, Write<Translation>)>::query())
-        .build(move |commands, world, (), controls| {
+        .read_component::<Translation>()
+        .build(move |commands, world, (), queries| {
             #[cfg(feature = "profiler")]
             profile_scope!("arc_ball_rotation_system");  
 
-            let (mut query_world, mut world) = world.split_for_query(&controls);
+            let targets: HashMap<Entity, Translation> = 
+                queries.0.iter(world).map(|ctrl| {
+                    match world.get_component::<Translation>(ctrl.target) {
+                        Some(trans) => Some((ctrl.target, *trans.clone())),
+                        None => None,
+                    } 
+                })
+                .filter(|t| t.is_some())
+                .map(|t| t.unwrap())
+                .collect();
 
-            for (control, rot, mut trans) in controls.iter_mut(&mut query_world) {
+            for (control, rot, mut trans) in queries.1.iter_mut(world) {
                 let pos_vec = rot.0 * (-Vector3::z() * control.distance);
-                if let Some(target_trans) = world.get_component::<Translation>(control.target) {
-                    let new_pos = (target_trans.vector - pos_vec);
-                    *trans = Translation(Translation3::from(new_pos));
+                match targets.get(&control.target) {
+                    Some(target_trans) => {
+                        *trans = Translation::from(target_trans.vector - pos_vec);
+                    },
+                    None => continue,
                 }
             }
         })
@@ -102,7 +116,7 @@ pub fn build_free_rotation_system(
             .read_resource::<EventChannel<Event>>()
             .read_resource::<WindowFocus>()
             .read_resource::<HideCursor>()
-            .with_query(<(Read<FlyControl>, Write<Rotation>)>::query())
+            .with_query(<(Write<Rotation>)>::query().filter(component::<FlyControl>() | component::<ArcBallControl>()))
             .build(move |commands, world, (events, focus, hide), controls| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("free_rotation_system");
@@ -112,7 +126,7 @@ pub fn build_free_rotation_system(
                     if focused && hide.hide {
                         if let Event::DeviceEvent { ref event, .. } = *event {
                             if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
-                                for (_, mut rotation) in controls.iter_mut(world) {
+                                for (mut rotation) in controls.iter_mut(world) {
                                     rotation.0 *= UnitQuaternion::from_euler_angles(
                                         (-(y as f32) * sensitivity_y).to_radians(),
                                         (-(x as f32) * sensitivity_x).to_radians(),

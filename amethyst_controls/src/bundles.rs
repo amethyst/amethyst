@@ -139,8 +139,8 @@ impl<T: BindingTypes> SystemBundle for ArcBallControlBundle<T> {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Begin, build_arc_ball_rotation_system);
         builder.add_system(Stage::Begin, build_free_rotation_system(self.sensitivity_x, self.sensitivity_y));
+        builder.add_system(Stage::Begin, build_arc_ball_rotation_system);
         builder.add_system(Stage::Begin, build_mouse_focus_update_system);
         builder.add_system(Stage::Begin, build_cursor_hide_system);
         Ok(())

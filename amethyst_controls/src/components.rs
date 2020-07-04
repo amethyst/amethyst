@@ -17,6 +17,15 @@ pub struct ArcBallControl {
     pub distance: f32,
 }
 
+impl ArcBallControl {
+    pub fn new(target: Entity, distance: f32) -> Self {
+        ArcBallControl {
+            target,
+            distance,
+        }
+    }
+}
+
 // `PrefabData` for loading control tags on an `Entity`
 //
 // Will always load a `FlyControlTag`
