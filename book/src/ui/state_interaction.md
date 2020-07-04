@@ -6,7 +6,7 @@ Let's declare our state, and call it `MenuState`:
 # use amethyst::ecs::Entity;
 
 #[derive(Default)]
-pub sturct MenuState {
+pub struct MenuState {
     button: Option<Entity>,
 }
 ```
