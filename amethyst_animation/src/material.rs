@@ -7,7 +7,7 @@ use amethyst_rendy::{
 use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
 
-use crate::{AnimationSampling, ApplyData, BlendMethod};
+use crate::{AnimationSampling, BlendMethod};
 
 /// Sampler primitive for Material animations
 /// Note that material can only ever be animated with `Step`, or a panic will occur.
@@ -90,9 +90,6 @@ pub enum MaterialChannel {
     UvOffset,
 }
 
-impl<'a> ApplyData<'a> for Material {
-    type ApplyData = ();
-}
 
 fn offset(offset: &TextureOffset) -> MaterialPrimitive {
     MaterialPrimitive::Offset(offset.u, offset.v)

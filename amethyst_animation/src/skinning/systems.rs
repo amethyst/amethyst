@@ -1,7 +1,5 @@
 use amethyst_core::{
-    ecs::prelude::{
-        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, SystemData, WriteStorage,
-    },
+    ecs::prelude::*,
     math::{convert, Matrix4},
     Transform,
 };
@@ -16,16 +14,13 @@ use super::resources::*;
 /// System for performing vertex skinning.
 ///
 /// Needs to run after global transforms have been updated for the current frame.
-#[derive(Debug, SystemDesc)]
+#[derive(Debug)]
 #[system_desc(name(VertexSkinningSystemDesc))]
 pub struct VertexSkinningSystem {
-    /// Also scratch space, used while determining which skins need to be updated.
-    #[system_desc(skip)]
-    updated: BitSet,
-    #[system_desc(skip)]
+    /// Also scratch space, used while determining which skins need to be updated.    
+    updated: BitSet,    
     updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
-    #[system_desc(flagged_storage_reader(Transform))]
     updated_id: ReaderId<ComponentEvent>,
 }
 

@@ -4,7 +4,10 @@ use log::error;
 use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
 
-use crate::{AnimationSampling, ApplyData, BlendMethod};
+use amethyst_assets::Handle;
+use amethyst_rendy::sprite::{SpriteRender, SpriteSheet};
+
+use crate::{AnimationSampling, BlendMethod};
 
 /// Sampler primitive for SpriteRender animations
 /// Note that sprites can only ever be animated with `Step`, or a panic will occur.
@@ -55,10 +58,6 @@ pub enum SpriteRenderChannel {
     SpriteSheet,
     /// Selecting a sprite index dynamically
     SpriteIndex,
-}
-
-impl<'a> ApplyData<'a> for SpriteRender {
-    type ApplyData = ();
 }
 
 impl AnimationSampling for SpriteRender {

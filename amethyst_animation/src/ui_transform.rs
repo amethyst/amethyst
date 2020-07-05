@@ -3,7 +3,7 @@ use amethyst_ui::UiTransform;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    resources::{AnimationSampling, ApplyData, BlendMethod},
+    resources::{AnimationSampling, BlendMethod},
     util::SamplerPrimitive,
 };
 
@@ -12,10 +12,6 @@ use crate::{
 pub enum UiTransformChannel {
     /// The 2 dimensional position for an UI entity
     Translation,
-}
-
-impl<'a> ApplyData<'a> for UiTransform {
-    type ApplyData = ();
 }
 
 impl AnimationSampling for UiTransform {
