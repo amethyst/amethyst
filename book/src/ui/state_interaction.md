@@ -6,7 +6,7 @@ Let's declare our state, and call it `MenuState`:
 # use amethyst::ecs::Entity;
 
 #[derive(Default)]
-pub sturct MenuState {
+pub struct MenuState {
     button: Option<Entity>,
 }
 ```
@@ -37,7 +37,7 @@ fn on_start(&mut self, data: StateData<()>) {
    	let btn = world.create_entity()
         .with(ui_transform)
         .with(ui_text)
-		.with(Interactable)
+	.with(Interactable)
         .build();
 
 	/* Saving the button in our state struct */
@@ -98,7 +98,7 @@ component to our button:
 
 fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 	let world = data.world;	
-	let hiddens = world.write_storage::<Hidden>();
+	let mut hiddens = world.write_storage::<Hidden>();
 	
 	if let Some(btn) = self.button {
 		let _ = hiddens.insert(btn, Hidden);
@@ -114,7 +114,7 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 
 fn on_resume(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     let world = data.world; 	
-    let hiddens = world.write_storage::<Hidden>();
+    let mut hiddens = world.write_storage::<Hidden>();
 	
     if let Some(btn) = self.button {
         let _ = hiddens.remove(btn);
