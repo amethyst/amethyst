@@ -2,13 +2,13 @@ use crate::{
     resources::AnimationSampling,
     skinning::VertexSkinningSystemDesc,
     systems::{
-        AnimationControlSystemDesc, AnimationProcessor, SamplerInterpolationSystem,
-        SamplerProcessor,
-    },
+        build_sampler_processor,
+        build_animation_processor
+    }, build_sampler_interpolation_system,
 };
 use amethyst_core::{
-    ecs::prelude::{Component, DispatcherBuilder, World},
-    SystemBundle, SystemDesc,
+    ecs::prelude::*,    
+    dispatcher::{DispatcherBuilder, Stage, SystemBundle}
 };
 use amethyst_error::Error;
 use std::{hash::Hash, marker};
@@ -35,12 +35,13 @@ impl<'a> VertexSkinningBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
+impl<'a, 'c> SystemBundle for VertexSkinningBundle<'c> {
     fn build(
         self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        builder: &mut DispatcherBuilder<'a>,
     ) -> Result<(), Error> {
+        todo!("Check this");
         builder.add(
             VertexSkinningSystemDesc::default().build(world),
             "vertex_skinning_system",
@@ -86,17 +87,20 @@ impl<'a, T> SamplingBundle<'a, T> {
     }
 }
 
-impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for SamplingBundle<'c, T>
+impl<'a, 'c, T> SystemBundle for SamplingBundle<'c, T>
 where
-    T: AnimationSampling + Component,
+    T: AnimationSampling,
 {
     fn build(
         self,
         _world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder<'a>,
     ) -> Result<(), Error> {
-        builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
-        builder.add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep);
+
+        builder.add_system(Stage::Begin, build_sampler_interpolation_system::<T>);
+        builder.add_system(Stage::Begin, build_sampler_processor::<T::Primitive>());
+            
         Ok(())
     }
 }
@@ -144,24 +148,28 @@ impl<'a, I, T> AnimationBundle<'a, I, T> {
     }
 }
 
-impl<'a, 'b, 'c, I, T> SystemBundle<'a, 'b> for AnimationBundle<'c, I, T>
+impl<'a, 'b, 'c, I, T> SystemBundle for AnimationBundle<'c, I, T>
 where
     I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
-    T: AnimationSampling + Component + Clone,
+    T: AnimationSampling + Clone,
 {
     fn build(
         self,
         world: &mut World,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        builder.add(AnimationProcessor::<T>::new(), "", &[]);
-        builder.add(
+
+        builder.add_system(Stage::Begin, build_animation_processor::<T>());        
+
+        compile_error!("error what's this?");
+        /*builder.add(
             AnimationControlSystemDesc::<I, T>::default().build(world),
             self.animation_name,
             self.dep,
-        );
+        );*/
         SamplingBundle::<T>::new(self.sampling_name)
             .with_dep(&[self.animation_name])
-            .build(world, builder)
+            .build(world, resources, builder)
     }
 }

@@ -6,13 +6,13 @@ use log::error;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{Asset, AssetStorage, Handle, PrefabData};
+use amethyst_assets::{Asset, AssetStorage, Handle/*, PrefabData*/};
 use amethyst_core::{
-    ecs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
-    shred::SystemData,
+    ecs::prelude::*,
+    // shred::SystemData,
     timing::{duration_to_secs, secs_to_duration},
 };
-use amethyst_derive::PrefabData;
+//use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 
 /// Blend method for sampler blending
@@ -23,13 +23,16 @@ pub enum BlendMethod {
 }
 
 /// Extra data to extract from `World`, for use when applying or fetching a sample
-pub trait ApplyData<'a> {
+pub trait ApplyData {
     /// The actual data, must implement `SystemData`
-    type ApplyData: SystemData<'a>;
+    //type ApplyData;//: SystemData<'a>;
+    fn extra_data(mut builder: SystemBuilder) -> SystemBuilder {
+
+    }
 }
 
 /// Master trait used to define animation sampling on a component
-pub trait AnimationSampling: Send + Sync + 'static + for<'b> ApplyData<'b> {
+pub trait AnimationSampling: Send + Sync + 'static + ApplyData {
     /// The interpolation primitive
     type Primitive: InterpolationPrimitive + Debug + Clone + Send + Sync + 'static;
     /// An independent grouping or type of functions that operate on attributes of a component
@@ -43,14 +46,18 @@ pub trait AnimationSampling: Send + Sync + 'static + for<'b> ApplyData<'b> {
         &mut self,
         channel: &Self::Channel,
         data: &Self::Primitive,
-        extra: &<Self as ApplyData<'a>>::ApplyData,
+        world: &mut SubWorld,
+        buffer: &mut CommandBuffer,
+        // extra: &<Self as ApplyData<'a>>::ApplyData,
     );
 
     /// Get the current sample for a channel
     fn current_sample<'a>(
         &self,
         channel: &Self::Channel,
-        extra: &<Self as ApplyData<'a>>::ApplyData,
+        world: &mut SubWorld,
+        buffer: &mut CommandBuffer,
+        // extra: &<Self as ApplyData<'a>>::ApplyData,
     ) -> Self::Primitive;
 
     /// Get default primitive
@@ -99,12 +106,11 @@ where
 {
     const NAME: &'static str = "animation::Sampler";
     type Data = Self;
-    type HandleStorage = VecStorage<Handle<Self>>;
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize, PrefabData)]
-#[prefab(Component)]
+#[derive(Debug, Clone, Deserialize, Serialize/*, PrefabData*/)]
+// #[prefab(Component)]
 pub struct RestState<T>
 where
     T: AnimationSampling + Clone,
@@ -127,12 +133,6 @@ where
     }
 }
 
-impl<T> Component for RestState<T>
-where
-    T: AnimationSampling + Clone,
-{
-    type Storage = DenseVecStorage<Self>;
-}
 
 /// Defines the hierarchy of nodes that a single animation can control.
 /// Attached to the root entity that an animation can be defined for.
@@ -180,31 +180,30 @@ where
 
     /// Create rest state for the hierarchy. Will copy the values from the base components for each
     /// entity in the hierarchy.
-    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<'_, RestState<T>>)
+    // pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<'_, RestState<T>>)
+    pub fn rest_state<F>(&self, get_component: F, world: &mut SubWorld, buffer: &mut CommandBuffer)
     where
         T: AnimationSampling + Clone,
         F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {
-            if !states.contains(*entity) {
+            if !world.has_component(*entity) {
                 if let Some(comp) = get_component(*entity) {
-                    if let Err(err) = states.insert(*entity, RestState::new(comp)) {
-                        error!(
-                            "Failed creating rest state for AnimationHierarchy, because of: {}",
-                            err
-                        );
-                    }
+                    buffer.add_component(*entity, RestState::new(comp));
                 }
             }
+            // if !states.contains(*entity) {
+            //     if let Some(comp) = get_component(*entity) {
+            //         if let Err(err) = states.insert(*entity, RestState::new(comp)) {
+            //             error!(
+            //                 "Failed creating rest state for AnimationHierarchy, because of: {}",
+            //                 err
+            //             );
+            //         }
+            //     }
+            // }
         }
     }
-}
-
-impl<T> Component for AnimationHierarchy<T>
-where
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
 }
 
 /// Defines a single animation.
@@ -276,7 +275,6 @@ where
 {
     const NAME: &'static str = "animation::Animation";
     type Data = Self;
-    type HandleStorage = VecStorage<Handle<Self>>;
 }
 
 /// State of animation
@@ -554,13 +552,6 @@ fn set_step_state<T>(
     }
 }
 
-impl<T> Component for SamplerControlSet<T>
-where
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// Used when doing animation stepping (i.e only move forward/backward to discrete input values)
 #[derive(Clone, Debug)]
 pub enum StepDirection {
@@ -644,13 +635,6 @@ where
             m: marker::PhantomData,
         }
     }
-}
-
-impl<T> Component for AnimationControl<T>
-where
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
 }
 
 /// Defer the start of an animation until the relationship has done this
@@ -864,14 +848,6 @@ where
     }
 }
 
-impl<I, T> Component for AnimationControlSet<I, T>
-where
-    I: Send + Sync + 'static,
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// Attaches to an entity that have animations, with links to all animations that can be run on the
 /// entity. Is not used directly by the animation systems, provided for convenience.
 ///
@@ -922,12 +898,4 @@ where
     pub fn get(&self, id: &I) -> Option<&Handle<Animation<T>>> {
         self.animations.get(id)
     }
-}
-
-impl<I, T> Component for AnimationSet<I, T>
-where
-    I: Eq + Hash + Send + Sync + 'static,
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
 }

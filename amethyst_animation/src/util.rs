@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_core::{
     alga::general::{SubsetOf, SupersetOf},
-    ecs::prelude::{Entity, WriteStorage},
+    ecs::prelude::*,
     math::{convert, RealField, Vector2, Vector3, Vector4},
 };
 
@@ -20,17 +20,26 @@ use self::SamplerPrimitive::*;
 ///        with the same id
 /// - `T`: the component type that the animation applies to
 pub fn get_animation_set<'a, I, T>(
-    controls: &'a mut WriteStorage<'_, AnimationControlSet<I, T>>,
+    // controls: &'a mut WriteStorage<'_, AnimationControlSet<I, T>>,
+    world: &mut SubWorld,
+    buffer: &mut CommandBuffer,
     entity: Entity,
 ) -> Option<&'a mut AnimationControlSet<I, T>>
 where
     I: Send + Sync + 'static,
     T: AnimationSampling,
 {
-    controls
-        .entry(entity)
-        .ok()
-        .map(|entry| entry.or_insert_with(AnimationControlSet::default))
+    if world.has_component(entity) {
+        world.get_component(entity)
+    } else {
+        let set = AnimationControlSet::default();
+        buffer.add_component(entity, set);
+        Some(set)
+     }
+    // controls
+    //     .entry(entity)
+    //     .ok()
+    //     .map(|entry| entry.or_insert_with(AnimationControlSet::default))
 }
 
 /// Sampler primitive
