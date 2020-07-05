@@ -122,7 +122,6 @@ pub fn play_bounce_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output
 Then, we'll update the Bounce System to play the sound whenever the ball bounces. Update `systems/bounce.rs`:
 
 ```rust,ignore
-use std::ops::Deref;
 
 use amethyst::{
     assets::AssetStorage,
@@ -154,7 +153,7 @@ impl<'s> System<'s> for BounceSystem {
                 || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
             {
                 ball.velocity[1] = -ball.velocity[1];
-                play_bounce_sound(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
+                play_bounce_sound(&*sounds, &storage, audio_output.as_deref());
             }
 
             // Bounce at the paddles.
@@ -168,7 +167,7 @@ impl<'s> System<'s> for BounceSystem {
                         || (paddle.side == Side::Right && ball.velocity[0] > 0.0)
                     {
                         ball.velocity[0] = -ball.velocity[0];
-                        play_bounce_sound(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
+                        play_bounce_sound(&*sounds, &storage, audio_output.as_deref());
                     }
                 }
             }
@@ -214,7 +213,6 @@ use amethyst::{
     ecs::Read,
 };
 use crate::audio::{play_score_sound, Sounds};
-use std::ops::Deref;
 
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
@@ -247,7 +245,7 @@ impl<'s> System<'s> for WinnerSystem {
                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
                 transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
 
-                play_score_sound(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
+                play_score_sound(&*sounds, &storage, audio_output.as_deref());
 
                 // Print the scoreboard.
                 println!(
