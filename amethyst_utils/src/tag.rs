@@ -2,20 +2,19 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::PrefabData;
-use amethyst_core::ecs::{
-    shred::{ResourceId, SystemData},
-    Component, Entities, Entity, Join, NullStorage, ReadStorage, World, WriteStorage,
+//use amethyst_assets::PrefabData;
+use amethyst_core::ecs::prelude::{
+    Entity, Read, World, IntoQuery, SubWorld,
 };
-use amethyst_derive::PrefabData;
-use amethyst_error::Error;
+//use amethyst_derive::PrefabData;
+//use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
 
 /// Tag component that can be used with a custom type to tag entities for processing
-#[derive(Clone, Debug, Serialize, Deserialize, PrefabData)]
+//#[derive(Clone, Debug, Serialize, Deserialize,PrefabData)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
-#[prefab(Component)]
 pub struct Tag<T>
 where
     T: Clone + Send + Sync + 'static,
@@ -32,35 +31,24 @@ where
     }
 }
 
-impl<T> Component for Tag<T>
-where
-    T: Clone + Send + Sync + 'static,
-{
-    type Storage = NullStorage<Self>;
-}
-
 /// Utility lookup for tag components
-#[derive(SystemData)]
 #[allow(missing_debug_implementations)]
-pub struct TagFinder<'a, T>
+pub struct TagFinder<T>
 where
     T: Clone + Send + Sync + 'static,
 {
-    /// The `EntitiesRes` from the ECS used to lookup tags.
-    pub entities: Entities<'a>,
-    /// The component storage for the tags being searched.
-    pub tags: ReadStorage<'a, Tag<T>>,
+    _m: PhantomData<T>,
 }
 
-impl<'a, T> TagFinder<'a, T>
+impl<T> TagFinder<T>
 where
     T: Clone + Send + Sync + 'static,
 {
     /// Returns the first entity found with the tag in question.
-    pub fn find(&self) -> Option<Entity> {
-        (&*self.entities, &self.tags)
-            .join()
-            .map(|(entity, _)| entity)
+    pub fn find(&self,subworld: &mut SubWorld<'_>) -> Option<Entity> {
+        <Read<Tag<T>>>::query()
+            .iter_entities(subworld)
+            .map(|(ent, _)| ent)
             .next()
     }
 }
