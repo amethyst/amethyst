@@ -2,9 +2,6 @@
 
 #![allow(unused)]
 
-use std::sync::Arc;
-
-use rayon::{ThreadPool, ThreadPoolBuilder};
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
@@ -13,7 +10,7 @@ use amethyst_core::{
         Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World,
         WorldExt, Write,
     },
-    Time,
+    ThreadPool, Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -28,7 +25,7 @@ impl App {
         let mut world = World::new();
 
         // Note: in an actual application, you'd want to share the thread pool.
-        let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
+        let pool = ThreadPool::new(None);
 
         world.register::<MeshHandle>();
 
@@ -100,7 +97,7 @@ impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
         Write<'a, AssetStorage<MeshAsset>>,
         Read<'a, Time>,
-        ReadExpect<'a, Arc<ThreadPool>>,
+        ReadExpect<'a, ThreadPool>,
         Option<Read<'a, HotReloadStrategy>>,
         /* texture storage, transforms, .. */
     );

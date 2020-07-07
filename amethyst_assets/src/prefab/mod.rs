@@ -467,11 +467,9 @@ where
 mod tests {
     use std::sync::Arc;
 
-    use rayon::ThreadPoolBuilder;
-
     use amethyst_core::{
         ecs::{Builder, RunNow, World, WorldExt},
-        SystemDesc, Time, Transform,
+        SystemDesc, ThreadPool, Time, Transform,
     };
 
     use crate::Loader;
@@ -483,7 +481,7 @@ mod tests {
     #[test]
     fn test_prefab_load() {
         let mut world = World::new();
-        let pool = Arc::new(ThreadPoolBuilder::default().build().unwrap());
+        let pool = ThreadPool::new(None);
         world.insert(pool.clone());
         world.insert(Loader::new(".", pool));
         world.insert(Time::default());

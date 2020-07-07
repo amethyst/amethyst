@@ -67,7 +67,7 @@ The `DispatcherBuilder` can be initialized and populated wherever desired, be it
 # use amethyst::{
 #     ecs::prelude::*,
 #     prelude::*,
-#     core::ArcThreadPool,
+#     core::ThreadPool,
 # };
 #
 # struct MoveBallsSystem; struct MovePaddlesSystem;
@@ -91,7 +91,7 @@ impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
 
         // Build and setup the `Dispatcher`.
         let mut dispatcher = dispatcher_builder
-            .with_pool((*world.read_resource::<ArcThreadPool>()).clone())
+            .with_pool(world.read_resource::<ThreadPool>().rayon())
             .build();
         dispatcher.setup(world);
 

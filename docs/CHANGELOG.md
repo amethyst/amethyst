@@ -56,6 +56,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - ***Breaking:*** `UiBundle` depends on `InputBundle` being registered with the dispatcher first. ([#2151])
 - Re-export `UiImageLoadPrefab` from `amethyst_ui`. ([#2169], [#2181])
 - Don't remove `HiddenPropagate` components set by users manually. ([#2155])
+* Replace `amethyst::core::ArcThreadPool` with `amethyst::core::ThreadPool` which proxies to it. ([#2354])
+* `amethyst::assets::ThreadPool` exports `amethyst::core::ThreadPool` instead of `rayon::ThreadPool`. ([#2354])
 
 ### Removed
 

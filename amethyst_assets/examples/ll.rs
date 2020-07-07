@@ -2,10 +2,8 @@
 
 use std::{str::from_utf8, sync::Arc, thread::sleep, time::Duration};
 
-use rayon::ThreadPoolBuilder;
-
 use amethyst_assets::*;
-use amethyst_core::ecs::prelude::VecStorage;
+use amethyst_core::{ecs::prelude::VecStorage, ThreadPool};
 use amethyst_error::Error;
 
 #[derive(Clone, Debug)]
@@ -40,8 +38,8 @@ impl Format<String> for DummyFormat {
 fn main() {
     let path = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
-    let builder = ThreadPoolBuilder::new().num_threads(8);
-    let pool = Arc::new(builder.build().expect("Invalid config"));
+    let num_threads = 8;
+    let pool = ThreadPool::new(Some(num_threads));
 
     let loader = Loader::new(&path, pool.clone());
     let mut storage: AssetStorage<DummyAsset> = AssetStorage::new();

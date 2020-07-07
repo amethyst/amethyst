@@ -25,7 +25,7 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-use std::{marker::PhantomData, sync::Arc};
+use std::marker::PhantomData;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -191,7 +191,7 @@ impl<'a, B: Backend> System<'a> for MeshProcessorSystem<B> {
         Write<'a, AssetStorage<Mesh>>,
         ReadExpect<'a, QueueId>,
         Read<'a, Time>,
-        ReadExpect<'a, Arc<ThreadPool>>,
+        ReadExpect<'a, ThreadPool>,
         Option<Read<'a, HotReloadStrategy>>,
         ReadExpect<'a, Factory<B>>,
     );
@@ -214,7 +214,7 @@ impl<'a, B: Backend> System<'a> for MeshProcessorSystem<B> {
                     .map_err(|e| e.compat().into())
             },
             time.frame_number(),
-            &**pool,
+            &*pool,
             strategy.as_deref(),
         );
     }
@@ -229,7 +229,7 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
         Write<'a, AssetStorage<Texture>>,
         ReadExpect<'a, QueueId>,
         Read<'a, Time>,
-        ReadExpect<'a, Arc<ThreadPool>>,
+        ReadExpect<'a, ThreadPool>,
         Option<Read<'a, HotReloadStrategy>>,
         WriteExpect<'a, Factory<B>>,
     );
@@ -261,7 +261,7 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
                 .map_err(|e| e.compat().into())
             },
             time.frame_number(),
-            &**pool,
+            &*pool,
             strategy.as_deref(),
         );
     }

@@ -263,8 +263,7 @@ mod tests {
         Texture,
     };
     use amethyst_assets::{Handle, Loader};
-    use amethyst_core::ecs::{Builder, Read, ReadExpect, World, WorldExt};
-    use rayon::ThreadPoolBuilder;
+    use amethyst_core::ecs::{Builder, Read, ReadExpect, ThreadPool, World, WorldExt};
     use std::sync::Arc;
 
     use approx::assert_ulps_eq;
@@ -272,7 +271,7 @@ mod tests {
     fn setup_sprite_world() -> World {
         let mut world = World::new();
         world.register::<SpriteRender>();
-        let loader = Loader::new(".", Arc::new(ThreadPoolBuilder::new().build().unwrap()));
+        let loader = Loader::new(".", ThreadPool::new(None).unwrap());
         let tex_storage = AssetStorage::<Texture>::default();
         let ss_storage = AssetStorage::<SpriteSheet>::default();
         world.insert(tex_storage);

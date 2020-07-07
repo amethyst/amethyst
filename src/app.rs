@@ -1,11 +1,10 @@
 //! The core engine framework.
 
-use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
+use std::{env, marker::PhantomData, path::Path, time::Duration};
 
 use crate::shred::Resource;
 use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
-use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
 use winit::Event;
@@ -20,7 +19,7 @@ use crate::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
-        ArcThreadPool, EventReader, Named,
+        EventReader, Named, ThreadPool,
     },
     ecs::prelude::{Component, Read, World, WorldExt, Write},
     error::Error,
@@ -524,24 +523,11 @@ where
                     .expect("AMETHYST_NUM_THREADS was provided but is not a valid number!")
             })
             .ok();
-
-        let mut world = World::new();
-
-        let thread_pool_builder = ThreadPoolBuilder::new();
-        #[cfg(feature = "profiler")]
-        let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
-            register_thread_with_profiler();
-        });
-        let pool: ArcThreadPool;
         if let Some(thread_count) = thread_count {
             debug!("Running Amethyst with fixed thread pool: {}", thread_count);
-            pool = thread_pool_builder
-                .num_threads(thread_count)
-                .build()
-                .map(Arc::new)?;
-        } else {
-            pool = thread_pool_builder.build().map(Arc::new)?;
         }
+        let pool = ThreadPool::new(thread_count)?;
+        let mut world = World::new();
         world.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.insert(pool);
         world.insert(EventChannel::<Event>::with_capacity(2000));

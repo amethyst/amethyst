@@ -8,7 +8,7 @@ use amethyst_core::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
         ReaderId, System, SystemData, World, Write, WriteStorage,
     },
-    ArcThreadPool, Parent, SystemDesc, Time,
+    Parent, SystemDesc, ThreadPool, Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -80,7 +80,7 @@ where
         Write<'a, AssetStorage<Prefab<T>>>,
         ReadStorage<'a, Handle<Prefab<T>>>,
         Read<'a, Time>,
-        ReadExpect<'a, ArcThreadPool>,
+        ReadExpect<'a, ThreadPool>,
         Option<Read<'a, HotReloadStrategy>>,
         WriteStorage<'a, Parent>,
         WriteStorage<'a, PrefabTag<T>>,
@@ -124,7 +124,7 @@ where
                 }
             },
             time.frame_number(),
-            &**pool,
+            &*pool,
             strategy,
         );
         prefab_handles

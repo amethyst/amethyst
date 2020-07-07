@@ -23,8 +23,6 @@ pub use num_traits as num;
 pub use specs as ecs;
 pub use specs::{shred, shrev};
 
-use std::sync::Arc;
-
 pub use crate::{
     bundle::SystemBundle,
     event::EventReader,
@@ -55,6 +53,7 @@ mod hide_system;
 mod named;
 mod system_desc;
 mod system_ext;
+mod thread_pool;
 
-/// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.
-pub type ArcThreadPool = Arc<rayon::ThreadPool>;
+/// A rayon thread pool proxy. This should be used as resource in `World`.
+pub type ThreadPool = thread_pool::ThreadPool;

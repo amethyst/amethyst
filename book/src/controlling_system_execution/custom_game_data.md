@@ -68,7 +68,7 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 #     running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
 #
-use amethyst::core::ArcThreadPool;
+use amethyst::core::ThreadPool;
 
 pub struct CustomGameDataBuilder<'a, 'b> {
     pub core: DispatcherBuilder<'a, 'b>,
@@ -109,10 +109,10 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
 impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         // Get a handle to the `ThreadPool`.
-        let pool = (*world.read_resource::<ArcThreadPool>()).clone();
+        let pool = world.read_resource::<ThreadPool>();
 
-        let mut core_dispatcher = self.core.with_pool(pool.clone()).build();
-        let mut running_dispatcher = self.running.with_pool(pool.clone()).build();
+        let mut core_dispatcher = self.core.with_pool(pool.rayon()).build();
+        let mut running_dispatcher = self.running.with_pool(pool.rayon()).build();
         core_dispatcher.setup(world);
         running_dispatcher.setup(world);
 

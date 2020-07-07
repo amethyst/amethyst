@@ -7,7 +7,7 @@ use crate::{
             DispatcherOperation,
         },
         ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World, WorldExt},
-        ArcThreadPool, RunNowDesc, SystemBundle, SystemDesc,
+        RunNowDesc, SystemBundle, SystemDesc, ThreadPool,
     },
     error::Error,
 };
@@ -462,9 +462,6 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// Instead of using `DataInit` for constructing `GameData`, build a standalone `Dispatcher`,
     /// which will be the same dispatcher that would have been created for the `GameData`.
     pub fn build_dispatcher(self, mut world: &mut World) -> Dispatcher<'a, 'b> {
-        #[cfg(not(no_threading))]
-        let pool = (*world.read_resource::<ArcThreadPool>()).clone();
-
         let mut dispatcher_builder = self.disp_builder;
 
         self.dispatcher_operations
@@ -475,7 +472,9 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
             .unwrap_or_else(|e| panic!("Failed to set up dispatcher: {}", e));
 
         #[cfg(not(no_threading))]
-        let mut dispatcher = dispatcher_builder.with_pool(pool).build();
+        let mut dispatcher = dispatcher_builder
+            .with_pool(world.read_resource::<ThreadPool>().rayon())
+            .build();
         #[cfg(no_threading)]
         let mut dispatcher = dispatcher_builder.build();
         dispatcher.setup(&mut world);

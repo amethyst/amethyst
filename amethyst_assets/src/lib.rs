@@ -27,7 +27,7 @@ pub use crate::{
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
 
-pub use rayon::ThreadPool;
+pub use amethyst_core::ThreadPool;
 
 mod asset;
 mod cache;

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use amethyst::{
-    core::{ArcThreadPool, SystemBundle, SystemDesc},
+    core::{SystemBundle, SystemDesc, ThreadPool},
     ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt},
     error::Error,
     DataDispose, DataInit,
@@ -130,11 +130,7 @@ fn build_dispatcher<'a, 'b>(
 ) -> Dispatcher<'a, 'b> {
     let mut dispatcher_builder = DispatcherBuilder::new();
 
-    #[cfg(not(no_threading))]
-    {
-        let pool = world.read_resource::<ArcThreadPool>().clone();
-        dispatcher_builder = dispatcher_builder.with_pool((*pool).clone());
-    }
+    dispatcher_builder = dispatcher_builder.with_pool(world.read_resource::<ThreadPool>().rayon());
 
     dispatcher_operations
         .into_iter()

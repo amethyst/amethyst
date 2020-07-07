@@ -9,7 +9,6 @@ use std::{
 use crossbeam_queue::SegQueue;
 use derivative::Derivative;
 use log::{debug, error, trace, warn};
-use rayon::ThreadPool;
 
 use amethyst_core::{
     ecs::{
@@ -17,7 +16,7 @@ use amethyst_core::{
         prelude::{Component, Read, ReadExpect, System, SystemData, VecStorage, World, Write},
         storage::UnprotectedStorage,
     },
-    SystemDesc, Time,
+    SystemDesc, ThreadPool, Time,
 };
 use amethyst_error::{Error, ResultExt};
 
@@ -532,7 +531,7 @@ where
 {
     type SystemData = (
         Write<'a, AssetStorage<A>>,
-        ReadExpect<'a, Arc<ThreadPool>>,
+        ReadExpect<'a, ThreadPool>,
         Read<'a, Time>,
         Option<Read<'a, HotReloadStrategy>>,
     );
@@ -544,7 +543,7 @@ where
         storage.process(
             ProcessableAsset::process,
             time.frame_number(),
-            &**pool,
+            &*pool,
             strategy.as_deref(),
         );
     }

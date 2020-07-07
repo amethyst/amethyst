@@ -2,7 +2,6 @@ use std::{borrow::Borrow, hash::Hash, path::PathBuf, sync::Arc};
 
 use fnv::FnvHashMap;
 use log::debug;
-use rayon::ThreadPool;
 
 use amethyst_error::ResultExt;
 #[cfg(feature = "profiler")]
@@ -11,20 +10,20 @@ use thread_profiler::profile_scope;
 use crate::{
     error::Error,
     storage::{AssetStorage, Handle, Processed},
-    Asset, Directory, Format, FormatValue, Progress, Source,
+    Asset, Directory, Format, FormatValue, Progress, Source, ThreadPool,
 };
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {
     hot_reload: bool,
-    pool: Arc<ThreadPool>,
+    pool: ThreadPool,
     sources: FnvHashMap<String, Arc<dyn Source>>,
 }
 
 impl Loader {
     /// Creates a new asset loader, initializing the directory store with the
     /// given path.
-    pub fn new<P>(directory: P, pool: Arc<ThreadPool>) -> Self
+    pub fn new<P>(directory: P, pool: ThreadPool) -> Self
     where
         P: Into<PathBuf>,
     {
@@ -32,7 +31,7 @@ impl Loader {
     }
 
     /// Creates a new asset loader, using the provided source
-    pub fn with_default_source<S>(source: S, pool: Arc<ThreadPool>) -> Self
+    pub fn with_default_source<S>(source: S, pool: ThreadPool) -> Self
     where
         S: Source,
     {
