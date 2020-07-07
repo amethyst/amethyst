@@ -449,5 +449,4 @@ mod tests {
         BACKTRACE_STATUS.store(1, atomic::Ordering::Relaxed);
         assert!(Error::from_string("an error").backtrace().is_none());
     }
-	
 }
