@@ -63,9 +63,10 @@ blockquote {
   border: solid var(--fg);
 }
 
-.language-rust {
+.language-rust,
+.language-toml {
   border-radius: 8px;
-  border: solid var(--fg);
+  border: solid var(--fg) !important;
 }
 
 .menu-title {
