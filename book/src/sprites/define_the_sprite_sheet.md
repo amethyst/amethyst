@@ -55,9 +55,23 @@ Grid((
 ))
 ```
 
+It is possible one of attributes will get out of bounds defined by method declaration. 
+If that happens, sprite will not be displayed. You can mitigate either by adding 
+`#![enable(implicit_some)]` to the very top of the file, or by specifying value
+as `Some(xx)` where `xx` is number out of bounds.
+
+E.g. following does not work:
+```rust,edition2018,no_run,noplaypen
+sprite_count: 48
+```
+And would need to be altered to
+```rust,edition2018,no_run,noplaypen
+sprite_count: Some(48)
+```
+
 For more information about list and grid based sprite sheets see [`SpriteGrid`][doc_grid] or [`SpriteList`][doc_list].
 
-Then, you can load it using the texture handle of the sheet's image you loaded earlier:
+Once you have ron file ready, you can load it using the texture handle of the sheet's image you loaded earlier:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
