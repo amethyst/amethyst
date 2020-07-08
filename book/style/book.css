@@ -39,3 +39,8 @@ blockquote {
 .menu-title {
   color: var(--fg) !important;
 }
+
+.icon-button,
+#print-button {
+  color: var(--fg) !important;
+}
