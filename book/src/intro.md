@@ -1,7 +1,7 @@
-<div style="display:inline-block;width:100%">
-    <img src="./images/amethyst_emblem.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
-    <h1>The Amethyst Engine</h1>
+<div class="splash">
+   <img src="./images/logo.svg" class="splogo" alt="Logo" height="110px"/>
 </div>
+<div class="drop"></div>
 
 ## Presentation
 
@@ -27,14 +27,14 @@ and its source code is completely yours to tinker with. The code is available on
 
 This book is split into several sections, with this introduction being the first. The others are:
 
-* [Getting Started][gs] – Prepare your computer for Amethyst development.
-* [Concepts][cc] – An overview of the concepts used in Amethyst. Recommended.
-* [Pong Tutorial][pt] – Build a basic pong game in Rust.
-* [Math][math] – A quick introduction to doing math with Amethyst.
-* [Animation][anim] – Explains the architecture of the `amethyst_animation` crate.
-* [Controlling `System` Execution][cse] – Shows you how to structure more complex games that need to change the `System` graph.
-* [Glossary][gl] – Defines special terms used throughout the book.
-* [Appendix A: Config Files][ax_a] – Shows you how to define your data in RON files.
+- [Getting Started][gs] – Prepare your computer for Amethyst development.
+- [Concepts][cc] – An overview of the concepts used in Amethyst. Recommended.
+- [Pong Tutorial][pt] – Build a basic pong game in Rust.
+- [Math][math] – A quick introduction to doing math with Amethyst.
+- [Animation][anim] – Explains the architecture of the `amethyst_animation` crate.
+- [Controlling `System` Execution][cse] – Shows you how to structure more complex games that need to change the `System` graph.
+- [Glossary][gl] – Defines special terms used throughout the book.
+- [Appendix A: Config Files][ax_a] – Shows you how to define your data in RON files.
 
 [gs]: ./getting-started.html
 [cc]: ./concepts/intro.html
@@ -90,18 +90,20 @@ First of all, the engine is based on the [Specs][specs] library, which is a comm
 A lot of features have been glued together using those:
 
 There are the obvious ones:
-* Transformations
-* Graphics
-* Windowing
-* Inputs
-* Audio
-* Etc...
+
+- Transformations
+- Graphics
+- Windowing
+- Inputs
+- Audio
+- Etc...
 
 And also the less known but also essential features:
-* Animations
-* Gltf
-* Locales
-* Networking
+
+- Animations
+- Gltf
+- Locales
+- Networking
 
 If you were not to use Amethyst, not only would you need to create all those features (or use pre-existing crates), but you would also need to glue the layers together.
 
