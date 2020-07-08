@@ -8,6 +8,14 @@ body {
   --sidebar-active: #8f4bff;
 }
 
+::-moz-selection {
+  background: #904bff83;
+}
+
+::selection {
+  background: #904bff83;
+}
+
 .splash {
   background: linear-gradient(191.12deg, #5c007c 0.01%, #090074 100.57%);
   position: absolute;
