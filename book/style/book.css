@@ -53,3 +53,23 @@ blockquote {
 .content p {
   line-height: 2em;
 }
+
+.chapter li a {
+  width: 100%;
+  transition: ease 0.3s;
+  border-radius: 8px;
+}
+.chapter li a:hover {
+  background-color: #904bff27;
+  padding-left: 10px;
+}
+
+.header {
+  transition: ease 0.3s;
+  border-radius: 8px;
+  padding-right: 20px;
+}
+.header:hover {
+  background-color: #904bff27;
+  padding-left: 10px;
+}
