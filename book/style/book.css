@@ -73,3 +73,9 @@ blockquote {
   background-color: #904bff27;
   padding-left: 10px;
 }
+.hljs {
+  color: var(--fg) !important;
+  border-radius: 8px;
+  border: solid #904bff;
+  background-color: var(--bg);
+}
