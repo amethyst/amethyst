@@ -44,3 +44,12 @@ blockquote {
 #print-button {
   color: var(--fg) !important;
 }
+
+.chapter li.chapter-item,
+.content ul {
+  line-height: 2.2em;
+  margin-top: 0.6em;
+}
+.content p {
+  line-height: 2em;
+}
