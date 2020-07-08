@@ -1,0 +1,41 @@
+body {
+  font-family: "Rubik", sans-serif;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap");
+
+:root {
+  --links: #8f4bff;
+  --sidebar-active: #8f4bff;
+}
+
+h2 {
+  font-size: 2.5em !important;
+}
+
+#menu-bar {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.589);
+}
+
+.sidebar {
+  z-index: 300;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.589);
+}
+
+.content main {
+  margin-top: 50px;
+}
+
+blockquote {
+  border-radius: 8px;
+  border: solid var(--fg);
+}
+
+.language-rust {
+  border-radius: 8px;
+  border: solid var(--fg);
+}
+
+.menu-title {
+  color: var(--fg) !important;
+}
