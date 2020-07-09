@@ -320,11 +320,11 @@ fn initialise_scoreboard(world: &mut World) {
         ))
         .build();
 
-	  let p2_score = world
-	  	  .create_entity()
-	  	  .with(p2_transform)
-	  	  .with(UiText::new(
-	  			font,
+    let p2_score = world
+        .create_entity()
+        .with(p2_transform)
+        .with(UiText::new(
+            font,
 	  			"0".to_string(),
 	  			[1., 1., 1., 1.],
 	  			50.,
