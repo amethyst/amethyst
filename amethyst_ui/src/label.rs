@@ -55,7 +55,7 @@ where
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
-    align: Option<Anchor>,
+    align: Anchor,
     parent: Option<Entity>,
 }
 
@@ -77,7 +77,7 @@ where
             text_color: DEFAULT_TXT_COLOR,
             font: None,
             font_size: 32.,
-            align: None,
+            align: Anchor::Middle,
             parent: None,
         }
     }
@@ -164,7 +164,7 @@ where
 
     /// Set text align
     pub fn with_align(mut self, align: Anchor) -> Self {
-        self.align = Some(align);
+        self.align = align;
         self
     }
 
@@ -215,7 +215,7 @@ where
         res.text
             .insert(
                 text_entity,
-                UiText::new(font_handle, self.text, self.text_color, self.font_size),
+                UiText::new(font_handle, self.text, self.text_color, self.font_size, self.align),
             )
             .expect("Unreachable: Inserting newly created entity");
 

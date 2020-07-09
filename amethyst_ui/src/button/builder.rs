@@ -66,7 +66,7 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
-    align: Option<Anchor>,
+    align: Anchor,
     image: Option<UiImage>,
     parent: Option<Entity>,
     on_click_start_sound: Option<UiPlaySoundAction>,
@@ -100,7 +100,7 @@ where
             text_color: DEFAULT_TXT_COLOR,
             font: None,
             font_size: 32.,
-            align: None,
+            align: Anchor::Middle,
             image: None,
             parent: None,
             on_click_start_sound: None,
@@ -219,7 +219,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
 
     /// Set text align
     pub fn with_align(mut self, align: Anchor) -> Self {
-        self.align = Some(align);
+        self.align = align;
         self
     }
 
@@ -406,7 +406,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         res.text
             .insert(
                 text_entity,
-                UiText::new(font_handle, self.text, self.text_color, self.font_size),
+                UiText::new(font_handle, self.text, self.text_color, self.font_size, self.align),
             )
             .expect("Unreachable: Inserting newly created entity");
         res.parent

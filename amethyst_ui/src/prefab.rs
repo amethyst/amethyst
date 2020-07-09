@@ -222,7 +222,7 @@ pub struct UiTextData {
     #[serde(default)]
     pub password: bool,
     /// Where should the text be aligned from. Relative to its own UiTransform's area.
-    pub align: Option<Anchor>,
+    pub align: Anchor,
     /// How should the text behave with line breaks.
     pub line_mode: Option<LineMode>,
     /// Optionally make the text editable
@@ -298,12 +298,8 @@ impl<'a> PrefabData<'a> for UiTextData {
             .as_ref()
             .ok_or_else(|| format_err!("did not load sub assets"))?
             .add_to_entity(entity, fonts, &[], &[])?;
-        let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
+        let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size, self.align);
         ui_text.password = self.password;
-
-        if let Some(align) = self.align {
-            ui_text.align = align;
-        }
 
         if let Some(line_mode) = self.line_mode {
             ui_text.line_mode = line_mode;
@@ -960,7 +956,7 @@ fn walk_ui_tree<C, W>(
                 editable: None,
                 font: button.font.clone(),
                 password: false,
-                align: None,
+                align: Anchor::Middle,
                 line_mode: None,
                 text: button.text.clone(),
                 font_size: button.font_size,

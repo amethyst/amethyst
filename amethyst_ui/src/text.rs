@@ -69,7 +69,7 @@ impl UiText {
     /// * `text`: the glyphs to render
     /// * `color`: RGBA color with a maximum of 1.0 and a minimum of 0.0 for each channel
     /// * `font_size`: a uniform scale applied to the glyphs
-    pub fn new(font: FontHandle, text: String, color: [f32; 4], font_size: f32) -> UiText {
+    pub fn new(font: FontHandle, text: String, color: [f32; 4], font_size: f32, align: Anchor) -> UiText {
         UiText {
             text,
             color,
@@ -77,7 +77,7 @@ impl UiText {
             font,
             password: false,
             line_mode: LineMode::Single,
-            align: Anchor::Middle,
+            align,
             cached_glyphs: Vec::new(),
         }
     }
