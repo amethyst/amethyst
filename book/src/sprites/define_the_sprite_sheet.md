@@ -55,10 +55,13 @@ Grid((
 ))
 ```
 
-It is possible one of attributes will get out of bounds defined by method declaration. 
-If that happens, sprite will not be displayed. You can mitigate either by adding 
-`#![enable(implicit_some)]` to the very top of the file, or by specifying value
-as `Some(xx)` where `xx` is number out of bounds.
+It is possible sprite will not be displayed. This might be because of value wrapped into
+`Option<..>` and this happens with values specified as `Option<..>`. You can check
+for such values here [`SpriteGrid`][doc_grid] and [`SpriteList`][doc_list]
+<br>
+You can mitigate either by telling Amethyst to implicitly wrap values into `Some<..>`
+by adding `#![enable(implicit_some)]` to the very top of the file, or by specifying 
+values as `Some(xx)` where `xx` is your desired value.
 
 E.g. following does not work:
 ```rust,edition2018,no_run,noplaypen
