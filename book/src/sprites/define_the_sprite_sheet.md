@@ -38,7 +38,6 @@ List((
     ],
 ))
 ```
-`offsets: Some((0.0, 0.0)),` can be replaced by `offsets: (0.0, 0.0),` if the line `#![enable(implicit_some)]` is added at the top of the definition file.
 
 Or you can use a grid based definition, for example:
 
@@ -51,28 +50,13 @@ Grid((
     // Specifies the number of columns in the sprite sheet
     columns: 2,
     // Specifies the number of sprites in the spritesheet.
-    sprite_count: 2
+    sprite_count: Some(2)
 ))
 ```
 
-It is possible sprite will not be displayed. This might be because of value wrapped into
-`Option<..>` and this happens with values specified as `Option<..>`. You can check
-for such values here [`SpriteGrid`][doc_grid] and [`SpriteList`][doc_list]
-<br>
-You can mitigate either by telling Amethyst to implicitly wrap values into `Some<..>`
-by adding `#![enable(implicit_some)]` to the very top of the file, or by specifying 
-values as `Some(xx)` where `xx` is your desired value.
+`Option` types need to be wrapped in the `Some` variant. For convenience, this can be left out if the line `#![enable(implicit_some)]` is added at the top of the definition file.  For example, `sprite_count: Some(2),` could be replaced by `sprite_count: 2,`.  Don't forget to either wrap the value in `Some` or put `#![enable(implicit_some)]` at the top of the file, otherwise your sprite sheet will fail to load and your sprites will not be displayed.
 
-E.g. following does not work:
-```rust,edition2018,no_run,noplaypen
-sprite_count: 48
-```
-And would need to be altered to
-```rust,edition2018,no_run,noplaypen
-sprite_count: Some(48)
-```
-
-For more information about list and grid based sprite sheets see [`SpriteGrid`][doc_grid] or [`SpriteList`][doc_list].
+For more information about list and grid based sprite sheets, including the types of their fields, see [`SpriteGrid`][doc_grid] or [`SpriteList`][doc_list].
 
 Once you have ron file ready, you can load it using the texture handle of the sheet's image you loaded earlier:
 
