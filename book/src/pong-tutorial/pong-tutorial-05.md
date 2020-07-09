@@ -315,8 +315,8 @@ fn initialise_scoreboard(world: &mut World) {
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
-				LineMode::Single,
-				Anchor::Middle,
+            LineMode::Single,
+            Anchor::Middle,
         ))
         .build();
 
@@ -325,13 +325,13 @@ fn initialise_scoreboard(world: &mut World) {
         .with(p2_transform)
         .with(UiText::new(
             font,
-	  			"0".to_string(),
-	  			[1., 1., 1., 1.],
-	  			50.,
-	  			LineMode::Single,
-	  			Anchor::Middle,
-	  	  ))
-	  	  .build();
+            "0".to_string(),
+            [1., 1., 1., 1.],
+            50.,
+            LineMode::Single,
+            Anchor::Middle,
+        ))
+        .build();
 
 # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
     world.insert(ScoreText { p1_score, p2_score });
