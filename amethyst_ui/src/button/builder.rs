@@ -13,8 +13,8 @@ use amethyst_rendy::{palette::Srgba, rendy::texture::palette::load_from_srgba, T
 
 use crate::{
     font::default::get_default_font,
-    Anchor, FontAsset, FontHandle, Interactable, Selectable, Stretch, UiButton, UiButtonAction,
-    UiButtonActionRetrigger,
+    Anchor, FontAsset, FontHandle, Interactable, LineMode, Selectable, Stretch, UiButton,
+    UiButtonAction, UiButtonActionRetrigger,
     UiButtonActionType::{self, *},
     UiImage, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
@@ -66,6 +66,7 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
+    line_mode: LineMode,
     align: Anchor,
     image: Option<UiImage>,
     parent: Option<Entity>,
@@ -100,6 +101,7 @@ where
             text_color: DEFAULT_TXT_COLOR,
             font: None,
             font_size: 32.,
+            line_mode: LineMode::Single,
             align: Anchor::Middle,
             image: None,
             parent: None,
@@ -214,6 +216,12 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     /// Set text color
     pub fn with_text_color(mut self, text_color: [f32; 4]) -> Self {
         self.text_color = text_color;
+        self
+    }
+
+    /// Set text line mode
+    pub fn with_line_mode(mut self, line_mode: LineMode) -> Self {
+        self.line_mode = line_mode;
         self
     }
 
@@ -406,7 +414,14 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         res.text
             .insert(
                 text_entity,
-                UiText::new(font_handle, self.text, self.text_color, self.font_size, self.align),
+                UiText::new(
+                    font_handle,
+                    self.text,
+                    self.text_color,
+                    self.font_size,
+                    self.line_mode,
+                    self.align,
+                ),
             )
             .expect("Unreachable: Inserting newly created entity");
         res.parent

@@ -66,17 +66,26 @@ impl UiText {
     /// # Parameters
     ///
     /// * `font`: A handle to a `Font` asset
-    /// * `text`: the glyphs to render
+    /// * `text`: The glyphs to render
     /// * `color`: RGBA color with a maximum of 1.0 and a minimum of 0.0 for each channel
-    /// * `font_size`: a uniform scale applied to the glyphs
-    pub fn new(font: FontHandle, text: String, color: [f32; 4], font_size: f32, align: Anchor) -> UiText {
+    /// * `font_size`: A uniform scale applied to the glyphs
+    /// * `line_mode`: Text mode allowing single line or multiple lines
+    /// * `align`: Text alignment within its `UiTransform`
+    pub fn new(
+        font: FontHandle,
+        text: String,
+        color: [f32; 4],
+        font_size: f32,
+        line_mode: LineMode,
+        align: Anchor,
+    ) -> UiText {
         UiText {
             text,
             color,
             font_size,
             font,
             password: false,
-            line_mode: LineMode::Single,
+            line_mode,
             align,
             cached_glyphs: Vec::new(),
         }
