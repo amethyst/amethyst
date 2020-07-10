@@ -6,7 +6,10 @@ stages:
 
 test:
   script:
+    - apt-get -y update
+    - apt-get install -y alsa-utils
     - cargo test --features empty
+
 # stages:
 #   - build-docs
 #   - deploy-docs
