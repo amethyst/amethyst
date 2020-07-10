@@ -7,7 +7,7 @@ stages:
 test:
   script:
     - apt-get -y update
-    - apt-get install -y alsa-utils
+    - apt install -y gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev
     - cargo test --features empty
 
 # stages:
