@@ -13,10 +13,7 @@ use amethyst_core::{
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};
-use amethyst_rendy::{
-    camera::CameraPrefab,
-    light::LightPrefab,
-};
+use amethyst_rendy::{camera::CameraPrefab, light::LightPrefab};
 
 use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, Named};
 
