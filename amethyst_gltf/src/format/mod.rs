@@ -15,7 +15,7 @@ use amethyst_core::{
 use amethyst_error::{format_err, Error, ResultExt};
 use amethyst_rendy::{
     camera::CameraPrefab,
-    light::{LightPrefab, Light},
+    light::{Light, LightPrefab},
 };
 
 use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, Named};
@@ -251,9 +251,7 @@ fn load_node(
 
     // Load lights
     if let Some(light) = node.light() {
-        prefab.data_or_default(entity_index).light = Some(
-            LightPrefab::from(light),
-        );
+        prefab.data_or_default(entity_index).light = Some(LightPrefab::from(light));
     }
 
     // check for skinning

@@ -22,8 +22,8 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use amethyst_rendy::{
-    camera::CameraPrefab, formats::mtl::MaterialPrefab, rendy::mesh::MeshBuilder, types::Mesh, light::LightPrefab,
-    visibility::BoundingSphere,
+    camera::CameraPrefab, formats::mtl::MaterialPrefab, light::LightPrefab,
+    rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere,
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
