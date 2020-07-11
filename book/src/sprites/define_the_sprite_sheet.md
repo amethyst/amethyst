@@ -54,7 +54,7 @@ Grid((
 ))
 ```
 
-`Option` types need to be wrapped in the `Some` variant. For convenience, this can be left out if the line `#![enable(implicit_some)]` is added at the top of the definition file.  For example, `sprite_count: Some(2),` could be replaced by `sprite_count: 2,`.  Don't forget to either wrap the value in `Some` or put `#![enable(implicit_some)]` at the top of the file, otherwise your sprite sheet will fail to load and your sprites will not be displayed.
+`Option` types need to be wrapped in the `Some` variant. For convenience, this can be left out if the line `#![enable(implicit_some)]` is added at the top of the definition file.  For example, `sprite_count: Some(2),` could be replaced by `sprite_count: 2,`.
 
 For more information about list and grid based sprite sheets, including the types of their fields, see [`SpriteGrid`][doc_grid] or [`SpriteList`][doc_list].
 
