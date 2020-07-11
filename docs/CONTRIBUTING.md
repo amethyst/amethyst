@@ -286,7 +286,7 @@ Then you can hit load button and choose `thread_profile.json` file.
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
 [fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
 [ma]: https://www.yumpu.com/en/document/view/43374261/mantle-programming-guide-and-api-reference
-[mo]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
+[mo]: https://shanee.io/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
 [ni]: http://www.gdcvault.com/play/1020706/Nitrous-Mantle-Combining-Efficient-Engine
 [pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
 
