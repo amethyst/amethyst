@@ -5,7 +5,7 @@ use amethyst::{
     ecs::prelude::World,
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
-    ui::{Anchor, TtfFormat, UiText, UiTransform},
+    ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform},
 };
 
 #[derive(Default)]
@@ -198,6 +198,8 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
+            LineMode::Single,
+            Anchor::Middle,
         ))
         .build();
     let p2_score = world
@@ -208,6 +210,8 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
+            LineMode::Single,
+            Anchor::Middle,
         ))
         .build();
     world.insert(ScoreText { p1_score, p2_score });

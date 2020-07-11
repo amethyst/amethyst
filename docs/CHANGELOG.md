@@ -14,13 +14,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - `GameDataBuilder::build_dispatcher` method returns a standalone `Dispatcher`
   instead of using `DataInit` to build a `GameData` ([#2294])
-- Support for text alignment in UiButton and UiLabel ([#2316])
+- Support for text alignment in `UiButton` and `UiLabel` ([#2316])
 - `amethyst_input::axis::Axis` supports a new variant, `Multiple` ([#2341])
+- Support layer to be set in `UiLabelBuilder` ([#2358])
+- Support line mode to be set in `UiLabelBuilder` and `UiButtonBuilder` ([#2358])
 
 ### Changed
 
 - `amethyst_rendy::shape::Shape::upload` takes `&ShapeUpload`. ([#2264])
 - Examples now have assets colocated in the individual example directiories ([#2289], [#2305])
+- `UiText` now requires 2 more arguments `line_mode` and `align` ([#2358])
 
 ### Fixed
 
@@ -29,6 +32,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Fixed issue where all `TileMap`s were rendered with the same transformation. ([#2210])
 - Fixed UiButtonBuilder incorrect UiImage creation ([#2299])
 - Correctly increment texture generation tracking number. ([#2339])
+- Fixed text alignment never being set in `UiText` ([#2358])
 
 [#2341]: https://github.com/amethyst/amethyst/pull/2341
 [#2294]: https://github.com/amethyst/amethyst/pull/2294

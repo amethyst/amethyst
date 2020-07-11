@@ -275,7 +275,7 @@ use amethyst::{
 #     ecs::Entity,
 #     prelude::*,
     // ...
-    ui::{Anchor, TtfFormat, UiText, UiTransform},
+    ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform},
 };
 
 # pub struct Pong;
@@ -315,13 +315,22 @@ fn initialise_scoreboard(world: &mut World) {
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
+            LineMode::Single,
+            Anchor::Middle,
         ))
         .build();
 
     let p2_score = world
         .create_entity()
         .with(p2_transform)
-        .with(UiText::new(font, "0".to_string(), [1., 1., 1., 1.], 50.))
+        .with(UiText::new(
+            font,
+            "0".to_string(),
+            [1., 1., 1., 1.],
+            50.,
+            LineMode::Single,
+            Anchor::Middle,
+        ))
         .build();
 
 # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
