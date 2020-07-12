@@ -24,18 +24,28 @@ to draw these widgets.
 A minimalistic game data would now look like this:  
 
 ```rust,edition2018,no_run,noplaypen
-let game_data = GameDataBuilder::default()
+# extern crate amethyst;
+# use amethyst::{
+#     GameDataBuilder,
+#     input::{InputBundle, StringBindings},
+#     renderer::{types::DefaultBackend, RenderingBundle, RenderToWindow},
+#     Result,
+#     ui::{RenderUi, UiBundle}
+# };
+# 
+# pub fn main() -> Result<()> {
+    let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
+                .with_plugin(RenderToWindow::from_config(Default::default())
                         .with_clear([0.0, 0.0, 0.0, 1.0]),
                 )
                 .with_plugin(RenderUi::default()),
         )?;
-
+#   Ok(())
+# }
 ```
 
 Make sure that the `InputBundle` and `UiBundle` have same binding types. In this case these
