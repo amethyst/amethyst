@@ -2,7 +2,6 @@ image: registry.gitlab.com/amethyst-engine/amethyst/base:latest
 
 stages:
   - test
-  - build
 
 test:
   script:
@@ -10,7 +9,7 @@ test:
   cache:
     key: debug
     paths:
-      - target/debug/
+      - target/debug/build/
 
 # stages:
 #   - build-docs
