@@ -1,4 +1,4 @@
-image: amethyst-engine/amethyst/base:latest
+image: registry.gitlab.com/amethyst-engine/amethyst/base:latest
 
 stages:
   - test
