@@ -1,4 +1,4 @@
-image: rust:latest
+image: amethyst-engine/amethyst/base:latest
 
 stages:
   - test
