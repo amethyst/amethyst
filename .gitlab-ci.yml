@@ -15,7 +15,6 @@ test:
       - target/debug/build/
       - .cargo/
 
-
 # stages:
 #   - build-docs
 #   - deploy-docs
