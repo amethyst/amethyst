@@ -376,6 +376,7 @@ fn on_resume(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let _ = hiddens.remove(btn);
     }
 }
+
 # }
 ```
 
