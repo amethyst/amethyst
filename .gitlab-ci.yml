@@ -1,3 +1,6 @@
+variables:
+  CARGO_HOME: $CI_PROJECT_DIR/.cargo
+
 image: registry.gitlab.com/amethyst-engine/amethyst/base:latest
 
 stages:
@@ -10,6 +13,7 @@ test:
     key: debug
     paths:
       - target/debug/build/
+      - .cargo/
 
 
 # stages:
