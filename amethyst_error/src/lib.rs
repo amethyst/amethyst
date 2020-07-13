@@ -104,8 +104,9 @@ impl Error {
     ///
     /// # Examples
     ///
-    /// The only way to set the source is through [`ResultExt`](ResultExt) using
-    /// [`with_context`](ResultExt::with_context).
+    /// The source can be set using [`with_source`](struct.Error.html#method.with_source) or
+    /// through [`ResultExt`](trait.ResultExt.html) using
+    /// [`with_context`](trait.ResultExt.html#method.with_context).
     ///
     /// ```rust
     /// use amethyst_error::{Error, ResultExt};
@@ -195,7 +196,7 @@ where
     /// Provide a context for the result in case it is an error.
     ///
     /// The context callback is expected to return a new error, which will replace the given error
-    /// and set the replaced error as its [`source`](Error::source).
+    /// and set the replaced error as its [`source`](struct.Error.html#method.source).
     ///
     /// # Examples
     ///
@@ -243,7 +244,7 @@ where
 
 /// An iterator over all the causes for this error.
 ///
-/// Created using [`Error::causes`](Error::causes).
+/// Created using [`Error::causes`](struct.Error.html#method.causes).
 #[derive(Debug, Clone)]
 pub struct Causes<'a> {
     current: Option<&'a Error>,
@@ -277,7 +278,7 @@ macro_rules! format_err {
     ($($arg:tt)*) => { $crate::Error::from_string(format!($($arg)*)) }
 }
 
-/// Constructs an [`Error`](Error) from a string.
+/// Constructs an [`Error`](struct.Error.html) from a string.
 pub fn err_msg<M>(message: M) -> Error
 where
     M: 'static + Send + Sync + fmt::Debug + fmt::Display,

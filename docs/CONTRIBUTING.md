@@ -87,12 +87,9 @@ Note that if you do not have mdbook already installed you may do so with `cargo 
 If you find dependency resolution problems when testing mdbook, 
 you may have to run `cargo clean` and `cargo build` again before retrying the `mdbook test` command.
 
-> If you want to be publicly known as an author, feel free to add your name
-> and/or GitHub username to the AUTHORS.md file in your pull request.
-
 Once you have submitted your pull request, please wait for a reviewer to give
 feedback on it. If no one responds, feel free to @-mention a developer or post
-publicly on the [appropriate chat room][gi] on Gitter or on Discord asking for a review. Once
+publicly on [Discord][di] asking for a review. Once
 your code has been reviewed, revised if necessary, and then signed-off by a
 developer, it will be merged into the source tree.
 
@@ -288,8 +285,8 @@ Then you can hit load button and choose `thread_profile.json` file.
 [di]: https://discord.gg/amethyst
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
 [fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
-[ma]: http://www.amd.com/Documents/Mantle-Programming-Guide-and-API-Reference.pdf
-[mo]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
+[ma]: https://www.yumpu.com/en/document/view/43374261/mantle-programming-guide-and-api-reference
+[mo]: https://shanee.io/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
 [ni]: http://www.gdcvault.com/play/1020706/Nitrous-Mantle-Combining-Efficient-Engine
 [pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
 
