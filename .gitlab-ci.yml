@@ -13,6 +13,7 @@ test:
     key: debug
     paths:
       - target/debug/build/
+      - target/debug/deps/
       - .cargo/
 
 # stages:
