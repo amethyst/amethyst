@@ -233,6 +233,7 @@ Documentation of any kind should adhere to the following standard:
    style* Markdown links, as shown in the example below. However, if the link
    points to an anchor that exists on the same page, the *inline style* should
    be used instead.
+3. Rust code snippets should be compilable whenever reasonably possible.
 
 ```markdown
 Here is some [example text][et] with a link in it. While we are at it, here is
