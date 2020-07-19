@@ -12,11 +12,11 @@
 pub use self::app_root_dir::*;
 
 pub mod app_root_dir;
-//pub mod auto_fov;
+pub mod auto_fov;
 pub mod circular_buffer;
-//pub mod fps_counter;
-//pub mod ortho_camera;
-//pub mod removal;
+pub mod fps_counter;
+pub mod ortho_camera;
+pub mod removal;
 //pub mod scene;
-//pub mod tag;
-//pub mod time_destroy;
+pub mod tag;
+pub mod time_destroy;
