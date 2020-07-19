@@ -242,18 +242,20 @@ impl<I: Hash + Eq> LookupBuilder<I> {
 }
 
 /// Convert any type slice to bytes slice.
-pub fn slice_as_bytes<T>(slice: &[T]) -> &[u8] {
-    unsafe {
-        // Inspecting any value as bytes should be safe.
-        core::slice::from_raw_parts(
-            slice.as_ptr() as *const u8,
-            core::mem::size_of::<T>() * slice.len(),
-        )
-    }
+/// # Safety
+/// `T` must not contain any padding bytes. In particular, `T` must be repr(C).
+pub unsafe fn slice_as_bytes<T>(slice: &[T]) -> &[u8] {
+    // If type contains no padding, object of this type can be observed as &[u8]
+    core::slice::from_raw_parts(
+        slice.as_ptr() as *const u8,
+        core::mem::size_of::<T>() * slice.len(),
+    )
 }
 
 /// Copy the byte-data from an iterator into a slice
-pub fn write_into_slice<I: IntoIterator>(dst_slice: &mut [u8], iter: I) {
+/// # Safety
+/// `T` must not contain any padding bytes. In particular, `T` must be repr(C).
+pub unsafe fn write_into_slice<I: IntoIterator>(dst_slice: &mut [u8], iter: I) {
     for (data, dst) in iter
         .into_iter()
         .zip(dst_slice.chunks_exact_mut(std::mem::size_of::<I::Item>()))
