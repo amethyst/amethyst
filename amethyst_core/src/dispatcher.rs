@@ -207,7 +207,7 @@ impl IntoRelativeStage for Stage {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct RelativeStage(
     /// The internal execution stage.
-    pub Stage, 
+    pub Stage,
     /// The stage offset.
     pub isize,
 );
