@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 
 /// A SystemBundle is a structure that can add multiple systems at once to a dispatcher.
 pub trait SystemBundle {
+    /// Build this SystemBundle.
     fn build(
         self,
         world: &mut World,
@@ -111,6 +112,7 @@ where
 
 /// Something that can be consumed by the DispatcherBuilder.
 pub trait ConsumeDesc {
+    /// Consume this resource.
     fn consume(
         self: Box<Self>,
         world: &mut World,
@@ -122,7 +124,9 @@ pub trait ConsumeDesc {
 
 /// Something that runs on a local (main) thread.
 pub trait ThreadLocal {
+    /// Run the thread local resource.
     fn run(&mut self, world: &mut World, resources: &mut Resources);
+    /// Get rid of the thread local resource.
     fn dispose(self: Box<Self>, world: &mut World, resources: &mut Resources);
 }
 
@@ -173,6 +177,8 @@ where
 
 /// Converts the type into a relative stage.
 pub trait IntoRelativeStage: Copy {
+    // TODO: Why not just use Into<RelativeStage> ?
+    /// Convert this type into a relative stage.
     fn into_relative(self) -> RelativeStage;
 }
 
