@@ -1,6 +1,5 @@
 //! A collection of structures and functions useful across the entire amethyst project.
 #![warn(
-    missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
     rust_2018_compatibility
