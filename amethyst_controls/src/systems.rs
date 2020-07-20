@@ -4,11 +4,11 @@ use winit::{DeviceEvent, Event, Window, WindowEvent};
 use thread_profiler::profile_scope;
 
 use amethyst_core::{
-    transform::{Translation, Rotation},
     ecs::prelude::*,
-    math::{convert, Unit, Vector3, Translation3, UnitQuaternion},
+    math::{convert, Translation3, Unit, UnitQuaternion, Vector3},
     shrev::EventChannel,
     timing::Time,
+    transform::{Rotation, Translation},
 };
 use std::collections::HashMap;
 
@@ -25,9 +25,9 @@ use crate::{
 ///
 /// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
 pub fn build_fly_movement_system<T: BindingTypes>(
-    speed: f32, 
-    horizontal_axis: Option<T::Axis>, 
-    vertical_axis: Option<T::Axis>, 
+    speed: f32,
+    horizontal_axis: Option<T::Axis>,
+    vertical_axis: Option<T::Axis>,
     longitudinal_axis: Option<T::Axis>,
 ) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>> {
     Box::new(move |_world, _resources| {
@@ -43,11 +43,10 @@ pub fn build_fly_movement_system<T: BindingTypes>(
                 let y = get_input_axis_simple(&vertical_axis, &input);
                 let z = get_input_axis_simple(&longitudinal_axis, &input);
 
-
                 if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
                     for (_, mut trans) in controls.iter_mut(world) {
                         let delta_sec = time.delta_seconds();
-                        trans.0 *= Translation3::from(dir.as_ref() * delta_sec * speed); 
+                        trans.0 *= Translation3::from(dir.as_ref() * delta_sec * speed);
                     }
                 }
             })
@@ -67,15 +66,17 @@ pub fn build_arc_ball_rotation_system(_: &mut World, _: &mut Resources) -> Box<d
         .read_component::<Translation>()
         .build(move |_commands, world, (), queries| {
             #[cfg(feature = "profiler")]
-            profile_scope!("arc_ball_rotation_system");  
+            profile_scope!("arc_ball_rotation_system");
 
-            let targets: HashMap<Entity, Translation> = 
-                queries.0.iter(world).map(|ctrl| {
-                    match world.get_component::<Translation>(ctrl.target) {
+            let targets: HashMap<Entity, Translation> = queries
+                .0
+                .iter(world)
+                .map(
+                    |ctrl| match world.get_component::<Translation>(ctrl.target) {
                         Some(trans) => Some((ctrl.target, *trans.clone())),
                         None => None,
-                    } 
-                })
+                    },
+                )
                 .filter(|t| t.is_some())
                 .map(|t| t.unwrap())
                 .collect();
@@ -85,7 +86,7 @@ pub fn build_arc_ball_rotation_system(_: &mut World, _: &mut Resources) -> Box<d
                 match targets.get(&control.target) {
                     Some(target_trans) => {
                         *trans = Translation::from(target_trans.vector - pos_vec);
-                    },
+                    }
                     None => continue,
                 }
             }
@@ -100,8 +101,8 @@ pub fn build_arc_ball_rotation_system(_: &mut World, _: &mut Resources) -> Box<d
 /// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
 /// `HideCursor.hide = false`
 pub fn build_free_rotation_system(
-    sensitivity_x: f32, 
-    sensitivity_y: f32, 
+    sensitivity_x: f32,
+    sensitivity_y: f32,
 ) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>> {
     Box::new(move |_world, resources| {
         let mut reader = resources
@@ -113,7 +114,10 @@ pub fn build_free_rotation_system(
             .read_resource::<EventChannel<Event>>()
             .read_resource::<WindowFocus>()
             .read_resource::<HideCursor>()
-            .with_query(<Write<Rotation>>::query().filter(component::<FlyControl>() | component::<ArcBallControl>()))
+            .with_query(
+                <Write<Rotation>>::query()
+                    .filter(component::<FlyControl>() | component::<ArcBallControl>()),
+            )
             .build(move |_commands, world, (events, focus, hide), controls| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("free_rotation_system");
@@ -127,7 +131,7 @@ pub fn build_free_rotation_system(
                                     rotation.0 *= UnitQuaternion::from_euler_angles(
                                         (-(y as f32) * sensitivity_y).to_radians(),
                                         (-(x as f32) * sensitivity_x).to_radians(),
-                                        0.0, 
+                                        0.0,
                                     );
                                 }
                             }
@@ -135,11 +139,14 @@ pub fn build_free_rotation_system(
                     }
                 }
             })
-        })
+    })
 }
 
 /// Builds the mouse focus update System.
-pub fn build_mouse_focus_update_system(_world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable> {
+pub fn build_mouse_focus_update_system(
+    _world: &mut World,
+    resources: &mut Resources,
+) -> Box<dyn Schedulable> {
     resources.insert(WindowFocus::new());
 
     let mut reader = resources
@@ -164,11 +171,10 @@ pub fn build_mouse_focus_update_system(_world: &mut World, resources: &mut Resou
         })
 }
 
-
 /// System which hides the cursor when the window is focused.
 /// Requires the usage MouseFocusUpdateSystem at the same time.
 pub fn build_cursor_hide_system(
-    _world: &mut World, 
+    _world: &mut World,
     resources: &mut Resources,
 ) -> Box<dyn Schedulable> {
     let mut is_hidden = true;

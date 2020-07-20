@@ -25,14 +25,14 @@ pub struct ArcBallControl {
 //     /// Place `ArcBallControlTag` on the `Entity`
 //     pub arc_ball: Option<(usize, f32)>,
 // }
-// 
+//
 // impl<'a> PrefabData<'a> for ControlTagPrefab {
 //     type SystemData = (
 //         WriteStorage<'a, FlyControl>,
 //         WriteStorage<'a, ArcBallControl>,
 //     );
 //     type Result = ();
-// 
+//
 //     fn add_to_entity(
 //         &self,
 //         entity: Entity,
