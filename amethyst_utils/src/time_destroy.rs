@@ -1,7 +1,7 @@
 //! Allows you to automatically delete an entity after a set time has elapsed.
 
 use amethyst_core::{
-    ecs::{Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, WriteStorage},
+    ecs::prelude::{World, SystemBuilder, Resources, Write, Read, Schedulable, IntoQuery}, 
     timing::Time,
 };
 
@@ -19,10 +19,6 @@ pub struct DestroyAtTime {
     pub time: f64,
 }
 
-impl Component for DestroyAtTime {
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// Destroys the entity to which this is attached after the specified time interval (in seconds).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DestroyInTime {
@@ -31,51 +27,43 @@ pub struct DestroyInTime {
     pub timer: f64,
 }
 
-impl Component for DestroyInTime {
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// The system in charge of destroying entities with the `DestroyAtTime` component.
-#[derive(Debug)]
-pub struct DestroyAtTimeSystem;
-
-impl<'a> System<'a> for DestroyAtTimeSystem {
-    type SystemData = (Entities<'a>, ReadStorage<'a, DestroyAtTime>, Read<'a, Time>);
-    fn run(&mut self, (entities, dat, time): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("destroy_at_time_system");
-
-        for (e, d) in (&entities, &dat).join() {
-            if time.absolute_time_seconds() > d.time {
-                if let Err(err) = entities.delete(e) {
-                    error!("Failed to delete entity: {:?}", err);
+pub fn build_destroy_at_time_system(world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+    SystemBuilder::<()>::new("destroy_at_time_system")
+        .read_resource::<Time>()
+        .with_query(<Read<DestroyAtTime>>::query())
+        .build(
+            move |commands, subworld, time, dat_query| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("destroy_at_time_system");
+                
+                for (ent, dat) in dat_query.iter_entities_mut(&mut *subworld) {
+                    if time.absolute_time_seconds() > dat.time {
+                        commands.delete(ent);
+                    }
                 }
             }
-        }
-    }
+        )
 }
 
 /// The system in charge of destroying entities with the `DestroyInTime` component.
-#[derive(Debug)]
-pub struct DestroyInTimeSystem;
+pub fn build_destroy_in_time_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
+    SystemBuilder::<()>::new("destroy_in_time_system")
+        .read_resource::<Time>()
+        .with_query(<Write<DestroyInTime>>::query())
+        .build(
+            move |commands, subworld, time, dit_query| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("destroy_in_time_system");
+                
+                for (ent, mut dit) in dit_query.iter_entities_mut(&mut *subworld) {
+                    if dit.timer <= 0f64 {
+                        commands.delete(ent);
+                    }
 
-impl<'a> System<'a> for DestroyInTimeSystem {
-    type SystemData = (
-        Entities<'a>,
-        WriteStorage<'a, DestroyInTime>,
-        Read<'a, Time>,
-    );
-    fn run(&mut self, (entities, mut dit, time): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("destroy_in_time_system");
-
-        for (e, d) in (&entities, &mut dit).join() {
-            if d.timer <= 0.0 {
-                if let Err(err) = entities.delete(e) {
-                    error!("Failed to delete entity: {:?}", err);
+                    dit.timer -= f64::from(time.delta_seconds());
                 }
+
             }
-            d.timer -= f64::from(time.delta_seconds());
-        }
-    }
+        )
 }

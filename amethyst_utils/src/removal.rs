@@ -1,11 +1,15 @@
 //! Provides utilities to remove large amounts of entities with a single command.
 
-use std::{fmt::Debug, ops::Deref};
+use std::{fmt::Debug};
 
-use amethyst_assets::PrefabData;
-use amethyst_core::ecs::{
-    storage::MaskedStorage, world::EntitiesRes, Component, DenseVecStorage, Entity, Join, Storage,
-    WriteStorage,
+//use amethyst_assets::PrefabData;
+use amethyst_core::ecs::prelude::{
+    World,
+    Read,
+    IntoQuery,
+    Entity,
+    SubWorld,
+    CommandBuffer,
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
@@ -44,8 +48,8 @@ use serde::{Deserialize, Serialize};
 /// // Count entities remaining in the world.
 /// assert_eq!((&*world.entities(),).join().count(), 1);
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize, PrefabData)]
-#[prefab(Component)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+//#[derive(Debug, Clone, Serialize, Deserialize, PrefabData)]
 pub struct Removal<I>
 where
     I: Debug + Clone + Send + Sync + 'static,
@@ -63,44 +67,33 @@ where
     }
 }
 
-impl<I> Component for Removal<I>
-where
-    I: Debug + Clone + Send + Sync + 'static,
-{
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// Removes all entities that have the `Removal<I>` component with the specified removal_id.
 pub fn exec_removal<I, D>(
-    entities: &EntitiesRes,
-    removal_storage: &Storage<'_, Removal<I>, D>,
+    commands: &mut CommandBuffer,
+    subworld: &mut SubWorld<'_>, 
     removal_id: I,
 ) where
     I: Debug + Clone + PartialEq + Send + Sync + 'static,
-    D: Deref<Target = MaskedStorage<Removal<I>>>,
-{
-    for (e, _) in (&*entities, removal_storage)
-        .join()
-        .filter(|(_, r)| r.id == removal_id)
+{ 
+    let removal_query = <Read<Removal<I>>>::query();
+    for (ent, _) in removal_query.iter_entities_mut(&mut *subworld)
+        .filter(|(_, rm)| rm.id == removal_id)
     {
-        if let Err(err) = entities.delete(e) {
-            error!("Failed to delete entity during exec_removal: {:?}", err);
-        }
+        commands.delete(ent);
     }
 }
 
 /// Adds a `Removal` component with the specified id to the specified entity.
 /// Usually used with prefabs, when you want to add a `Removal` component at the root of the loaded prefab.
 pub fn add_removal_to_entity<T: PartialEq + Clone + Debug + Send + Sync + 'static>(
+    world: &mut World,
     entity: Entity,
     id: T,
-    storage: &mut WriteStorage<'_, Removal<T>>,
 ) {
-    storage
-        .insert(entity, Removal::new(id))
-        .unwrap_or_else(|_| {
+    world.add_component(entity, id)
+        .unwrap_or_else(|_|{
             panic!(
-                "Failed to insert `Removal` component id to entity {:?}.",
+                "Failed to insert `Removal` component id to entity: {:?}.",
                 entity,
             )
         });

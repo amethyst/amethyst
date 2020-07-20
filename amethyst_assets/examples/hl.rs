@@ -9,51 +9,59 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
 use amethyst_core::{
-    ecs::prelude::{
-        Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World,
-        WorldExt, Write,
-    },
+    dispatcher::{DispatcherBuilder, Stage},
+    ecs::prelude::*,
     Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
 struct App {
-    dispatcher: Dispatcher<'static, 'static>,
+    scheduler: Schedule,
+    resources: Resources,
     state: Option<State>,
     world: World,
 }
 
 impl App {
-    fn new(dispatcher: Dispatcher<'static, 'static>, path: &str, state: State) -> Self {
+    fn new(path: &str, state: State) -> Self {
         let mut world = World::new();
 
         // Note: in an actual application, you'd want to share the thread pool.
         let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
+        let mut resources = Resources::default();
 
-        world.register::<MeshHandle>();
+        resources.insert(AssetStorage::<MeshAsset>::new());
+        resources.insert(Loader::new(path, pool.clone()));
+        resources.insert(Time::default());
+        resources.insert(pool);
+        resources.insert(Time::default());
+        resources.insert::<Option<HotReloadStrategy>>(None);
 
-        world.insert(AssetStorage::<MeshAsset>::new());
-        world.insert(Loader::new(path, pool.clone()));
-        world.insert(Time::default());
-        world.insert(pool);
-        world.insert(Time::default());
+        let scheduler = Schedule::builder()
+            .add_system(build_rendering_system(&mut world, &mut resources))
+            .build();
 
         App {
-            dispatcher,
+            scheduler,
+            resources,
             state: Some(state),
             world,
         }
     }
 
     fn update(&mut self) {
-        self.dispatcher.dispatch(&self.world);
-        self.world.maintain();
+        self.scheduler.execute(&mut self.world, &mut self.resources);
     }
 
     fn run(&mut self) {
         loop {
             self.update();
-            match self.state.take().unwrap().update(&mut self.world) {
+            match self
+                .state
+                .take()
+                .unwrap()
+                .update(&mut self.world, &mut self.resources)
+            {
                 Some(state) => self.state = Some(state),
                 None => return,
             }
@@ -72,7 +80,6 @@ pub struct MeshAsset {
 impl Asset for MeshAsset {
     const NAME: &'static str = "example::Mesh";
     type Data = VertexData;
-    type HandleStorage = VecStorage<MeshHandle>;
 }
 
 /// A format the mesh data could be stored with.
@@ -94,33 +101,32 @@ impl Format<VertexData> for Ron {
     }
 }
 
-pub struct RenderingSystem;
+pub fn build_rendering_system(
+    world: &mut World,
+    resources: &mut Resources,
+) -> Box<dyn Schedulable> {
+    SystemBuilder::<()>::new("RenderingSystem")
+        .read_resource::<Time>()
+        .read_resource::<Arc<ThreadPool>>()
+        .read_resource::<Option<HotReloadStrategy>>()
+        .write_resource::<AssetStorage<MeshAsset>>()
+        .build(
+            move |_commands, _world, (time, pool, strategy, mesh_storage), _query| {
+                use std::ops::Deref;
+                let strategy = strategy.as_ref();
 
-impl<'a> System<'a> for RenderingSystem {
-    type SystemData = (
-        Write<'a, AssetStorage<MeshAsset>>,
-        Read<'a, Time>,
-        ReadExpect<'a, Arc<ThreadPool>>,
-        Option<Read<'a, HotReloadStrategy>>,
-        /* texture storage, transforms, .. */
-    );
+                mesh_storage.process(
+                    |vertex_data| {
+                        // Upload vertex data to GPU and give back an asset
 
-    fn run(&mut self, (mut mesh_storage, time, pool, strategy): Self::SystemData) {
-        use std::ops::Deref;
-
-        let strategy = strategy.as_ref().map(Deref::deref);
-
-        mesh_storage.process(
-            |vertex_data| {
-                // Upload vertex data to GPU and give back an asset
-
-                Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
+                        Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
+                    },
+                    time.frame_number(),
+                    &**pool,
+                    strategy,
+                );
             },
-            time.frame_number(),
-            &**pool,
-            strategy,
-        );
-    }
+        )
 }
 
 enum State {
@@ -131,19 +137,21 @@ enum State {
 
 impl State {
     /// Returns `Some` if the app should quit.
-    fn update(self, world: &mut World) -> Option<Self> {
+    fn update(self, world: &mut World, resources: &mut Resources) -> Option<Self> {
         match self {
             State::Start => {
                 let (mesh, progress) = {
                     let mut progress = ProgressCounter::new();
-                    let loader = world.read_resource::<Loader>();
+                    let loader = resources
+                        .get::<Loader>()
+                        .expect("Could not get Loader resource");
                     let a: MeshHandle =
-                        loader.load("mesh.ron", Ron, &mut progress, &world.read_resource());
+                        loader.load("mesh.ron", Ron, &mut progress, &resources.get().unwrap());
 
                     (a, progress)
                 };
 
-                world.create_entity().with(mesh).build();
+                world.insert((), vec![(mesh,)]);
 
                 Some(State::Loading(progress))
             }
@@ -184,11 +192,7 @@ pub struct VertexData {
 }
 
 fn main() {
-    let disp = DispatcherBuilder::new()
-        .with(RenderingSystem, "rendering", &[])
-        .build();
-
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
-    let mut app = App::new(disp, &assets_dir, State::Start);
+    let mut app = App::new(&assets_dir, State::Start);
     app.run();
 }
