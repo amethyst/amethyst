@@ -288,7 +288,7 @@ pub struct DispatcherData {
 }
 impl DispatcherData {
     /// Flatten the DispatcherData into a Dispatcher.
-    pub fn flatten(mut self) -> Dispatcher {
+    pub fn flatten(self) -> Dispatcher {
         let mut sorted_systems = Vec::with_capacity(128);
         self.stages
             .into_iter()
@@ -314,7 +314,7 @@ impl DispatcherData {
     pub fn merge(mut self, mut other: DispatcherData) -> Self {
         self.thread_locals.extend(other.thread_locals.drain(..));
 
-        for (k, mut v) in other.stages.iter_mut() {
+        for (k, v) in other.stages.iter_mut() {
             self.stages
                 .entry(*k)
                 .or_insert_with(Vec::default)
@@ -352,7 +352,7 @@ impl<'a> DispatcherBuilder<'a> {
         desc: T,
     ) {
         self.thread_locals
-            .push((Box::new(DispatcherThreadLocal(desc)) as Box<dyn ConsumeDesc>));
+            .push(Box::new(DispatcherThreadLocal(desc)) as Box<dyn ConsumeDesc>);
     }
 
     /// Add a thread local resource.
@@ -373,7 +373,7 @@ impl<'a> DispatcherBuilder<'a> {
         desc: T,
     ) {
         self.thread_locals
-            .push((Box::new(DispatcherThreadLocalSystem(desc)) as Box<dyn ConsumeDesc>));
+            .push(Box::new(DispatcherThreadLocalSystem(desc)) as Box<dyn ConsumeDesc>);
     }
 
     /// Add a thread local System.
