@@ -75,8 +75,8 @@ impl<T: BindingTypes> FlyControlBundle<T> {
 impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
     fn build(
         self,
-        world: &mut World,
-        resources: &mut Resources,
+        _world: &mut World,
+        _resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         builder.add_system(Stage::Begin, build_fly_movement_system::<T>(
@@ -135,8 +135,8 @@ impl<T: BindingTypes> Default for ArcBallControlBundle<T> {
 impl<T: BindingTypes> SystemBundle for ArcBallControlBundle<T> {
     fn build(
         self,
-        world: &mut World,
-        resources: &mut Resources,
+        _world: &mut World,
+        _resources: &mut Resources,
         builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
         builder.add_system(Stage::Begin, build_free_rotation_system(self.sensitivity_x, self.sensitivity_y));

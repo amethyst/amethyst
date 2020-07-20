@@ -1,6 +1,6 @@
 use amethyst_core::ecs::prelude::*;
-use amethyst_error::Error;
 
+use derive_new::new;
 use serde::{Deserialize, Serialize};
 
 /// Add this to a camera if you want it to be a fly camera.
@@ -9,21 +9,12 @@ use serde::{Deserialize, Serialize};
 pub struct FlyControl;
 
 /// To add an arc ball behaviour, add this to a camera which already has the FlyControlTag added.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct ArcBallControl {
     /// The target entity which the camera will orbit
     pub target: Entity,
     /// The distance from the target entity that the camera should orbit at.
     pub distance: f32,
-}
-
-impl ArcBallControl {
-    pub fn new(target: Entity, distance: f32) -> Self {
-        ArcBallControl {
-            target,
-            distance,
-        }
-    }
 }
 
 // `PrefabData` for loading control tags on an `Entity`

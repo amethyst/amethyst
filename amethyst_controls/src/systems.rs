@@ -1,21 +1,18 @@
-use derive_new::new;
 use winit::{DeviceEvent, Event, Window, WindowEvent};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use amethyst_core::{
-    transform::{Translation, Rotation, LocalToWorld},
+    transform::{Translation, Rotation},
     ecs::prelude::*,
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
     math::{convert, Unit, Vector3, Translation3, UnitQuaternion},
-    shrev::{EventChannel, ReaderId},
+    shrev::EventChannel,
     timing::Time,
 };
 use std::collections::HashMap;
 
-use amethyst_derive::SystemDesc;
-use amethyst_input::{get_input_axis_simple, get_action_simple, BindingTypes, InputHandler};
+use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
 
 use crate::{
     components::{ArcBallControl, FlyControl},
@@ -38,7 +35,7 @@ pub fn build_fly_movement_system<T: BindingTypes>(
             .read_resource::<Time>()
             .read_resource::<InputHandler<T>>()
             .with_query(<(Read<FlyControl>, Write<Translation>)>::query())
-            .build(move |commands, world, (time, input), controls| {
+            .build(move |_commands, world, (time, input), controls| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("free_movement_system");
 
@@ -65,10 +62,10 @@ pub fn build_fly_movement_system<T: BindingTypes>(
 /// `FreeRotationSystem`.
 pub fn build_arc_ball_rotation_system(_: &mut World, _: &mut Resources) -> Box<dyn Schedulable> {
     SystemBuilder::<()>::new("ArcBallRotationSystem")
-        .with_query(<(Read<ArcBallControl>)>::query())
+        .with_query(<Read<ArcBallControl>>::query())
         .with_query(<(Read<ArcBallControl>, Read<Rotation>, Write<Translation>)>::query())
         .read_component::<Translation>()
-        .build(move |commands, world, (), queries| {
+        .build(move |_commands, world, (), queries| {
             #[cfg(feature = "profiler")]
             profile_scope!("arc_ball_rotation_system");  
 
@@ -116,8 +113,8 @@ pub fn build_free_rotation_system(
             .read_resource::<EventChannel<Event>>()
             .read_resource::<WindowFocus>()
             .read_resource::<HideCursor>()
-            .with_query(<(Write<Rotation>)>::query().filter(component::<FlyControl>() | component::<ArcBallControl>()))
-            .build(move |commands, world, (events, focus, hide), controls| {
+            .with_query(<Write<Rotation>>::query().filter(component::<FlyControl>() | component::<ArcBallControl>()))
+            .build(move |_commands, world, (events, focus, hide), controls| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("free_rotation_system");
 
@@ -126,7 +123,7 @@ pub fn build_free_rotation_system(
                     if focused && hide.hide {
                         if let Event::DeviceEvent { ref event, .. } = *event {
                             if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
-                                for (mut rotation) in controls.iter_mut(world) {
+                                for mut rotation in controls.iter_mut(world) {
                                     rotation.0 *= UnitQuaternion::from_euler_angles(
                                         (-(y as f32) * sensitivity_y).to_radians(),
                                         (-(x as f32) * sensitivity_x).to_radians(),
@@ -141,6 +138,7 @@ pub fn build_free_rotation_system(
         })
 }
 
+/// Builds the mouse focus update System.
 pub fn build_mouse_focus_update_system(_world: &mut World, resources: &mut Resources) -> Box<dyn Schedulable> {
     resources.insert(WindowFocus::new());
 
@@ -152,7 +150,7 @@ pub fn build_mouse_focus_update_system(_world: &mut World, resources: &mut Resou
     SystemBuilder::<()>::new("MouseFocusUpdateSystem")
         .read_resource::<EventChannel<Event>>()
         .write_resource::<WindowFocus>()
-        .build(move |commands, world, (events, focus), ()| {
+        .build(move |_commands, _world, (events, focus), ()| {
             #[cfg(feature = "profiler")]
             profile_scope!("mouse_focus_update_system");
 
@@ -181,7 +179,7 @@ pub fn build_cursor_hide_system(
         .read_resource::<HideCursor>()
         .read_resource::<WindowFocus>()
         .read_resource::<Window>()
-        .build(move |commands, world, (hide, focus, window), ()| {
+        .build(move |_commands, _world, (hide, focus, window), ()| {
             #[cfg(feature = "profiler")]
             profile_scope!("cursor_hide_system");
 
