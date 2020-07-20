@@ -1,10 +1,9 @@
 use std::marker::PhantomData;
 
 use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::prelude::{DispatcherBuilder, World},
+    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
+    ecs::prelude::*,
     math::one,
-    SystemDesc,
 };
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
@@ -37,25 +36,25 @@ pub struct FlyControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     speed: f32,
-    right_input_axis: Option<T::Axis>,
-    up_input_axis: Option<T::Axis>,
-    forward_input_axis: Option<T::Axis>,
+    horizontal_axis: Option<T::Axis>,
+    vertical_axis: Option<T::Axis>,
+    longitudinal_axis: Option<T::Axis>,
 }
 
 impl<T: BindingTypes> FlyControlBundle<T> {
     /// Builds a new fly control bundle using the provided axes as controls.
     pub fn new(
-        right_input_axis: Option<T::Axis>,
-        up_input_axis: Option<T::Axis>,
-        forward_input_axis: Option<T::Axis>,
+        horizontal_axis: Option<T::Axis>,
+        vertical_axis: Option<T::Axis>,
+        longitudinal_axis: Option<T::Axis>,
     ) -> Self {
         FlyControlBundle {
             sensitivity_x: 1.0,
             sensitivity_y: 1.0,
             speed: one(),
-            right_input_axis,
-            up_input_axis,
-            forward_input_axis,
+            horizontal_axis,
+            vertical_axis,
+            longitudinal_axis,
         }
     }
 
@@ -73,38 +72,28 @@ impl<T: BindingTypes> FlyControlBundle<T> {
     }
 }
 
-impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
+impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
     fn build(
         self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        _world: &mut World,
+        _resources: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
-        builder.add(
-            FlyMovementSystemDesc::<T>::new(
+        builder.add_system(
+            Stage::Begin,
+            build_fly_movement_system::<T>(
                 self.speed,
-                self.right_input_axis,
-                self.up_input_axis,
-                self.forward_input_axis,
-            )
-            .build(world),
-            "fly_movement",
-            &[],
+                self.horizontal_axis,
+                self.vertical_axis,
+                self.longitudinal_axis,
+            ),
         );
-        builder.add(
-            FreeRotationSystemDesc::new(self.sensitivity_x, self.sensitivity_y).build(world),
-            "free_rotation",
-            &[],
+        builder.add_system(
+            Stage::Begin,
+            build_free_rotation_system(self.sensitivity_x, self.sensitivity_y),
         );
-        builder.add(
-            MouseFocusUpdateSystemDesc::default().build(world),
-            "mouse_focus",
-            &["free_rotation"],
-        );
-        builder.add(
-            CursorHideSystemDesc::default().build(world),
-            "cursor_hide",
-            &["mouse_focus"],
-        );
+        builder.add_system(Stage::Begin, build_mouse_focus_update_system);
+        builder.add_system(Stage::Begin, build_cursor_hide_system);
         Ok(())
     }
 }
@@ -147,28 +136,20 @@ impl<T: BindingTypes> Default for ArcBallControlBundle<T> {
     }
 }
 
-impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for ArcBallControlBundle<T> {
+impl<T: BindingTypes> SystemBundle for ArcBallControlBundle<T> {
     fn build(
         self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        _world: &mut World,
+        _resources: &mut Resources,
+        builder: &mut DispatcherBuilder<'_>,
     ) -> Result<(), Error> {
-        builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
-        builder.add(
-            FreeRotationSystemDesc::new(self.sensitivity_x, self.sensitivity_y).build(world),
-            "free_rotation",
-            &[],
+        builder.add_system(
+            Stage::Begin,
+            build_free_rotation_system(self.sensitivity_x, self.sensitivity_y),
         );
-        builder.add(
-            MouseFocusUpdateSystemDesc::default().build(world),
-            "mouse_focus",
-            &["free_rotation"],
-        );
-        builder.add(
-            CursorHideSystemDesc::default().build(world),
-            "cursor_hide",
-            &["mouse_focus"],
-        );
+        builder.add_system(Stage::Begin, build_arc_ball_rotation_system);
+        builder.add_system(Stage::Begin, build_mouse_focus_update_system);
+        builder.add_system(Stage::Begin, build_cursor_hide_system);
         Ok(())
     }
 }
