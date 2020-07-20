@@ -244,6 +244,45 @@ page, we can do this inline.
 [al]: https://another.url/
 ```
 
+Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust,edition2018,no_run,noplaypen`. Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example: 
+
+````
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+use amethyst::ecs::{World, WorldExt};
+
+// A simple struct with no data.
+struct MyResource;
+
+fn main() {
+    // We create a new `World` instance.
+    let mut world = World::new();
+    
+    // We create our resource.
+    let my = MyResource;
+    
+    // We add the resource to the world.
+    world.insert(my);
+}
+```
+````
+
+Examples in `book/` can be tested with the following:
+
+```shell
+# First, clean up amethyst artifacts and rebuild to ensure there is only one copy of the artifacts in
+# the amethyst repo, otherwise mdbook complains. You only need to do this once, unless you change code
+# in the actual amethyst library.
+rm -rf ./target/debug/deps/libamethyst*
+cargo test --workspace --features=empty --no-run
+
+# Then, test the book.  You can edit, run this command, and then repeat until you get everything passing.
+# This is what the book tests in CI do, so the snippets in the book must pass before you can push.
+mdbook test -L ./target/debug/deps book
+```
+
+Examples in the API can be tested with `cargo test`.  Examples in top-level markdown files (like the one we are currently in) are not tested.
+
 When submitting your pull requests, please follow the same procedures described
 in the [Pull Requests](#pull-requests) section above.
 
