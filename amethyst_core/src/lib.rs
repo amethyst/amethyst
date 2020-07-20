@@ -34,10 +34,15 @@ pub use self::{
 };
 
 //pub mod deferred_dispatcher_operation;
+/// The dispatcher module.
 pub mod dispatcher;
+/// The frame limiter module.
 pub mod frame_limiter;
+/// The geometry module.
 pub mod geometry;
+/// The timing module.
 pub mod timing;
+/// The transformation module.
 pub mod transform;
 
 mod axis;
