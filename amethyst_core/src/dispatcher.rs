@@ -181,9 +181,13 @@ pub trait IntoRelativeStage: Copy {
     Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash, serde::Serialize, serde::Deserialize,
 )]
 pub enum Stage {
+    /// Execute at the start of the frame.
     Begin,
+    /// Execute at the time to execute the game logic.
     Logic,
+    /// Execute at the time of rendering.
     Render,
+    /// Execute at the end of the frame, on the main thread.
     ThreadLocal,
 }
 impl IntoRelativeStage for Stage {
