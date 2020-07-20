@@ -22,13 +22,6 @@ impl HiddenPropagate {
         }
     }
 
-    /// Is meant to be used only by HideHierarchySystem.
-    pub(crate) fn new_propagated() -> Self {
-        Self {
-            is_propagated: true,
-        }
-    }
-
     /// Returns true if this component was propagated by [HideHierarchySystem](struct.HideHierarchySystem.html) automatically.
     pub fn is_propagated(&self) -> bool {
         self.is_propagated
