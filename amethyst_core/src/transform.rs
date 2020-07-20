@@ -6,6 +6,7 @@ use amethyst_error::Error;
 
 pub use legion_transform::prelude::*;
 
+/// Bundle to add the transformation systems.
 #[derive(Debug, Default)]
 pub struct TransformBundle;
 

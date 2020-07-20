@@ -126,7 +126,6 @@ pub struct TileMap<T: Tile, E: CoordinateEncoder = crate::MortonEncoder2D> {
 impl<T: Tile, E: CoordinateEncoder> Asset for TileMap<T, E> {
     const NAME: &'static str = "tiles::map";
     type Data = Self;
-    type HandleStorage = HashMapStorage<Handle<Self>>;
 }
 impl<T: Tile, E: CoordinateEncoder> Component for TileMap<T, E> {
     type Storage = HashMapStorage<Self>;

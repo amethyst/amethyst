@@ -1,7 +1,9 @@
 use crate::{ecs::prelude::*, ArcThreadPool};
 use std::collections::BTreeMap;
 
+/// A SystemBundle is a structure that can add multiple systems at once to a dispatcher.
 pub trait SystemBundle {
+    /// Build this SystemBundle.
     fn build(
         self,
         world: &mut World,
@@ -29,6 +31,7 @@ impl SystemBundle
     }
 }
 
+/// A bundle inserted going to be consumed by a dispatcher builder.
 pub struct DispatcherSystemBundle<B>(B);
 impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
     fn consume(
@@ -43,6 +46,7 @@ impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
     }
 }
 
+/// A system inserted in a dispatcher builder.
 pub struct DispatcherSystem<F>(RelativeStage, F);
 impl<F> ConsumeDesc for DispatcherSystem<F>
 where
@@ -67,6 +71,7 @@ where
     }
 }
 
+/// A thread local system in a dispatcher builder.
 pub struct DispatcherThreadLocalSystem<F>(F);
 impl<F> ConsumeDesc for DispatcherThreadLocalSystem<F>
 where
@@ -87,6 +92,7 @@ where
     }
 }
 
+/// A thread local in a dispatcher builder.
 pub struct DispatcherThreadLocal<F>(F);
 impl<F> ConsumeDesc for DispatcherThreadLocal<F>
 where
@@ -103,7 +109,10 @@ where
         Ok(())
     }
 }
+
+/// Something that can be consumed by the DispatcherBuilder.
 pub trait ConsumeDesc {
+    /// Consume this resource.
     fn consume(
         self: Box<Self>,
         world: &mut World,
@@ -113,8 +122,11 @@ pub trait ConsumeDesc {
     ) -> Result<(), amethyst_error::Error>;
 }
 
+/// Something that runs on a local (main) thread.
 pub trait ThreadLocal {
+    /// Run the thread local resource.
     fn run(&mut self, world: &mut World, resources: &mut Resources);
+    /// Get rid of the thread local resource.
     fn dispose(self: Box<Self>, world: &mut World, resources: &mut Resources);
 }
 
@@ -136,6 +148,7 @@ impl Into<Box<dyn ThreadLocal>> for Box<dyn Runnable> {
     }
 }
 
+/// An object to be built as a thread local.
 pub struct ThreadLocalObject<S, F, D>(pub S, pub F, pub D);
 impl<S, F, D> ThreadLocalObject<S, F, D>
 where
@@ -143,6 +156,7 @@ where
     F: FnMut(&mut S, &mut World, &mut Resources) + 'static,
     D: FnOnce(S, &mut World, &mut Resources) + 'static,
 {
+    /// Build the thread local object.
     pub fn build(initial_state: S, run_fn: F, dispose_fn: D) -> Box<dyn ThreadLocal> {
         Box::new(Self(initial_state, run_fn, dispose_fn))
     }
@@ -161,17 +175,25 @@ where
     }
 }
 
+/// Converts the type into a relative stage.
 pub trait IntoRelativeStage: Copy {
+    // TODO: Why not just use Into<RelativeStage> ?
+    /// Convert this type into a relative stage.
     fn into_relative(self) -> RelativeStage;
 }
 
+/// The default relative execution stages provided by amethyst.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash, serde::Serialize, serde::Deserialize,
 )]
 pub enum Stage {
+    /// Execute at the start of the frame.
     Begin,
+    /// Execute at the time to execute the game logic.
     Logic,
+    /// Execute at the time of rendering.
     Render,
+    /// Execute at the end of the frame, on the main thread.
     ThreadLocal,
 }
 impl IntoRelativeStage for Stage {
@@ -180,13 +202,22 @@ impl IntoRelativeStage for Stage {
     }
 }
 
+/// A relative execution stage.
+/// Used for system execution ordering.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-pub struct RelativeStage(pub Stage, pub isize);
+pub struct RelativeStage(
+    /// The internal execution stage.
+    pub Stage,
+    /// The stage offset.
+    pub isize,
+);
 impl RelativeStage {
+    /// Get the stage.
     pub fn stage(&self) -> Stage {
         self.0
     }
 
+    /// Get the stage offset
     pub fn offset(&self) -> isize {
         self.1
     }
@@ -214,12 +245,15 @@ impl Ord for RelativeStage {
     }
 }
 
+/// A System execution dispatcher.
 pub struct Dispatcher {
     executor: Executor,
+    /// The defragmentation budget.
     pub defrag_budget: Option<usize>,
     pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
 }
 impl Dispatcher {
+    /// Execute the systems.
     pub fn dispatch(&mut self, world: &mut World, resources: &mut Resources) {
         self.executor.execute(world, resources);
 
@@ -227,8 +261,11 @@ impl Dispatcher {
             .iter_mut()
             .for_each(|local| local.run(world, resources));
 
+        // TODO: should we be using this?
         //world.defrag(self.defrag_budget);
     }
+
+    /// Clean and destroy the systems.
     pub fn dispose(mut self, world: &mut World, resources: &mut Resources) {
         self.thread_locals
             .drain(..)
@@ -241,14 +278,17 @@ impl Dispatcher {
     }
 }
 
+/// Data used by the Dispatcher.
 #[derive(Default)]
 pub struct DispatcherData {
+    /// The defragmentation budget.
     pub defrag_budget: Option<usize>,
     pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
     pub(crate) stages: BTreeMap<RelativeStage, Vec<Box<dyn Schedulable>>>,
 }
 impl DispatcherData {
-    pub fn flatten(mut self) -> Dispatcher {
+    /// Flatten the DispatcherData into a Dispatcher.
+    pub fn flatten(self) -> Dispatcher {
         let mut sorted_systems = Vec::with_capacity(128);
         self.stages
             .into_iter()
@@ -270,10 +310,11 @@ impl DispatcherData {
         }
     }
 
+    /// Merge two DispatcherData together.
     pub fn merge(mut self, mut other: DispatcherData) -> Self {
         self.thread_locals.extend(other.thread_locals.drain(..));
 
-        for (k, mut v) in other.stages.iter_mut() {
+        for (k, v) in other.stages.iter_mut() {
             self.stages
                 .entry(*k)
                 .or_insert_with(Vec::default)
@@ -284,6 +325,7 @@ impl DispatcherData {
     }
 }
 
+/// A Dispatcher builder structure.
 pub struct DispatcherBuilder<'a> {
     pub(crate) defrag_budget: Option<usize>,
     pub(crate) systems: Vec<(RelativeStage, Box<dyn ConsumeDesc + 'a>)>,
@@ -304,14 +346,16 @@ impl<'a> Default for DispatcherBuilder<'a> {
     }
 }
 impl<'a> DispatcherBuilder<'a> {
+    /// Add a thread local resource.
     pub fn add_thread_local<T: FnOnce(&mut World, &mut Resources) -> Box<dyn ThreadLocal> + 'a>(
         &mut self,
         desc: T,
     ) {
         self.thread_locals
-            .push((Box::new(DispatcherThreadLocal(desc)) as Box<dyn ConsumeDesc>));
+            .push(Box::new(DispatcherThreadLocal(desc)) as Box<dyn ConsumeDesc>);
     }
 
+    /// Add a thread local resource.
     pub fn with_thread_local<T: FnOnce(&mut World, &mut Resources) -> Box<dyn ThreadLocal> + 'a>(
         mut self,
         desc: T,
@@ -321,6 +365,7 @@ impl<'a> DispatcherBuilder<'a> {
         self
     }
 
+    /// Add a thread local System.
     pub fn add_thread_local_system<
         T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a,
     >(
@@ -328,9 +373,10 @@ impl<'a> DispatcherBuilder<'a> {
         desc: T,
     ) {
         self.thread_locals
-            .push((Box::new(DispatcherThreadLocalSystem(desc)) as Box<dyn ConsumeDesc>));
+            .push(Box::new(DispatcherThreadLocalSystem(desc)) as Box<dyn ConsumeDesc>);
     }
 
+    /// Add a thread local System.
     pub fn with_thread_local_system<
         T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a,
     >(
@@ -342,6 +388,7 @@ impl<'a> DispatcherBuilder<'a> {
         self
     }
 
+    /// Add a System.
     pub fn add_system<
         S: IntoRelativeStage,
         T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a,
@@ -356,6 +403,7 @@ impl<'a> DispatcherBuilder<'a> {
         ));
     }
 
+    /// Add a System.
     pub fn with_system<
         S: IntoRelativeStage,
         T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a,
@@ -369,29 +417,34 @@ impl<'a> DispatcherBuilder<'a> {
         self
     }
 
+    /// Add a bundle to the dispatcher.
     pub fn add_bundle<T: SystemBundle + 'a>(&mut self, bundle: T) {
         self.bundles
             .push(Box::new(DispatcherSystemBundle(bundle)) as Box<dyn ConsumeDesc>);
     }
 
+    /// Add a bundle to the dispatcher.
     pub fn with_bundle<T: SystemBundle + 'a>(mut self, bundle: T) -> Self {
         self.add_bundle(bundle);
 
         self
     }
 
+    /// Set the defragmentation budget.
     pub fn with_defrag_budget(mut self, budget: Option<usize>) -> Self {
         self.defrag_budget = budget;
 
         self
     }
 
+    /// Set the thread pool.
     pub fn with_pool(mut self, pool: Option<ArcThreadPool>) -> Self {
         self.thread_pool = pool;
 
         self
     }
 
+    /// Is any system inserted?
     pub fn is_empty(&self) -> bool {
         self.systems.is_empty() && self.bundles.is_empty()
     }
@@ -440,6 +493,7 @@ impl<'a> DispatcherBuilder<'a> {
         dispatcher_data
     }
 
+    /// Build the dispatcher!
     pub fn build(mut self, world: &mut World, resources: &mut Resources) -> Dispatcher {
         self.build_data(world, resources).flatten()
     }

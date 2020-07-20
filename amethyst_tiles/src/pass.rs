@@ -2,9 +2,8 @@
 #![allow(unused_imports, unused_variables)]
 
 use amethyst_core::{
-    ecs::{
-        DispatcherBuilder, Entities, Join, Read, ReadExpect, ReadStorage, System, SystemData, World,
-    },
+    ecs::prelude::*,
+    dispatcher::*,
     geometry::{Plane, Ray},
     math::{self, clamp, convert, Matrix4, Point2, Point3, Vector2, Vector3, Vector4},
     transform::Transform,
@@ -424,25 +423,16 @@ impl<T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderTiles2D<T, E, Z>
     }
 }
 
-type SetupData<'a, T, E> = (
-    ReadStorage<'a, Handle<SpriteSheet>>,
-    ReadStorage<'a, Handle<Texture>>,
-    ReadStorage<'a, Hidden>,
-    ReadStorage<'a, TileMap<T, E>>,
-);
-
 impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderPlugin<B>
     for RenderTiles2D<T, E, Z>
 {
-    fn on_build<'a, 'b>(
-        &mut self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), amethyst_error::Error> {
-        SetupData::<T, E>::setup(world);
-
-        Ok(())
-    }
+    //fn on_build<'a, 'b>(
+    //    &mut self,
+    //    world: &mut World,
+    //    builder: &mut DispatcherBuilder<'a, 'b>,
+    //) -> Result<(), amethyst_error::Error> {
+    //    Ok(())
+    //}
 
     fn on_plan(
         &mut self,
