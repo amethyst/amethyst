@@ -279,6 +279,8 @@ cargo test --workspace --features=empty --no-run
 # Then, test the book.  You can edit, run this command, and then repeat until you get everything passing.
 # This is what the book tests in CI do, so the snippets in the book must pass before you can push.
 mdbook test -L ./target/debug/deps book
+# This serves your book so you can view it locally in a browser and see what it actually looks like
+mdbook serve book
 ```
 
 Examples in the API can be tested with `cargo test`.  Examples in top-level markdown files (like the one we are currently in) are not tested.
