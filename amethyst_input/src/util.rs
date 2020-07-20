@@ -63,6 +63,17 @@ pub fn get_input_axis_simple<T: BindingTypes>(
         .unwrap_or(0.0)
 }
 
+/// Gets the action active status from the `InputHandler`.
+/// If the action name is None, it will default to false.
+pub fn get_action_simple<T: BindingTypes>(
+    name: &Option<T::Action>,
+    input: &InputHandler<T>,
+) -> bool {
+    name.as_ref()
+        .and_then(|ref n| input.action_is_down(n))
+        .unwrap_or(false)
+}
+
 /// If this event was for manipulating a mouse button, this will return the `MouseButton`
 /// and the new state.
 pub fn get_mouse_button(event: &Event) -> Option<(MouseButton, ElementState)> {

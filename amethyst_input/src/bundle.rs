@@ -1,8 +1,9 @@
 //! ECS input bundle
 
-use crate::{build_input_system, BindingError, BindingTypes, Bindings};
+use crate::{build_input_system, BindingError, BindingTypes, InputHandler, InputEvent, Bindings};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
+    shrev::EventChannel,
     dispatcher::{DispatcherBuilder, Stage, SystemBundle},
     ecs::prelude::*,
 };
@@ -94,7 +95,8 @@ impl<T: BindingTypes> SystemBundle for InputBundle<T> {
                 SdlEventsSystem::<T>::new(world, self.controller_mappings).unwrap(),
             );
         }
-        builder.add_system(Stage::Begin, build_input_system::<T>);
+
+        builder.add_system(Stage::Begin, build_input_system::<T>(self.bindings));
         Ok(())
     }
 }

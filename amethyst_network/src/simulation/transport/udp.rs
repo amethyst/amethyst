@@ -66,6 +66,10 @@ pub fn build_udp_network_send_system(
                                 delivery
                             ),
                         }
+                        delivery => panic!(
+                            "{:?} is unsupported. UDP only supports Unreliable by design.",
+                            delivery
+                        ),
                     }
                 }
             },
@@ -114,6 +118,7 @@ pub fn build_udp_network_receive_system(
 #[derive(Default, new)]
 pub struct UdpSocketResource {
     socket: Option<UdpSocket>,
+    recv_buffer: Vec<u8>,
 }
 
 impl UdpSocketResource {
@@ -123,8 +128,8 @@ impl UdpSocketResource {
     }
 
     /// Returns a mutable reference to the socket if there is one configured.
-    pub fn get_mut(&mut self) -> Option<&mut UdpSocket> {
-        self.socket.as_mut()
+    pub fn get_mut(&mut self) -> (Option<&mut UdpSocket>, &mut Vec<u8>) {
+        (self.socket.as_mut(), self.recv_buffer.as_mut())
     }
 
     /// Sets the bound socket to the `UdpSocketResource`.
