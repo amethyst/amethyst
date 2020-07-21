@@ -57,7 +57,7 @@
     * [Orthographic Camera](./sprites/orthographic_camera.md)
 * [User Interface](./ui/introduction.md)
     * [Creating a simple button](./ui/simple_button.md)
-    * [Interacting with the UI](./ui/interaction.md)
+    * [Interacting with the UI](./ui/interacting.md)
     * [Interacting through a state](./ui/state_interaction.md)
 * [Testing](./testing.md)
     * [Test Examples](./testing/test_examples.md)
