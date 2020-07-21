@@ -8,14 +8,16 @@ stages:
 
 test:
   script:
-    - find / -name target
-#    - cargo test --features empty
-  cache:
-    key: debug
-    paths:
-      - target/debug/build/
-      - target/debug/deps/
-      - .cargo/
+    - mv /target .
+    - cargo test --features empty
+
+# Didn't work -- cache was either too large, or it wasn't the right combination of stuff to avoid recompilation
+#  cache:
+#    key: debug
+#    paths:
+#      - target/debug/build/
+#      - target/debug/deps/
+#      - .cargo/
 
 
 # stages:
