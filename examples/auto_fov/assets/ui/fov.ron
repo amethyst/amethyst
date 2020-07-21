@@ -7,7 +7,7 @@ Container(
         y: -80.0,
         width: 350.0,
         height: 80.0,
-        transparent: true,
+        opaque: false,
     ),
     background: None,
     children: [
@@ -19,7 +19,7 @@ Container(
                 y: 0.0,
                 width: 350.0,
                 height: 25.0,
-                transparent: true,
+                opaque: false,
             ),
             text: (
                 text: "Screen Aspect Ratio: N/A",
@@ -37,7 +37,7 @@ Container(
                 y: 0.0,
                 width: 350.0,
                 height: 25.0,
-                transparent: true,
+                opaque: false,
             ),
             text: (
                 text: "Camera Aspect Ratio: N/A",
@@ -55,7 +55,7 @@ Container(
                 y: 0.0,
                 width: 350.0,
                 height: 25.0,
-                transparent: true,
+                opaque: false,
             ),
             text: (
                 text: "Camera Fov: N/A",

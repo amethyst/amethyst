@@ -17,7 +17,7 @@ Container(
                 y: -25.,
                 width: 200.,
                 height: 50.,
-                transparent: true,
+                opaque: false,
             ),
             text: (
                 text: "N/A",
@@ -34,7 +34,7 @@ Container(
                 y: -50.,
                 width: 200.,
                 height: 50.,
-                transparent: true,
+                opaque: false,
             ),
             text: (
                 text: "UNDER MOUSE",
