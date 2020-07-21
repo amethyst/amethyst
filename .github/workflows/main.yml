@@ -17,4 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: echo building
+        run: cargo build --verbose --features=empty
+      - name: Run tests
+        run: cargo test --verbose --features=empty
