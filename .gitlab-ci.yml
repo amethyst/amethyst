@@ -1,13 +1,14 @@
 variables:
   CARGO_HOME: $CI_PROJECT_DIR/.cargo
 
-image: registry.gitlab.com/amethyst-engine/amethyst/base:latest
+image: registry.gitlab.com/amethyst-engine/amethyst/builder-stable:latest
 
 stages:
   - test
 
 test:
   script:
+    - mv ../target .
     - cargo test --features empty
   cache:
     key: debug
