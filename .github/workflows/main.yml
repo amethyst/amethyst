@@ -2,8 +2,7 @@ name: Amethyst CI via GitHub Actions
 
 on:
   push:
-    branches:
-      - *
+    branches: [ $default-branch ]
   pull_request:
     branches: [ $default-branch ]
 
