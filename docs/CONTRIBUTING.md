@@ -282,8 +282,8 @@ mdbook serve book
 Examples in the API can be tested with `cargo test`.  Examples in top-level markdown files (like the one we are currently in) are not tested.
 
 When submitting your pull requests, please follow the same procedures described
-in the [Pull Requests](#pull-requests) section above in addition to the one stated below.
-The following  command must also be completed without error:
+in the [Pull Requests](#pull-requests) section above and the procedures below.
+All of the following commands completed without errors.
 * `mdbook test book -L target/debug/deps`
 
 Note that if you do not have mdbook already installed, you may do so with `cargo install mdbook`.
