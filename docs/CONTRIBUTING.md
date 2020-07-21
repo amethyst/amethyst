@@ -66,7 +66,7 @@ done the following things first:
    If this is not the case, run `rustup update` or install [rustfmt]
 3. All of the following commands completed without errors.
    * `cargo +stable fmt --all`
-	* `cargo clippy --all --features "empty"` (may require `cargo clean` before)
+   * `cargo clippy --all --features "empty"` (may require `cargo clean` before)
    * `cargo build --features "empty"`
    * `cargo test --all --features "empty"`
    * `cargo run --example {example-name} --features YOUR_BACKEND`
