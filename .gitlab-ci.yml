@@ -8,8 +8,8 @@ stages:
 
 test:
   script:
-    - mv ../target .
-    - cargo test --features empty
+    - find / -name target
+#    - cargo test --features empty
   cache:
     key: debug
     paths:
