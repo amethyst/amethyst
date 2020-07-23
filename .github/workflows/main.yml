@@ -2,9 +2,11 @@ name: Amethyst CI via GitHub Actions
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches:
+      - master
   pull_request:
-    branches: [ $default-branch ]
+    branches:
+      - master
 
 env:
   CARGO_TERM_COLOR: always
