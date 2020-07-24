@@ -73,11 +73,11 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --features=${{matrix.FEATURES}} -- -D warnings
+          args: --features=${{matrix.FEATURES}}
         if: contains(matrix.toolchain, 'stable')
 
       - name: cargo test amethyst
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --features=${{matrix.FEATURES}} -- -D warnings
+          args: --features=${{matrix.FEATURES}}
