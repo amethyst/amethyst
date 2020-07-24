@@ -2,19 +2,81 @@ name: Amethyst CI via GitHub Actions
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches: 
+      - master
   pull_request:
-    branches: [ $default-branch ]
-
+    branches: 
+      - master
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
 
 jobs:
-  build:
 
+  rustfmt:
     runs-on: ubuntu-latest
-
+    name: cargo fmt
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: echo building
+
+      - name: install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rustfmt
+          override: true
+
+      - name: cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check  
+
+  test:
+    name: Cargo test & clippy
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macOS-latest, windows-latest, ubuntu-latest]
+        toolchain: [stable, nightly]
+        include:
+        - os: macos-latest
+          FEATURES: metal sdl_controller json saveload tiles storage-event-control
+        - os: windows-latest
+          FEATURES: vulkan sdl_controller json saveload tiles storage-event-control
+        - os: ubuntu-latest 
+          FEATURES: vulkan sdl_controller json saveload tiles storage-event-control
+          
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install linux deps
+        run: |
+          sudo apt update
+          sudo apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev
+        if: contains(matrix.os, 'ubuntu')
+
+      - name: install ${{ matrix.toolchain }} toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          profile: minimal
+          override: true
+
+      - name: install clippy
+        run: cargo install clippy
+        if: contains(matrix.toolchain, 'stable')
+
+      - name: cargo clippy amethyst
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features=${{matrix.FEATURES} -- -D warnings
+        if: contains(matrix.toolchain, 'stable')
+
+      - name: cargo test amethyst
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --features=${{matrix.FEATURES} -- -D warnings
