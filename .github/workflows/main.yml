@@ -43,11 +43,11 @@ jobs:
         toolchain: [stable, nightly]
         include:
         - os: macos-latest
-          FEATURES: metal sdl_controller json saveload tiles storage-event-control
+          FEATURES: "metal"
         - os: windows-latest
-          FEATURES: vulkan sdl_controller json saveload tiles storage-event-control
+          FEATURES: "vulkan json saveload tiles storage-event-control"
         - os: ubuntu-latest 
-          FEATURES: vulkan sdl_controller json saveload tiles storage-event-control
+          FEATURES: "vulkan sdl_controller json saveload tiles storage-event-control"
           
     steps:
       - uses: actions/checkout@v2
