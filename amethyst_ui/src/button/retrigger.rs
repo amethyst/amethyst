@@ -16,7 +16,7 @@ pub type UiButtonActionRetriggerSystem = EventRetriggerSystem<UiButtonActionRetr
 
 /// Attach this to an entity with a `UiButton` attached to it to
 /// trigger specific events when a user interaction happens.
-#[derive(Debug)]
+#[derive(Debug, Default, Clone)]
 pub struct UiButtonActionRetrigger {
     /// The `UiButtonAction`s that should happen when the user begins a click
     /// on the `UiButton`
