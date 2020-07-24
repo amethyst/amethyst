@@ -124,7 +124,7 @@ If you are compiling on Linux, make sure to install the dependencies below.
 ### Arch Linux
 
 ```
-# pacman -S --needed grep gcc pkgconf openssl alsa-lib cmake make python3 freetype2 awk libxcb
+# pacman -Sy --needed grep gcc pkgconf openssl alsa-lib cmake make python3 freetype2 awk libxcb
 ```
 Also check https://wiki.archlinux.org/index.php/Vulkan for Vulkan installation
 
