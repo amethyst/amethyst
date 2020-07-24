@@ -66,7 +66,7 @@ jobs:
           override: true
 
       - name: install clippy
-        run: cargo install clippy
+        run: rustup component add clippy
         if: contains(matrix.toolchain, 'stable')
 
       - name: cargo clippy amethyst
