@@ -43,11 +43,11 @@ jobs:
         toolchain: [stable, nightly]
         include:
         - os: macos-latest
-          FEATURES: "metal"
+          FEATURES: metal
         - os: windows-latest
-          FEATURES: "vulkan json saveload tiles storage-event-control"
+          FEATURES: vulkan json saveload tiles storage-event-control
         - os: ubuntu-latest 
-          FEATURES: "vulkan sdl_controller json saveload tiles storage-event-control"
+          FEATURES: vulkan sdl_controller json saveload tiles storage-event-control
           
     steps:
       - uses: actions/checkout@v2
@@ -73,11 +73,11 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --features=${{matrix.FEATURES}} -- -D warnings
+          args: --features ${{matrix.FEATURES}} -- -D warnings
         if: contains(matrix.toolchain, 'stable')
 
       - name: cargo test amethyst
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --features=${{matrix.FEATURES}} -- -D warnings
+          args: --features ${{matrix.FEATURES}} -- -D warnings
