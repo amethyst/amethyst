@@ -45,9 +45,9 @@ jobs:
         - os: macos-latest
           FEATURES: metal
         - os: windows-latest
-          FEATURES: vulkan,json,saveload,tiles,storage-event-control
+          FEATURES: vulkan
         - os: ubuntu-latest 
-          FEATURES: vulkan,sdl_controller,json,saveload,tiles,storage-event-control
+          FEATURES: vulkan
           
     steps:
       - uses: actions/checkout@v2
