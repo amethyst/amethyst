@@ -1,0 +1,43 @@
+name: Amethyst book CI
+
+on:
+  push:
+    branches: 
+      - master
+    paths:
+    - 'book/**'
+    
+  pull_request:
+    branches: 
+      - master
+    paths:
+    - 'book/**'
+    
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+
+  mdbook:
+    runs-on: ubuntu-latest
+    name: Test and build mdbook
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: install mdbook
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: --vers "^0.4" mdbook
+
+      - name: mdbook build
+        run: mdbook build
+        working-directory: ./book

@@ -3,7 +3,7 @@
 ## Setting up Rust
 
 We recommend using [rustup][ru] to easily install the latest stable version of rust.
-Instructions should be on the screen once rustup is downloaded.
+Instructions should be on the screen once rustup is downloaded. TEST
 
 [ru]: https://rustup.rs
 
