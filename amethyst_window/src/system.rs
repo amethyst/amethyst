@@ -1,5 +1,5 @@
 use crate::resources::ScreenDimensions;
-use amethyst_core::{ecs::*, shrev::EventChannel};
+use amethyst_core::{ecs::*, EventChannel};
 use winit::{Event, EventsLoop, Window};
 
 /// Updates `ScreenDimensions` struct with the actual window size from `Window`.
@@ -35,18 +35,18 @@ pub fn build_window_system() -> impl Runnable {
     SystemBuilder::new("WindowSystem")
         .write_resource::<ScreenDimensions>()
         .read_resource::<Window>()
-        .build(|_commands, _world, (screen_dimensions, window_res), _query| {
-            manage_dimensions(screen_dimensions, window_res)
-        })
+        .build(
+            |_commands, _world, (screen_dimensions, window_res), _query| {
+                manage_dimensions(screen_dimensions, window_res)
+            },
+        )
 }
 
 /// System that polls the window events and pushes them to appropriate event channels.
 ///
 /// This system must be active for any `GameState` to receive
 /// any `StateEvent::Window` event into it's `handle_event` method.
-pub fn build_events_loop_system(
-    mut events_loop: EventsLoop,
-) -> impl Runnable {
+pub fn build_events_loop_system(mut events_loop: EventsLoop) -> impl Runnable {
     let mut events = Vec::with_capacity(128);
     SystemBuilder::<()>::new("EventsLoopSystem")
         .write_resource::<EventChannel<Event>>()

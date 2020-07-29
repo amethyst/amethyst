@@ -1,7 +1,4 @@
-use crate::ecs::{
-    *,
-    systems::ParallelRunnable,
-};
+use crate::ecs::{systems::ParallelRunnable, *};
 use amethyst_error::Error;
 
 pub use crate::ecs::systems::Builder;
@@ -9,19 +6,31 @@ pub use crate::ecs::systems::Builder;
 /// A SystemBundle is a structure that adds multiple systems to the [Dispatcher] and loads/unloads all required resources.
 pub trait SystemBundle {
     /// [Dispatcher::load] executes this method for all added system bundles.
-    fn load(&mut self, world: &mut World, resources: &mut Resources, builder: &mut Builder) -> Result<(), Error>;
+    fn load(
+        &mut self,
+        world: &mut World,
+        resources: &mut Resources,
+        builder: &mut Builder,
+    ) -> Result<(), Error>;
 
     /// [Dispatcher::unload] executes this method for all added system bundles.
-    fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> { Ok(()) }
+    fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> {
+        Ok(())
+    }
 }
 
 /// System bundle that wraps legion's standard system
 struct ParallelRunnableBundle<T: ParallelRunnable + 'static> {
-    system: Option<T>
+    system: Option<T>,
 }
 
 impl<T: ParallelRunnable + 'static> SystemBundle for ParallelRunnableBundle<T> {
-    fn load(&mut self, _world: &mut World, _resources: &mut Resources, builder: &mut Builder) -> Result<(), Error> {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        _resources: &mut Resources,
+        builder: &mut Builder,
+    ) -> Result<(), Error> {
         builder.with_system(self.system.take().unwrap());
         Ok(())
     }
@@ -29,7 +38,7 @@ impl<T: ParallelRunnable + 'static> SystemBundle for ParallelRunnableBundle<T> {
 
 impl<T> From<T> for ParallelRunnableBundle<T>
 where
-    T: ParallelRunnable + 'static
+    T: ParallelRunnable + 'static,
 {
     fn from(system: T) -> Self {
         Self {
@@ -46,7 +55,7 @@ pub struct DispatcherBuilder {
 impl Default for DispatcherBuilder {
     fn default() -> Self {
         Self {
-            bundles: Vec::with_capacity(20)
+            bundles: Vec::with_capacity(20),
         }
     }
 }
@@ -57,7 +66,7 @@ impl DispatcherBuilder {
     pub fn with_bundle<T: SystemBundle + 'static>(&mut self, bundle: T) {
         self.bundles.push(Box::new(bundle));
     }
-    
+
     /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
     /// and initialize any required entities or resources.
     pub fn add_bundle<T: SystemBundle + 'static>(mut self, bundle: T) -> Self {
@@ -69,7 +78,7 @@ impl DispatcherBuilder {
     pub fn with_system<T: ParallelRunnable + 'static>(&mut self, system: T) {
         self.with_bundle(ParallelRunnableBundle::from(system));
     }
-    
+
     /// Adds legion system to the [Dispatcher].
     pub fn add_system<T: ParallelRunnable + 'static>(mut self, system: T) -> Self {
         self.with_system(system);
@@ -77,7 +86,11 @@ impl DispatcherBuilder {
     }
 
     /// Builds [Dispatcher] by calling [SystemBundle::load] on all inserted bundles and constructing a [legion::Schedule].
-    pub fn load(mut self, world: &mut World, resources: &mut Resources) -> Result<Dispatcher, Error> {
+    pub fn load(
+        mut self,
+        world: &mut World,
+        resources: &mut Resources,
+    ) -> Result<Dispatcher, Error> {
         let mut builder = Schedule::builder();
 
         for bundle in &mut self.bundles {
@@ -86,7 +99,7 @@ impl DispatcherBuilder {
 
         Ok(Dispatcher {
             bundles: self.bundles,
-            schedule: builder.build()
+            schedule: builder.build(),
         })
     }
 }
@@ -105,7 +118,11 @@ impl Dispatcher {
 
     /// Unloads any resources by calling [SystemBundle::unload] for stored system bundles and returns [DispatcherBuilder]
     /// containing the same bundles.
-    pub fn unload(mut self, world: &mut World, resources: &mut Resources) -> Result<DispatcherBuilder, Error> {
+    pub fn unload(
+        mut self,
+        world: &mut World,
+        resources: &mut Resources,
+    ) -> Result<DispatcherBuilder, Error> {
         for bundle in &mut self.bundles {
             bundle.unload(world, resources)?;
         }
@@ -127,12 +144,21 @@ pub mod tests {
         struct MyBundle;
 
         impl SystemBundle for MyBundle {
-            fn load(&mut self, _world: &mut World, resources: &mut Resources, _builder: &mut Builder) -> Result<(), Error> {
+            fn load(
+                &mut self,
+                _world: &mut World,
+                resources: &mut Resources,
+                _builder: &mut Builder,
+            ) -> Result<(), Error> {
                 resources.insert(MyResource(false));
                 Ok(())
             }
 
-            fn unload(&mut self, _world: &mut World, resources: &mut Resources) -> Result<(), Error> {
+            fn unload(
+                &mut self,
+                _world: &mut World,
+                resources: &mut Resources,
+            ) -> Result<(), Error> {
                 resources.remove::<MyResource>();
                 Ok(())
             }
@@ -174,7 +200,7 @@ pub mod tests {
             .add_system(system)
             .load(&mut world, &mut resources)
             .unwrap();
-        
+
         dispatcher.execute(&mut world, &mut resources);
 
         assert_eq!(resources.get::<MyResource>().unwrap().0, true);

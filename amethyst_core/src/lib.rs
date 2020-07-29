@@ -8,7 +8,7 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 
 pub use alga;
 pub use approx;
-pub use legion as ecs;
+pub use legion;
 pub use nalgebra as math;
 pub use num_traits as num;
 pub use shrev;
@@ -21,18 +21,27 @@ pub use self::{
     axis::{Axis2, Axis3},
     hidden::{Hidden, HiddenPropagate},
     named::Named,
+    shrev::EventChannel,
 };
 
-/// The frame limiter module.
-pub mod frame_limiter;
 /// Dispatcher module.
 pub mod dispatcher;
+/// The frame limiter module.
+pub mod frame_limiter;
 /// The geometry module.
 pub mod geometry;
 /// The timing module.
 pub mod timing;
 /// The transformation module.
 pub mod transform;
+
+/// legion ECS reexported with some convenience types.
+pub mod ecs {
+    pub use crate::{
+        dispatcher::{Builder, SystemBundle},
+        legion::*,
+    };
+}
 
 mod axis;
 //mod event;

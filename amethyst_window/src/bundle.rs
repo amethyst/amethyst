@@ -1,9 +1,6 @@
 use crate::{build_events_loop_system, build_window_system, DisplayConfig, ScreenDimensions};
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{
-    ecs::*,
-    dispatcher::{SystemBundle, Builder},
-};
+use amethyst_core::ecs::*;
 use amethyst_error::Error;
 use winit::EventsLoop;
 
@@ -53,10 +50,16 @@ impl WindowBundle {
 }
 
 impl SystemBundle for WindowBundle {
-    fn load(&mut self, _world: &mut World, resources: &mut Resources, builder: &mut Builder) -> Result<(), Error> {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut Builder,
+    ) -> Result<(), Error> {
         let events_loop = EventsLoop::new();
 
-        let window = self.config
+        let window = self
+            .config
             .clone()
             .into_window_builder(&events_loop)
             .build(&events_loop)
