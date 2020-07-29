@@ -1,500 +1,182 @@
-use crate::{ecs::prelude::*, ArcThreadPool};
-use std::collections::BTreeMap;
+use crate::ecs::{
+    *,
+    systems::ParallelRunnable,
+};
+use amethyst_error::Error;
 
-/// A SystemBundle is a structure that can add multiple systems at once to a dispatcher.
+pub use crate::ecs::systems::Builder;
+
+/// A SystemBundle is a structure that adds multiple systems to the [Dispatcher] and loads/unloads all required resources.
 pub trait SystemBundle {
-    /// Build this SystemBundle.
-    fn build(
-        self,
-        world: &mut World,
-        resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
-    ) -> Result<(), amethyst_error::Error>;
+    /// [Dispatcher::load] executes this method for all added system bundles.
+    fn load(&mut self, world: &mut World, resources: &mut Resources, builder: &mut Builder) -> Result<(), Error>;
+
+    /// [Dispatcher::unload] executes this method for all added system bundles.
+    fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> { Ok(()) }
 }
 
-impl SystemBundle
-    for Box<
-        dyn FnMut(
-            &mut World,
-            &mut Resources,
-            &mut DispatcherBuilder<'_>,
-        ) -> Result<(), amethyst_error::Error>,
-    >
-{
-    fn build(
-        mut self,
-        world: &mut World,
-        resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
-    ) -> Result<(), amethyst_error::Error> {
-        (self)(world, resources, builder)
-    }
+/// System bundle that wraps legion's standard system
+struct ParallelRunnableBundle<T: ParallelRunnable + 'static> {
+    system: Option<T>
 }
 
-/// A bundle inserted going to be consumed by a dispatcher builder.
-pub struct DispatcherSystemBundle<B>(B);
-impl<B: SystemBundle> ConsumeDesc for DispatcherSystemBundle<B> {
-    fn consume(
-        self: Box<Self>,
-        world: &mut World,
-        resources: &mut Resources,
-        _: &mut DispatcherData,
-        builder: &mut DispatcherBuilder<'_>,
-    ) -> Result<(), amethyst_error::Error> {
-        self.0.build(world, resources, builder)?;
+impl<T: ParallelRunnable + 'static> SystemBundle for ParallelRunnableBundle<T> {
+    fn load(&mut self, _world: &mut World, _resources: &mut Resources, builder: &mut Builder) -> Result<(), Error> {
+        builder.with_system(self.system.take().unwrap());
         Ok(())
     }
 }
 
-/// A system inserted in a dispatcher builder.
-pub struct DispatcherSystem<F>(RelativeStage, F);
-impl<F> ConsumeDesc for DispatcherSystem<F>
+impl<T> From<T> for ParallelRunnableBundle<T>
 where
-    F: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>,
+    T: ParallelRunnable + 'static
 {
-    fn consume(
-        self: Box<Self>,
-        world: &mut World,
-        resources: &mut Resources,
-        dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder<'_>,
-    ) -> Result<(), amethyst_error::Error> {
-        let sys = (self.1)(world, resources);
-
-        dispatcher
-            .stages
-            .entry(self.0)
-            .or_insert_with(Vec::default)
-            .push(sys);
-
-        Ok(())
+    fn from(system: T) -> Self {
+        Self {
+            system: Some(system),
+        }
     }
 }
 
-/// A thread local system in a dispatcher builder.
-pub struct DispatcherThreadLocalSystem<F>(F);
-impl<F> ConsumeDesc for DispatcherThreadLocalSystem<F>
-where
-    F: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable>,
-{
-    fn consume(
-        self: Box<Self>,
-        world: &mut World,
-        resources: &mut Resources,
-        dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder<'_>,
-    ) -> Result<(), amethyst_error::Error> {
-        let runnable = (self.0)(world, resources);
+/// Builds [Dispatcher] from provided systems and system bundles.
+pub struct DispatcherBuilder {
+    bundles: Vec<Box<dyn SystemBundle>>,
+}
 
-        // TODO: dispose?
-        dispatcher.thread_locals.push(runnable.into());
-        Ok(())
+impl Default for DispatcherBuilder {
+    fn default() -> Self {
+        Self {
+            bundles: Vec::with_capacity(20)
+        }
     }
 }
 
-/// A thread local in a dispatcher builder.
-pub struct DispatcherThreadLocal<F>(F);
-impl<F> ConsumeDesc for DispatcherThreadLocal<F>
-where
-    F: FnOnce(&mut World, &mut Resources) -> Box<dyn ThreadLocal>,
-{
-    fn consume(
-        self: Box<Self>,
-        world: &mut World,
-        resources: &mut Resources,
-        dispatcher: &mut DispatcherData,
-        _: &mut DispatcherBuilder<'_>,
-    ) -> Result<(), amethyst_error::Error> {
-        dispatcher.thread_locals.push((self.0)(world, resources));
-        Ok(())
+impl DispatcherBuilder {
+    /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
+    /// and initialize any required entities or resources.
+    pub fn with_bundle<T: SystemBundle + 'static>(&mut self, bundle: T) {
+        self.bundles.push(Box::new(bundle));
     }
-}
-
-/// Something that can be consumed by the DispatcherBuilder.
-pub trait ConsumeDesc {
-    /// Consume this resource.
-    fn consume(
-        self: Box<Self>,
-        world: &mut World,
-        resources: &mut Resources,
-        stages: &mut DispatcherData,
-        builder: &mut DispatcherBuilder<'_>,
-    ) -> Result<(), amethyst_error::Error>;
-}
-
-/// Something that runs on a local (main) thread.
-pub trait ThreadLocal {
-    /// Run the thread local resource.
-    fn run(&mut self, world: &mut World, resources: &mut Resources);
-    /// Get rid of the thread local resource.
-    fn dispose(self: Box<Self>, world: &mut World, resources: &mut Resources);
-}
-
-impl<F> ThreadLocal for F
-where
-    F: FnMut(&mut World, &mut Resources) + 'static,
-{
-    fn run(&mut self, world: &mut World, resources: &mut Resources) {
-        (self)(world, resources)
+    
+    /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
+    /// and initialize any required entities or resources.
+    pub fn add_bundle<T: SystemBundle + 'static>(mut self, bundle: T) -> Self {
+        self.with_bundle(bundle);
+        self
     }
-    fn dispose(self: Box<Self>, _world: &mut World, _resources: &mut Resources) {}
-}
 
-impl Into<Box<dyn ThreadLocal>> for Box<dyn Runnable> {
-    fn into(mut self) -> Box<dyn ThreadLocal> {
-        Box::new(move |world: &mut World, resources: &mut Resources| {
-            self.run(world, resources);
+    /// Adds legion system to the [Dispatcher].
+    pub fn with_system<T: ParallelRunnable + 'static>(&mut self, system: T) {
+        self.with_bundle(ParallelRunnableBundle::from(system));
+    }
+    
+    /// Adds legion system to the [Dispatcher].
+    pub fn add_system<T: ParallelRunnable + 'static>(mut self, system: T) -> Self {
+        self.with_system(system);
+        self
+    }
+
+    /// Builds [Dispatcher] by calling [SystemBundle::load] on all inserted bundles and constructing a [legion::Schedule].
+    pub fn load(mut self, world: &mut World, resources: &mut Resources) -> Result<Dispatcher, Error> {
+        let mut builder = Schedule::builder();
+
+        for bundle in &mut self.bundles {
+            bundle.load(world, resources, &mut builder)?;
+        }
+
+        Ok(Dispatcher {
+            bundles: self.bundles,
+            schedule: builder.build()
         })
     }
 }
 
-/// An object to be built as a thread local.
-pub struct ThreadLocalObject<S, F, D>(pub S, pub F, pub D);
-impl<S, F, D> ThreadLocalObject<S, F, D>
-where
-    S: 'static,
-    F: FnMut(&mut S, &mut World, &mut Resources) + 'static,
-    D: FnOnce(S, &mut World, &mut Resources) + 'static,
-{
-    /// Build the thread local object.
-    pub fn build(initial_state: S, run_fn: F, dispose_fn: D) -> Box<dyn ThreadLocal> {
-        Box::new(Self(initial_state, run_fn, dispose_fn))
-    }
-}
-impl<S, F, D> ThreadLocal for ThreadLocalObject<S, F, D>
-where
-    S: 'static,
-    F: FnMut(&mut S, &mut World, &mut Resources) + 'static,
-    D: FnOnce(S, &mut World, &mut Resources) + 'static,
-{
-    fn run(&mut self, world: &mut World, resources: &mut Resources) {
-        (self.1)(&mut self.0, world, resources)
-    }
-    fn dispose(self: Box<Self>, world: &mut World, resources: &mut Resources) {
-        (self.2)(self.0, world, resources)
-    }
-}
-
-/// Converts the type into a relative stage.
-pub trait IntoRelativeStage: Copy {
-    // TODO: Why not just use Into<RelativeStage> ?
-    /// Convert this type into a relative stage.
-    fn into_relative(self) -> RelativeStage;
-}
-
-/// The default relative execution stages provided by amethyst.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash, serde::Serialize, serde::Deserialize,
-)]
-pub enum Stage {
-    /// Execute at the start of the frame.
-    Begin,
-    /// Execute at the time to execute the game logic.
-    Logic,
-    /// Execute at the time of rendering.
-    Render,
-    /// Execute at the end of the frame, on the main thread.
-    ThreadLocal,
-}
-impl IntoRelativeStage for Stage {
-    fn into_relative(self) -> RelativeStage {
-        RelativeStage(self, 0)
-    }
-}
-
-/// A relative execution stage.
-/// Used for system execution ordering.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-pub struct RelativeStage(
-    /// The internal execution stage.
-    pub Stage,
-    /// The stage offset.
-    pub isize,
-);
-impl RelativeStage {
-    /// Get the stage.
-    pub fn stage(&self) -> Stage {
-        self.0
-    }
-
-    /// Get the stage offset
-    pub fn offset(&self) -> isize {
-        self.1
-    }
-}
-impl IntoRelativeStage for RelativeStage {
-    fn into_relative(self) -> RelativeStage {
-        self
-    }
-}
-impl From<Stage> for RelativeStage {
-    fn from(other: Stage) -> Self {
-        RelativeStage(other, 0)
-    }
-}
-impl PartialOrd for RelativeStage {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-impl Ord for RelativeStage {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.stage()
-            .cmp(&other.stage())
-            .then(self.offset().cmp(&other.offset()))
-    }
-}
-
-/// A System execution dispatcher.
+/// Dispatcher is created by [DispatcherBuilder] and contains [legion::Schedule] used to execute all systems.
 pub struct Dispatcher {
-    executor: Executor,
-    /// The defragmentation budget.
-    pub defrag_budget: Option<usize>,
-    pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
+    bundles: Vec<Box<dyn SystemBundle>>,
+    schedule: Schedule,
 }
+
 impl Dispatcher {
-    /// Execute the systems.
-    pub fn dispatch(&mut self, world: &mut World, resources: &mut Resources) {
-        self.executor.execute(world, resources);
-
-        self.thread_locals
-            .iter_mut()
-            .for_each(|local| local.run(world, resources));
-
-        // TODO: should we be using this?
-        //world.defrag(self.defrag_budget);
+    /// Executes systems according to the [legion::Schedule].
+    pub fn execute(&mut self, world: &mut World, resources: &mut Resources) {
+        self.schedule.execute(world, resources);
     }
 
-    /// Clean and destroy the systems.
-    pub fn dispose(mut self, world: &mut World, resources: &mut Resources) {
-        self.thread_locals
-            .drain(..)
-            .for_each(|local| local.dispose(world, resources));
+    /// Unloads any resources by calling [SystemBundle::unload] for stored system bundles and returns [DispatcherBuilder]
+    /// containing the same bundles.
+    pub fn unload(mut self, world: &mut World, resources: &mut Resources) -> Result<DispatcherBuilder, Error> {
+        for bundle in &mut self.bundles {
+            bundle.unload(world, resources)?;
+        }
 
-        // self.executor
-        //     .into_vec()
-        //     .into_iter()
-        //     .for_each(|system| system.dispose(world, resources));
+        Ok(DispatcherBuilder {
+            bundles: self.bundles,
+        })
     }
 }
 
-/// Data used by the Dispatcher.
-#[derive(Default)]
-pub struct DispatcherData {
-    /// The defragmentation budget.
-    pub defrag_budget: Option<usize>,
-    pub(crate) thread_locals: Vec<Box<dyn ThreadLocal>>,
-    pub(crate) stages: BTreeMap<RelativeStage, Vec<Box<dyn Schedulable>>>,
-}
-impl DispatcherData {
-    /// Flatten the DispatcherData into a Dispatcher.
-    pub fn flatten(self) -> Dispatcher {
-        let mut sorted_systems = Vec::with_capacity(128);
-        self.stages
-            .into_iter()
-            .for_each(|(_, mut v)| v.drain(..).for_each(|sys| sorted_systems.push(sys)));
+#[cfg(test)]
+pub mod tests {
+    use super::*;
 
-        log::trace!("Sorted {} systems", sorted_systems.len());
-        if log::log_enabled!(log::Level::Trace) {
-            sorted_systems.iter().for_each(|system| {
-                log::trace!("System: {}", system.name());
-            });
+    struct MyResource(bool);
+
+    #[test]
+    fn dispatcher_loads_and_unloads() {
+        struct MyBundle;
+
+        impl SystemBundle for MyBundle {
+            fn load(&mut self, _world: &mut World, resources: &mut Resources, _builder: &mut Builder) -> Result<(), Error> {
+                resources.insert(MyResource(false));
+                Ok(())
+            }
+
+            fn unload(&mut self, _world: &mut World, resources: &mut Resources) -> Result<(), Error> {
+                resources.remove::<MyResource>();
+                Ok(())
+            }
         }
 
-        let executor = Executor::new(sorted_systems);
+        let mut world = World::default();
+        let mut resources = Resources::default();
 
-        Dispatcher {
-            defrag_budget: self.defrag_budget,
-            thread_locals: self.thread_locals,
-            executor,
-        }
-    }
-
-    /// Merge two DispatcherData together.
-    pub fn merge(mut self, mut other: DispatcherData) -> Self {
-        self.thread_locals.extend(other.thread_locals.drain(..));
-
-        for (k, v) in other.stages.iter_mut() {
-            self.stages
-                .entry(*k)
-                .or_insert_with(Vec::default)
-                .extend(v.drain(..))
-        }
-
-        self
-    }
-}
-
-/// A Dispatcher builder structure.
-pub struct DispatcherBuilder<'a> {
-    pub(crate) defrag_budget: Option<usize>,
-    pub(crate) systems: Vec<(RelativeStage, Box<dyn ConsumeDesc + 'a>)>,
-    pub(crate) thread_locals: Vec<Box<dyn ConsumeDesc + 'a>>,
-    pub(crate) bundles: Vec<Box<dyn ConsumeDesc + 'a>>,
-    pub(crate) thread_pool: Option<ArcThreadPool>,
-}
-impl<'a> Default for DispatcherBuilder<'a> {
-    // We preallocate 128 for these, as its just a random round number but they are just fat-pointers so whatever
-    fn default() -> Self {
-        Self {
-            defrag_budget: None,
-            systems: Vec::with_capacity(128),
-            thread_locals: Vec::with_capacity(128),
-            bundles: Vec::with_capacity(128),
-            thread_pool: None,
-        }
-    }
-}
-impl<'a> DispatcherBuilder<'a> {
-    /// Add a thread local resource.
-    pub fn add_thread_local<T: FnOnce(&mut World, &mut Resources) -> Box<dyn ThreadLocal> + 'a>(
-        &mut self,
-        desc: T,
-    ) {
-        self.thread_locals
-            .push(Box::new(DispatcherThreadLocal(desc)) as Box<dyn ConsumeDesc>);
-    }
-
-    /// Add a thread local resource.
-    pub fn with_thread_local<T: FnOnce(&mut World, &mut Resources) -> Box<dyn ThreadLocal> + 'a>(
-        mut self,
-        desc: T,
-    ) -> Self {
-        self.add_thread_local(desc);
-
-        self
-    }
-
-    /// Add a thread local System.
-    pub fn add_thread_local_system<
-        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a,
-    >(
-        &mut self,
-        desc: T,
-    ) {
-        self.thread_locals
-            .push(Box::new(DispatcherThreadLocalSystem(desc)) as Box<dyn ConsumeDesc>);
-    }
-
-    /// Add a thread local System.
-    pub fn with_thread_local_system<
-        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable> + 'a,
-    >(
-        mut self,
-        desc: T,
-    ) -> Self {
-        self.add_thread_local_system(desc);
-
-        self
-    }
-
-    /// Add a System.
-    pub fn add_system<
-        S: IntoRelativeStage,
-        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a,
-    >(
-        &mut self,
-        stage: S,
-        desc: T,
-    ) {
-        self.systems.push((
-            stage.into_relative(),
-            Box::new(DispatcherSystem(stage.into_relative(), desc)) as Box<dyn ConsumeDesc>,
-        ));
-    }
-
-    /// Add a System.
-    pub fn with_system<
-        S: IntoRelativeStage,
-        T: FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable> + 'a,
-    >(
-        mut self,
-        stage: S,
-        desc: T,
-    ) -> Self {
-        self.add_system(stage, desc);
-
-        self
-    }
-
-    /// Add a bundle to the dispatcher.
-    pub fn add_bundle<T: SystemBundle + 'a>(&mut self, bundle: T) {
-        self.bundles
-            .push(Box::new(DispatcherSystemBundle(bundle)) as Box<dyn ConsumeDesc>);
-    }
-
-    /// Add a bundle to the dispatcher.
-    pub fn with_bundle<T: SystemBundle + 'a>(mut self, bundle: T) -> Self {
-        self.add_bundle(bundle);
-
-        self
-    }
-
-    /// Set the defragmentation budget.
-    pub fn with_defrag_budget(mut self, budget: Option<usize>) -> Self {
-        self.defrag_budget = budget;
-
-        self
-    }
-
-    /// Set the thread pool.
-    pub fn with_pool(mut self, pool: Option<ArcThreadPool>) -> Self {
-        self.thread_pool = pool;
-
-        self
-    }
-
-    /// Is any system inserted?
-    pub fn is_empty(&self) -> bool {
-        self.systems.is_empty() && self.bundles.is_empty()
-    }
-
-    fn build_data(&mut self, world: &mut World, resources: &mut Resources) -> DispatcherData {
-        let mut dispatcher_data = DispatcherData::default();
-
-        for bundle in self.bundles.drain(..) {
-            let mut recursive_builder = DispatcherBuilder::default();
-            bundle
-                .consume(
-                    world,
-                    resources,
-                    &mut dispatcher_data,
-                    &mut recursive_builder,
-                )
-                .unwrap();
-            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
-        }
-
-        for desc in self.systems.drain(..) {
-            let mut recursive_builder = DispatcherBuilder::default();
-            desc.1
-                .consume(
-                    world,
-                    resources,
-                    &mut dispatcher_data,
-                    &mut recursive_builder,
-                )
-                .unwrap();
-            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
-        }
-
-        for desc in self.thread_locals.drain(..) {
-            let mut recursive_builder = DispatcherBuilder::default();
-            desc.consume(
-                world,
-                resources,
-                &mut dispatcher_data,
-                &mut recursive_builder,
-            )
+        // Create dispatcher
+        let dispatcher = DispatcherBuilder::default()
+            .add_bundle(MyBundle)
+            .load(&mut world, &mut resources)
             .unwrap();
-            dispatcher_data = dispatcher_data.merge(recursive_builder.build_data(world, resources));
-        }
 
-        dispatcher_data
+        // Ensure that resources were loaded
+        assert!(resources.get::<MyResource>().is_some());
+
+        // Unload
+        dispatcher.unload(&mut world, &mut resources).unwrap();
+
+        // Ensure that resources were unloaded
+        assert!(resources.get::<MyResource>().is_none());
     }
 
-    /// Build the dispatcher!
-    pub fn build(mut self, world: &mut World, resources: &mut Resources) -> Dispatcher {
-        self.build_data(world, resources).flatten()
+    #[test]
+    fn dispatcher_legion_system() {
+        let mut world = World::default();
+        let mut resources = Resources::default();
+
+        resources.insert(MyResource(false));
+
+        let system = SystemBuilder::new("test")
+            .write_resource::<MyResource>()
+            .build(|_, _, res, _| {
+                res.0 = true;
+            });
+
+        let mut dispatcher = DispatcherBuilder::default()
+            .add_system(system)
+            .load(&mut world, &mut resources)
+            .unwrap();
+        
+        dispatcher.execute(&mut world, &mut resources);
+
+        assert_eq!(resources.get::<MyResource>().unwrap().0, true);
     }
 }

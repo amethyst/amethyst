@@ -23,11 +23,10 @@ pub use self::{
     named::Named,
 };
 
-//pub mod deferred_dispatcher_operation;
-/// The dispatcher module.
-pub mod dispatcher;
 /// The frame limiter module.
 pub mod frame_limiter;
+/// Dispatcher module.
+pub mod dispatcher;
 /// The geometry module.
 pub mod geometry;
 /// The timing module.
@@ -40,8 +39,6 @@ mod axis;
 mod hidden;
 //mod hide_system;
 mod named;
-//mod system_desc;
-//mod system_ext;
 
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.
 pub type ArcThreadPool = Arc<rayon::ThreadPool>;
