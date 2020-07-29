@@ -8,11 +8,7 @@ use rayon::{ThreadPool, ThreadPoolBuilder};
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
-use amethyst_core::{
-    dispatcher::{DispatcherBuilder, Stage},
-    ecs::prelude::*,
-    Time,
-};
+use amethyst_core::{ecs::*, Time};
 use amethyst_error::{format_err, Error, ResultExt};
 
 struct App {
@@ -38,7 +34,7 @@ impl App {
         resources.insert::<Option<HotReloadStrategy>>(None);
 
         let scheduler = Schedule::builder()
-            .add_system(build_rendering_system(&mut world, &mut resources))
+            .add_system(build_rendering_system())
             .build();
 
         App {
@@ -101,11 +97,8 @@ impl Format<VertexData> for Ron {
     }
 }
 
-pub fn build_rendering_system(
-    world: &mut World,
-    resources: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("RenderingSystem")
+pub fn build_rendering_system() -> impl Runnable {
+    SystemBuilder::new("RenderingSystem")
         .read_resource::<Time>()
         .read_resource::<Arc<ThreadPool>>()
         .read_resource::<Option<HotReloadStrategy>>()
@@ -151,7 +144,7 @@ impl State {
                     (a, progress)
                 };
 
-                world.insert((), vec![(mesh,)]);
+                world.push((mesh,));
 
                 Some(State::Loading(progress))
             }

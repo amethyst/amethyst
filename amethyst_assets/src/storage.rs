@@ -15,7 +15,7 @@ use specs::{
     storage::{UnprotectedStorage, VecStorage},
 };
 
-use amethyst_core::{ecs::prelude::*, ArcThreadPool, Time};
+use amethyst_core::{ecs::*, ArcThreadPool, Time};
 use amethyst_error::{Error, ResultExt};
 
 #[cfg(feature = "profiler")]
@@ -492,22 +492,36 @@ impl<A: Asset> Drop for AssetStorage<A> {
     }
 }
 
+pub struct AssetProcessorSystemBundle<A: Asset + ProcessableAsset> {
+    _phantom: std::marker::PhantomData<A>,
+}
+
+impl<A: Asset + ProcessableAsset> SystemBundle for AssetProcessorSystemBundle<A> {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut Builder,
+    ) -> Result<(), Error> {
+        resources.insert(AssetStorage::<A>::default());
+
+        builder.with_system(build_asset_processor_system::<A>());
+
+        Ok(())
+    }
+}
+
 /// A default implementation for an asset processing system
 /// which converts data to assets and maintains the asset storage
 /// for `A`.
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
-pub fn build_asset_processor_system<A>(
-    _world: &mut World,
-    resources: &mut Resources,
-) -> Box<dyn Schedulable>
+pub fn build_asset_processor_system<A>() -> impl Runnable
 where
     A: Asset + ProcessableAsset,
 {
-    resources.insert(AssetStorage::<A>::default());
-
-    SystemBuilder::<()>::new("AssetProcessorSystem")
+    SystemBuilder::new("AssetProcessorSystem")
         .write_resource::<AssetStorage<A>>()
         .read_resource::<ArcThreadPool>()
         .read_resource::<Time>()
