@@ -1,8 +1,8 @@
-use crate::{build_events_loop_system, build_window_system_from_config, DisplayConfig};
+use crate::{build_events_loop_system, build_window_system, DisplayConfig, ScreenDimensions};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    ecs::prelude::*,
+    ecs::*,
+    dispatcher::{SystemBundle, Builder},
 };
 use amethyst_error::Error;
 use winit::EventsLoop;
@@ -53,19 +53,27 @@ impl WindowBundle {
 }
 
 impl SystemBundle for WindowBundle {
-    fn build(
-        self,
-        _world: &mut World,
-        _resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
-    ) -> Result<(), Error> {
-        let event_loop = EventsLoop::new();
+    fn load(&mut self, _world: &mut World, resources: &mut Resources, builder: &mut Builder) -> Result<(), Error> {
+        let events_loop = EventsLoop::new();
 
-        builder.add_system(
-            Stage::Begin,
-            build_window_system_from_config(&event_loop, self.config),
-        );
-        builder.add_thread_local_system(build_events_loop_system(event_loop));
+        let window = self.config
+            .clone()
+            .into_window_builder(&events_loop)
+            .build(&events_loop)
+            .unwrap();
+
+        let hidpi = window.get_hidpi_factor();
+        let (width, height) = window
+            .get_inner_size()
+            .expect("Window closed during initialization!")
+            .to_physical(hidpi)
+            .into();
+
+        resources.insert(ScreenDimensions::new(width, height, hidpi));
+        resources.insert(window);
+
+        builder.with_system(build_window_system());
+        builder.with_thread_local(build_events_loop_system(events_loop));
 
         Ok(())
     }
