@@ -501,7 +501,7 @@ impl<A: Asset + ProcessableAsset> SystemBundle for AssetProcessorSystemBundle<A>
         &mut self,
         _world: &mut World,
         resources: &mut Resources,
-        builder: &mut Builder,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(AssetStorage::<A>::default());
 

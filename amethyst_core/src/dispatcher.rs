@@ -1,4 +1,7 @@
-use crate::ecs::{*, systems::{Step, ParallelRunnable, Executor}};
+use crate::ecs::{
+    systems::{Executor, ParallelRunnable, Step},
+    *,
+};
 use amethyst_error::Error;
 
 /// A SystemBundle is a structure that adds multiple systems to the [Dispatcher] and loads/unloads all required resources.
@@ -104,7 +107,8 @@ impl DispatcherBuilder {
     /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
     /// and initialize any required entities or resources.
     pub fn with_bundle<T: SystemBundle + 'static>(&mut self, bundle: T) {
-        self.items.push(DispatcherItem::SystemBundle(Box::new(bundle)));
+        self.items
+            .push(DispatcherItem::SystemBundle(Box::new(bundle)));
     }
 
     /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
@@ -115,30 +119,33 @@ impl DispatcherBuilder {
     }
 
     /// Evaluates all system bundles (recursively). Resulting systems and unpacked bundles are put into [DispatcherData].
-    pub fn load(self, world: &mut World, resources: &mut Resources, data: &mut DispatcherData) -> Result<(), Error> {
+    pub fn load(
+        self,
+        world: &mut World,
+        resources: &mut Resources,
+        data: &mut DispatcherData,
+    ) -> Result<(), Error> {
         for item in self.items {
             match item {
-                DispatcherItem::System(s) => {
-                    data.accumulator.push(s)
-                },
+                DispatcherItem::System(s) => data.accumulator.push(s),
                 DispatcherItem::FlushCmdBuffers => {
                     data.finalize_executor();
                     data.steps.push(Step::FlushCmdBuffers);
-                },
+                }
                 DispatcherItem::ThreadLocalFn(f) => {
                     data.finalize_executor();
                     data.steps.push(Step::ThreadLocalFn(f));
-                },
+                }
                 DispatcherItem::ThreadLocalSystem(s) => {
                     data.finalize_executor();
                     data.steps.push(Step::ThreadLocalSystem(s));
-                },
+                }
                 DispatcherItem::SystemBundle(mut bundle) => {
                     let mut builder = DispatcherBuilder::default();
                     bundle.load(world, resources, &mut builder)?;
                     builder.load(world, resources, data)?;
                     data.bundles.push(bundle);
-                },
+                }
             }
         }
 
@@ -153,16 +160,14 @@ impl DispatcherBuilder {
 
         Ok(Dispatcher {
             schedule: Schedule::from(data.steps),
-            bundles: data.bundles
+            bundles: data.bundles,
         })
     }
 }
 
 impl Default for DispatcherBuilder {
     fn default() -> Self {
-        Self {
-            items: Vec::new(),
-        }
+        Self { items: Vec::new() }
     }
 }
 
@@ -194,11 +199,7 @@ impl Dispatcher {
 
     /// Unloads any resources by calling [SystemBundle::unload] for stored system bundles and returns [DispatcherBuilder]
     /// containing the same bundles.
-    pub fn unload(
-        mut self,
-        world: &mut World,
-        resources: &mut Resources,
-    ) -> Result<(), Error> {
+    pub fn unload(mut self, world: &mut World, resources: &mut Resources) -> Result<(), Error> {
         for bundle in &mut self.bundles {
             bundle.unload(world, resources)?;
         }

@@ -54,7 +54,7 @@ impl SystemBundle for WindowBundle {
         &mut self,
         _world: &mut World,
         resources: &mut Resources,
-        builder: &mut Builder,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         let events_loop = EventsLoop::new();
 

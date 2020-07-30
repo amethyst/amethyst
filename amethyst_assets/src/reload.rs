@@ -29,7 +29,7 @@ impl SystemBundle for HotReloadBundle {
         &mut self,
         _world: &mut World,
         resources: &mut Resources,
-        builder: &mut Builder,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(self.strategy.clone());
         resources.get_mut::<Loader>().unwrap().set_hot_reload(true);
