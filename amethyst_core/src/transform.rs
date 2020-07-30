@@ -12,7 +12,7 @@ impl SystemBundle for TransformBundle {
         &mut self,
         _world: &mut World,
         _resources: &mut Resources,
-        builder: &mut Builder,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         builder.with_system(missing_previous_parent_system::build());
         builder.with_system(parent_update_system::build());

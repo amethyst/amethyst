@@ -1,70 +1,110 @@
-use crate::ecs::{systems::ParallelRunnable, *};
+use crate::ecs::{*, systems::{Step, ParallelRunnable, Executor}};
 use amethyst_error::Error;
-
-pub use crate::ecs::systems::Builder;
 
 /// A SystemBundle is a structure that adds multiple systems to the [Dispatcher] and loads/unloads all required resources.
 pub trait SystemBundle {
-    /// [Dispatcher::load] executes this method for all added system bundles.
+    /// This method is lazily evaluated when [Dispatcher] is built with [DispatcherBuilder::build].
+    /// It is used to add systems or bundles (recursive) into [Dispatcher]. [World] and [Resources] are
+    /// also provided to initialize any entities or resources used by the system.
     fn load(
         &mut self,
         world: &mut World,
         resources: &mut Resources,
-        builder: &mut Builder,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error>;
 
-    /// [Dispatcher::unload] executes this method for all added system bundles.
+    /// This method is called once [Dispatcher] is disposed. It can be used to cleanup entities or resources from ECS.
     fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> {
         Ok(())
     }
 }
 
-/// System bundle that wraps legion's standard system
-struct ParallelRunnableBundle<T: ParallelRunnable + 'static> {
-    system: Option<T>,
-}
-
-impl<T: ParallelRunnable + 'static> SystemBundle for ParallelRunnableBundle<T> {
-    fn load(
-        &mut self,
-        _world: &mut World,
-        _resources: &mut Resources,
-        builder: &mut Builder,
-    ) -> Result<(), Error> {
-        builder.with_system(self.system.take().unwrap());
-        Ok(())
-    }
-}
-
-impl<T> From<T> for ParallelRunnableBundle<T>
-where
-    T: ParallelRunnable + 'static,
-{
-    fn from(system: T) -> Self {
-        Self {
-            system: Some(system),
-        }
-    }
-}
-
-/// Builds [Dispatcher] from provided systems and system bundles.
-pub struct DispatcherBuilder {
+/// This structure is an intermediate step for building [Dispatcher]. When [DispatcherBuilder::build] is called,
+/// all system bundles are evaluated by calling [SystemBundle::load]. This structure is used to split systems
+/// (executable by [Schedule]) and system bundles (used for cleanup with unload).
+#[derive(Default)]
+pub struct DispatcherData {
+    /// Holds all steps that can be executed by [Schedule].
+    steps: Vec<Step>,
+    /// Temporarily holds systems which are later combined into [Executor].
+    accumulator: Vec<Box<dyn ParallelRunnable>>,
+    /// Bundles that can be later used for cleanup by calling [SystemBundle::unload].
     bundles: Vec<Box<dyn SystemBundle>>,
 }
 
-impl Default for DispatcherBuilder {
-    fn default() -> Self {
-        Self {
-            bundles: Vec::with_capacity(20),
+impl DispatcherData {
+    fn finalize_executor(&mut self) {
+        if !self.accumulator.is_empty() {
+            let mut systems = Vec::new();
+            std::mem::swap(&mut self.accumulator, &mut systems);
+            let executor = Executor::new(systems);
+            self.steps.push(Step::Systems(executor));
         }
     }
 }
 
+/// A builder which is used to construct [Dispatcher] from multiple systems and system bundles.
+pub struct DispatcherBuilder {
+    items: Vec<DispatcherItem>,
+}
+
 impl DispatcherBuilder {
+    /// Adds a system to the schedule.
+    pub fn with_system<T: ParallelRunnable + 'static>(&mut self, system: T) {
+        self.items.push(DispatcherItem::System(Box::new(system)));
+    }
+
+    /// Adds a system to the schedule.
+    pub fn add_system<T: ParallelRunnable + 'static>(mut self, system: T) -> Self {
+        self.with_system(system);
+        self
+    }
+
+    /// Waits for executing systems to complete, and the flushes all outstanding system
+    /// command buffers.
+    pub fn with_flush(&mut self) {
+        self.items.push(DispatcherItem::FlushCmdBuffers);
+    }
+
+    /// Waits for executing systems to complete, and the flushes all outstanding system
+    /// command buffers.
+    pub fn add_flush(mut self) -> Self {
+        self.with_flush();
+        self
+    }
+
+    /// Adds a thread local function to the schedule. This function will be executed on the main thread.
+    pub fn with_thread_local_fn<F: FnMut(&mut World, &mut Resources) + 'static>(&mut self, f: F) {
+        self.items.push(DispatcherItem::ThreadLocalFn(
+            Box::new(f) as Box<dyn FnMut(&mut World, &mut Resources)>
+        ));
+    }
+
+    /// Adds a thread local function to the schedule. This function will be executed on the main thread.
+    pub fn add_thread_local_fn<F: FnMut(&mut World, &mut Resources) + 'static>(
+        mut self,
+        f: F,
+    ) -> Self {
+        self.with_thread_local_fn(f);
+        self
+    }
+
+    /// Adds a thread local system to the schedule. This system will be executed on the main thread.
+    pub fn with_thread_local<S: Runnable + 'static>(&mut self, system: S) {
+        let system = Box::new(system) as Box<dyn Runnable>;
+        self.items.push(DispatcherItem::ThreadLocalSystem(system));
+    }
+
+    /// Adds a thread local system to the schedule. This system will be executed on the main thread.
+    pub fn add_thread_local<S: Runnable + 'static>(mut self, system: S) -> Self {
+        self.with_thread_local(system);
+        self
+    }
+
     /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
     /// and initialize any required entities or resources.
     pub fn with_bundle<T: SystemBundle + 'static>(&mut self, bundle: T) {
-        self.bundles.push(Box::new(bundle));
+        self.items.push(DispatcherItem::SystemBundle(Box::new(bundle)));
     }
 
     /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
@@ -74,44 +114,80 @@ impl DispatcherBuilder {
         self
     }
 
-    /// Adds legion system to the [Dispatcher].
-    pub fn with_system<T: ParallelRunnable + 'static>(&mut self, system: T) {
-        self.with_bundle(ParallelRunnableBundle::from(system));
-    }
-
-    /// Adds legion system to the [Dispatcher].
-    pub fn add_system<T: ParallelRunnable + 'static>(mut self, system: T) -> Self {
-        self.with_system(system);
-        self
-    }
-
-    /// Builds [Dispatcher] by calling [SystemBundle::load] on all inserted bundles and constructing a [legion::Schedule].
-    pub fn load(
-        mut self,
-        world: &mut World,
-        resources: &mut Resources,
-    ) -> Result<Dispatcher, Error> {
-        let mut builder = Schedule::builder();
-
-        for bundle in &mut self.bundles {
-            bundle.load(world, resources, &mut builder)?;
+    /// Evaluates all system bundles (recursively). Resulting systems and unpacked bundles are put into [DispatcherData].
+    pub fn load(self, world: &mut World, resources: &mut Resources, data: &mut DispatcherData) -> Result<(), Error> {
+        for item in self.items {
+            match item {
+                DispatcherItem::System(s) => {
+                    data.accumulator.push(s)
+                },
+                DispatcherItem::FlushCmdBuffers => {
+                    data.finalize_executor();
+                    data.steps.push(Step::FlushCmdBuffers);
+                },
+                DispatcherItem::ThreadLocalFn(f) => {
+                    data.finalize_executor();
+                    data.steps.push(Step::ThreadLocalFn(f));
+                },
+                DispatcherItem::ThreadLocalSystem(s) => {
+                    data.finalize_executor();
+                    data.steps.push(Step::ThreadLocalSystem(s));
+                },
+                DispatcherItem::SystemBundle(mut bundle) => {
+                    let mut builder = DispatcherBuilder::default();
+                    bundle.load(world, resources, &mut builder)?;
+                    builder.load(world, resources, data)?;
+                    data.bundles.push(bundle);
+                },
+            }
         }
 
+        Ok(())
+    }
+
+    /// Finalizes the builder into a [Dispatcher]. This also evaluates all system bundles by calling [SystemBundle::load].
+    pub fn build(self, world: &mut World, resources: &mut Resources) -> Result<Dispatcher, Error> {
+        let mut data = DispatcherData::default();
+
+        self.add_flush().load(world, resources, &mut data)?;
+
         Ok(Dispatcher {
-            bundles: self.bundles,
-            schedule: builder.build(),
+            schedule: Schedule::from(data.steps),
+            bundles: data.bundles
         })
     }
 }
 
-/// Dispatcher is created by [DispatcherBuilder] and contains [legion::Schedule] used to execute all systems.
+impl Default for DispatcherBuilder {
+    fn default() -> Self {
+        Self {
+            items: Vec::new(),
+        }
+    }
+}
+
+/// Dispatcher items. This is different from [Step] in that it contains [SystemBundle].
+pub enum DispatcherItem {
+    /// A simple system.
+    System(Box<dyn ParallelRunnable>),
+    /// Flush system command buffers.
+    FlushCmdBuffers,
+    /// A thread local function.
+    ThreadLocalFn(Box<dyn FnMut(&mut World, &mut Resources)>),
+    /// A thread local system.
+    ThreadLocalSystem(Box<dyn Runnable>),
+    /// A system bundle
+    SystemBundle(Box<dyn SystemBundle>),
+}
+
+/// Dispatcher is created by [DispatcherBuilder] and contains [Schedule] used to execute all systems.
 pub struct Dispatcher {
     bundles: Vec<Box<dyn SystemBundle>>,
     schedule: Schedule,
 }
 
 impl Dispatcher {
-    /// Executes systems according to the [legion::Schedule].
+    /// Executes systems according to the [Schedule].
     pub fn execute(&mut self, world: &mut World, resources: &mut Resources) {
         self.schedule.execute(world, resources);
     }
@@ -122,14 +198,12 @@ impl Dispatcher {
         mut self,
         world: &mut World,
         resources: &mut Resources,
-    ) -> Result<DispatcherBuilder, Error> {
+    ) -> Result<(), Error> {
         for bundle in &mut self.bundles {
             bundle.unload(world, resources)?;
         }
 
-        Ok(DispatcherBuilder {
-            bundles: self.bundles,
-        })
+        Ok(())
     }
 }
 
@@ -148,7 +222,7 @@ pub mod tests {
                 &mut self,
                 _world: &mut World,
                 resources: &mut Resources,
-                _builder: &mut Builder,
+                _builder: &mut DispatcherBuilder,
             ) -> Result<(), Error> {
                 resources.insert(MyResource(false));
                 Ok(())
@@ -170,7 +244,7 @@ pub mod tests {
         // Create dispatcher
         let dispatcher = DispatcherBuilder::default()
             .add_bundle(MyBundle)
-            .load(&mut world, &mut resources)
+            .build(&mut world, &mut resources)
             .unwrap();
 
         // Ensure that resources were loaded
@@ -198,7 +272,7 @@ pub mod tests {
 
         let mut dispatcher = DispatcherBuilder::default()
             .add_system(system)
-            .load(&mut world, &mut resources)
+            .build(&mut world, &mut resources)
             .unwrap();
 
         dispatcher.execute(&mut world, &mut resources);
