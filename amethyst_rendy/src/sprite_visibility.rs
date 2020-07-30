@@ -5,7 +5,7 @@ use crate::{
     transparent::Transparent,
 };
 use amethyst_core::{
-    ecs::prelude::*,
+    ecs::*,
     math::{Point3, Vector3},
     transform::LocalToWorld,
     Hidden, HiddenPropagate,
@@ -41,24 +41,19 @@ struct Internals {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-pub fn build_sprite_visibility_sorting_system(
-    world: &mut World,
-    resources: &mut Resources,
-) -> Box<dyn Schedulable> {
-    resources.insert(SpriteVisibility::default());
-
+pub fn build_sprite_visibility_sorting_system() -> impl Runnable {
     let mut transparent_centroids: Vec<Internals> = Vec::default();
 
     SystemBuilder::<()>::new("SpriteVisibilitySortingSystem")
         .read_resource::<ActiveCamera>()
         .write_resource::<SpriteVisibility>()
         .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
-        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
+        .with_query(<(Entity, Read<Camera>, Read<LocalToWorld>)>::query())
         .with_query(
-            <(Read<LocalToWorld>, Read<SpriteRender>, Read<Transparent>)>::query()
+            <(Entity, Read<LocalToWorld>, Read<SpriteRender>, Read<Transparent>)>::query()
                 .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
         )
-        .with_query(<(Read<LocalToWorld>, Read<SpriteRender>)>::query().filter(
+        .with_query(<(Entity, Read<LocalToWorld>, Read<SpriteRender>)>::query().filter(
             !component::<Transparent>() & !component::<Hidden>() & !component::<HiddenPropagate>(),
         ))
         .build(
@@ -75,16 +70,13 @@ pub fn build_sprite_visibility_sorting_system(
 
                 let (camera, camera_transform) = match active_camera.entity.map_or_else(
                     || {
-                        camera_query1
-                            .iter_entities(world)
-                            .nth(0)
-                            .map(|args| args.1)
+                        camera_query1.iter(world).nth(0)
                     },
                     |e| {
                         camera_query2
-                            .iter_entities(world)
-                            .find(|(camera_entity, (_, _))| *camera_entity == e)
-                            .map(|args| args.1)
+                            .iter(world)
+                            .find(|(camera_entity, _, _)| **camera_entity == e)
+                            .map(|(_entity, camera, camera_transform)| (camera, camera_transform))
                     },
                 ) {
                     Some(r) => r,
@@ -96,8 +88,8 @@ pub fn build_sprite_visibility_sorting_system(
 
                 transparent_centroids.extend(
                     transparent_query
-                        .iter_entities(world)
-                        .map(|(e, (t, _, _))| (e, t.transform_point(&origin)))
+                        .iter(world)
+                        .map(|(e, t, _, _)| (*e, t.transform_point(&origin)))
                         // filter entities behind the camera
                         .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
                         .map(|(entity, centroid)| Internals {
@@ -120,8 +112,8 @@ pub fn build_sprite_visibility_sorting_system(
 
                 visibility.visible_unordered.extend(
                     non_transparent_query
-                        .iter_entities(world)
-                        .map(|(e, (t, _))| (e, t.transform_point(&origin)))
+                        .iter(world)
+                        .map(|(e, t, _)| (e, t.transform_point(&origin)))
                         // filter entities behind the camera
                         .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
                         .map(|(entity, _)| entity),

@@ -10,7 +10,7 @@ use crate::{
     util,
 };
 use amethyst_assets::{AssetStorage, Handle, WeakHandle};
-use amethyst_core::ecs::prelude::*;
+use amethyst_core::ecs::*;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;

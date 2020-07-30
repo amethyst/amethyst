@@ -45,8 +45,8 @@
 #![allow(clippy::new_without_default)]
 #![allow(unused_variables, dead_code)]
 
-#[macro_use]
-extern crate amethyst_derive;
+// #[macro_use]
+// extern crate amethyst_derive;
 
 #[macro_use]
 mod macros;
@@ -94,7 +94,7 @@ pub use crate::{
     mtl::{Material, MaterialDefaults},
     plugins::*,
     sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
-    system::{build_mesh_processor, build_rendering_system, build_texture_processor, GraphCreator},
+    system::{build_mesh_processor, build_texture_processor, GraphCreator},
     transparent::Transparent,
     types::{Backend, Mesh, Texture},
     util::{simple_shader_set, ChangeDetection},

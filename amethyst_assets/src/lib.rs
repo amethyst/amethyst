@@ -20,7 +20,7 @@ pub use crate::{
     progress::{Completion, Progress, ProgressCounter, Tracker},
     reload::{build_hot_reload_system, HotReloadBundle, HotReloadStrategy, Reload, SingleFile},
     source::{Directory, Source},
-    storage::{build_asset_processor_system, AssetStorage, Handle, ProcessingState, WeakHandle},
+    storage::{AssetProcessorSystemBundle, AssetStorage, Handle, ProcessingState, WeakHandle},
 };
 
 pub use rayon::ThreadPool;

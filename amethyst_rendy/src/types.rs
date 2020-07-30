@@ -1,5 +1,5 @@
 //! 'Global' rendering type declarations
-use amethyst_assets::{Asset, Handle};
+use amethyst_assets::Asset;
 use serde::{Deserialize, Serialize};
 
 /// Extension of the rendy Backend trait.

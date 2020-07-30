@@ -11,7 +11,10 @@ use crate::{
     util,
 };
 use amethyst_assets::AssetStorage;
-use amethyst_core::{ecs::prelude::*, transform::LocalToWorld, Hidden, HiddenPropagate};
+use amethyst_core::{
+    ecs::{systems::ResourceSet, *},
+    transform::LocalToWorld,
+};
 use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
@@ -129,9 +132,21 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
                     Some((
                         entity,
                         (
-                            world.get_component::<SpriteRender>(*entity)?,
-                            world.get_component::<LocalToWorld>(*entity)?,
-                            world.get_component::<Tint>(*entity),
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<SpriteRender>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<LocalToWorld>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Tint>()
+                                .ok(),
                         ),
                     ))
                 })
@@ -322,9 +337,21 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
                     Some((
                         entity,
                         (
-                            world.get_component::<SpriteRender>(*entity)?,
-                            world.get_component::<LocalToWorld>(*entity)?,
-                            world.get_component::<Tint>(*entity),
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<SpriteRender>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<LocalToWorld>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Tint>()
+                                .ok(),
                         ),
                     ))
                 })

@@ -492,8 +492,17 @@ impl<A: Asset> Drop for AssetStorage<A> {
     }
 }
 
+/// A bundle for asset processor system, which also inserts the required [AssetStorage] resource.
 pub struct AssetProcessorSystemBundle<A: Asset + ProcessableAsset> {
     _phantom: std::marker::PhantomData<A>,
+}
+
+impl<A: Asset + ProcessableAsset> Default for AssetProcessorSystemBundle<A> {
+    fn default() -> Self {
+        Self {
+            _phantom: Default::default()
+        }
+    }
 }
 
 impl<A: Asset + ProcessableAsset> SystemBundle for AssetProcessorSystemBundle<A> {

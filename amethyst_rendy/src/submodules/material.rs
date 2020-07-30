@@ -15,7 +15,7 @@ use crate::{
     util,
 };
 use amethyst_assets::{AssetStorage, Handle, WeakHandle};
-use amethyst_core::ecs::prelude::*;
+use amethyst_core::ecs::*;
 use glsl_layout::*;
 
 #[cfg(feature = "profiler")]

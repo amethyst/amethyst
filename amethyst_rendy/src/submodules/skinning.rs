@@ -16,7 +16,7 @@ use fnv::FnvHashMap;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use amethyst_core::ecs::prelude::*;
+use amethyst_core::ecs::*;
 
 /// Provides per-image abstraction for submitting skinned mesh skeletal information.
 #[derive(Debug)]

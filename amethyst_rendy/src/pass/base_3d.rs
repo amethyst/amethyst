@@ -7,13 +7,12 @@ use crate::{
     skinning::JointTransforms,
     submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
     system::GraphAuxData,
-    transparent::Transparent,
     types::{Backend, Mesh},
     util,
     visibility::Visibility,
 };
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{ecs::prelude::*, transform::LocalToWorld, Hidden, HiddenPropagate};
+use amethyst_core::{ecs::*, transform::LocalToWorld};
 use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
@@ -217,10 +216,26 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                     Some((
                         entity,
                         (
-                            world.get_component::<Handle<Material>>(*entity)?,
-                            world.get_component::<Handle<Mesh>>(*entity)?,
-                            world.get_component::<LocalToWorld>(*entity)?,
-                            world.get_component::<Tint>(*entity),
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Handle<Material>>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Handle<Mesh>>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<LocalToWorld>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Tint>()
+                                .ok(),
                         ),
                     ))
                 })
@@ -253,11 +268,31 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                     Some((
                         entity,
                         (
-                            world.get_component::<Handle<Material>>(*entity)?,
-                            world.get_component::<Handle<Mesh>>(*entity)?,
-                            world.get_component::<LocalToWorld>(*entity)?,
-                            world.get_component::<Tint>(*entity),
-                            world.get_component::<JointTransforms>(*entity)?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Handle<Material>>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Handle<Mesh>>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<LocalToWorld>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Tint>()
+                                .ok(),
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<JointTransforms>()
+                                .ok()?,
                         ),
                     ))
                 })
@@ -566,10 +601,26 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                     Some((
                         entity,
                         (
-                            world.get_component::<Handle<Material>>(*entity)?,
-                            world.get_component::<Handle<Mesh>>(*entity)?,
-                            world.get_component::<LocalToWorld>(*entity)?,
-                            world.get_component::<Tint>(*entity),
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Handle<Material>>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Handle<Mesh>>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<LocalToWorld>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Tint>()
+                                .ok(),
                         ),
                     ))
                 })
@@ -607,11 +658,31 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                     Some((
                         entity,
                         (
-                            world.get_component::<Handle<Material>>(*entity)?,
-                            world.get_component::<Handle<Mesh>>(*entity)?,
-                            world.get_component::<LocalToWorld>(*entity)?,
-                            world.get_component::<Tint>(*entity),
-                            world.get_component::<JointTransforms>(*entity)?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Handle<Material>>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Handle<Mesh>>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<LocalToWorld>()
+                                .ok()?,
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<Tint>()
+                                .ok(),
+                            world
+                                .entry_ref(*entity)
+                                .unwrap()
+                                .into_component::<JointTransforms>()
+                                .ok()?,
                         ),
                     ))
                 })

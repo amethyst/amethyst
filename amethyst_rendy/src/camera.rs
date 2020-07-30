@@ -2,7 +2,7 @@
 
 //use amethyst_assets::PrefabData;
 use amethyst_core::{
-    ecs::prelude::*,
+    ecs::*,
     geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
     transform::LocalToWorld,
@@ -803,7 +803,7 @@ mod tests {
     use super::*;
     use amethyst_core::{
         math::{convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3},
-        transform::components::LocalToWorld,
+        transform::LocalToWorld,
     };
     use ron::{de::from_str, ser::to_string_pretty};
 
