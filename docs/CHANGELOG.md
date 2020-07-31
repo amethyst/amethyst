@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - `amethyst_input::axis::Axis` supports a new variant, `Multiple` ([#2341])
 - Support layer to be set in `UiLabelBuilder` ([#2358])
 - Support line mode to be set in `UiLabelBuilder` and `UiButtonBuilder` ([#2358])
+- `SpriteRender::new` for cleaner instantiation ([#2395])
 
 ### Changed
 
@@ -42,6 +43,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#2264]: https://github.com/amethyst/amethyst/pull/2264
 [#2299]: https://github.com/amethyst/amethyst/pull/2299
 [#2339]: https://github.com/amethyst/amethyst/pull/2339
+[#2395]: https://github.com/amethyst/amethyst/pull/2395
 
 ## [0.15.0] - 2020-03-24
 
