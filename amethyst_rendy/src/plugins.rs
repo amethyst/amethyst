@@ -66,14 +66,17 @@ mod window {
         /// Clear window with specified color every frame.
         /// This function takes linear RGBA. You can convert rgba to linear rgba like so (where your_r, your_g, your_b, and your_g are all u32):
         ///
-        /// ```no_run
+        /// ```
         /// use amethyst::renderer::palette::Srgba;
+        /// use amethyst::renderer::RenderToWindow;
         ///
-        /// let (r, g, b, a) = Srgba::new(your_r / 255., your_g / 255., your_b / 255., your_a)
-        ///  .into_linear()
-        ///  .into_components();
+        /// # fn main() {
+        ///     let (r, g, b, a) = Srgba::new(your_r / 255., your_g / 255., your_b / 255., your_a)
+        ///         .into_linear()
+        ///         .into_components();
         ///
-        /// RenderToWindow{ ... }.with_clear([r, g, b, a]);
+        ///     RenderToWindow::from_config_path(display_config)?.with_clear([r, g, b, a]);
+        /// # }
         /// ```
         pub fn with_clear(mut self, clear: impl Into<ClearColor>) -> Self {
             self.clear = Some(clear.into());
