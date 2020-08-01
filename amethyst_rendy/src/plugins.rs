@@ -70,8 +70,8 @@ mod window {
         /// use amethyst::renderer::palette::Srgba;
         ///
         /// let (r, g, b, a) = Srgba::new(your_r / 255., your_g / 255., your_b / 255., your_a)
-        ///  .into_linear()
-        ///  .into_components();
+        ///     .into_linear()
+        ///     .into_components();
         ///
         /// RenderToWindow{ ... }.with_clear([r, g, b, a]);
         /// ```
