@@ -46,6 +46,17 @@ pub enum UiImage {
         texture_dimensions: [u32; 2],
     },
     /// An image entirely covered by single solid color
+    /// This tuple takes linear RGBA. You can convert rgba to linear rgba like so (where your_r, your_g, your_b, and your_g are all u32):
+    ///
+    /// ```no_run
+    /// use amethyst::renderer::palette::Srgba;
+    ///
+    /// let (r, g, b, a) = Srgba::new(your_r / 255., your_g / 255., your_b / 255., your_a)
+    ///  .into_linear()
+    ///  .into_components();
+    ///  
+    /// UiImage::SolidColor(r, g, b, a);
+    /// ```
     SolidColor([f32; 4]),
 }
 
