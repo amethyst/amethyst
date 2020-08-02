@@ -66,7 +66,10 @@ impl DispatcherBuilder {
     }
 
     /// Adds a thread local function to the schedule. This function will be executed on the main thread.
-    pub fn add_thread_local_fn<F: FnMut(&mut World, &mut Resources) + 'static>(&mut self, f: F) -> &mut Self {
+    pub fn add_thread_local_fn<F: FnMut(&mut World, &mut Resources) + 'static>(
+        &mut self,
+        f: F,
+    ) -> &mut Self {
         self.items.push(DispatcherItem::ThreadLocalFn(
             Box::new(f) as Box<dyn FnMut(&mut World, &mut Resources)>
         ));
@@ -123,7 +126,11 @@ impl DispatcherBuilder {
     }
 
     /// Finalizes the builder into a [Dispatcher]. This also evaluates all system bundles by calling [SystemBundle::load].
-    pub fn build(&mut self, world: &mut World, resources: &mut Resources) -> Result<Dispatcher, Error> {
+    pub fn build(
+        &mut self,
+        world: &mut World,
+        resources: &mut Resources,
+    ) -> Result<Dispatcher, Error> {
         let mut data = DispatcherData::default();
 
         self.flush().load(world, resources, &mut data)?;
@@ -164,6 +171,7 @@ pub struct Dispatcher {
 impl Dispatcher {
     /// Executes systems according to the [Schedule].
     pub fn execute(&mut self, world: &mut World, resources: &mut Resources) {
+        // TODO: use ArcThreadPool from resources to dispatch legion
         self.schedule.execute(world, resources);
     }
 

@@ -4,7 +4,7 @@ use amethyst_input::is_close_requested;
 
 use derivative::Derivative;
 
-use crate::{ecs::prelude::*, GameData, StateEvent};
+use crate::{ecs::*, GameData, StateEvent};
 
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 

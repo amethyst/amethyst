@@ -38,11 +38,11 @@ pub mod transform;
 /// legion ECS reexported with some convenience types.
 pub mod ecs {
     pub use crate::{
-        dispatcher::{DispatcherBuilder, SystemBundle},
+        dispatcher::{Dispatcher, DispatcherBuilder, SystemBundle},
         legion::{
-            *,
-            systems::{Runnable, CommandBuffer},
+            systems::{CommandBuffer, Resource, Runnable},
             world::SubWorld,
+            *,
         },
     };
 }

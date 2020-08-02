@@ -96,7 +96,7 @@ pub use crate::derive::*;
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     error::Error,
-    game_data::{DataDispose, DataInit, GameData, GameDataBuilder},
+    game_data::{DataDispose, DataInit, GameData},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,

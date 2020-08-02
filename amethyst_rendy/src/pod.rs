@@ -6,10 +6,7 @@ use crate::{
     types::Texture,
 };
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{
-    math::Vector4,
-    transform::LocalToWorld,
-};
+use amethyst_core::{math::Vector4, transform::LocalToWorld};
 use glsl_layout::*;
 use rendy::{
     hal::format::Format,

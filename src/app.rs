@@ -20,7 +20,7 @@ use crate::{
         timing::{Stopwatch, Time},
         ArcThreadPool, Named,
     },
-    ecs::{prelude::*, systems::resource::Resource},
+    ecs::*,
     error::Error,
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
@@ -841,7 +841,7 @@ where
             .unwrap()
             .register_reader();
 
-        let data = init.build(&mut self.world, &mut self.resources);
+        let data = init.build(&mut self.world, &mut self.resources)?;
 
         let event_reader_id = self
             .resources
