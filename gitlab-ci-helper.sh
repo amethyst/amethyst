@@ -12,7 +12,7 @@ function build_book {
   INVALIDATION_PATH=$3
 
   # Checkout the ref we were given
-  git checkout -q $REF
+  git checkout -q -f $REF
   HEAD_REV=$(git rev-parse HEAD)
 
   # Check if the existing ref matches
@@ -44,7 +44,7 @@ function build_docs_wasm {
   INVALIDATION_PATH=$3
 
   # Checkout the ref we were given
-  git checkout -q $REF
+  git checkout -q -f $REF
   HEAD_REV=$(git rev-parse HEAD)
 
   # Check if the existing ref matches
@@ -102,7 +102,7 @@ function build_docs {
   INVALIDATION_PATH=$3
 
   # Checkout the ref we were given
-  git checkout -q $REF
+  git checkout -q -f $REF
   HEAD_REV=$(git rev-parse HEAD)
 
   # Check if the existing ref matches
