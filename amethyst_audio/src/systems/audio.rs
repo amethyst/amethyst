@@ -13,7 +13,7 @@ use rodio::SpatialSink;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use amethyst_core::{ecs::prelude::*, math::convert, transform::LocalToWorld};
+use amethyst_core::{ecs::*, math::convert, transform::LocalToWorld};
 
 use crate::{
     components::{AudioEmitter, AudioListener},
@@ -32,11 +32,11 @@ pub struct AudioSystem(Output);
 pub struct SelectedListener(pub Entity);
 
 /// Creates a new audio system.
-pub fn build_audio_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("AudioSystem")
+pub fn build_audio_system() -> impl Runnable {
+    SystemBuilder::new("AudioSystem")
         .read_resource::<Option<Output>>()
         .read_resource::<Option<SelectedListener>>()
-        .with_query(<Read<AudioListener>>::query())
+        .with_query(<(Entity, Read<AudioListener>)>::query())
         .with_query(<(Write<AudioEmitter>, Read<LocalToWorld>)>::query())
         .build(
             move |_commands,
@@ -48,30 +48,24 @@ pub fn build_audio_system(_world: &mut World, _res: &mut Resources) -> Box<dyn S
                 // Process emitters and listener.
                 if let Some((entity, listener)) = select_listener
                     .as_ref()
-                    .and_then(|sl| {
+                    .and_then(|select_listener| {
+                        // Find entity refered by SelectedListener resource
                         world
-                            .get_component::<AudioListener>(sl.0)
-                            .map(|c| (sl.0, (*c).clone()))
+                            .entry_ref(select_listener.0)
+                            .and_then(|entry| entry.into_component::<AudioListener>().ok())
+                            .map(|audio_listener| (select_listener.0, audio_listener))
                     })
                     .or_else(|| {
+                        // Otherwise, select the first available AudioListener
                         q_audio_listener
-                            .iter_entities(world)
+                            .iter(world)
                             .next()
-                            .map(|(e, c)| (e, (*c).clone()))
+                            .map(|(entity, audio_listener)| (*entity, audio_listener))
                     })
                 {
-                    if let Some(listener_transform) = select_listener
-                        .as_ref()
-                        .and_then(|sl| {
-                            world
-                                .get_component::<LocalToWorld>(sl.0)
-                                .map(|c| (*c).clone())
-                        })
-                        .or_else(|| {
-                            world
-                                .get_component::<LocalToWorld>(entity)
-                                .map(|c| (*c).clone())
-                        })
+                    if let Some(listener_transform) = world
+                        .entry_ref(entity)
+                        .and_then(|entry| entry.into_component::<LocalToWorld>().ok())
                     {
                         let listener_transform = listener_transform.0;
                         let left_ear_position: [f32; 3] = {

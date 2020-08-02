@@ -14,7 +14,7 @@ use rodio::{
     Source as RSource,
 };
 
-use amethyst_core::ecs::prelude::Resources;
+use amethyst_core::ecs::*;
 
 use crate::{sink::AudioSink, source::Source, DecoderError};
 
