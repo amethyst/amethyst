@@ -1,11 +1,9 @@
 //! Module for mesh support.
 use crate::{
-    shape::{FromShape, ShapePrefab},
-    types::{Mesh, MeshData},
+    types::{MeshData},
 };
-use amethyst_assets::{AssetStorage, Format, Handle, Loader, ProgressCounter};
+use amethyst_assets::Format;
 use amethyst_error::Error;
-use rendy::mesh::MeshBuilder;
 use serde::{Deserialize, Serialize};
 
 /// 'Obj' mesh format `Format` implementation.

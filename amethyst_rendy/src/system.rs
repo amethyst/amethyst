@@ -17,6 +17,7 @@ use rendy::{
 use thread_profiler::profile_scope;
 
 /// Auxiliary data for render graph.
+#[allow(missing_debug_implementations)]
 pub struct InternalGraphAuxData<'a> {
     /// World
     pub world: &'a World,
@@ -24,11 +25,11 @@ pub struct InternalGraphAuxData<'a> {
     pub resources: &'a Resources,
 }
 
-// FIXME: It is currently impossible to pass types with lifetimes (except for a single reference)
-// to auxiliary data structures. It worked before when passing just `World`, but with legion we
-// also need to pass `Resources`. To do this we have to transmute `InternalGraphAuxData<'a>` into
-// `InternalGraphAuxData<'static>` and ensure that none of the graph nodes store the references.
-// Simplified issue: https://github.com/rust-lang/rust/issues/51567
+/// FIXME: It is currently impossible to pass types with lifetimes (except for a single reference)
+/// to auxiliary data structures. It worked before when passing just `World`, but with legion we
+/// also need to pass `Resources`. To do this we have to transmute `InternalGraphAuxData<'a>` into
+/// `InternalGraphAuxData<'static>` and ensure that none of the graph nodes store the references.
+/// Simplified issue: https://github.com/rust-lang/rust/issues/51567
 pub fn make_graph_aux_data(world: &World, resources: &Resources) -> GraphAuxData {
     unsafe { std::mem::transmute(InternalGraphAuxData { world, resources }) }
 }
@@ -54,9 +55,13 @@ pub trait GraphCreator<B: Backend> {
 }
 
 /// Holds internal state of the rendering system
+#[allow(missing_debug_implementations)]
 pub struct RenderState<B: Backend, G> {
+    /// Renderer graph
     pub graph: Option<Graph<B, GraphAuxData>>,
+    /// Device queue families
     pub families: Families<B>,
+    /// Graph creator
     pub graph_creator: G,
 }
 
@@ -110,6 +115,8 @@ where
         .run(&mut factory, &mut state.families, &aux)
 }
 
+/// Main render function to be executed as thread local system.
+/// This should not be used directly and [RenderingBundle] should be used instead.
 pub fn render<B, G>(world: &mut World, resources: &mut Resources)
 where
     B: Backend,
