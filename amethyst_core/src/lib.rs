@@ -39,7 +39,11 @@ pub mod transform;
 pub mod ecs {
     pub use crate::{
         dispatcher::{DispatcherBuilder, SystemBundle},
-        legion::*,
+        legion::{
+            *,
+            systems::{Runnable, CommandBuffer},
+            world::SubWorld,
+        },
     };
 }
 

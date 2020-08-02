@@ -74,7 +74,7 @@ mod window {
             builder: &mut DispatcherBuilder,
         ) -> Result<(), Error> {
             if let Some(config) = self.config.take() {
-                builder.with_bundle(WindowBundle::from_config(config))
+                builder.add_bundle(WindowBundle::from_config(config));
             }
 
             Ok(())
@@ -170,7 +170,7 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(Visibility::default());
-        builder.with_system(build_visibility_sorting_system());
+        builder.add_system(build_visibility_sorting_system());
         Ok(())
     }
 
@@ -224,7 +224,7 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(SpriteVisibility::default());
-        builder.with_system(build_sprite_visibility_sorting_system());
+        builder.add_system(build_sprite_visibility_sorting_system());
         Ok(())
     }
 

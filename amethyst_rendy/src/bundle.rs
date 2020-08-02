@@ -76,18 +76,18 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(AssetStorage::<Mesh>::default());
-        builder.with_system(build_mesh_processor::<B>());
+        builder.add_system(build_mesh_processor::<B>());
 
         resources.insert(AssetStorage::<Texture>::default());
-        builder.with_system(build_texture_processor::<B>());
+        builder.add_system(build_texture_processor::<B>());
 
-        builder.with_bundle(AssetProcessorSystemBundle::<Material>::default());
-        builder.with_bundle(AssetProcessorSystemBundle::<SpriteSheet>::default());
+        builder.add_bundle(AssetProcessorSystemBundle::<Material>::default());
+        builder.add_bundle(AssetProcessorSystemBundle::<SpriteSheet>::default());
 
         resources.insert(ActiveCamera::default());
 
         // make sure that all renderer-specific systems run after game code
-        //builder.with_flush(); TODO: flush legion here?
+        //builder.flush(); TODO: flush legion here?
 
         for plugin in &mut self.plugins {
             plugin.on_build(world, resources, builder)?;
@@ -113,7 +113,7 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
             graph_creator: self.into_graph_creator(),
         });
 
-        builder.with_thread_local_fn(render::<B, PluggableRenderGraphCreator<B>>);
+        builder.add_thread_local_fn(render::<B, PluggableRenderGraphCreator<B>>);
 
         Ok(())
     }

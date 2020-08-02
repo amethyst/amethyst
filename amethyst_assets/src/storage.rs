@@ -514,7 +514,7 @@ impl<A: Asset + ProcessableAsset> SystemBundle for AssetProcessorSystemBundle<A>
     ) -> Result<(), Error> {
         resources.insert(AssetStorage::<A>::default());
 
-        builder.with_system(build_asset_processor_system::<A>());
+        builder.add_system(build_asset_processor_system::<A>());
 
         Ok(())
     }

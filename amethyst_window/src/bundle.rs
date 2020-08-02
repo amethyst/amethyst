@@ -75,8 +75,9 @@ impl SystemBundle for WindowBundle {
         resources.insert(ScreenDimensions::new(width, height, hidpi));
         resources.insert(window);
 
-        builder.with_system(build_window_system());
-        builder.with_thread_local(build_events_loop_system(events_loop));
+        builder
+            .add_system(build_window_system())
+            .add_thread_local(build_events_loop_system(events_loop));
 
         Ok(())
     }

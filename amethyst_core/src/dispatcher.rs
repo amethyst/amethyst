@@ -53,79 +53,49 @@ pub struct DispatcherBuilder {
 
 impl DispatcherBuilder {
     /// Adds a system to the schedule.
-    pub fn with_system<T: ParallelRunnable + 'static>(&mut self, system: T) {
+    pub fn add_system<T: ParallelRunnable + 'static>(&mut self, system: T) -> &mut Self {
         self.items.push(DispatcherItem::System(Box::new(system)));
-    }
-
-    /// Adds a system to the schedule.
-    pub fn add_system<T: ParallelRunnable + 'static>(mut self, system: T) -> Self {
-        self.with_system(system);
         self
     }
 
     /// Waits for executing systems to complete, and the flushes all outstanding system
     /// command buffers.
-    pub fn with_flush(&mut self) {
+    pub fn flush(&mut self) -> &mut Self {
         self.items.push(DispatcherItem::FlushCmdBuffers);
-    }
-
-    /// Waits for executing systems to complete, and the flushes all outstanding system
-    /// command buffers.
-    pub fn add_flush(mut self) -> Self {
-        self.with_flush();
         self
     }
 
     /// Adds a thread local function to the schedule. This function will be executed on the main thread.
-    pub fn with_thread_local_fn<F: FnMut(&mut World, &mut Resources) + 'static>(&mut self, f: F) {
+    pub fn add_thread_local_fn<F: FnMut(&mut World, &mut Resources) + 'static>(&mut self, f: F) -> &mut Self {
         self.items.push(DispatcherItem::ThreadLocalFn(
             Box::new(f) as Box<dyn FnMut(&mut World, &mut Resources)>
         ));
-    }
-
-    /// Adds a thread local function to the schedule. This function will be executed on the main thread.
-    pub fn add_thread_local_fn<F: FnMut(&mut World, &mut Resources) + 'static>(
-        mut self,
-        f: F,
-    ) -> Self {
-        self.with_thread_local_fn(f);
         self
     }
 
     /// Adds a thread local system to the schedule. This system will be executed on the main thread.
-    pub fn with_thread_local<S: Runnable + 'static>(&mut self, system: S) {
+    pub fn add_thread_local<S: Runnable + 'static>(&mut self, system: S) -> &mut Self {
         let system = Box::new(system) as Box<dyn Runnable>;
         self.items.push(DispatcherItem::ThreadLocalSystem(system));
-    }
-
-    /// Adds a thread local system to the schedule. This system will be executed on the main thread.
-    pub fn add_thread_local<S: Runnable + 'static>(mut self, system: S) -> Self {
-        self.with_thread_local(system);
         self
     }
 
     /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
     /// and initialize any required entities or resources.
-    pub fn with_bundle<T: SystemBundle + 'static>(&mut self, bundle: T) {
+    pub fn add_bundle<T: SystemBundle + 'static>(&mut self, bundle: T) -> &mut Self {
         self.items
             .push(DispatcherItem::SystemBundle(Box::new(bundle)));
-    }
-
-    /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
-    /// and initialize any required entities or resources.
-    pub fn add_bundle<T: SystemBundle + 'static>(mut self, bundle: T) -> Self {
-        self.with_bundle(bundle);
         self
     }
 
     /// Evaluates all system bundles (recursively). Resulting systems and unpacked bundles are put into [DispatcherData].
     pub fn load(
-        self,
+        &mut self,
         world: &mut World,
         resources: &mut Resources,
         data: &mut DispatcherData,
     ) -> Result<(), Error> {
-        for item in self.items {
+        for item in self.items.drain(..) {
             match item {
                 DispatcherItem::System(s) => data.accumulator.push(s),
                 DispatcherItem::FlushCmdBuffers => {
@@ -153,10 +123,10 @@ impl DispatcherBuilder {
     }
 
     /// Finalizes the builder into a [Dispatcher]. This also evaluates all system bundles by calling [SystemBundle::load].
-    pub fn build(self, world: &mut World, resources: &mut Resources) -> Result<Dispatcher, Error> {
+    pub fn build(&mut self, world: &mut World, resources: &mut Resources) -> Result<Dispatcher, Error> {
         let mut data = DispatcherData::default();
 
-        self.add_flush().load(world, resources, &mut data)?;
+        self.flush().load(world, resources, &mut data)?;
 
         Ok(Dispatcher {
             schedule: Schedule::from(data.steps),
