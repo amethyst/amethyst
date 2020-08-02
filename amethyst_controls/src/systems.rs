@@ -4,9 +4,9 @@ use winit::{DeviceEvent, Event, Window, WindowEvent};
 use thread_profiler::profile_scope;
 
 use amethyst_core::{
-    ecs::prelude::*,
+    ecs::*,
     math::{convert, Translation3, Unit, UnitQuaternion, Vector3},
-    shrev::EventChannel,
+    shrev::{EventChannel, ReaderId},
     timing::Time,
     transform::{Rotation, Translation},
 };
@@ -29,28 +29,26 @@ pub fn build_fly_movement_system<T: BindingTypes>(
     horizontal_axis: Option<T::Axis>,
     vertical_axis: Option<T::Axis>,
     longitudinal_axis: Option<T::Axis>,
-) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>> {
-    Box::new(move |_world, _resources| {
-        SystemBuilder::<()>::new("FreeMovementSystem")
-            .read_resource::<Time>()
-            .read_resource::<InputHandler<T>>()
-            .with_query(<(Read<FlyControl>, Write<Translation>)>::query())
-            .build(move |_commands, world, (time, input), controls| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("free_movement_system");
+) -> impl Runnable {
+    SystemBuilder::new("FreeMovementSystem")
+        .read_resource::<Time>()
+        .read_resource::<InputHandler<T>>()
+        .with_query(<(Read<FlyControl>, Write<Translation>)>::query())
+        .build(move |_commands, world, (time, input), controls| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("free_movement_system");
 
-                let x = get_input_axis_simple(&horizontal_axis, &input);
-                let y = get_input_axis_simple(&vertical_axis, &input);
-                let z = get_input_axis_simple(&longitudinal_axis, &input);
+            let x = get_input_axis_simple(&horizontal_axis, &input);
+            let y = get_input_axis_simple(&vertical_axis, &input);
+            let z = get_input_axis_simple(&longitudinal_axis, &input);
 
-                if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
-                    for (_, mut trans) in controls.iter_mut(world) {
-                        let delta_sec = time.delta_seconds();
-                        trans.0 *= Translation3::from(dir.as_ref() * delta_sec * speed);
-                    }
+            if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
+                for (_, trans) in controls.iter_mut(world) {
+                    let delta_sec = time.delta_seconds();
+                    trans.0 *= Translation3::from(dir.as_ref() * delta_sec * speed);
                 }
-            })
-    })
+            }
+        })
 }
 
 /// The system that manages the arc ball movement;
@@ -59,8 +57,8 @@ pub fn build_fly_movement_system<T: BindingTypes>(
 ///
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
 /// `FreeRotationSystem`.
-pub fn build_arc_ball_rotation_system(_: &mut World, _: &mut Resources) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("ArcBallRotationSystem")
+pub fn build_arc_ball_rotation_system() -> impl Runnable {
+    SystemBuilder::new("ArcBallRotationSystem")
         .with_query(<Read<ArcBallControl>>::query())
         .with_query(<(Read<ArcBallControl>, Read<Rotation>, Write<Translation>)>::query())
         .read_component::<Translation>()
@@ -71,17 +69,21 @@ pub fn build_arc_ball_rotation_system(_: &mut World, _: &mut Resources) -> Box<d
             let targets: HashMap<Entity, Translation> = queries
                 .0
                 .iter(world)
-                .map(
-                    |ctrl| match world.get_component::<Translation>(ctrl.target) {
-                        Some(trans) => Some((ctrl.target, *trans.clone())),
+                .map(|ctrl| {
+                    match world
+                        .entry_ref(ctrl.target)
+                        .map(|e| e.into_component::<Translation>().ok())
+                        .flatten()
+                    {
+                        Some(trans) => Some((ctrl.target, *trans)),
                         None => None,
-                    },
-                )
+                    }
+                })
                 .filter(|t| t.is_some())
                 .map(|t| t.unwrap())
                 .collect();
 
-            for (control, rot, mut trans) in queries.1.iter_mut(world) {
+            for (control, rot, trans) in queries.1.iter_mut(world) {
                 let pos_vec = rot.0 * (-Vector3::z() * control.distance);
                 match targets.get(&control.target) {
                     Some(target_trans) => {
@@ -103,58 +105,42 @@ pub fn build_arc_ball_rotation_system(_: &mut World, _: &mut Resources) -> Box<d
 pub fn build_free_rotation_system(
     sensitivity_x: f32,
     sensitivity_y: f32,
-) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>> {
-    Box::new(move |_world, resources| {
-        let mut reader = resources
-            .get_mut::<EventChannel<Event>>()
-            .unwrap()
-            .register_reader();
+    mut reader: ReaderId<Event>,
+) -> impl Runnable {
+    SystemBuilder::new("FreeRotationSystem")
+        .read_resource::<EventChannel<Event>>()
+        .read_resource::<WindowFocus>()
+        .read_resource::<HideCursor>()
+        .with_query(
+            <Write<Rotation>>::query()
+                .filter(component::<FlyControl>() | component::<ArcBallControl>()),
+        )
+        .build(move |_commands, world, (events, focus, hide), controls| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("free_rotation_system");
 
-        SystemBuilder::<()>::new("FreeRotationSystem")
-            .read_resource::<EventChannel<Event>>()
-            .read_resource::<WindowFocus>()
-            .read_resource::<HideCursor>()
-            .with_query(
-                <Write<Rotation>>::query()
-                    .filter(component::<FlyControl>() | component::<ArcBallControl>()),
-            )
-            .build(move |_commands, world, (events, focus, hide), controls| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("free_rotation_system");
-
-                let focused = focus.is_focused;
-                for event in events.read(&mut reader) {
-                    if focused && hide.hide {
-                        if let Event::DeviceEvent { ref event, .. } = *event {
-                            if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
-                                for mut rotation in controls.iter_mut(world) {
-                                    rotation.0 *= UnitQuaternion::from_euler_angles(
-                                        (-(y as f32) * sensitivity_y).to_radians(),
-                                        (-(x as f32) * sensitivity_x).to_radians(),
-                                        0.0,
-                                    );
-                                }
+            let focused = focus.is_focused;
+            for event in events.read(&mut reader) {
+                if focused && hide.hide {
+                    if let Event::DeviceEvent { ref event, .. } = *event {
+                        if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
+                            for rotation in controls.iter_mut(world) {
+                                rotation.0 *= UnitQuaternion::from_euler_angles(
+                                    (-(y as f32) * sensitivity_y).to_radians(),
+                                    (-(x as f32) * sensitivity_x).to_radians(),
+                                    0.0,
+                                );
                             }
                         }
                     }
                 }
-            })
-    })
+            }
+        })
 }
 
 /// Builds the mouse focus update System.
-pub fn build_mouse_focus_update_system(
-    _world: &mut World,
-    resources: &mut Resources,
-) -> Box<dyn Schedulable> {
-    resources.insert(WindowFocus::new());
-
-    let mut reader = resources
-        .get_mut::<EventChannel<Event>>()
-        .unwrap()
-        .register_reader();
-
-    SystemBuilder::<()>::new("MouseFocusUpdateSystem")
+pub fn build_mouse_focus_update_system(mut reader: ReaderId<Event>) -> impl Runnable {
+    SystemBuilder::new("MouseFocusUpdateSystem")
         .read_resource::<EventChannel<Event>>()
         .write_resource::<WindowFocus>()
         .build(move |_commands, _world, (events, focus), ()| {
@@ -173,15 +159,10 @@ pub fn build_mouse_focus_update_system(
 
 /// System which hides the cursor when the window is focused.
 /// Requires the usage MouseFocusUpdateSystem at the same time.
-pub fn build_cursor_hide_system(
-    _world: &mut World,
-    resources: &mut Resources,
-) -> Box<dyn Schedulable> {
+pub fn build_cursor_hide_system() -> impl Runnable {
     let mut is_hidden = true;
 
-    resources.insert(HideCursor::default());
-
-    SystemBuilder::<()>::new("CursorHideSystem")
+    SystemBuilder::new("CursorHideSystem")
         .read_resource::<HideCursor>()
         .read_resource::<WindowFocus>()
         .read_resource::<Window>()
