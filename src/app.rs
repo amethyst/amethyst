@@ -18,13 +18,13 @@ use crate::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
-        ArcThreadPool, Named,
+        ArcThreadPool,
     },
     ecs::*,
     error::Error,
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
-    state_event::{StateEvent, StateEventChannel},
+    state_event::StateEvent,
 };
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
@@ -313,8 +313,8 @@ where
 
         // Read the Trans queue and apply changes.
         {
-            let mut world = &mut self.world;
-            let mut resources = &mut self.resources;
+            let world = &mut self.world;
+            let resources = &mut self.resources;
             let states = &mut self.states;
             let reader = &mut self.trans_reader_id;
 
@@ -423,8 +423,9 @@ where
 pub struct ApplicationBuilder<S, T, E> {
     // config: Config,
     initial_state: S,
-    /// Used by bundles to access the world directly
+    /// Used by bundles to initialize any entities in the world
     pub world: World,
+    /// Used by bundles to initialize any resources in the world
     pub resources: Resources,
     ignore_window_close: bool,
     phantom: PhantomData<(T, E)>,
@@ -534,7 +535,7 @@ where
             })
             .ok();
 
-        let mut world = World::new();
+        let world = World::new();
         let mut resources = Resources::default();
 
         let thread_pool_builder = ThreadPoolBuilder::new();

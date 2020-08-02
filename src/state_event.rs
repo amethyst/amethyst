@@ -2,7 +2,7 @@ use derivative::Derivative;
 use winit::Event;
 
 use crate::{
-    core::shrev::{EventChannel, ReaderId},
+    core::shrev::EventChannel,
     input::{BindingTypes, InputEvent, StringBindings},
 };
 
@@ -22,4 +22,5 @@ where
     Input(InputEvent<T>),
 }
 
+/// Predefined event channel that holds [StateEvent]
 pub type StateEventChannel<T = StringBindings> = EventChannel<StateEvent<T>>;

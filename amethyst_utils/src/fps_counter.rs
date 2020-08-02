@@ -109,8 +109,8 @@ pub struct FpsCounterBundle;
 impl SystemBundle for FpsCounterBundle {
     fn load(
         &mut self,
-        world: &mut World,
-        resources: &mut Resources,
+        _world: &mut World,
+        _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         builder.add_system(build_fps_counter_system());

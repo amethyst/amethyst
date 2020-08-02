@@ -500,7 +500,7 @@ pub struct AssetProcessorSystemBundle<A: Asset + ProcessableAsset> {
 impl<A: Asset + ProcessableAsset> Default for AssetProcessorSystemBundle<A> {
     fn default() -> Self {
         Self {
-            _phantom: Default::default()
+            _phantom: Default::default(),
         }
     }
 }

@@ -1,9 +1,10 @@
 //! Provides a automatically resized orthographic camera.
 
 //use amethyst_assets::PrefabData;
-use amethyst_core::{ecs::*, Axis2};
-use amethyst_derive::PrefabData;
-use amethyst_error::Error;
+use amethyst_core::{
+    ecs::*,
+    Axis2,
+};
 use amethyst_rendy::camera::{Camera, Orthographic};
 use amethyst_window::ScreenDimensions;
 use derive_new::new;

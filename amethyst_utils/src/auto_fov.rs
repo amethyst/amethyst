@@ -235,7 +235,7 @@ pub fn build_auto_fov_system() -> impl Runnable {
             profile_scope!("auto_fov_system");
 
             if last_dimensions != **screen {
-                for (mut camera, auto_fov) in query.iter_mut(&mut *subworld) {
+                for (camera, auto_fov) in query.iter_mut(subworld) {
                     if let Some(perspective) = camera.projection_mut().as_perspective_mut() {
                         let fovy = perspective.fovy();
                         let fovx = auto_fov.new_fovx(screen.aspect_ratio(), fovy);

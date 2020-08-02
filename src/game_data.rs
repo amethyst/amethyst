@@ -1,7 +1,5 @@
-use std::marker::PhantomData;
-
 use crate::{
-    core::{ecs::*, ArcThreadPool},
+    core::ecs::*,
     error::Error,
 };
 
