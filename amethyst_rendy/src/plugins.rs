@@ -64,7 +64,7 @@ mod window {
         }
 
         /// Clear window with specified color every frame.
-        /// This function takes linear RGBA. You can convert rgba to linear rgba like so (where your_r, your_g, your_b, and your_g are all u32):
+        /// This function takes linear RGBA. You can convert rgba to linear rgba like so:
         ///
         /// ```
         /// use amethyst_rendy::palette::Srgba;
