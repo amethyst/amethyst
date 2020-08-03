@@ -164,6 +164,7 @@ pub enum DispatcherItem {
 
 /// Dispatcher is created by [DispatcherBuilder] and contains [Schedule] used to execute all systems.
 pub struct Dispatcher {
+    // Used to execute unload on system bundles once dispatcher is disposed.
     bundles: Vec<Box<dyn SystemBundle>>,
     schedule: Schedule,
 }

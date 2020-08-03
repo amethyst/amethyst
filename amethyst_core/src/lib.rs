@@ -15,7 +15,7 @@ pub use shrev;
 
 use std::sync::Arc;
 
-pub use crate::timing::*;
+pub use crate::{event::EventReader, timing::*};
 
 pub use self::{
     axis::{Axis2, Axis3},
@@ -48,7 +48,7 @@ pub mod ecs {
 }
 
 mod axis;
-//mod event;
+mod event;
 mod hidden;
 //mod hide_system;
 mod named;

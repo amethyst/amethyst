@@ -102,7 +102,7 @@ pub use self::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
         TransEvent,
     },
-    state_event::{StateEvent, StateEventChannel},
+    state_event::{StateEvent, StateEventReader},
 };
 
 /// Convenience alias for use in main functions that uses Amethyst.

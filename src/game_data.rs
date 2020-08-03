@@ -1,7 +1,4 @@
-use crate::{
-    core::ecs::*,
-    error::Error,
-};
+use crate::{core::ecs::*, error::Error};
 
 /// Initialise trait for game data
 pub trait DataInit<T> {

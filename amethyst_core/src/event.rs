@@ -1,32 +1,20 @@
-use crate::ecs::{SystemData, World};
+use crate::ecs::*;
 
 /// Read events generically
-pub trait EventReader<'a> {
-    /// SystemData needed to read the event(s)
-    type SystemData: SystemData<'a>;
+pub trait EventReader {
     /// The event type produced by the reader
     type Event: Clone + Send + Sync + 'static;
 
     /// Read events from the linked `SystemData` and append to the given Vec
-    fn read(&mut self, _: Self::SystemData, _: &mut Vec<Self::Event>);
-
-    /// Read events from `World` and append to the given `Vec`
-    fn read_from_world(&mut self, world: &'a World, events: &mut Vec<Self::Event>) {
-        self.read(world.system_data(), events);
-    }
+    fn read(&mut self, _: &mut Resources, _: &mut Vec<Self::Event>);
 
     /// Setup event reader
-    fn setup(&mut self, res: &mut World) {
-        Self::SystemData::setup(res);
-    }
+    fn setup(&mut self, _res: &mut Resources) {}
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        ecs::Read,
-        shrev::{EventChannel, ReaderId},
-    };
+    use crate::shrev::{EventChannel, ReaderId};
 
     use super::*;
 
@@ -37,12 +25,17 @@ mod tests {
         reader: ReaderId<TestEvent>,
     }
 
-    impl<'a> EventReader<'a> for TestEventReader {
-        type SystemData = Read<'a, EventChannel<TestEvent>>;
+    impl EventReader for TestEventReader {
         type Event = TestEvent;
 
-        fn read(&mut self, events: Self::SystemData, data: &mut Vec<TestEvent>) {
-            data.extend(events.read(&mut self.reader).cloned());
+        fn read(&mut self, resources: &mut Resources, data: &mut Vec<Self::Event>) {
+            data.extend(
+                resources
+                    .get::<EventChannel<Self::Event>>()
+                    .unwrap()
+                    .read(&mut self.reader)
+                    .cloned(),
+            );
         }
     }
 
@@ -53,12 +46,17 @@ mod tests {
         reader: ReaderId<OtherEvent>,
     }
 
-    impl<'a> EventReader<'a> for OtherEventReader {
-        type SystemData = Read<'a, EventChannel<OtherEvent>>;
+    impl EventReader for OtherEventReader {
         type Event = OtherEvent;
 
-        fn read(&mut self, events: Self::SystemData, data: &mut Vec<OtherEvent>) {
-            data.extend(events.read(&mut self.reader).cloned());
+        fn read(&mut self, resources: &mut Resources, data: &mut Vec<Self::Event>) {
+            data.extend(
+                resources
+                    .get::<EventChannel<Self::Event>>()
+                    .unwrap()
+                    .read(&mut self.reader)
+                    .cloned(),
+            );
         }
     }
 
@@ -86,16 +84,26 @@ mod tests {
         other: ReaderId<OtherEvent>,
     }
 
-    impl<'a> EventReader<'a> for AggregateEventReader {
-        type SystemData = (
-            <TestEventReader as EventReader<'a>>::SystemData,
-            <OtherEventReader as EventReader<'a>>::SystemData,
-        );
+    impl EventReader for AggregateEventReader {
         type Event = AggregateEvent;
 
-        fn read(&mut self, system_data: Self::SystemData, data: &mut Vec<AggregateEvent>) {
-            data.extend(system_data.0.read(&mut self.test).cloned().map(Into::into));
-            data.extend(system_data.1.read(&mut self.other).cloned().map(Into::into));
+        fn read(&mut self, resources: &mut Resources, data: &mut Vec<Self::Event>) {
+            data.extend(
+                resources
+                    .get::<EventChannel<TestEvent>>()
+                    .unwrap()
+                    .read(&mut self.test)
+                    .cloned()
+                    .map(Into::into),
+            );
+            data.extend(
+                resources
+                    .get::<EventChannel<OtherEvent>>()
+                    .unwrap()
+                    .read(&mut self.other)
+                    .cloned()
+                    .map(Into::into),
+            );
         }
     }
 }

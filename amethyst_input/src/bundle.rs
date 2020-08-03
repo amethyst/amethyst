@@ -1,6 +1,6 @@
 //! ECS input bundle
 
-use crate::{build_input_system, BindingError, BindingTypes, Bindings, InputEvent, InputHandler};
+use crate::{build_input_system, BindingError, BindingTypes, Bindings, InputHandler};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
@@ -104,7 +104,6 @@ impl<T: BindingTypes> SystemBundle for InputBundle<T> {
         }
 
         resources.insert(handler);
-        resources.insert(EventChannel::<InputEvent<T>>::new());
 
         builder.add_system(build_input_system::<T>(reader));
 
