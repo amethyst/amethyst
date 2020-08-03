@@ -152,20 +152,20 @@ where
     }
 
     /// Loads configuration structure from raw bytes.
-    fn load_bytes(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError>;
-
-    /// Writes a configuration structure to a file in RON format.
-    #[deprecated(note = "use `write_format` instead")]
-    fn write<P: AsRef<Path>>(&self, format: ConfigFormat, path: P) -> Result<(), ConfigError> {
-        self.write_format(ConfigFormat::Ron, path)
-    }
-
+    fn load_bytes_format(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError>;
+    
     /// Writes a configuration structure to a file.
     fn write_format<P: AsRef<Path>>(
         &self,
         format: ConfigFormat,
         path: P,
     ) -> Result<(), ConfigError>;
+    
+    /// Writes a configuration structure to a file.
+    #[deprecated(note = "use `write_format` instead")]
+    fn write<P: AsRef<Path>>(&self, format: ConfigFormat, path: P) -> Result<(), ConfigError> {
+        self.write_format(ConfigFormat::Ron, path)
+    }
 }
 
 impl<T> Config for T
@@ -187,11 +187,11 @@ where
 
         if let Some(extension) = path.extension().and_then(std::ffi::OsStr::to_str) {
             match extension {
-                "ron" => Self::load_bytes(ConfigFormat::Ron, &content),
+                "ron" => Self::load_bytes_format(ConfigFormat::Ron, &content),
                 #[cfg(feature = "json")]
-                "json" => Self::load_bytes(ConfigFormat::Json, &content),
+                "json" => Self::load_bytes_format(ConfigFormat::Json, &content),
                 #[cfg(feature = "binary")]
-                "bin" => Self::load_bytes(ConfigFormat::Binary, &content),
+                "bin" => Self::load_bytes_format(ConfigFormat::Binary, &content),
                 _ => Err(ConfigError::Extension(path.to_path_buf())),
             }
         } else {
@@ -199,7 +199,7 @@ where
         }
     }
 
-    fn load_bytes(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError> {
+    fn load_bytes_format(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError> {
         match format {
             ConfigFormat::Ron => {
                 let mut de = ron::de::Deserializer::from_bytes(bytes)?;
