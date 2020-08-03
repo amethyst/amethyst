@@ -6,7 +6,7 @@ use crate::simulation::{
     timing::{build_network_simulation_time_system, NetworkSimulationTime},
     transport::TransportResource,
 };
-use amethyst_core::{dispatcher::*, ecs::prelude::*, shrev::EventChannel};
+use amethyst_core::{ecs::*, EventChannel};
 use amethyst_error::Error;
 pub use laminar::{Config as LaminarConfig, ErrorKind, Socket as LaminarSocket};
 use laminar::{Packet, SocketEvent};
@@ -27,28 +27,27 @@ impl LaminarNetworkBundle {
 }
 
 impl SystemBundle for LaminarNetworkBundle {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         _world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Begin, build_network_simulation_time_system);
-        builder.add_system(Stage::Begin, build_laminar_network_send_system);
-        builder.add_system(Stage::Begin, build_laminar_network_poll_system);
-        builder.add_system(Stage::Begin, build_laminar_network_recv_system);
+        resources.insert(LaminarSocketResource::new(self.socket.take()));
 
-        resources.insert(LaminarSocketResource::new(self.socket));
+        builder
+            .add_system(build_network_simulation_time_system())
+            .add_system(build_laminar_network_send_system())
+            .add_system(build_laminar_network_poll_system())
+            .add_system(build_laminar_network_recv_system());
+
         Ok(())
     }
 }
 
 /// Creates a new laminar network send system.
-pub fn build_laminar_network_send_system(
-    _world: &mut World,
-    _res: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("LaminarNetworkSendSystem")
+pub fn build_laminar_network_send_system() -> impl Runnable {
+    SystemBuilder::new("LaminarNetworkSendSystem")
         .write_resource::<TransportResource>()
         .write_resource::<LaminarSocketResource>()
         .read_resource::<NetworkSimulationTime>()
@@ -113,11 +112,8 @@ pub fn build_laminar_network_send_system(
 }
 
 /// Creates a new laminar network poll system.
-pub fn build_laminar_network_poll_system(
-    _world: &mut World,
-    _res: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("LaminarNetworkPollSystem")
+pub fn build_laminar_network_poll_system() -> impl Runnable {
+    SystemBuilder::new("LaminarNetworkPollSystem")
         .write_resource::<LaminarSocketResource>()
         .build(move |_commands, _world, socket, _| {
             if let Some(socket) = socket.get_mut() {
@@ -127,11 +123,8 @@ pub fn build_laminar_network_poll_system(
 }
 
 /// Creates a new laminar receive system.
-pub fn build_laminar_network_recv_system(
-    _world: &mut World,
-    _res: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("LaminarNetworkRecvSystem")
+pub fn build_laminar_network_recv_system() -> impl Runnable {
+    SystemBuilder::new("LaminarNetworkRecvSystem")
         .write_resource::<LaminarSocketResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(move |_commands, _world, (socket, event_channel), _| {
