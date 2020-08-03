@@ -22,8 +22,9 @@ where
 {
     /// Events sent by the winit window.
     Window(Event),
-    // /// Events sent by the ui system.
-    // Ui(UiEvent),
+    /// Events sent by the ui system.
+    #[cfg(feature = "ui")]
+    Ui(ui::UiEvent),
     /// Events sent by the input system.
     Input(InputEvent<T>),
 }
