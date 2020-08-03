@@ -95,6 +95,8 @@ impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
             reader,
         ));
 
+        resources.insert(WindowFocus::new());
+
         let reader = resources
             .get_mut::<EventChannel<Event>>()
             .unwrap()

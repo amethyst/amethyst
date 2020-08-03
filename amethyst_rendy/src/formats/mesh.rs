@@ -1,7 +1,5 @@
 //! Module for mesh support.
-use crate::{
-    types::{MeshData},
-};
+use crate::types::MeshData;
 use amethyst_assets::Format;
 use amethyst_error::Error;
 use serde::{Deserialize, Serialize};

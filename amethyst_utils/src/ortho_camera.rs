@@ -1,10 +1,7 @@
 //! Provides a automatically resized orthographic camera.
 
 //use amethyst_assets::PrefabData;
-use amethyst_core::{
-    ecs::*,
-    Axis2,
-};
+use amethyst_core::{ecs::*, Axis2};
 use amethyst_rendy::camera::{Camera, Orthographic};
 use amethyst_window::ScreenDimensions;
 use derive_new::new;
@@ -235,7 +232,7 @@ pub fn build_camera_normalize_system() -> impl Runnable {
 
             let aspect = dimensions.aspect_ratio();
 
-            for (camera, ortho_camera) in query.iter_mut(&mut *subworld) {
+            for (camera, ortho_camera) in query.iter_mut(subworld) {
                 if aspect != ortho_camera.aspect_ratio_cache {
                     ortho_camera.aspect_ratio_cache = aspect;
                     let offsets = ortho_camera.camera_offsets(aspect);

@@ -32,7 +32,7 @@ pub fn build_destroy_at_time_system() -> impl Runnable {
             #[cfg(feature = "profiler")]
             profile_scope!("destroy_at_time_system");
 
-            for (ent, dat) in dat_query.iter_mut(&mut *subworld) {
+            for (ent, dat) in dat_query.iter_mut(subworld) {
                 if time.absolute_time_seconds() > dat.time {
                     commands.remove(*ent);
                 }
@@ -49,7 +49,7 @@ pub fn build_destroy_in_time_system() -> impl Runnable {
             #[cfg(feature = "profiler")]
             profile_scope!("destroy_in_time_system");
 
-            for (ent, mut dit) in dit_query.iter_mut(&mut *subworld) {
+            for (ent, mut dit) in dit_query.iter_mut(subworld) {
                 if dit.timer <= 0f64 {
                     commands.remove(*ent);
                 }

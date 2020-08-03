@@ -48,7 +48,7 @@ pub fn build_window_system() -> impl Runnable {
 /// any `StateEvent::Window` event into it's `handle_event` method.
 pub fn build_events_loop_system(mut events_loop: EventsLoop) -> impl Runnable {
     let mut events = Vec::with_capacity(128);
-    SystemBuilder::<()>::new("EventsLoopSystem")
+    SystemBuilder::new("EventsLoopSystem")
         .write_resource::<EventChannel<Event>>()
         .build(move |_commands, _world, event_channel, _query| {
             events_loop.poll_events(|event| {

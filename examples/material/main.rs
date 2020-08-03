@@ -97,7 +97,7 @@ impl SimpleState for Example {
         }
         .into();
 
-        let mut light1_translation = Translation::new(6.0, 6.0, -6.0);
+        let light1_translation = Translation::new(6.0, 6.0, -6.0);
 
         let light2: Light = PointLight {
             intensity: 5.0,
@@ -106,7 +106,7 @@ impl SimpleState for Example {
         }
         .into();
 
-        let mut light2_translation = Translation::new(6.0, -6.0, -6.0);
+        let light2_translation = Translation::new(6.0, -6.0, -6.0);
 
         world.extend(vec![
             (LocalToWorld::identity(), light1, light1_translation),
@@ -115,8 +115,8 @@ impl SimpleState for Example {
 
         println!("Put camera");
 
-        let mut translation = Translation::new(0.0, 0.0, -12.0);
-        let mut rotation = Rotation::from_euler_angles(0.0, std::f32::consts::PI, 0.0);
+        let translation = Translation::new(0.0, 0.0, -12.0);
+        let rotation = Rotation::from_euler_angles(0.0, std::f32::consts::PI, 0.0);
 
         let (width, height) = {
             let dim = resources.get::<ScreenDimensions>().unwrap();
@@ -139,9 +139,9 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/material/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-    let mut dispatcher = DispatcherBuilder::default();
+    let mut builder = DispatcherBuilder::default();
 
-    dispatcher.add_bundle(TransformBundle).add_bundle(
+    builder.add_bundle(TransformBundle).add_bundle(
         RenderingBundle::<DefaultBackend>::new()
             .with_plugin(
                 RenderToWindow::from_config_path(display_config_path)?
@@ -150,7 +150,7 @@ fn main() -> amethyst::Result<()> {
             .with_plugin(RenderPbr3D::default()),
     );
 
-    let mut game = Application::new(assets_dir, Example, dispatcher)?;
+    let mut game = Application::new(assets_dir, Example, builder)?;
     game.run();
     Ok(())
 }

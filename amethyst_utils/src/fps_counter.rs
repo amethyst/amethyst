@@ -90,7 +90,7 @@ pub fn build_fps_counter_system() -> impl Runnable {
             #[cfg(feature = "profiler")]
             profile_scope!("fps_counter_system");
 
-            if let Some(counter) = query.iter_mut(&mut *subworld).next() {
+            if let Some(counter) = query.iter_mut(subworld).next() {
                 counter.push(duration_to_nanos(time.delta_real_time()));
                 //Enable this to debug performance engine wide.
                 log::debug!(
