@@ -20,12 +20,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-<<<<<<< HEAD
-=======
 #[cfg(feature = "binary")]
 use bincode::Error as BincodeError;
 use ron::{self, de::Error as DeError, ser::Error as SerError};
->>>>>>> 4b91a4e5... Support for JSON & Binary Config Files
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "json")]
 use serde_json::error::Error as SerJsonError;
@@ -147,13 +144,7 @@ where
     }
 
     /// Loads configuration structure from raw bytes.
-    fn load_bytes(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError>;
-
-    /// Writes a configuration structure to a file in RON format.
-    #[deprecated(note = "use `write_format` instead")]
-    fn write<P: AsRef<Path>>(&self, format: ConfigFormat, path: P) -> Result<(), ConfigError> {
-        self.write_format(ConfigFormat::Ron, path)
-    }
+    fn load_bytes_format(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError>;
 
     /// Writes a configuration structure to a file.
     fn write_format<P: AsRef<Path>>(
@@ -161,6 +152,12 @@ where
         format: ConfigFormat,
         path: P,
     ) -> Result<(), ConfigError>;
+
+    /// Writes a configuration structure to a file.
+    #[deprecated(note = "use `write_format` instead")]
+    fn write<P: AsRef<Path>>(&self, format: ConfigFormat, path: P) -> Result<(), ConfigError> {
+        self.write_format(ConfigFormat::Ron, path)
+    }
 }
 
 impl<T> Config for T
@@ -188,11 +185,11 @@ where
 
         if let Some(extension) = path.extension().and_then(std::ffi::OsStr::to_str) {
             match extension {
-                "ron" => Self::load_bytes(ConfigFormat::Ron, &content),
+                "ron" => Self::load_bytes_format(ConfigFormat::Ron, &content),
                 #[cfg(feature = "json")]
-                "json" => Self::load_bytes(ConfigFormat::Json, &content),
+                "json" => Self::load_bytes_format(ConfigFormat::Json, &content),
                 #[cfg(feature = "binary")]
-                "bin" => Self::load_bytes(ConfigFormat::Binary, &content),
+                "bin" => Self::load_bytes_format(ConfigFormat::Binary, &content),
                 _ => Err(ConfigError::Extension(path.to_path_buf())),
             }
         } else {
@@ -200,34 +197,15 @@ where
         }
     }
 
-    // fn load_bytes(bytes: &[u8]) -> Result<Self, ConfigError> {
-    //     ron::de::Deserializer::from_bytes(bytes)
-    //         .and_then(|mut de| {
-    //             let val = T::deserialize(&mut de)?;
-    //             de.end()?;
-    //             Ok(val)
-    //         })
-    //         .map_err(ConfigError::Parser)
-    // }
-
-    // fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
-    //     use std::{fs::File, io::Write};
-
-    //     use ron::ser::to_string_pretty;
-
-    //     let s = to_string_pretty(self, Default::default()).map_err(ConfigError::Serializer)?;
-    //     File::create(path)?.write_all(s.as_bytes())?;
-    fn load_bytes(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError> {
+    fn load_bytes_format(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError> {
         match format {
-            ConfigFormat::Ron => {
-                ron::de::Deserializer::from_bytes(bytes)
-                    .and_then(|mut de| {
-                let val = T::deserialize(&mut de)?;
-                de.end()?;
-                Ok(val)
-            })
-            .map_err(ConfigError::Parser)
-            }
+            ConfigFormat::Ron => ron::de::Deserializer::from_bytes(bytes)
+                .and_then(|mut de| {
+                    let val = T::deserialize(&mut de)?;
+                    de.end()?;
+                    Ok(val)
+                })
+                .map_err(ConfigError::Parser),
             #[cfg(feature = "json")]
             ConfigFormat::Json => {
                 let mut de = serde_json::de::Deserializer::from_slice(bytes);
