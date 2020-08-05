@@ -122,12 +122,10 @@ pub fn build() -> impl Runnable {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::missing_previous_parent_system;
+    use crate::transform::missing_previous_parent_system;
 
     #[test]
     fn correct_children() {
-        let _ = env_logger::builder().is_test(true).try_init();
-
         let mut resources = Resources::default();
         let mut world = Universe::new().create_world();
 
@@ -138,19 +136,8 @@ mod test {
             .build();
 
         // Add parent entities
-        let parent = world.push((Translation::identity(), LocalToWorld::identity()));
-        let children = world.extend(vec![
-            (
-                Translation::identity(),
-                LocalToParent::identity(),
-                LocalToWorld::identity(),
-            ),
-            (
-                Translation::identity(),
-                LocalToParent::identity(),
-                LocalToWorld::identity(),
-            ),
-        ]);
+        let parent = world.push((Transform::default(),));
+        let children = world.extend(vec![(Transform::default(),), (Transform::default(),)]);
         let (e1, e2) = (children[0], children[1]);
 
         // Parent `e1` and `e2` to `parent`.

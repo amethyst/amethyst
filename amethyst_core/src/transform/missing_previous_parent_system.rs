@@ -26,25 +26,14 @@ mod test {
 
     #[test]
     fn previous_parent_added() {
-        let _ = env_logger::builder().is_test(true).try_init();
-
         let mut resources = Resources::default();
         let mut world = Universe::new().create_world();
 
         let mut schedule = Schedule::builder().add_system(build()).build();
 
-        let e1 = world.push((
-            Translation::identity(),
-            LocalToParent::identity(),
-            LocalToWorld::identity(),
-        ));
+        let e1 = world.push((Transform::default(),));
 
-        let e2 = world.push((
-            Translation::identity(),
-            LocalToParent::identity(),
-            LocalToWorld::identity(),
-            Parent(e1),
-        ));
+        let e2 = world.push((Transform::default(), Parent(e1)));
 
         schedule.execute(&mut world, &mut resources);
 

@@ -28,6 +28,9 @@ pub struct Transform {
     /// The global transformation matrix.
     #[get = "pub"]
     pub(crate) global_matrix: Matrix4<f32>,
+    /// The parent transformation matrix.
+    #[get = "pub"]
+    pub(crate) parent_matrix: Matrix4<f32>,
 }
 
 impl Transform {
@@ -55,6 +58,7 @@ impl Transform {
             isometry: Isometry3::from_parts(na::convert(position), na::convert(rotation)),
             scale: na::convert(scale),
             global_matrix: na::one(),
+            parent_matrix: na::one(),
         }
     }
 
@@ -566,6 +570,7 @@ impl Default for Transform {
             isometry: Isometry3::identity(),
             scale: Vector3::from_element(1.0),
             global_matrix: na::one(),
+            parent_matrix: na::one(),
         }
     }
 }
@@ -665,7 +670,7 @@ mod tests {
     use crate::{
         approx::*,
         math::{UnitQuaternion, Vector3},
-        Transform,
+        transform::Transform,
     };
 
     /// Sanity test for concat operation
