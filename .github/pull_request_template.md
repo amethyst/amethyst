@@ -19,13 +19,14 @@ Add a brief summary of your PR here, between one sentence and two paragraphs
 
 By placing an x in the boxes I certify that I have:
 
-- [ ] Updated the content of the book if this PR would make the book outdated.
-- [ ] Added a changelog entry if this will impact users, or modified more than 5 lines of Rust that wasn't a doc comment.
 - [ ] Added unit tests for new code added in this PR.
 - [ ] Acknowledged that by making this pull request I release this code under an MIT/Apache 2.0 dual licensing scheme.
+- [ ] Added a changelog entry if this will impact users, or modified more than 5 lines of Rust that wasn't a doc comment.
+- [ ] Updated the content of the book if this PR would make the book outdated.
 
 If this modified or created any rs files:
 
 - [ ] Ran `cargo +stable fmt --all`
-- [ ] Ran `cargo clippy --all --features "empty"`
+- [ ] Ran `cargo clippy --all --features "empty"` (may require `cargo clean` before)
+- [ ] Ran `cargo build --features "empty"`
 - [ ] Ran `cargo test --all --features "empty"`

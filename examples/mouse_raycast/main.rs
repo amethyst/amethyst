@@ -1,4 +1,4 @@
-//! Demonstrates how to perform raycasts with the camera to project to the mouse to world coordinates.
+//! Demonstrates how to perform raycasts with the camera to project from mouse to world coordinates.
 //!
 //!
 
@@ -74,7 +74,7 @@ impl<'s> System<'s> for MouseRaycastSystem {
                 .or_else(|| camera_join.next())
             {
                 // Project a ray from the camera to the 0z axis
-                let ray = camera.projection().screen_ray(
+                let ray = camera.screen_ray(
                     Point2::new(mouse_position.0, mouse_position.1),
                     Vector2::new(screen_dimensions.width(), screen_dimensions.height()),
                     camera_transform,
@@ -259,7 +259,7 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/mouse_raycast/assets/");
     let display_config_path = app_root.join("examples/mouse_raycast/config/display.ron");
 
     let game_data = GameDataBuilder::default()

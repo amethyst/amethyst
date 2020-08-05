@@ -1,6 +1,6 @@
 use crate::{
-    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, Stretch, UiText,
-    UiTransform, WidgetId, Widgets,
+    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode,
+    Stretch, UiText, UiTransform, WidgetId, Widgets,
 };
 
 use amethyst_assets::{AssetStorage, Loader};
@@ -55,6 +55,8 @@ where
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
+    line_mode: LineMode,
+    align: Anchor,
     parent: Option<Entity>,
 }
 
@@ -76,6 +78,8 @@ where
             text_color: DEFAULT_TXT_COLOR,
             font: None,
             font_size: 32.,
+            line_mode: LineMode::Single,
+            align: Anchor::Middle,
             parent: None,
         }
     }
@@ -115,6 +119,11 @@ where
     pub fn with_position(mut self, x: f32, y: f32) -> Self {
         self.x = x;
         self.y = y;
+        self
+    }
+    /// Provide a Z position, i.e UI layer
+    pub fn with_layer(mut self, z: f32) -> Self {
+        self.z = z;
         self
     }
 
@@ -157,6 +166,18 @@ where
     /// Set font size
     pub fn with_font_size(mut self, size: f32) -> Self {
         self.font_size = size;
+        self
+    }
+
+    /// Set text line mode
+    pub fn with_line_mode(mut self, line_mode: LineMode) -> Self {
+        self.line_mode = line_mode;
+        self
+    }
+
+    /// Set text align
+    pub fn with_align(mut self, align: Anchor) -> Self {
+        self.align = align;
         self
     }
 
@@ -207,7 +228,14 @@ where
         res.text
             .insert(
                 text_entity,
-                UiText::new(font_handle, self.text, self.text_color, self.font_size),
+                UiText::new(
+                    font_handle,
+                    self.text,
+                    self.text_color,
+                    self.font_size,
+                    self.line_mode,
+                    self.align,
+                ),
             )
             .expect("Unreachable: Inserting newly created entity");
 

@@ -11,7 +11,7 @@ use amethyst::{
     input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
     prelude::*,
     renderer::{
-        camera::{ActiveCamera, Camera, Projection},
+        camera::{ActiveCamera, Camera},
         debug_drawing::DebugLinesComponent,
         formats::texture::ImageFormat,
         palette::Srgba,
@@ -82,12 +82,12 @@ impl<'s> System<'s> for DrawSelectionSystem {
                             camera_transform.translation().z,
                         );
 
-                        let mut start_world = camera.projection().screen_to_world_point(
+                        let mut start_world = camera.screen_to_world_point(
                             self.start_coordinate.expect("Wut?"),
                             screen_dimensions,
                             camera_transform,
                         );
-                        let mut end_world = camera.projection().screen_to_world_point(
+                        let mut end_world = camera.screen_to_world_point(
                             end_coordinate,
                             screen_dimensions,
                             camera_transform,
@@ -108,10 +108,14 @@ impl<'s> System<'s> for DrawSelectionSystem {
 
 pub struct CameraSwitchSystem {
     pressed: bool,
+    perspective: bool,
 }
 impl Default for CameraSwitchSystem {
     fn default() -> Self {
-        Self { pressed: false }
+        Self {
+            pressed: false,
+            perspective: false,
+        }
     }
 }
 impl<'s> System<'s> for CameraSwitchSystem {
@@ -138,7 +142,7 @@ impl<'s> System<'s> for CameraSwitchSystem {
 
             // Lazily delete the old camera
             let mut camera_join = (&entities, &cameras, &transforms, &parents).join();
-            let (old_camera_entity, old_camera, _, old_parent) = active_camera
+            let (old_camera_entity, _, _, old_parent) = active_camera
                 .entity
                 .and_then(|a| camera_join.get(a, &entities))
                 .or_else(|| camera_join.next())
@@ -146,16 +150,18 @@ impl<'s> System<'s> for CameraSwitchSystem {
             let old_camera_entity = old_camera_entity;
 
             let new_parent = old_parent.entity;
-            let (new_camera, new_position) = match old_camera.projection() {
-                Projection::Orthographic(_) => (
+
+            self.perspective = !self.perspective;
+            let (new_camera, new_position) = if self.perspective {
+                (
                     Camera::standard_3d(dimensions.width(), dimensions.height()),
                     Vector3::new(0.0, 0.0, 500.1),
-                ),
-                Projection::Perspective(_) => (
+                )
+            } else {
+                (
                     Camera::standard_2d(dimensions.width(), dimensions.height()),
                     Vector3::new(0.0, 0.0, 1.1),
-                ),
-                Projection::CustomMatrix(_) => unimplemented!(),
+                )
             };
 
             lazy.exec_mut(move |w| {
@@ -408,9 +414,9 @@ impl SimpleState for Example {
 }
 
 fn main() -> amethyst::Result<()> {
-    amethyst::Logger::from_config(Default::default())
-        .level_for("amethyst_tiles", log::LevelFilter::Warn)
-        .start();
+    // amethyst::Logger::from_config(Default::default())
+    //     .level_for("amethyst_tiles", log::LevelFilter::Warn)
+    //     .start();
 
     let app_root = application_root_dir()?;
     let assets_directory = app_root.join("examples/assets");

@@ -426,7 +426,7 @@ First, let's declare the function and load the sprite sheet's image data.
 #     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
-#         camera::{Camera, Projection},
+#         camera::Camera,
 #         formats::texture::ImageFormat,
 #         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
 #         Texture,
@@ -514,7 +514,7 @@ Finally, we load the file containing the position of each sprite on the sheet.
 #     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
-#         camera::{Camera, Projection},
+#         camera::Camera,
 #         formats::texture::ImageFormat,
 #         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
 #         Texture,

@@ -1,0 +1,52 @@
+#![enable(implicit_some)]
+/*!
+    @import /amethyst_assets/src/prefab/mod.rs#Prefab
+    @import ../../sphere/main.rs#MyPrefabData
+    Prefab<MyPrefabData>
+*/
+
+Prefab (
+    entities: [
+        (
+            data: (
+                graphics: (
+                    mesh: Shape((shape: Sphere(32, 32))),
+                    material: (
+                        albedo: Generate(Srgba(0.0, 0.0, 1.0, 1.0)),
+                    ),
+                ),
+                transform: (),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (2.0, 2.0, -2.0),
+                    rotation: (0.0, 1.0, 0.0, 0.0),
+                ),
+                light: (
+                    ambient_color: (Srgba(0.01, 0.01, 0.01, 1.0)),
+                    light: Point((
+                        intensity: 3.0,
+                        color: (1.0, 1.0, 1.0),
+                        radius: 5.0,
+                    )),
+                ),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (0.0, 0.0, -4.0),
+                    rotation: (0.0, 1.0, 0.0, 0.0),
+                ),
+                camera: Perspective(
+                    aspect: 1.3,
+                    fovy: 1.0471975512,
+                    znear: 0.1,
+                    zfar: 2000.0,
+                ),
+            ),
+        ),
+    ],
+)

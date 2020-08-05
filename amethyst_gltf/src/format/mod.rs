@@ -13,7 +13,7 @@ use amethyst_core::{
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};
-use amethyst_rendy::camera::CameraPrefab;
+use amethyst_rendy::{camera::CameraPrefab, light::LightPrefab};
 
 use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, Named};
 
@@ -242,14 +242,13 @@ fn load_node(
                 })?,
                 fovy: proj.yfov(),
                 znear: proj.znear(),
-                zfar: proj.zfar().ok_or_else(|| {
-                    format_err!(
-                        "Camera {} is perspective projection, but has no far plane",
-                        camera.index()
-                    )
-                })?,
             },
         });
+    }
+
+    // Load lights
+    if let Some(light) = node.light() {
+        prefab.data_or_default(entity_index).light = Some(LightPrefab::from(light));
     }
 
     // check for skinning

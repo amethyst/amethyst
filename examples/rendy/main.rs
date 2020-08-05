@@ -582,7 +582,7 @@ fn main() -> amethyst::Result<()> {
         .join("rendy")
         .join("config")
         .join("display.ron");
-    let assets_dir = app_root.join("examples").join("assets");
+    let assets_dir = app_root.join("examples").join("rendy").join("assets");
 
     let mut bindings = Bindings::new();
     bindings.insert_axis(

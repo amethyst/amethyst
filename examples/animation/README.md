@@ -14,4 +14,4 @@ Animates a sphere using a custom-built animation sampler sequence. Keybindings:
 * `Right` - step to the next animation keyframe
 * `Left` - step to the previous animation keyframe
 
-![animation example screenshot](../assets/img/animation.png)
+![animation example screenshot](./screenshot.png)

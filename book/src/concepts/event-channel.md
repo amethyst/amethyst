@@ -106,24 +106,6 @@ It is the `ReaderId` that needs to be mutable to keep track of where your last r
 When using the event channel, we usually re-use the same pattern over and over again to maximize parallelism.
 It goes as follow:
 
-Create the event channel and add it to the world during `State` creation:
-
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::{ecs::{World, WorldExt}, shrev::EventChannel};
-# #[derive(Debug)]
-# pub enum MyEvent {
-#   A,
-#   B,
-# }
-# fn main() {
-#   let mut world = World::new();
-world.insert(EventChannel::<MyEvent>::new());
-# }
-```
-
-_Note: You can also derive `Default`, this way you don't have to manually create your resource and add it. Resources implementing `Default` are automatically added to `Resources` when a `System` uses them (`Read` or `Write` in `SystemData`)._
-
 In the **producer** `System`, get a mutable reference to your resource:
 
 ```rust,edition2018,no_run,noplaypen

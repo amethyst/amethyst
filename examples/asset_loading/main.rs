@@ -9,7 +9,7 @@ use amethyst::{
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        camera::{Camera, Projection},
+        camera::Camera,
         light::{Light, PointLight},
         mtl::{Material, MaterialDefaults},
         palette::{Srgb, Srgba},
@@ -118,7 +118,7 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/asset_loading/assets");
 
     let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
@@ -146,12 +146,7 @@ fn initialise_camera(world: &mut World) {
 
     world
         .create_entity()
-        .with(Camera::from(Projection::perspective(
-            1.0,
-            std::f32::consts::FRAC_PI_3,
-            0.1,
-            1000.0,
-        )))
+        .with(Camera::perspective(1.0, std::f32::consts::FRAC_PI_3, 0.1))
         .with(transform)
         .build();
 }

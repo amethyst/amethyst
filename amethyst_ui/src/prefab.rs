@@ -221,10 +221,10 @@ pub struct UiTextData {
     /// Should the text be shown as dots instead of the proper characters?
     #[serde(default)]
     pub password: bool,
-    /// Where should the text be aligned from. Relative to its own UiTransform's area.
-    pub align: Option<Anchor>,
     /// How should the text behave with line breaks.
     pub line_mode: Option<LineMode>,
+    /// Where should the text be aligned from. Relative to its own UiTransform's area.
+    pub align: Option<Anchor>,
     /// Optionally make the text editable
     #[serde(default)]
     pub editable: Option<TextEditingPrefab>,
@@ -245,8 +245,8 @@ impl Debug for UiTextData {
             .field("font", &font)
             .field("color", &self.color)
             .field("password", &self.password)
-            .field("align", &self.align)
             .field("line_mode", &self.line_mode)
+            .field("align", &self.align)
             .field("editable", &self.editable)
             .finish()
     }
@@ -298,16 +298,25 @@ impl<'a> PrefabData<'a> for UiTextData {
             .as_ref()
             .ok_or_else(|| format_err!("did not load sub assets"))?
             .add_to_entity(entity, fonts, &[], &[])?;
-        let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
-        ui_text.password = self.password;
 
+        let mut ui_text_align = Anchor::Middle;
         if let Some(align) = self.align {
-            ui_text.align = align;
+            ui_text_align = align;
+        }
+        let mut ui_text_line_mode = LineMode::Single;
+        if let Some(line_mode) = self.line_mode {
+            ui_text_line_mode = line_mode;
         }
 
-        if let Some(line_mode) = self.line_mode {
-            ui_text.line_mode = line_mode;
-        }
+        let mut ui_text = UiText::new(
+            font_handle,
+            self.text.clone(),
+            self.color,
+            self.font_size,
+            ui_text_line_mode,
+            ui_text_align,
+        );
+        ui_text.password = self.password;
 
         texts.insert(entity, ui_text)?;
         if let Some(ref editing) = self.editable {

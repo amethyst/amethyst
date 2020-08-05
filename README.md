@@ -1,9 +1,7 @@
-<img align="left" width="64px" src="book/src/images/amethyst_emblem.png" />
-
-# Amethyst
+<img src="docs/splash.png" alt="Amethyst Game Engine" />
 
 [![Build Status][s1]][jc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li]
-[![Join us on Discord][s4]][di]  [![Community forum][s5]][ds] [![Reddit][s7]][rd]
+[![Join us on Discord][s4]][di] [![Community forum][s5]][ds] [![Reddit][s7]][rd]
 [![Code coverage][s8]][cc] ![Lines of Code][s6]
 
 [s1]: https://jenkins.amethyst-engine.org/job/amethyst/job/master/badge/icon
@@ -32,10 +30,10 @@ Amethyst is a data-driven and data-oriented game engine aiming to be fast and as
 
 These principles are what makes Amethyst unique and competitive in the world of game engines:
 
-* Massively parallel architecture.
-* Powered by a correct [Entity Component System][ECS] model.
-* Rapid prototyping with [RON][ron] files for prefabs and an abstract scripting API.
-* Strong focus on encouraging reusability and clean interfaces.
+- Massively parallel architecture.
+- Powered by a correct [Entity Component System][ecs] model.
+- Rapid prototyping with [RON][ron] files for prefabs and an abstract scripting API.
+- Strong focus on encouraging reusability and clean interfaces.
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
 [ron]: https://github.com/ron-rs/ron
@@ -64,12 +62,12 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 ## Navigation
 
-* [**Link to the book (master)**][bkm]
-* [**Link to the book (0.15)**][bkstable]
-* [**Link to the book (0.14)**][bks14]
-* [**Link to the examples (master)**][exm]
-* [**Link to the examples (0.15)**][ex15]
-* [**Link to the examples (0.14)**][ex14]
+- [**Link to the book (master)**][bkm]
+- [**Link to the book (0.15)**][bkstable]
+- [**Link to the book (0.14)**][bks14]
+- [**Link to the examples (master)**][exm]
+- [**Link to the examples (0.15)**][ex15]
+- [**Link to the examples (0.14)**][ex14]
 
 ## Usage
 
@@ -254,6 +252,7 @@ Thank you to all our backers! 🙏 [Become a backer](https://amethyst.rs/donate)
 ## Sponsors
 
 Amethyst is supported by:
+
 <p>
   <a href="https://www.digitalocean.com?utm_medium=opensource&utm_source=amethyst/">
     <img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" width="201px">

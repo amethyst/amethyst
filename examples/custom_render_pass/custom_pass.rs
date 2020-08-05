@@ -31,13 +31,13 @@ lazy_static::lazy_static! {
     // These uses the precompiled shaders.
     // These can be obtained using glslc.exe in the vulkan sdk.
     static ref VERTEX: SpirvShader = SpirvShader::from_bytes(
-        include_bytes!("../assets/shaders/compiled/vertex/custom.vert.spv"),
+        include_bytes!("./assets/shaders/compiled/vertex/custom.vert.spv"),
         ShaderStageFlags::VERTEX,
         "main",
     ).unwrap();
 
     static ref FRAGMENT: SpirvShader = SpirvShader::from_bytes(
-        include_bytes!("../assets/shaders/compiled/fragment/custom.frag.spv"),
+        include_bytes!("./assets/shaders/compiled/fragment/custom.frag.spv"),
         ShaderStageFlags::FRAGMENT,
         "main",
     ).unwrap();

@@ -90,7 +90,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/custom_render_pass/config/display.ron");
-    let assets_dir = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/custom_render_pass/assets/");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<StringBindings>::new())?
