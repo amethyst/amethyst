@@ -194,3 +194,48 @@ pub struct LightPrefab {
     light: Option<Light>,
     ambient_color: Option<AmbientColor>,
 }
+
+use gltf::khr_lights_punctual;
+use gltf::khr_lights_punctual::Kind;
+
+/// Import a gltf light into a LightPrefab
+impl From<khr_lights_punctual::Light<'_>> for LightPrefab {
+    fn from(light: khr_lights_punctual::Light<'_>) -> Self {
+        let color = {
+            let parts = light.color();
+            palette::Srgb::new(parts[0], parts[1], parts[2])
+        };
+        let intensity = light.intensity();
+        let range = light.range();
+        LightPrefab {
+            light: Some(match light.kind() {
+                Kind::Directional => {
+                    let mut directional = DirectionalLight::default();
+                    directional.color = color;
+                    directional.intensity = intensity;
+                    Light::Directional(directional)
+                }
+                Kind::Point => {
+                    let mut point = PointLight::default();
+                    point.color = color;
+                    point.intensity = intensity;
+                    if let Some(r) = range {
+                        point.radius = r;
+                    }
+                    Light::Point(point)
+                }
+                Kind::Spot {
+                    inner_cone_angle,
+                    outer_cone_angle,
+                } => {
+                    let mut spot = SpotLight::default();
+                    spot.angle = outer_cone_angle;
+                    spot.color = color;
+                    spot.intensity = intensity;
+                    Light::Spot(spot)
+                }
+            }),
+            ambient_color: None,
+        }
+    }
+}
