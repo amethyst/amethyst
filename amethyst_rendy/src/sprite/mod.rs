@@ -183,14 +183,24 @@ impl From<&TextureCoordinates> for [f32; 4] {
 
 /// Information for rendering a sprite.
 ///
-/// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
-/// render textures to quads. This struct carries the information necessary for the draw2dflat pass.
+/// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler
+/// set of shaders to render textures to quads. This struct carries the
+/// information necessary for the draw2dflat pass.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpriteRender {
     /// Handle to the sprite sheet of the sprite
     pub sprite_sheet: Handle<SpriteSheet>,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
+}
+
+impl SpriteRender {
+    pub fn new(sprite_sheet: Handle<SpriteSheet>, sprite_number: usize) -> SpriteRender {
+        SpriteRender {
+            sprite_sheet,
+            sprite_number,
+        }
+    }
 }
 
 impl Component for SpriteRender {
