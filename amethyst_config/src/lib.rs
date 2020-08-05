@@ -161,9 +161,9 @@ where
         path: P,
     ) -> Result<(), ConfigError>;
     
-    /// Writes a configuration structure to a file.
+    /// Writes a configuration structure to a file using Ron format.
     #[deprecated(note = "use `write_format` instead")]
-    fn write<P: AsRef<Path>>(&self, format: ConfigFormat, path: P) -> Result<(), ConfigError> {
+    fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
         self.write_format(ConfigFormat::Ron, path)
     }
 }
