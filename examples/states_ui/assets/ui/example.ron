@@ -212,7 +212,7 @@ Container(
                 height: 25.,
                 tab_order: 2,
                 anchor: TopLeft,
-                transparent: true,
+                opaque: false,
             ),
             text: (
                 text: "N/A",
@@ -232,7 +232,7 @@ Container(
                 height: 25.,
                 tab_order: 2,
                 anchor: TopLeft,
-                transparent: true,
+                opaque: false,
             ),
             text: (
                 text: "N/A",

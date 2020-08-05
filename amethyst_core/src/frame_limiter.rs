@@ -62,7 +62,7 @@
 //! will have to test different grace period timings to determine how much time needs to be left
 //! to ensure that the main thread doesn't sleep too long and miss the start of the next frame.
 //!
-//! [`Application`]: ../../amethyst/struct.Application.html
+//! [`Application`]: ../../amethyst/type.Application.html
 //! [`FrameRateLimitStrategy`]: ./enum.FrameRateLimitStrategy.html
 //! [`thread::yield_now`]: https://doc.rust-lang.org/std/thread/fn.yield_now.html
 //! [`thread::sleep`]: https://doc.rust-lang.org/stable/std/thread/fn.sleep.html
@@ -199,7 +199,7 @@ impl FrameLimiter {
     /// `wait` is used internally by [`Application`] to limit the frame rate of the game
     /// to the configured rate. This should likely never be called directly by game logic.
     ///
-    /// [`Application`]: ../../amethyst/struct.Application.html
+    /// [`Application`]: ../../amethyst/type.Application.html
     pub fn wait(&mut self) {
         use self::FrameRateLimitStrategy::*;
         match self.strategy {

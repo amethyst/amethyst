@@ -7,7 +7,7 @@ Label(
         y: 0.,
         width: 200.,
         height: 50.,
-        transparent: true,
+        opaque: false,
     ),
     text: (
         text: "Loading",
