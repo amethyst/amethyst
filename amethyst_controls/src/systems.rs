@@ -5,10 +5,10 @@ use thread_profiler::profile_scope;
 
 use amethyst_core::{
     ecs::*,
-    math::{convert, Translation3, Unit, UnitQuaternion, Vector3},
+    math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     timing::Time,
-    transform::{Rotation, Translation},
+    transform::Transform,
 };
 use std::collections::HashMap;
 
@@ -30,22 +30,22 @@ pub fn build_fly_movement_system<T: BindingTypes>(
     vertical_axis: Option<T::Axis>,
     longitudinal_axis: Option<T::Axis>,
 ) -> impl Runnable {
-    SystemBuilder::new("FreeMovementSystem")
+    SystemBuilder::new("FlyMovementSystem")
         .read_resource::<Time>()
         .read_resource::<InputHandler<T>>()
-        .with_query(<(Read<FlyControl>, Write<Translation>)>::query())
+        .with_query(<(&FlyControl, &mut Transform)>::query())
         .build(move |_commands, world, (time, input), controls| {
             #[cfg(feature = "profiler")]
-            profile_scope!("free_movement_system");
+            profile_scope!("fly_movement_system");
 
             let x = get_input_axis_simple(&horizontal_axis, &input);
             let y = get_input_axis_simple(&vertical_axis, &input);
             let z = get_input_axis_simple(&longitudinal_axis, &input);
 
             if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
-                for (_, trans) in controls.iter_mut(world) {
+                for (_, transform) in controls.iter_mut(world) {
                     let delta_sec = time.delta_seconds();
-                    trans.0 *= Translation3::from(dir.as_ref() * delta_sec * speed);
+                    transform.append_translation_along(dir, delta_sec * speed);
                 }
             }
         })
@@ -59,20 +59,20 @@ pub fn build_fly_movement_system<T: BindingTypes>(
 /// `FreeRotationSystem`.
 pub fn build_arc_ball_rotation_system() -> impl Runnable {
     SystemBuilder::new("ArcBallRotationSystem")
-        .with_query(<Read<ArcBallControl>>::query())
-        .with_query(<(Read<ArcBallControl>, Read<Rotation>, Write<Translation>)>::query())
-        .read_component::<Translation>()
+        .with_query(<&ArcBallControl>::query())
+        .with_query(<(&ArcBallControl, &mut Transform)>::query())
+        .read_component::<Transform>()
         .build(move |_commands, world, (), queries| {
             #[cfg(feature = "profiler")]
             profile_scope!("arc_ball_rotation_system");
 
-            let targets: HashMap<Entity, Translation> = queries
+            let targets: HashMap<Entity, Transform> = queries
                 .0
                 .iter(world)
                 .map(|ctrl| {
                     match world
                         .entry_ref(ctrl.target)
-                        .map(|e| e.into_component::<Translation>().ok())
+                        .map(|e| e.into_component::<Transform>().ok())
                         .flatten()
                     {
                         Some(trans) => Some((ctrl.target, *trans)),
@@ -83,11 +83,11 @@ pub fn build_arc_ball_rotation_system() -> impl Runnable {
                 .map(|t| t.unwrap())
                 .collect();
 
-            for (control, rot, trans) in queries.1.iter_mut(world) {
-                let pos_vec = rot.0 * (-Vector3::z() * control.distance);
+            for (control, transform) in queries.1.iter_mut(world) {
+                let pos_vec = transform.rotation() * -Vector3::z() * control.distance;
                 match targets.get(&control.target) {
                     Some(target_trans) => {
-                        *trans = Translation::from(target_trans.vector - pos_vec);
+                        *transform.translation_mut() = target_trans.translation() - pos_vec;
                     }
                     None => continue,
                 }
@@ -112,7 +112,7 @@ pub fn build_free_rotation_system(
         .read_resource::<WindowFocus>()
         .read_resource::<HideCursor>()
         .with_query(
-            <Write<Rotation>>::query()
+            <&mut Transform>::query()
                 .filter(component::<FlyControl>() | component::<ArcBallControl>()),
         )
         .build(move |_commands, world, (events, focus, hide), controls| {
@@ -124,11 +124,12 @@ pub fn build_free_rotation_system(
                 if focused && hide.hide {
                     if let Event::DeviceEvent { ref event, .. } = *event {
                         if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
-                            for rotation in controls.iter_mut(world) {
-                                rotation.0 *= UnitQuaternion::from_euler_angles(
+                            for transform in controls.iter_mut(world) {
+                                transform.append_rotation_x_axis(
                                     (-(y as f32) * sensitivity_y).to_radians(),
+                                );
+                                transform.prepend_rotation_y_axis(
                                     (-(x as f32) * sensitivity_x).to_radians(),
-                                    0.0,
                                 );
                             }
                         }

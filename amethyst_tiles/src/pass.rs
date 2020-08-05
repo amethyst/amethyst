@@ -2,8 +2,8 @@
 #![allow(unused_imports, unused_variables)]
 
 use amethyst_core::{
-    ecs::prelude::*,
     dispatcher::*,
+    ecs::prelude::*,
     geometry::{Plane, Ray},
     math::{self, clamp, convert, Matrix4, Point2, Point3, Vector2, Vector3, Vector4},
     transform::Transform,

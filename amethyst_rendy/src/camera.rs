@@ -5,7 +5,7 @@ use amethyst_core::{
     ecs::*,
     geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
-    transform::LocalToWorld,
+    transform::Transform,
 };
 // use amethyst_error::Error;
 
@@ -173,12 +173,12 @@ impl Camera {
         &self,
         screen_position: Point2<f32>,
         screen_diagonal: Vector2<f32>,
-        camera_transform: &LocalToWorld,
+        camera_transform: &Transform,
     ) -> Ray<f32> {
         let screen_x = 2.0 * screen_position.x / screen_diagonal.x - 1.0;
         let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
 
-        let matrix = **camera_transform * self.inverse;
+        let matrix = camera_transform.global_matrix() * self.inverse;
 
         let near = Point3::new(screen_x, screen_y, 1.0);
         let far = Point3::new(screen_x, screen_y, 0.0);
@@ -199,7 +199,7 @@ impl Camera {
         &self,
         screen_position: Point3<f32>,
         screen_diagonal: Vector2<f32>,
-        camera_transform: &LocalToWorld,
+        camera_transform: &Transform,
     ) -> Point3<f32> {
         self.screen_ray(screen_position.xy(), screen_diagonal, camera_transform)
             .at_distance(screen_position.z)
@@ -213,9 +213,9 @@ impl Camera {
         &self,
         world_position: Point3<f32>,
         screen_diagonal: Vector2<f32>,
-        camera_transform: &LocalToWorld,
+        camera_transform: &Transform,
     ) -> Point2<f32> {
-        let transformation_matrix = camera_transform.try_inverse().unwrap();
+        let transformation_matrix = camera_transform.global_matrix().try_inverse().unwrap();
         let screen_pos = (self.matrix * transformation_matrix).transform_point(&world_position);
 
         Point2::new(
@@ -336,7 +336,7 @@ mod tests {
     use super::*;
     use amethyst_core::{
         math::{convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3},
-        transform::LocalToWorld,
+        transform::Transform,
     };
     use ron::{de::from_str, ser::to_string_pretty};
 
@@ -348,7 +348,7 @@ mod tests {
         let diagonal = Vector2::new(1024.0, 768.0);
 
         let camera = Camera::standard_3d(diagonal.x, diagonal.y);
-        let mut transform = LocalToWorld::default();
+        let mut transform = Transform::default();
 
         let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
         let top_left = Point3::new(0.0, 0.0, 0.0);
@@ -385,7 +385,7 @@ mod tests {
         let diagonal = Vector2::new(1024.0, 768.0);
 
         let camera = Camera::standard_2d(diagonal.x, diagonal.y);
-        let mut transform = LocalToWorld::default();
+        let mut transform = Transform::default();
 
         let center_screen = Point3::new(diagonal.x / 2.0, diagonal.y / 2.0, 0.0);
         let top_left = Point3::new(0.0, 0.0, 0.0);
@@ -420,7 +420,7 @@ mod tests {
         let diagonal = Vector2::new(1024.0, 768.0);
 
         let ortho = Camera::standard_2d(diagonal.x, diagonal.y);
-        let transform = LocalToWorld::default();
+        let transform = Transform::default();
 
         let center_screen = Point2::new(diagonal.x / 2.0, diagonal.y / 2.0);
         let top_left = Point2::new(0.0, 0.0);
@@ -472,14 +472,14 @@ mod tests {
 
     // Our world-space is +Y Up, +X Right and -Z Away
     // Current render target is +Y Down, +X Right and +Z Away
-    fn setup() -> (LocalToWorld, [Point3<f32>; 3], [Point3<f32>; 3]) {
+    fn setup() -> (Transform, [Point3<f32>; 3], [Point3<f32>; 3]) {
         // Setup common inputs for most of the tests.
         //
         // Sets up a test camera is positioned at (0,0,3) in world space.
         // A camera without rotation is pointing in the (0,0,-1) direction.
         //
         // Sets up basic points.
-        let camera_transform = LocalToWorld::new(
+        let camera_transform = Transform::new(
             Translation3::new(0.0, 0.0, 3.0),
             // Apply _no_ rotation
             UnitQuaternion::identity(),
@@ -500,7 +500,7 @@ mod tests {
         (camera_transform, simple_points, simple_points_clipped)
     }
 
-    fn gatherer_calc_view_matrix(transform: LocalToWorld) -> Matrix4<f32> {
+    fn gatherer_calc_view_matrix(transform: Transform) -> Matrix4<f32> {
         convert(transform.view_matrix())
     }
 

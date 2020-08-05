@@ -13,7 +13,7 @@ use crate::{
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{systems::ResourceSet, *},
-    transform::LocalToWorld,
+    transform::Transform,
 };
 use derivative::Derivative;
 use rendy::{
@@ -140,7 +140,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
                             world
                                 .entry_ref(*entity)
                                 .unwrap()
-                                .into_component::<LocalToWorld>()
+                                .into_component::<Transform>()
                                 .ok()?,
                             world
                                 .entry_ref(*entity)
@@ -345,7 +345,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
                             world
                                 .entry_ref(*entity)
                                 .unwrap()
-                                .into_component::<LocalToWorld>()
+                                .into_component::<Transform>()
                                 .ok()?,
                             world
                                 .entry_ref(*entity)
