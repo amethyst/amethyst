@@ -47,7 +47,7 @@ installed, fork the repository to your account and `git clone` the forked
 copy to your local machine. On clone you will be on the *master* branch. This
 is the branch that contains all new work that has not been released yet. If you
 are adding a new feature to amethyst then you want to base your work off of this
-branch. Otherwise, if you are attemping to fix something in an older release you
+branch. Otherwise, if you are attempting to fix something in an older release you
 will have to base your work off of a released tag. This can be done after a clone
 by running `git checkout TAG` where `TAG` is a released tag eg `v0.8.0`. Now that
 you have the latest code you can start contributing.
@@ -61,31 +61,27 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-2. You have processed your source code with `cargo fmt` (we use latest rustup stable).
+2. You used `cargo fmt` at the root of the crate to format the code.
+   Make sure that `cargo fmt --version` returns the latest stable version.
+   If this is not the case, run `rustup update` or install [rustfmt]
 3. All of the following commands completed without errors.
+   * `cargo +stable fmt --all`
+   * `cargo clippy --all --features "empty"` (may require `cargo clean` before)
    * `cargo build --features "empty"`
    * `cargo test --all --features "empty"`
    * `cargo run --example {example-name} --features YOUR_BACKEND`
-   * `mdbook test book -L target/debug/deps`
 4. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
 5. You added your change in docs/CHANGELOG.md and linked your pull request number.
-6. You used `cargo fmt` at the root of the crate to format the code.
-   Make sure that `cargo fmt --version` returns the latest stable version.
-   If this is not the case, run `rustup update` or install [rustfmt]
 7. For new features or changes to an existing one,
    add or change either the book tutorial or the examples.
 
 [lm]: LICENSE-MIT
 [la]: LICENSE-APACHE
 [rustfmt]: https://github.com/rust-lang-nursery/rustfmt
-
-Note that if you do not have mdbook already installed you may do so with `cargo install mdbook`. 
-If you find dependency resolution problems when testing mdbook, 
-you may have to run `cargo clean` and `cargo build` again before retrying the `mdbook test` command.
 
 Once you have submitted your pull request, please wait for a reviewer to give
 feedback on it. If no one responds, feel free to @-mention a developer or post
@@ -285,7 +281,12 @@ mdbook serve book
 Examples in the API can be tested with `cargo test`.  Examples in top-level markdown files (like the one we are currently in) are not tested.
 
 When submitting your pull requests, please follow the same procedures described
-in the [Pull Requests](#pull-requests) section above.
+in the [Pull Requests](#pull-requests) section above, in addition to the following commands:
+* `mdbook test book -L target/debug/deps`
+
+Note that if you do not have mdbook already installed, you may do so with `cargo install mdbook`.
+If you find dependency resolution problems when testing mdbook,
+you may have to run `cargo clean` and `cargo build` again before retrying the `mdbook test` command.
 
 ## Profiling the engine
 You can build Amethyst with a `profiler` feature like this:
