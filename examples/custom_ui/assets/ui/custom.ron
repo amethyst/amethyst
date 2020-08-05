@@ -12,7 +12,7 @@ Custom(
                 y: -25.,
                 width: 200.,
                 height: 50.,
-                transparent: true,
+                opaque: false,
             ),
             text: (
                 text: "Repeated Text",
