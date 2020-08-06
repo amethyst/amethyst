@@ -95,8 +95,10 @@ You can download it and read the installation instructions at [Git LFS home page
 To compile any of the examples run:
 
 ```
-$ cargo run --example name_of_example
+$ cargo run --example name_of_example --features empty
 ```
+
+> See [Graphics Features][graphics-features] for more about `--features empty`
 
 All available examples are listed under the [examples][exm] directory.
 
@@ -244,6 +246,7 @@ If for some reason we don't have any open PRs in need of a review nor any good f
 [pr]: https://github.com/amethyst/amethyst/pulls
 [it]: https://github.com/amethyst/amethyst/issues
 [gfi]: https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+[graphics-features]: https://book.amethyst.rs/stable/appendices/c_feature_gates.html#graphics-features
 
 ## Backers
 
