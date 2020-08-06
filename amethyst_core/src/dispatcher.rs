@@ -47,6 +47,7 @@ impl DispatcherData {
 }
 
 /// A builder which is used to construct [Dispatcher] from multiple systems and system bundles.
+#[derive(Default)]
 pub struct DispatcherBuilder {
     items: Vec<DispatcherItem>,
 }
@@ -139,12 +140,6 @@ impl DispatcherBuilder {
             schedule: Schedule::from(data.steps),
             bundles: data.bundles,
         })
-    }
-}
-
-impl Default for DispatcherBuilder {
-    fn default() -> Self {
-        Self { items: Vec::new() }
     }
 }
 

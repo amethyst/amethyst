@@ -49,7 +49,11 @@ where
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         init_output(resources);
-        builder.add_system(build_dj_system(self.f.take().unwrap()));
+        builder.add_system(build_dj_system(
+            self.f
+                .take()
+                .expect("DJ system function not provided or bundle loaded multiple times"),
+        ));
         Ok(())
     }
 }

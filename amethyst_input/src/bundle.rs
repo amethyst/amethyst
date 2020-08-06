@@ -95,7 +95,7 @@ impl<T: BindingTypes> SystemBundle for InputBundle<T> {
 
         let reader = resources
             .get_mut::<EventChannel<Event>>()
-            .unwrap()
+            .expect("Window event channel not found in resources")
             .register_reader();
 
         let mut handler = InputHandler::<T>::new();
