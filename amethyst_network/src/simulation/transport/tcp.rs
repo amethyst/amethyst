@@ -215,7 +215,7 @@ fn write_message(
     channel: &mut EventChannel<NetworkSimulationEvent>,
 ) {
     if let Some((_, stream)) = net.get_stream(message.destination) {
-        let len : Bytes = Bytes::copy_from_slice(&(message.payload.len() as u32).to_le_bytes()); 
+        let len: Bytes = Bytes::copy_from_slice(&(message.payload.len() as u32).to_le_bytes());
         let msg = [len, message.payload.clone()].concat();
 
         if let Err(e) = stream.write(&msg) {
@@ -235,12 +235,12 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
 
     fn run(&mut self, (mut net, mut event_channel): Self::SystemData) {
         let resource = net.deref_mut();
-        
+
         for (_, (active, stream)) in resource.streams.iter_mut() {
-            // let mut raw_data = [0 as u8; 4098]; // buffer size 
+            // let mut raw_data = [0 as u8; 4098]; // buffer size
             let mut ptr: usize = 0;
             let mut pack_size: usize = 0;
-            // let mut raw_data = [0 as u8; 32]; // buffer size 
+            // let mut raw_data = [0 as u8; 32]; // buffer size
 
             // If we can't get a peer_addr, there is likely something pretty wrong with the
             // connection so we'll mark it inactive.
@@ -260,14 +260,9 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                     if tcp_pack_size == 0 {
                         break;
                     }
-                    let raw_size: [u8; 4] = [   
-                        len[0],
-                        len[1],
-                        len[2],
-                        len[3],
-                    ];
+                    let raw_size: [u8; 4] = [len[0], len[1], len[2], len[3]];
                     pack_size = u32::from_le_bytes(raw_size.try_into().unwrap()) as usize;
-                },
+                }
 
                 Err(e) => {
                     match e.kind() {
@@ -281,19 +276,16 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                     }
                     break;
                 }
-
             }
-            
+
             // Then grab this amount of data.
             let mut data = vec![0; pack_size];
             match stream.read(&mut data) {
                 Ok(tcp_pack_size) => {
-                    let event = NetworkSimulationEvent::Message(
-                        peer_addr,
-                        Bytes::copy_from_slice(&data), 
-                    );
+                    let event =
+                        NetworkSimulationEvent::Message(peer_addr, Bytes::copy_from_slice(&data));
                     event_channel.single_write(event);
-                },
+                }
 
                 Err(e) => {
                     match e.kind() {
@@ -307,7 +299,6 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                     }
                     break;
                 }
-
             }
         }
     }
