@@ -25,6 +25,10 @@ use std::{
     ops::DerefMut,
 };
 
+use log::{info};
+
+use std::convert::TryInto;
+
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "connection_listener";
 const STREAM_MANAGEMENT_SYSTEM_NAME: &str = "stream_management";
 
@@ -213,7 +217,14 @@ fn write_message(
     channel: &mut EventChannel<NetworkSimulationEvent>,
 ) {
     if let Some((_, stream)) = net.get_stream(message.destination) {
-        if let Err(e) = stream.write(&message.payload) {
+        let len : Bytes = Bytes::copy_from_slice(&(message.payload.len() as u32).to_le_bytes()); 
+        info!("Sending Packet of size .len(): {:?}", message.payload.len());
+        info!("Sending Packet of size: {:?}", len);
+        info!("Data: {:?}", message.payload);
+        let msg = [len, message.payload.clone()].concat();
+        info!("{:?}", msg);
+
+        if let Err(e) = stream.write(&msg) {
             channel.single_write(NetworkSimulationEvent::SendError(e, message));
         }
     }
@@ -230,7 +241,13 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
 
     fn run(&mut self, (mut net, mut event_channel): Self::SystemData) {
         let resource = net.deref_mut();
+        
         for (_, (active, stream)) in resource.streams.iter_mut() {
+            // let mut raw_data = [0 as u8; 4098]; // buffer size 
+            let mut ptr: usize = 0;
+            let mut pack_size: usize = 0;
+            // let mut raw_data = [0 as u8; 32]; // buffer size 
+
             // If we can't get a peer_addr, there is likely something pretty wrong with the
             // connection so we'll mark it inactive.
             let peer_addr = match stream.peer_addr() {
@@ -242,33 +259,64 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                 }
             };
 
-            loop {
-                match stream.read(&mut resource.recv_buffer) {
-                    Ok(recv_len) => {
-                        if recv_len > 0 {
-                            let event = NetworkSimulationEvent::Message(
-                                peer_addr,
-                                Bytes::copy_from_slice(&resource.recv_buffer[..recv_len]),
-                            );
-                            event_channel.single_write(event);
-                        } else {
-                            *active = false;
-                            break;
-                        }
-                    }
-                    Err(e) => {
-                        match e.kind() {
-                            io::ErrorKind::ConnectionReset => {
-                                *active = false;
-                            }
-                            io::ErrorKind::WouldBlock => {}
-                            _ => {
-                                event_channel.single_write(NetworkSimulationEvent::RecvError(e));
-                            }
-                        }
+            // First get the pack size.
+            let mut len = vec![0; 4];
+            match stream.read(&mut len) {
+                Ok(tcp_pack_size) => {
+                    if tcp_pack_size == 0 {
                         break;
                     }
+                    info!("{:?}", tcp_pack_size);
+                    let raw_size: [u8; 4] = [   
+                        len[0],
+                        len[1],
+                        len[2],
+                        len[3],
+                    ];
+                    pack_size = u32::from_le_bytes(raw_size.try_into().unwrap()) as usize;
+                    info!("Pack_size: {:?}", pack_size);
+                },
+
+                Err(e) => {
+                    match e.kind() {
+                        io::ErrorKind::ConnectionReset => {
+                            *active = false;
+                        }
+                        io::ErrorKind::WouldBlock => {}
+                        _ => {
+                            event_channel.single_write(NetworkSimulationEvent::RecvError(e));
+                        }
+                    }
+                    break;
                 }
+
+            }
+            
+            // Then grab this amount of data.
+            let mut data = vec![0; pack_size];
+            match stream.read(&mut data) {
+                Ok(tcp_pack_size) => {
+                    info!("Data: {:?}", data);
+                    let event = NetworkSimulationEvent::Message(
+                        peer_addr,
+                        Bytes::copy_from_slice(&data), 
+                    );
+                    event_channel.single_write(event);
+                },
+
+                Err(e) => {
+                    match e.kind() {
+                        io::ErrorKind::ConnectionReset => {
+                            *active = false;
+                        }
+                        io::ErrorKind::WouldBlock => {}
+                        _ => {
+                            event_channel.single_write(NetworkSimulationEvent::RecvError(e));
+                        }
+                    }
+                    break;
+                }
+
             }
         }
     }
