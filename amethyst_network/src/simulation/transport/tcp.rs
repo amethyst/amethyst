@@ -25,8 +25,6 @@ use std::{
     ops::DerefMut,
 };
 
-use log::{info};
-
 use std::convert::TryInto;
 
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "connection_listener";
@@ -218,11 +216,7 @@ fn write_message(
 ) {
     if let Some((_, stream)) = net.get_stream(message.destination) {
         let len : Bytes = Bytes::copy_from_slice(&(message.payload.len() as u32).to_le_bytes()); 
-        info!("Sending Packet of size .len(): {:?}", message.payload.len());
-        info!("Sending Packet of size: {:?}", len);
-        info!("Data: {:?}", message.payload);
         let msg = [len, message.payload.clone()].concat();
-        info!("{:?}", msg);
 
         if let Err(e) = stream.write(&msg) {
             channel.single_write(NetworkSimulationEvent::SendError(e, message));
@@ -266,7 +260,6 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                     if tcp_pack_size == 0 {
                         break;
                     }
-                    info!("{:?}", tcp_pack_size);
                     let raw_size: [u8; 4] = [   
                         len[0],
                         len[1],
@@ -274,7 +267,6 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
                         len[3],
                     ];
                     pack_size = u32::from_le_bytes(raw_size.try_into().unwrap()) as usize;
-                    info!("Pack_size: {:?}", pack_size);
                 },
 
                 Err(e) => {
@@ -296,7 +288,6 @@ impl<'s> System<'s> for TcpNetworkRecvSystem {
             let mut data = vec![0; pack_size];
             match stream.read(&mut data) {
                 Ok(tcp_pack_size) => {
-                    info!("Data: {:?}", data);
                     let event = NetworkSimulationEvent::Message(
                         peer_addr,
                         Bytes::copy_from_slice(&data), 
