@@ -1,6 +1,14 @@
 # Test suite must pass on GitHub Actions before merging into `master`.
 status = [
-    "Tests",
+    "Tests (macos-latest, stable)",
+    "Tests (macos-latest, beta)",
+    "Tests (macos-latest, nightly)",
+    "Tests (windows-latest, stable)",
+    "Tests (windows-latest, beta)",
+    "Tests (windows-latest, nightly)",
+    "Tests (ubuntu-latest, stable)",
+    "Tests (ubuntu-latest, beta)",
+    "Tests (ubuntu-latest, nightly)",
 ]
 
 # Do not allow pull requests with these labels to be merged.
@@ -18,5 +26,5 @@ delete_merged_branches = false
 timeout_sec = 18000
 
 [committer]
-name = "amethyst-bot"
-email = "5838512+CleanCut@users.noreply.github.com"
+name = "amethyst-bors"
+email = "bors@amethyst-engine.org"
