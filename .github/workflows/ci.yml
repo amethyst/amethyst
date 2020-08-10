@@ -18,7 +18,6 @@ env:
 jobs:
 
   tests:
-    name: Tests
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
