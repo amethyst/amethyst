@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+      # bors needs CI to trigger for pushes to its staging/trying branches
+      - staging
+      - trying
   pull_request:
     branches:
       - "**"
