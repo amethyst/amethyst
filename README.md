@@ -1,10 +1,10 @@
 <img src="docs/splash.png" alt="Amethyst Game Engine" />
 
-[![Build Status][s1]][jc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li]
+[![Build Status][s1]][ac] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li]
 [![Join us on Discord][s4]][di] [![Community forum][s5]][ds] [![Reddit][s7]][rd]
 [![Code coverage][s8]][cc] ![Lines of Code][s6]
 
-[s1]: https://jenkins.amethyst-engine.org/job/amethyst/job/master/badge/icon
+[s1]: https://github.com/amethyst/amethyst/workflows/CI/badge.svg
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [docs-badge]: https://img.shields.io/badge/docs-website-blue.svg
 [docs]: https://amethyst.rs/doc/
@@ -14,7 +14,7 @@
 [s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 [s7]: https://img.shields.io/badge/dynamic/json.svg?label=r/Amethyst&query=$.data.subscribers&url=https://www.reddit.com/r/Amethyst/about.json
 [s8]: https://img.shields.io/codecov/c/github/amethyst/amethyst.svg
-[jc]: https://jenkins.amethyst-engine.org/blue/organizations/jenkins/amethyst/activity/
+[ac]: https://github.com/amethyst/amethyst/actions
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
 [di]: https://discord.gg/amethyst
