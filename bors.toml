@@ -18,5 +18,5 @@ delete_merged_branches = false
 timeout_sec = 18000
 
 [committer]
-name = "amethyst-bot"
-email = "5838512+CleanCut@users.noreply.github.com"
+name = "amethyst-bors"
+email = "bors@amethyst-engine.org"
