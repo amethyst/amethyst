@@ -195,6 +195,7 @@ pub struct SpriteRender {
 }
 
 impl SpriteRender {
+    /// Create a new `SpriteRender`.
     pub fn new(sprite_sheet: Handle<SpriteSheet>, sprite_number: usize) -> SpriteRender {
         SpriteRender {
             sprite_sheet,
