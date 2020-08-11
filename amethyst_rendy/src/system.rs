@@ -25,11 +25,12 @@ pub struct InternalGraphAuxData<'a> {
     pub resources: &'a Resources,
 }
 
-/// FIXME: It is currently impossible to pass types with lifetimes (except for a single reference)
-/// to auxiliary data structures. It worked before when passing just `World`, but with legion we
-/// also need to pass `Resources`. To do this we have to transmute `InternalGraphAuxData<'a>` into
-/// `InternalGraphAuxData<'static>` and ensure that none of the graph nodes store the references.
-/// Simplified issue: https://github.com/rust-lang/rust/issues/51567
+// FIXME: It is currently impossible to pass types with lifetimes (except for a single reference)
+// to auxiliary data structures. It worked before when passing just `World`, but with legion we
+// also need to pass `Resources`. To do this we have to transmute `InternalGraphAuxData<'a>` into
+// `InternalGraphAuxData<'static>` and ensure that none of the graph nodes store the references.
+// Simplified issue: https://github.com/rust-lang/rust/issues/51567
+#[allow(missing_docs)]
 pub fn make_graph_aux_data(world: &World, resources: &Resources) -> GraphAuxData {
     unsafe { std::mem::transmute(InternalGraphAuxData { world, resources }) }
 }

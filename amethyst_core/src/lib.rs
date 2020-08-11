@@ -8,7 +8,6 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 
 pub use alga;
 pub use approx;
-pub use legion;
 pub use nalgebra as math;
 pub use num_traits as num;
 pub use shrev;
@@ -34,6 +33,8 @@ pub mod geometry;
 pub mod timing;
 /// The transformation module.
 pub mod transform;
+
+use legion;
 
 /// legion ECS reexported with some convenience types.
 pub mod ecs {

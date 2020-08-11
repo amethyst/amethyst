@@ -45,9 +45,6 @@
 #![allow(clippy::new_without_default)]
 #![allow(unused_variables, dead_code)]
 
-// #[macro_use]
-// extern crate amethyst_derive;
-
 #[macro_use]
 mod macros;
 
