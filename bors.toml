@@ -2,13 +2,13 @@
 status = [
     "Tests (macos-latest, stable)",
     "Tests (macos-latest, beta)",
-    "Tests (macos-latest, nightly)",
+#    "Tests (macos-latest, nightly)",
     "Tests (windows-latest, stable)",
     "Tests (windows-latest, beta)",
-    "Tests (windows-latest, nightly)",
+#    "Tests (windows-latest, nightly)",
     "Tests (ubuntu-latest, stable)",
     "Tests (ubuntu-latest, beta)",
-    "Tests (ubuntu-latest, nightly)",
+#    "Tests (ubuntu-latest, nightly)",
 ]
 
 # Do not allow pull requests with these labels to be merged.
