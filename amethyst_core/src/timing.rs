@@ -288,11 +288,22 @@ mod tests {
 
     use super::Stopwatch;
 
+    // Timing varies more on macOS CI
+    fn get_uncertainty() -> u32 {
+        let is_macos = !std::env::var("MACOS").unwrap_or_default().is_empty();
+        let is_ci = std::env::var("CI").is_ok();
+        if is_macos && is_ci {
+            20
+        } else {
+            10
+        }
+    }
+
     #[test]
     fn elapsed() {
         const DURATION: u64 = 1; // in seconds.
-        const UNCERTAINTY: u32 = 10; // in percents.
         let mut watch = Stopwatch::new();
+        let uncertainty = get_uncertainty();
 
         watch.start();
         thread::sleep(Duration::from_secs(DURATION));
@@ -301,13 +312,13 @@ mod tests {
         // check that elapsed time was DURATION sec +/- UNCERTAINTY%
         let elapsed = watch.elapsed();
         let duration = Duration::new(DURATION, 0);
-        let lower = duration / 100 * (100 - UNCERTAINTY);
-        let upper = duration / 100 * (100 + UNCERTAINTY);
+        let lower = duration / 100 * (100 - uncertainty);
+        let upper = duration / 100 * (100 + uncertainty);
         assert!(
             elapsed < upper && elapsed > lower,
             "expected {} +- {}% seconds, got {:?}",
             DURATION,
-            UNCERTAINTY,
+            uncertainty,
             elapsed
         );
     }
@@ -329,7 +340,7 @@ mod tests {
     fn restart() {
         const DURATION0: u64 = 2; // in seconds.
         const DURATION: u64 = 1; // in seconds.
-        const UNCERTAINTY: u32 = 10; // in percents.
+        let uncertainty = get_uncertainty(); // in percents.
         let mut watch = Stopwatch::new();
 
         watch.start();
@@ -343,13 +354,13 @@ mod tests {
         // check that elapsed time was DURATION sec +/- UNCERTAINTY%
         let elapsed = watch.elapsed();
         let duration = Duration::new(DURATION, 0);
-        let lower = duration / 100 * (100 - UNCERTAINTY);
-        let upper = duration / 100 * (100 + UNCERTAINTY);
+        let lower = duration / 100 * (100 - uncertainty);
+        let upper = duration / 100 * (100 + uncertainty);
         assert!(
             elapsed < upper && elapsed > lower,
             "expected {} +- {}% seconds, got {:?}",
             DURATION,
-            UNCERTAINTY,
+            uncertainty,
             elapsed
         );
     }
@@ -358,7 +369,7 @@ mod tests {
     #[test]
     fn stop_start() {
         const DURATION: u64 = 3; // in seconds.
-        const UNCERTAINTY: u32 = 10; // in percents.
+        let uncertainty = get_uncertainty(); // in percents.
         let mut watch = Stopwatch::new();
 
         for _ in 0..DURATION {
@@ -370,13 +381,13 @@ mod tests {
         // check that elapsed time was DURATION sec +/- UNCERTAINTY%
         let elapsed = watch.elapsed();
         let duration = Duration::new(DURATION, 0);
-        let lower = duration / 100 * (100 - UNCERTAINTY);
-        let upper = duration / 100 * (100 + UNCERTAINTY);
+        let lower = duration / 100 * (100 - uncertainty);
+        let upper = duration / 100 * (100 + uncertainty);
         assert!(
             elapsed < upper && elapsed > lower,
             "expected {}  +- {}% seconds, got {:?}",
             DURATION,
-            UNCERTAINTY,
+            uncertainty,
             elapsed
         );
     }
