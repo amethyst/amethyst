@@ -1,7 +1,8 @@
 # Number of days of inactivity before an issue becomes stale
 daysUntilStale: 180
-# Number of days of inactivity before a stale issue is closed
-daysUntilClose: 7
+# Number of days of inactivity before an Issue or Pull Request with the stale label is closed.
+# Set to false to disable. If disabled, issues still need to be closed manually, but will remain marked as stale.
+daysUntilClose: false
 # Label to use when marking an issue as stale
 staleLabel: stale
 # Comment to post when marking an issue as stale. Set to `false` to disable
@@ -9,5 +10,3 @@ markComment: >
   This issue has been automatically marked as stale because it has not had
   recent activity. It will be closed in 7 days if no further activity occurs.
   Feel free to comment if this ticket is still relevant.
-# Comment to post when closing a stale issue. Set to `false` to disable
-closeComment: false
