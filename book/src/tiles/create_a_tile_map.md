@@ -9,7 +9,7 @@ use amethyst::{
         math::Vector3,
         transform::Transform,
     },
-    tiles:TileMap,
+    tiles::TileMap,
 };
 # use amethyst::{
 #     assets::Handle,
