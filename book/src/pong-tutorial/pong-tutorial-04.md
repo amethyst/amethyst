@@ -69,11 +69,8 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
     let mut local_transform = Transform::default();
     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
-    // Assign the sprite for the ball
-    let sprite_render = SpriteRender {
-        sprite_sheet: sprite_sheet_handle,
-        sprite_number: 1, // ball is the second sprite on the sprite sheet
-    };
+    // Assign the sprite for the ball. The ball is the second sprite in the sheet.
+    let sprite_render = SpriteRender::new(sprite_sheet_handle, 1);
 
     world
         .create_entity()
@@ -475,7 +472,7 @@ use amethyst::core::timing::Time;
 #     ball_spawn_timer: Option<f32>,
 #     sprite_sheet_handle: Option<Handle<SpriteSheet>>,
 # }
-# 
+#
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
@@ -524,4 +521,3 @@ and add a scoring system!
 [pong_02_drawing]: pong-tutorial-02.html#drawing
 [doc_time]: https://docs.amethyst.rs/stable/amethyst_core/timing/struct.Time.html
 [delta_timing]: https://en.wikipedia.org/wiki/Delta_timing
-
