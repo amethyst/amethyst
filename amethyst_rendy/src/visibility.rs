@@ -4,7 +4,7 @@ use crate::{
     transparent::Transparent,
 };
 use amethyst_core::{
-    ecs::prelude::*,
+    ecs::*,
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
     transform::LocalToWorld,
     Hidden, HiddenPropagate,
@@ -80,24 +80,22 @@ struct Internals {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-pub fn build_visibility_sorting_system(
-    world: &mut World,
-    resources: &mut Resources,
-) -> Box<dyn Schedulable> {
-    resources.insert(Visibility::default());
-
+pub fn build_visibility_sorting_system() -> impl Runnable {
     let mut state = VisibilitySortingSystemState::default();
 
-    SystemBuilder::<()>::new("VisibilitySortingSystem")
+    SystemBuilder::new("VisibilitySortingSystem")
         .read_resource::<ActiveCamera>()
         .write_resource::<Visibility>()
-        .read_component::<BoundingSphere>()
-        .read_component::<Transparent>()
-        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
-        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
+        .with_query(<(&Camera, &LocalToWorld)>::query())
+        .with_query(<(Entity, &Camera, &LocalToWorld)>::query())
         .with_query(
-            <Read<LocalToWorld>>::query()
-                .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
+            <(
+                Entity,
+                &LocalToWorld,
+                Option<&Transparent>,
+                Option<&BoundingSphere>,
+            )>::query()
+            .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
         )
         .build(
             move |commands,
@@ -115,12 +113,12 @@ pub fn build_visibility_sorting_system(
                 let origin = Point3::origin();
 
                 let (camera, camera_transform) = match active_camera.entity.map_or_else(
-                    || camera_query1.iter_entities(world).nth(0).map(|args| args.1),
+                    || camera_query1.iter(world).nth(0),
                     |e| {
                         camera_query2
-                            .iter_entities(world)
-                            .find(|(camera_entity, (_, _))| *camera_entity == e)
-                            .map(|args| args.1)
+                            .iter(world)
+                            .find(|(camera_entity, _, _)| **camera_entity == e)
+                            .map(|(_entity, camera, camera_transform)| (camera, camera_transform))
                     },
                 ) {
                     Some(r) => r,
@@ -135,13 +133,12 @@ pub fn build_visibility_sorting_system(
 
                 state.centroids.extend(
                     entity_query
-                        .iter_entities(world)
-                        .map(|(entity, transform)| {
-                            let sphere = world.get_component::<BoundingSphere>(entity);
-
+                        .iter(world)
+                        .map(|(entity, transform, transparent, sphere)| {
                             let pos = sphere.clone().map_or(origin, |s| s.center);
                             (
-                                entity,
+                                *entity,
+                                transparent.is_some(),
                                 transform.transform_point(&pos),
                                 sphere.map_or(1.0, |s| s.radius)
                                     * transform[(0, 0)]
@@ -149,10 +146,10 @@ pub fn build_visibility_sorting_system(
                                         .max(transform[(2, 2)]),
                             )
                         })
-                        .filter(|(_, centroid, radius)| frustum.check_sphere(centroid, *radius))
-                        .map(|(entity, centroid, _)| Internals {
+                        .filter(|(_, _, centroid, radius)| frustum.check_sphere(centroid, *radius))
+                        .map(|(entity, transparent, centroid, _)| Internals {
                             entity,
-                            transparent: world.get_component::<Transparent>(entity).is_some(),
+                            transparent,
                             centroid,
                             camera_distance: distance_squared(&centroid, &camera_centroid),
                         }),

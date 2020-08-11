@@ -3,14 +3,11 @@
 use crate::{
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
     pass::*,
-    sprite_visibility::build_sprite_visibility_sorting_system,
-    visibility::build_visibility_sorting_system,
+    sprite_visibility::{build_sprite_visibility_sorting_system, SpriteVisibility},
+    visibility::{build_visibility_sorting_system, Visibility},
     Backend, Factory,
 };
-use amethyst_core::{
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    ecs::prelude::*,
-};
+use amethyst_core::ecs::*;
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
@@ -74,10 +71,10 @@ mod window {
             &mut self,
             world: &mut World,
             resources: &mut Resources,
-            builder: &mut DispatcherBuilder<'_>,
+            builder: &mut DispatcherBuilder,
         ) -> Result<(), Error> {
             if let Some(config) = self.config.take() {
-                WindowBundle::from_config(config).build(world, resources, builder)?;
+                builder.add_bundle(WindowBundle::from_config(config));
             }
 
             Ok(())
@@ -170,9 +167,10 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         &mut self,
         world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Render, build_visibility_sorting_system);
+        resources.insert(Visibility::default());
+        builder.add_system(build_visibility_sorting_system());
         Ok(())
     }
 
@@ -223,9 +221,10 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         &mut self,
         world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Render, build_sprite_visibility_sorting_system);
+        resources.insert(SpriteVisibility::default());
+        builder.add_system(build_sprite_visibility_sorting_system());
         Ok(())
     }
 

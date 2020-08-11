@@ -1,12 +1,7 @@
 //! Provides a automatically resized orthographic camera.
 
 //use amethyst_assets::PrefabData;
-use amethyst_core::{
-    ecs::prelude::{SystemBuilder, World, Write, Read, Schedulable, IntoQuery, Resources},
-    Axis2,
-};
-use amethyst_derive::PrefabData;
-use amethyst_error::Error;
+use amethyst_core::{ecs::*, Axis2};
 use amethyst_rendy::camera::{Camera, Orthographic};
 use amethyst_window::ScreenDimensions;
 use derive_new::new;
@@ -227,37 +222,35 @@ impl Default for CameraNormalizeMode {
 
 /// System that automatically changes the camera matrix according to the settings in
 /// the `CameraOrtho` attached to the camera entity.
-pub fn build_camera_normalize_system(world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("camera_ortho_system")
+pub fn build_camera_normalize_system() -> impl Runnable {
+    SystemBuilder::new("camera_ortho_system")
         .read_resource::<ScreenDimensions>()
         .with_query(<(Write<Camera>, Write<CameraOrtho>)>::query())
-        .build(
-            move |_, subworld, dimensions, query| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("camera_ortho_system");
+        .build(move |_, subworld, dimensions, query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("camera_ortho_system");
 
-                let aspect = dimensions.aspect_ratio();
+            let aspect = dimensions.aspect_ratio();
 
-                for (camera, ortho_camera) in query.iter_mut(&mut *subworld) {
-                    if aspect != ortho_camera.aspect_ratio_cache {
-                        ortho_camera.aspect_ratio_cache = aspect;
-                        let offsets = ortho_camera.camera_offsets(aspect);
-        
-                        let (near, far) = if let Some(prev) = camera.projection().as_orthographic() {
-                            (prev.near(), prev.far())
-                        } else {
-                            continue;
-                        };
-        
-                        camera.set_projection(
-                            Orthographic::new(offsets.0, offsets.1, offsets.2, offsets.3, near, far).into(),
-                        );
-                    }
+            for (camera, ortho_camera) in query.iter_mut(subworld) {
+                if aspect != ortho_camera.aspect_ratio_cache {
+                    ortho_camera.aspect_ratio_cache = aspect;
+                    let offsets = ortho_camera.camera_offsets(aspect);
+
+                    let (near, far) = if let Some(prev) = camera.projection().as_orthographic() {
+                        (prev.near(), prev.far())
+                    } else {
+                        continue;
+                    };
+
+                    camera.set_projection(
+                        Orthographic::new(offsets.0, offsets.1, offsets.2, offsets.3, near, far)
+                            .into(),
+                    );
                 }
             }
-        )
+        })
 }
-
 
 #[cfg(test)]
 mod test {

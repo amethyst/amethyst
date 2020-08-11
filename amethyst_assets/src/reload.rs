@@ -2,11 +2,7 @@
 
 use std::{sync::Arc, time::Instant};
 
-use amethyst_core::{
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    ecs::prelude::*,
-    Time,
-};
+use amethyst_core::{ecs::*, Time};
 use amethyst_error::Error;
 
 #[cfg(feature = "profiler")]
@@ -29,14 +25,17 @@ impl HotReloadBundle {
 }
 
 impl SystemBundle for HotReloadBundle {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         _world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        resources.insert(self.strategy);
-        builder.add_system(Stage::Begin, build_hot_reload_system);
+        resources.insert(self.strategy.clone());
+        resources.get_mut::<Loader>().unwrap().set_hot_reload(true);
+
+        builder.add_system(build_hot_reload_system());
+
         Ok(())
     }
 }
@@ -135,17 +134,8 @@ enum HotReloadStrategyInner {
 }
 
 /// Hot reload system that manages asset reload polling
-pub fn build_hot_reload_system(
-    _world: &mut World,
-    resources: &mut Resources,
-) -> Box<dyn Schedulable> {
-    if resources.get::<HotReloadStrategy>().is_none() {
-        resources.insert(HotReloadStrategy::default())
-    }
-
-    resources.get_mut::<Loader>().unwrap().set_hot_reload(true);
-
-    SystemBuilder::<()>::new("HotReloadSystem")
+pub fn build_hot_reload_system() -> impl Runnable {
+    SystemBuilder::new("HotReloadSystem")
         .write_resource::<HotReloadStrategy>()
         .read_resource::<Time>()
         .build(move |_commands, _world, (strategy, time), _query| {

@@ -1,7 +1,5 @@
-use crate::{config::DisplayConfig, resources::ScreenDimensions};
-use amethyst_config::{Config, ConfigError};
-use amethyst_core::{ecs::prelude::*, shrev::EventChannel};
-use std::path::Path;
+use crate::resources::ScreenDimensions;
+use amethyst_core::{ecs::*, EventChannel};
 use winit::{Event, EventsLoop, Window};
 
 /// Updates `ScreenDimensions` struct with the actual window size from `Window`.
@@ -32,71 +30,30 @@ fn manage_dimensions(mut screen_dimensions: &mut ScreenDimensions, window: &Wind
     screen_dimensions.update_hidpi_factor(hidpi);
 }
 
-/// Builds window system from `DisplayConfig` ron file path.
-pub fn build_window_system_from_config_path(
-    events_loop: &EventsLoop,
-    path: impl AsRef<Path>,
-) -> Result<Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>>, ConfigError> {
-    Ok(build_window_system_from_config(
-        events_loop,
-        DisplayConfig::load(path.as_ref())?,
-    ))
-}
-
-/// Builds window system from `DisplayConfig`.
-pub fn build_window_system_from_config(
-    events_loop: &EventsLoop,
-    config: DisplayConfig,
-) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>> {
-    let window = config
-        .into_window_builder(events_loop)
-        .build(events_loop)
-        .unwrap();
-    build_window_system(window)
-}
-
 /// Builds window system that updates `ScreenDimensions` resource from a provided `Window`.
-pub fn build_window_system(
-    window: Window,
-) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Schedulable>> {
-    Box::new(|_world, resources| {
-        let hidpi = window.get_hidpi_factor();
-        let (width, height) = window
-            .get_inner_size()
-            .expect("Window closed during initialization!")
-            .to_physical(hidpi)
-            .into();
-
-        resources.insert(ScreenDimensions::new(width, height, hidpi));
-        resources.insert(window);
-
-        SystemBuilder::<()>::new("WindowSystem")
-            .write_resource::<ScreenDimensions>()
-            .read_resource::<Window>()
-            .build(
-                move |_commands, _world, (screen_dimensions, window), _query| {
-                    manage_dimensions(screen_dimensions, window)
-                },
-            )
-    })
+pub fn build_window_system() -> impl Runnable {
+    SystemBuilder::new("WindowSystem")
+        .write_resource::<ScreenDimensions>()
+        .read_resource::<Window>()
+        .build(
+            |_commands, _world, (screen_dimensions, window_res), _query| {
+                manage_dimensions(screen_dimensions, window_res)
+            },
+        )
 }
 
 /// System that polls the window events and pushes them to appropriate event channels.
 ///
 /// This system must be active for any `GameState` to receive
 /// any `StateEvent::Window` event into it's `handle_event` method.
-pub fn build_events_loop_system(
-    mut events_loop: EventsLoop,
-) -> Box<dyn FnOnce(&mut World, &mut Resources) -> Box<dyn Runnable>> {
+pub fn build_events_loop_system(mut events_loop: EventsLoop) -> impl Runnable {
     let mut events = Vec::with_capacity(128);
-    Box::new(|_world, _resources| {
-        SystemBuilder::<()>::new("EventsLoopSystem")
-            .write_resource::<EventChannel<Event>>()
-            .build_thread_local(move |_commands, _world, event_channel, _query| {
-                events_loop.poll_events(|event| {
-                    events.push(event);
-                });
-                event_channel.drain_vec_write(&mut events);
-            })
-    })
+    SystemBuilder::new("EventsLoopSystem")
+        .write_resource::<EventChannel<Event>>()
+        .build(move |_commands, _world, event_channel, _query| {
+            events_loop.poll_events(|event| {
+                events.push(event);
+            });
+            event_channel.drain_vec_write(&mut events);
+        })
 }

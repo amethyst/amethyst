@@ -18,13 +18,13 @@ use crate::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
-        ArcThreadPool, Named,
+        ArcThreadPool, EventReader,
     },
-    ecs::{prelude::*, systems::resource::Resource},
+    ecs::*,
     error::Error,
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
-    state_event::{StateEvent, StateEventChannel},
+    state_event::{StateEvent, StateEventReader},
 };
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
@@ -40,7 +40,7 @@ use crate::{
 /// - `R`: `EventReader` implementation for the given event type `E`
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct CoreApplication<'a, T, E = StateEvent>
+pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader>
 where
     T: DataDispose + 'static,
     E: 'static,
@@ -51,7 +51,7 @@ where
     #[derivative(Debug = "ignore")]
     resources: Resources,
     #[derivative(Debug = "ignore")]
-    reader_id: ReaderId<E>,
+    reader: R,
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
     event_reader_id: ReaderId<Event>,
@@ -129,12 +129,13 @@ where
 /// ```
 ///
 /// [log]: https://crates.io/crates/log
-pub type Application<'a, T> = CoreApplication<'a, T, StateEvent>;
+pub type Application<'a, T> = CoreApplication<'a, T, StateEvent, StateEventReader>;
 
-impl<'a, T, E> CoreApplication<'a, T, E>
+impl<'a, T, E, R> CoreApplication<'a, T, E, R>
 where
     T: DataDispose + 'static,
     E: Clone + Send + Sync + 'static,
+    R: EventReader<Event = E>,
 {
     /// Creates a new CoreApplication with the given initial game state.
     /// This will create and allocate all the needed resources for
@@ -195,6 +196,7 @@ where
         P: AsRef<Path>,
         S: State<T, E> + 'a,
         I: DataInit<T>,
+        R: EventReader<Event = E> + Default,
     {
         ApplicationBuilder::new(path, initial_state)?.build(init)
     }
@@ -203,10 +205,11 @@ where
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, T, E>, Error>
+    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, T, E, R>, Error>
     where
         P: AsRef<Path>,
         S: State<T, E> + 'a,
+        R: EventReader<Event = E>,
     {
         ApplicationBuilder::new(path, initial_state)
     }
@@ -313,8 +316,8 @@ where
 
         // Read the Trans queue and apply changes.
         {
-            let mut world = &mut self.world;
-            let mut resources = &mut self.resources;
+            let world = &mut self.world;
+            let resources = &mut self.resources;
             let states = &mut self.states;
             let reader = &mut self.trans_reader_id;
 
@@ -334,9 +337,8 @@ where
             profile_scope!("handle_event");
 
             {
-                let channel = self.resources.get_mut::<EventChannel<E>>().unwrap();
-                self.events
-                    .extend(channel.read(&mut self.reader_id).cloned());
+                let events = &mut self.events;
+                self.reader.read(&mut self.resources, events);
             }
 
             {
@@ -401,7 +403,7 @@ where
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, T, E> Drop for CoreApplication<'a, T, E>
+impl<'a, T, E, R> Drop for CoreApplication<'a, T, E, R>
 where
     T: DataDispose,
 {
@@ -420,17 +422,18 @@ where
 /// [`CoreApplication`](struct.CoreApplication.html)
 /// object is created.
 #[allow(missing_debug_implementations)]
-pub struct ApplicationBuilder<S, T, E> {
+pub struct ApplicationBuilder<S, T, E, R> {
     // config: Config,
     initial_state: S,
-    /// Used by bundles to access the world directly
+    /// Used by bundles to initialize any entities in the world
     pub world: World,
+    /// Used by bundles to initialize any resources in the world
     pub resources: Resources,
     ignore_window_close: bool,
-    phantom: PhantomData<(T, E)>,
+    phantom: PhantomData<(T, E, R)>,
 }
 
-impl<S, T, E> ApplicationBuilder<S, T, E>
+impl<S, T, E, X> ApplicationBuilder<S, T, E, X>
 where
     T: DataDispose + 'static,
 {
@@ -534,7 +537,7 @@ where
             })
             .ok();
 
-        let mut world = World::new();
+        let world = World::default();
         let mut resources = Resources::default();
 
         let thread_pool_builder = ThreadPoolBuilder::new();
@@ -821,11 +824,12 @@ where
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build<'a, I>(mut self, init: I) -> Result<CoreApplication<'a, T, E>, Error>
+    pub fn build<'a, I>(mut self, init: I) -> Result<CoreApplication<'a, T, E, X>, Error>
     where
         S: State<T, E> + 'a,
         I: DataInit<T>,
         E: Clone + Send + Sync + 'static,
+        X: EventReader<Event = E> + Default,
     {
         trace!("Entering `ApplicationBuilder::build`");
 
@@ -834,14 +838,9 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        self.resources.insert(EventChannel::<E>::default());
-        let reader_id = self
-            .resources
-            .get_mut::<EventChannel<E>>()
-            .unwrap()
-            .register_reader();
-
-        let data = init.build(&mut self.world, &mut self.resources);
+        let mut reader = X::default();
+        reader.setup(&mut self.resources);
+        let data = init.build(&mut self.world, &mut self.resources)?;
 
         let event_reader_id = self
             .resources
@@ -859,7 +858,7 @@ where
             world: self.world,
             resources: self.resources,
             states: StateMachine::new(self.initial_state),
-            reader_id,
+            reader,
             events: Vec::new(),
             ignore_window_close: self.ignore_window_close,
             data,

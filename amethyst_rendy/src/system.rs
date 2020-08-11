@@ -1,15 +1,10 @@
 //! Renderer system
 use crate::{
-    mtl::{Material, MaterialDefaults},
+    mtl::Material,
     types::{Backend, Mesh, Texture},
 };
 use amethyst_assets::{AssetStorage, ProcessingState};
-use amethyst_core::{
-    dispatcher::{ThreadLocal, ThreadLocalObject},
-    ecs::prelude::*,
-    timing::Time,
-    ArcThreadPool,
-};
+use amethyst_core::{ecs::*, timing::Time, ArcThreadPool};
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
@@ -22,8 +17,11 @@ use rendy::{
 use thread_profiler::profile_scope;
 
 /// Auxiliary data for render graph.
+#[allow(missing_debug_implementations)]
 pub struct InternalGraphAuxData<'a> {
+    /// World
     pub world: &'a World,
+    /// Resources
     pub resources: &'a Resources,
 }
 
@@ -32,7 +30,8 @@ pub struct InternalGraphAuxData<'a> {
 // also need to pass `Resources`. To do this we have to transmute `InternalGraphAuxData<'a>` into
 // `InternalGraphAuxData<'static>` and ensure that none of the graph nodes store the references.
 // Simplified issue: https://github.com/rust-lang/rust/issues/51567
-fn make_graph_aux_data(world: &World, resources: &Resources) -> GraphAuxData {
+#[allow(missing_docs)]
+pub fn make_graph_aux_data(world: &World, resources: &Resources) -> GraphAuxData {
     unsafe { std::mem::transmute(InternalGraphAuxData { world, resources }) }
 }
 
@@ -57,10 +56,14 @@ pub trait GraphCreator<B: Backend> {
 }
 
 /// Holds internal state of the rendering system
-struct RenderState<B: Backend, G> {
-    graph: Option<Graph<B, GraphAuxData>>,
-    families: Families<B>,
-    graph_creator: G,
+#[allow(missing_debug_implementations)]
+pub struct RenderState<B: Backend, G> {
+    /// Renderer graph
+    pub graph: Option<Graph<B, GraphAuxData>>,
+    /// Device queue families
+    pub families: Families<B>,
+    /// Graph creator
+    pub graph_creator: G,
 }
 
 fn rebuild_graph<B, G>(state: &mut RenderState<B, G>, world: &World, resources: &Resources)
@@ -113,64 +116,24 @@ where
         .run(&mut factory, &mut state.families, &aux)
 }
 
-pub fn build_rendering_system<B, G>(
-    world: &mut World,
-    resources: &mut Resources,
-    graph_creator: G,
-    families: Families<B>,
-) -> Box<dyn ThreadLocal>
+/// Main render function to be executed as thread local system.
+/// This should not be used directly and [RenderingBundle] should be used instead.
+pub fn render<B, G>(world: &mut World, resources: &mut Resources)
 where
     B: Backend,
     G: 'static + GraphCreator<B>,
 {
-    let mat = create_default_mat::<B>(resources);
-    resources.insert(MaterialDefaults(mat));
-
-    ThreadLocalObject::build(
-        RenderState {
-            graph: None,
-            families,
-            graph_creator,
-        },
-        |state, world, resources| {
-            let rebuild = state.graph_creator.rebuild(world, resources);
-            if state.graph.is_none() || rebuild {
-                rebuild_graph(state, world, resources);
-            }
-            run_graph(state, world, resources);
-        },
-        move |state, world, resources| {
-            let mut graph = state.graph;
-            if let Some(graph) = graph.take() {
-                let mut factory = resources.get_mut::<Factory<B>>().unwrap();
-                log::debug!("Dispose graph");
-
-                let aux = make_graph_aux_data(world, resources);
-                graph.dispose(&mut factory, &aux);
-            }
-
-            log::debug!("Unload resources");
-            if let Some(mut storage) = resources.get_mut::<AssetStorage<Mesh>>() {
-                storage.unload_all();
-            }
-            if let Some(mut storage) = resources.get_mut::<AssetStorage<Texture>>() {
-                storage.unload_all();
-            }
-
-            log::debug!("Drop families");
-            drop(state.families);
-        },
-    )
+    let mut state = resources.get_mut::<RenderState<B, G>>().unwrap();
+    let rebuild = state.graph_creator.rebuild(world, resources);
+    if state.graph.is_none() || rebuild {
+        rebuild_graph(&mut state, world, resources);
+    }
+    run_graph(&mut state, world, resources);
 }
 
 /// Asset processing system for `Mesh` asset type.
-pub fn build_mesh_processor<B: Backend>(
-    world: &mut World,
-    resources: &mut Resources,
-) -> Box<dyn Schedulable> {
-    resources.insert(AssetStorage::<Mesh>::default());
-
-    SystemBuilder::<()>::new("MeshProcessorSystem")
+pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
+    SystemBuilder::new("MeshProcessorSystem")
         .write_resource::<AssetStorage<Mesh>>()
         .read_resource::<QueueId>()
         .read_resource::<Time>()
@@ -203,13 +166,8 @@ pub fn build_mesh_processor<B: Backend>(
 }
 
 /// Asset processing system for `Mesh` asset type.
-pub fn build_texture_processor<B: Backend>(
-    world: &mut World,
-    resources: &mut Resources,
-) -> Box<dyn Schedulable> {
-    resources.insert(AssetStorage::<Texture>::default());
-
-    SystemBuilder::<()>::new("TextureProcessorSystem")
+pub fn build_texture_processor<B: Backend>() -> impl Runnable {
+    SystemBuilder::new("TextureProcessorSystem")
         .write_resource::<AssetStorage<Texture>>()
         .read_resource::<QueueId>()
         .read_resource::<Time>()

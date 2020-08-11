@@ -7,7 +7,7 @@ use crate::simulation::{
     timing::{build_network_simulation_time_system, NetworkSimulationTime},
     transport::TransportResource,
 };
-use amethyst_core::{dispatcher::*, ecs::prelude::*, shrev::EventChannel};
+use amethyst_core::{ecs::*, EventChannel};
 use amethyst_error::Error;
 use bytes::Bytes;
 use log::warn;
@@ -34,26 +34,27 @@ impl TcpNetworkBundle {
 }
 
 impl SystemBundle for TcpNetworkBundle {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         _world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
+        resources.insert(TcpNetworkResource::new(
+            self.listener.take(),
+            self.recv_buffer_size_bytes,
+        ));
+
         // NetworkSimulationTime should run first
         // followed by TcpConnectionListenerSystem and TcpStreamManagementSystem
         // then TcpNetworkSendSystem and TcpNetworkRecvSystem
+        builder
+            .add_system(build_network_simulation_time_system())
+            .add_system(build_tcp_connection_listener_system())
+            .add_system(build_tcp_stream_management_system())
+            .add_system(build_tcp_network_send_system())
+            .add_system(build_tcp_network_recv_system());
 
-        builder.add_system(Stage::Begin, build_network_simulation_time_system);
-        builder.add_system(Stage::Begin, build_tcp_connection_listener_system);
-        builder.add_system(Stage::Begin, build_tcp_stream_management_system);
-        builder.add_system(Stage::Begin, build_tcp_network_send_system);
-        builder.add_system(Stage::Begin, build_tcp_network_recv_system);
-
-        resources.insert(TcpNetworkResource::new(
-            self.listener,
-            self.recv_buffer_size_bytes,
-        ));
         Ok(())
     }
 }
@@ -65,11 +66,8 @@ pub struct TcpStreamManagementSystem;
 // We cannot use `net.streams.entry(message.destination).or_insert_with(|| { .. })` because
 // there is a `return;` statement for early exit, which is not allowed within the closure.
 #[allow(clippy::map_entry)]
-pub fn build_tcp_stream_management_system(
-    _world: &mut World,
-    _res: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("TcpStreamManagementSystem")
+pub fn build_tcp_stream_management_system() -> impl Runnable {
+    SystemBuilder::new("TcpStreamManagementSystem")
         .write_resource::<TcpNetworkResource>()
         .read_resource::<TransportResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
@@ -108,11 +106,8 @@ pub fn build_tcp_stream_management_system(
 }
 
 /// System to listen for incoming connections and cache them to the resource.
-pub fn build_tcp_connection_listener_system(
-    _world: &mut World,
-    _res: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("TcpConnectionListenerSystem")
+pub fn build_tcp_connection_listener_system() -> impl Runnable {
+    SystemBuilder::new("TcpConnectionListenerSystem")
         .write_resource::<TcpNetworkResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(move |_commands, _world, (net, event_channel), _| {
@@ -143,11 +138,8 @@ pub fn build_tcp_connection_listener_system(
 }
 
 /// System to send messages to a particular open `TcpStream`.
-pub fn build_tcp_network_send_system(
-    _world: &mut World,
-    _res: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("TcpNetworkSendSystem")
+pub fn build_tcp_network_send_system() -> impl Runnable {
+    SystemBuilder::new("TcpNetworkSendSystem")
         .write_resource::<TransportResource>()
         .write_resource::<TcpNetworkResource>()
         .read_resource::<NetworkSimulationTime>()
@@ -188,11 +180,8 @@ fn write_message(
 }
 
 /// System to receive messages from all open `TcpStream`s.
-pub fn build_tcp_network_recv_system(
-    _world: &mut World,
-    _res: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("TcpNetworkRecvSystem")
+pub fn build_tcp_network_recv_system() -> impl Runnable {
+    SystemBuilder::new("TcpNetworkRecvSystem")
         .write_resource::<TcpNetworkResource>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
         .build(move |_commands, _world, (net, event_channel), _| {

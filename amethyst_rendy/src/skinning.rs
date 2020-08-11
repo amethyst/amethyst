@@ -1,6 +1,6 @@
 //! Skinned mesh and bone implementation for renderer.
 // use amethyst_assets::PrefabData;
-use amethyst_core::{ecs::prelude::*, math::Matrix4};
+use amethyst_core::{ecs::*, math::Matrix4};
 // use amethyst_error::Error;
 use rendy::{
     hal::format::Format,

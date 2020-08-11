@@ -1,6 +1,6 @@
 //! Texture formats implementation.
-use crate::types::{Texture, TextureData};
-use amethyst_assets::{AssetStorage, Format, Handle, Loader, ProgressCounter, SerializableFormat};
+use crate::types::TextureData;
+use amethyst_assets::Format;
 use amethyst_error::Error;
 use rendy::{
     hal::{

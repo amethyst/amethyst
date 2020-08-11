@@ -1,9 +1,8 @@
 //! Util Resources
 
 use amethyst_core::{
-    ecs::prelude::{SystemBuilder, Read, World, Write, IntoQuery, Resources, Schedulable},
+    ecs::*,
     timing::{duration_to_nanos, Time},
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
 };
 use amethyst_error::Error;
 
@@ -83,26 +82,24 @@ impl FpsCounter {
 
 /// Add this system to your game to automatically push FPS values
 /// to the [FpsCounter](../resources/struct.FpsCounter.html) resource with id 0
-pub fn build_fps_counter_system(_world: &mut World,_res: &mut Resources) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("fps_counter_system")
+pub fn build_fps_counter_system() -> impl Runnable {
+    SystemBuilder::new("fps_counter_system")
         .read_resource::<Time>()
         .with_query(<Write<FpsCounter>>::query())
-        .build(
-            move |_, subworld, time, query| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("fps_counter_system");
+        .build(move |_, subworld, time, query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("fps_counter_system");
 
-                if let Some(counter) = query.iter_mut(&mut *subworld).next() {
-                    counter.push(duration_to_nanos(time.delta_real_time()));
-                    //Enable this to debug performance engine wide.
-                    log::debug!(
-                        "Cur FPS: {}, Sampled: {}",
-                        counter.frame_fps(),
-                        counter.sampled_fps()
-                    );
-                }
+            if let Some(counter) = query.iter_mut(subworld).next() {
+                counter.push(duration_to_nanos(time.delta_real_time()));
+                //Enable this to debug performance engine wide.
+                log::debug!(
+                    "Cur FPS: {}, Sampled: {}",
+                    counter.frame_fps(),
+                    counter.sampled_fps()
+                );
             }
-        )
+        })
 }
 
 ///Automatically adds a FpsCounterSystem and a FpsCounter resource with the specified sample size.
@@ -110,14 +107,14 @@ pub fn build_fps_counter_system(_world: &mut World,_res: &mut Resources) -> Box<
 pub struct FpsCounterBundle;
 
 impl SystemBundle for FpsCounterBundle {
-    fn build(
-        self,
-        world: &mut World,
-        resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+    fn load(
+        &mut self,
+        _world: &mut World,
+        _resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Begin, build_fps_counter_system);
-        
+        builder.add_system(build_fps_counter_system());
+
         Ok(())
     }
 }

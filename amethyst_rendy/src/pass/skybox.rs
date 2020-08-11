@@ -8,7 +8,6 @@ use crate::{
     types::Backend,
     util,
 };
-use amethyst_core::ecs::prelude::*;
 use derivative::Derivative;
 use glsl_layout::{vec3, AsStd140};
 use rendy::{

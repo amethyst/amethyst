@@ -84,7 +84,8 @@ pub use amethyst_network as network;
 pub use amethyst_rendy as renderer;
 #[cfg(feature = "tiles")]
 pub use amethyst_tiles as tiles;
-//pub use amethyst_ui as ui;
+#[cfg(feature = "ui")]
+pub use amethyst_ui as ui;
 pub use amethyst_utils as utils;
 pub use amethyst_window as window;
 pub use winit;
@@ -96,13 +97,13 @@ pub use crate::derive::*;
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     error::Error,
-    game_data::{DataDispose, DataInit, GameData, GameDataBuilder},
+    game_data::{DataDispose, DataInit, GameData},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
         TransEvent,
     },
-    state_event::{StateEvent, StateEventChannel},
+    state_event::{StateEvent, StateEventReader},
 };
 
 /// Convenience alias for use in main functions that uses Amethyst.

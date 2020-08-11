@@ -6,7 +6,7 @@ use crate::simulation::{
     timing::{build_network_simulation_time_system, NetworkSimulationTime},
     transport::TransportResource,
 };
-use amethyst_core::{dispatcher::*, ecs::prelude::*, shrev::EventChannel};
+use amethyst_core::{ecs::*, EventChannel};
 use amethyst_error::Error;
 use bytes::Bytes;
 use std::{io, net::UdpSocket};
@@ -19,28 +19,29 @@ pub struct UdpNetworkBundle {
 }
 
 impl SystemBundle for UdpNetworkBundle {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         _world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Begin, build_network_simulation_time_system);
-        builder.add_system(Stage::Begin, build_udp_network_receive_system);
-        builder.add_system(Stage::Begin, build_udp_network_send_system);
+        resources.insert(UdpSocketResource::new(
+            self.socket.take(),
+            self.recv_buffer_size_bytes,
+        ));
 
-        resources.insert(UdpSocketResource::new(self.socket));
-        resources.insert(UdpSocketBuffer::new(self.recv_buffer_size_bytes));
+        builder
+            .add_system(build_network_simulation_time_system())
+            .add_system(build_udp_network_receive_system())
+            .add_system(build_udp_network_send_system());
+
         Ok(())
     }
 }
 
 /// Creates a new network simulation time system.
-pub fn build_udp_network_send_system(
-    _world: &mut World,
-    _res: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("UdpNetworkSendSystem")
+pub fn build_udp_network_send_system() -> impl Runnable {
+    SystemBuilder::new("UdpNetworkSendSystem")
         .write_resource::<TransportResource>()
         .write_resource::<UdpSocketResource>()
         .read_resource::<NetworkSimulationTime>()
@@ -66,10 +67,6 @@ pub fn build_udp_network_send_system(
                                 delivery
                             ),
                         }
-                        delivery => panic!(
-                            "{:?} is unsupported. UDP only supports Unreliable by design.",
-                            delivery
-                        ),
                     }
                 }
             },
@@ -77,48 +74,52 @@ pub fn build_udp_network_send_system(
 }
 
 /// Creates a new udp network receiver system
-pub fn build_udp_network_receive_system(
-    _world: &mut World,
-    _res: &mut Resources,
-) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("AudioSystem")
+pub fn build_udp_network_receive_system() -> impl Runnable {
+    SystemBuilder::new("UdpNetworkReceiveSystem")
         .write_resource::<UdpSocketResource>()
-        .write_resource::<UdpSocketBuffer>()
         .write_resource::<EventChannel<NetworkSimulationEvent>>()
-        .build(
-            move |_commands, _world, (socket, buffer, event_channel), _| {
-                //let UdpSocketResource{ mut socket, mut recv_buffer } = **sock;
-                let mut recv_buffer = &mut buffer.recv_buffer;
-                if let Some(socket) = socket.get_mut() {
-                    loop {
-                        match socket.recv_from(&mut recv_buffer) {
-                            Ok((recv_len, address)) => {
-                                let event = NetworkSimulationEvent::Message(
-                                    address,
-                                    Bytes::copy_from_slice(&recv_buffer[..recv_len]),
-                                );
-                                // TODO: Handle other types of events.
-                                event_channel.single_write(event);
+        .build(move |_commands, _world, (socket, event_channel), _| {
+            let UdpSocketResource {
+                ref mut socket,
+                ref mut recv_buffer,
+            } = **socket;
+            if let Some(socket) = socket {
+                loop {
+                    match socket.recv_from(recv_buffer) {
+                        Ok((recv_len, address)) => {
+                            let event = NetworkSimulationEvent::Message(
+                                address,
+                                Bytes::copy_from_slice(&recv_buffer[..recv_len]),
+                            );
+                            // TODO: Handle other types of events.
+                            event_channel.single_write(event);
+                        }
+                        Err(e) => {
+                            if e.kind() != io::ErrorKind::WouldBlock {
+                                event_channel.single_write(NetworkSimulationEvent::RecvError(e));
                             }
-                            Err(e) => {
-                                if e.kind() != io::ErrorKind::WouldBlock {
-                                    event_channel
-                                        .single_write(NetworkSimulationEvent::RecvError(e));
-                                }
-                                break;
-                            }
+                            break;
                         }
                     }
                 }
-            },
-        )
+            }
+        })
 }
 
 /// Resource to own the UDP socket.
-#[derive(Default, new)]
+#[derive(Default)]
 pub struct UdpSocketResource {
     socket: Option<UdpSocket>,
     recv_buffer: Vec<u8>,
+}
+
+impl UdpSocketResource {
+    fn new(socket: Option<UdpSocket>, recv_buffer_size_bytes: usize) -> Self {
+        Self {
+            socket,
+            recv_buffer: vec![0; recv_buffer_size_bytes],
+        }
+    }
 }
 
 impl UdpSocketResource {
@@ -128,8 +129,8 @@ impl UdpSocketResource {
     }
 
     /// Returns a mutable reference to the socket if there is one configured.
-    pub fn get_mut(&mut self) -> (Option<&mut UdpSocket>, &mut Vec<u8>) {
-        (self.socket.as_mut(), self.recv_buffer.as_mut())
+    pub fn get_mut(&mut self) -> Option<&mut UdpSocket> {
+        self.socket.as_mut()
     }
 
     /// Sets the bound socket to the `UdpSocketResource`.
@@ -140,20 +141,5 @@ impl UdpSocketResource {
     /// Drops the socket from the `UdpSocketResource`.
     pub fn drop_socket(&mut self) {
         self.socket = None;
-    }
-}
-
-/// Resource to own the UDP socket.
-#[derive(Default)]
-pub struct UdpSocketBuffer {
-    pub recv_buffer: Vec<u8>,
-}
-
-impl UdpSocketBuffer {
-    /// Create a new instance of the `UdpSocketBuffer`
-    pub fn new(size: usize) -> Self {
-        Self {
-            recv_buffer: Vec::with_capacity(size),
-        }
     }
 }

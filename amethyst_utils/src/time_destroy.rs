@@ -1,11 +1,7 @@
 //! Allows you to automatically delete an entity after a set time has elapsed.
 
-use amethyst_core::{
-    ecs::prelude::{World, SystemBuilder, Resources, Write, Read, Schedulable, IntoQuery}, 
-    timing::Time,
-};
+use amethyst_core::{ecs::*, timing::Time};
 
-use log::error;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "profiler")]
@@ -28,42 +24,37 @@ pub struct DestroyInTime {
 }
 
 /// The system in charge of destroying entities with the `DestroyAtTime` component.
-pub fn build_destroy_at_time_system(world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("destroy_at_time_system")
+pub fn build_destroy_at_time_system() -> impl Runnable {
+    SystemBuilder::new("destroy_at_time_system")
         .read_resource::<Time>()
-        .with_query(<Read<DestroyAtTime>>::query())
-        .build(
-            move |commands, subworld, time, dat_query| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("destroy_at_time_system");
-                
-                for (ent, dat) in dat_query.iter_entities_mut(&mut *subworld) {
-                    if time.absolute_time_seconds() > dat.time {
-                        commands.delete(ent);
-                    }
+        .with_query(<(Entity, Read<DestroyAtTime>)>::query())
+        .build(move |commands, subworld, time, dat_query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("destroy_at_time_system");
+
+            for (ent, dat) in dat_query.iter_mut(subworld) {
+                if time.absolute_time_seconds() > dat.time {
+                    commands.remove(*ent);
                 }
             }
-        )
+        })
 }
 
 /// The system in charge of destroying entities with the `DestroyInTime` component.
-pub fn build_destroy_in_time_system(_world: &mut World, _res: &mut Resources) -> Box<dyn Schedulable> {
-    SystemBuilder::<()>::new("destroy_in_time_system")
+pub fn build_destroy_in_time_system() -> impl Runnable {
+    SystemBuilder::new("destroy_in_time_system")
         .read_resource::<Time>()
-        .with_query(<Write<DestroyInTime>>::query())
-        .build(
-            move |commands, subworld, time, dit_query| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("destroy_in_time_system");
-                
-                for (ent, mut dit) in dit_query.iter_entities_mut(&mut *subworld) {
-                    if dit.timer <= 0f64 {
-                        commands.delete(ent);
-                    }
+        .with_query(<(Entity, Write<DestroyInTime>)>::query())
+        .build(move |commands, subworld, time, dit_query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("destroy_in_time_system");
 
-                    dit.timer -= f64::from(time.delta_seconds());
+            for (ent, mut dit) in dit_query.iter_mut(subworld) {
+                if dit.timer <= 0f64 {
+                    commands.remove(*ent);
                 }
 
+                dit.timer -= f64::from(time.delta_seconds());
             }
-        )
+        })
 }

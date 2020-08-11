@@ -3,8 +3,8 @@
 pub use crate::{
     app::{Application, ApplicationBuilder, CoreApplication},
     config::Config,
-    ecs::prelude::*,
-    game_data::{DataInit, GameData, GameDataBuilder},
+    ecs::*,
+    game_data::{DataInit, GameData},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, Trans, TransEvent,
     },

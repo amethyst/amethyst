@@ -1,12 +1,10 @@
 use std::marker::PhantomData;
 
-use amethyst_core::{
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    ecs::prelude::*,
-    math::one,
-};
+use amethyst_core::{ecs::*, math::one, shrev::EventChannel};
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
+
+use winit::Event;
 
 use super::*;
 
@@ -73,27 +71,42 @@ impl<T: BindingTypes> FlyControlBundle<T> {
 }
 
 impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         _world: &mut World,
-        _resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(
-            Stage::Begin,
-            build_fly_movement_system::<T>(
-                self.speed,
-                self.horizontal_axis,
-                self.vertical_axis,
-                self.longitudinal_axis,
-            ),
-        );
-        builder.add_system(
-            Stage::Begin,
-            build_free_rotation_system(self.sensitivity_x, self.sensitivity_y),
-        );
-        builder.add_system(Stage::Begin, build_mouse_focus_update_system);
-        builder.add_system(Stage::Begin, build_cursor_hide_system);
+        builder.add_system(build_fly_movement_system::<T>(
+            self.speed,
+            self.horizontal_axis.clone(),
+            self.vertical_axis.clone(),
+            self.longitudinal_axis.clone(),
+        ));
+
+        let reader = resources
+            .get_mut::<EventChannel<Event>>()
+            .expect("Window event channel not found in resources")
+            .register_reader();
+
+        builder.add_system(build_free_rotation_system(
+            self.sensitivity_x,
+            self.sensitivity_y,
+            reader,
+        ));
+
+        resources.insert(WindowFocus::new());
+
+        let reader = resources
+            .get_mut::<EventChannel<Event>>()
+            .expect("Window event channel not found in resources")
+            .register_reader();
+
+        builder.add_system(build_mouse_focus_update_system(reader));
+
+        resources.insert(HideCursor::default());
+        builder.add_system(build_cursor_hide_system());
+
         Ok(())
     }
 }
@@ -137,19 +150,36 @@ impl<T: BindingTypes> Default for ArcBallControlBundle<T> {
 }
 
 impl<T: BindingTypes> SystemBundle for ArcBallControlBundle<T> {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         _world: &mut World,
-        _resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(
-            Stage::Begin,
-            build_free_rotation_system(self.sensitivity_x, self.sensitivity_y),
-        );
-        builder.add_system(Stage::Begin, build_arc_ball_rotation_system);
-        builder.add_system(Stage::Begin, build_mouse_focus_update_system);
-        builder.add_system(Stage::Begin, build_cursor_hide_system);
+        let reader = resources
+            .get_mut::<EventChannel<Event>>()
+            .expect("Window event channel not found in resources")
+            .register_reader();
+
+        builder.add_system(build_free_rotation_system(
+            self.sensitivity_x,
+            self.sensitivity_y,
+            reader,
+        ));
+        builder.add_system(build_arc_ball_rotation_system());
+
+        resources.insert(WindowFocus::new());
+
+        let reader = resources
+            .get_mut::<EventChannel<Event>>()
+            .expect("Window event channel not found in resources")
+            .register_reader();
+
+        builder.add_system(build_mouse_focus_update_system(reader));
+
+        resources.insert(HideCursor::default());
+        builder.add_system(build_cursor_hide_system());
+
         Ok(())
     }
 }

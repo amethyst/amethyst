@@ -2,7 +2,7 @@
 
 use crate::{
     camera::ActiveCamera,
-    mtl::Material,
+    mtl::{Material, MaterialDefaults},
     rendy::{
         command::QueueId,
         factory::Factory,
@@ -14,17 +14,14 @@ use crate::{
         wsi::Surface,
     },
     system::{
-        build_mesh_processor, build_rendering_system, build_texture_processor, GraphAuxData,
-        GraphCreator,
+        build_mesh_processor, build_texture_processor, create_default_mat, make_graph_aux_data,
+        render, GraphAuxData, GraphCreator, RenderState,
     },
-    types::Backend,
+    types::{Backend, Mesh, Texture},
     SpriteSheet,
 };
-use amethyst_assets::build_asset_processor_system;
-use amethyst_core::{
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    ecs::prelude::*,
-};
+use amethyst_assets::{AssetProcessorSystemBundle, AssetStorage};
+use amethyst_core::ecs::*;
 use amethyst_error::{format_err, Error};
 use std::collections::HashMap;
 
@@ -64,30 +61,33 @@ impl<B: Backend> RenderingBundle<B> {
         self.plugins.push(Box::new(plugin));
     }
 
-    fn into_graph_creator(self) -> PluggableRenderGraphCreator<B> {
+    fn into_graph_creator(&mut self) -> PluggableRenderGraphCreator<B> {
         PluggableRenderGraphCreator {
-            plugins: self.plugins,
+            plugins: self.plugins.drain(..).collect(),
         }
     }
 }
 
 impl<B: Backend> SystemBundle for RenderingBundle<B> {
-    fn build(
-        mut self,
+    fn load(
+        &mut self,
         world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Begin, build_mesh_processor::<B>);
-        builder.add_system(Stage::Begin, build_texture_processor::<B>);
+        resources.insert(AssetStorage::<Mesh>::default());
+        builder.add_system(build_mesh_processor::<B>());
 
-        builder.add_system(Stage::Begin, build_asset_processor_system::<Material>);
-        builder.add_system(Stage::Begin, build_asset_processor_system::<SpriteSheet>);
+        resources.insert(AssetStorage::<Texture>::default());
+        builder.add_system(build_texture_processor::<B>());
+
+        builder.add_bundle(AssetProcessorSystemBundle::<Material>::default());
+        builder.add_bundle(AssetProcessorSystemBundle::<SpriteSheet>::default());
 
         resources.insert(ActiveCamera::default());
 
         // make sure that all renderer-specific systems run after game code
-        //builder.add_barrier(); TODO: flush legion here?
+        //builder.flush(); TODO: flush legion here?
 
         for plugin in &mut self.plugins {
             plugin.on_build(world, resources, builder)?;
@@ -104,9 +104,43 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
         resources.insert(factory);
         resources.insert(queue_id);
 
-        builder.add_thread_local(move |world, resources| {
-            build_rendering_system(world, resources, self.into_graph_creator(), families)
+        let mat = create_default_mat::<B>(resources);
+        resources.insert(MaterialDefaults(mat));
+
+        resources.insert(RenderState {
+            graph: None,
+            families,
+            graph_creator: self.into_graph_creator(),
         });
+
+        builder.add_thread_local_fn(render::<B, PluggableRenderGraphCreator<B>>);
+
+        Ok(())
+    }
+
+    fn unload(&mut self, world: &mut World, resources: &mut Resources) -> Result<(), Error> {
+        let mut state = resources
+            .remove::<RenderState<B, PluggableRenderGraphCreator<B>>>()
+            .unwrap();
+
+        if let Some(graph) = state.graph.take() {
+            let mut factory = resources.get_mut::<Factory<B>>().unwrap();
+            log::debug!("Dispose graph");
+
+            let aux = make_graph_aux_data(world, resources);
+            graph.dispose(&mut factory, &aux);
+        }
+
+        log::debug!("Unload resources");
+        if let Some(mut storage) = resources.get_mut::<AssetStorage<Mesh>>() {
+            storage.unload_all();
+        }
+        if let Some(mut storage) = resources.get_mut::<AssetStorage<Texture>>() {
+            storage.unload_all();
+        }
+
+        log::debug!("Drop families");
+        drop(state.families);
 
         Ok(())
     }
@@ -156,7 +190,7 @@ pub trait RenderPlugin<B: Backend>: std::fmt::Debug {
         &mut self,
         _world: &mut World,
         _resources: &mut Resources,
-        _builder: &mut DispatcherBuilder<'_>,
+        _builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         Ok(())
     }

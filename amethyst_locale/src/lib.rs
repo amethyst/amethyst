@@ -11,10 +11,6 @@
 #![warn(clippy::all)]
 
 use amethyst_assets::{Asset, Format, Handle};
-<<<<<<< HEAD
-use amethyst_core::ecs::prelude::*;
-=======
->>>>>>> upstream/legion_v2
 use amethyst_error::Error;
 pub use fluent::{concurrent::FluentBundle, FluentResource};
 use serde::{Deserialize, Serialize};

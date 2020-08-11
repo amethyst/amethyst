@@ -3,9 +3,7 @@
 use std::marker::PhantomData;
 
 //use amethyst_assets::PrefabData;
-use amethyst_core::ecs::prelude::{
-    Entity, Read, World, IntoQuery, SubWorld,
-};
+use amethyst_core::ecs::*;
 //use amethyst_derive::PrefabData;
 //use amethyst_error::Error;
 
@@ -45,10 +43,10 @@ where
     T: Clone + Send + Sync + 'static,
 {
     /// Returns the first entity found with the tag in question.
-    pub fn find(&self,subworld: &mut SubWorld<'_>) -> Option<Entity> {
-        <Read<Tag<T>>>::query()
-            .iter_entities(subworld)
-            .map(|(ent, _)| ent)
+    pub fn find(&self, subworld: &mut SubWorld<'_>) -> Option<Entity> {
+        <(Entity, Read<Tag<T>>)>::query()
+            .iter(subworld)
+            .map(|(ent, _)| *ent)
             .next()
     }
 }

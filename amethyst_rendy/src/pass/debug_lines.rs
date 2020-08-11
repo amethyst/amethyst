@@ -7,7 +7,7 @@ use crate::{
     types::Backend,
     util,
 };
-use amethyst_core::ecs::prelude::*;
+use amethyst_core::ecs::*;
 use derivative::Derivative;
 use glsl_layout::*;
 use rendy::{
@@ -112,11 +112,9 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawDebugLines<B> {
 
         let GraphAuxData { world, resources } = aux;
 
-        let lines_query = <Read<DebugLinesComponent>>::query();
-
         let old_len = self.lines.len();
         self.lines.clear();
-        for lines_component in lines_query.iter(*world) {
+        for lines_component in <Read<DebugLinesComponent>>::query().iter(*world) {
             self.lines.extend_from_slice(lines_component.lines());
         }
 

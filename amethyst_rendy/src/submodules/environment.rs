@@ -15,7 +15,7 @@ use crate::{
     util::{self, TapCountIter},
 };
 use amethyst_core::{
-    ecs::prelude::*,
+    ecs::*,
     math::{convert, Vector3},
     transform::LocalToWorld,
 };
@@ -192,7 +192,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             }
             .std140();
 
-            let point_lights_query = <(Read<Light>, Read<LocalToWorld>)>::query();
+            let mut point_lights_query = <(Read<Light>, Read<LocalToWorld>)>::query();
             let point_lights = point_lights_query
                 .iter(world)
                 .filter_map(|(light, transform)| match &*light {
@@ -209,7 +209,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 })
                 .take(MAX_POINT_LIGHTS);
 
-            let dir_lights_query = <Read<Light>>::query();
+            let mut dir_lights_query = <Read<Light>>::query();
             let dir_lights = dir_lights_query
                 .iter(world)
                 .filter_map(|light| match &*light {
@@ -225,7 +225,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 })
                 .take(MAX_DIR_LIGHTS);
 
-            let spot_lights_query = <(Read<Light>, Read<LocalToWorld>)>::query();
+            let mut spot_lights_query = <(Read<Light>, Read<LocalToWorld>)>::query();
             let spot_lights = spot_lights_query
                 .iter(world)
                 .filter_map(|(light, transform)| match &*light {

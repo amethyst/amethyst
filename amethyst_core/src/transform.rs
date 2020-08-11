@@ -1,7 +1,4 @@
-use crate::{
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    ecs::prelude::*,
-};
+use crate::ecs::*;
 use amethyst_error::Error;
 
 pub use legion_transform::prelude::*;
@@ -11,19 +8,18 @@ pub use legion_transform::prelude::*;
 pub struct TransformBundle;
 
 impl SystemBundle for TransformBundle {
-    fn build(
-        self,
-        world: &mut World,
-        resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+    fn load(
+        &mut self,
+        _world: &mut World,
+        _resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        hierarchy_maintenance_system::build(world, resources)
-            .into_iter()
-            .for_each(|system| builder.add_system(Stage::Begin, move |_, _| system));
-
-        builder.add_system(Stage::Begin, local_to_parent_system::build);
-        builder.add_system(Stage::Begin, local_to_world_system::build);
-        builder.add_system(Stage::Begin, local_to_world_propagate_system::build);
+        builder
+            .add_system(missing_previous_parent_system::build())
+            .add_system(parent_update_system::build())
+            .add_system(local_to_parent_system::build())
+            .add_system(local_to_world_system::build())
+            .add_system(local_to_world_propagate_system::build());
 
         Ok(())
     }

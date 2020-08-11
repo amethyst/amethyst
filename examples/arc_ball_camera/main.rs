@@ -1,35 +1,33 @@
 //! Demonstrates how to use the arc ball camera.
-//! 
+//!
 use amethyst::{
     assets::{AssetStorage, Loader},
-    controls::{ArcBallControlBundle, HideCursor, ArcBallControl},
+    controls::{ArcBallControl, ArcBallControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,
-        transform::{LocalToWorld, Rotation, Translation, TransformBundle},
+        transform::{LocalToWorld, Rotation, TransformBundle, Translation},
     },
     input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
         camera::Camera,
-        plugins::{RenderShaded3D, RenderToWindow, RenderDebugLines},
+        light::{Light, PointLight},
         mtl::{Material, MaterialDefaults},
         palette::{LinSrgba, Srgb},
-        light::{Light, PointLight},
+        plugins::{RenderShaded3D, RenderToWindow},
         rendy::{
             mesh::{Normal, Position, Tangent, TexCoord},
             texture::palette::load_from_linear_rgba,
         },
         shape::Shape,
         types::DefaultBackend,
-        RenderingBundle, Mesh, Texture,
+        Mesh, RenderingBundle, Texture,
     },
     utils::application_root_dir,
-    winit::{MouseButton, VirtualKeyCode},
     window::ScreenDimensions,
+    winit::{MouseButton, VirtualKeyCode},
     Error,
 };
-
-//type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
 struct ExampleState;
 
@@ -95,7 +93,7 @@ impl SimpleState for ExampleState {
             (LocalToWorld::identity(), pos, mesh.clone(), mtl)
         });
 
-        let target = world.insert((), spheres).into_iter().nth(0).unwrap().clone();
+        let target = world.extend(spheres).into_iter().nth(0).unwrap().clone();
 
         println!("Create lights");
         let light1: Light = PointLight {
@@ -116,13 +114,10 @@ impl SimpleState for ExampleState {
 
         let light2_translation = Translation::new(6.0, -6.0, -6.0);
 
-        world.insert(
-            (),
-            vec![
-                (LocalToWorld::identity(), light1, light1_translation),
-                (LocalToWorld::identity(), light2, light2_translation),
-            ],
-        );
+        world.extend(vec![
+            (LocalToWorld::identity(), light1, light1_translation),
+            (LocalToWorld::identity(), light2, light2_translation),
+        ]);
 
         println!("Put camera");
 
@@ -134,24 +129,16 @@ impl SimpleState for ExampleState {
             (dim.width(), dim.height())
         };
 
-        world.insert(
-            (),
-            vec![(
-                LocalToWorld::identity(),
-                Camera::standard_3d(width, height),
-                translation,
-                rotation,
-                ArcBallControl::new(target, 10.0),
-            )],
-        );
-
+        world.extend(vec![(
+            LocalToWorld::identity(),
+            Camera::standard_3d(width, height),
+            translation,
+            rotation,
+            ArcBallControl::new(target, 10.0),
+        )]);
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { resources, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
@@ -174,11 +161,14 @@ fn main() -> Result<(), Error> {
     let assets_dir = app_root.join("examples/assets");
     let key_bindings_path = app_root.join("examples/arc_ball_camera/config/input.ron");
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle)
-        .with_bundle(InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?)
-        .with_bundle(ArcBallControlBundle::<StringBindings>::new().with_sensitivity(0.1, 0.1))
-        .with_bundle(
+    let mut builder = DispatcherBuilder::default();
+    builder
+        .add_bundle(TransformBundle)
+        .add_bundle(
+            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
+        )
+        .add_bundle(ArcBallControlBundle::<StringBindings>::new().with_sensitivity(0.1, 0.1))
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?
@@ -189,7 +179,7 @@ fn main() -> Result<(), Error> {
 
     let mut game = Application::build(assets_dir, ExampleState)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 60)
-        .build(game_data)?;
+        .build(builder)?;
 
     game.run();
     Ok(())

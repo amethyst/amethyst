@@ -1,10 +1,7 @@
 //! ECS audio bundles
 
-use amethyst_assets::build_asset_processor_system;
-use amethyst_core::{
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    ecs::prelude::*,
-};
+use amethyst_assets::AssetProcessorSystemBundle;
+use amethyst_core::ecs::*;
 use amethyst_error::Error;
 
 use crate::{output::Output, source::*, systems::*};
@@ -20,14 +17,15 @@ use crate::{output::Output, source::*, systems::*};
 pub struct AudioBundle(Output);
 
 impl SystemBundle for AudioBundle {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         _world: &mut World,
         _resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Stage::Begin, build_audio_system);
-        builder.add_system(Stage::Begin, build_asset_processor_system::<Source>);
+        builder
+            .add_system(build_audio_system())
+            .add_bundle(AssetProcessorSystemBundle::<Source>::default());
         Ok(())
     }
 }

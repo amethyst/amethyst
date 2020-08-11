@@ -5,8 +5,8 @@ use crate::{
     resources::AmbientColor,
 };
 use amethyst_core::{
-    ecs::prelude::*,
-    math::{convert, Matrix4, Vector3},
+    ecs::*,
+    math::{convert, Vector3},
     transform::LocalToWorld,
 };
 use glsl_layout::*;
@@ -37,9 +37,9 @@ impl CameraGatherer {
         // Find if such camera exists
         let entity = active_camera
             .and_then(|active_camera| {
-                <Read<Camera>>::query()
-                    .iter_entities(world)
-                    .map(|(e, _)| e)
+                <(Entity, Read<Camera>)>::query()
+                    .iter(world)
+                    .map(|(e, _)| *e)
                     .find(|e| active_camera == *e)
             })
             .or_else(|| None);
@@ -49,10 +49,10 @@ impl CameraGatherer {
             Some(entity) => Some(entity),
             None => {
                 // Fetch first available camera
-                <Read<Camera>>::query()
-                    .iter_entities(world)
+                <(Entity, Read<Camera>)>::query()
+                    .iter(world)
                     .nth(0)
-                    .map(|(e, _)| e)
+                    .map(|(e, _)| *e)
             }
         }
     }
@@ -72,12 +72,18 @@ impl CameraGatherer {
         let camera_entity = Self::gather_camera_entity(world, resources);
 
         let camera = camera_entity
-            .map(|e| world.get_component::<Camera>(e))
+            .map(|e| world.entry_ref(e).unwrap().into_component::<Camera>().ok())
             .flatten();
         let camera = camera.as_deref().unwrap_or(&defcam);
 
         let transform = camera_entity
-            .map(|e| world.get_component::<LocalToWorld>(e))
+            .map(|e| {
+                world
+                    .entry_ref(e)
+                    .unwrap()
+                    .into_component::<LocalToWorld>()
+                    .ok()
+            })
             .flatten();
         let transform = transform.as_deref().unwrap_or(&identity);
 

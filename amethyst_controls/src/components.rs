@@ -1,4 +1,4 @@
-use amethyst_core::ecs::prelude::*;
+use amethyst_core::ecs::*;
 
 use derive_new::new;
 use serde::{Deserialize, Serialize};

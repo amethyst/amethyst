@@ -1,9 +1,7 @@
 //! Utility to adjust the aspect ratio of cameras automatically
 
 //use amethyst_assets::PrefabData;
-use amethyst_core::ecs::prelude::{
-    World, SystemBuilder, Resources, Write, Read, Schedulable, IntoQuery
-}; 
+use amethyst_core::ecs::*;
 //use amethyst_derive::{PrefabData, SystemDesc};
 //use amethyst_error::Error;
 use amethyst_rendy::camera::Camera;
@@ -204,7 +202,6 @@ impl AutoFov {
     }
 }
 
-
 impl Default for AutoFov {
     fn default() -> Self {
         AutoFov {
@@ -227,42 +224,25 @@ impl Default for AutoFov {
 /// If the camera is being loaded by a prefab, it is best to have the `PrefabLoaderSystem` loading
 /// the camera as a dependency of this system. It enables the system to adjust the camera right
 /// after it is created -- simply put, in the same frame.
-pub struct AutoFovResource {
-    last_dimensions: ScreenDimensions,
-}
+pub fn build_auto_fov_system() -> impl Runnable {
+    let mut last_dimensions = ScreenDimensions::new(0, 0, 0.0);
 
-impl AutoFovResource {
-    /// Sets up `SystemData` and returns a new `AutoFovSystem`.
-    pub fn new() -> Self {
-        Self {
-            last_dimensions: ScreenDimensions::new(0, 0, 0.0),
-        }
-    }
-}
-
-pub fn build_auto_fov_system(_world: &mut World, res: &mut Resources) -> Box<dyn Schedulable> {
-    res.insert(AutoFovResource::new());
-    
-    SystemBuilder::<()>::new("auto_fov_system")
-        .write_resource::<AutoFovResource>()
+    SystemBuilder::new("auto_fov_system")
         .read_resource::<ScreenDimensions>()
         .with_query(<(Write<Camera>, Read<AutoFov>)>::query())
-        .build(
-            move |_commands, subworld, (mut auto_fov_res, screen) , query| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("auto_fov_system");
-                
-                if auto_fov_res.last_dimensions != *screen {
-                    for (mut camera, auto_fov) in query.iter_mut(&mut *subworld) {
-                        if let Some(perspective) = camera.projection_mut().as_perspective_mut() {
-                            let fovy = perspective.fovy();
-                            let fovx = auto_fov.new_fovx(screen.aspect_ratio(), fovy);
-                            perspective.set_aspect(fovx / fovy);
-                        }
-                    }
-                    auto_fov_res.last_dimensions = screen.clone();
-                }
+        .build(move |_commands, subworld, screen, query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("auto_fov_system");
 
+            if last_dimensions != **screen {
+                for (camera, auto_fov) in query.iter_mut(subworld) {
+                    if let Some(perspective) = camera.projection_mut().as_perspective_mut() {
+                        let fovy = perspective.fovy();
+                        let fovx = auto_fov.new_fovx(screen.aspect_ratio(), fovy);
+                        perspective.set_aspect(fovx / fovy);
+                    }
+                }
+                last_dimensions = screen.clone();
             }
-        )
+        })
 }

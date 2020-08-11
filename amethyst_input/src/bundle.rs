@@ -1,15 +1,12 @@
 //! ECS input bundle
 
-use crate::{build_input_system, BindingError, BindingTypes, InputHandler, InputEvent, Bindings};
+use crate::{build_input_system, BindingError, BindingTypes, Bindings, InputHandler};
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{
-    shrev::EventChannel,
-    dispatcher::{DispatcherBuilder, Stage, SystemBundle},
-    ecs::prelude::*,
-};
+use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
 use derivative::Derivative;
 use std::{error, fmt, path::Path};
+use winit::Event;
 
 #[cfg(feature = "sdl_controller")]
 use crate::sdl_events_system::ControllerMappings;
@@ -81,11 +78,11 @@ impl<T: BindingTypes> InputBundle<T> {
 }
 
 impl<T: BindingTypes> SystemBundle for InputBundle<T> {
-    fn build(
-        self,
-        world: &mut World,
+    fn load(
+        &mut self,
+        _world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'_>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         #[cfg(feature = "sdl_controller")]
         {
@@ -96,7 +93,20 @@ impl<T: BindingTypes> SystemBundle for InputBundle<T> {
             );
         }
 
-        builder.add_system(Stage::Begin, build_input_system::<T>(self.bindings));
+        let reader = resources
+            .get_mut::<EventChannel<Event>>()
+            .expect("Window event channel not found in resources")
+            .register_reader();
+
+        let mut handler = InputHandler::<T>::new();
+        if let Some(bindings) = self.bindings.as_ref() {
+            handler.bindings = bindings.clone();
+        }
+
+        resources.insert(handler);
+
+        builder.add_system(build_input_system::<T>(reader));
+
         Ok(())
     }
 }

@@ -1,20 +1,10 @@
 //! Provides utilities to remove large amounts of entities with a single command.
 
-use std::{fmt::Debug};
+use std::fmt::Debug;
 
 //use amethyst_assets::PrefabData;
-use amethyst_core::ecs::prelude::{
-    World,
-    Read,
-    IntoQuery,
-    Entity,
-    SubWorld,
-    CommandBuffer,
-};
-use amethyst_derive::PrefabData;
-use amethyst_error::Error;
+use amethyst_core::ecs::*;
 
-use log::error;
 use serde::{Deserialize, Serialize};
 
 /// A marker `Component` used to remove entities and clean up your scene.
@@ -68,18 +58,16 @@ where
 }
 
 /// Removes all entities that have the `Removal<I>` component with the specified removal_id.
-pub fn exec_removal<I, D>(
-    commands: &mut CommandBuffer,
-    subworld: &mut SubWorld<'_>, 
-    removal_id: I,
-) where
+pub fn exec_removal<I, D>(commands: &mut CommandBuffer, subworld: &mut SubWorld<'_>, removal_id: I)
+where
     I: Debug + Clone + PartialEq + Send + Sync + 'static,
-{ 
-    let removal_query = <Read<Removal<I>>>::query();
-    for (ent, _) in removal_query.iter_entities_mut(&mut *subworld)
+{
+    let mut removal_query = <(Entity, &Removal<I>)>::query();
+    for (ent, _) in removal_query
+        .iter_mut(subworld)
         .filter(|(_, rm)| rm.id == removal_id)
     {
-        commands.delete(ent);
+        commands.remove(*ent);
     }
 }
 
@@ -90,8 +78,10 @@ pub fn add_removal_to_entity<T: PartialEq + Clone + Debug + Send + Sync + 'stati
     entity: Entity,
     id: T,
 ) {
-    world.add_component(entity, id)
-        .unwrap_or_else(|_|{
+    world
+        .entry(entity)
+        .map(|mut entry| entry.add_component(Removal::new(id)))
+        .unwrap_or_else(|| {
             panic!(
                 "Failed to insert `Removal` component id to entity: {:?}.",
                 entity,

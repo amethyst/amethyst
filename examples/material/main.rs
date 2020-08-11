@@ -2,7 +2,7 @@
 use amethyst::{
     assets::{AssetStorage, Loader},
     core::{
-        ecs::prelude::*,
+        ecs::*,
         transform::{LocalToWorld, Rotation, TransformBundle, Translation},
     },
     renderer::{
@@ -21,7 +21,7 @@ use amethyst::{
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    Application, GameData, GameDataBuilder, SimpleState, StateData,
+    Application, GameData, SimpleState, StateData,
 };
 
 struct Example;
@@ -87,7 +87,7 @@ impl SimpleState for Example {
             (LocalToWorld::identity(), pos, mesh.clone(), mtl)
         });
 
-        world.insert((), spheres);
+        world.extend(spheres);
 
         println!("Create lights");
         let light1: Light = PointLight {
@@ -97,7 +97,7 @@ impl SimpleState for Example {
         }
         .into();
 
-        let mut light1_translation = Translation::new(6.0, 6.0, -6.0);
+        let light1_translation = Translation::new(6.0, 6.0, -6.0);
 
         let light2: Light = PointLight {
             intensity: 5.0,
@@ -106,35 +106,29 @@ impl SimpleState for Example {
         }
         .into();
 
-        let mut light2_translation = Translation::new(6.0, -6.0, -6.0);
+        let light2_translation = Translation::new(6.0, -6.0, -6.0);
 
-        world.insert(
-            (),
-            vec![
-                (LocalToWorld::identity(), light1, light1_translation),
-                (LocalToWorld::identity(), light2, light2_translation),
-            ],
-        );
+        world.extend(vec![
+            (LocalToWorld::identity(), light1, light1_translation),
+            (LocalToWorld::identity(), light2, light2_translation),
+        ]);
 
         println!("Put camera");
 
-        let mut translation = Translation::new(0.0, 0.0, -12.0);
-        let mut rotation = Rotation::from_euler_angles(0.0, std::f32::consts::PI, 0.0);
+        let translation = Translation::new(0.0, 0.0, -12.0);
+        let rotation = Rotation::from_euler_angles(0.0, std::f32::consts::PI, 0.0);
 
         let (width, height) = {
             let dim = resources.get::<ScreenDimensions>().unwrap();
             (dim.width(), dim.height())
         };
 
-        world.insert(
-            (),
-            vec![(
-                LocalToWorld::identity(),
-                Camera::standard_3d(width, height),
-                translation,
-                rotation,
-            )],
-        );
+        world.extend(vec![(
+            LocalToWorld::identity(),
+            Camera::standard_3d(width, height),
+            translation,
+            rotation,
+        )]);
     }
 }
 
@@ -145,18 +139,18 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/material/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle)
-        .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
-                )
-                .with_plugin(RenderPbr3D::default()),
-        );
+    let mut builder = DispatcherBuilder::default();
 
-    let mut game = Application::new(assets_dir, Example, game_data)?;
+    builder.add_bundle(TransformBundle).add_bundle(
+        RenderingBundle::<DefaultBackend>::new()
+            .with_plugin(
+                RenderToWindow::from_config_path(display_config_path)?
+                    .with_clear([0.34, 0.36, 0.52, 1.0]),
+            )
+            .with_plugin(RenderPbr3D::default()),
+    );
+
+    let mut game = Application::new(assets_dir, Example, builder)?;
     game.run();
     Ok(())
 }

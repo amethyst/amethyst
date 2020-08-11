@@ -11,7 +11,10 @@ use crate::{
     util,
 };
 use amethyst_assets::AssetStorage;
-use amethyst_core::{ecs::prelude::*, transform::LocalToWorld, Hidden, HiddenPropagate};
+use amethyst_core::{
+    ecs::{systems::ResourceSet, *},
+    transform::LocalToWorld,
+};
 use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
@@ -122,19 +125,12 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_visibility");
 
+            let mut query = <(&SpriteRender, &LocalToWorld, Option<&Tint>)>::query();
+
             visibility
                 .visible_unordered
                 .iter()
-                .filter_map(|entity| {
-                    Some((
-                        entity,
-                        (
-                            world.get_component::<SpriteRender>(*entity)?,
-                            world.get_component::<LocalToWorld>(*entity)?,
-                            world.get_component::<Tint>(*entity),
-                        ),
-                    ))
-                })
+                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
                 .filter_map(|(entity, (sprite_render, global, tint))| {
                     let (batch_data, texture) = if let Some(tint) = tint {
                         SpriteArgs::from_data(
@@ -315,19 +311,12 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_visibility");
 
+            let mut query = <(&SpriteRender, &LocalToWorld, Option<&Tint>)>::query();
+
             visibility
                 .visible_ordered
                 .iter()
-                .filter_map(|entity| {
-                    Some((
-                        entity,
-                        (
-                            world.get_component::<SpriteRender>(*entity)?,
-                            world.get_component::<LocalToWorld>(*entity)?,
-                            world.get_component::<Tint>(*entity),
-                        ),
-                    ))
-                })
+                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
                 .filter_map(|(entity, (sprite_render, global, tint))| {
                     let (batch_data, texture) = if let Some(tint) = tint {
                         SpriteArgs::from_data(
