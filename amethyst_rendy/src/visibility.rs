@@ -86,13 +86,16 @@ pub fn build_visibility_sorting_system() -> impl Runnable {
     SystemBuilder::new("VisibilitySortingSystem")
         .read_resource::<ActiveCamera>()
         .write_resource::<Visibility>()
-        .read_component::<BoundingSphere>()
-        .read_component::<Transparent>()
-        .with_query(<(Read<Camera>, Read<LocalToWorld>)>::query())
-        .with_query(<(Entity, Read<Camera>, Read<LocalToWorld>)>::query())
+        .with_query(<(&Camera, &LocalToWorld)>::query())
+        .with_query(<(Entity, &Camera, &LocalToWorld)>::query())
         .with_query(
-            <(Entity, Read<LocalToWorld>)>::query()
-                .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
+            <(
+                Entity,
+                &LocalToWorld,
+                Option<&Transparent>,
+                Option<&BoundingSphere>,
+            )>::query()
+            .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
         )
         .build(
             move |commands,
@@ -131,15 +134,11 @@ pub fn build_visibility_sorting_system() -> impl Runnable {
                 state.centroids.extend(
                     entity_query
                         .iter(world)
-                        .map(|(entity, transform)| {
-                            let sphere = world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<BoundingSphere>();
-
+                        .map(|(entity, transform, transparent, sphere)| {
                             let pos = sphere.clone().map_or(origin, |s| s.center);
                             (
                                 *entity,
+                                transparent.is_some(),
                                 transform.transform_point(&pos),
                                 sphere.map_or(1.0, |s| s.radius)
                                     * transform[(0, 0)]
@@ -147,14 +146,10 @@ pub fn build_visibility_sorting_system() -> impl Runnable {
                                         .max(transform[(2, 2)]),
                             )
                         })
-                        .filter(|(_, centroid, radius)| frustum.check_sphere(centroid, *radius))
-                        .map(|(entity, centroid, _)| Internals {
+                        .filter(|(_, _, centroid, radius)| frustum.check_sphere(centroid, *radius))
+                        .map(|(entity, transparent, centroid, _)| Internals {
                             entity,
-                            transparent: world
-                                .entry_ref(entity)
-                                .unwrap()
-                                .get_component::<Transparent>()
-                                .is_ok(),
+                            transparent,
                             centroid,
                             camera_distance: distance_squared(&centroid, &camera_centroid),
                         }),

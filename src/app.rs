@@ -537,7 +537,7 @@ where
             })
             .ok();
 
-        let world = World::new();
+        let world = World::default();
         let mut resources = Resources::default();
 
         let thread_pool_builder = ThreadPoolBuilder::new();

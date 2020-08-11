@@ -62,7 +62,7 @@ pub fn exec_removal<I, D>(commands: &mut CommandBuffer, subworld: &mut SubWorld<
 where
     I: Debug + Clone + PartialEq + Send + Sync + 'static,
 {
-    let mut removal_query = <(Entity, Read<Removal<I>>)>::query();
+    let mut removal_query = <(Entity, &Removal<I>)>::query();
     for (ent, _) in removal_query
         .iter_mut(subworld)
         .filter(|(_, rm)| rm.id == removal_id)
@@ -80,7 +80,7 @@ pub fn add_removal_to_entity<T: PartialEq + Clone + Debug + Send + Sync + 'stati
 ) {
     world
         .entry(entity)
-        .map(|mut entry| entry.add_component(id))
+        .map(|mut entry| entry.add_component(Removal::new(id)))
         .unwrap_or_else(|| {
             panic!(
                 "Failed to insert `Removal` component id to entity: {:?}.",
