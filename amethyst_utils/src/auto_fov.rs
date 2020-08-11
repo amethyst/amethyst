@@ -14,7 +14,7 @@ use thread_profiler::profile_scope;
 
 /// A component that stores the parameters that the associated camera should have
 /// when it is managed by the AutoFovSystem.
-#[derive(Clone, Debug, Deserialize, /*PrefabData,*/ Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 // #[prefab(Component)]
 #[serde(default)]
 pub struct AutoFov {
