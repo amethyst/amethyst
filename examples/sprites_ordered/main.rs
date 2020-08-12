@@ -289,10 +289,7 @@ impl Example {
             // This combines multiple `Transform`ations.
             sprite_transform.concat(&common_transform);
 
-            let sprite_render = SpriteRender {
-                sprite_sheet: sprite_sheet_handle.clone(),
-                sprite_number: i as usize,
-            };
+            let sprite_render = SpriteRender::new(sprite_sheet_handle.clone(), i as usize);
 
             let mut entity_builder = world
                 .create_entity()

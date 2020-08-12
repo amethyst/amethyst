@@ -84,7 +84,7 @@ struct ExampleState;
 impl SimpleState for ExampleState {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
-# 
+#
 #         let sprite_sheet = load_sprite_sheet(texture_handle);
 #         let sprite_sheet_handle = {
 #             let loader = data.world.read_resource::<Loader>();
@@ -115,10 +115,8 @@ impl ExampleState {
         let mut sprite_transform = Transform::default();
         sprite_transform.set_translation_xyz(width / 2., height / 2., 0.);
 
-        let sprite_render = SpriteRender {
-            sprite_sheet: sprite_sheet_handle,
-            sprite_number: 0, // First sprite
-        };
+        // 0 indicates the first sprite in the sheet.
+        let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // First sprite
 
         world
             .create_entity()

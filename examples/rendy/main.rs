@@ -473,10 +473,7 @@ fn load_crate_spritesheet(world: &mut World) -> Handle<SpriteSheet> {
 fn create_tinted_crates(world: &mut World) {
     let crate_spritesheet = load_crate_spritesheet(world);
 
-    let crate_sprite_render = SpriteRender {
-        sprite_sheet: crate_spritesheet.clone(),
-        sprite_number: 0,
-    };
+    let crate_sprite_render = SpriteRender::new(crate_spritesheet.clone(), 0);
 
     let crate_scale = Vector3::new(0.01, 0.01, 1.0);
 
