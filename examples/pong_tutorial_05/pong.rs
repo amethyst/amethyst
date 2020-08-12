@@ -183,7 +183,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
-    let sprite_render = SpriteRender::new(sprite_sheet_handle, 1);
+    let sprite_render = SpriteRender::new(sprite_sheet_handle, 1);  // ball is the second sprite on the sprite_sheet
 
     world
         .create_entity()
