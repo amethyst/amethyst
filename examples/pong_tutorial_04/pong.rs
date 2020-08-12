@@ -172,7 +172,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
     );
 
     // Assign the sprite for the ball
-    let sprite_render = SpriteRender::new(sprite_sheet_handle, 1);
+    let sprite_render = SpriteRender::new(sprite_sheet_handle, 1);  // ball is the second sprite on the sprite_sheet
 
     world
         .create_entity()
