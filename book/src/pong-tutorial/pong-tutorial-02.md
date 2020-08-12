@@ -579,7 +579,7 @@ the right one is flipped horizontally.
 # use amethyst::{assets::Handle, renderer::{SpriteRender, SpriteSheet}};
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 // Assign the sprites for the paddles
-let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);
+let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // paddle is the first sprite in the sprite_sheet
 # }
 ```
 
