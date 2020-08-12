@@ -596,7 +596,7 @@ Next we simply add the components to the paddle entities:
 # use amethyst::renderer::sprite::{SpriteSheet, SpriteRender};
 # use amethyst::prelude::*;
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
-# let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);
+# let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // paddle is the first sprite in the sprite_sheet
 // Create a left plank entity.
 world
     .create_entity()
