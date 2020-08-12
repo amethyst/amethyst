@@ -74,7 +74,7 @@ impl ExampleState {
 #         let mut sprite_transform = Transform::default();
 #         sprite_transform.set_translation_xyz(width / 2., height / 2., 0.);
 #
-#         let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);
+#         let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // First sprite
 
         // White shows the sprite as normal.
         // You can change the color at any point to modify the sprite's tint.
