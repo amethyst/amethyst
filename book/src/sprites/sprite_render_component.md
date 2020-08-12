@@ -116,7 +116,7 @@ impl ExampleState {
         sprite_transform.set_translation_xyz(width / 2., height / 2., 0.);
 
         // 0 indicates the first sprite in the sheet.
-        let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);
+        let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // First sprite
 
         world
             .create_entity()
