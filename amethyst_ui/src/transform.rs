@@ -29,7 +29,7 @@ impl<'a> UiFinder<'a> {
     pub fn find(&self, id: &str) -> Option<Entity> {
         (&*self.entities, &self.storage)
             .join()
-            .find(|(_, transform)| transform.id == id)
+            .find(|(_, transformb)| transform.id == id)
             .map(|(entity, _)| entity)
     }
 }
