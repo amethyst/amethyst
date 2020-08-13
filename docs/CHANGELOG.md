@@ -41,7 +41,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Fixed
 
 - Fixed tiles example MapMovementSystem ([#2209])
-- Fixed the bind method for DynamicVertexBuffer::<B,u32> ([2221])
+- Fixed the bind method for DynamicVertexBuffer::<B,u32> ([#2221])
 - Fixed renderable example ([#2223])
 - Fixed custom game data example ([#2239])
 - Fixed all the broken examples with UiBundle failing being loaded without InputBundle ([#2243])
