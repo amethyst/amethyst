@@ -34,7 +34,7 @@ derivative = "2.1.1"
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-amethyst = { path = "..", version = "0.15.0" }
+amethyst = { path = "..", version = "0.15.1" }
 ron = "0.5.1"
 
 [features]
