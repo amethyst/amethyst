@@ -19,46 +19,59 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [0.15.0] - 2020-08-14
 
-- Moving images from central README.md to individual examples ([#2201])
-- `GameDataBuilder::build_dispatcher` method returns a standalone `Dispatcher`
+### Added
+
+- New `optional_graphics` example demonstrating running an app with and without graphics ([#2282])
+- Return a standalone `Dispatcher` from `GameDataBuilder::build_dispatcher`
   instead of using `DataInit` to build a `GameData` ([#2294])
-- Support for text alignment in `UiButton` and `UiLabel` ([#2316])
-- `amethyst_input::axis::Axis` supports a new variant, `Multiple` ([#2341])
+- Support text alignment in `UiButton` and `UiLabel` ([#2316])
+- Support new variant `Multiple` in `amethyst_input::axis::Axis` ([#2341])
 - Support layer to be set in `UiLabelBuilder` ([#2358])
 - Support line mode to be set in `UiLabelBuilder` and `UiButtonBuilder` ([#2358])
 - `SpriteRender::new` for cleaner instantiation ([#2395])
 
 ### Changed
 
-- Changed Texture Asset name constant to "Texture" ([#2231])
+- Removed far plane from perspective projection ([#2118])
+- Updated pong example ([#2248])
+- Experimented with CI solutions, ended up with GitHub Actions ([#2262], )
 - `amethyst_rendy::shape::Shape::upload` takes `&ShapeUpload`. ([#2264])
-- Examples now have assets colocated in the individual example directories ([#2289], [#2305])
+- Updated examples. Improved readmes, updated screenshots, colocated assets with example code ([#2289], [#2305], [#2201])
 - `UiText` now requires 2 more arguments `line_mode` and `align` ([#2358])
 - `amethyst_ui::UiButtonActionRetrigger` now derives `Default` and `Clone`. ([#2388])
-- Removed far plane from perspective projection ([#2118])
-- Change Callback type to FnOnce ([#2244])
+
 
 ### Fixed
 
-- Fixed tiles example MapMovementSystem ([#2209])
-- Fixed the bind method for DynamicVertexBuffer::<B,u32> ([#2221])
-- Fixed renderable example ([#2223])
-- Fixed custom game data example ([#2239])
-- Fixed all the broken examples with UiBundle failing being loaded without InputBundle ([#2243])
-- Reset y val on score in pong tutorial ([#2248])
-- Corrected an issue where fixed updates were tied to time_scale ([#2255])
-- Fix asset handle reuse in rendy subs ([#2258])
-
-- Fixed asset handle reuse bug in renderer. ([#2258])
-- Fixed issue where all `TileMap`s were rendered with the same transformation. ([#2210])
-- Fixed UiButtonBuilder incorrect UiImage creation ([#2299])
+- Fix tiles example's `MapMovementSystem` to look for the correct components ([#2209])
+- Fix issue where all `TileMap`s were rendered with the same transformation. ([#2210])
+- Fix the bind method for `DynamicVertexBuffer::<B,u32>` ([#2221])
+- Fix examples which would not run due to incorrect system order. ([#2213], [#2223], [#2239], [#2243], [#2267])
+- Fix Texture asset debugging representation ([#2231])
+- Fix fixed updates being tied to time_scale ([#2255])
+- Fix incorrect assets being used when asset handles get reused ([#2258])
+- Fix UiButtonBuilder incorrect UiImage creation ([#2299])
+- Fix text alignment never being set in `UiText` ([#2316])
 - Correctly increment texture generation tracking number. ([#2339])
-- Fixed text alignment never being set in `UiText` ([#2358])
 
+[#2118]: https://github.com/amethyst/amethyst/pull/2118
+[#2201]: https://github.com/amethyst/amethyst/pull/2201
+[#2209]: https://github.com/amethyst/amethyst/pull/2209
 [#2210]: https://github.com/amethyst/amethyst/issues/2210
+[#2213]: https://github.com/amethyst/amethyst/pull/2213
+[#2221]: https://github.com/amethyst/amethyst/pull/2221
+[#2223]: https://github.com/amethyst/amethyst/pull/2223
+[#2231]: https://github.com/amethyst/amethyst/pull/2231
+[#2239]: https://github.com/amethyst/amethyst/pull/2239
+[#2243]: https://github.com/amethyst/amethyst/pull/2243
+[#2248]: https://github.com/amethyst/amethyst/pull/2248
 [#2254]: https://github.com/amethyst/amethyst/issues/2254
+[#2255]: https://github.com/amethyst/amethyst/pull/2255
 [#2258]: https://github.com/amethyst/amethyst/pull/2258
+[#2262]: https://github.com/amethyst/amethyst/pull/2262
 [#2264]: https://github.com/amethyst/amethyst/pull/2264
+[#2267]: https://github.com/amethyst/amethyst/pull/2267
+[#2282]: https://github.com/amethyst/amethyst/pull/2282
 [#2289]: https://github.com/amethyst/amethyst/pull/2289
 [#2294]: https://github.com/amethyst/amethyst/pull/2294
 [#2299]: https://github.com/amethyst/amethyst/pull/2299
