@@ -46,8 +46,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Fixed custom game data example ([#2239])
 - Fixed all the broken examples with UiBundle failing being loaded without InputBundle ([#2243])
 - Reset y val on score in pong tutorial ([#2248])
+- Corrected an issue where fixed updates were tied to time_scale ([#2255])
+- Fix asset handle reuse in rendy subs ([#2258])
 
-- Corrected an issue where fixed updates were tied to time scale. ([#2254])
 - Fixed asset handle reuse bug in renderer. ([#2258])
 - Fixed issue where all `TileMap`s were rendered with the same transformation. ([#2210])
 - Fixed UiButtonBuilder incorrect UiImage creation ([#2299])
