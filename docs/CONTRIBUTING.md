@@ -269,7 +269,7 @@ Examples in `book/` can be tested with the following:
 # the amethyst repo, otherwise mdbook complains. You only need to do this once, unless you change code
 # in the actual amethyst library.
 rm -rf ./target/debug/deps/libamethyst*
-cargo test --workspace --features=empty --no-run
+cargo test --workspace --features=empty,tiles --no-run
 
 # Then, test the book.  You can edit, run this command, and then repeat until you get everything passing.
 # This is what the book tests in CI do, so the snippets in the book must pass before you can push.
