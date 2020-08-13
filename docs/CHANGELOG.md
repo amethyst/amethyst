@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Examples now have assets colocated in the individual example directories ([#2289], [#2305])
 - `UiText` now requires 2 more arguments `line_mode` and `align` ([#2358])
 - `amethyst_ui::UiButtonActionRetrigger` now derives `Default` and `Clone`. ([#2388])
+- Removed far plane from perspective projection ([#2118])
 
 ### Fixed
 
