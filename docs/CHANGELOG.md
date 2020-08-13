@@ -36,14 +36,18 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Correctly increment texture generation tracking number. ([#2339])
 - Fixed text alignment never being set in `UiText` ([#2358])
 
-[#2341]: https://github.com/amethyst/amethyst/pull/2341
-[#2294]: https://github.com/amethyst/amethyst/pull/2294
 [#2210]: https://github.com/amethyst/amethyst/issues/2210
 [#2254]: https://github.com/amethyst/amethyst/issues/2254
 [#2258]: https://github.com/amethyst/amethyst/pull/2258
 [#2264]: https://github.com/amethyst/amethyst/pull/2264
+[#2289]: https://github.com/amethyst/amethyst/pull/2289
+[#2294]: https://github.com/amethyst/amethyst/pull/2294
 [#2299]: https://github.com/amethyst/amethyst/pull/2299
+[#2305]: https://github.com/amethyst/amethyst/pull/2305
+[#2316]: https://github.com/amethyst/amethyst/pull/2316
 [#2339]: https://github.com/amethyst/amethyst/pull/2339
+[#2341]: https://github.com/amethyst/amethyst/pull/2341
+[#2358]: https://github.com/amethyst/amethyst/pull/2358
 [#2388]: https://github.com/amethyst/amethyst/pull/2388
 [#2395]: https://github.com/amethyst/amethyst/pull/2395
 
@@ -80,6 +84,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Editable text is correctly blurred / unfocused when clicking outside its bounds. ([#2091], [#2151])
 - `amethyst_test` crate features now map 1-1 to `amethyst` features. ([#2153])
 
+[#1917]: https://github.com/amethyst/amethyst/pull/1917
+[#1988]: https://github.com/amethyst/amethyst/pull/1988
 [#2091]: https://github.com/amethyst/amethyst/issues/2091
 [#2108]: https://github.com/amethyst/amethyst/issues/2108
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
@@ -197,7 +203,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Fixed a silent shader error causing amethyst_tiles not to work. ([#1968])
 
-[#1966]: https://github.com/amethyst/amethyst/pull/1968
+[#1968]: https://github.com/amethyst/amethyst/pull/1968
 
 ## [0.13.2] - 2019-10-4
 
@@ -352,6 +358,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1802]: https://github.com/amethyst/amethyst/pull/1802
 [#1804]: https://github.com/amethyst/amethyst/pull/1804
 [#1805]: https://github.com/amethyst/amethyst/pull/1805
+[#1806]: https://github.com/amethyst/amethyst/pull/1806
 [#1807]: https://github.com/amethyst/amethyst/pull/1807
 [#1809]: https://github.com/amethyst/amethyst/issues/1809
 [#1811]: https://github.com/amethyst/amethyst/pull/1811
