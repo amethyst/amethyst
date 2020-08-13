@@ -12,6 +12,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
+### Changed
+
+### Fixed
+
+
+## [0.15.0] - 2020-08-14
+
 - `GameDataBuilder::build_dispatcher` method returns a standalone `Dispatcher`
   instead of using `DataInit` to build a `GameData` ([#2294])
 - Support for text alignment in `UiButton` and `UiLabel` ([#2316])
@@ -23,7 +30,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Changed
 
 - `amethyst_rendy::shape::Shape::upload` takes `&ShapeUpload`. ([#2264])
-- Examples now have assets colocated in the individual example directiories ([#2289], [#2305])
+- Examples now have assets colocated in the individual example directories ([#2289], [#2305])
 - `UiText` now requires 2 more arguments `line_mode` and `align` ([#2358])
 - `amethyst_ui::UiButtonActionRetrigger` now derives `Default` and `Clone`. ([#2388])
 
@@ -1244,7 +1251,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Initial release
 
-[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.0...HEAD
+[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.1...HEAD
+[0.15.1]: https://github.com/amethyst/amethyst/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/amethyst/amethyst/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/amethyst/amethyst/compare/v0.13.3...v0.14.0
 [0.13.3]: https://github.com/amethyst/amethyst/compare/v0.13.2...v0.13.3
