@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [0.15.0] - 2020-08-14
 
+- Moving images from central README.md to individual examples ([#2201])
 - `GameDataBuilder::build_dispatcher` method returns a standalone `Dispatcher`
   instead of using `DataInit` to build a `GameData` ([#2294])
 - Support for text alignment in `UiButton` and `UiLabel` ([#2316])
@@ -29,13 +30,22 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+- Changed Texture Asset name constant to "Texture" ([#2231])
 - `amethyst_rendy::shape::Shape::upload` takes `&ShapeUpload`. ([#2264])
 - Examples now have assets colocated in the individual example directories ([#2289], [#2305])
 - `UiText` now requires 2 more arguments `line_mode` and `align` ([#2358])
 - `amethyst_ui::UiButtonActionRetrigger` now derives `Default` and `Clone`. ([#2388])
 - Removed far plane from perspective projection ([#2118])
+- Change Callback type to FnOnce ([#2244])
 
 ### Fixed
+
+- Fixed tiles example MapMovementSystem ([#2209])
+- Fixed the bind method for DynamicVertexBuffer::<B,u32> ([2221])
+- Fixed renderable example ([#2223])
+- Fixed custom game data example ([#2239])
+- Fixed all the broken examples with UiBundle failing being loaded without InputBundle ([#2243])
+- Reset y val on score in pong tutorial ([#2248])
 
 - Corrected an issue where fixed updates were tied to time scale. ([#2254])
 - Fixed asset handle reuse bug in renderer. ([#2258])
