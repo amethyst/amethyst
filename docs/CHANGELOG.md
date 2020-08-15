@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Fixed
 
 
-## [0.15.0] - 2020-08-14
+## [0.15.1] - 2020-08-14
 
 ### Added
 
