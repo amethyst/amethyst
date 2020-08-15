@@ -1,5 +1,6 @@
 //! Passes and shaders implemented by amethyst
 
+mod base_2d;
 mod base_3d;
 mod debug_lines;
 mod flat;
@@ -8,7 +9,9 @@ mod pbr;
 mod shaded;
 mod skybox;
 
-pub use self::{base_3d::*, debug_lines::*, flat::*, flat2d::*, pbr::*, shaded::*, skybox::*};
+pub use self::{
+    base_2d::*, base_3d::*, debug_lines::*, flat::*, flat2d::*, pbr::*, shaded::*, skybox::*,
+};
 
 use rendy::{hal::pso::ShaderStageFlags, shader::SpirvShader};
 
