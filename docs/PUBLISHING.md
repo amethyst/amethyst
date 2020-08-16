@@ -6,10 +6,11 @@ dev-dependencies when publishing.
 
 Steps:
 
-1. Bump crate versions and dependencies and commit.
-2. Comment out dev-dependencies and commit: `git cherry-pick ebf45081`.
-3. Run `scripts/publish.sh` from the workspace root.
-4. Revert the dev-dependencies commit: `git revert HEAD`.
+1. Tag the commit with `vX.Y.Z`, and push.  For example: `git tag v0.15.1 && git push origin HEAD --tags`
+2. Bump crate versions and dependencies and commit.
+3. Comment out the `[dev-dependencies]` section from all `Cargo.toml` files and then commit.  It looks a lot like [this commit](https://github.com/amethyst/amethyst/commit/f911c8b08e960f005fc8013858a971aaa95ac2ed).
+4. Run `scripts/publish.sh` from the workspace root.
+5. Revert the dev-dependencies commit: `git revert HEAD`.
 
 ### Basic Crates
 

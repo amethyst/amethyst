@@ -7,6 +7,7 @@ if [[ `uname` == "Darwin" ]] ; then
 fi
 
 # Wave one -- crates without `amethyst_rendy` dependency.
+# The order is important because of inter-dependencies (see docs/PUBLISHING.md)
 crates=(
   amethyst_config
   amethyst_derive
