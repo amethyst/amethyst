@@ -14,7 +14,7 @@ use amethyst::{
 };
 
 pub struct CustomInputSystem {
-    input_event_rid: Option<ReaderId<InputEvent<StringBindings>>>,
+    input_event_rid: ReaderId<InputEvent<StringBindings>>,
 }
 
 impl CustomInputSystem {
