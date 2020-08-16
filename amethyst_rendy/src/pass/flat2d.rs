@@ -8,7 +8,7 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::Transform;
 use rendy::shader::SpirvShader;
 
-/// Implementation of `Base3DPassDef` describing a simple shaded 3D pass.
+/// Implementation of `Base2DPassDef` describing a simple flat 2D pass.
 #[derive(Debug)]
 pub struct Flat2DPassDef;
 impl Base2DPassDef for Flat2DPassDef {
@@ -40,12 +40,12 @@ impl Base2DPassDef for Flat2DPassDef {
     }
 }
 
-/// Describes a simple shaded 3D pass.
+/// Describes a simple flat 2D pass.
 pub type DrawFlat2DDesc<B> = DrawBase2DDesc<B, Flat2DPassDef>;
-/// Draws a simple shaded 3D pass.
+/// Draws a simple flat 2D pass.
 pub type DrawFlat2D<B> = DrawBase2D<B, Flat2DPassDef>;
 
-/// Describes a simple shaded 3D pass with transparency
+/// Describes a simple flat 2D pass with transparency
 pub type DrawFlat2DTransparentDesc<B> = DrawBase2DTransparentDesc<B, Flat2DPassDef>;
-/// Draws a simple shaded 3D pass with transparency
+/// Draws a simple flat 2D pass with transparency
 pub type DrawFlat2DTransparent<B> = DrawBase2DTransparent<B, Flat2DPassDef>;

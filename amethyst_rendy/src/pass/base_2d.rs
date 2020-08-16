@@ -31,12 +31,15 @@ use static_assertions::_core::marker::PhantomData;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-/// Define drawing opaque 3d meshes with specified shaders and texture set
+/// Define drawing types and functions to draw a 2d pass
 pub trait Base2DPassDef: 'static + std::fmt::Debug + Send + Sync {
     /// The human readable name of this pass
     const NAME: &'static str;
 
+    ///The Component type that will be fetch from the world each frame
     type SpriteComponent: Component;
+
+    ///The Data that gets passed into the vertex shader
     type SpriteData: AsVertex;
 
     /// Returns the vertex `SpirvShader` which will be used for this pass
@@ -45,6 +48,7 @@ pub trait Base2DPassDef: 'static + std::fmt::Debug + Send + Sync {
     /// Returns the fragment `SpirvShader` which will be used for this pass
     fn fragment_shader() -> &'static SpirvShader;
 
+    ///Function to convert between the SpriteComponent and the SpriteData
     fn get_args<'a>(
         tex_storage: &AssetStorage<Texture>,
         sprite_storage: &'a AssetStorage<SpriteSheet>,
@@ -54,7 +58,7 @@ pub trait Base2DPassDef: 'static + std::fmt::Debug + Send + Sync {
     ) -> Option<(Self::SpriteData, &'a [Handle<Texture>])>;
 }
 
-/// Draw opaque 3d meshes with specified shaders and texture set
+/// Draw opaque 2d components with specified shaders and texture set
 #[derive(Clone, Derivative)]
 #[derivative(Debug(bound = ""), Default(bound = ""))]
 pub struct DrawBase2DDesc<B: Backend, T: Base2DPassDef> {
@@ -254,7 +258,7 @@ impl<B: Backend, T: Base2DPassDef> RenderGroup<B, World> for DrawBase2D<B, T> {
     }
 }
 
-/// Describes drawing transparent sprites without lighting.
+/// Describes drawing transparent 2d components without lighting.
 #[derive(Clone, Debug, PartialEq, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct DrawBase2DTransparentDesc<B: Backend, T: Base2DPassDef> {
@@ -308,7 +312,7 @@ impl<B: Backend, T: Base2DPassDef> RenderGroupDesc<B, World> for DrawBase2DTrans
     }
 }
 
-/// Draws transparent sprites without lighting.
+/// Draws transparent  2d components without lighting.
 #[derive(Debug)]
 pub struct DrawBase2DTransparent<B: Backend, T: Base2DPassDef> {
     pipeline: B::GraphicsPipeline,
