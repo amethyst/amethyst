@@ -209,36 +209,17 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
         {
             profile_scope_impl!("prepare");
 
+            let mut query = <(
+                &Handle<Material>,
+                &Handle<Mesh>,
+                &Transform,
+                Option<&Tint>,
+            )>::query();
+
             visibility
                 .visible_unordered
                 .iter()
-                .filter_map(|entity| {
-                    Some((
-                        entity,
-                        (
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Handle<Material>>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Handle<Mesh>>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Transform>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Tint>()
-                                .ok(),
-                        ),
-                    ))
-                })
+                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
                 .map(|(entity, (mat, mesh, tform, tint))| {
                     if let Some(tint) = tint {
                         (
@@ -261,41 +242,18 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
         if self.pipeline_skinned.is_some() {
             profile_scope_impl!("prepare_skinning");
 
+            let mut query = <(
+                &Handle<Material>,
+                &Handle<Mesh>,
+                &Transform,
+                Option<&Tint>,
+                &JointTransforms,
+            )>::query();
+
             visibility
                 .visible_unordered
                 .iter()
-                .filter_map(|entity| {
-                    Some((
-                        entity,
-                        (
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Handle<Material>>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Handle<Mesh>>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Transform>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Tint>()
-                                .ok(),
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<JointTransforms>()
-                                .ok()?,
-                        ),
-                    ))
-                })
+                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
                 .map(|(_, (mat, mesh, tform, tint, joints))| {
                     if let Some(tint) = tint {
                         (
@@ -594,36 +552,17 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
         {
             profile_scope_impl!("prepare");
 
+            let mut query = <(
+                &Handle<Material>,
+                &Handle<Mesh>,
+                &Transform,
+                Option<&Tint>,
+            )>::query();
+
             visibility
                 .visible_ordered
                 .iter()
-                .filter_map(|entity| {
-                    Some((
-                        entity,
-                        (
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Handle<Material>>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Handle<Mesh>>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Transform>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Tint>()
-                                .ok(),
-                        ),
-                    ))
-                })
+                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
                 .map(|(entity, (mat, mesh, tform, tint))| {
                     if let Some(tint) = tint {
                         (
@@ -651,41 +590,18 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
         if self.pipeline_skinned.is_some() {
             profile_scope_impl!("prepare_skinning");
 
+            let mut query = <(
+                &Handle<Material>,
+                &Handle<Mesh>,
+                &Transform,
+                Option<&Tint>,
+                &JointTransforms,
+            )>::query();
+
             visibility
                 .visible_unordered
                 .iter()
-                .filter_map(|entity| {
-                    Some((
-                        entity,
-                        (
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Handle<Material>>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Handle<Mesh>>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Transform>()
-                                .ok()?,
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<Tint>()
-                                .ok(),
-                            world
-                                .entry_ref(*entity)
-                                .unwrap()
-                                .into_component::<JointTransforms>()
-                                .ok()?,
-                        ),
-                    ))
-                })
+                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
                 .map(|(_, (mat, mesh, tform, tint, joints))| {
                     if let Some(tint) = tint {
                         (

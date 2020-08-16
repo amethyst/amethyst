@@ -63,7 +63,7 @@ impl SystemBundle for WindowBundle {
             .clone()
             .into_window_builder(&events_loop)
             .build(&events_loop)
-            .unwrap();
+            .expect("Unable to create window");
 
         let hidpi = window.get_hidpi_factor();
         let (width, height) = window

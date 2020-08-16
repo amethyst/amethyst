@@ -86,7 +86,7 @@ impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
 
         let reader = resources
             .get_mut::<EventChannel<Event>>()
-            .unwrap()
+            .expect("Window event channel not found in resources")
             .register_reader();
 
         builder.add_system(build_free_rotation_system(
@@ -99,7 +99,7 @@ impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
 
         let reader = resources
             .get_mut::<EventChannel<Event>>()
-            .unwrap()
+            .expect("Window event channel not found in resources")
             .register_reader();
 
         builder.add_system(build_mouse_focus_update_system(reader));
@@ -158,7 +158,7 @@ impl<T: BindingTypes> SystemBundle for ArcBallControlBundle<T> {
     ) -> Result<(), Error> {
         let reader = resources
             .get_mut::<EventChannel<Event>>()
-            .unwrap()
+            .expect("Window event channel not found in resources")
             .register_reader();
 
         builder.add_system(build_free_rotation_system(
@@ -172,7 +172,7 @@ impl<T: BindingTypes> SystemBundle for ArcBallControlBundle<T> {
 
         let reader = resources
             .get_mut::<EventChannel<Event>>()
-            .unwrap()
+            .expect("Window event channel not found in resources")
             .register_reader();
 
         builder.add_system(build_mouse_focus_update_system(reader));

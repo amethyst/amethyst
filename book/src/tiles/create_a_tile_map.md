@@ -6,17 +6,17 @@ With the `tiles` feature installed and our `RenderTiles2D` render pass setup, we
 # extern crate amethyst;
 use amethyst::{
     core::{
-        math::Vector3,
+        math::{Point3, Vector3},
         transform::Transform,
     },
-    tiles:TileMap,
+    tiles::{Tile, TileMap},
 };
 # use amethyst::{
 #     assets::Handle,
-#     prelude::*
+#     prelude::*,
 #     renderer::SpriteSheet,
 # };
-
+#
 # #[derive(Clone, Default)]
 # struct SimpleTile;
 # impl Tile for SimpleTile {

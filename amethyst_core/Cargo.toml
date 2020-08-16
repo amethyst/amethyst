@@ -36,13 +36,14 @@ thread_profiler = { version = "0.3", optional = true }
 
 [dependencies.legion]
 git = "https://github.com/TomGillen/legion"
+rev = "b93b636d"
 default-features = false
 features = ["serialize", "crossbeam-events", "codegen"]
 
 [dev-dependencies]
-#amethyst = { path = "..", version = "0.15.0" }
+#amethyst = { path = "..", version = "0.15.1" }
 ron = "0.5.1"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]
-parallel = ["legion/par-iter", "legion/par-schedule"]
+parallel = ["legion/parallel"]

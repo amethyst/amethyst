@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      # bors needs CI to trigger for pushes to its staging/trying branches
+      - staging
+      - trying
+  pull_request:
+    branches:
+      - "**"
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+
+  tests:
+    name: Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        toolchain: [stable, beta, nightly]
+        include:
+        - os: macos-latest
+          FEATURES: metal,tiles
+          MACOS: true
+        - os: windows-latest
+          FEATURES: vulkan,tiles
+        - os: ubuntu-latest
+          FEATURES: vulkan,tiles
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install linux deps
+        run: |
+          sudo apt update
+          sudo apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev pulseaudio
+        if: contains(matrix.os, 'ubuntu')
+
+      - name: install ${{ matrix.toolchain }} toolchain
+        id: install_toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          profile: minimal
+          # Don't use a 'components:' entry--we don't need them with beta/nightly, plus nightly often doesn't have them
+          override: true
+
+      - name: install rustfmt+clippy on stable
+        run: |
+          rustup component add rustfmt
+          rustup component add clippy
+        if: contains(matrix.toolchain, 'stable')
+
+      - name: run rustfmt on stable
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+        if: contains(matrix.toolchain, 'stable')
+
+      - name: run clippy on stable
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features=${{matrix.FEATURES}}
+        if: contains(matrix.toolchain, 'stable')
+
+      - name: clean clippy-generated amethyst libs
+        run: rm -rf ./target/debug/deps/libamethyst*
+        if: contains(matrix.os, 'macos') || contains(matrix.os, 'linux')
+
+      - name: run tests
+        run: |
+          # Remove the clippy-generated amethyst files, they mess up `mdbook test` later on for some reason
+          cargo test --workspace --features=${{matrix.FEATURES}}
+        env:
+          MACOS: ${{ matrix.MACOS }}  # Used by some tests
+
+      - name: install mdbook on stable macos
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: 'latest'
+        if: contains(matrix.toolchain, 'stable') && contains(matrix.os, 'macos')
+
+# Should be working, but postponing until after we go live with GitHub Actions
+#      - name: install mdbook-linkcheck on stable macos
+#        run: |
+#          curl -L https://github.com/Michael-F-Bryan/mdbook-linkcheck/releases/download/v0.7.0/mdbook-linkcheck-v0.7.0-x86_64-apple-darwin.tar.gz | tar -xz && mv mdbook-linkcheck /Users/runner/.cargo/bin/mdbook-linkcheck
+#          chmod a+x /Users/runner/.cargo/bin/mdbook-linkcheck
+#          echo -e "\n\n[output.linkcheck]" >> book/book.toml ## PROBABLY REMOVE THIS IN FAVOR OF ALWAYS HAVING IT AS OPTIONAL IN THE CONFIG
+#        if: contains(matrix.toolchain, 'stable') && contains(matrix.os, 'macos')
+
+      - name: build mdbook on stable macos
+        run: mdbook build book
+        if: contains(matrix.toolchain, 'stable') && contains(matrix.os, 'macos')
+
+      - name: run mdbook tests on stable macos
+        run: mdbook test -L ./target/debug/deps book
+        if: contains(matrix.toolchain, 'stable') && contains(matrix.os, 'macos')

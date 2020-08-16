@@ -41,7 +41,7 @@ struct ExampleState;
 impl SimpleState for ExampleState {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
-# 
+#
 #         let sprite_sheet = load_sprite_sheet(texture_handle);
 #         let sprite_sheet_handle = {
 #             let loader = data.world.read_resource::<Loader>();
@@ -69,15 +69,12 @@ impl ExampleState {
 #             let dim = world.read_resource::<ScreenDimensions>();
 #             (dim.width(), dim.height())
 #         };
-# 
+#
 #         // Move the sprite to the middle of the window
 #         let mut sprite_transform = Transform::default();
 #         sprite_transform.set_translation_xyz(width / 2., height / 2., 0.);
-# 
-#         let sprite_render = SpriteRender {
-#             sprite_sheet: sprite_sheet_handle,
-#             sprite_number: 0, // First sprite
-#         };
+#
+#         let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // First sprite
 
         // White shows the sprite as normal.
         // You can change the color at any point to modify the sprite's tint.
