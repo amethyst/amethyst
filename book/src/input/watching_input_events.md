@@ -20,7 +20,7 @@ pub struct CustomInputSystem {
 impl CustomInputSystem {
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(world);
-        let reader_id = world.fetch_mut::<EventChannel<InputEvent<StringBindings>>>().register_reader();
+        let input_event_rid = world.fetch_mut::<EventChannel<InputEvent<StringBindings>>>().register_reader();
         Self { input_event_rid }
     }
 }
@@ -28,9 +28,9 @@ impl CustomInputSystem {
 impl<'a> System<'a> for CustomInputSystem {
     type SystemData = Read<'a, EventChannel<InputEvent<StringBindings>>>;
     fn run(&mut self, event_channel: Self::SystemData) {
-        for event in event_channel.read(&mut self.reader_id) {
-            if let InputEvent::KeyPressed(key) = event {
-                println!("{:?} was pressed", key);
+        for event in event_channel.read(&mut self.input_event_rid) {
+            if let InputEvent::KeyPressed { key_code, scancode } = event {
+                println!("{:?} was pressed", key_code);
             }
         }
     }
