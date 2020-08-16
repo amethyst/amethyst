@@ -2,4 +2,4 @@
 
 Creates a custom format and loads it using the asset loader.
 
-![asset loading example screenshot](../assets/img/asset-loading.png)
+![asset loading example screenshot](./screenshot.png)

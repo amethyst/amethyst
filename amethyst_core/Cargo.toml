@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_core"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst core"
@@ -41,7 +41,7 @@ default-features = false
 features = ["serialize", "crossbeam-events", "codegen"]
 
 [dev-dependencies]
-#amethyst = { path = "..", version = "0.15.0" }
+#amethyst = { path = "..", version = "0.15.1" }
 ron = "0.5.1"
 
 [features]

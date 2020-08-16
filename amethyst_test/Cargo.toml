@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_test"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Azriel Hoh <azriel91@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst test utilities crate"
@@ -13,7 +13,7 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst = { path = "..", version = "0.15.0", default-features = false }
+amethyst = { path = "..", version = "0.15.1", default-features = false }
 derivative = "2.1.1"
 derive-new = "0.5"
 derive_deref = "1.1.0"

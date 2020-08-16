@@ -53,4 +53,9 @@ cargo run --example {{name}} --features "{{backend}}"
    6. [Tiles](tiles)
    7. [Optional graphics](optional_graphics)
 8. Games
-   1. [Pong](pong)
+   1. [Pong 1](pong_tutorial_01)
+   2. [Pong 2](pong_tutorial_02)
+   3. [Pong 3](pong_tutorial_03)
+   4. [Pong 4](pong_tutorial_04)
+   5. [Pong 5](pong_tutorial_05)
+   6. [Pong 6](pong_tutorial_06)

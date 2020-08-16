@@ -1,6 +1,6 @@
 //! The simplest Amethyst example.
 
-use amethyst::prelude::*;
+use amethyst::{prelude::*, utils::application_root_dir};
 
 struct Example;
 
@@ -21,7 +21,7 @@ impl EmptyState for Example {
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
-    let assets_dir = "./";
+    let assets_dir = application_root_dir()?.join("examples/hello_world/assets");
     let mut game = Application::new(assets_dir, Example, ())?;
     game.run();
 

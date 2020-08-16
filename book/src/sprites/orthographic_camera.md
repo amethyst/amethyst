@@ -9,7 +9,7 @@ The following snippet demonstrates how to set up a `Camera` that sees entities w
 use amethyst::{
     core::{math::Orthographic3, transform::Transform},
     prelude::*,
-    renderer::camera::{Camera, Projection},
+    renderer::camera::Camera,
     window::ScreenDimensions,
 };
 
@@ -36,15 +36,14 @@ impl ExampleState {
         let mut transform = Transform::default();
         transform.set_translation_xyz(0., height, 10.);
 
-        let mut camera = Camera::standard_3d(width, height);
-        camera.set_projection(Projection::orthographic(
+        let camera = Camera::orthographic(
             0.0,
             width,
             0.0,
             height,
             0.0,
             20.0,
-        ));
+        );
 
         let camera = world
             .create_entity()

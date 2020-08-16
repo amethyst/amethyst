@@ -914,7 +914,7 @@ mod tests {
                     kind,
                     levels: 1,
                     format: Format::D32Sfloat,
-                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
                 }),
             },
         )
@@ -928,7 +928,7 @@ mod tests {
             kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+            Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
         );
         manual_graph.add_node(
             RenderPassNodeBuilder::new().with_subpass(
@@ -984,7 +984,7 @@ mod tests {
                     kind: window_kind,
                     levels: 1,
                     format: Format::D32Sfloat,
-                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
                 }),
             },
         )
@@ -1002,7 +1002,7 @@ mod tests {
             window_kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+            Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
         );
         manual_graph.add_node(
             RenderPassNodeBuilder::new()

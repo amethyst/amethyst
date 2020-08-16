@@ -294,11 +294,11 @@ The only thing that remains now is to use our `CustomGameDataBuilder` when build
 #
 # fn main() -> amethyst::Result<()> {
 #
-let mut world = World::new();
+let mut app_builder = Application::build(assets_directory, Main)?;
 let game_data = CustomGameDataBuilder::default()
     .with_running(ExampleSystem, "example_system", &[])
     .with_base_bundle(
-        &mut world,
+        &mut app_builder.world,
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and
             // drawing on it
@@ -309,14 +309,14 @@ let game_data = CustomGameDataBuilder::default()
             .with_plugin(RenderFlat2D::default())
             .with_plugin(RenderUi::default()),
     )?
-    .with_base_bundle(&mut world, TransformBundle::new())?
-    .with_base_bundle(&mut world, UiBundle::<StringBindings>::new())?
+    .with_base_bundle(&mut app_builder.world, TransformBundle::new())?
+    .with_base_bundle(&mut app_builder.world, UiBundle::<StringBindings>::new())?
     .with_base_bundle(
-        &mut world,
+        &mut app_builder.world,
         InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
     )?;
 
-let mut game = Application::new(assets_directory, Main, game_data)?;
+let mut game = app_builder.build(game_data)?;
 game.run();
 #
 # }

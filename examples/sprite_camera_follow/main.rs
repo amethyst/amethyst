@@ -68,10 +68,7 @@ fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Handl
 fn init_background_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_z(-10.0);
-    let sprite = SpriteRender {
-        sprite_sheet: sprite_sheet.clone(),
-        sprite_number: 0,
-    };
+    let sprite = SpriteRender::new(sprite_sheet.clone(), 0);
     world
         .create_entity()
         .with(transform)
@@ -85,10 +82,7 @@ fn init_background_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>)
 fn init_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, 0.0);
-    let sprite = SpriteRender {
-        sprite_sheet: sprite_sheet.clone(),
-        sprite_number: 0,
-    };
+    let sprite = SpriteRender::new(sprite_sheet.clone(), 0);
     world
         .create_entity()
         .with(transform)
@@ -102,10 +96,7 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) 
 fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(-250.0, -245.0, -11.0);
-    let sprite = SpriteRender {
-        sprite_sheet: sprite_sheet.clone(),
-        sprite_number: 0,
-    };
+    let sprite = SpriteRender::new(sprite_sheet.clone(), 0);
     world
         .create_entity()
         .with(transform)
@@ -118,10 +109,7 @@ fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteS
 fn init_player(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, -3.0);
-    let sprite = SpriteRender {
-        sprite_sheet: sprite_sheet.clone(),
-        sprite_number: 1,
-    };
+    let sprite = SpriteRender::new(sprite_sheet.clone(), 1);
     world
         .create_entity()
         .with(transform)
@@ -205,7 +193,7 @@ fn main() -> amethyst::Result<()> {
         .start();
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/assets");
+    let assets_directory = app_root.join("examples/sprite_camera_follow/assets");
     let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
 
     let game_data = GameDataBuilder::default()

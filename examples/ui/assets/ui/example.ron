@@ -1,0 +1,398 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "background",
+        anchor: Middle,
+        stretch: XY( x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
+        width: 20.,
+        height: 20.,
+    ),
+    background: SolidColor(0.6, 0.6, 1.0, 0.8),
+    children: [
+        // Parenting test
+        Container(
+            transform: (
+                id: "top_right",
+                x: -32.,
+                y: -32.,
+                width: 64.,
+                height: 64.,
+                anchor: TopRight,
+            ),
+            background: SolidColor(0.09, 0.02, 0.25, 1.0),
+            children: [
+                Image(
+                    transform: (
+                        id: "middle_top_right",
+                        width: 32.,
+                        height: 32.,
+                        anchor: Middle,
+                        stretch: XY( x_margin: 0., y_margin: 10., keep_aspect_ratio: false),
+                    ),
+                    image: SolidColor(0.18, 0.05, 0.85, 1.0),
+                ),
+            ]
+        ),
+
+        // Amethyst logo
+        Image(
+            transform: (
+                id: "logo",
+                y: 32.,
+                width: 64.,
+                height: 64.,
+                tab_order: 1,
+                anchor: BottomMiddle,
+                mouse_reactive: true,
+            ),
+            image: Texture(File("texture/logo_transparent.png", ("IMAGE", ()))),
+        ),
+         // Partial Texture logo
+        Image(
+            transform: (
+                id: "Partial Texture Logo",
+                x: -120.,
+                y: -16.,
+                width: 64.,
+                height: 32.,
+                tab_order: 1,
+                anchor: TopRight,
+                mouse_reactive: true,
+            ),
+            image: PartialTexture(
+                tex: File("texture/test_texture.png", ("IMAGE", ())),
+                left : 0.34,
+                right : 1.0,
+                bottom: 0.333,
+                top: 0.0),
+        ),
+        //9-Slice
+        Image(
+            transform: (
+                id: "9 Slice",
+                x: -250.,
+                y: -40.,
+                width: 150.,
+                height:  80.,
+                tab_order: 1,
+                anchor: TopRight,
+                mouse_reactive: true,
+            ),
+            image: NineSlice(
+                x_start: 0,
+                y_start: 0,
+                width: 75,
+                height: 50,
+                left_dist: 20,
+                right_dist: 53,
+                top_dist: 28,
+                bottom_dist: 20,
+                tex: File("texture/9_Slice_Example.png", ("IMAGE", ())),
+                texture_dimensions: (75,50),
+            ),
+        ),
+
+        // Editable text single line.
+        Container(
+            transform: (
+                id: "editable_container",
+                x: 270.0,
+                y: 50.,
+                width: 500.,
+                height: 75.,
+                tab_order: 1,
+                anchor: BottomLeft,
+            ),
+            background: SolidColor(0.09, 0.02, 0.25, 1.0),
+            children: [
+                Label(
+                    transform: (
+                        id: "editable",
+                        width: 500.,
+                        height: 75.,
+                        tab_order: 1,
+                        anchor: Middle,
+                        stretch: XY(x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
+                        mouse_reactive: true,
+                        selectable: 0,
+                    ),
+                    text: (
+                        text: "Editable",
+                        font: File("font/square.ttf", ("TTF", ())),
+                        font_size: 75.,
+                        color: (0.2, 0.2, 1.0, 1.0),
+                        align: MiddleLeft,
+                        editable: (
+                            max_length: 2000,
+                            selected_text_color: (0.09, 0.02, 0.25, 1.0),
+                            selected_background_color: (1.0, 0.5, 0.8, 1.0),
+                        ),
+                    )
+                ),
+            ]
+        ),
+
+        // Complex Button
+        Button(
+            transform: (
+                id: "complex_button",
+                y: -32.,
+                width: 128.,
+                height: 64.,
+                tab_order: 9,
+                anchor: TopMiddle,
+                mouse_reactive: true,
+            ),
+            button: (
+                text: "ComplexBtn",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 20.,
+                normal_text_color: (0.2, 0.2, 1.0, 1.0),
+                hover_text_color: (0.4, 0.4, 1.0, 1.0),
+                press_text_color: (0.6, 0.6, 1.0, 1.0),
+                normal_image: SolidColor(0., 1., 0., 1.),
+                hover_image: SolidColor(0.3, 1., 0.3, 1.),
+                press_image: SolidColor(0.15, 1., 0.15, 1.),
+                hover_sound: File("audio/boop.ogg", ("OGG", ())),
+                press_sound: File("audio/confirm.ogg", ("OGG", ())),
+            )
+        ),
+
+        // Simple Button
+        Button(
+            transform: (
+                id: "simple_button",
+                x: 250.,
+                y: -40.,
+                z: 11.,
+                width: 128.,
+                height: 64.,
+                tab_order: 9,
+                anchor: TopLeft,
+                mouse_reactive: true,
+            ),
+            button: (
+                text: "SimpleBtn",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 20.,
+                normal_text_color: (0.0, 0.0, 0.0, 1.0),
+                normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
+            )
+        ),
+
+        // Draggable Button
+        Button(
+            transform: (
+                id: "draggable_button",
+                x: 250.,
+                y: -120.,
+                z: 12.,
+                width: 128.,
+                height: 64.,
+                tab_order: 9,
+                anchor: TopLeft,
+                mouse_reactive: true,
+                draggable: true,
+            ),
+            button: (
+                text: "Draggable",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 20.,
+                normal_text_color: (0.0, 0.0, 0.0, 1.0),
+                normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
+            )
+        ),
+
+        Label(
+            transform: (
+                id: "fps",
+                x: 100.,
+                y: -16,
+                width: 200.,
+                height: 25.,
+                tab_order: 2,
+                anchor: TopLeft,
+                opaque: false,
+            ),
+            text: (
+                text: "N/A",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 25.,
+                color: (0.498, 0.254, 0.937, 1.0),
+            )
+        ),
+
+        // Random text
+        Label(
+            transform: (
+                id: "random_text",
+                x: 100.,
+                y: -48,
+                width: 300.,
+                height: 25.,
+                tab_order: 2,
+                anchor: TopLeft,
+                opaque: false,
+            ),
+            text: (
+                text: "N/A",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 25.,
+                color: (1.0, 1.0, 1.0, 1.0),
+            )
+        ),
+
+        Label(
+            transform: (
+                id: "multiline",
+                x: -200.,
+                width: 400.,
+                height: 200.,
+                tab_order: 1,
+                anchor: MiddleRight,
+            ),
+            text: (
+                text: "Multiline\nText!",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 30.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                line_mode: Wrap,
+                align: MiddleRight,
+            )
+        ),
+
+        Label(
+            transform: (
+                id: "system_font",
+                x: 200.,
+                width: 400.,
+                height: 200.,
+                tab_order: 1,
+                anchor: MiddleLeft,
+            ),
+            text: (
+                text: "System Font",
+                font_size: 30.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                align: MiddleLeft,
+            )
+        ),
+
+        Image(
+            transform: (
+                id: "TopLeft_bg",
+                y: 180.0,
+                width: 800.,
+                height: 175.,
+                anchor: Middle,
+            ),
+            image: SolidColor(1.0, 1.0, 1.0, 0.2),
+        ),
+        Image(
+            transform: (
+                id: "Middle_bg",
+                y: 0.0,
+                width: 800.,
+                height: 175.,
+                anchor: Middle,
+            ),
+            image: SolidColor(1.0, 1.0, 1.0, 0.2),
+        ),
+        Image(
+            transform: (
+                id: "BottomRight_bg",
+                y: -180.0,
+                width: 800.,
+                height: 175.,
+                anchor: Middle,
+            ),
+            image: SolidColor(1.0, 1.0, 1.0, 0.2),
+        ),
+        // ------ Text Align Start ------
+        Label(
+            transform: (
+                id: "TopLeft",
+                y: 180.0,
+                z: 2.0,
+                width: 800.,
+                height: 175.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            text: (
+                text: "TopLeft",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 75.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                align: TopLeft, // ! relative to the transform specified, which only has a width of 800 and height of 175 !
+            )
+        ),
+        Label(
+            transform: (
+                id: "Middle",
+                y: 0.0,
+                z: 2.0,
+                width: 800.,
+                height: 175.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            text: (
+                text: "Middle",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 75.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                align: Middle,
+            )
+        ),
+        Label(
+            transform: (
+                id: "BottomRight",
+                y: -180.0,
+                z: 2.0,
+                width: 800.,
+                height: 175.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            text: (
+                text: "BottomRight",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 75.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                align: BottomRight,
+            )
+        ),
+        // ------ Text Align Stop -------
+
+        Container(
+            transform: (
+                id: "right_bar",
+                width: 500.,
+                height: 1024.,
+                anchor: BottomRight,
+            ),
+            background: SolidColor(0., 0., 0., 1.0),
+            children: [
+                Label(
+                    transform: (
+                        id: "multiline",
+                        x: 0.,
+                        y: 0.,
+                        z: 2.,
+                        width: 500.,
+                        height: 1024.,
+                        anchor: Middle,
+                    ),
+                    text: (
+                        text: "Multiline\nNested in container\nTEST!\nlorem\nipsum\ndolor\nlines\n123\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlast line",
+                        font_size: 20.,
+                        color: (0.2, 0.2, 1.0, 1.0),
+                        line_mode: Wrap,
+                        align: TopLeft,
+                    )
+                ),
+            ]
+        ),
+    ],
+)

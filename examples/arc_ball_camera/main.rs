@@ -1,5 +1,5 @@
-//! Demonstrates how to use the arc ball camera.
-//!
+//! Demonstrates the arc ball camera
+
 use amethyst::{
     assets::{AssetStorage, Loader},
     controls::{ArcBallControl, ArcBallControlBundle, HideCursor},
@@ -157,8 +157,9 @@ fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
+
+    let assets_dir = app_root.join("examples/arc_ball_camera/assets");
     let display_config_path = app_root.join("examples/arc_ball_camera/config/display.ron");
-    let assets_dir = app_root.join("examples/assets");
     let key_bindings_path = app_root.join("examples/arc_ball_camera/config/input.ron");
 
     let mut builder = DispatcherBuilder::default();

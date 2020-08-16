@@ -275,7 +275,7 @@ use amethyst::{
 #     ecs::Entity,
 #     prelude::*,
     // ...
-    ui::{Anchor, TtfFormat, UiText, UiTransform},
+    ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform},
 };
 
 # pub struct Pong;
@@ -315,13 +315,22 @@ fn initialise_scoreboard(world: &mut World) {
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
+            LineMode::Single,
+            Anchor::Middle,
         ))
         .build();
 
     let p2_score = world
         .create_entity()
         .with(p2_transform)
-        .with(UiText::new(font, "0".to_string(), [1., 1., 1., 1.], 50.))
+        .with(UiText::new(
+            font,
+            "0".to_string(),
+            [1., 1., 1., 1.],
+            50.,
+            LineMode::Single,
+            Anchor::Middle,
+        ))
         .build();
 
 # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
@@ -356,7 +365,7 @@ game window. You'll notice that the scores don't update yet when the ball makes
 it to either side, so we'll add that next!
 
 
-[font-download]: https://github.com/amethyst/amethyst/raw/master/examples/assets/font/square.ttf
+[font-download]: https://github.com/amethyst/amethyst/raw/master/examples/pong_tutorial_05/assets/font/square.ttf
 [input-handler]: https://docs.amethyst.rs/stable/amethyst_input/struct.InputHandler.html
 [ui-bundle]: https://docs.amethyst.rs/stable/amethyst_ui/struct.UiBundle.html
 

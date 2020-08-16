@@ -99,7 +99,7 @@ will.
     # use amethyst::renderer::Camera;
     # use amethyst::core::Transform;
     fn initialise_camera(world: &mut World) {
-        // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left. 
+        // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
         let mut transform = Transform::default();
         transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
 
@@ -353,7 +353,7 @@ This is rather inconvenient &mdash; to need to manually register each component
 before it can be used. There *must* be a better way. **Hint:** there is.
 
 When we add systems to our application, any component that a `System` uses is
-automatically registered. 
+automatically registered.
 However, as we haven't got any `System`s, we have to
 live with registering the `Paddle` component manually.
 
@@ -426,7 +426,7 @@ First, let's declare the function and load the sprite sheet's image data.
 #     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
-#         camera::{Camera, Projection},
+#         camera::Camera,
 #         formats::texture::ImageFormat,
 #         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
 #         Texture,
@@ -499,8 +499,8 @@ List((
 
 > **Note:** Make sure to pay attention to the kind of parentheses in the ron file.
 > Especially, if you are used to writing JSON or similar format files, you might
-> be tempted to use curly braces there; that will however lead to very 
-> hard-to-debug errors, especially since amethyst will not warn you about that 
+> be tempted to use curly braces there; that will however lead to very
+> hard-to-debug errors, especially since amethyst will not warn you about that
 > when compiling.
 
 Finally, we load the file containing the position of each sprite on the sheet.
@@ -514,7 +514,7 @@ Finally, we load the file containing the position of each sprite on the sheet.
 #     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
-#         camera::{Camera, Projection},
+#         camera::Camera,
 #         formats::texture::ImageFormat,
 #         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
 #         Texture,
@@ -579,10 +579,7 @@ the right one is flipped horizontally.
 # use amethyst::{assets::Handle, renderer::{SpriteRender, SpriteSheet}};
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 // Assign the sprites for the paddles
-let sprite_render = SpriteRender {
-    sprite_sheet: sprite_sheet_handle,
-    sprite_number: 0, // paddle is the first sprite in the sprite_sheet
-};
+let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // paddle is the first sprite in the sprite_sheet
 # }
 ```
 
@@ -599,10 +596,7 @@ Next we simply add the components to the paddle entities:
 # use amethyst::renderer::sprite::{SpriteSheet, SpriteRender};
 # use amethyst::prelude::*;
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
-# let sprite_render = SpriteRender {
-#   sprite_sheet: sprite_sheet_handle,
-#   sprite_number: 0, // paddle is the first sprite in the sprite_sheet
-# };
+# let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // paddle is the first sprite in the sprite_sheet
 // Create a left plank entity.
 world
     .create_entity()
@@ -664,4 +658,3 @@ moving!
 [sb-storage]: https://specs.amethyst.rs/docs/tutorials/05_storages.html#densevecstorage
 [2d]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.Camera.html#method.standard_2d
 [ss]: ../images/pong_tutorial/pong_spritesheet.png
-

@@ -35,7 +35,7 @@ pub fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/states_ui/config/display.ron");
 
     // other assets ('*.ron' files, '*.png' textures, '*.ogg' audio files, ui prefab files, ...) are here
-    let assets_dir = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/states_ui/assets");
 
     let game_data = GameDataBuilder::default()
         // a lot of other bundles/systems depend on this (without it being explicitly clear), so it

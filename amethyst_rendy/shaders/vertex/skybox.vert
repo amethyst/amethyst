@@ -21,5 +21,6 @@ void main() {
     vertex.position = position.xyz;
     vertex.tex_coord = tex_coord;
 
-    gl_Position = (proj * view_without_translation * vec4(position, 1.0)).xyww;
+    vec4 before_divide = (proj * view_without_translation * vec4(position, 1.0));
+    gl_Position = vec4(before_divide.xy, 0.0, before_divide.w);
 }

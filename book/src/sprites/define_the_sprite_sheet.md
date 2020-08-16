@@ -38,7 +38,6 @@ List((
     ],
 ))
 ```
-`offsets: Some((0.0, 0.0)),` can be replaced by `offsets: (0.0, 0.0),` if the line `#![enable(implicit_some)]` is added at the top of the definition file.
 
 Or you can use a grid based definition, for example:
 
@@ -51,13 +50,15 @@ Grid((
     // Specifies the number of columns in the sprite sheet
     columns: 2,
     // Specifies the number of sprites in the spritesheet.
-    sprite_count: 2
+    sprite_count: Some(2)
 ))
 ```
 
-For more information about list and grid based sprite sheets see [`SpriteGrid`][doc_grid] or [`SpriteList`][doc_list].
+`Option` types need to be wrapped in the `Some` variant. For convenience, this can be left out if the line `#![enable(implicit_some)]` is added at the top of the definition file.  For example, `sprite_count: Some(2),` could be replaced by `sprite_count: 2,`.
 
-Then, you can load it using the texture handle of the sheet's image you loaded earlier:
+For more information about list and grid based sprite sheets, including the types of their fields, see [`SpriteGrid`][doc_grid] or [`SpriteList`][doc_list].
+
+Once you have ron file ready, you can load it using the texture handle of the sheet's image you loaded earlier:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;

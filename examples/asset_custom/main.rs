@@ -122,7 +122,7 @@ impl SimpleState for LoadingState {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("assets");
+    let assets_dir = app_root.join("example/asset_custom/assets");
 
     let game_data = GameDataBuilder::default().with(Processor::<EnergyBlast>::new(), "", &[]);
     let mut game = Application::new(

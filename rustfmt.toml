@@ -1,2 +1,4 @@
 reorder_imports = true
-merge_imports = true
+
+# Disabled until stable or unstable features can be used with stable rust
+# merge_imports = true

@@ -12,24 +12,107 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
-- `GameDataBuilder::build_dispatcher` method returns a standalone `Dispatcher`
-  instead of using `DataInit` to build a `GameData` ([#2294])
-
 ### Changed
-
-- `amethyst_rendy::shape::Shape::upload` takes `&ShapeUpload`. ([#2264])
 
 ### Fixed
 
-- Corrected an issue where fixed updates were tied to time scale. ([#2254])
-- Fixed asset handle reuse bug in renderer. ([#2258])
-- Fixed UiButtonBuilder incorrect UiImage creation ([#2299])
 
-[#2294]: https://github.com/amethyst/amethyst/pull/2294
+## [0.15.1] - 2020-08-14
+
+### Added
+
+- New `optional_graphics` example demonstrating running an app with and without graphics ([#2282])
+- Return a standalone `Dispatcher` from `GameDataBuilder::build_dispatcher`
+  instead of using `DataInit` to build a `GameData` ([#2294])
+- Added _User Interface_ chapter to The Book ([#2311], [#2346], [#2347], [#2368], [#2373])
+- Support text alignment in `UiButton` and `UiLabel` ([#2316])
+- You can now bind multiple inputs to a single axis via `Axis::Multiple` ([#2341])
+- Support layer to be set in `UiLabelBuilder` ([#2358])
+- Support line mode to be set in `UiLabelBuilder` and `UiButtonBuilder` ([#2358])
+- `GltfPrefab` now also imports lights from a glTF source ([#2362])
+- Added _Tiles_ chapter to The Book ([#2391])
+- Added `SpriteRender::new` for cleaner instantiation ([#2395], [#2419])
+- `amethyst_ui::UiButtonActionRetrigger` now derives `Default` and `Clone`. ([#2388])
+
+
+### Changed
+
+- Removed far plane from perspective projection ([#2118])
+- Experimented with CI solutions, selected GitHub Actions. Fixed bors & stalebot. ([#2262], [#2380], [#2382], [#2410], [#2413], [#2414], [#2415])
+- `amethyst_rendy::shape::Shape::upload` takes `&ShapeUpload`. ([#2264])
+- Updated examples, with special attention to the pong example. Improved readmes, updated screenshots, colocated assets with example code ([#2248], [#2289], [#2305], [#2201], [#2310], [#2312], [#2349], [#2384], [#2396], [#2422])
+- `UiText` now requires 2 more arguments `line_mode` and `align` ([#2358])
+- Updated the style of The Book ([#2355])
+
+
+### Fixed
+
+- Fix tile example's `MapMovementSystem` to look for the correct components ([#2209])
+- Fix issue where all `TileMap`s were rendered with the same transformation. ([#2210])
+- Fix the bind method for `DynamicVertexBuffer::<B,u32>` ([#2221])
+- Fix examples which would not run due to incorrect system order. ([#2213], [#2223], [#2239], [#2243], [#2267])
+- Fix Texture asset debugging representation ([#2231])
+- Fix fixed updates being tied to time_scale ([#2255])
+- Fix incorrect assets being used when asset handles get reused ([#2258])
+- Fix bug causing only one TileMap to be rendered ([#2296])
+- Fix `UiButtonBuilder` so buttons it builds get rendered ([#2299])
+- Fix `Tint` so its color is converted from sRGBA to linear RGBA so shader color is correct. Also update various documentation regarding linear RGBA ([#2314], [#2398])
+- Fix text alignment in `UiText` ([#2316], [#2358])
+- Fix release build path resolution on Windows ([#2337])
+- Fix textures sometimes showing up incorrectly or not at all. ([#2339])
+
+[#2118]: https://github.com/amethyst/amethyst/pull/2118
+[#2201]: https://github.com/amethyst/amethyst/pull/2201
+[#2209]: https://github.com/amethyst/amethyst/pull/2209
+[#2210]: https://github.com/amethyst/amethyst/issues/2210
+[#2213]: https://github.com/amethyst/amethyst/pull/2213
+[#2221]: https://github.com/amethyst/amethyst/pull/2221
+[#2223]: https://github.com/amethyst/amethyst/pull/2223
+[#2231]: https://github.com/amethyst/amethyst/pull/2231
+[#2239]: https://github.com/amethyst/amethyst/pull/2239
+[#2243]: https://github.com/amethyst/amethyst/pull/2243
+[#2248]: https://github.com/amethyst/amethyst/pull/2248
 [#2254]: https://github.com/amethyst/amethyst/issues/2254
+[#2255]: https://github.com/amethyst/amethyst/pull/2255
 [#2258]: https://github.com/amethyst/amethyst/pull/2258
+[#2262]: https://github.com/amethyst/amethyst/pull/2262
 [#2264]: https://github.com/amethyst/amethyst/pull/2264
+[#2267]: https://github.com/amethyst/amethyst/pull/2267
+[#2282]: https://github.com/amethyst/amethyst/pull/2282
+[#2289]: https://github.com/amethyst/amethyst/pull/2289
+[#2294]: https://github.com/amethyst/amethyst/pull/2294
+[#2296]: https://github.com/amethyst/amethyst/pull/2296
 [#2299]: https://github.com/amethyst/amethyst/pull/2299
+[#2305]: https://github.com/amethyst/amethyst/pull/2305
+[#2310]: https://github.com/amethyst/amethyst/pull/2310
+[#2311]: https://github.com/amethyst/amethyst/pull/2311
+[#2312]: https://github.com/amethyst/amethyst/pull/2312
+[#2314]: https://github.com/amethyst/amethyst/pull/2314
+[#2316]: https://github.com/amethyst/amethyst/pull/2316
+[#2337]: https://github.com/amethyst/amethyst/pull/2337
+[#2339]: https://github.com/amethyst/amethyst/pull/2339
+[#2341]: https://github.com/amethyst/amethyst/pull/2341
+[#2346]: https://github.com/amethyst/amethyst/pull/2346
+[#2347]: https://github.com/amethyst/amethyst/pull/2347
+[#2349]: https://github.com/amethyst/amethyst/pull/2349
+[#2355]: https://github.com/amethyst/amethyst/pull/2355
+[#2358]: https://github.com/amethyst/amethyst/pull/2358
+[#2362]: https://github.com/amethyst/amethyst/pull/2362
+[#2368]: https://github.com/amethyst/amethyst/pull/2368
+[#2373]: https://github.com/amethyst/amethyst/pull/2373
+[#2380]: https://github.com/amethyst/amethyst/pull/2380
+[#2382]: https://github.com/amethyst/amethyst/pull/2382
+[#2384]: https://github.com/amethyst/amethyst/pull/2384
+[#2388]: https://github.com/amethyst/amethyst/pull/2388
+[#2391]: https://github.com/amethyst/amethyst/pull/2391
+[#2395]: https://github.com/amethyst/amethyst/pull/2395
+[#2398]: https://github.com/amethyst/amethyst/pull/2398
+[#2410]: https://github.com/amethyst/amethyst/pull/2410
+[#2413]: https://github.com/amethyst/amethyst/pull/2413
+[#2414]: https://github.com/amethyst/amethyst/pull/2414
+[#2415]: https://github.com/amethyst/amethyst/pull/2415
+[#2419]: https://github.com/amethyst/amethyst/pull/2419
+[#2422]: https://github.com/amethyst/amethyst/pull/2422
 
 ## [0.15.0] - 2020-03-24
 
@@ -64,6 +147,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Editable text is correctly blurred / unfocused when clicking outside its bounds. ([#2091], [#2151])
 - `amethyst_test` crate features now map 1-1 to `amethyst` features. ([#2153])
 
+[#1917]: https://github.com/amethyst/amethyst/pull/1917
+[#1988]: https://github.com/amethyst/amethyst/pull/1988
 [#2091]: https://github.com/amethyst/amethyst/issues/2091
 [#2108]: https://github.com/amethyst/amethyst/issues/2108
 [#2114]: https://github.com/amethyst/amethyst/pull/2114
@@ -106,7 +191,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - amethyst_network completely rewritten to provide a new baseline with which to build. ([#1917])
 - Cleaned up tiles example. Added rotation and translation tests, fixed raycast debug box. Added default zoom to PROJECT
   perspective projection since no one knew to zoom out. ([#1974])
-- TileMaps to_tile and to_world now take an Option<&Transform> that allows them to work if the entire map in 
+- TileMaps to_tile and to_world now take an Option<&Transform> that allows them to work if the entire map in
  translated. ([#1987],[#1991])
 - `AmethystApplication::with_fn` constraint relaxed from `Fn` to `FnOnce`. ([#1983])
 - ScreenDimensions now consistently reports window size in physical pixels. ([#1988])
@@ -181,7 +266,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Fixed a silent shader error causing amethyst_tiles not to work. ([#1968])
 
-[#1966]: https://github.com/amethyst/amethyst/pull/1968
+[#1968]: https://github.com/amethyst/amethyst/pull/1968
 
 ## [0.13.2] - 2019-10-4
 
@@ -336,6 +421,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1802]: https://github.com/amethyst/amethyst/pull/1802
 [#1804]: https://github.com/amethyst/amethyst/pull/1804
 [#1805]: https://github.com/amethyst/amethyst/pull/1805
+[#1806]: https://github.com/amethyst/amethyst/pull/1806
 [#1807]: https://github.com/amethyst/amethyst/pull/1807
 [#1809]: https://github.com/amethyst/amethyst/issues/1809
 [#1811]: https://github.com/amethyst/amethyst/pull/1811
@@ -1221,7 +1307,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Initial release
 
-[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.0...HEAD
+[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.1...HEAD
+[0.15.1]: https://github.com/amethyst/amethyst/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/amethyst/amethyst/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/amethyst/amethyst/compare/v0.13.3...v0.14.0
 [0.13.3]: https://github.com/amethyst/amethyst/compare/v0.13.2...v0.13.3

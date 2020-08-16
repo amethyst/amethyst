@@ -2,8 +2,8 @@
 #![allow(unused_imports, unused_variables)]
 
 use amethyst_core::{
-    ecs::prelude::*,
     dispatcher::*,
+    ecs::prelude::*,
     geometry::{Plane, Ray},
     math::{self, clamp, convert, Matrix4, Point2, Point3, Vector2, Vector3, Vector4},
     transform::Transform,
@@ -12,9 +12,9 @@ use amethyst_core::{
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_rendy::{
-    batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
+    batch::{GroupIterator, OneLevelBatch, OrderedTwoLevelBatch},
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
-    camera::{ActiveCamera, Camera, Projection},
+    camera::{ActiveCamera, Camera},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::IntoPod,
     rendy::{
@@ -142,7 +142,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
             pipeline_layout,
             textures,
             vertex,
-            env,
+            env: vec![env],
             sprites: Default::default(),
             _marker: PhantomData::default(),
             change: Default::default(),
@@ -169,10 +169,10 @@ pub struct DrawTiles2D<
     pipeline_layout: B::PipelineLayout,
     textures: TextureSub<B>,
     vertex: DynamicVertexBuffer<B, TileArgs>,
-    sprites: OrderedOneLevelBatch<TextureId, TileArgs>,
+    sprites: OrderedTwoLevelBatch<TextureId, usize, TileArgs>,
     change: util::ChangeDetection,
 
-    env: DynamicUniform<B, TileMapArgs>,
+    env: Vec<DynamicUniform<B, TileMapArgs>>,
 
     #[derivative(Debug = "ignore")]
     _marker: PhantomData<(T, E, Z)>,
@@ -210,13 +210,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
 
         let CameraGatherer { projview, .. } = CameraGatherer::gather(world);
 
-        let mut tilemap_args = TileMapArgs {
-            proj: projview.proj,
-            view: projview.view,
-            map_coordinate_transform: Default::default(),
-            map_transform: Default::default(),
-            sprite_dimensions: Default::default(),
-        };
+        let mut tilemap_args = vec![];
 
         for (tile_map, _, transform) in (&tile_maps, !&hiddens, transforms.maybe()).join() {
             let maybe_sheet = tile_map
@@ -230,39 +224,26 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 None => continue,
             };
 
+            let tilemap_args_index = tilemap_args.len();
             let map_coordinate_transform: [[f32; 4]; 4] = (*tile_map.transform()).into();
-
             let map_transform: [[f32; 4]; 4] = if let Some(transform) = transform {
                 (*transform.global_matrix()).into()
             } else {
                 Matrix4::identity().into()
             };
+            tilemap_args.push(TileMapArgs {
+                proj: projview.proj,
+                view: projview.view,
+                map_coordinate_transform: map_coordinate_transform.into(),
+                map_transform: map_transform.into(),
+                sprite_dimensions: [
+                    tile_map.tile_dimensions().x as f32,
+                    tile_map.tile_dimensions().y as f32,
+                ]
+                .into(),
+            });
 
-            tilemap_args.map_coordinate_transform = map_coordinate_transform.into();
-            tilemap_args.map_transform = map_transform.into();
-            tilemap_args.sprite_dimensions = [
-                tile_map.tile_dimensions().x as f32,
-                tile_map.tile_dimensions().y as f32,
-            ]
-            .into();
-
-            let mut region = Z::bounds(tile_map, world);
-
-            let zero = Vector3::new(0, 0, 0);
-            let max_value = tile_map.dimensions() - Vector3::new(1, 1, 1);
-
-            region.min = Point3::new(
-                region.min.x.max(0).min(max_value.x),
-                region.min.y.max(0).min(max_value.y),
-                region.min.z.max(0).min(max_value.z),
-            );
-            region.max = Point3::new(
-                region.max.x.max(0).min(max_value.x),
-                region.max.y.max(0).min(max_value.y),
-                region.max.z.max(0).min(max_value.z),
-            );
-
-            region
+            compute_region::<T, E, Z>(&tile_map, &world)
                 .iter()
                 .filter_map(|coord| {
                     let tile = tile_map.get(&coord).unwrap();
@@ -288,7 +269,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                     None
                 })
                 .for_each_group(|tex_id, batch_data| {
-                    sprites_ref.insert(tex_id, batch_data.drain(..))
+                    sprites_ref.insert(tex_id, tilemap_args_index, batch_data.drain(..))
                 });
         }
 
@@ -305,7 +286,16 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 Some(self.sprites.data()),
             );
 
-            self.env.write(factory, index, tilemap_args.std140());
+            // grow tilemap_args cache if necessary, or shrink it
+            if self.env.len() < tilemap_args.len() || self.env.len() <= tilemap_args.len() / 2 {
+                self.env.resize_with(tilemap_args.len(), || {
+                    DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX).unwrap()
+                });
+            }
+
+            for (env, tilemap_args) in self.env.iter_mut().zip(&tilemap_args) {
+                env.write(factory, index, tilemap_args.std140());
+            }
         }
 
         self.change.prepare_result(index, changed)
@@ -323,15 +313,19 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
 
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
-        self.env.bind(index, layout, 0, &mut encoder);
 
         self.vertex.bind(index, 0, 0, &mut encoder);
-        for (&tex, range) in self.sprites.iter() {
-            if self.textures.loaded(tex) {
-                self.textures.bind(layout, 1, tex, &mut encoder);
+        for (&tex, ranges) in self.sprites.iter() {
+            for (tilemap_args_index, range) in ranges {
+                let env = self.env.get(*tilemap_args_index).unwrap();
+                env.bind(index, layout, 0, &mut encoder);
 
-                unsafe {
-                    encoder.draw(0..4, range);
+                if self.textures.loaded(tex) {
+                    self.textures.bind(layout, 1, tex, &mut encoder);
+
+                    unsafe {
+                        encoder.draw(0..4, range.to_owned());
+                    }
                 }
             }
         }
@@ -345,6 +339,27 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 .destroy_pipeline_layout(self.pipeline_layout);
         }
     }
+}
+
+fn compute_region<T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds>(
+    tile_map: &TileMap<T, E>,
+    world: &World,
+) -> Region {
+    let mut region = Z::bounds(tile_map, world);
+    let max_value = tile_map.dimensions() - Vector3::new(1, 1, 1);
+
+    region.min = Point3::new(
+        region.min.x.max(0).min(max_value.x),
+        region.min.y.max(0).min(max_value.y),
+        region.min.z.max(0).min(max_value.z),
+    );
+    region.max = Point3::new(
+        region.max.x.max(0).min(max_value.x),
+        region.max.y.max(0).min(max_value.y),
+        region.max.z.max(0).min(max_value.z),
+    );
+
+    region
 }
 
 fn build_tiles_pipeline<B: Backend>(
@@ -376,7 +391,7 @@ fn build_tiles_pipeline<B: Backend>(
                     blend: Some(pso::BlendState::PREMULTIPLIED_ALPHA),
                 }])
                 .with_depth_test(pso::DepthTest {
-                    fun: pso::Comparison::Less,
+                    fun: pso::Comparison::Greater,
                     write: false,
                 }),
         )

@@ -2,3 +2,10 @@
 title = "Amethyst Documentation"
 author = "Eyal Kalderon, Jojolepro (Joël Lupien), Moxinilian (Théo Degioanni), Kylejlin (Kyle Lin)"
 
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "coal"
+additional-css = ["style/book.css"]
+additional-js = ["style/book.js"]
+
+#[output.linkcheck]

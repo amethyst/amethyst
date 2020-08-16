@@ -47,7 +47,7 @@ installed, fork the repository to your account and `git clone` the forked
 copy to your local machine. On clone you will be on the *master* branch. This
 is the branch that contains all new work that has not been released yet. If you
 are adding a new feature to amethyst then you want to base your work off of this
-branch. Otherwise, if you are attemping to fix something in an older release you
+branch. Otherwise, if you are attempting to fix something in an older release you
 will have to base your work off of a released tag. This can be done after a clone
 by running `git checkout TAG` where `TAG` is a released tag eg `v0.8.0`. Now that
 you have the latest code you can start contributing.
@@ -61,21 +61,21 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-2. You have processed your source code with `cargo fmt` (we use latest rustup stable).
+2. You used `cargo fmt` at the root of the crate to format the code.
+   Make sure that `cargo fmt --version` returns the latest stable version.
+   If this is not the case, run `rustup update` or install [rustfmt]
 3. All of the following commands completed without errors.
+   * `cargo +stable fmt --all`
+   * `cargo clippy --all --features "empty"` (may require `cargo clean` before)
    * `cargo build --features "empty"`
    * `cargo test --all --features "empty"`
    * `cargo run --example {example-name} --features YOUR_BACKEND`
-   * `mdbook test book -L target/debug/deps`
 4. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
 5. You added your change in docs/CHANGELOG.md and linked your pull request number.
-6. You used `cargo fmt` at the root of the crate to format the code.
-   Make sure that `cargo fmt --version` returns the latest stable version.
-   If this is not the case, run `rustup update` or install [rustfmt]
 7. For new features or changes to an existing one,
    add or change either the book tutorial or the examples.
 
@@ -83,16 +83,9 @@ done the following things first:
 [la]: LICENSE-APACHE
 [rustfmt]: https://github.com/rust-lang-nursery/rustfmt
 
-Note that if you do not have mdbook already installed you may do so with `cargo install mdbook`. 
-If you find dependency resolution problems when testing mdbook, 
-you may have to run `cargo clean` and `cargo build` again before retrying the `mdbook test` command.
-
-> If you want to be publicly known as an author, feel free to add your name
-> and/or GitHub username to the AUTHORS.md file in your pull request.
-
 Once you have submitted your pull request, please wait for a reviewer to give
 feedback on it. If no one responds, feel free to @-mention a developer or post
-publicly on the [appropriate chat room][gi] on Gitter or on Discord asking for a review. Once
+publicly on [Discord][di] asking for a review. Once
 your code has been reviewed, revised if necessary, and then signed-off by a
 developer, it will be merged into the source tree.
 
@@ -101,8 +94,7 @@ developer, it will be merged into the source tree.
 The following rules shall be applied strictly for the `amethyst` repository. For other repositories of this organization,
 thorough review would be desirable, but no strict application is required there due to lower activity and less influence.
 
-* Pull Requests shall be approved by at least two members (two approvals from contributors can count as one member approval.)
-* Pull Requests opened by organization members may be merged if approved by one member.
+* Pull Requests shall be approved by at least one trusted contributor or member.
 * Merging a PR shall be done with `bors r+`, if possible. If there is more than one reviewer the preferred format is `bors r=@reviewer1, @reviewer2`. You can read more about this [here](https://bors.tech/documentation/).
 * You may only block merging of a PR if the changes in it are relevant to an org team you have joined. This doesn't mean you can't
 make comments, but it does mean that team may ignore your comments if they so choose. Please do not use the "Request Changes" feature if
@@ -236,6 +228,7 @@ Documentation of any kind should adhere to the following standard:
    style* Markdown links, as shown in the example below. However, if the link
    points to an anchor that exists on the same page, the *inline style* should
    be used instead.
+3. Rust code snippets should be compilable whenever reasonably possible.
 
 ```markdown
 Here is some [example text][et] with a link in it. While we are at it, here is
@@ -246,8 +239,54 @@ page, we can do this inline.
 [al]: https://another.url/
 ```
 
+Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust,edition2018,no_run,noplaypen`. Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example: 
+
+````
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+use amethyst::ecs::{World, WorldExt};
+
+// A simple struct with no data.
+struct MyResource;
+
+fn main() {
+    // We create a new `World` instance.
+    let mut world = World::new();
+    
+    // We create our resource.
+    let my = MyResource;
+    
+    // We add the resource to the world.
+    world.insert(my);
+}
+```
+````
+
+Examples in `book/` can be tested with the following:
+
+```shell
+# First, clean up amethyst artifacts and rebuild to ensure there is only one copy of the artifacts in
+# the amethyst repo, otherwise mdbook complains. You only need to do this once, unless you change code
+# in the actual amethyst library.
+rm -rf ./target/debug/deps/libamethyst*
+cargo test --workspace --features=empty,tiles --no-run
+
+# Then, test the book.  You can edit, run this command, and then repeat until you get everything passing.
+# This is what the book tests in CI do, so the snippets in the book must pass before you can push.
+mdbook test -L ./target/debug/deps book
+# This serves your book so you can view it locally in a browser and see what it actually looks like
+mdbook serve book
+```
+
+Examples in the API can be tested with `cargo test`.  Examples in top-level markdown files (like the one we are currently in) are not tested.
+
 When submitting your pull requests, please follow the same procedures described
-in the [Pull Requests](#pull-requests) section above.
+in the [Pull Requests](#pull-requests) section above, in addition to the following commands:
+* `mdbook test book -L target/debug/deps`
+
+Note that if you do not have mdbook already installed, you may do so with `cargo install mdbook`.
+If you find dependency resolution problems when testing mdbook,
+you may have to run `cargo clean` and `cargo build` again before retrying the `mdbook test` command.
 
 ## Profiling the engine
 You can build Amethyst with a `profiler` feature like this:
@@ -288,8 +327,8 @@ Then you can hit load button and choose `thread_profile.json` file.
 [di]: https://discord.gg/amethyst
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
 [fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
-[ma]: http://www.amd.com/Documents/Mantle-Programming-Guide-and-API-Reference.pdf
-[mo]: http://shaneenishry.com/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
+[ma]: https://www.yumpu.com/en/document/view/43374261/mantle-programming-guide-and-api-reference
+[mo]: https://shanee.io/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
 [ni]: http://www.gdcvault.com/play/1020706/Nitrous-Mantle-Combining-Efficient-Engine
 [pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
 
