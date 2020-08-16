@@ -41,7 +41,7 @@ default-features = false
 features = ["serialize", "crossbeam-events", "codegen"]
 
 [dev-dependencies]
-#amethyst = { path = "..", version = "0.15.0" }
+#amethyst = { path = "..", version = "0.15.1" }
 ron = "0.5.1"
 
 [features]

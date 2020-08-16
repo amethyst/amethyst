@@ -121,3 +121,6 @@ blockquote {
   border: solid #904bff83;
   background-color: var(--bg);
 }
+#search-wrapper {
+  margin-top: 300px;
+}

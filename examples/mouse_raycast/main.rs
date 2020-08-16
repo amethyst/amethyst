@@ -202,10 +202,7 @@ fn init_sprite(
     let mut transform = Transform::default();
     transform.set_translation(position);
 
-    let sprite = SpriteRender {
-        sprite_sheet: sprite_sheet.clone(),
-        sprite_number,
-    };
+    let sprite = SpriteRender::new(sprite_sheet.clone(), sprite_number);
     world
         .create_entity()
         .with(transform)

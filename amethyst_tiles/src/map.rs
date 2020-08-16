@@ -101,9 +101,8 @@ pub trait MapStorage<T: Tile> {
 
 /// Concrete implementation of a generic 3D `TileMap` component. Accepts a `Tile` type and `CoordinateEncoder` type,
 /// creating a flat 1D array storage which is spatially partitioned utilizing the provided encoding scheme.
-/// creating a flat 1D array storage which is spatially partitioned utilizing the provided encoding scheme.
 ///
-/// The defualt encoding scheme is `MortonEncoder2D`, which allows for arbitrary X, Y and Z coordinate sizes while
+/// The default encoding scheme is `MortonEncoder2D`, which allows for arbitrary X, Y and Z coordinate sizes while
 /// still spatially partitioning each z-level. For more efficient Z-order encoding, use `MortonEncoder` which requires
 /// cubic map dimensions but provides for much greater spatial efficiency.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
