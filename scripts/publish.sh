@@ -1,6 +1,11 @@
 #! /bin/bash
 set -e
 
+BACKEND="vulkan"
+if [[ `uname` == "Darwin" ]] ; then
+  BACKEND="metal"
+fi
+
 # Wave one -- crates without `amethyst_rendy` dependency.
 crates=(
   amethyst_config
@@ -46,9 +51,9 @@ do
 
   if test "${crate}" = "amethyst"
   then
-    cargo publish --features "vulkan"
+    cargo publish --features $BACKEND
   else
-    (cd $crate && cargo publish --features "vulkan")
+    (cd $crate && cargo publish --features $BACKEND)
   fi
 
   # Rate limit ourselves as `crates.io` takes a while to update cache.
