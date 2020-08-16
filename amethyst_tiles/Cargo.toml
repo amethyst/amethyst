@@ -35,10 +35,10 @@ bitintr = "0.3"
 glsl-layout = "0.3"
 err-derive = "0.2.3"
 
-[dev-dependencies]
-criterion = "0.3"
-more-asserts = "0.2"
-approx = "0.3"
+#[dev-dependencies]
+#criterion = "0.3"
+#more-asserts = "0.2"
+#approx = "0.3"
 
 [features]
 vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
