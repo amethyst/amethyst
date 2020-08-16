@@ -6,6 +6,7 @@ You can also directly listen/post directly on input [event channels](../concepts
 # extern crate amethyst;
 # use amethyst::{
 #     ecs::{System, SystemData, Read},
+#     prelude::*,
 # };
 use amethyst::{
     input::{InputEvent, StringBindings},
@@ -23,19 +24,6 @@ impl CustomInputSystem {
         Self { reader_id }
     }
 }
-```
-
-Setting up the system is a bit different as you'll need to store a reader id on the system and implement a new function (see the [event channel](../concepts/event-channel.md) guide for more details and another example of doing this) on the system to initialize that reader id. We declare our reader id (`input_event_rid`) with the events we want to listen to, in this case were listening to input events, so we're going to use `InputEvent` and use the `StringBindings`, but you would use whatever binding struct you're using in your game here.
-
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-use amethyst:{
-    ecs::{System, SystemData, Read},
-    input::{InputEvent, StringBindings},
-};
-# use amethyst::{
-#     shrev::{EventChannel, ReaderId},
-# };
 
 impl<'a> System<'a> for CustomInputSystem {
     type SystemData = Read<'a, EventChannel<InputEvent<StringBindings>>>;
@@ -48,6 +36,8 @@ impl<'a> System<'a> for CustomInputSystem {
     }
 }
 ```
+
+Setting up the system is a bit different as you'll need to store a reader id on the system and implement a new function (see the [event channel](../concepts/event-channel.md) guide for more details and another example of doing this) on the system to initialize that reader id. We declare our reader id (`input_event_rid`) with the events we want to listen to, in this case were listening to input events, so we're going to use `InputEvent` and use the `StringBindings`, but you would use whatever binding struct you're using in your game here.
 
 Now we can create a `Read` in our system data for the input event channel and in our systems run function we can iterate over all the input events the occured. Take a look at the [`InputEvent`][doc_input_event] enum for all the available input events.
 
