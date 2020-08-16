@@ -57,7 +57,7 @@
     * [Orthographic Camera](./sprites/orthographic_camera.md)
 * [Tiles](./tiles.md)
     * [Setup Features and Render Pass](./tiles/setup.md)
-    * [Create a Tile Map](.tiles/create_a_tile_map.md)
+    * [Create a Tile Map](./tiles/create_a_tile_map.md)
 * [User Interface](./ui/introduction.md)
     * [Creating a simple button](./ui/simple_button.md)
     * [Interacting with the UI](./ui/interacting.md)
