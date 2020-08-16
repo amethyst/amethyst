@@ -21,7 +21,7 @@ impl CustomInputSystem {
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(world);
         let reader_id = world.fetch_mut::<EventChannel<InputEvent<StringBindings>>>().register_reader();
-        Self { reader_id }
+        Self { input_event_rid }
     }
 }
 
