@@ -1,6 +1,11 @@
 #!/bin/bash
 set -euxo pipefail
 
+BACKEND="vulkan"
+if [[ `uname` == "Darwin" ]] ; then
+  BACKEND="metal"
+fi
+
 function build_book {
   if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
     echo "Usage: build-book REF DIR INVALIDATION_PATH"
@@ -58,7 +63,7 @@ function build_docs_wasm {
   echo "Building wasm docs for $REF..."
 
   # TODO: build wasm branch here
-  # cargo doc --all --features="animation gltf vulkan"
+  # cargo doc --all --features="animation gltf ${BACKEND}"
 
   # taken from run.sh for future reference:
   # # (cd amethyst_animation && cargo doc --no-deps)
@@ -114,7 +119,7 @@ function build_docs {
   rm -rf $DIR
   mkdir -p $DIR
   echo "Building docs for $REF..."
-  cargo doc --all --features="animation gltf vulkan"
+  cargo doc --all --features="animation gltf ${BACKEND}"
   mv target/doc/* $DIR/
 
   # Write the newly built rev to the rev file
