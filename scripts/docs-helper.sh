@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# This script is used by publish_docs.sh -- both this script and that should be
+# integrated into CI and then deleted.
+
 set -euxo pipefail
 
 BACKEND="vulkan"
