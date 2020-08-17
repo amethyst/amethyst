@@ -13,7 +13,7 @@ use crate::{
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{systems::ResourceSet, *},
-    transform::LocalToWorld,
+    transform::Transform,
 };
 use derivative::Derivative;
 use rendy::{
@@ -125,7 +125,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_visibility");
 
-            let mut query = <(&SpriteRender, &LocalToWorld, Option<&Tint>)>::query();
+            let mut query = <(&SpriteRender, &Transform, Option<&Tint>)>::query();
 
             visibility
                 .visible_unordered
@@ -311,7 +311,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_visibility");
 
-            let mut query = <(&SpriteRender, &LocalToWorld, Option<&Tint>)>::query();
+            let mut query = <(&SpriteRender, &Transform, Option<&Tint>)>::query();
 
             visibility
                 .visible_ordered

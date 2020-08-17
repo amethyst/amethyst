@@ -6,6 +6,9 @@
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
 
+#[macro_use]
+extern crate getset;
+
 pub use alga;
 pub use approx;
 pub use nalgebra as math;

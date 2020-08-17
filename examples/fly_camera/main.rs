@@ -5,7 +5,7 @@ use amethyst::{
     controls::{FlyControl, FlyControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,
-        transform::{LocalToWorld, Rotation, TransformBundle, Translation},
+        transform::{Transform, TransformBundle},
     },
     input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
     prelude::*,
@@ -72,7 +72,8 @@ impl SimpleState for ExampleState {
             let roughness = 1.0f32 * (i as f32 / 4.0f32);
             let metallic = 1.0f32 * (j as f32 / 4.0f32);
 
-            let pos = Translation::new(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
+            let mut pos = Transform::default();
+            pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
             let mtl = {
                 let metallic_roughness = loader.load_from_data(
@@ -92,7 +93,7 @@ impl SimpleState for ExampleState {
                 )
             };
 
-            (LocalToWorld::identity(), pos, mesh.clone(), mtl)
+            (pos, mesh.clone(), mtl)
         });
 
         world.extend(spheres);
@@ -105,7 +106,8 @@ impl SimpleState for ExampleState {
         }
         .into();
 
-        let light1_translation = Translation::new(6.0, 6.0, -6.0);
+        let mut light1_transform = Transform::default();
+        light1_transform.set_translation_xyz(6.0, 6.0, -6.0);
 
         let light2: Light = PointLight {
             intensity: 5.0,
@@ -114,17 +116,16 @@ impl SimpleState for ExampleState {
         }
         .into();
 
-        let light2_translation = Translation::new(6.0, -6.0, -6.0);
+        let mut light2_transform = Transform::default();
+        light2_transform.set_translation_xyz(6.0, -6.0, -6.0);
 
-        world.extend(vec![
-            (LocalToWorld::identity(), light1, light1_translation),
-            (LocalToWorld::identity(), light2, light2_translation),
-        ]);
+        world.extend(vec![(light1, light1_transform), (light2, light2_transform)]);
 
         println!("Put camera");
 
-        let translation = Translation::new(0.0, 0.0, -12.0);
-        let rotation = Rotation::from_euler_angles(0.0, 0.0, 0.0);
+        let mut transform = Transform::default();
+        transform.set_translation_xyz(0.0, 0.0, -12.0);
+        transform.prepend_rotation_y_axis(std::f32::consts::PI);
 
         let (width, height) = {
             let dim = resources.get::<ScreenDimensions>().unwrap();
@@ -132,10 +133,8 @@ impl SimpleState for ExampleState {
         };
 
         world.extend(vec![(
-            LocalToWorld::identity(),
             Camera::standard_3d(width, height),
-            translation,
-            rotation,
+            transform,
             FlyControl,
         )]);
     }

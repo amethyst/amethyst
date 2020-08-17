@@ -6,7 +6,7 @@ use crate::{
 use amethyst_core::{
     ecs::*,
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
-    transform::LocalToWorld,
+    transform::Transform,
     Hidden, HiddenPropagate,
 };
 
@@ -86,12 +86,12 @@ pub fn build_visibility_sorting_system() -> impl Runnable {
     SystemBuilder::new("VisibilitySortingSystem")
         .read_resource::<ActiveCamera>()
         .write_resource::<Visibility>()
-        .with_query(<(&Camera, &LocalToWorld)>::query())
-        .with_query(<(Entity, &Camera, &LocalToWorld)>::query())
+        .with_query(<(&Camera, &Transform)>::query())
+        .with_query(<(Entity, &Camera, &Transform)>::query())
         .with_query(
             <(
                 Entity,
-                &LocalToWorld,
+                &Transform,
                 Option<&Transparent>,
                 Option<&BoundingSphere>,
             )>::query()
@@ -125,10 +125,10 @@ pub fn build_visibility_sorting_system() -> impl Runnable {
                     None => return,
                 };
 
-                let camera_centroid = camera_transform.transform_point(&origin);
+                let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
                 let frustum = Frustum::new(
                     convert::<_, Matrix4<f32>>(camera.matrix)
-                        * camera_transform.try_inverse().unwrap(),
+                        * camera_transform.global_matrix().try_inverse().unwrap(),
                 );
 
                 state.centroids.extend(
@@ -136,14 +136,13 @@ pub fn build_visibility_sorting_system() -> impl Runnable {
                         .iter(world)
                         .map(|(entity, transform, transparent, sphere)| {
                             let pos = sphere.clone().map_or(origin, |s| s.center);
+                            let matrix = transform.global_matrix();
                             (
                                 *entity,
                                 transparent.is_some(),
-                                transform.transform_point(&pos),
+                                matrix.transform_point(&pos),
                                 sphere.map_or(1.0, |s| s.radius)
-                                    * transform[(0, 0)]
-                                        .max(transform[(1, 1)])
-                                        .max(transform[(2, 2)]),
+                                    * matrix[(0, 0)].max(matrix[(1, 1)]).max(matrix[(2, 2)]),
                             )
                         })
                         .filter(|(_, _, centroid, radius)| frustum.check_sphere(centroid, *radius))

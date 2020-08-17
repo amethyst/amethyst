@@ -17,7 +17,7 @@ use crate::{
 use amethyst_core::{
     ecs::*,
     math::{convert, Vector3},
-    transform::LocalToWorld,
+    transform::Transform,
 };
 use glsl_layout::*;
 
@@ -192,14 +192,16 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             }
             .std140();
 
-            let mut point_lights_query = <(Read<Light>, Read<LocalToWorld>)>::query();
+            let mut point_lights_query = <(Read<Light>, Read<Transform>)>::query();
             let point_lights = point_lights_query
                 .iter(world)
                 .filter_map(|(light, transform)| match &*light {
                     Light::Point(light) => Some(
                         pod::PointLight {
-                            position: convert::<_, Vector3<f32>>(transform.column(3).xyz())
-                                .into_pod(),
+                            position: convert::<_, Vector3<f32>>(
+                                transform.global_matrix().column(3).xyz(),
+                            )
+                            .into_pod(),
                             color: light.color.into_pod(),
                             intensity: light.intensity,
                         }
@@ -225,14 +227,16 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 })
                 .take(MAX_DIR_LIGHTS);
 
-            let mut spot_lights_query = <(Read<Light>, Read<LocalToWorld>)>::query();
+            let mut spot_lights_query = <(Read<Light>, Read<Transform>)>::query();
             let spot_lights = spot_lights_query
                 .iter(world)
                 .filter_map(|(light, transform)| match &*light {
                     Light::Spot(light) => Some(
                         pod::SpotLight {
-                            position: convert::<_, Vector3<f32>>(transform.column(3).xyz())
-                                .into_pod(),
+                            position: convert::<_, Vector3<f32>>(
+                                transform.global_matrix().column(3).xyz(),
+                            )
+                            .into_pod(),
                             color: light.color.into_pod(),
                             direction: light.direction.into_pod(),
                             angle: light.angle.cos(),

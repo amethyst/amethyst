@@ -1,10 +1,10 @@
-use crate::ecs::*;
+//! ECS transform bundle
+
 use amethyst_error::Error;
 
-pub use legion_transform::prelude::*;
+use crate::{ecs::*, transform::*};
 
-/// Bundle to add the transformation systems.
-#[derive(Debug, Default)]
+/// Transform bundle
 pub struct TransformBundle;
 
 impl SystemBundle for TransformBundle {
@@ -17,9 +17,7 @@ impl SystemBundle for TransformBundle {
         builder
             .add_system(missing_previous_parent_system::build())
             .add_system(parent_update_system::build())
-            .add_system(local_to_parent_system::build())
-            .add_system(local_to_world_system::build())
-            .add_system(local_to_world_propagate_system::build());
+            .add_system(transform_system::build());
 
         Ok(())
     }

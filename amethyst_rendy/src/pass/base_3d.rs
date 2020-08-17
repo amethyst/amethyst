@@ -12,7 +12,7 @@ use crate::{
     visibility::Visibility,
 };
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{ecs::*, transform::LocalToWorld};
+use amethyst_core::{ecs::*, transform::Transform};
 use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
@@ -212,7 +212,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
             let mut query = <(
                 &Handle<Material>,
                 &Handle<Mesh>,
-                &LocalToWorld,
+                &Transform,
                 Option<&Tint>,
             )>::query();
 
@@ -224,10 +224,10 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                     if let Some(tint) = tint {
                         (
                             (mat, mesh.id()),
-                            VertexArgs::from_object_data(&tform, Some(&tint)),
+                            VertexArgs::from_object_data(tform, Some(&tint)),
                         )
                     } else {
-                        ((mat, mesh.id()), VertexArgs::from_object_data(&tform, None))
+                        ((mat, mesh.id()), VertexArgs::from_object_data(tform, None))
                     }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
@@ -245,7 +245,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
             let mut query = <(
                 &Handle<Material>,
                 &Handle<Mesh>,
-                &LocalToWorld,
+                &Transform,
                 Option<&Tint>,
                 &JointTransforms,
             )>::query();
@@ -555,7 +555,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
             let mut query = <(
                 &Handle<Material>,
                 &Handle<Mesh>,
-                &LocalToWorld,
+                &Transform,
                 Option<&Tint>,
             )>::query();
 
@@ -593,7 +593,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
             let mut query = <(
                 &Handle<Material>,
                 &Handle<Mesh>,
-                &LocalToWorld,
+                &Transform,
                 Option<&Tint>,
                 &JointTransforms,
             )>::query();

@@ -13,7 +13,7 @@ use rodio::SpatialSink;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use amethyst_core::{ecs::*, math::convert, transform::LocalToWorld};
+use amethyst_core::{ecs::*, math::convert, transform::Transform};
 
 use crate::{
     components::{AudioEmitter, AudioListener},
@@ -37,7 +37,7 @@ pub fn build_audio_system() -> impl Runnable {
         .read_resource::<Option<Output>>()
         .read_resource::<Option<SelectedListener>>()
         .with_query(<(Entity, Read<AudioListener>)>::query())
-        .with_query(<(Write<AudioEmitter>, Read<LocalToWorld>)>::query())
+        .with_query(<(Write<AudioEmitter>, Read<Transform>)>::query())
         .build(
             move |_commands,
                   world,
@@ -65,9 +65,9 @@ pub fn build_audio_system() -> impl Runnable {
                 {
                     if let Some(listener_transform) = world
                         .entry_ref(entity)
-                        .and_then(|entry| entry.into_component::<LocalToWorld>().ok())
+                        .and_then(|entry| entry.into_component::<Transform>().ok())
                     {
-                        let listener_transform = listener_transform.0;
+                        let listener_transform = listener_transform.global_matrix();
                         let left_ear_position: [f32; 3] = {
                             let pos = listener_transform
                                 .transform_point(&listener.left_ear)
@@ -84,9 +84,9 @@ pub fn build_audio_system() -> impl Runnable {
                         };
                         q_audio_emitter.for_each_mut(world, |(mut audio_emitter, transform)| {
                             let emitter_position: [f32; 3] = {
-                                let x = transform.0[(0, 3)];
-                                let y = transform.0[(1, 3)];
-                                let z = transform.0[(2, 3)];
+                                let x = transform.global_matrix()[(0, 3)];
+                                let y = transform.global_matrix()[(1, 3)];
+                                let z = transform.global_matrix()[(2, 3)];
                                 [convert(x), convert(y), convert(z)]
                             };
                             // Remove all sinks whose sounds have ended.
