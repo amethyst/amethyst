@@ -28,6 +28,7 @@ Steps:
 - Announce the release on Discord.
 - Post the release to Reddit.*
 - Tweet about the release.*
+- Update the `amethyst-starter-2d` repo to use the new version
 
 *Could use more detail!
 
