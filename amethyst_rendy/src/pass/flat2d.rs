@@ -1,11 +1,14 @@
 use crate::pass::{
     Base2DPassDef, DrawBase2D, DrawBase2DDesc, DrawBase2DTransparent, DrawBase2DTransparentDesc,
 };
-use crate::pod::SpriteArgs;
+use crate::pod::{SpriteArgs, ViewArgs};
 use crate::resources::Tint;
+use crate::submodules::gather::CameraGatherer;
 use crate::{SpriteRender, SpriteSheet, Texture};
 use amethyst_assets::{AssetStorage, Handle};
+use amethyst_core::ecs::World;
 use amethyst_core::Transform;
+use glsl_layout::AsStd140;
 use rendy::shader::SpirvShader;
 
 /// Implementation of `Base2DPassDef` describing a simple flat 2D pass.
@@ -15,6 +18,8 @@ impl Base2DPassDef for Flat2DPassDef {
     const NAME: &'static str = "Flat 2D";
     type SpriteComponent = SpriteRender;
     type SpriteData = SpriteArgs;
+    type UniformType = ViewArgs;
+
     fn vertex_shader() -> &'static SpirvShader {
         &super::SPRITE_VERTEX
     }
@@ -37,6 +42,10 @@ impl Base2DPassDef for Flat2DPassDef {
             tint,
         )
         .map(|(data, texture)| (data, std::slice::from_ref(texture)))
+    }
+
+    fn get_uniform(world: &World) -> <ViewArgs as AsStd140>::Std140 {
+        CameraGatherer::gather(world).projview
     }
 }
 

@@ -4,7 +4,7 @@ use crate::{
     resources::Tint,
     sprite::SpriteSheet,
     sprite_visibility::SpriteVisibility,
-    submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
+    submodules::{DynamicVertexBuffer, TextureId, TextureSub},
     types::{Backend, Texture},
     util,
 };
@@ -27,6 +27,8 @@ use rendy::{
     shader::{Shader, SpirvShader},
 };
 
+use crate::submodules::DynamicUniform;
+use glsl_layout::AsStd140;
 use static_assertions::_core::marker::PhantomData;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -42,11 +44,29 @@ pub trait Base2DPassDef: 'static + std::fmt::Debug + Send + Sync {
     ///The Data that gets passed into the vertex shader
     type SpriteData: AsVertex;
 
+    ///The Type of the Uniform to be passed to the vertex shader
+    type UniformType: AsStd140 + std::fmt::Debug + Send + Sync + Sized;
+
     /// Returns the vertex `SpirvShader` which will be used for this pass
     fn vertex_shader() -> &'static SpirvShader;
 
     /// Returns the fragment `SpirvShader` which will be used for this pass
     fn fragment_shader() -> &'static SpirvShader;
+
+    /// Returns the Optional Geometry `SpirvShader` which will be used for this pass
+    fn geomtry_shader() -> Option<&'static SpirvShader> {
+        None
+    }
+
+    /// Returns the Optional Hull `SpirvShader` which will be used for this pass
+    fn hull_shader() -> Option<&'static SpirvShader> {
+        None
+    }
+
+    /// Returns the Optional Domain `SpirvShader` which will be used for this pass
+    fn domain_shader() -> Option<&'static SpirvShader> {
+        None
+    }
 
     ///Function to convert between the SpriteComponent and the SpriteData
     fn get_args<'a>(
@@ -56,6 +76,9 @@ pub trait Base2DPassDef: 'static + std::fmt::Debug + Send + Sync {
         transform: &Transform,
         tint: Option<&Tint>,
     ) -> Option<(Self::SpriteData, &'a [Handle<Texture>])>;
+
+    ///Populates the Uniform with information from World
+    fn get_uniform(world: &World) -> <Self::UniformType as AsStd140>::Std140;
 }
 
 /// Draw opaque 2d components with specified shaders and texture set
@@ -72,7 +95,10 @@ impl<B: Backend, T: Base2DPassDef> DrawBase2DDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base2DPassDef> RenderGroupDesc<B, World> for DrawBase2DDesc<B, T> {
+impl<B: Backend, T: Base2DPassDef> RenderGroupDesc<B, World> for DrawBase2DDesc<B, T>
+where
+    <<T as Base2DPassDef>::UniformType as AsStd140>::Std140: Sized,
+{
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -88,7 +114,7 @@ impl<B: Backend, T: Base2DPassDef> RenderGroupDesc<B, World> for DrawBase2DDesc<
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
-        let env = FlatEnvironmentSub::new(factory)?;
+        let env = DynamicUniform::new(factory, rendy::hal::pso::ShaderStageFlags::VERTEX)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertexBuffer::new();
 
@@ -114,16 +140,22 @@ impl<B: Backend, T: Base2DPassDef> RenderGroupDesc<B, World> for DrawBase2DDesc<
 
 /// Draws opaque 2D sprites to the screen without lighting.
 #[derive(Debug)]
-pub struct DrawBase2D<B: Backend, T: Base2DPassDef> {
+pub struct DrawBase2D<B: Backend, T: Base2DPassDef>
+where
+    <<T as Base2DPassDef>::UniformType as AsStd140>::Std140: Sized,
+{
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
-    env: FlatEnvironmentSub<B>,
+    env: DynamicUniform<B, T::UniformType>,
     textures: TextureSub<B>,
     vertex: DynamicVertexBuffer<B, T::SpriteData>,
     sprites: OneLevelBatch<Vec<TextureId>, T::SpriteData>,
 }
 
-impl<B: Backend, T: Base2DPassDef> RenderGroup<B, World> for DrawBase2D<B, T> {
+impl<B: Backend, T: Base2DPassDef> RenderGroup<B, World> for DrawBase2D<B, T>
+where
+    <<T as Base2DPassDef>::UniformType as AsStd140>::Std140: Sized,
+{
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -155,7 +187,7 @@ impl<B: Backend, T: Base2DPassDef> RenderGroup<B, World> for DrawBase2D<B, T> {
             ReadStorage<'_, Tint>,
         )>::fetch(world);
 
-        self.env.process(factory, index, world);
+        self.env.write(factory, index, T::get_uniform(world));
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
@@ -271,7 +303,10 @@ impl<B: Backend, T: Base2DPassDef> DrawBase2DTransparentDesc<B, T> {
         Default::default()
     }
 }
-impl<B: Backend, T: Base2DPassDef> RenderGroupDesc<B, World> for DrawBase2DTransparentDesc<B, T> {
+impl<B: Backend, T: Base2DPassDef> RenderGroupDesc<B, World> for DrawBase2DTransparentDesc<B, T>
+where
+    <<T as Base2DPassDef>::UniformType as AsStd140>::Std140: Sized,
+{
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -287,7 +322,7 @@ impl<B: Backend, T: Base2DPassDef> RenderGroupDesc<B, World> for DrawBase2DTrans
         #[cfg(feature = "profiler")]
         profile_scope!("build_trans");
 
-        let env = FlatEnvironmentSub::new(factory)?;
+        let env = DynamicUniform::new(factory, rendy::hal::pso::ShaderStageFlags::VERTEX)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertexBuffer::new();
 
@@ -314,17 +349,23 @@ impl<B: Backend, T: Base2DPassDef> RenderGroupDesc<B, World> for DrawBase2DTrans
 
 /// Draws transparent  2d components without lighting.
 #[derive(Debug)]
-pub struct DrawBase2DTransparent<B: Backend, T: Base2DPassDef> {
+pub struct DrawBase2DTransparent<B: Backend, T: Base2DPassDef>
+where
+    <<T as Base2DPassDef>::UniformType as AsStd140>::Std140: Sized,
+{
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
-    env: FlatEnvironmentSub<B>,
     textures: TextureSub<B>,
     vertex: DynamicVertexBuffer<B, T::SpriteData>,
     sprites: OrderedOneLevelBatch<Vec<TextureId>, T::SpriteData>,
     change: util::ChangeDetection,
+    env: DynamicUniform<B, T::UniformType>,
 }
 
-impl<B: Backend, T: Base2DPassDef> RenderGroup<B, World> for DrawBase2DTransparent<B, T> {
+impl<B: Backend, T: Base2DPassDef> RenderGroup<B, World> for DrawBase2DTransparent<B, T>
+where
+    <<T as Base2DPassDef>::UniformType as AsStd140>::Std140: Sized,
+{
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -346,7 +387,7 @@ impl<B: Backend, T: Base2DPassDef> RenderGroup<B, World> for DrawBase2DTranspare
                 ReadStorage<'_, Tint>,
             )>::fetch(world);
 
-        self.env.process(factory, index, world);
+        self.env.write(factory, index, T::get_uniform(world));
         self.sprites.swap_clear();
         let mut changed = false;
 
@@ -461,17 +502,23 @@ fn build_sprite_pipeline<B: Backend, T: Base2DPassDef>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    let shader_vertex = unsafe { super::SPRITE_VERTEX.module(factory).unwrap() };
-    let shader_fragment = unsafe { super::SPRITE_FRAGMENT.module(factory).unwrap() };
+    let shader_vertex = unsafe { T::vertex_shader().module(factory).unwrap() };
+    let shader_fragment = unsafe { T::fragment_shader().module(factory).unwrap() };
+    let shader_hull = T::hull_shader().map(|sh| unsafe { sh.module(factory).unwrap() });
+    let shader_domain = T::domain_shader().map(|sh| unsafe { sh.module(factory).unwrap() });
+    let shader_geometry = T::geomtry_shader().map(|sh| unsafe { sh.module(factory).unwrap() });
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(T::SpriteData::vertex(), pso::VertexInputRate::Instance(1))])
                 .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
-                .with_shaders(util::simple_shader_set(
+                .with_shaders(util::simple_shader_set_ext(
                     &shader_vertex,
                     Some(&shader_fragment),
+                    shader_hull.as_ref(),
+                    shader_domain.as_ref(),
+                    shader_geometry.as_ref(),
                 ))
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
