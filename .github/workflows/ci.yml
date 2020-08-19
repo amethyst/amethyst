@@ -51,33 +51,23 @@ jobs:
           # Don't use a 'components:' entry--we don't need them with beta/nightly, plus nightly often doesn't have them
           override: true
 
-      - name: install rustfmt+clippy on stable
-        run: |
-          rustup component add rustfmt
-          rustup component add clippy
+      - run: rustup component add rustfmt clippy
         if: contains(matrix.toolchain, 'stable')
 
-      - name: run rustfmt on stable
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+      - run: cargo fmt
         if: contains(matrix.toolchain, 'stable')
 
-      - name: run clippy on stable
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --features=${{matrix.FEATURES}}
+      - run: cargo clippy --features=${{matrix.FEATURES}}
         if: contains(matrix.toolchain, 'stable')
 
       - name: clean clippy-generated amethyst libs
+        # Remove the clippy-generated amethyst files.
+        # They mess up `mdbook test` later on for some reason
         run: rm -rf ./target/debug/deps/libamethyst*
         if: contains(matrix.os, 'macos') || contains(matrix.os, 'linux')
 
       - name: run tests
         run: |
-          # Remove the clippy-generated amethyst files, they mess up `mdbook test` later on for some reason
           cargo test --workspace --features=${{matrix.FEATURES}}
         env:
           MACOS: ${{ matrix.MACOS }}  # Used by some tests
