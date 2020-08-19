@@ -6,7 +6,7 @@
 set -euxo pipefail
 
 BACKEND="vulkan"
-if [[ `uname` == "Darwin" ]] ; then
+if [[ $(uname) == "Darwin" ]] ; then
   BACKEND="metal"
 fi
 
@@ -67,7 +67,7 @@ function build_docs_wasm {
   echo "Building wasm docs for $REF..."
 
   # TODO: build wasm branch here
-  # cargo doc --all --features="animation gltf ${BACKEND}"
+  # cargo doc --no-deps --workspace --features="animation gltf ${BACKEND}"
 
   # taken from run.sh for future reference:
   # # (cd amethyst_animation && cargo doc --no-deps)
@@ -123,7 +123,7 @@ function build_docs {
   rm -rf $DIR
   mkdir -p $DIR
   echo "Building docs for $REF..."
-  cargo doc --all --features="animation gltf ${BACKEND}"
+  cargo doc --no-deps --workspace --features="animation gltf ${BACKEND}"
   mv target/doc/* $DIR/
 
   # Write the newly built rev to the rev file
@@ -185,5 +185,5 @@ case $SUBCOMMAND in
     ;;
   *)
     shift
-    echo "Usage: gitlab-ci-helper (build-book|build-docs|build-docs-wasm|invalidate-aws) [ARGS...]"
+    echo "Usage: script/docs-helper.sh (build-book|build-docs|build-docs-wasm|invalidate-aws) [ARGS...]"
 esac
