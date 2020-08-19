@@ -6,7 +6,7 @@ edition = "2018"
 description = "Audio support for Amethyst"
 exclude = ["examples/*"]
 keywords = ["game", "engine", "audio","amethyst"]
-categories = ["audio"]
+categories = ["multimedia::audio"]
 
 documentation = "https://docs.amethyst.rs/stable/amethyst_audio/"
 homepage = "https://amethyst.rs/"
