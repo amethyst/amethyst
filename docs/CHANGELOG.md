@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+- `Camera::screen_ray` fixed since bug introduced in 0.15.1 ([#2447])
+
+[#2447]: https://github.com/amethyst/amethyst/pull/2447
 
 ## [0.15.1] - 2020-08-14
 
