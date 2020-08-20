@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Fix book pong-tutorial/pong-tutorial-01, use `cargo new pong` not `amethyst new pong`
 
-[#xxx]: https://github.com/amethyst/amethyst/pull/xxx
+[#2448]: https://github.com/amethyst/amethyst/pull/2448
 
 ## [0.15.1] - 2020-08-14
 
