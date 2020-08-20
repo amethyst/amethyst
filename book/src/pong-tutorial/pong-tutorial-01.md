@@ -7,7 +7,7 @@ starting the logger, opening a window and preparing a simple rendering setup.
 
 Let's start a new project:
 
-`amethyst new pong`
+`cargo new pong`
 
 Update the dependencies in the project's `Cargo.toml` so that it contains:
 
