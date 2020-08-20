@@ -54,10 +54,10 @@ jobs:
       - run: rustup component add rustfmt clippy
         if: contains(matrix.toolchain, 'stable')
 
-      - run: cargo fmt
+      - run: cargo fmt --all -- --check
         if: contains(matrix.toolchain, 'stable')
 
-      - run: cargo clippy --features=${{matrix.FEATURES}}
+      - run: cargo clippy --features=${{matrix.FEATURES}} --workspace
         if: contains(matrix.toolchain, 'stable')
 
       - name: clean clippy-generated amethyst libs
