@@ -43,7 +43,7 @@ impl Base2DPassDef for Flat2DPassDef {
             transform,
             tint,
         )
-        .map(|(data, texture)| (data,vec![texture.clone()]))
+        .map(|(data, texture)| (data, vec![texture.clone()]))
     }
 
     fn get_uniform(world: &World) -> <ViewArgs as AsStd140>::Std140 {
