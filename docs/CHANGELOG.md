@@ -17,8 +17,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Fixed
 
 - `Camera::screen_ray` fixed since bug introduced in 0.15.1 ([#2447])
+- Fix book pong-tutorial/pong-tutorial-01, use `cargo new pong` not `amethyst new pong`
 
 [#2447]: https://github.com/amethyst/amethyst/pull/2447
+[#2448]: https://github.com/amethyst/amethyst/pull/2448
 
 ## [0.15.1] - 2020-08-14
 
