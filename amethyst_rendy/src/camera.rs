@@ -700,7 +700,7 @@ mod tests {
             // should pass through the top right corner of the screen.
             direction: Vector3::new(0.66436, -0.37370, -0.64727),
         };
-        assert_abs_diff_eq!(ray.origin, expected_ray.origin, epsilon = 0.00001);
+        assert_ulps_eq!(ray.origin, expected_ray.origin, max_ulps = 1);
         assert_abs_diff_eq!(ray.direction, expected_ray.direction, epsilon = 0.00001);
     }
 }
