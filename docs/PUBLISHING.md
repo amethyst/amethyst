@@ -18,7 +18,7 @@ Steps:
   - Copy in the changelog section from the last step for the body of the post.
 - Tag the commit with `vX.Y.Z`, and push.  For example: `git tag v0.15.1 && git push origin HEAD --tags`
   - Comment out the `[dev-dependencies]` section from all `Cargo.toml` files and then commit.  Here is [an example of commenting out `dev-dependencies`].
-  - Run `scripts/publish.sh` from the workspace root.
+  - Run `script/publish.sh` from the workspace root.
   - Revert the removal-of-dev-dependencies commit: `git revert HEAD`.
 - Get an approval and merge the branch with `bors r+`
 - Update the book and API docs on the website.*†
@@ -43,7 +43,7 @@ Steps:
 
 Here is a snapshot of which crates depend on which others. This is no longer needed for publishing, since the order of publishing is implicit in [publish.sh]
 
-[publish.sh]: https://github.com/amethyst/amethyst/blob/master/scripts/publish.sh
+[publish.sh]: https://github.com/amethyst/amethyst/blob/master/script/publish.sh
 
 ### Basic Crates
 
