@@ -16,6 +16,8 @@ use rendy::shader::SpirvShader;
 pub struct Flat2DPassDef;
 impl Base2DPassDef for Flat2DPassDef {
     const NAME: &'static str = "Flat 2D";
+    const TEXTURE_COUNT: usize = 1;
+
     type SpriteComponent = SpriteRender;
     type SpriteData = SpriteArgs;
     type UniformType = ViewArgs;
@@ -33,7 +35,7 @@ impl Base2DPassDef for Flat2DPassDef {
         sprite_component: &Self::SpriteComponent,
         transform: &Transform,
         tint: Option<&Tint>,
-    ) -> Option<(Self::SpriteData, &'a [Handle<Texture>])> {
+    ) -> Option<(Self::SpriteData, Vec<Handle<Texture>>)> {
         SpriteArgs::from_data(
             tex_storage,
             sprite_storage,
@@ -41,7 +43,7 @@ impl Base2DPassDef for Flat2DPassDef {
             transform,
             tint,
         )
-        .map(|(data, texture)| (data, std::slice::from_ref(texture)))
+        .map(|(data, texture)| (data,vec![texture.clone()]))
     }
 
     fn get_uniform(world: &World) -> <ViewArgs as AsStd140>::Std140 {
@@ -57,4 +59,4 @@ pub type DrawFlat2D<B> = DrawBase2D<B, Flat2DPassDef>;
 /// Describes a simple flat 2D pass with transparency
 pub type DrawFlat2DTransparentDesc<B> = DrawBase2DTransparentDesc<B, Flat2DPassDef>;
 /// Draws a simple flat 2D pass with transparency
-pub type DrawFlat2DTransparent<B> = DrawBase2DTransparent<B, Flat2DPassDef>;
+pub type DrawFlat2DTranspaerent<B> = DrawBase2DTransparent<B, Flat2DPassDef>;

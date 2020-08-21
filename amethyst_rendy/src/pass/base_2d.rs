@@ -38,6 +38,9 @@ pub trait Base2DPassDef: 'static + std::fmt::Debug + Send + Sync {
     /// The human readable name of this pass
     const NAME: &'static str;
 
+    ///The count of textures returned
+    const TEXTURE_COUNT: usize;
+
     ///The Component type that will be fetch from the world each frame
     type SpriteComponent: Component;
 
@@ -75,7 +78,7 @@ pub trait Base2DPassDef: 'static + std::fmt::Debug + Send + Sync {
         sprite_render: &Self::SpriteComponent,
         transform: &Transform,
         tint: Option<&Tint>,
-    ) -> Option<(Self::SpriteData, &'a [Handle<Texture>])>;
+    ) -> Option<(Self::SpriteData, Vec<Handle<Texture>>)>;
 
     ///Populates the Uniform with information from World
     fn get_uniform(world: &World) -> <Self::UniformType as AsStd140>::Std140;
@@ -115,8 +118,10 @@ where
         profile_scope!("build");
 
         let env = DynamicUniform::new(factory, rendy::hal::pso::ShaderStageFlags::VERTEX)?;
-        let textures = TextureSub::new(factory)?;
+        let textures :Vec<TextureSub<B>> = (0..T::TEXTURE_COUNT).into_iter().map(|_| TextureSub::new(factory).unwrap()).collect();
         let vertex = DynamicVertexBuffer::new();
+        let mut layouts = vec![env.raw_layout()];
+        layouts.append(&mut textures.iter().map(|ts| ts.raw_layout()).collect());
 
         let (pipeline, pipeline_layout) = build_sprite_pipeline::<B, T>(
             factory,
@@ -124,7 +129,7 @@ where
             framebuffer_width,
             framebuffer_height,
             false,
-            vec![env.raw_layout(), textures.raw_layout()],
+            layouts,
         )?;
 
         Ok(Box::new(DrawBase2D::<B, T> {
@@ -147,7 +152,7 @@ where
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
     env: DynamicUniform<B, T::UniformType>,
-    textures: TextureSub<B>,
+    textures: Vec<TextureSub<B>> ,
     vertex: DynamicVertexBuffer<B, T::SpriteData>,
     sprites: OneLevelBatch<Vec<TextureId>, T::SpriteData>,
 }
@@ -216,8 +221,10 @@ where
 
                     let tex_ids: Vec<TextureId> = textures
                         .iter()
-                        .map(|texture| {
-                            let (tex_id, _) = textures_ref
+                        .enumerate()
+                        .map(|(set,texture)|
+                        {
+                            let (tex_id, _) = textures_ref[set]
                                 .insert(
                                     factory,
                                     world,
@@ -236,7 +243,7 @@ where
                 });
         }
 
-        self.textures.maintain(factory, world);
+       // self.textures.maintain(factory, world);
 
         {
             #[cfg(feature = "profiler")]
@@ -269,13 +276,12 @@ where
         self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, 0, &mut encoder);
         for (texs, range) in self.sprites.iter() {
-            for (num, &tex) in texs.iter().enumerate() {
-                if self.textures.loaded(tex) {
-                    self.textures.bind(layout, 1, tex, &mut encoder);
-                    unsafe {
-                        encoder.draw(0..4, range.clone());
-                    }
-                }
+            for (set,texturesub) in self.textures.iter().enumerate(){
+
+                texturesub.bind(layout, set as u32 +1 ,  texs[set], &mut encoder);
+            }
+            unsafe {
+                encoder.draw(0..4, range.clone());
             }
         }
     }
@@ -414,16 +420,18 @@ where
 
                     let tex_ids: Vec<TextureId> = textures
                         .iter()
-                        .map(|texture| {
-                            let (tex_id, this_changed) = textures_ref
+                        .enumerate()
+                        .map(|(binding,texture)|
+                        {
+                            let (tex_id, _) = textures_ref
                                 .insert(
                                     factory,
                                     world,
                                     texture,
                                     hal::image::Layout::ShaderReadOnlyOptimal,
+
                                 )
                                 .unwrap();
-                            changed = changed || this_changed;
                             tex_id
                         })
                         .collect();
