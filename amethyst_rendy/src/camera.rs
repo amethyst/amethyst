@@ -181,6 +181,7 @@ impl Camera {
         let matrix = *camera_transform.global_matrix() * self.inverse;
 
         let near = Point3::new(screen_x, screen_y, 1.0);
+        // The constraint on far is: 0.0 < far < 1.0. We arbitrarily chose 0.5 - maybe there is a better value?
         let far = Point3::new(screen_x, screen_y, 0.5);
 
         let near_t = matrix.transform_point(&near);
