@@ -695,12 +695,12 @@ mod tests {
 
         let expected_ray = Ray {
             /// In the znear plane.
-            origin: Point3::new(0.12830007, -0.07216879, 2.875),
+            origin: Point3::new(0.12830, -0.07216, 2.875),
             // Corresponds to 45 degree rotation to the right and 30 degree rotation up. This ray
             // should pass through the top right corner of the screen.
-            direction: Vector3::new(0.66436374, -0.37370458, -0.6472757),
+            direction: Vector3::new(0.66436, -0.37370, -0.64727),
         };
-        assert_ulps_eq!(ray.origin, expected_ray.origin);
-        assert_ulps_eq!(ray.direction, expected_ray.direction);
+        assert_abs_diff_eq!(ray.origin, expected_ray.origin, epsilon = 0.00001);
+        assert_abs_diff_eq!(ray.direction, expected_ray.direction, epsilon = 0.00001);
     }
 }
