@@ -16,8 +16,19 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
-- `Camera::screen_ray` fixed since bug introduced in 0.15.1 ([#2447])
-- Fix book pong-tutorial/pong-tutorial-01, use `cargo new pong` not `amethyst new pong`
+## [0.15.2] - 2020-08-22
+
+### Added
+
+
+### Changed
+
+- Internal CI improvements
+- Recommend `cargo new pong` instead of deprecated `amethyst new pong` in the book tutorial ([#2448])
+
+### Fixed
+
+- Fix `Camera::screen_ray` bug introduced in 0.15.1 ([#2447])
 
 [#2447]: https://github.com/amethyst/amethyst/pull/2447
 [#2448]: https://github.com/amethyst/amethyst/pull/2448
@@ -1312,7 +1323,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Initial release
 
-[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.1...HEAD
+[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.2...HEAD
+[0.15.2]: https://github.com/amethyst/amethyst/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/amethyst/amethyst/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/amethyst/amethyst/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/amethyst/amethyst/compare/v0.13.3...v0.14.0
