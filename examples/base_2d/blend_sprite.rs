@@ -1,25 +1,23 @@
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::ecs::prelude::*;
-use amethyst_core::math::{convert, Matrix4, Vector4};
-use amethyst_core::{Time, Transform};
+use amethyst_core::{
+    ecs::prelude::*,
+    math::{convert, Matrix4, Vector4},
+    Transform,
+};
 use amethyst_error::Error;
-use amethyst_rendy::bundle::{RenderOrder, RenderPlan, Target};
-use amethyst_rendy::pass::{
-    Base2DPassDef, DrawBase2D, DrawBase2DDesc, DrawBase2DTransparent, DrawBase2DTransparentDesc,
-};
-use amethyst_rendy::pod::IntoPod;
-use amethyst_rendy::pod::{SpriteArgs, ViewArgs};
-use amethyst_rendy::rendy::graph::render::{PrepareResult, RenderGroup, RenderGroupDesc};
-use amethyst_rendy::rendy::hal::pso::ShaderStageFlags;
-use amethyst_rendy::rendy::shader::SpirvShader;
-use amethyst_rendy::resources::Tint;
-use amethyst_rendy::submodules::gather::CameraGatherer;
 use amethyst_rendy::{
-    ActiveCamera, Backend, Camera, Factory, RenderPlugin, SpriteRender, SpriteSheet, Texture,
+    bundle::{RenderOrder, RenderPlan, Target},
+    pass::{Base2DPassDef, DrawBase2DDesc, DrawBase2DTransparentDesc},
+    pod::{IntoPod, SpriteArgs, ViewArgs},
+    rendy::{graph::render::RenderGroupDesc, hal::pso::ShaderStageFlags, shader::SpirvShader},
+    resources::Tint,
+    submodules::gather::CameraGatherer,
+    Backend, Factory, RenderPlugin, SpriteRender, SpriteSheet, Texture,
 };
+
 use glsl_layout::{mat4, AsStd140};
 
-///Load Shaders
+//Load Shaders
 lazy_static::lazy_static! {
     // These uses the precompiled shaders.
     // These can be obtained using glslc.exe in the vulkan sdk.
@@ -118,36 +116,24 @@ impl Base2DPassDef for BlendSpritePassDef {
     }
 }
 
-/// Describes a simple flat 2D pass.
+/// Describes a Blending Sprite pass.
 pub type BlendSpritePassDesc<B> = DrawBase2DDesc<B, BlendSpritePassDef>;
-/// Draws a simple flat 2D pass.
-pub type BlendSpritePass<B> = DrawBase2D<B, BlendSpritePassDef>;
 
-/// Describes a simple flat 2D pass with transparency
+/// Describes a Blending Sprite pass with transparency
 pub type BlendSpritePassTransparentDesc<B> = DrawBase2DTransparentDesc<B, BlendSpritePassDef>;
-/// Draws a simple flat 2D pass with transparency
-pub type BlendSpritePassTransparent<B> = DrawBase2DTransparent<B, BlendSpritePassDef>;
 
-/// A [RenderPlugin] for drawing 2d objects with flat shading.
+/// A [RenderPlugin] for drawing blended 2d objects .
 /// Required to display sprites defined with [SpriteRender] component.
 #[derive(Default, Debug)]
 pub struct RenderBlendSprite {
     target: Target,
 }
 
-impl RenderBlendSprite {
-    /// Set target to which 2d sprites will be rendered.
-    pub fn with_target(mut self, target: Target) -> Self {
-        self.target = target;
-        self
-    }
-}
-
 impl<B: Backend> RenderPlugin<B> for RenderBlendSprite {
     fn on_build<'a, 'b>(
         &mut self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        _builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         world.register::<BlendSprite>();
         Ok(())

@@ -119,7 +119,6 @@ where
 
         let env = DynamicUniform::new(factory, rendy::hal::pso::ShaderStageFlags::VERTEX)?;
         let textures: Vec<TextureSub<B>> = (0..T::TEXTURE_COUNT)
-            .into_iter()
             .map(|_| TextureSub::new(factory).unwrap())
             .collect();
         let vertex = DynamicVertexBuffer::new();

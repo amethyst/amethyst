@@ -12,13 +12,9 @@ use crate::scrolling_sprite::*;
 
 use amethyst::{
     core::transform::Transform,
-    input::{
-        is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings,
-    },
     prelude::*,
     renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
-    winit::VirtualKeyCode,
 };
 use amethyst_rendy::{
     Camera, ImageFormat, RenderFlat2D, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture,
@@ -26,7 +22,6 @@ use amethyst_rendy::{
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::TransformBundle;
-use amethyst_rendy::pass::DrawFlat2D;
 use amethyst_rendy::resources::Tint;
 use palette::Srgba;
 
@@ -39,7 +34,6 @@ impl SimpleState for CustomShaderState {
         //load textures
         initialise_camera(world);
         let (flag_sheet, noise_sheet) = load_sprite_sheet(world);
-
 
         //Load Sprites
         let mut transform = Transform::default();

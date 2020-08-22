@@ -1,23 +1,19 @@
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::ecs::prelude::*;
-use amethyst_core::{Time, Transform};
+use amethyst_core::{ecs::prelude::*, Transform};
 use amethyst_error::Error;
-use amethyst_rendy::bundle::{RenderOrder, RenderPlan, Target};
-use amethyst_rendy::pass::{
-    Base2DPassDef, DrawBase2D, DrawBase2DDesc, DrawBase2DTransparent, DrawBase2DTransparentDesc,
-};
-use amethyst_rendy::pod::{SpriteArgs, ViewArgs};
-use amethyst_rendy::rendy::graph::render::{PrepareResult, RenderGroup, RenderGroupDesc};
-use amethyst_rendy::rendy::hal::pso::ShaderStageFlags;
-use amethyst_rendy::rendy::shader::SpirvShader;
-use amethyst_rendy::resources::Tint;
-use amethyst_rendy::submodules::gather::CameraGatherer;
 use amethyst_rendy::{
-    ActiveCamera, Backend, Camera, Factory, RenderPlugin, SpriteRender, SpriteSheet, Texture,
+    bundle::{RenderOrder, RenderPlan, Target},
+    pass::{Base2DPassDef, DrawBase2DDesc, DrawBase2DTransparentDesc},
+    pod::{SpriteArgs, ViewArgs},
+    rendy::{graph::render::RenderGroupDesc, hal::pso::ShaderStageFlags, shader::SpirvShader},
+    resources::Tint,
+    submodules::gather::CameraGatherer,
+    Backend, Factory, RenderPlugin, SpriteRender, SpriteSheet, Texture,
 };
-use glsl_layout::{mat4, AsStd140};
 
-///Load Shaders
+use glsl_layout::AsStd140;
+
+//Load Shaders
 lazy_static::lazy_static! {
     // These uses the precompiled shaders.
     // These can be obtained using glslc.exe in the vulkan sdk.
@@ -82,37 +78,25 @@ impl Base2DPassDef for ColorReplacementPassDef {
     }
 }
 
-/// Describes a simple flat 2D pass.
+/// Describes a Color Replacement Pass.
 pub type ColorReplacementPassDesc<B> = DrawBase2DDesc<B, ColorReplacementPassDef>;
-/// Draws a simple flat 2D pass.
-pub type ColorReplacementPass<B> = DrawBase2D<B, ColorReplacementPassDef>;
 
-/// Describes a simple flat 2D pass with transparency
+/// Describes a Color Replacement Pass with transparency
 pub type ColorReplacementPassTransparentDesc<B> =
     DrawBase2DTransparentDesc<B, ColorReplacementPassDef>;
-/// Draws a simple flat 2D pass with transparency
-pub type ColorReplacementPassTransparent<B> = DrawBase2DTransparent<B, ColorReplacementPassDef>;
 
-/// A [RenderPlugin] for drawing 2d objects with flat shading.
+/// A [RenderPlugin] for drawing 2d objects with Color Replacement.
 /// Required to display sprites defined with [SpriteRender] component.
 #[derive(Default, Debug)]
 pub struct RenderColorReplacement {
     target: Target,
 }
 
-impl RenderColorReplacement {
-    /// Set target to which 2d sprites will be rendered.
-    pub fn with_target(mut self, target: Target) -> Self {
-        self.target = target;
-        self
-    }
-}
-
 impl<B: Backend> RenderPlugin<B> for RenderColorReplacement {
     fn on_build<'a, 'b>(
         &mut self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        _builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         world.register::<ColorReplacementSprite>();
         Ok(())

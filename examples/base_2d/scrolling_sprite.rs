@@ -1,23 +1,18 @@
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::ecs::prelude::*;
-use amethyst_core::{Time, Transform};
+use amethyst_core::{ecs::prelude::*, Time, Transform};
 use amethyst_error::Error;
-use amethyst_rendy::bundle::{RenderOrder, RenderPlan, Target};
-use amethyst_rendy::pass::{
-    Base2DPassDef, DrawBase2D, DrawBase2DDesc, DrawBase2DTransparent, DrawBase2DTransparentDesc,
-};
-use amethyst_rendy::pod::{SpriteArgs, ViewArgs};
-use amethyst_rendy::rendy::graph::render::{PrepareResult, RenderGroup, RenderGroupDesc};
-use amethyst_rendy::rendy::hal::pso::ShaderStageFlags;
-use amethyst_rendy::rendy::shader::SpirvShader;
-use amethyst_rendy::resources::Tint;
-use amethyst_rendy::submodules::gather::CameraGatherer;
 use amethyst_rendy::{
+    bundle::{RenderOrder, RenderPlan, Target},
+    pass::{Base2DPassDef, DrawBase2DDesc, DrawBase2DTransparentDesc},
+    pod::SpriteArgs,
+    rendy::{graph::render::RenderGroupDesc, hal::pso::ShaderStageFlags, shader::SpirvShader},
+    resources::Tint,
     ActiveCamera, Backend, Camera, Factory, RenderPlugin, SpriteRender, SpriteSheet, Texture,
 };
+
 use glsl_layout::{mat4, AsStd140};
 
-///Load Shaders
+//Load Shaders
 lazy_static::lazy_static! {
     // These uses the precompiled shaders.
     // These can be obtained using glslc.exe in the vulkan sdk.
@@ -52,6 +47,7 @@ pub struct ViewTimeArgs {
     pub time: f32,
 }
 
+/// Implementation of `Base2DPassDef` describing a scrolling sprite pass.
 #[derive(Debug)]
 pub struct ScrollingSpritePassDef;
 impl Base2DPassDef for ScrollingSpritePassDef {
@@ -129,37 +125,25 @@ impl Base2DPassDef for ScrollingSpritePassDef {
     }
 }
 
-/// Describes a simple flat 2D pass.
+/// Describes a scrolling sprite pass.
 pub type ScrollingSpritePassDesc<B> = DrawBase2DDesc<B, ScrollingSpritePassDef>;
-/// Draws a simple flat 2D pass.
-pub type ScrollingSpritePass<B> = DrawBase2D<B, ScrollingSpritePassDef>;
 
-/// Describes a simple flat 2D pass with transparency
+/// Describes a scrolling sprite pass with transparency
 pub type ScrollingSpritePassTransparentDesc<B> =
     DrawBase2DTransparentDesc<B, ScrollingSpritePassDef>;
-/// Draws a simple flat 2D pass with transparency
-pub type ScrollingSpritePassTransparent<B> = DrawBase2DTransparent<B, ScrollingSpritePassDef>;
 
-/// A [RenderPlugin] for drawing 2d objects with flat shading.
+/// A [RenderPlugin] for drawing 2d objects with scrolling.
 /// Required to display sprites defined with [SpriteRender] component.
 #[derive(Default, Debug)]
 pub struct RenderScrollingSprite {
     target: Target,
 }
 
-impl RenderScrollingSprite {
-    /// Set target to which 2d sprites will be rendered.
-    pub fn with_target(mut self, target: Target) -> Self {
-        self.target = target;
-        self
-    }
-}
-
 impl<B: Backend> RenderPlugin<B> for RenderScrollingSprite {
     fn on_build<'a, 'b>(
         &mut self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        _builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         world.register::<ScrollingSprite>();
         Ok(())

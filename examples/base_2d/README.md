@@ -1,6 +1,6 @@
 ## Custom Render Pass
 
-Showcases a few different effects that can be acheived be extending base_2d pass.
+Showcases a few different effects that can be achieved be extending base_2d pass.
 
 Effects:
 * Top Row
@@ -10,7 +10,7 @@ Effects:
     * Color Replace  ( Magenta -> Yellow)
 * Bottom Row
     * Fire Effect
-    * Multitexture Blend
+    * Multi-Texture Blend
     * Nothing (Saved for future effects)
     * Nothing (Saved for future effect)
 
