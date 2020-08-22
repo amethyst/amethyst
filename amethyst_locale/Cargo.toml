@@ -10,7 +10,7 @@ Localisation bindings.
 exclude = ["examples/*"]
 license = "MIT/Apache-2.0"
 keywords = ["game", "localisation", "resource", "management", "amethyst"]
-categories = ["filesystem,localisation"]
+categories = ["localization"]
 
 documentation = "https://docs.amethyst.rs/stable/amethyst_locale/"
 homepage = "https://amethyst.rs/"

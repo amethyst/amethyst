@@ -1,7 +1,7 @@
 use crate::systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 use amethyst::{
     core::bundle::SystemBundle,
-    ecs::prelude::{DispatcherBuilder, World},
+    ecs::{DispatcherBuilder, World},
     error::Error,
 };
 
