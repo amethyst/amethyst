@@ -181,7 +181,8 @@ impl Camera {
         let matrix = *camera_transform.global_matrix() * self.inverse;
 
         let near = Point3::new(screen_x, screen_y, 1.0);
-        let far = Point3::new(screen_x, screen_y, 0.0);
+        // The constraint on far is: 0.0 < far < 1.0. We arbitrarily chose 0.5 - maybe there is a better value?
+        let far = Point3::new(screen_x, screen_y, 0.5);
 
         let near_t = matrix.transform_point(&near);
         let far_t = matrix.transform_point(&far);
@@ -670,5 +671,37 @@ mod tests {
         let far = Point3::new(0.0, 0.0, -97.0);
         let projected_point = mvp.transform_point(&far);
         assert_abs_diff_eq!(projected_point[2], 0.0);
+    }
+
+    #[test]
+    fn screen_ray_3d() {
+        let width = 1280.0;
+        let height = 720.0;
+
+        let aspect = width / height;
+        let fov = std::f32::consts::FRAC_PI_3;
+        let znear = 0.125;
+        let camera = Camera::perspective(aspect, fov, znear);
+
+        let mut camera_transform: Transform = Transform::new(
+            Translation3::new(0.0, 0.0, 3.0),
+            UnitQuaternion::identity(),
+            [1.0, 1.0, 1.0].into(),
+        );
+        camera_transform.copy_local_to_global();
+
+        let cursor_pos = Point2::new(width, height);
+        let screen_diag = Vector2::new(width, height);
+        let ray = camera.screen_ray(cursor_pos, screen_diag, &camera_transform);
+
+        let expected_ray = Ray {
+            /// In the znear plane.
+            origin: Point3::new(0.12830007, -0.0721688, 2.875),
+            // Corresponds to 45 degree rotation to the right and 30 degree rotation up. This ray
+            // should pass through the top right corner of the screen.
+            direction: Vector3::new(0.6643638, -0.37370467, -0.6472754),
+        };
+        assert_ulps_eq!(ray.origin, expected_ray.origin);
+        assert_ulps_eq!(ray.direction, expected_ray.direction);
     }
 }
