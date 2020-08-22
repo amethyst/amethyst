@@ -37,12 +37,12 @@ static_assertions = "1.1"
 thread_profiler = { version = "0.3", optional = true }
 approx = "0.3.2"
 
-[dev-dependencies]
-rayon = "1.3.0"
-more-asserts = "0.2.1"
-criterion = "0.3.0"
-winit = "0.19"
-approx = "0.3"
+#[dev-dependencies]
+#rayon = "1.3.0"
+#more-asserts = "0.2.1"
+#criterion = "0.3.0"
+#winit = "0.19"
+#approx = "0.3"
 
 [features]
 metal = ["rendy/metal"]
