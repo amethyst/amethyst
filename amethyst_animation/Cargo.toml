@@ -32,7 +32,7 @@ serde = { version = "1.0", features = ["derive"] }
 
 thread_profiler = { version = "0.3", optional = true }
 
-#[dev-dependencies]
+[dev-dependencies]
 
 [features]
 vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
