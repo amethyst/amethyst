@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.15.1"
+version = "0.15.2"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Data-oriented game engine written in Rust"

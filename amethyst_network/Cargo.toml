@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_network"
-version = "0.8.1"
+version = "0.15.2"
 authors = [
 	"Joël Lupien (Jojolepro) <jojolepro@jojolepro.com>",
 	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>",

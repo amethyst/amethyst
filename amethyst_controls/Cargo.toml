@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_controls"
-version = "0.9.1"
+version = "0.15.2"
 authors = ["Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst controls"
