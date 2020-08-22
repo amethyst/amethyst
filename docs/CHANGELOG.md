@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+- Added extensible 2D base pass, changed Flat 2D to use the new system, and provided examples. ()
+
 ### Fixed
 
 - Fix book pong-tutorial/pong-tutorial-01, use `cargo new pong` not `amethyst new pong`
