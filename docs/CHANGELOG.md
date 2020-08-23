@@ -16,10 +16,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
-## [0.15.2] - 2020-08-22
+## [0.15.3] - 2020-08-22
 
-### Added
+0.15.3 is a corrected version of 0.15.2, which was inadvertently published based off of an incorrect (and broken) commit.
 
+## [0.15.2] - 2020-08-22 - YANKED
 
 ### Changed
 
@@ -1323,7 +1324,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Initial release
 
-[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.2...HEAD
+[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.3...HEAD
+[0.15.3]: https://github.com/amethyst/amethyst/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/amethyst/amethyst/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/amethyst/amethyst/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/amethyst/amethyst/compare/v0.14.0...v0.15.0
