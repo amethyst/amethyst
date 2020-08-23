@@ -17,5 +17,9 @@ which rg > /dev/null || die "Please 'cargo install ripgrep'"
 CARGO_TOML_FILES=$(rg '^version =' -t toml -l)
 
 for file in $CARGO_TOML_FILES ; do
-  sed -e "s/^version = \".*\"\$/version = \"${VERSION}\"/" -e "s/\\(amethyst_.*\", \\)version = \".*\"/\\1version = \"${VERSION}\"/g" -i "" "${file}"
+  sed -E \
+    -e "s/^version = \".*\"\$/version = \"${VERSION}\"/" \
+    -e "s/(amethyst_.*\", )version = \"[0-9]+.[0-9]+.[0-9]+\"/\\1version = \"${VERSION}\"/g" \
+    -e "s/^(amethyst = \\{ path = \"\.\.\", )version = \"[0-9]+.[0-9]+.[0-9]+\"/\\1version = \"${VERSION}\"/g" \
+    -i "" "${file}"
 done
