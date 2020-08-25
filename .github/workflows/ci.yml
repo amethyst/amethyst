@@ -79,13 +79,14 @@ jobs:
           mdbook-version: 'latest'
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - name: install mdbook-linkcheck on stable, ubuntu-latest
-        env:
-          LINKCHECK_URL: https://github.com/Michael-F-Bryan/mdbook-linkcheck/releases/download/v0.7.0/mdbook-linkcheck-v0.7.0-x86_64-unknown-linux-gnu.tar.gz
-        run: |
-          curl -L ${{ env.LINKCHECK_URL }} | tar -C ~/.cargo/bin -xzf -
-          echo -e "\n\n[output.linkcheck]" >> book/book.toml ## PROBABLY REMOVE THIS IN FAVOR OF ALWAYS HAVING IT AS OPTIONAL IN THE CONFIG
-        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
+      # Should be working, but postponing until after we go live with GitHub Actions
+      # - name: install mdbook-linkcheck on stable, ubuntu-latest
+      #   env:
+      #     LINKCHECK_URL: https://github.com/Michael-F-Bryan/mdbook-linkcheck/releases/download/v0.7.0/mdbook-linkcheck-v0.7.0-x86_64-unknown-linux-gnu.tar.gz
+      #   run: |
+      #     curl -L ${{ env.LINKCHECK_URL }} | tar -C ~/.cargo/bin -xzf -
+      #     echo -e "\n\n[output.linkcheck]" >> book/book.toml ## PROBABLY REMOVE THIS IN FAVOR OF ALWAYS HAVING IT AS OPTIONAL IN THE CONFIG
+      #   if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
       - run: mdbook build book
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
