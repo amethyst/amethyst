@@ -122,7 +122,7 @@ impl Error {
     /// assert_eq!("wrapped", e.source().expect("no source").to_string());
     /// ```
     pub fn source(&self) -> Option<&Error> {
-        self.inner.source.as_ref().map(|e| &**e)
+        self.inner.source.as_deref()
     }
 
     /// Iterate over all causes, including this one.

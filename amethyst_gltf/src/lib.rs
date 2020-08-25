@@ -215,15 +215,19 @@ pub struct GltfSceneOptions {
     pub scene_index: Option<usize>,
 }
 
+type SysDataOf<'a, T> = <T as PrefabData<'a>>::SystemData;
+
 impl<'a> PrefabData<'a> for GltfPrefab {
+    // Looks better when defined all in one place
+    #[allow(clippy::type_complexity)]
     type SystemData = (
-        <Transform as PrefabData<'a>>::SystemData,
-        <Named as PrefabData<'a>>::SystemData,
-        <CameraPrefab as PrefabData<'a>>::SystemData,
-        <LightPrefab as PrefabData<'a>>::SystemData,
-        <MaterialPrefab as PrefabData<'a>>::SystemData,
-        <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
-        <SkinnablePrefab as PrefabData<'a>>::SystemData,
+        SysDataOf<'a, Transform>,
+        SysDataOf<'a, Named>,
+        SysDataOf<'a, CameraPrefab>,
+        SysDataOf<'a, LightPrefab>,
+        SysDataOf<'a, MaterialPrefab>,
+        SysDataOf<'a, AnimatablePrefab<usize, Transform>>,
+        SysDataOf<'a, SkinnablePrefab>,
         WriteStorage<'a, BoundingSphere>,
         WriteStorage<'a, Handle<Mesh>>,
         Read<'a, AssetStorage<Mesh>>,
