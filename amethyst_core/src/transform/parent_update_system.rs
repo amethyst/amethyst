@@ -127,7 +127,8 @@ mod test {
     #[test]
     fn correct_children() {
         let mut resources = Resources::default();
-        let mut world = Universe::new().create_world();
+        let mut world = World::default();
+
 
         let mut schedule = Schedule::builder()
             .add_system(missing_previous_parent_system::build())
