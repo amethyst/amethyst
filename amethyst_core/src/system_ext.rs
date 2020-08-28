@@ -76,9 +76,9 @@ where
 
 /// A system that is enabled when `V` has a specific value.
 ///
-/// This is created using the [`SystemExt::pausable`] method.
+/// This is created using the [`pausable`] method.
 ///
-/// [`SystemExt::pausable`]: trait.SystemExt.html#tymethod.pausable
+/// [`pausable`]: fn.pauseable.html
 #[derive(Debug)]
 pub struct Pauseable<S, V> {
     system: S,
