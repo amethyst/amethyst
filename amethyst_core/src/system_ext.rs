@@ -63,8 +63,8 @@ where
 {
     let (resource_reads, _) = runnable.reads();
     let resource_reads = resource_reads
-        .into_iter()
-        .map(|id| *id)
+        .iter()
+        .copied()
         .chain(std::iter::once(ResourceTypeId::of::<V>()))
         .collect::<Vec<_>>();
     Pauseable {
