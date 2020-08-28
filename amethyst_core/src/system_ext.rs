@@ -76,9 +76,9 @@ where
 
 /// A system that is enabled when `V` has a specific value.
 ///
-/// This is created using the [`pausable`] method.
+/// This is created using the [`pauseable`] method.
 ///
-/// [`pausable`]: fn.pauseable.html
+/// [`pauseable`]: fn.pauseable.html
 #[derive(Debug)]
 pub struct Pauseable<S, V> {
     system: S,
