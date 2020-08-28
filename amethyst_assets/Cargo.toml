@@ -60,6 +60,7 @@ futures-executor = { version = "0.3", default-features = false }
 legion-transaction = "0.1"
 legion-prefab = "0.1"
 prefab-format = "0.1"
+encoding_rs_io = "0.1"
 
 [dev-dependencies]
 serde_json = "1"
