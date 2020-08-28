@@ -129,7 +129,6 @@ mod test {
         let mut resources = Resources::default();
         let mut world = World::default();
 
-
         let mut schedule = Schedule::builder()
             .add_system(missing_previous_parent_system::build())
             .flush()

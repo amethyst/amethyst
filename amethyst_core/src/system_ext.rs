@@ -5,10 +5,9 @@
 use crate::legion::{
     storage::ComponentTypeId,
     systems::{
-        CommandBuffer, Resource, ResourceSet, ResourceTypeId, Runnable,
-        SystemId, UnsafeResources,
+        CommandBuffer, Resource, ResourceSet, ResourceTypeId, Runnable, SystemId, UnsafeResources,
     },
-    world::{WorldId, ArchetypeAccess, World},
+    world::{ArchetypeAccess, World, WorldId},
     Read,
 };
 
@@ -26,13 +25,13 @@ use crate::legion::{
 /// # Examples
 /// ```rust
 /// use legion::{system, Schedule, World, Resources};
-/// 
+///
 /// #[derive(PartialEq)]
 /// enum CurrentState {
 ///     Disabled,
 ///     Enabled,
 /// }
-/// 
+///
 /// #[system]
 /// fn add_number(#[state] n: &u32, #[resource] sum: &mut u32) {
 ///     *sum += n;
@@ -60,7 +59,8 @@ use crate::legion::{
 /// ```
 pub fn pauseable<V>(runnable: impl Runnable, value: V) -> Pauseable<impl Runnable, V>
 where
-    V: Resource + PartialEq {
+    V: Resource + PartialEq,
+{
     let (resource_reads, _) = runnable.reads();
     let resource_reads = resource_reads
         .into_iter()
