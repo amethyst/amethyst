@@ -12,8 +12,7 @@ on:
       - "**"
 
 env:
-  RUSTFLAGS: --deny warnings -Cdebuginfo=0
-  RUSTDOCFLAGS: --deny warnings
+  RUSTFLAGS: -Cdebuginfo=0
 
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0

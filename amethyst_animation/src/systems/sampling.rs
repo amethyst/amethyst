@@ -217,7 +217,7 @@ where
                 .last()
                 .cloned()
                 .map(secs_to_duration)
-                .unwrap_or(Duration::from_secs(0));
+                .unwrap_or_else(|| Duration::from_secs(0));
             // duration is past last frame of sampling
             if current_dur > last_frame {
                 // Check end conditions
