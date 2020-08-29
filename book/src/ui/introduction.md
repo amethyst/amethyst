@@ -5,9 +5,9 @@ In general UI includes all kinds of widgets from images, buttons, progress bars,
 
 The API in Amethyst was designed more to provide users with building blocks for the UI and without 
 a specific layout system. The reason is that you don't often see, if any, layout systems 
-used in games, although are very popular GUI frameworks. 
+used in games, although there are very popular GUI frameworks. 
 
-Please note that not all forementinoted widgets exist in Amethyst yet.
+Please note that not all aforementioned widgets exist in Amethyst yet.
 
 ## Setting up the UI
 
