@@ -16,7 +16,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use ron::{self, de::Error as DeError, ser::Error as SerError};
 use serde::{Deserialize, Serialize};
 
 /// Error related to anything that manages/creates configurations as well as
@@ -26,9 +25,9 @@ pub enum ConfigError {
     /// Forward to the `std::io::Error` error.
     File(io::Error),
     /// Errors related to serde's parsing of configuration files.
-    Parser(DeError),
+    Parser(ron::Error),
     /// Occurs if a value is ill-formed during serialization (like a poisoned mutex).
-    Serializer(SerError),
+    Serializer(ron::Error),
     /// Related to the path of the file.
     Extension(PathBuf),
 }
@@ -59,18 +58,6 @@ impl fmt::Display for ConfigError {
 impl From<io::Error> for ConfigError {
     fn from(e: io::Error) -> ConfigError {
         ConfigError::File(e)
-    }
-}
-
-impl From<DeError> for ConfigError {
-    fn from(e: DeError) -> Self {
-        ConfigError::Parser(e)
-    }
-}
-
-impl From<SerError> for ConfigError {
-    fn from(e: SerError) -> Self {
-        ConfigError::Serializer(e)
     }
 }
 
@@ -138,18 +125,20 @@ where
     }
 
     fn load_bytes(bytes: &[u8]) -> Result<Self, ConfigError> {
-        let mut de = ron::de::Deserializer::from_bytes(bytes)?;
-        let val = T::deserialize(&mut de)?;
-        de.end()?;
-
-        Ok(val)
+        ron::de::Deserializer::from_bytes(bytes)
+            .and_then(|mut de| {
+                let val = T::deserialize(&mut de)?;
+                de.end()?;
+                Ok(val)
+            })
+            .map_err(ConfigError::Parser)
     }
 
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
         use ron::ser::to_string_pretty;
         use std::{fs::File, io::Write};
 
-        let s = to_string_pretty(self, Default::default())?;
+        let s = to_string_pretty(self, Default::default()).map_err(ConfigError::Serializer)?;
         File::create(path)?.write_all(s.as_bytes())?;
 
         Ok(())

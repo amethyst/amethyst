@@ -1,6 +1,5 @@
-use std::{marker, time::Duration};
+use std::{collections::HashSet, marker, time::Duration};
 
-use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
 
 use amethyst_assets::AssetStorage;
@@ -76,28 +75,34 @@ where
                     process_sampler(control, sampler, &time, &mut self.inner);
                 }
             }
-            if !self.inner.is_empty() {
-                self.channels.clear();
-                self.channels
-                    .extend(self.inner.iter().map(|o| &o.1).unique().cloned());
-                for channel in &self.channels {
-                    match comp.blend_method(channel) {
-                        None => {
-                            if let Some(p) = self
-                                .inner
-                                .iter()
-                                .filter(|p| p.1 == *channel)
-                                .map(|p| p.2.clone())
-                                .last()
-                            {
-                                comp.apply_sample(channel, &p, &apply_data);
-                            }
-                        }
 
-                        Some(BlendMethod::Linear) => {
-                            if let Some(p) = linear_blend::<T>(channel, &self.inner) {
-                                comp.apply_sample(channel, &p, &apply_data);
-                            }
+            if self.inner.is_empty() {
+                return;
+            }
+            self.channels.clear();
+            self.channels.extend(
+                self.inner
+                    .iter()
+                    .map(|o| o.1.clone())
+                    .collect::<HashSet<_>>(),
+            );
+            for channel in &self.channels {
+                match comp.blend_method(channel) {
+                    None => {
+                        if let Some(p) = self
+                            .inner
+                            .iter()
+                            .filter(|p| p.1 == *channel)
+                            .map(|p| p.2.clone())
+                            .last()
+                        {
+                            comp.apply_sample(channel, &p, &apply_data);
+                        }
+                    }
+
+                    Some(BlendMethod::Linear) => {
+                        if let Some(p) = linear_blend::<T>(channel, &self.inner) {
+                            comp.apply_sample(channel, &p, &apply_data);
                         }
                     }
                 }

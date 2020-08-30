@@ -14,7 +14,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+- ***Breaking:***: updated `ron` from `0.5` to `0.6`, this changes the `amethyst_config::ConfigError` enum (#2473)
+
 ### Fixed
+
+[#2473]: https://github.com/amethyst/amethyst/pull/2473
 
 ## [0.15.3] - 2020-08-22
 

@@ -1,5 +1,6 @@
 # Test suite must pass on GitHub Actions before merging into `master`.
 status = [
+    "cargo-deny-check (bans licenses sources)",
     "Tests (macos-latest, stable)",
     "Tests (macos-latest, beta)",
 #    "Tests (macos-latest, nightly)",
