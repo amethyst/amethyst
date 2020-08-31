@@ -21,7 +21,6 @@ travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 crossbeam-queue = "0.2.2"
 derivative = "2.1.1"
