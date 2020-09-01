@@ -890,6 +890,7 @@ mod tests {
 
     #[test]
     #[ignore] // CI can't run tests requiring actual backend
+    #[cfg(feature = "window")]
     fn main_pass_surface_plan() {
         use winit::{EventsLoop, WindowBuilder};
 
