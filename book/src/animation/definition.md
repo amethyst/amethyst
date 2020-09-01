@@ -12,4 +12,4 @@ Right now we do not have a tutorial for defining an animation from scratch, but 
 [ex_ani]: https://github.com/amethyst/amethyst/tree/master/examples/animation
 [ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 [ex_sprite]: https://github.com/amethyst/amethyst/tree/master/examples/sprite_animation
-[api]: https://docs.amethyst.rs/stable/amethyst_animation/
+[api]: https://docs.amethyst.rs/master/amethyst_animation

@@ -39,7 +39,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
 2. Define the adapter prefab data type.
 
-    Create a (de)serializable enum type with a variant for each representation. The following is an example of an adapter type for the [`Position`] component, which allows either `i32` or `f32` values to be specified in the prefab:
+    Create a (de)serializable enum type with a variant for each representation. The following is an example of an adapter type for the `Position` component, which allows either `i32` or `f32` values to be specified in the prefab:
 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
@@ -60,21 +60,31 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     }
     ```
 
-    The [`#[serde(deny_unknown_fields)]`] ensures that deserialization produces an error if it encounters an unknown field. This will help expose mistakes in the prefab file, such as when there is a typo.
+    The [`#[serde(deny_unknown_fields)]`][ser_unk] ensures that deserialization produces an error if it encounters an unknown field. This will help expose mistakes in the prefab file, such as when there is a typo.
 
-    **Note:** You may already have a type that captures the multiple representations. For example, for the [`Camera`] component, the [`Projection`] enum captures the different representations:
+    **Note:** You may already have a type that captures the multiple representations. For example, for the [`Camera`] component, the [`CameraPrefab`] enum captures the different representations:
 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
     #
-    # use amethyst::core::math::{Orthographic3, Perspective3};
     # use serde::{Deserialize, Serialize};
     #
-    #[derive(Clone, Deserialize, PartialEq, Serialize)]
-    pub enum Projection {
-        Orthographic(Orthographic3<f32>),
-        Perspective(Perspective3<f32>),
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)
+    pub enum CameraPrefab {
+        Orthographic {
+            left: f32,
+            right: f32,
+            bottom: f32,
+            top: f32,
+            znear: f32,
+            zfar: f32,
+        },
+        Perspective {
+            aspect: f32,
+            fovy: f32,
+            znear: f32,
+        },
     }
     ```
 
@@ -161,12 +171,11 @@ To see this in a complete example, run the [`prefab_adapter` example][repo_prefa
 cargo run --example prefab_adapter
 ```
 
-[`#[serde(default)]`]: https://serde.rs/container-attrs.html#default
-[`#[serde(deny_unknown_fields)]`]: https://serde.rs/container-attrs.html#deny_unknown_fields
-[`Camera`]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.Camera.html
-[`Component`]: https://docs.amethyst.rs/stable/specs/trait.Component.html
-[`Prefab`]: https://docs.amethyst.rs/stable/amethyst_assets/struct.Prefab.html
-[`PrefabData`]: https://docs.amethyst.rs/stable/amethyst_assets/trait.PrefabData.html#impl-PrefabData%3C%27a%3E
-[`Projection`]: https://docs.amethyst.rs/stable/amethyst_renderer/enum.Projection.html
+[ser_unk]: https://serde.rs/container-attrs.html#deny_unknown_fields
+[`Camera`]: https://docs.amethyst.rs/master/amethyst_rendy/camera/struct.Camera.html
+[`Component`]: https://docs.rs/specs/~0.16/specs/trait.Component.html
+[`Prefab`]: https://docs.amethyst.rs/master/amethyst_assets/struct.Prefab.html
+[`PrefabData`]: https://docs.amethyst.rs/master/amethyst_assets/trait.PrefabData.html
+[`CameraPrefab`]: https://docs.amethyst.rs/master/amethyst_rendy/camera/enum.CameraPrefab.html
 [bk_prefab_prelude]: how_to_define_prefabs_prelude.html
 [repo_prefab_adapter]: https://github.com/amethyst/amethyst/tree/master/examples/prefab_adapter
