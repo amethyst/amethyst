@@ -46,13 +46,15 @@
 //! * `Yield` will call [`thread::yield_now`] repeatedly until the frame duration has
 //!   passed. This will result in the most accurate frame timings, but effectively guarantees
 //!   that one CPU core will be fully utilized during the frame's idle time.
-//! * `Sleep` will sleep for the approximate remainder of the frame duration. This will result in
-//!   lower CPU usage while the game is idle, but risks fluctuations in frame timing if the
-//!   operating system doesn't wake the game until after the frame should have started.
-//! * `SleepAndYield` will sleep until there's only a small amount of time left in the frame,
-//!   and then will yield until the next frame starts. This approach attempts to get the
+//! * `Sleep` will attempt to sleep for the first half of the desired frame duration, and will then
+//!   yield until the next frame starts. This approach, in contrast to `Yield`, helps reduce CPU usage
+//!   while the game is idle. It yields for the remainder of the frame to reduce risk of fluctuations
+//!   in frame timing caused by the imprecise nature of sleeps. This approach attempts to get the
 //!   consistent frame timings of yielding, while reducing CPU usage compared to the yield-only
 //!   approach.
+//! * `SleepAndYield` differs from `Sleep` by letting you specify when to stop sleeping and start yielding,
+//!   granting you complete control over the frame timings, whereas `Sleep` will sleep for half the frame and yield
+//!   for the remainder of the frame.
 //!
 //! By default amethyst will use the `Yield` strategy, which is fine for desktop and console
 //! games that aren't as affected by extra CPU usage. For mobile devices, the `Sleep` strategy
@@ -68,14 +70,13 @@
 //! [`thread::sleep`]: https://doc.rust-lang.org/stable/std/thread/fn.sleep.html
 
 use std::{
+    assert,
     thread::{sleep, yield_now},
     time::{Duration, Instant},
 };
 
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-
-const ZERO: Duration = Duration::from_millis(0);
 
 /// Frame rate limiting strategy.
 ///
@@ -91,12 +92,15 @@ pub enum FrameRateLimitStrategy {
     /// Yield repeatedly until the frame duration has passed.
     Yield,
 
-    /// Sleep repeatedly until the frame duration has passed.
+    /// Use sleep and yield combined automatically based on target frame rate.
+    ///
+    /// Will sleep repeatedly until half the frame duration has passed, and will then yield
+    /// repeatedly for the remaining frame time to prevent over-sleeping.
     Sleep,
 
-    /// Use sleep and yield combined.
+    /// Use sleep and yield combined with an explicit sleep barrier.
     ///
-    /// Will sleep repeatedly until the given duration remains, and then will yield repeatedly
+    /// Will sleep repeatedly until the given duration remains, and will then yield repeatedly
     /// for the remaining frame time.
     SleepAndYield(Duration),
 }
@@ -148,6 +152,7 @@ impl Default for FrameRateLimitConfig {
 #[derive(Debug)]
 pub struct FrameLimiter {
     frame_duration: Duration,
+    sleep_barrier: Duration,
     strategy: FrameRateLimitStrategy,
     last_call: Instant,
 }
@@ -163,6 +168,7 @@ impl FrameLimiter {
     pub fn new(strategy: FrameRateLimitStrategy, fps: u32) -> Self {
         let mut s = Self {
             frame_duration: Duration::from_secs(0),
+            sleep_barrier: Duration::from_secs(0),
             strategy: Default::default(),
             last_call: Instant::now(),
         };
@@ -171,13 +177,16 @@ impl FrameLimiter {
     }
 
     /// Sets the maximum fps and frame rate limiting strategy.
-    pub fn set_rate(&mut self, mut strategy: FrameRateLimitStrategy, mut fps: u32) {
-        if fps == 0 {
-            strategy = FrameRateLimitStrategy::Unlimited;
-            fps = 144;
-        }
+    pub fn set_rate(&mut self, strategy: FrameRateLimitStrategy, fps: u32) {
+        assert!(fps > 0, "FrameLimiter::set_rate parameter `fps` is {}. This parameter must be greater than zero!");
         self.strategy = strategy;
         self.frame_duration = Duration::from_secs(1) / fps;
+        self.sleep_barrier = self.frame_duration / 2;
+    }
+
+    /// Gets the assigned frame duration.
+    pub fn get_frame_duration(&self) -> Duration {
+        self.frame_duration
     }
 
     /// Creates a new frame limiter with the given config.
@@ -207,7 +216,10 @@ impl FrameLimiter {
 
             Yield => self.do_yield(),
 
-            Sleep => self.do_sleep(ZERO),
+            Sleep => {
+                self.do_sleep(self.sleep_barrier);
+                self.do_yield();
+            }
 
             SleepAndYield(dur) => {
                 self.do_sleep(dur);

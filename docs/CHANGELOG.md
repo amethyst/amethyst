@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+[#2083]: https://github.com/amethyst/amethyst/pull/2478
+
 ## [0.15.3] - 2020-08-22
 
 0.15.3 is a corrected version of 0.15.2, which was inadvertently published based off of an incorrect (and broken) commit.
