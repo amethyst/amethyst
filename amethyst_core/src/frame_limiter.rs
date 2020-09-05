@@ -178,7 +178,7 @@ impl FrameLimiter {
 
     /// Sets the maximum fps and frame rate limiting strategy.
     pub fn set_rate(&mut self, strategy: FrameRateLimitStrategy, fps: u32) {
-        assert!(fps > 0, "FrameLimiter::set_rate parameter `fps` is {}. This parameter must be greater than zero!");
+        assert!(fps > 0, "FrameLimiter::set_rate parameter `fps` is {}. This parameter must be greater than zero!", fps);
         self.strategy = strategy;
         self.frame_duration = Duration::from_secs(1) / fps;
         self.sleep_barrier = self.frame_duration / 2;
