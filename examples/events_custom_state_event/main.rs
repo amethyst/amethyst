@@ -24,7 +24,7 @@ fn main() -> amethyst::Result<()> {
         assets_dir,
         GameplayState::default(),
     )?
-    .with_frame_limit(FrameRateLimitStrategy::Sleep, 1)
+    .with_frame_limit(FrameRateLimitStrategy::SleepAndYield, 1)
     .build(game_data)?;
 
     game.run();

@@ -29,7 +29,7 @@
 //! let assets_dir = "./";
 //! let mut game = Application::build(assets_dir, GameState)?
 //!     .with_frame_limit(
-//!         FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
+//!         FrameRateLimitStrategy::SleepAndYieldDuration(Duration::from_millis(2)),
 //!         144,
 //!     )
 //!     .build(GameDataBuilder::new())?;
@@ -46,21 +46,21 @@
 //! * `Yield` will call [`thread::yield_now`] repeatedly until the frame duration has
 //!   passed. This will result in the most accurate frame timings, but effectively guarantees
 //!   that one CPU core will be fully utilized during the frame's idle time.
-//! * `Sleep` will attempt to sleep for the first half of the desired frame duration, and will then
+//! * `SleepAndYield` will attempt to sleep for the first half of the desired frame duration, and will then
 //!   yield until the next frame starts. This approach, in contrast to `Yield`, helps reduce CPU usage
 //!   while the game is idle. It yields for the remainder of the frame to reduce risk of fluctuations
 //!   in frame timing caused by the imprecise nature of sleeps. This approach attempts to get the
 //!   consistent frame timings of yielding, while reducing CPU usage compared to the yield-only
 //!   approach.
-//! * `SleepAndYield` differs from `Sleep` by letting you specify when to stop sleeping and start yielding,
-//!   granting you complete control over the frame timings, whereas `Sleep` will sleep for half the frame and yield
+//! * `SleepAndYieldDuration` differs from `SleepAndYield` by letting you specify when to stop sleeping and start yielding,
+//!   granting you complete control over the frame timings, whereas `SleepAndYield` will sleep for half the frame and yield
 //!   for the remainder of the frame.
 //!
 //! By default amethyst will use the `Yield` strategy, which is fine for desktop and console
-//! games that aren't as affected by extra CPU usage. For mobile devices, the `Sleep` strategy
+//! games that aren't as affected by extra CPU usage. For mobile devices, the `SleepAndYield` strategy
 //! will help conserve battery life.
 //!
-//! `SleepAndYield` can potentially be as accurate as `Yield` while using less CPU time, but you
+//! `SleepAndYieldDuration` and `SleepAndYield` can potentially be as accurate as `Yield` while using less CPU time, but you
 //! will have to test different grace period timings to determine how much time needs to be left
 //! to ensure that the main thread doesn't sleep too long and miss the start of the next frame.
 //!
@@ -96,13 +96,13 @@ pub enum FrameRateLimitStrategy {
     ///
     /// Will sleep repeatedly until half the frame duration has passed, and will then yield
     /// repeatedly for the remaining frame time to prevent over-sleeping.
-    Sleep,
+    SleepAndYield,
 
     /// Use sleep and yield combined with an explicit sleep barrier.
     ///
     /// Will sleep repeatedly until the given duration remains, and will then yield repeatedly
     /// for the remaining frame time.
-    SleepAndYield(Duration),
+    SleepAndYieldDuration(Duration),
 }
 
 impl Default for FrameRateLimitStrategy {
@@ -216,12 +216,12 @@ impl FrameLimiter {
 
             Yield => self.do_yield(),
 
-            Sleep => {
+            SleepAndYield => {
                 self.do_sleep(self.sleep_barrier);
                 self.do_yield();
             }
 
-            SleepAndYield(dur) => {
+            SleepAndYieldDuration(dur) => {
                 self.do_sleep(dur);
                 self.do_yield();
             }

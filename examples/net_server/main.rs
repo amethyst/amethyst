@@ -40,7 +40,7 @@ fn main() -> Result<()> {
 
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(
-            FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
+            FrameRateLimitStrategy::SleepAndYieldDuration(Duration::from_millis(2)),
             60,
         )
         .build(game_data)?;
