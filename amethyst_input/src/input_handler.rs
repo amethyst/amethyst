@@ -18,8 +18,7 @@ use winit::{
 /// For example, if a key is pressed on the keyboard, this struct will record
 /// that the key is pressed until it is released again.
 #[derive(Debug, Default)]
-pub struct InputHandler
-{
+pub struct InputHandler {
     /// Maps inputs to actions and axes.
     pub bindings: Bindings,
     /// Encodes the VirtualKeyCode and corresponding scancode.
@@ -38,8 +37,7 @@ pub struct InputHandler
     mouse_wheel_horizontal: f32,
 }
 
-impl InputHandler
-{
+impl InputHandler {
     /// Creates a new input handler.
     pub fn new() -> Self {
         Default::default()
@@ -491,7 +489,11 @@ impl InputHandler
             .pressed_mouse_buttons
             .iter()
             .map(|&mb| Button::Mouse(mb));
-        let keys = self.pressed_keys.iter().flat_map(|v| Some(Button::Key(v.0)).into_iter().chain(Some(Button::ScanCode(v.1)).into_iter()));
+        let keys = self.pressed_keys.iter().flat_map(|v| {
+            Some(Button::Key(v.0))
+                .into_iter()
+                .chain(Some(Button::ScanCode(v.1)).into_iter())
+        });
         let controller_buttons = self
             .pressed_controller_buttons
             .iter()
@@ -577,16 +579,14 @@ impl InputHandler
     }
 
     /// Returns the value of an axis by the id, if the id doesn't exist this returns None.
-    pub fn axis_value(&self, id: &str) -> Option<f32>
-    {
+    pub fn axis_value(&self, id: &str) -> Option<f32> {
         self.bindings.axes.get(id).map(|a| self.axis_value_impl(a))
     }
 
     /// Returns true if any of the actions bindings is down.
     ///
     /// If a binding represents a combination of buttons, all of them need to be down.
-    pub fn action_is_down(&self, action: &str) -> Option<bool>
-    {
+    pub fn action_is_down(&self, action: &str) -> Option<bool> {
         self.bindings.actions.get(action).map(|combinations| {
             combinations.iter().any(|combination| {
                 combination
@@ -787,7 +787,7 @@ mod tests {
         let mut events = EventChannel::<InputEvent>::new();
         let mut reader = events.register_reader();
 
-        const TEST_KEY_ACTION: Cow::<'static, str> = Cow::Borrowed("test_key_action");
+        const TEST_KEY_ACTION: Cow<'static, str> = Cow::Borrowed("test_key_action");
 
         handler
             .bindings
@@ -885,7 +885,7 @@ mod tests {
         let mut events = EventChannel::<InputEvent>::new();
         let mut reader = events.register_reader();
 
-        const TEST_COMBO_ACTION: Cow::<'static, str> = Cow::Borrowed("test_combo_action");
+        const TEST_COMBO_ACTION: Cow<'static, str> = Cow::Borrowed("test_combo_action");
 
         handler
             .bindings
@@ -974,7 +974,7 @@ mod tests {
         let mut events = EventChannel::<InputEvent>::new();
         let mut reader = events.register_reader();
 
-        const TEST_AXIS: Cow::<'static, str> = Cow::Borrowed("test_axis");
+        const TEST_AXIS: Cow<'static, str> = Cow::Borrowed("test_axis");
 
         handler
             .bindings

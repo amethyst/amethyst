@@ -14,8 +14,7 @@ use super::{
 /// Type parameter T is the type assigned to your Actions for your
 /// InputBundle or InputHandler.
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
-pub enum InputEvent
-{
+pub enum InputEvent {
     /// A key was pressed down, sent exactly once per key press.
     KeyPressed {
         /// `VirtualKeyCode`, used for semantic info. i.e. "W" was pressed

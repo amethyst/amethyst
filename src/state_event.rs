@@ -14,8 +14,7 @@ use crate::{
 /// `handle_event` method.
 #[derive(Clone, Debug, EventReader)]
 #[reader(StateEventReader)]
-pub enum StateEvent
-{
+pub enum StateEvent {
     /// Events sent by the winit window.
     Window(Event),
     /// Events sent by the ui system.

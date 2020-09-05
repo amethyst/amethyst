@@ -118,8 +118,7 @@ pub enum ControllerEvent {
     },
 }
 
-impl<'a> Into<InputEvent> for &'a ControllerEvent
-{
+impl<'a> Into<InputEvent> for &'a ControllerEvent {
     fn into(self) -> InputEvent {
         use self::ControllerEvent::*;
         match *self {

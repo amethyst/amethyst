@@ -76,8 +76,7 @@ pub enum BindingError {
     MouseWheelAxisAlreadyBound(Cow<'static, str>),
 }
 
-impl Display for BindingError
-{
+impl Display for BindingError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match *self {
             BindingError::ComboContainsDuplicates(ref id) => write!(
@@ -303,11 +302,7 @@ impl Bindings {
         Ok(())
     }
 
-    fn check_action_invariants(
-        &self,
-        id: &str,
-        bind: &[Button],
-    ) -> Result<(), BindingError> {
+    fn check_action_invariants(&self, id: &str, bind: &[Button]) -> Result<(), BindingError> {
         // Guarantee each button is unique.
         for i in 0..bind.len() {
             for j in (i + 1)..bind.len() {
@@ -386,10 +381,7 @@ mod tests {
                 [Button::Mouse(MouseButton::Left)].iter().cloned(),
             )
             .unwrap();
-        assert_eq!(
-            bindings.actions().collect::<Vec<_>>(),
-            vec![&TEST_ACTION]
-        );
+        assert_eq!(bindings.actions().collect::<Vec<_>>(), vec![&TEST_ACTION]);
         let action_bindings = bindings.action_bindings(&TEST_ACTION).collect::<Vec<_>>();
         assert_eq!(action_bindings, vec![[Button::Mouse(MouseButton::Left)]]);
         bindings
@@ -409,10 +401,7 @@ mod tests {
                 .cloned(),
             )
             .unwrap();
-        assert_eq!(
-            bindings.actions().collect::<Vec<_>>(),
-            vec![&TEST_ACTION],
-        );
+        assert_eq!(bindings.actions().collect::<Vec<_>>(), vec![&TEST_ACTION],);
         let action_bindings = bindings.action_bindings(&TEST_ACTION).collect::<Vec<_>>();
         assert_eq!(
             action_bindings,
@@ -679,19 +668,13 @@ mod tests {
         );
         assert_eq!(
             bindings
-                .insert_axis(
-                    TEST_MOUSEWHEEL_AXIS,
-                    Axis::MouseWheel { horizontal: true },
-                )
+                .insert_axis(TEST_MOUSEWHEEL_AXIS, Axis::MouseWheel { horizontal: true },)
                 .unwrap(),
             None
         );
         assert_eq!(
             bindings
-                .insert_axis(
-                    TEST_MOUSEWHEEL_AXIS,
-                    Axis::MouseWheel { horizontal: false },
-                )
+                .insert_axis(TEST_MOUSEWHEEL_AXIS, Axis::MouseWheel { horizontal: false },)
                 .unwrap(),
             Some(Axis::MouseWheel { horizontal: true })
         );
@@ -712,8 +695,10 @@ mod tests {
         const NORMAL_AXIS: Cow<'static, str> = Cow::Borrowed("normal_axis");
         const MULTIPLE_AXIS: Cow<'static, str> = Cow::Borrowed("multiple_axis");
         const NORMAL_CONTROLLER_AXIS: Cow<'static, str> = Cow::Borrowed("normal_controller_axis");
-        const MULTIPLE_CONTROLLER_AXIS: Cow<'static, str> = Cow::Borrowed("multiple_controller_axis");
-        const MULTIPLE_CONTROLLER_AXIS_2: Cow<'static, str> = Cow::Borrowed("multiple_controller_axis_2");
+        const MULTIPLE_CONTROLLER_AXIS: Cow<'static, str> =
+            Cow::Borrowed("multiple_controller_axis");
+        const MULTIPLE_CONTROLLER_AXIS_2: Cow<'static, str> =
+            Cow::Borrowed("multiple_controller_axis_2");
 
         let mut bindings = Bindings::new();
         assert_eq!(
@@ -907,10 +892,7 @@ mod tests {
         );
         assert_eq!(
             bindings
-                .insert_axis(
-                    TEST_MOUSEWHEEL_AXIS,
-                    Axis::MouseWheel { horizontal: false },
-                )
+                .insert_axis(TEST_MOUSEWHEEL_AXIS, Axis::MouseWheel { horizontal: false },)
                 .unwrap(),
             None
         );

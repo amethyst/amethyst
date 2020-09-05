@@ -46,10 +46,7 @@ impl InputBundle {
     }
 
     /// Load bindings from file
-    pub fn with_bindings_from_file<P: AsRef<Path>>(
-        self,
-        file: P,
-    ) -> Result<Self, BindingsFileError>
+    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> Result<Self, BindingsFileError>
     where
         Bindings: Config,
     {
@@ -120,8 +117,7 @@ pub enum BindingsFileError {
     BindingError(BindingError),
 }
 
-impl fmt::Display for BindingsFileError
-{
+impl fmt::Display for BindingsFileError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BindingsFileError::ConfigError(..) => write!(f, "Configuration error"),
@@ -130,8 +126,7 @@ impl fmt::Display for BindingsFileError
     }
 }
 
-impl error::Error for BindingsFileError
-{
+impl error::Error for BindingsFileError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             BindingsFileError::ConfigError(ref e) => Some(e),
