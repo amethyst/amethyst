@@ -10,9 +10,10 @@ use amethyst_core::{
     timing::Time,
     transform::Transform,
 };
+use std::borrow::Cow;
 use std::collections::HashMap;
 
-use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
+use amethyst_input::{get_input_axis_simple, InputHandler};
 
 use crate::{
     components::{ArcBallControl, FlyControl},
@@ -24,15 +25,15 @@ use crate::{
 /// # Type parameters
 ///
 /// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
-pub fn build_fly_movement_system<T: BindingTypes>(
+pub fn build_fly_movement_system(
     speed: f32,
-    horizontal_axis: Option<T::Axis>,
-    vertical_axis: Option<T::Axis>,
-    longitudinal_axis: Option<T::Axis>,
+    horizontal_axis: Option<Cow<'static, str>>,
+    vertical_axis: Option<Cow<'static, str>>,
+    longitudinal_axis: Option<Cow<'static, str>>,
 ) -> impl Runnable {
     SystemBuilder::new("FlyMovementSystem")
         .read_resource::<Time>()
-        .read_resource::<InputHandler<T>>()
+        .read_resource::<InputHandler>()
         .with_query(<(&FlyControl, &mut Transform)>::query())
         .build(move |_commands, world, (time, input), controls| {
             #[cfg(feature = "profiler")]
