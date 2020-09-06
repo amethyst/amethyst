@@ -16,7 +16,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
-[#2083]: https://github.com/amethyst/amethyst/pull/2479
+- Fix `FrameRateLimitStrategy::Sleep` strategy sleeps too long ([#2479])
+
+[#2479]: https://github.com/amethyst/amethyst/pull/2479
 
 ## [0.15.3] - 2020-08-22
 
