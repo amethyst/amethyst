@@ -20,6 +20,7 @@ jobs:
   tests:
     name: Tests
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.toolchain == 'nightly' }}
     strategy:
       fail-fast: true
       matrix:
