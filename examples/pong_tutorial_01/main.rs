@@ -24,7 +24,8 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("examples/pong_tutorial_01/assets/");
 
-    let game_data = GameDataBuilder::default().with_bundle(
+    let mut dispatcher = DispatcherBuilder::default();
+    dispatcher.add_bundle(
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and
             // drawing on it
@@ -34,9 +35,9 @@ fn main() -> amethyst::Result<()> {
             )
             // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
             .with_plugin(RenderFlat2D::default()),
-    )?;
+    );
 
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
+    let mut game = Application::new(assets_dir, Pong, dispatcher)?;
     game.run();
     Ok(())
 }
