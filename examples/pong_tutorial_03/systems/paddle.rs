@@ -1,29 +1,24 @@
 use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 use amethyst::{
     core::transform::Transform,
-    derive::SystemDesc,
-    ecs::prelude::{Join, Read, ReadStorage, System, SystemData, WriteStorage},
-    input::{InputHandler, StringBindings},
+    ecs::{Runnable, SystemBuilder},
+    input::{get_input_axis_simple, InputHandler, StringBindings},
+    prelude::*,
 };
 
-#[derive(SystemDesc)]
-pub struct PaddleSystem;
-
-impl<'s> System<'s> for PaddleSystem {
-    type SystemData = (
-        WriteStorage<'s, Transform>,
-        ReadStorage<'s, Paddle>,
-        Read<'s, InputHandler<StringBindings>>,
-    );
-
-    fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
-        for (paddle, transform) in (&paddles, &mut transforms).join() {
-            let movement = match paddle.side {
-                Side::Left => input.axis_value("left_paddle"),
-                Side::Right => input.axis_value("right_paddle"),
-            };
-            if let Some(mv_amount) = movement {
-                let scaled_amount = 1.2 * mv_amount;
+pub fn build() -> impl Runnable {
+    SystemBuilder::new("PaddleSystem")
+        .with_query(<(&Paddle, &mut Transform)>::query())
+        .read_resource::<InputHandler<StringBindings>>()
+        .read_component::<Paddle>()
+        .write_component::<Transform>()
+        .build(move |_commands, world, input, query_paddles| {
+            for (paddle, transform) in query_paddles.iter_mut(world) {
+                let movement = match paddle.side {
+                    Side::Left => get_input_axis_simple(&Some("left_paddle".to_string()), input),
+                    Side::Right => get_input_axis_simple(&Some("right_paddle".to_string()), input),
+                };
+                let scaled_amount = 1.2 * movement;
                 let paddle_y = transform.translation().y;
                 transform.set_translation_y(
                     (paddle_y + scaled_amount)
@@ -31,6 +26,5 @@ impl<'s> System<'s> for PaddleSystem {
                         .max(PADDLE_HEIGHT * 0.5),
                 );
             }
-        }
-    }
+        })
 }
