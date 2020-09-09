@@ -9,7 +9,7 @@ In Amethyst, the [`Tile`][doc_tile] is a trait that must be implemented within y
 
 > **Note:** The code snippets in this section explain the parts of creating tile maps separately. For complete application examples, please refer to the [*tiles*][ex_tiles] example in the [examples][ex_all] directory.
 
-> **Note:** This section uses [*sprites*](../sprites.md) and assumes knowledge of loading sprites and spritesheets.
+> **Note:** This section uses [*sprites*](./sprites.md) and assumes knowledge of loading sprites and spritesheets.
 
 [doc_tile]: https://docs.amethyst.rs/stable/amethyst_tiles/trait.Tile.html
 [doc_tilemap]: https://docs.amethyst.rs/stable/amethyst_tiles/struct.TileMap.html

@@ -142,5 +142,5 @@ pub fn load_sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
 
 
 
-[doc_grid]: https://docs.amethyst.rs/stable/amethyst_rendy/sprite/struct.SpriteGrid.html
-[doc_list]: https://docs.amethyst.rs/stable/amethyst_rendy/sprite/struct.SpriteList.html
+[doc_grid]: https://docs.amethyst.rs/master/amethyst_rendy/sprite/struct.SpriteGrid.html
+[doc_list]: https://docs.amethyst.rs/master/amethyst_rendy/sprite/struct.SpriteList.html

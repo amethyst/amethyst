@@ -24,8 +24,10 @@ At the time of writing, the list of features of this type is the following:
 * `saveload`
 * `sdl_controller`
 
-The full list of available features is available in the [Cargo.toml](https://github.com/amethyst/amethyst/blob/master/Cargo.toml) file.
+The full list of available features is available in the [Cargo.toml] file.
 The available features might change from time to time.
+
+[Cargo.toml]: https://github.com/amethyst/amethyst/blob/master/Cargo.toml
 
 ## Graphics features
 
@@ -50,7 +52,7 @@ by [shaderc]). Please note, that on Windows this feature requires [Ninja] to be 
 
 ## Using Amethyst testing utility
 
-As described in the [Testing chapter](../testing.html), Amethyst has several utilities to help you
+As described in the [Testing chapter][bk_test], Amethyst has several utilities to help you
 test an application written using Amethyst. For some cases (especially when rendering components 
 are involved in the test), you need to enable the `test-support` feature.
 
@@ -63,7 +65,7 @@ cargo (build/test/run) --features profiler
 ```
 
 The next time you will run a project, upon closing it, a file will be created at the root of the project called `thread_profile.json`.
-You can open this file using the chromium browser (or google chrome) and navigating to [chrome://tracing](chrome://tracing)
+You can open this file using the chromium browser (or google chrome) and navigating to chrome://tracing
 
 ## Nightly
 
@@ -92,3 +94,5 @@ version = "*"
 default-features = false
 features = ["audio", "animation"] # you can add more or replace those
 ```
+
+[bk_test]: ../testing.html

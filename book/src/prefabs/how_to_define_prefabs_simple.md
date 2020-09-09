@@ -1,6 +1,6 @@
 # How to Define Prefabs: Simple
 
-This guide explains how to enable a [`[Component]`(https://docs.amethyst.rs/stable/specs/trait.Component.html)] to be used in a [`[Prefab]`(https://docs.amethyst.rs/stable/amethyst_assets/struct.Prefab.html)]. This can be applied where the [`[Component]`(https://docs.amethyst.rs/stable/specs/trait.Component.html)] type itself is completely serializable &ndash; the data is self-contained:
+This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. This can be applied where the [`Component`] type itself is completely serializable &ndash; the data is self-contained:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -72,11 +72,11 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     pub struct Position(pub f32, pub f32, pub f32);
     ```
 
-    The [`[PrefabData]`(https://docs.amethyst.rs/stable/amethyst_assets/trait.PrefabData.html#impl-PrefabData)][api_pf_derive](https://docs.amethyst.rs/stable/amethyst_derive/derive.PrefabData.html) derive implements the `[PrefabData]` trait for the type. The `#[prefab(Component)]` attribute informs the `[PrefabData]` derive that this type is a [`[Component]`(https://docs.amethyst.rs/stable/specs/trait.Component.html)], as opposed to being composed of fields which implement `[PrefabData]`.
+    The [`PrefabData`] [api_pf_derive] derive implements the [`PrefabData`] trait for the type. The `#[prefab(Component)]` attribute informs the [`PrefabData`] derive that this type is a [`Component`], as opposed to being composed of fields which implement `[PrefabData]`.
 
-    The [[`#[serde(default)]`](https://serde.rs/container-attrs.html#default)] attribute allows fields to not be specified in the prefab, and the fields' default value will be used. If this attribute is not present, then all fields must be specified in the prefab.
+    The [`#[serde(default)]`][ser_def] attribute allows fields to not be specified in the prefab, and the fields' default value will be used. If this attribute is not present, then all fields must be specified in the prefab.
 
-    Finally, the [[`#[serde(deny_unknown_fields)]`](https://serde.rs/container-attrs.html#deny_unknown_fields)] ensures that deserialization produces an error if it encounters an unknown field. This will help expose mistakes in the prefab file, such as when there is a typo.
+    Finally, the [`#[serde(deny_unknown_fields)]`][ser_unk] ensures that deserialization produces an error if it encounters an unknown field. This will help expose mistakes in the prefab file, such as when there is a typo.
 
 4. Now the type can be used in a prefab:
 
@@ -91,8 +91,17 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     )
     ```
 
-To see this in a complete example, run the [`prefab_basic` example](https://github.com/amethyst/amethyst/tree/master/examples/prefab_basic) from the Amethyst repository:
+To see this in a complete example, run the [`prefab_basic` example] from the Amethyst repository:
 
 ```bash
 cargo run --example prefab_basic
 ```
+
+[`Component`]: https://docs.rs/specs/~0.16/specs/trait.Component.html
+[`Prefab`]: https://docs.amethyst.rs/master/amethyst_assets/struct.Prefab.html
+[`PrefabData`]: https://docs.amethyst.rs/master/amethyst_assets/trait.PrefabData.html#impl-PrefabData
+[api_pf_derive]: https://docs.amethyst.rs/master/amethyst_derive/derive.PrefabData.html
+[ser_def]: https://serde.rs/container-attrs.html#default
+[ser_unk]: https://serde.rs/container-attrs.html#deny_unknown_fields
+[`prefab_basic` example]: https://github.com/amethyst/amethyst/tree/master/examples/prefab_basic
+[bk_prefab_prelude]: ./how_to_define_prefabs_prelude.html
