@@ -1,7 +1,6 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     core::{timing::Time, transform::Transform},
-    ecs::prelude::{Component, DenseVecStorage, WorldExt},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
 };
@@ -23,7 +22,7 @@ pub struct Pong {
 }
 
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
         // Wait one second before spawning the ball.
@@ -32,16 +31,17 @@ impl SimpleState for Pong {
         // Load the spritesheet necessary to render the graphics.
         // `spritesheet` is the layout of the sprites on the image;
         // `texture` is the pixel data.
-        self.sprite_sheet_handle.replace(load_sprite_sheet(world));
+        self.sprite_sheet_handle
+            .replace(load_sprite_sheet(data.resources));
         initialise_paddles(world, self.sprite_sheet_handle.clone().unwrap());
         initialise_camera(world);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
             // If the timer isn't expired yet, substract the time that passed since last update.
             {
-                let time = data.world.fetch::<Time>();
+                let time = data.resources.get::<Time>().unwrap();
                 timer -= time.delta_seconds();
             }
             if timer <= 0.0 {
@@ -56,7 +56,7 @@ impl SimpleState for Pong {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Side {
     Left,
     Right,
@@ -78,28 +78,20 @@ impl Paddle {
     }
 }
 
-impl Component for Paddle {
-    type Storage = DenseVecStorage<Self>;
-}
-
 pub struct Ball {
     pub velocity: [f32; 2],
     pub radius: f32,
 }
 
-impl Component for Ball {
-    type Storage = DenseVecStorage<Self>;
-}
-
-fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
+fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
     // `sprite_sheet` is the layout of the sprites on the image
     // `texture_handle` is a cloneable reference to the texture
 
     let texture_handle = {
-        let loader = world.read_resource::<Loader>();
-        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+        let loader = resources.get::<Loader>().unwrap();
+        let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
         loader.load(
             "texture/pong_spritesheet.png",
             ImageFormat::default(),
@@ -108,8 +100,8 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
         )
     };
 
-    let loader = world.read_resource::<Loader>();
-    let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
+    let loader = resources.get::<Loader>().unwrap();
+    let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
     loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file
         SpriteSheetFormat(texture_handle), // We pass it the texture we want it to use
@@ -124,11 +116,7 @@ fn initialise_camera(world: &mut World) {
     let mut transform = Transform::default();
     transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
 
-    world
-        .create_entity()
-        .with(Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT))
-        .with(transform)
-        .build();
+    world.push((Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT), transform));
 }
 
 /// Initialises one paddle on the left, and one paddle on the right.
@@ -145,20 +133,18 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
     let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
 
     // Create a left plank entity.
-    world
-        .create_entity()
-        .with(sprite_render.clone())
-        .with(Paddle::new(Side::Left))
-        .with(left_transform)
-        .build();
+    world.push((
+        sprite_render.clone(),
+        Paddle::new(Side::Left),
+        left_transform,
+    ));
 
     // Create right plank entity.
-    world
-        .create_entity()
-        .with(sprite_render)
-        .with(Paddle::new(Side::Right))
-        .with(right_transform)
-        .build();
+    world.push((
+        sprite_render.clone(),
+        Paddle::new(Side::Right),
+        right_transform,
+    ));
 }
 
 /// Initialises one ball in the middle of the arena.
@@ -174,13 +160,12 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
     // Assign the sprite for the ball
     let sprite_render = SpriteRender::new(sprite_sheet_handle, 1); // ball is the second sprite on the sprite_sheet
 
-    world
-        .create_entity()
-        .with(sprite_render)
-        .with(Ball {
+    world.push((
+        sprite_render,
+        Ball {
             radius: BALL_RADIUS,
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
-        })
-        .with(local_transform)
-        .build();
+        },
+        local_transform,
+    ));
 }
