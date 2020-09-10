@@ -23,13 +23,13 @@ impl<'s> System<'s> for SimpleButtonSystem {
 }
 ```
 
-This was shown in previous [chapters](../concepts/system/system_initialization.html).
+This was shown in previous [chapters][sys_ini].
 The way you will be able to read the generated 
-events is with a [ReaderId](https://docs.amethyst.rs/master/specs/prelude/struct.ReaderId.html).
+events is with a [ReaderId].
 The `ReaderId` is added as a field to the system struct.
 
-The events we want to read are of type [UiEvent](https://docs.amethyst.rs/master/amethyst_ui/struct.UiEvent.html).
-We also need to fetch the [EventChannel](https://docs.amethyst.rs/master/shrev/struct.EventChannel.html) in our `SystemData`, 
+The events we want to read are of type [UiEvent].
+We also need to fetch the [EventChannel] in our `SystemData`, 
 since the `ReaderId` actually pulls (reads) information  from the `EventChannel`.
 
 Adding it up, it should look like this: 
@@ -227,22 +227,7 @@ Eventhough possible, it is not recommended. That's why now
 we will go through managing input through the state.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+[sys_ini]: ../concepts/system/system_initialization.html
+[ReaderId]: https://docs.rs/specs/~0.16/specs/struct.ReaderId.html
+[UiEvent]: https://docs.amethyst.rs/master/amethyst_ui/struct.UiEvent.html
+[EventChannel]: https://specs.amethyst.rs/docs/api/shrev/struct.eventchannel

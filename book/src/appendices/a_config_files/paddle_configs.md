@@ -56,8 +56,8 @@ and modify the `main.rs`'s `run()` function to add our `PaddleConfig`s.
 ```
 
 We add the `PaddlesConfig` to the `World`, rather than as separate `left` and `right` configurations because
-`System`s can only access resources with ID 0. Any resource added using [`World::add_resource`][add_resource]
-is added using a default ID of 0. You must use [`World::add_resource_with_id`][add_with_id] to add multiple
+`System`s can only access resources with ID 0. Any resource added using `World::add_resource`
+is added using a default ID of 0. You must use `World::add_resource_with_id` to add multiple
 resources of the same type, but then the `System`s cannot properly differentiate between them.
 
 ## Replacing Constants with Configs
@@ -160,9 +160,3 @@ keep the left paddle blue so the final `config.ron` file will be as follows:
     )
 )
 ```
-
-
-[add_resource]: https://docs.rs/specs/0.12.0/specs/struct.World.html#method.insert
-[add_with_id]: https://docs.rs/specs/0.12.0/specs/struct.World.html#method.insert_with_id
-
-

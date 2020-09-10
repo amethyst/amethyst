@@ -54,9 +54,8 @@ impl ExampleState {
 }
 ```
 
-And you're done! If you would like to see this in practice, check out the [*sprites*][ex_sprites] or [*sprites_ordered*][ex_ordered] examples in the [examples][ex_all] directory.
+And you're done! If you would like to see this in practice, check out the [*sprites_ordered*][ex_ordered] example in the [examples][ex_all] directory.
 
 [ex_all]: https://github.com/amethyst/amethyst/tree/master/examples
 [ex_ordered]: https://github.com/amethyst/amethyst/tree/master/examples/sprites_ordered
-[ex_sprites]: https://github.com/amethyst/amethyst/tree/master/examples/sprites
 [opengl_ortho]: https://opengl-notes.readthedocs.io/en/latest/topics/transforms/viewing.html#orthographic-projection

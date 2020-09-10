@@ -54,7 +54,7 @@ impl BindingTypes for MovementBindingTypes {
 
 The `Axis` and `Action` type both need to derive all the traits listed above, the first five are used by Amethyst and the last two are for reading and writing to files correctly. They also need to implement `Display` if you want to add a bindings config file.
 
-For serializing and deserializing you need to add [serde](https://crates.io/crates/serde) to the dependencies like this:
+For serializing and deserializing you need to add [serde] to the dependencies like this:
 
 ```toml,ignore
 serde = { version = "1", features = ["derive"] }
@@ -216,3 +216,5 @@ let game_data = GameDataBuilder::default()
 //..
 #   ;
 ```
+
+[serde]: https://crates.io/crates/serde
