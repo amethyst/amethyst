@@ -9,7 +9,7 @@ use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
 pub fn build() -> impl Runnable {
     SystemBuilder::new("PaddleSystem")
-        .with_query(<(&Paddle, &mut Transform)>::query())
+        .with_query(<(&mut Paddle, &mut Transform)>::query())
         .read_resource::<InputHandler<StringBindings>>()
         .read_component::<Paddle>()
         .write_component::<Transform>()
@@ -21,11 +21,11 @@ pub fn build() -> impl Runnable {
                 };
                 let scaled_amount = 1.2 * movement;
                 let paddle_y = transform.translation().y;
-                transform.set_translation_y(
-                    (paddle_y + scaled_amount)
-                        .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
-                        .max(PADDLE_HEIGHT * 0.5),
-                );
+                let new_paddle_y = (paddle_y + scaled_amount)
+                    .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
+                    .max(PADDLE_HEIGHT * 0.5);
+                transform.set_translation_y(new_paddle_y);
+                paddle.y = new_paddle_y;
             }
         })
 }

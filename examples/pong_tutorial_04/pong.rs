@@ -66,6 +66,8 @@ pub struct Paddle {
     pub side: Side,
     pub width: f32,
     pub height: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl Paddle {
@@ -74,6 +76,11 @@ impl Paddle {
             side,
             width: PADDLE_WIDTH,
             height: PADDLE_HEIGHT,
+            x: match side {
+                Side::Right => ARENA_WIDTH - PADDLE_WIDTH / 2.,
+                Side::Left => PADDLE_WIDTH / 2.,
+            },
+            y: ARENA_HEIGHT / 2.,
         }
     }
 }
