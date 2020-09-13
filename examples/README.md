@@ -22,7 +22,8 @@ cargo run --example {{name}} --features "{{backend}}"
    3. [Sprites Ordered](sprites_ordered)
    4. [Renderable](renderable)
    5. [rendy](rendy)
-   5. [Custom Render Pass](custom_render_pass)
+   6. [Custom Render Pass](custom_render_pass)
+   7. [Base 2D Effects](base_2d)
 3. Assets
    1. [Asset Custom](asset_custom)
    2. [Asset Loading](asset_loading)
