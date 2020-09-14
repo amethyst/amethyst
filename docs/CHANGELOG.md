@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+- `UiLabelBuilder` takes in `&mut UiLabelBuilderResources` ([#2486]).
+
 ### Fixed
 
 ## [0.15.2] - 2020-08-22
