@@ -28,6 +28,7 @@ A minimalistic game data would now look like this:
 # extern crate amethyst;
 # use amethyst::{
 #     GameDataBuilder,
+#     core::transform::TransformBundle,
 #     input::{InputBundle, StringBindings},
 #     renderer::{types::DefaultBackend, RenderingBundle, RenderToWindow},
 #     Result,
@@ -36,6 +37,7 @@ A minimalistic game data would now look like this:
 # 
 # pub fn main() -> Result<()> {
     let game_data = GameDataBuilder::default()
+        .with_bundle(TransformBundle::new())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
