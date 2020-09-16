@@ -13,9 +13,10 @@ Please note that not all aforementioned widgets exist in Amethyst yet.
 
 The first thing you need to add to your systems is the [UiBundle](https://docs.amethyst.rs/master/amethyst_ui/struct.UiBundle.html). The `UiBundle` registers
 all the needed components,systems and resources in order to be able use the UI. Another **very important thing**
-is that you want to add the [InputBundle](https://docs.amethyst.rs/master/amethyst_input/struct.InputBundle.html) 
+is that you want to add [InputBundle](https://docs.amethyst.rs/master/amethyst_input/struct.InputBundle.html)
+and [TransformBundle](https://docs.amethyst.rs/master/amethyst_core/transform/bundle/struct.TransformBundle.html)
 **before** the `UiBundle`,
-otherwise the application will panic, since it is a dependency for the `UiBundle`!
+otherwise the application will panic, since they are both dependencies for the `UiBundle`!
 
 Now you are able to create your widgets! Unfortunately you won't be able to see them. That's why you also need 
 to add a plugin to your rendering bundle called [RenderUi](https://docs.amethyst.rs/master/amethyst_ui/struct.RenderUi.html) in order
