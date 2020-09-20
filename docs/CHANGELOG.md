@@ -14,7 +14,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+- Make `TextEditingPrefab` public ([#2492])
+
 ### Fixed
+
+[#2492]: https://github.com/amethyst/amethyst/pull/2492
 
 ## [0.15.3] - 2020-08-22
 
