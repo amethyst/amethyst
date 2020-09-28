@@ -27,8 +27,10 @@ use crate::{
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventReader},
-    ui::UiEvent,
 };
+
+#[cfg(feature = "ui")]
+use crate::ui::UiEvent;
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.
@@ -545,6 +547,7 @@ where
         world.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.insert(pool);
         world.insert(EventChannel::<Event>::with_capacity(2000));
+        #[cfg(feature = "ui")]
         world.insert(EventChannel::<UiEvent>::with_capacity(40));
         world.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         world.insert(FrameLimiter::default());
