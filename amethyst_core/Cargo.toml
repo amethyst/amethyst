@@ -23,7 +23,7 @@ amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 fnv = "1.0.6"
 log = "0.4.8"
 num-traits = "0.2.11"
-rayon = "1.3.0"
+rayon = "1.4.0"
 serde = { version = "1", features = ["derive"] }
 specs = { version = "0.16.0", default-features = false, features = ["shred-derive", "specs-derive"] }
 specs-hierarchy = { version = "0.6", default-features = false }
