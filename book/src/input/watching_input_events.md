@@ -27,6 +27,7 @@ impl CustomInputSystem {
 
 impl<'a> System<'a> for CustomInputSystem {
     type SystemData = Read<'a, EventChannel<InputEvent<StringBindings>>>;
+    
     fn run(&mut self, event_channel: Self::SystemData) {
         for event in event_channel.read(&mut self.input_event_rid) {
             if let InputEvent::KeyPressed { key_code, scancode } = event {
