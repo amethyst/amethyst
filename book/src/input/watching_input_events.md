@@ -1,6 +1,6 @@
 # Watching Input Events From Systems
 
-You can also directly listen/post directly on input [event channels](../concepts/event-channel.md). This can be useful if you need to listen to an key/action being pressed as it happens.
+You can directly listen to input [event channels](../concepts/event-channel.md). This can be useful if you need to detect an key press or action as it happens.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
