@@ -405,19 +405,19 @@ impl SimpleState for Example {
 }
 
 fn main() -> amethyst::Result<()> {
-    // amethyst::Logger::from_config(Default::default())
-    //     .level_for("amethyst_tiles", log::LevelFilter::Warn)
-    //     .start();
+    amethyst::Logger::from_config(Default::default())
+        .level_for("amethyst_tiles", log::LevelFilter::Warn)
+        .start();
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/assets");
-    let display_config_path = app_root.join("examples/tiles/resources/display_config.ron");
+    let assets_directory = app_root.join("examples/tiles/assets");
+    let display_config_path = app_root.join("examples/tiles/config/display.ron");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             InputBundle::<StringBindings>::new()
-                .with_bindings_from_file("examples/tiles/resources/input.ron")?,
+                .with_bindings_from_file("examples/tiles/config/input.ron")?,
         )?
         .with(
             MapMovementSystem::default(),

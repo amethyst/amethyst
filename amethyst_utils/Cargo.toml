@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_utils"
-version = "0.10.1"
+version = "0.15.3"
 authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst utils"
@@ -15,13 +15,13 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.11.0" }
-amethyst_controls = { path = "../amethyst_controls", version = "0.9.0" }
-amethyst_core = { path = "../amethyst_core", version = "0.10.0" }
-amethyst_error = { path = "../amethyst_error", version = "0.5.0" }
-amethyst_derive = { path = "../amethyst_derive", version = "0.8.0" }
-amethyst_rendy = { path = "../amethyst_rendy", version = "0.5.0" }
-amethyst_window = { path = "../amethyst_window", version = "0.5.0" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
+amethyst_controls = { path = "../amethyst_controls", version = "0.15.3" }
+amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
+amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
+amethyst_rendy = { path = "../amethyst_rendy", version = "0.15.3" }
+amethyst_window = { path = "../amethyst_window", version = "0.15.3" }
 derive-new = "0.5.8"
 log = "0.4.6"
 serde = { version = "1.0", features = ["derive"] }

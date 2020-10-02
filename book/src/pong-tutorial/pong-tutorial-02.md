@@ -31,7 +31,7 @@ initialization code from the Pong code.
     use amethyst::{
         assets::{AssetStorage, Loader, Handle},
         core::transform::Transform,
-        ecs::prelude::{Component, DenseVecStorage},
+        ecs::{Component, DenseVecStorage},
         prelude::*,
         renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     };
@@ -423,7 +423,7 @@ First, let's declare the function and load the sprite sheet's image data.
 # use amethyst::{
 #     assets::{AssetStorage, Loader, Handle},
 #     core::transform::Transform,
-#     ecs::prelude::{Component, DenseVecStorage},
+#     ecs::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
 #         camera::Camera,
@@ -511,7 +511,7 @@ Finally, we load the file containing the position of each sprite on the sheet.
 # use amethyst::{
 #     assets::{AssetStorage, Handle, Loader},
 #     core::transform::Transform,
-#     ecs::prelude::{Component, DenseVecStorage},
+#     ecs::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
 #         camera::Camera,
@@ -655,6 +655,5 @@ In the next chapter, we'll explore the "S" in ECS and actually get these paddles
 moving!
 
 [sb]: https://specs.amethyst.rs/docs/tutorials/
-[sb-storage]: https://specs.amethyst.rs/docs/tutorials/05_storages.html#densevecstorage
-[2d]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.Camera.html#method.standard_2d
+[sb-storage]: https://specs.amethyst.rs/docs/tutorials/05_storages.html
 [ss]: ../images/pong_tutorial/pong_spritesheet.png

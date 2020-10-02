@@ -159,7 +159,7 @@ impl<B: Backend, V: VertexDataBufferType, T: 'static> DynamicVertexData<B, V, T>
                 let tmp = std::mem::replace(&mut slice, &mut []);
                 let (dst_slice, rest) = tmp.split_at_mut(data_slice.len());
                 dst_slice.copy_from_slice(data_slice);
-                std::mem::replace(&mut slice, rest);
+                slice = rest;
             });
             allocated
         } else {

@@ -121,7 +121,7 @@ impl<'a> System<'a> for MakeObjectsFall {
     );
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
-        for (mut transform, _) in (&mut transforms, &falling).join() {
+        for (transform, _) in (&mut transforms, &falling).join() {
             if transform.translation().y > 0.0 {
                 transform.prepend_translation_y(-0.1);
             }

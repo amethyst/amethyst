@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_derive"
-version = "0.8.1"
+version = "0.15.3"
 authors = ["Simon Rönnberg <seamonr@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Amethyst derive"
@@ -23,10 +23,10 @@ proc_macro_roids = "0.7"
 proc-macro-crate = "0.1"
 
 [dev-dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.10.0" }
-amethyst_assets = { path = "../amethyst_assets", version = "0.11.0" }
-amethyst_error = { path = "../amethyst_error", version = "0.5.0" }
-amethyst_test = { path = "../amethyst_test", version = "0.6.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
+amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_test = { path = "../amethyst_test", version = "0.15.3" }
 
 [lib]
 name = "amethyst_derive"

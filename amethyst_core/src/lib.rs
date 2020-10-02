@@ -20,6 +20,7 @@ pub use alga;
 pub use approx;
 pub use nalgebra as math;
 pub use num_traits as num;
+#[doc(inline)]
 pub use specs as ecs;
 pub use specs::{shred, shrev};
 
