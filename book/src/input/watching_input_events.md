@@ -37,7 +37,7 @@ impl<'a> System<'a> for CustomInputSystem {
 }
 ```
 
-Setting up the system is a bit different as you'll need to store a reader id on the system and implement a new function (see the [event channel](../concepts/event-channel.md) guide for more details and another example of doing this) on the system to initialize that reader id. We declare our reader id (`input_event_rid`) with the events we want to listen to, in this case were listening to input events, so we're going to use `InputEvent` and use the `StringBindings`, but you would use whatever binding struct you're using in your game here.
+Setting up the system has extra requirements. You will need to store a `ReaderId` in your system struct used to read the type of input events you care about. In this example, our struct field is called `input_event_rid` and the type of event we are listening to is `InputEvent<StringBindings>`, but you would use whatever event type you would want to use in your own game.  You need to initialize your `ReaderID` in the system's `new` method (see the [event channel](../concepts/event-channel.md) guide for more details and another example of doing this).
 
 Now we can create a `Read` in our system data for the input event channel and in our systems run function we can iterate over all the input events the occured. Take a look at the [`InputEvent`][doc_input_event] enum for all the available input events.
 
