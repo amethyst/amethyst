@@ -44,7 +44,7 @@ pub fn build() -> impl Runnable {
                         .global_matrix;
 
                     right
-                        .entry_mut(*entity)
+                        .entry_mut(*entity).ok()
                         .and_then(|entry| entry.into_component_mut::<Transform>().ok())
                         .map(|transform| {
                             transform.parent_matrix = parent_matrix;

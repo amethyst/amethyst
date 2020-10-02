@@ -31,14 +31,8 @@ smallvec = "1.4"
 shrinkwraprs = "0.3"
 shrev = "1.1"
 derivative = "2.1.1"
-
+legion = { version = "0.3.1", default-features = false, features = ["serialize", "crossbeam-events", "codegen"] }
 thread_profiler = { version = "0.3", optional = true }
-
-[dependencies.legion]
-git = "https://github.com/TomGillen/legion"
-rev = "b93b636d"
-default-features = false
-features = ["serialize", "crossbeam-events", "codegen"]
 
 [dev-dependencies]
 #amethyst = { path = "..", version = "0.15.1" }

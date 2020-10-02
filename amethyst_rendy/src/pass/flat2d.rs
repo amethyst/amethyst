@@ -130,7 +130,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
             visibility
                 .visible_unordered
                 .iter()
-                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .filter_map(|(entity, (sprite_render, global, tint))| {
                     let (batch_data, texture) = if let Some(tint) = tint {
                         SpriteArgs::from_data(
@@ -316,7 +316,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
             visibility
                 .visible_ordered
                 .iter()
-                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .filter_map(|(entity, (sprite_render, global, tint))| {
                     let (batch_data, texture) = if let Some(tint) = tint {
                         SpriteArgs::from_data(

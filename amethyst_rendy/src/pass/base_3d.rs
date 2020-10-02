@@ -219,7 +219,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
             visibility
                 .visible_unordered
                 .iter()
-                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .map(|(entity, (mat, mesh, tform, tint))| {
                     if let Some(tint) = tint {
                         (
@@ -253,7 +253,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
             visibility
                 .visible_unordered
                 .iter()
-                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .map(|(_, (mat, mesh, tform, tint, joints))| {
                     if let Some(tint) = tint {
                         (
@@ -562,7 +562,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
             visibility
                 .visible_ordered
                 .iter()
-                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .map(|(entity, (mat, mesh, tform, tint))| {
                     if let Some(tint) = tint {
                         (
@@ -601,7 +601,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
             visibility
                 .visible_unordered
                 .iter()
-                .filter_map(|entity| Some((entity, query.get(*world, *entity)?)))
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .map(|(_, (mat, mesh, tform, tint, joints))| {
                     if let Some(tint) = tint {
                         (
