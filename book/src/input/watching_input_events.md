@@ -42,6 +42,6 @@ Setting up the system has extra requirements. You will need to store a `ReaderId
 
 Next let's take a look at our implementation of the `System` trait. We set the `SystemData` associated type to a `Read` storage for the type of event channel we want.  In the `run` method we iterate over all the input events the occured. Take a look at the [`InputEvent`][doc_input_event] enum for all the available input events you can handle.
 
-There we have it, now you can read input events as they occur, be sure to look at the [`event channel`](../concepts/event-channel.md) section for a better guide on using event channels and enjoy listening to input events!
+There you have it! Now you can read input events as they occur. Be sure to look at the [`event channel`](../concepts/event-channel.md) section for a better guide on using event channels and enjoy listening to input events!
 
 [doc_input_event]: https://docs.amethyst.rs/stable/amethyst_input/enum.InputEvent.html
