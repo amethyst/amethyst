@@ -35,7 +35,7 @@ thread_profiler = { version = "0.3", optional = true }
 [dev-dependencies]
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 

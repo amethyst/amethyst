@@ -8,7 +8,10 @@ use amethyst::{
         is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings,
     },
     prelude::*,
-    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
+    renderer::{
+        plugins::RenderToWindow, rendy::hal::command::ClearColor, types::DefaultBackend,
+        RenderingBundle,
+    },
     utils::application_root_dir,
     winit::VirtualKeyCode,
 };
@@ -97,8 +100,9 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([1.0, 1.0, 1.0, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [1.0, 1.0, 1.0, 1.0],
+                    }),
                 )
                 // Add our custom render plugin to the rendering bundle.
                 .with_plugin(RenderCustom::default()),

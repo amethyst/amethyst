@@ -121,7 +121,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -369,21 +369,26 @@ fn build_tiles_pipeline<B: Backend>(
     framebuffer_width: u32,
     framebuffer_height: u32,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    let mut shaders = SHADERS.build(factory, Default::default())?;
+    let mut shaders = SHADERS
+        .build(factory, Default::default())
+        .map_err(|e| match e {
+            hal::device::ShaderError::OutOfMemory(oom) => oom.into(),
+            _ => pso::CreationError::Other,
+        })?;
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(TileArgs::vertex(), pso::VertexInputRate::Instance(1))])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
-                .with_shaders(shaders.raw()?)
+                .with_input_assembler(pso::InputAssemblerDesc::new(pso::Primitive::TriangleStrip))
+                .with_shaders(shaders.raw().map_err(|_| pso::CreationError::Other)?)
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)

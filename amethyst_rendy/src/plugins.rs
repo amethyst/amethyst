@@ -68,7 +68,7 @@ mod window {
         ///
         /// ```
         /// use amethyst_rendy::palette::Srgba;
-        /// use amethyst_rendy::RenderToWindow;
+        /// use amethyst_rendy::{RenderToWindow, rendy::hal::command::ClearColor};
         /// use amethyst_window::DisplayConfig;
         ///
         /// let your_red: f32 = 255.;
@@ -80,7 +80,7 @@ mod window {
         ///     .into_linear()
         ///     .into_components();
         ///
-        /// RenderToWindow::from_config(DisplayConfig::default()).with_clear([r, g, b, a]);
+        /// RenderToWindow::from_config(DisplayConfig::default()).with_clear(ClearColor { float32: [r, g, b, a] });
         /// ```
         pub fn with_clear(mut self, clear: impl Into<ClearColor>) -> Self {
             self.clear = Some(clear.into());
@@ -121,7 +121,9 @@ mod window {
             self.dirty = false;
 
             let window = <ReadExpect<'_, Window>>::fetch(world);
-            let surface = factory.create_surface(&window);
+            // Explicitly deref so we get a type that implements HasRawWindowHandle.
+            let window: &Window = &window;
+            let surface = factory.create_surface(window)?;
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
@@ -129,7 +131,12 @@ mod window {
                 kind: window_kind,
                 levels: 1,
                 format: Format::D32Sfloat,
-                clear: Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+                clear: Some(ClearValue {
+                    depth_stencil: ClearDepthStencil {
+                        depth: 0.0,
+                        stencil: 0,
+                    },
+                }),
             };
 
             plan.add_root(Target::Main);
@@ -138,7 +145,7 @@ mod window {
                 crate::bundle::TargetPlanOutputs {
                     colors: vec![OutputColor::Surface(
                         surface,
-                        self.clear.map(ClearValue::Color),
+                        self.clear.map(|color| ClearValue { color }),
                     )],
                     depth: Some(depth_options),
                 },

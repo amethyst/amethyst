@@ -492,7 +492,7 @@ impl TargetImage {
 }
 
 /// Set of options required to create an image node in render graph.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct ImageOptions {
     /// Image kind and size
     pub kind: hal::image::Kind,
@@ -612,6 +612,13 @@ impl<B: Backend> TargetPlan<B> {
             ));
         }
         let mut outputs = self.outputs.unwrap();
+        let suggested_extent = {
+            let metadata = ctx.target_metadata(self.key).unwrap();
+            hal::window::Extent2D {
+                width: metadata.width,
+                height: metadata.height,
+            }
+        };
 
         ctx.mark_evaluating(self.key)?;
 
@@ -648,7 +655,7 @@ impl<B: Backend> TargetPlan<B> {
             match color {
                 OutputColor::Surface(surface, clear) => {
                     subpass.add_color_surface();
-                    pass.add_surface(surface, clear);
+                    pass.add_surface(surface, suggested_extent, clear);
                 }
                 OutputColor::Image(opts) => {
                     let node = ctx.create_image(opts);
@@ -806,7 +813,7 @@ mod tests {
             subpass: hal::pass::Subpass<'_, B>,
             buffers: Vec<NodeBuffer>,
             images: Vec<NodeImage>,
-        ) -> Result<Box<dyn RenderGroup<B, T>>, failure::Error> {
+        ) -> Result<Box<dyn RenderGroup<B, T>>, hal::pso::CreationError> {
             unimplemented!()
         }
     }
@@ -822,7 +829,7 @@ mod tests {
             subpass: hal::pass::Subpass<'_, B>,
             buffers: Vec<NodeBuffer>,
             images: Vec<NodeImage>,
-        ) -> Result<Box<dyn RenderGroup<B, T>>, failure::Error> {
+        ) -> Result<Box<dyn RenderGroup<B, T>>, hal::pso::CreationError> {
             unimplemented!()
         }
     }
@@ -831,8 +838,7 @@ mod tests {
     #[ignore] // CI can't run tests requiring actual backend
     fn main_pass_color_image_plan() {
         let config: rendy::factory::Config = Default::default();
-        let (factory, families): (Factory<DefaultBackend>, _) =
-            rendy::factory::init(config).unwrap();
+        let factory: Factory<DefaultBackend> = rendy::init::Rendy::init(&config).unwrap().factory;
         let mut plan = RenderPlan::<DefaultBackend>::new();
 
         plan.extend_target(Target::Main, |ctx| {
@@ -856,7 +862,12 @@ mod tests {
                     kind,
                     levels: 1,
                     format: Format::D32Sfloat,
-                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+                    clear: Some(ClearValue {
+                        depth_stencil: ClearDepthStencil {
+                            depth: 0.0,
+                            stencil: 0,
+                        },
+                    }),
                 }),
             },
         )
@@ -870,7 +881,12 @@ mod tests {
             kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+            Some(ClearValue {
+                depth_stencil: ClearDepthStencil {
+                    depth: 0.0,
+                    stencil: 0,
+                },
+            }),
         );
         manual_graph.add_node(
             RenderPassNodeBuilder::new().with_subpass(
@@ -906,12 +922,12 @@ mod tests {
         let window_kind = crate::Kind::D2(size.width as u32, size.height as u32, 1, 1);
 
         let config: rendy::factory::Config = Default::default();
-        let (mut factory, families): (Factory<DefaultBackend>, _) =
-            rendy::factory::init(config).unwrap();
+        let mut factory: Factory<DefaultBackend> =
+            rendy::init::Rendy::init(&config).unwrap().factory;
         let mut plan = RenderPlan::<DefaultBackend>::new();
 
-        let surface1 = factory.create_surface(&window);
-        let surface2 = factory.create_surface(&window);
+        let surface1 = factory.create_surface(&window).unwrap();
+        let surface2 = factory.create_surface(&window).unwrap();
 
         plan.extend_target(Target::Main, |ctx| {
             ctx.add(RenderOrder::Opaque, TestGroup2.builder())?;
@@ -927,7 +943,12 @@ mod tests {
                     kind: window_kind,
                     levels: 1,
                     format: Format::D32Sfloat,
-                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+                    clear: Some(ClearValue {
+                        depth_stencil: ClearDepthStencil {
+                            depth: 0.0,
+                            stencil: 0,
+                        },
+                    }),
                 }),
             },
         )
@@ -945,7 +966,12 @@ mod tests {
             window_kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+            Some(ClearValue {
+                depth_stencil: ClearDepthStencil {
+                    depth: 0.0,
+                    stencil: 0,
+                },
+            }),
         );
         manual_graph.add_node(
             RenderPassNodeBuilder::new()
@@ -956,7 +982,14 @@ mod tests {
                         .with_color_surface()
                         .with_depth_stencil(depth),
                 )
-                .with_surface(surface2, None),
+                .with_surface(
+                    surface2,
+                    hal::window::Extent2D {
+                        width: 1,
+                        height: 1,
+                    },
+                    None,
+                ),
         );
 
         assert_eq!(

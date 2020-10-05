@@ -19,14 +19,13 @@ amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 amethyst_window = { path = "../amethyst_window", version = "0.15.3", optional = true }
 amethyst_config = { path = "../amethyst_config", version = "0.15.3" }
 derive-new = "0.5.6"
-failure = "0.1"
 genmesh = "0.6"
 glsl-layout = "0.3"
 gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
 lazy_static = "1.4"
 log = "0.4"
 palette = { version = "0.4", features = ["serde"] }
-rendy = { version = "0.4.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1"] }
+rendy = { version = "0.5.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1"] }
 ron = "0.5"
 serde = { version = "1", features = ["serde_derive"] }
 fnv = "1"
@@ -47,14 +46,13 @@ approx = "0.3"
 [features]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
-vulkan-x11 = ["rendy/vulkan-x11"]
 empty = ["rendy/empty"]
 profiler = [ "thread_profiler/thread_profiler", "rendy/profiler" ]
 no-slow-safety-checks = ["rendy/no-slow-safety-checks"]
 shader-compiler =  ["rendy/shader-compiler"]
 test-support =  []
 experimental-spirv-reflection = ["rendy/spirv-reflection"]
-window = ["rendy/wsi-winit", "amethyst_window"]
+window = ["amethyst_window"]
 
 [[bench]]
 name = "camera"

@@ -16,6 +16,7 @@ use amethyst::{
         formats::GraphicsPrefab,
         light::LightPrefab,
         plugins::{RenderShaded3D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         rendy::mesh::{Normal, Position, Tangent, TexCoord},
         types::DefaultBackend,
         RenderingBundle,
@@ -32,7 +33,9 @@ use amethyst::{
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 
-const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+const CLEAR_COLOR: ClearColor = ClearColor {
+    float32: [0.0, 0.0, 0.0, 1.0],
+};
 
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());

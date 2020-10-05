@@ -31,15 +31,15 @@ use serde::{Deserialize, Serialize};
 ///        .with_data_height(handle.height)
 ///        .with_kind(image::Kind::D2(handle.width, handle.height, 1, 1))
 ///        .with_view_kind(image::ViewKind::D2)
-///        .with_sampler_info(SamplerInfo {
+///        .with_sampler_info(SamplerDesc {
 ///        min_filter: Filter::Linear,
 ///        mag_filter: Filter::Linear,
 ///        mip_filter: Filter::Linear,
 ///        wrap_mode: (WrapMode::Clamp, WrapMode::Clamp, WrapMode::Clamp),
-///        lod_bias: 0.0.into(),
+///        lod_bias: Lod(0.0),
 ///        lod_range: std::ops::Range {
-///            start: 0.0.into(),
-///            end: 1000.0.into(),
+///            start: Lod(0.0),
+///            end: Lod(1000.0),
 ///        },
 ///        comparison: None,
 ///        border: PackedColor(0),
@@ -56,7 +56,7 @@ pub struct ImageFormat(pub ImageTextureConfig);
 impl Default for ImageFormat {
     fn default() -> Self {
         use rendy::{
-            hal::image::{Anisotropic, PackedColor, SamplerInfo, WrapMode},
+            hal::image::{Anisotropic, Lod, PackedColor, SamplerDesc, WrapMode},
             texture::image::{Repr, TextureKind},
         };
 
@@ -64,15 +64,15 @@ impl Default for ImageFormat {
             format: None,
             repr: Repr::Srgb,
             kind: TextureKind::D2,
-            sampler_info: SamplerInfo {
+            sampler_info: SamplerDesc {
                 min_filter: Filter::Nearest,
                 mag_filter: Filter::Nearest,
                 mip_filter: Filter::Nearest,
                 wrap_mode: (WrapMode::Tile, WrapMode::Tile, WrapMode::Tile),
-                lod_bias: 0.0.into(),
+                lod_bias: Lod(0.0),
                 lod_range: std::ops::Range {
-                    start: 0.0.into(),
-                    end: 1000.0.into(),
+                    start: Lod(0.0),
+                    end: Lod(1000.0),
                 },
                 comparison: None,
                 border: PackedColor(0),
@@ -96,7 +96,7 @@ impl Format<TextureData> for ImageFormat {
     fn import_simple(&self, bytes: Vec<u8>) -> Result<TextureData, Error> {
         load_from_image(std::io::Cursor::new(&bytes), self.0.clone())
             .map(|builder| builder.into())
-            .map_err(|e| e.compat().into())
+            .map_err(|e| e.into())
     }
 }
 
@@ -139,7 +139,7 @@ fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> Textu
         .with_view_kind(ViewKind::D2)
         .with_data_width(size)
         .with_data_height(size)
-        .with_sampler_info(hal::image::SamplerInfo::new(
+        .with_sampler_info(hal::image::SamplerDesc::new(
             filter,
             hal::image::WrapMode::Clamp,
         ))

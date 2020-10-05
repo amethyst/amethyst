@@ -145,15 +145,15 @@ where
 
     fn setup(&mut self, world: &mut World) {
         let config: rendy::factory::Config = Default::default();
-        let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
+        let r = rendy::init::Rendy::init(&config).unwrap();
 
         let queue_id = QueueId {
-            family: families.family_by_index(0).id(),
+            family: r.families.family_by_index(0).id(),
             index: 0,
         };
 
-        self.families = Some(families);
-        world.insert(factory);
+        self.families = Some(r.families);
+        world.insert(r.factory);
         world.insert(queue_id);
 
         SetupData::setup(world);
@@ -211,7 +211,7 @@ impl<'a, B: Backend> System<'a> for MeshProcessorSystem<B> {
                 b.0.build(*queue_id, &factory)
                     .map(B::wrap_mesh)
                     .map(ProcessingState::Loaded)
-                    .map_err(|e| e.compat().into())
+                    .map_err(|e| e.into())
             },
             time.frame_number(),
             &**pool,
@@ -258,7 +258,8 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
                 )
                 .map(B::wrap_texture)
                 .map(ProcessingState::Loaded)
-                .map_err(|e| e.compat().into())
+                // TODO: impl Error for BuildError
+                .map_err(|e| amethyst_error::err_msg(format!("{:?}", e)))
             },
             time.frame_number(),
             &**pool,
