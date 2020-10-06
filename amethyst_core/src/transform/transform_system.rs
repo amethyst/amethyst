@@ -11,11 +11,13 @@ pub fn build() -> impl Runnable {
     SystemBuilder::new("TransformSystem")
         // Entities at the hierarchy root (no parent component)
         .with_query(
-            <(Entity, &mut Transform)>::query().filter(maybe_changed::<Transform>() & !component::<Parent>()),
+            <(Entity, &mut Transform)>::query()
+                .filter(maybe_changed::<Transform>() & !component::<Parent>()),
         )
         // Entities that are children of some entity
         .with_query(
-            <(Entity, &mut Transform)>::query().filter(maybe_changed::<Transform>() & component::<Parent>()),
+            <(Entity, &mut Transform)>::query()
+                .filter(maybe_changed::<Transform>() & component::<Parent>()),
         )
         .with_query(<(Entity, &Parent)>::query())
         .write_component::<Transform>()
@@ -44,7 +46,8 @@ pub fn build() -> impl Runnable {
                         .global_matrix;
 
                     right
-                        .entry_mut(*entity).ok()
+                        .entry_mut(*entity)
+                        .ok()
                         .and_then(|entry| entry.into_component_mut::<Transform>().ok())
                         .map(|transform| {
                             transform.parent_matrix = parent_matrix;
@@ -91,7 +94,7 @@ mod tests {
 
     fn transform_world() -> (Resources, World, Dispatcher) {
         let mut resources = Resources::default();
-        let mut world = Universe::new().create_world();
+        let mut world = World::default();
 
         let dispatcher = DispatcherBuilder::default()
             .add_bundle(TransformBundle)

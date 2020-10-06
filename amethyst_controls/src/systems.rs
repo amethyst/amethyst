@@ -71,7 +71,8 @@ pub fn build_arc_ball_rotation_system() -> impl Runnable {
                 .iter(world)
                 .map(|ctrl| {
                     match world
-                        .entry_ref(ctrl.target).ok()
+                        .entry_ref(ctrl.target)
+                        .ok()
                         .and_then(|e| e.into_component::<Transform>().ok())
                     {
                         Some(trans) => Some((ctrl.target, *trans)),

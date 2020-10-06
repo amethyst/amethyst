@@ -26,7 +26,8 @@ pub fn build() -> impl Runnable {
                 log::trace!("Parent was removed from {:?}", entity);
                 if let Some(previous_parent_entity) = previous_parent.0 {
                     if let Some(previous_parent_children) = left
-                        .entry_mut(previous_parent_entity).ok()
+                        .entry_mut(previous_parent_entity)
+                        .ok()
                         .and_then(|entry| entry.into_component_mut::<Children>().ok())
                     {
                         log::trace!(" > Removing {:?} from it's prev parent's children", entity);
@@ -53,7 +54,8 @@ pub fn build() -> impl Runnable {
 
                     // Remove from `PreviousParent.Children`.
                     if let Some(previous_parent_children) = left
-                        .entry_mut(previous_parent_entity).ok()
+                        .entry_mut(previous_parent_entity)
+                        .ok()
                         .and_then(|entry| entry.into_component_mut::<Children>().ok())
                     {
                         log::trace!(" > Removing {:?} from prev parent's children", entity);
@@ -68,7 +70,8 @@ pub fn build() -> impl Runnable {
                 // `children_additions`).
                 log::trace!("Adding {:?} to it's new parent {:?}", entity, parent.0);
                 if let Some(new_parent_children) = left
-                    .entry_mut(parent.0).ok()
+                    .entry_mut(parent.0)
+                    .ok()
                     .and_then(|entry| entry.into_component_mut::<Children>().ok())
                 {
                     // This is the parent
@@ -127,7 +130,7 @@ mod test {
     #[test]
     fn correct_children() {
         let mut resources = Resources::default();
-        let mut world = Universe::new().create_world();
+        let mut world = World::default();
 
         let mut schedule = Schedule::builder()
             .add_system(missing_previous_parent_system::build())

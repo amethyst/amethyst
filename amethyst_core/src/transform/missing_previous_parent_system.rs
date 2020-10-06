@@ -27,7 +27,7 @@ mod test {
     #[test]
     fn previous_parent_added() {
         let mut resources = Resources::default();
-        let mut world = Universe::new().create_world();
+        let mut world = World::default();
 
         let mut schedule = Schedule::builder().add_system(build()).build();
 

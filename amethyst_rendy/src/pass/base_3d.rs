@@ -209,12 +209,8 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
         {
             profile_scope_impl!("prepare");
 
-            let mut query = <(
-                &Handle<Material>,
-                &Handle<Mesh>,
-                &Transform,
-                Option<&Tint>,
-            )>::query();
+            let mut query =
+                <(&Handle<Material>, &Handle<Mesh>, &Transform, Option<&Tint>)>::query();
 
             visibility
                 .visible_unordered
@@ -552,12 +548,8 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
         {
             profile_scope_impl!("prepare");
 
-            let mut query = <(
-                &Handle<Material>,
-                &Handle<Mesh>,
-                &Transform,
-                Option<&Tint>,
-            )>::query();
+            let mut query =
+                <(&Handle<Material>, &Handle<Mesh>, &Transform, Option<&Tint>)>::query();
 
             visibility
                 .visible_ordered

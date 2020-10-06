@@ -20,7 +20,7 @@ struct App {
 
 impl App {
     fn new(path: &str, state: State) -> Self {
-        let mut world = World::new();
+        let mut world = World::default();
 
         // Note: in an actual application, you'd want to share the thread pool.
         let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
