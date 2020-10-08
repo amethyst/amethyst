@@ -1,6 +1,6 @@
 //! ECS input bundle
 
-use crate::{build_input_system, BindingError, BindingTypes, Bindings, InputHandler};
+use crate::{build_input_system, BindingError, Bindings, InputHandler};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
@@ -13,7 +13,7 @@ use crate::sdl_events_system::ControllerMappings;
 
 /// Bundle for adding the `InputHandler`.
 ///
-/// This also adds the Winit EventHandler and the `InputEvent<T>` EventHandler
+/// This also adds the Winit EventHandler and the `InputEvent` EventHandler
 /// where `T::Action` is the type for Actions you have assigned here.
 ///
 /// ## Type parameters
@@ -26,33 +26,29 @@ use crate::sdl_events_system::ControllerMappings;
 ///
 /// No errors returned from this bundle.
 ///
-#[derive(Debug, Derivative)]
-#[derivative(Default(bound = ""))]
-pub struct InputBundle<T: BindingTypes> {
-    bindings: Option<Bindings<T>>,
+#[derive(Debug, Default)]
+pub struct InputBundle {
+    bindings: Option<Bindings>,
     #[cfg(feature = "sdl_controller")]
     controller_mappings: Option<ControllerMappings>,
 }
 
-impl<T: BindingTypes> InputBundle<T> {
+impl InputBundle {
     /// Create a new input bundle with no bindings
     pub fn new() -> Self {
         Default::default()
     }
 
     /// Use the provided bindings with the `InputHandler`
-    pub fn with_bindings(mut self, bindings: Bindings<T>) -> Self {
+    pub fn with_bindings(mut self, bindings: Bindings) -> Self {
         self.bindings = Some(bindings);
         self
     }
 
     /// Load bindings from file
-    pub fn with_bindings_from_file<P: AsRef<Path>>(
-        self,
-        file: P,
-    ) -> Result<Self, BindingsFileError<T>>
+    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> Result<Self, BindingsFileError>
     where
-        Bindings<T>: Config,
+        Bindings: Config,
     {
         let mut bindings = Bindings::load(file)?;
         bindings.check_invariants()?;
@@ -77,7 +73,7 @@ impl<T: BindingTypes> InputBundle<T> {
     }
 }
 
-impl<T: BindingTypes> SystemBundle for InputBundle<T> {
+impl SystemBundle for InputBundle {
     fn load(
         &mut self,
         _world: &mut World,
@@ -89,7 +85,7 @@ impl<T: BindingTypes> SystemBundle for InputBundle<T> {
             use super::SdlEventsSystem;
             builder.add_thread_local(
                 // TODO: improve errors when migrating to failure
-                SdlEventsSystem::<T>::new(world, self.controller_mappings).unwrap(),
+                SdlEventsSystem::new(world, self.controller_mappings).unwrap(),
             );
         }
 
@@ -98,14 +94,14 @@ impl<T: BindingTypes> SystemBundle for InputBundle<T> {
             .expect("Window event channel not found in resources")
             .register_reader();
 
-        let mut handler = InputHandler::<T>::new();
+        let mut handler = InputHandler::new();
         if let Some(bindings) = self.bindings.as_ref() {
             handler.bindings = bindings.clone();
         }
 
         resources.insert(handler);
 
-        builder.add_system(build_input_system::<T>(reader));
+        builder.add_system(build_input_system(reader));
 
         Ok(())
     }
@@ -114,18 +110,14 @@ impl<T: BindingTypes> SystemBundle for InputBundle<T> {
 /// An error occurred while loading the bindings file.
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
-pub enum BindingsFileError<T: BindingTypes> {
+pub enum BindingsFileError {
     /// Problem in amethyst_config
     ConfigError(ConfigError),
     /// Problem with the bindings themselves.
-    BindingError(BindingError<T>),
+    BindingError(BindingError),
 }
 
-impl<T: BindingTypes> fmt::Display for BindingsFileError<T>
-where
-    T::Axis: fmt::Display,
-    T::Action: fmt::Display,
-{
+impl fmt::Display for BindingsFileError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BindingsFileError::ConfigError(..) => write!(f, "Configuration error"),
@@ -134,11 +126,7 @@ where
     }
 }
 
-impl<T: BindingTypes> error::Error for BindingsFileError<T>
-where
-    T::Axis: fmt::Display,
-    T::Action: fmt::Display,
-{
+impl error::Error for BindingsFileError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             BindingsFileError::ConfigError(ref e) => Some(e),
@@ -147,13 +135,13 @@ where
     }
 }
 
-impl<T: BindingTypes> From<BindingError<T>> for BindingsFileError<T> {
-    fn from(error: BindingError<T>) -> Self {
+impl From<BindingError> for BindingsFileError {
+    fn from(error: BindingError) -> Self {
         BindingsFileError::BindingError(error)
     }
 }
 
-impl<T: BindingTypes> From<ConfigError> for BindingsFileError<T> {
+impl From<ConfigError> for BindingsFileError {
     fn from(error: ConfigError) -> Self {
         BindingsFileError::ConfigError(error)
     }

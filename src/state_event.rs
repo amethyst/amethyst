@@ -1,4 +1,3 @@
-use derivative::Derivative;
 use winit::Event;
 
 use crate::{
@@ -8,23 +7,19 @@ use crate::{
         EventReader,
     },
     derive::EventReader,
-    input::{BindingTypes, InputEvent, StringBindings},
+    input::InputEvent,
 };
 
 /// The enum holding the different types of event that can be received in a `State` in the
 /// `handle_event` method.
-#[derive(Debug, Derivative, EventReader)]
-#[derivative(Clone(bound = ""))]
+#[derive(Clone, Debug, EventReader)]
 #[reader(StateEventReader)]
-pub enum StateEvent<T = StringBindings>
-where
-    T: BindingTypes,
-{
+pub enum StateEvent {
     /// Events sent by the winit window.
     Window(Event),
     /// Events sent by the ui system.
     #[cfg(feature = "ui")]
     Ui(ui::UiEvent),
     /// Events sent by the input system.
-    Input(InputEvent<T>),
+    Input(InputEvent),
 }

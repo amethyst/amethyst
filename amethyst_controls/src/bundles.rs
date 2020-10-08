@@ -1,8 +1,7 @@
-use std::marker::PhantomData;
+use std::borrow::Cow;
 
 use amethyst_core::{ecs::*, math::one, shrev::EventChannel};
 use amethyst_error::Error;
-use amethyst_input::BindingTypes;
 
 use winit::Event;
 
@@ -30,21 +29,21 @@ use super::*;
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
 #[derive(Debug)]
-pub struct FlyControlBundle<T: BindingTypes> {
+pub struct FlyControlBundle {
     sensitivity_x: f32,
     sensitivity_y: f32,
     speed: f32,
-    horizontal_axis: Option<T::Axis>,
-    vertical_axis: Option<T::Axis>,
-    longitudinal_axis: Option<T::Axis>,
+    horizontal_axis: Option<Cow<'static, str>>,
+    vertical_axis: Option<Cow<'static, str>>,
+    longitudinal_axis: Option<Cow<'static, str>>,
 }
 
-impl<T: BindingTypes> FlyControlBundle<T> {
+impl FlyControlBundle {
     /// Builds a new fly control bundle using the provided axes as controls.
     pub fn new(
-        horizontal_axis: Option<T::Axis>,
-        vertical_axis: Option<T::Axis>,
-        longitudinal_axis: Option<T::Axis>,
+        horizontal_axis: Option<Cow<'static, str>>,
+        vertical_axis: Option<Cow<'static, str>>,
+        longitudinal_axis: Option<Cow<'static, str>>,
     ) -> Self {
         FlyControlBundle {
             sensitivity_x: 1.0,
@@ -70,14 +69,14 @@ impl<T: BindingTypes> FlyControlBundle<T> {
     }
 }
 
-impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
+impl SystemBundle for FlyControlBundle {
     fn load(
         &mut self,
         _world: &mut World,
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(build_fly_movement_system::<T>(
+        builder.add_system(build_fly_movement_system(
             self.speed,
             self.horizontal_axis.clone(),
             self.vertical_axis.clone(),
@@ -119,19 +118,17 @@ impl<T: BindingTypes> SystemBundle for FlyControlBundle<T> {
 ///
 /// See the `arc_ball_camera` example to see how to use the arc ball camera.
 #[derive(Debug)]
-pub struct ArcBallControlBundle<T: BindingTypes> {
+pub struct ArcBallControlBundle {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    _marker: PhantomData<T>,
 }
 
-impl<T: BindingTypes> ArcBallControlBundle<T> {
+impl ArcBallControlBundle {
     /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
     pub fn new() -> Self {
         ArcBallControlBundle {
             sensitivity_x: 1.0,
             sensitivity_y: 1.0,
-            _marker: PhantomData,
         }
     }
 
@@ -143,13 +140,13 @@ impl<T: BindingTypes> ArcBallControlBundle<T> {
     }
 }
 
-impl<T: BindingTypes> Default for ArcBallControlBundle<T> {
+impl Default for ArcBallControlBundle {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: BindingTypes> SystemBundle for ArcBallControlBundle<T> {
+impl SystemBundle for ArcBallControlBundle {
     fn load(
         &mut self,
         _world: &mut World,

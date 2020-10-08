@@ -13,7 +13,7 @@
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::{
     axis::Axis,
-    bindings::{BindingError, BindingTypes, Bindings, StringBindings},
+    bindings::{BindingError, Bindings},
     bundle::{BindingsFileError, InputBundle},
     button::Button,
     controller::{ControllerAxis, ControllerButton, ControllerEvent},
@@ -45,29 +45,3 @@ mod util;
 
 #[cfg(feature = "sdl_controller")]
 mod sdl_events_system;
-
-struct KeyThenCode {
-    value: (VirtualKeyCode, u32),
-    index: u8,
-}
-
-impl KeyThenCode {
-    pub fn new(value: (VirtualKeyCode, u32)) -> KeyThenCode {
-        KeyThenCode { value, index: 0 }
-    }
-}
-
-impl Iterator for KeyThenCode {
-    type Item = Button;
-    fn next(&mut self) -> Option<Button> {
-        let index = self.index;
-        if self.index < 2 {
-            self.index += 1;
-        }
-        match index {
-            0 => Some(Button::Key(self.value.0)),
-            1 => Some(Button::ScanCode(self.value.1)),
-            _ => None,
-        }
-    }
-}
