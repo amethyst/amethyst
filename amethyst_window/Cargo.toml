@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_window"
-version = "0.5.1"
+version = "0.15.3"
 authors = ["Frizi <frizi09@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Windowing support for Amethyst engine."
@@ -13,9 +13,9 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.10.0" }
-amethyst_config = { path = "../amethyst_config", version = "0.14.0" }
-amethyst_error = { path = "../amethyst_error", version = "0.5.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
+amethyst_config = { path = "../amethyst_config", version = "0.15.3" }
+amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 
 log = "0.4.6"
 serde = { version = "1", features = ["derive"] }

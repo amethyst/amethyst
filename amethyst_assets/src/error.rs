@@ -1,6 +1,7 @@
 use err_derive::Error;
 
 #[derive(Debug, Error)]
+#[non_exhaustive]
 pub enum Error {
     #[error(display = "Failed to load asset with name {:?}", _0)]
     Asset(String),
@@ -10,7 +11,4 @@ pub enum Error {
     Format(&'static str),
     #[error(display = "Asset was loaded but no handle to it was saved.")]
     UnusedHandle,
-    #[error(display = "Some error has occurred")]
-    #[doc(hidden)]
-    __Nonexhaustive,
 }

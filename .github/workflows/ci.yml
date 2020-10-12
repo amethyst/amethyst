@@ -12,6 +12,8 @@ on:
       - "**"
 
 env:
+  RUSTFLAGS: -Cdebuginfo=0
+
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
 
@@ -20,6 +22,7 @@ jobs:
   tests:
     name: Tests
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.toolchain == 'nightly' }}
     strategy:
       fail-fast: true
       matrix:
@@ -51,55 +54,45 @@ jobs:
           # Don't use a 'components:' entry--we don't need them with beta/nightly, plus nightly often doesn't have them
           override: true
 
-      - name: install rustfmt+clippy on stable
-        run: |
-          rustup component add rustfmt
-          rustup component add clippy
-        if: contains(matrix.toolchain, 'stable')
+      - run: rustup component add clippy
+        if: matrix.toolchain == 'stable'
 
-      - name: run rustfmt on stable
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-        if: contains(matrix.toolchain, 'stable')
+      - run: rustup component add rustfmt
+        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - name: run clippy on stable
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --features=${{matrix.FEATURES}}
-        if: contains(matrix.toolchain, 'stable')
+      - run: cargo fmt --all -- --check
+        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
+
+      - run: cargo clippy --features=${{matrix.FEATURES}} --workspace
+        if: matrix.toolchain == 'stable'
 
       - name: clean clippy-generated amethyst libs
+        # Remove the clippy-generated amethyst files.
+        # They mess up `mdbook test` later on for some reason
         run: rm -rf ./target/debug/deps/libamethyst*
-        if: contains(matrix.os, 'macos') || contains(matrix.os, 'linux')
+        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - name: run tests
-        run: |
-          # Remove the clippy-generated amethyst files, they mess up `mdbook test` later on for some reason
-          cargo test --workspace --features=${{matrix.FEATURES}}
+      - run: cargo test --workspace --features=${{matrix.FEATURES}}
         env:
-          MACOS: ${{ matrix.MACOS }}  # Used by some tests
+          MACOS: ${{ matrix.MACOS }} # Used by some tests
 
-      - name: install mdbook on stable macos
+      - name: install mdbook on stable, ubuntu-latest
         uses: peaceiris/actions-mdbook@v1
         with:
           mdbook-version: 'latest'
-        if: contains(matrix.toolchain, 'stable') && contains(matrix.os, 'macos')
+        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-# Should be working, but postponing until after we go live with GitHub Actions
-#      - name: install mdbook-linkcheck on stable macos
-#        run: |
-#          curl -L https://github.com/Michael-F-Bryan/mdbook-linkcheck/releases/download/v0.7.0/mdbook-linkcheck-v0.7.0-x86_64-apple-darwin.tar.gz | tar -xz && mv mdbook-linkcheck /Users/runner/.cargo/bin/mdbook-linkcheck
-#          chmod a+x /Users/runner/.cargo/bin/mdbook-linkcheck
-#          echo -e "\n\n[output.linkcheck]" >> book/book.toml ## PROBABLY REMOVE THIS IN FAVOR OF ALWAYS HAVING IT AS OPTIONAL IN THE CONFIG
-#        if: contains(matrix.toolchain, 'stable') && contains(matrix.os, 'macos')
+      # Should be working, but postponing until after we go live with GitHub Actions
+      # - name: install mdbook-linkcheck on stable, ubuntu-latest
+      #   env:
+      #     LINKCHECK_URL: https://github.com/Michael-F-Bryan/mdbook-linkcheck/releases/download/v0.7.0/mdbook-linkcheck-v0.7.0-x86_64-unknown-linux-gnu.tar.gz
+      #   run: |
+      #     curl -L ${{ env.LINKCHECK_URL }} | tar -C ~/.cargo/bin -xzf -
+      #     echo -e "\n\n[output.linkcheck]" >> book/book.toml ## PROBABLY REMOVE THIS IN FAVOR OF ALWAYS HAVING IT AS OPTIONAL IN THE CONFIG
+      #   if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - name: build mdbook on stable macos
-        run: mdbook build book
-        if: contains(matrix.toolchain, 'stable') && contains(matrix.os, 'macos')
+      - run: mdbook build book
+        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - name: run mdbook tests on stable macos
-        run: mdbook test -L ./target/debug/deps book
-        if: contains(matrix.toolchain, 'stable') && contains(matrix.os, 'macos')
+      - run: mdbook test -L ./target/debug/deps book
+        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'

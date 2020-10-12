@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_error"
-version = "0.5.1"
+version = "0.15.3"
 authors = ["John-John Tedro <udoprog@tedro.se>", "Amethyst Foundation <contact@amethyst.rs>"]
 readme = "README.md"
 edition = "2018"
@@ -8,7 +8,7 @@ description = """
 Internal error handling for Amethyst.
 """
 keywords = ["game", "error", "amethyst"]
-categories = ["error"]
+categories = ["rust-patterns"]
 license = "MIT/Apache-2.0"
 
 documentation = "https://docs.amethyst.rs/stable/amethyst_error/"

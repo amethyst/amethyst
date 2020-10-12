@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_input"
-version = "0.11.1"
+version = "0.15.3"
 authors = ["Rhuagh <seamonr@gmail.com>", "Xaeroxe <kieseljake@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Input rebinding "
@@ -15,10 +15,10 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.10.0" }
-amethyst_error = { path = "../amethyst_error", version = "0.5.0" }
-amethyst_config = { path = "../amethyst_config/", version = "0.14.0" }
-amethyst_window = { path = "../amethyst_window", version = "0.5.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
+amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_config = { path = "../amethyst_config/", version = "0.15.3" }
+amethyst_window = { path = "../amethyst_window", version = "0.15.3" }
 derivative = "2.1.1"
 derive-new = "0.5"
 fnv = "1"

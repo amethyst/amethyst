@@ -33,6 +33,10 @@ body {
   margin-bottom: 300px;
 }
 
+h1, h2 {
+  text-align: start;
+}
+
 h2 {
   font-size: 2.5em !important;
 }
@@ -89,6 +93,7 @@ blockquote {
 
 .chapter li.chapter-item,
 .content ul {
+  text-align: start;
   line-height: 2.2em;
   margin-top: 0.6em;
 }

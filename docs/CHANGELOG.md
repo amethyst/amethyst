@@ -14,8 +14,31 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+- Upgraded from `rayon 1.3.0` to `rayon 1.4.0`, drastically decreasing idle CPU usage in some situations ([#2489])
+- Make `TextEditingPrefab` public ([#2492])
+
 ### Fixed
 
+[#2489]: https://github.com/amethyst/amethyst/pull/2489
+[#2492]: https://github.com/amethyst/amethyst/pull/2492
+
+## [0.15.3] - 2020-08-22
+
+0.15.3 is a corrected version of 0.15.2, which was inadvertently published based off of an incorrect (and broken) commit.
+
+## [0.15.2] - 2020-08-22 - YANKED
+
+### Changed
+
+- Internal CI improvements
+- Recommend `cargo new pong` instead of deprecated `amethyst new pong` in the book tutorial ([#2448])
+
+### Fixed
+
+- Fix `Camera::screen_ray` bug introduced in 0.15.1 ([#2447])
+
+[#2447]: https://github.com/amethyst/amethyst/pull/2447
+[#2448]: https://github.com/amethyst/amethyst/pull/2448
 
 ## [0.15.1] - 2020-08-14
 
@@ -1307,7 +1330,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 - Initial release
 
-[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.1...HEAD
+[unreleased]: https://github.com/amethyst/amethyst/compare/v0.15.3...HEAD
+[0.15.3]: https://github.com/amethyst/amethyst/compare/v0.15.2...v0.15.3
+[0.15.2]: https://github.com/amethyst/amethyst/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/amethyst/amethyst/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/amethyst/amethyst/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/amethyst/amethyst/compare/v0.13.3...v0.14.0

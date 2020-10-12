@@ -23,7 +23,7 @@ use std::marker::PhantomData;
 /// Will register all necessary components and systems needed for UI, along with any resources.
 /// The generic type T represent the T generic parameter of the InputHandler<T>.
 ///
-/// Will fail with error 'No resource with the given id' if the InputBundle is not added.
+/// Will fail with error 'No resource with the given id' if either the InputBundle or TransformBundle are not added.
 #[derive(new, Debug)]
 pub struct UiBundle<T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
