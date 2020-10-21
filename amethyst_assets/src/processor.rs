@@ -6,7 +6,7 @@ use std::{
 use atelier_loader::AssetLoadOp;
 use crossbeam_queue::SegQueue;
 
-use amethyst_core::ecs::prelude::{System, Write};
+use amethyst_core::ecs::{System, Write};
 
 use crate::{error::Error, loader_new::LoadHandle, progress::Tracker, storage_new::AssetStorage};
 

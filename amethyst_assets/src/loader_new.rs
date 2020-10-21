@@ -1,17 +1,25 @@
 use crate::{processor::ProcessingQueue, storage_new::AssetStorage};
 use amethyst_core::ecs::{DispatcherBuilder, System, World};
+// use atelier_assets::loader::{
+//     handle::{self, AssetHandle, Handle, RefOp, WeakHandle},
+//     storage::{DefaultIndirectionResolver, IndirectIdentifier, LoadStatus},
+//     Loader, RpcIO,
+// };
 use atelier_loader::{
-    self,
+    // self,
+    crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
-    AssetLoadOp, AssetTypeId, LoadInfo, Loader as AtelierLoader, LoaderInfoProvider,
+    storage::{AssetLoadOp, LoadInfo, LoaderInfoProvider},
+    AssetTypeId,
+    Loader as AtelierLoader,
 };
 use bincode;
-use crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError};
 use serde::de::Deserialize;
 use std::{cell::RefCell, collections::HashMap, error::Error, sync::Arc};
 
 pub(crate) use atelier_loader::LoadHandle;
-pub use atelier_loader::{AssetUuid, LoadStatus, TypeUuid};
+pub use atelier_loader::{storage::LoadStatus, AssetUuid};
+pub use type_uuid::TypeUuid;
 
 /// Manages asset loading and storage for an application.
 pub trait Loader: Send + Sync {
@@ -165,7 +173,7 @@ impl<T: AtelierLoader + Send + Sync> AtelierLoader for LoaderWithStorage<T> {
     }
     fn process(
         &mut self,
-        asset_storage: &dyn atelier_loader::AssetStorage,
+        asset_storage: &dyn atelier_loader::storage::AssetStorage,
     ) -> Result<(), Box<dyn Error>> {
         self.loader.process(asset_storage)
     }
@@ -337,7 +345,7 @@ impl<'a> WorldStorages<'a> {
     }
 }
 
-impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
+impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
     fn update_asset(
         &self,
         loader_info: &dyn LoaderInfoProvider,
