@@ -1,7 +1,9 @@
 use crate::{experimental::AssetUuid, Format};
 // FIXME
 // pub use atelier_importer::SourceFileImporter;
-use atelier_importer::{self as importer, ImportedAsset, Importer, ImporterValue, SerdeObj};
+use atelier_importer::{
+    self as importer, BoxedImporter, ImportedAsset, Importer, ImporterValue, SerdeObj,
+};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 use type_uuid::TypeUuid;
@@ -75,7 +77,21 @@ where
         })
     }
 }
+/// Use [inventory::submit!] to register an importer to use for a file extension.
+#[derive(Debug)]
+pub struct SourceFileImporter {
+    pub extension: &'static str,
+    pub instantiator: fn() -> Box<dyn BoxedImporter>,
+}
+inventory::collect!(SourceFileImporter);
 
+/// Get the registered importers and their associated extension.
+pub fn get_source_importers(
+) -> impl Iterator<Item = (&'static str, Box<dyn BoxedImporter + 'static>)> {
+    inventory::iter::<SourceFileImporter>
+        .into_iter()
+        .map(|s| (s.extension.trim_start_matches("."), (s.instantiator)()))
+}
 // Associates the given file extension with a `Format` implementation
 //
 // The `AssetDaemon` will automatically re-import the asset when a file of that format is created
