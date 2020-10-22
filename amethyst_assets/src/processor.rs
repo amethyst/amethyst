@@ -1,12 +1,9 @@
-use std::{
-    marker::PhantomData,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
-use atelier_loader::AssetLoadOp;
+use atelier_loader::storage::AssetLoadOp;
 use crossbeam_queue::SegQueue;
 
-use amethyst_core::ecs::{System, Write};
+use amethyst_core::ecs::{systems::ParallelRunnable, SystemBuilder};
 
 use crate::{error::Error, loader_new::LoadHandle, progress::Tracker, storage_new::AssetStorage};
 
@@ -16,39 +13,51 @@ use crate::{error::Error, loader_new::LoadHandle, progress::Tracker, storage_new
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
-pub struct Processor<A> {
-    marker: PhantomData<A>,
-}
+// pub struct Processor<A> {
+//     marker: PhantomData<A>,
+// }
 
-impl<A> Default for Processor<A> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+// impl<A> Default for Processor<A> {
+//     fn default() -> Self {
+//         Self::new()
+//     }
+// }
 
-impl<A> Processor<A> {
-    /// Creates a new asset processor for assets of type `A`.
-    pub fn new() -> Self {
-        Processor {
-            marker: PhantomData,
-        }
-    }
-}
+// impl<A> Processor<A> {
+//     /// Creates a new asset processor for assets of type `A`.
+//     pub fn new() -> Self {
+//         Processor {
+//             marker: PhantomData,
+//         }
+//     }
+// }
 
-impl<'a, A> System<'a> for Processor<A>
+// impl<'a, A> System<'a> for Processor<A>
+// where
+//     A: crate::asset::Asset,
+//     A::Data: Into<Result<ProcessingState<A::Data, A>, Error>>,
+// {
+//     type SystemData = (
+//         Write<'a, ProcessingQueue<A::Data>>,
+//         Write<'a, AssetStorage<A>>,
+//     );
+
+//     fn run(&mut self, (mut queue, mut storage): Self::SystemData) {
+//     }
+// }
+
+pub fn build_default_asset_processer_system<A>() -> impl ParallelRunnable
 where
     A: crate::asset::Asset,
     A::Data: Into<Result<ProcessingState<A::Data, A>, Error>>,
 {
-    type SystemData = (
-        Write<'a, ProcessingQueue<A::Data>>,
-        Write<'a, AssetStorage<A>>,
-    );
-
-    fn run(&mut self, (mut queue, mut storage): Self::SystemData) {
-        queue.process(&mut storage, Into::into);
-        storage.process_custom_drop(|_| {});
-    }
+    SystemBuilder::new(format!("Asset Processor {}", A::name()))
+        .write_resource::<ProcessingQueue<A::Data>>()
+        .write_resource::<AssetStorage<A>>()
+        .build(|_, _, (queue, storage), _| {
+            queue.process(storage, Into::into);
+            storage.process_custom_drop(|_| {});
+        })
 }
 
 /// Represents asset data processed by `atelier-assets` that needs to be loaded by Amethyst.

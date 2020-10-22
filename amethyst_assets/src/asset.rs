@@ -1,4 +1,4 @@
-use crate::{storage::ProcessingState, FormatRegisteredData, Reload, SingleFile, Source};
+use crate::{processor::ProcessingState, FormatRegisteredData, Reload, SingleFile, Source};
 use amethyst_error::{Error, ResultExt};
 use std::{fmt::Debug, ops::Deref, sync::Arc};
 
@@ -31,11 +31,11 @@ pub trait Asset: Send + Sync + 'static {
 /// using default `Processor` system to process assets that implement that type.
 pub trait ProcessableAsset: Asset + Sized {
     /// Processes asset data into asset during loading.
-    fn process(data: Self::Data) -> Result<ProcessingState<Self>, Error>;
+    fn process(data: Self::Data) -> Result<ProcessingState<Self::Data, Self>, Error>;
 }
 
 impl<T: Asset<Data = T>> ProcessableAsset for T {
-    fn process(data: Self::Data) -> Result<ProcessingState<Self>, Error> {
+    fn process(data: Self::Data) -> Result<ProcessingState<Self::Data, Self>, Error> {
         Ok(ProcessingState::Loaded(data))
     }
 }

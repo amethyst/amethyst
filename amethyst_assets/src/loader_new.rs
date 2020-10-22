@@ -1,5 +1,5 @@
 use crate::{processor::ProcessingQueue, storage_new::AssetStorage};
-use amethyst_core::ecs::{DispatcherBuilder, System, World};
+use amethyst_core::ecs::{DispatcherBuilder, Resources};
 // use atelier_assets::loader::{
 //     handle::{self, AssetHandle, Handle, RefOp, WeakHandle},
 //     storage::{DefaultIndirectionResolver, IndirectIdentifier, LoadStatus},
@@ -9,13 +9,21 @@ use atelier_loader::{
     // self,
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
-    storage::{AssetLoadOp, LoadInfo, LoaderInfoProvider},
+    storage::{DefaultIndirectionResolver, AssetLoadOp, LoadInfo, LoaderInfoProvider},
     AssetTypeId,
     Loader as AtelierLoader,
+    RpcIO,
 };
 use bincode;
 use serde::de::Deserialize;
-use std::{cell::RefCell, collections::HashMap, error::Error, sync::Arc};
+use std::{
+    borrow::{Borrow, BorrowMut},
+    cell::RefCell,
+    collections::HashMap,
+    error::Error,
+    ops::{Deref, DerefMut},
+    sync::Arc,
+};
 
 pub(crate) use atelier_loader::LoadHandle;
 pub use atelier_loader::{storage::LoadStatus, AssetUuid};
@@ -112,74 +120,74 @@ pub trait Loader: Send + Sync {
     /// # Parameters
     ///
     /// * `world`: World in the application.
-    fn init_world(&mut self, world: &mut World);
+    fn init_world(&mut self, resources: &mut Resources);
 
     /// Registers processing systems in the `Dispatcher`.
     ///
     /// # Parameters
     ///
     /// * `builder`: DispatcherBuilder in the application.
-    fn init_dispatcher(&mut self, builder: &mut DispatcherBuilder<'static, 'static>);
+    fn init_dispatcher(&mut self, builder: &mut DispatcherBuilder);
 
     /// Updates asset loading state and removes assets that are no longer referenced.
     ///
     /// # Parameters
     ///
     /// * `world`: Specs world in the application.
-    fn process(&mut self, world: &World) -> Result<(), Box<dyn Error>>;
+    fn process(&mut self, resources: &Resources) -> Result<(), Box<dyn Error + Send>>;
 }
 
 /// Default loader is the Atelier Assets `RpcLoader`.
-pub type DefaultLoader = LoaderWithStorage<atelier_loader::rpc_loader::RpcLoader>;
+pub type DefaultLoader = LoaderWithStorage;
 
 /// Asset loader and storage.
-#[derive(Debug)]
-pub struct LoaderWithStorage<T: AtelierLoader + Send + Sync> {
-    loader: T,
+//#[derive(Debug)]
+pub struct LoaderWithStorage {
+    loader: AtelierLoader,
     storage_map: AssetStorageMap,
-    ref_sender: Arc<Sender<RefOp>>,
+    ref_sender: Sender<RefOp>,
     ref_receiver: Receiver<RefOp>,
 }
 
-impl<T: AtelierLoader + Send + Sync + Default> Default for LoaderWithStorage<T> {
+impl Default for LoaderWithStorage {
     fn default() -> Self {
         let (tx, rx) = unbounded();
         Self {
-            loader: Default::default(),
+            loader: AtelierLoader::new(Box::new(RpcIO::default())),
             storage_map: Default::default(),
-            ref_sender: Arc::new(tx),
+            ref_sender: tx,
             ref_receiver: rx,
         }
     }
 }
-impl<T: AtelierLoader + Send + Sync> AtelierLoader for LoaderWithStorage<T> {
-    fn add_ref(&self, id: AssetUuid) -> LoadHandle {
-        self.loader.add_ref(id)
-    }
-    fn remove_ref(&self, load_handle: LoadHandle) {
-        self.loader.remove_ref(load_handle)
-    }
-    fn get_asset(&self, load: LoadHandle) -> Option<(AssetTypeId, LoadHandle)> {
-        self.loader.get_asset(load)
-    }
-    fn get_load(&self, id: AssetUuid) -> Option<LoadHandle> {
-        self.loader.get_load(id)
-    }
-    fn get_load_info(&self, load: LoadHandle) -> Option<LoadInfo> {
-        self.loader.get_load_info(load)
-    }
-    fn get_load_status(&self, load: LoadHandle) -> LoadStatus {
-        self.loader.get_load_status(load)
-    }
-    fn process(
-        &mut self,
-        asset_storage: &dyn atelier_loader::storage::AssetStorage,
-    ) -> Result<(), Box<dyn Error>> {
-        self.loader.process(asset_storage)
-    }
-}
+// impl<T: AtelierLoader + Send + Sync> AtelierLoader for LoaderWithStorage<T> {
+//     fn add_ref(&self, id: AssetUuid) -> LoadHandle {
+//         self.loader.add_ref(id)
+//     }
+//     fn remove_ref(&self, load_handle: LoadHandle) {
+//         self.loader.remove_ref(load_handle)
+//     }
+//     fn get_asset(&self, load: LoadHandle) -> Option<(AssetTypeId, LoadHandle)> {
+//         self.loader.get_asset(load)
+//     }
+//     fn get_load(&self, id: AssetUuid) -> Option<LoadHandle> {
+//         self.loader.get_load(id)
+//     }
+//     fn get_load_info(&self, load: LoadHandle) -> Option<LoadInfo> {
+//         self.loader.get_load_info(load)
+//     }
+//     fn get_load_status(&self, load: LoadHandle) -> LoadStatus {
+//         self.loader.get_load_status(load)
+//     }
+//     fn process(
+//         &mut self,
+//         asset_storage: &dyn atelier_loader::storage::AssetStorage,
+//     ) -> Result<(), Box<dyn Error>> {
+//         self.loader.process(asset_storage)
+//     }
+// }
 
-impl<T: AtelierLoader + Send + Sync> Loader for LoaderWithStorage<T> {
+impl Loader for LoaderWithStorage {
     fn load_asset_generic(&self, id: AssetUuid) -> GenericHandle {
         GenericHandle::new(self.ref_sender.clone(), self.loader.add_ref(id))
     }
@@ -192,18 +200,18 @@ impl<T: AtelierLoader + Send + Sync> Loader for LoaderWithStorage<T> {
     fn get_load_status_handle(&self, handle: LoadHandle) -> LoadStatus {
         self.loader.get_load_status(handle)
     }
-    fn init_world(&mut self, world: &mut World) {
+    fn init_world(&mut self, resources: &mut Resources) {
         for (_, storage) in self.storage_map.storages_by_asset_uuid.iter() {
-            (storage.create_storage)(world);
+            (storage.create_storage)(resources);
         }
     }
-    fn init_dispatcher(&mut self, builder: &mut DispatcherBuilder<'static, 'static>) {
+    fn init_dispatcher(&mut self, builder: &mut DispatcherBuilder) {
         for (_, storage) in self.storage_map.storages_by_asset_uuid.iter() {
             (storage.register_system)(builder);
         }
     }
 
-    fn process(&mut self, world: &World) -> Result<(), Box<dyn Error>> {
+    fn process(&mut self, resources: &Resources) -> Result<(), Box<dyn Error + Send>> {
         loop {
             match self.ref_receiver.try_recv() {
                 Err(TryRecvError::Empty) => break,
@@ -219,8 +227,8 @@ impl<T: AtelierLoader + Send + Sync> Loader for LoaderWithStorage<T> {
                 }
             }
         }
-        let storages = WorldStorages::new(world, &self.storage_map, &self.ref_sender);
-        self.loader.process(&storages)
+        let storages = WorldStorages::new(resources, &self.storage_map, &self.ref_sender);
+        self.loader.process(&storages, &DefaultIndirectionResolver)
     }
 }
 
@@ -241,10 +249,10 @@ pub trait AssetTypeStorage {
     fn update_asset(
         &self,
         handle: LoadHandle,
-        data: &[u8],
+        data: std::vec::Vec<u8>,
         load_op: AssetLoadOp,
         version: u32,
-    ) -> Result<(), Box<dyn Error>>;
+    ) -> Result<(), Box<dyn Error + Send>>;
 
     /// Commits an asset.
     ///
@@ -270,13 +278,17 @@ where
     fn update_asset(
         &self,
         handle: LoadHandle,
-        data: &[u8],
+        data: std::vec::Vec<u8>,
         load_op: AssetLoadOp,
         version: u32,
-    ) -> Result<(), Box<dyn Error>> {
-        let asset = bincode::deserialize::<Intermediate>(data.as_ref())?;
-        self.0.enqueue(handle, asset, load_op, version);
-        Ok(())
+    ) -> Result<(), Box<dyn Error + Send>> {
+        match bincode::deserialize::<Intermediate>(data.as_ref()) {
+            Err(err) => Err(Box::new(err)),
+            Ok(asset) => {
+                self.0.enqueue(handle, asset, load_op, version);
+                Ok(())
+            },
+        }
     }
     fn commit_asset_version(&mut self, handle: LoadHandle, version: u32) {
         self.1.commit_asset(handle, version);
@@ -327,20 +339,20 @@ impl Default for AssetStorageMap {
 /// This contains immutable references to the `AssetStorageMap` and `World` resources.
 struct WorldStorages<'a> {
     storage_map: &'a AssetStorageMap,
-    ref_sender: &'a Arc<Sender<RefOp>>,
-    world: &'a World,
+    ref_sender: &'a Sender<RefOp>,
+    resources: &'a Resources,
 }
 
 impl<'a> WorldStorages<'a> {
     fn new(
-        world: &'a World,
+        resources: &'a Resources,
         storage_map: &'a AssetStorageMap,
-        ref_sender: &'a Arc<Sender<RefOp>>,
+        ref_sender: &'a Sender<RefOp>,
     ) -> WorldStorages<'a> {
         WorldStorages {
             storage_map,
             ref_sender,
-            world,
+            resources,
         }
     }
 }
@@ -350,28 +362,34 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
         &self,
         loader_info: &dyn LoaderInfoProvider,
         asset_type: &AssetTypeId,
-        data: &[u8],
+        data: std::vec::Vec<u8>,
         load_handle: LoadHandle,
         load_op: AssetLoadOp,
         version: u32,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<(), Box<dyn Error + Send>> {
+        // FIXME
         // can't move into closure, so we work around it with a RefCell + Option
         let moved_op = RefCell::new(Some(load_op));
+        let moved_data = RefCell::new(Some(data));
         let mut result = None;
         (self
             .storage_map
             .storages_by_data_uuid
             .get(asset_type)
             .expect("could not find asset type")
-            .with_storage)(self.world, &mut |storage: &mut dyn AssetTypeStorage| {
-            SerdeContext::with(loader_info, self.ref_sender.clone(), || {
-                result = Some(storage.update_asset(
-                    load_handle,
-                    data,
-                    moved_op.replace(None).unwrap(),
-                    version,
-                ));
-            });
+            .with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
+            SerdeContext::with(
+                loader_info,
+                self.ref_sender.clone(),
+                async {
+                    result = Some(storage.update_asset(
+                        load_handle,
+                        moved_data.replace(None).unwrap(),
+                        moved_op.replace(None).unwrap(),
+                        version,
+                    ));
+                },
+            );
         });
         result.unwrap()
     }
@@ -386,7 +404,7 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
             .storages_by_data_uuid
             .get(asset_type)
             .expect("could not find asset type")
-            .with_storage)(self.world, &mut |storage: &mut dyn AssetTypeStorage| {
+            .with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
             storage.commit_asset_version(load_handle, version);
         });
     }
@@ -399,7 +417,7 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
             .storages_by_data_uuid
             .get(asset_type)
             .expect("could not find asset type")
-            .with_storage)(self.world, &mut |storage: &mut dyn AssetTypeStorage| {
+            .with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
             storage.free(moved_handle.replace(None).unwrap())
         });
     }
@@ -413,10 +431,10 @@ pub struct AssetType {
     /// UUID of the type representing the asset.
     pub asset_uuid: AssetTypeId,
     /// Function to create the `AssetTypeStorage`'s resources in the `World`.
-    pub create_storage: fn(&mut World),
-    pub register_system: fn(&mut DispatcherBuilder<'static, 'static>),
+    pub create_storage: fn(&mut Resources),
+    pub register_system: fn(&mut DispatcherBuilder),
     /// Function that runs another function, passing in the `AssetTypeStorage`.
-    pub with_storage: fn(&World, &mut dyn FnMut(&mut dyn AssetTypeStorage)),
+    pub with_storage: fn(&Resources, &mut dyn FnMut(&mut dyn AssetTypeStorage)),
 }
 
 impl std::fmt::Debug for AssetType {
@@ -435,28 +453,29 @@ crate::inventory::collect!(AssetType);
 ///
 /// This function is not intended to be called be directly. Use the `register_asset_type!` macro
 /// macro instead.
-pub fn create_asset_type<Intermediate, Asset, Processor>() -> AssetType
+pub fn create_asset_type<Intermediate, Asset>(
+    processor: fn(dispatcher_builder: &mut DispatcherBuilder),
+) -> AssetType
 where
     Asset: 'static + TypeUuid + Send + Sync,
-    for<'a> Processor: System<'a> + Send + Default + 'static,
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
 {
     AssetType {
         data_uuid: AssetTypeId(Intermediate::UUID),
         asset_uuid: AssetTypeId(Asset::UUID),
         create_storage: |res| {
-            if res.try_fetch::<AssetStorage<Asset>>().is_none() {
-                res.insert(AssetStorage::<Asset>::default())
-            }
-            if res.try_fetch::<ProcessingQueue<Intermediate>>().is_none() {
-                res.insert(ProcessingQueue::<Intermediate>::default())
-            }
+            res.get_or_insert_with(|| AssetStorage::<Asset>::default());
+            res.get_or_insert_with(|| ProcessingQueue::<Intermediate>::default());
         },
-        register_system: |builder| builder.add(Processor::default(), "", &[]),
+        register_system: processor,
         with_storage: |res, func| {
             func(&mut (
-                &*res.fetch::<ProcessingQueue<Intermediate>>(),
-                &mut *res.fetch_mut::<AssetStorage<Asset>>(),
+                res.get::<ProcessingQueue<Intermediate>>()
+                    .expect("Could not get ProcessingQueue")
+                    .deref(),
+                res.get_mut::<AssetStorage<Asset>>()
+                    .expect("Could not get_mut AssetStorage")
+                    .deref_mut(),
             ))
         },
     }

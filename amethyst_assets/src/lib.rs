@@ -54,8 +54,8 @@ pub mod experimental {
     pub use crate::{
         bundle_new::LoaderBundle,
         loader_new::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
-        processor::{ProcessingQueue, ProcessingState, Processor},
-        simple_importer::{SimpleImporter, SourceFileImporter},
+        processor::{ProcessingQueue, ProcessingState},
+        simple_importer::SimpleImporter, // SourceFileImporter},
         storage_new::AssetStorage,
     };
     pub use atelier_loader::asset_uuid;

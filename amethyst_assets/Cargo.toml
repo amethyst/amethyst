@@ -40,11 +40,10 @@ objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
-specs = "0.16"
-atelier-loader = { git = "https://github.com/amethyst/atelier-assets.git", optional = true }
-atelier-importer = { git = "https://github.com/amethyst/atelier-assets.git", optional = true }
-uuid = { version = "0.7", optional = true }
-bincode = { version = "1.1", optional = true }
+atelier-loader = { git = "https://github.com/amethyst/atelier-assets.git", branch = "indirect_handles", features = ["asset_uuid_macro"] }
+atelier-importer = { git = "https://github.com/amethyst/atelier-assets.git", branch = "indirect_handles" }
+uuid = { version = "0.8", features = ["v4"] }
+bincode = "1.1"
 type-uuid = "0.1"
 
 [dev-dependencies]

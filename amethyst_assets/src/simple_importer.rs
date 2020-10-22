@@ -1,5 +1,6 @@
 use crate::{experimental::AssetUuid, Format};
-pub use atelier_importer::SourceFileImporter;
+// FIXME
+// pub use atelier_importer::SourceFileImporter;
 use atelier_importer::{self as importer, ImportedAsset, Importer, ImporterValue, SerdeObj};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
@@ -51,7 +52,7 @@ where
     fn import(
         &self,
         source: &mut dyn Read,
-        options: Self::Options,
+        options: &Self::Options,
         state: &mut Self::State,
     ) -> importer::Result<ImporterValue> {
         if state.id.is_none() {
@@ -75,21 +76,21 @@ where
     }
 }
 
-/// Associates the given file extension with a `Format` implementation
-///
-/// The `AssetDaemon` will automatically re-import the asset when a file of that format is created
-/// or modified.
-///
-/// # Parameters
-///
-/// * `ext`: File extension including the leading `.`, such as `".ron"`.
-/// * `format`: Type that implements the `Format` trait.
-///
-/// # Examples
-///
-/// ```rust,ignore
-/// amethyst_assets::register_importer!(".ron", Ron);
-/// ```
+// Associates the given file extension with a `Format` implementation
+//
+// The `AssetDaemon` will automatically re-import the asset when a file of that format is created
+// or modified.
+//
+// # Parameters
+//
+// * `ext`: File extension including the leading `.`, such as `".ron"`.
+// * `format`: Type that implements the `Format` trait.
+//
+// # Examples
+//
+// ```rust,ignore
+// amethyst_assets::register_importer!(".ron", Ron);
+// ```
 #[macro_export]
 macro_rules! register_importer {
     ($ext:literal, $format:ty) => {
