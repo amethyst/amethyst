@@ -40,6 +40,7 @@ objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
+atelier-core = { git = "https://github.com/amethyst/atelier-assets.git", branch = "indirect_handles", features = ["serde-1", "type_uuid"] }
 atelier-loader = { git = "https://github.com/amethyst/atelier-assets.git", branch = "indirect_handles", features = ["asset_uuid_macro"] }
 atelier-importer = { git = "https://github.com/amethyst/atelier-assets.git", branch = "indirect_handles" }
 uuid = { version = "0.8", features = ["v4"] }

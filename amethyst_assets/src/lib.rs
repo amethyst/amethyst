@@ -58,6 +58,7 @@ pub mod experimental {
         simple_importer::{SimpleImporter, SourceFileImporter},
         storage_new::AssetStorage,
     };
+    pub use atelier_core::TypeUuidDynamic;
     pub use atelier_loader::asset_uuid;
     pub use atelier_loader::handle::{AssetHandle, GenericHandle, Handle};
 }

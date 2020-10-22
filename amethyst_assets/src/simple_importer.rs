@@ -6,7 +6,7 @@ use atelier_importer::{
 };
 use serde::{Deserialize, Serialize};
 use std::io::Read;
-use type_uuid::TypeUuid;
+use type_uuid::{TypeUuid, TypeUuidDynamic};
 
 /// A simple state for Importer to retain the same UUID between imports
 /// for all single-asset source files
