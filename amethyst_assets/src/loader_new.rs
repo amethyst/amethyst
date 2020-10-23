@@ -1,4 +1,4 @@
-use crate::{processor::ProcessingQueue, storage_new::AssetStorage};
+use crate::{Asset, progress::Progress, processor::ProcessingQueue, storage_new::AssetStorage};
 use amethyst_core::ecs::{DispatcherBuilder, Resources};
 // use atelier_assets::loader::{
 //     handle::{self, AssetHandle, Handle, RefOp, WeakHandle},
@@ -9,7 +9,7 @@ use atelier_loader::{
     // self,
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
-    storage::{DefaultIndirectionResolver, AssetLoadOp, LoadInfo, LoaderInfoProvider},
+    storage::{AtomicHandleAllocator, DefaultIndirectionResolver, AssetLoadOp, HandleAllocator, LoaderInfoProvider},
     AssetTypeId,
     Loader as AtelierLoader,
     RpcIO,
@@ -17,7 +17,6 @@ use atelier_loader::{
 use bincode;
 use serde::de::Deserialize;
 use std::{
-    borrow::{Borrow, BorrowMut},
     cell::RefCell,
     collections::HashMap,
     error::Error,
@@ -115,7 +114,18 @@ pub trait Loader: Send + Sync {
             .unwrap_or(None)
     }
 
-    /// Creates the `AssetTypeStorage`'s resources in the `World`.
+    /// Load an asset from data and return a handle.
+    fn load_from_data<A, P>(
+        &self,
+        data: A::Data,
+        progress: P,
+        processing_queue: &ProcessingQueue<A::Data>,
+    ) -> Handle<A>
+    where
+        A: Asset,
+        P: Progress;
+
+    // Creates the `AssetTypeStorage`'s resources in the `World`.
     ///
     /// # Parameters
     ///
@@ -147,16 +157,19 @@ pub struct LoaderWithStorage {
     storage_map: AssetStorageMap,
     ref_sender: Sender<RefOp>,
     ref_receiver: Receiver<RefOp>,
+    handle_allocator: Arc<AtomicHandleAllocator>,
 }
 
 impl Default for LoaderWithStorage {
     fn default() -> Self {
         let (tx, rx) = unbounded();
+        let handle_allocator = Arc::new(AtomicHandleAllocator::default());
         Self {
-            loader: AtelierLoader::new(Box::new(RpcIO::default())),
+            loader: AtelierLoader::new_with_handle_allocator(Box::new(RpcIO::default()), handle_allocator.clone()),
             storage_map: Default::default(),
             ref_sender: tx,
             ref_receiver: rx,
+            handle_allocator,
         }
     }
 }
@@ -200,6 +213,34 @@ impl Loader for LoaderWithStorage {
     fn get_load_status_handle(&self, handle: LoadHandle) -> LoadStatus {
         self.loader.get_load_status(handle)
     }
+
+    /// Load an asset from data and return a handle.
+    fn load_from_data<A, P>(
+        &self,
+        data: A::Data,
+        mut progress: P,
+        processing_queue: &ProcessingQueue<A::Data>,
+    ) -> Handle<A>
+    where
+        A: Asset,
+        P: Progress,
+    {
+        progress.add_assets(1);
+        let tracker = progress.create_tracker();
+        let tracker = Box::new(tracker);
+        let handle = self.handle_allocator.alloc();
+        processing_queue.enqueue_with_tracker(
+            handle.clone(),
+            data,
+            Some(tracker),
+            None,
+            0,
+        );
+        // storage.update_asset(handle, FormatValue::data(data), 0);
+        Handle::<A>::new(self.ref_sender.clone(), handle)
+    }
+
+
     fn init_world(&mut self, resources: &mut Resources) {
         for (_, storage) in self.storage_map.storages_by_asset_uuid.iter() {
             (storage.create_storage)(resources);
@@ -285,7 +326,7 @@ where
         match bincode::deserialize::<Intermediate>(data.as_ref()) {
             Err(err) => Err(Box::new(err)),
             Ok(asset) => {
-                self.0.enqueue(handle, asset, load_op, version);
+                self.0.enqueue(handle, asset, Some(load_op), version);
                 Ok(())
             },
         }

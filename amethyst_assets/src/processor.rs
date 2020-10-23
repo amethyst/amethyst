@@ -3,9 +3,13 @@ use std::sync::{Arc, Mutex};
 use atelier_loader::storage::AssetLoadOp;
 use crossbeam_queue::SegQueue;
 
-use amethyst_core::ecs::{systems::ParallelRunnable, SystemBuilder};
+use amethyst_core::ecs::{systems::ParallelRunnable, DispatcherBuilder, SystemBuilder};
+use amethyst_error::Error as AmethystError;
 
-use crate::{error::Error, loader_new::LoadHandle, progress::Tracker, storage_new::AssetStorage};
+use crate::{
+    asset::Asset, error::Error, loader_new::LoadHandle, progress::Tracker,
+    storage_new::AssetStorage,
+};
 
 /// A default implementation for an asset processing system
 /// which converts data to assets and maintains the asset storage
@@ -46,6 +50,15 @@ use crate::{error::Error, loader_new::LoadHandle, progress::Tracker, storage_new
 //     }
 // }
 
+pub fn add_default_asset_processor_system_to_dispatcher<A>(
+    dispatcher_builder: &mut DispatcherBuilder,
+) where
+    A: crate::asset::Asset,
+    A::Data: Into<Result<ProcessingState<A::Data, A>, Error>>,
+{
+    dispatcher_builder.add_system(build_default_asset_processer_system::<A>());
+}
+
 pub fn build_default_asset_processer_system<A>() -> impl ParallelRunnable
 where
     A: crate::asset::Asset,
@@ -65,7 +78,7 @@ pub(crate) struct Processed<T> {
     data: Result<T, Error>,
     handle: LoadHandle,
     tracker: Option<Box<dyn Tracker>>,
-    load_op: AssetLoadOp,
+    load_op: Option<AssetLoadOp>,
     version: u32,
 }
 
@@ -98,11 +111,27 @@ impl<T> Default for ProcessingQueue<T> {
 
 impl<T> ProcessingQueue<T> {
     /// Enqueue asset data for processing
-    pub(crate) fn enqueue(&self, handle: LoadHandle, data: T, load_op: AssetLoadOp, version: u32) {
+    pub(crate) fn enqueue(
+        &self,
+        handle: LoadHandle,
+        data: T,
+        load_op: Option<AssetLoadOp>,
+        version: u32,
+    ) {
+        self.enqueue_with_tracker(handle, data, None, load_op, version)
+    }
+    pub(crate) fn enqueue_with_tracker(
+        &self,
+        handle: LoadHandle,
+        data: T,
+        tracker: Option<Box<dyn Tracker>>,
+        load_op: Option<AssetLoadOp>,
+        version: u32,
+    ) {
         self.processed.push(Processed {
             data: Ok(data),
             handle,
-            tracker: None,
+            tracker,
             load_op,
             version,
         })
@@ -159,7 +188,12 @@ impl<T> ProcessingQueue<T> {
                                 //     tracker.success();
                                 // }
 
-                                load_op.complete();
+                                if let Some(tracker) = tracker {
+                                    tracker.success();
+                                }
+                                if let Some(op) = load_op {
+                                    op.complete();
+                                }
                                 x
                             }
                             Ok(ProcessingState::Loading(x)) => {
@@ -186,11 +220,13 @@ impl<T> ProcessingQueue<T> {
                                 //     handle,
                                 //     e,
                                 // );
-                                // if let Some(tracker) = tracker {
-                                //     tracker.fail(handle, A::name(), name, e);
-                                // }
-                                load_op.error(e);
-
+                                if let Some(tracker) = tracker {
+                                    // FIXME
+                                    tracker.fail(handle.0, &"", "".to_string(), AmethystError::from_string(""));
+                                }
+                                if let Some(op) = load_op {
+                                    op.error(e);
+                                }
                                 continue;
                             }
                         };

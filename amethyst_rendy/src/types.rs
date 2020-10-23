@@ -1,5 +1,5 @@
 //! 'Global' rendering type declarations
-use amethyst_assets::Asset;
+use amethyst_assets::{add_default_asset_processor_system_to_dispatcher, Asset};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
@@ -140,22 +140,14 @@ pub struct MeshData(
     #[serde(deserialize_with = "deserialize_data")] pub rendy::mesh::MeshBuilder<'static>,
 );
 
-#[derive(Default)]
-struct PlaceholderSystem;
-
-impl<'a> System<'a> for PlaceholderSystem {
-    type SystemData = ();
-    fn run(&mut self, data: Self::SystemData) {}
-}
-
-amethyst_assets::register_asset_type!(MeshData => Mesh; PlaceholderSystem);
+amethyst_assets::register_asset_type!(MeshData => Mesh; add_default_asset_processor_system_to_dispatcher::<Mesh>);
 
 /// Newtype for TextureBuilder prefab usage.
 #[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
 #[uuid = "25063afd-6cc0-487e-982f-a63fed7d7393"]
 pub struct TextureData(pub rendy::texture::TextureBuilder<'static>);
 
-amethyst_assets::register_asset_type!(TextureData => Texture; PlaceholderSystem);
+amethyst_assets::register_asset_type!(TextureData => Texture; add_default_asset_processor_system_to_dispatcher::<Texture>);
 
 impl From<rendy::mesh::MeshBuilder<'static>> for MeshData {
     fn from(builder: rendy::mesh::MeshBuilder<'static>) -> Self {

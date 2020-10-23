@@ -129,7 +129,7 @@ enum MaterialState<B: Backend> {
         set: Escape<DescriptorSet<B>>,
         slot: usize,
         generation: u32,
-        handle: WeakHandle<Material>,
+        handle: WeakHandle,
     },
 }
 

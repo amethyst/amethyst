@@ -24,7 +24,7 @@ enum TextureState<B: Backend> {
         set: Escape<DescriptorSet<B>>,
         generation: u32,
         version: u32,
-        handle: WeakHandle<Texture>,
+        handle: WeakHandle,
         layout: hal::image::Layout,
     },
 }
