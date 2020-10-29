@@ -65,6 +65,19 @@ impl<A> AssetStorage<A> {
         }
     }
 
+    pub fn contains(&self, load_handle: LoadHandle) -> bool {
+        self.assets.contains_key(&load_handle)
+    }
+
+    /// Returns the asset for the given load handle, or `None` if has not completed loading.
+    ///
+    /// # Parameters
+    ///
+    /// * `load_handle`: LoadHandle of the asset.
+    pub fn get_for_load_handle(&self, load_handle: LoadHandle) -> Option<&A> {
+        self.assets.get(&load_handle).map(|a| &a.asset)
+    }
+
     /// Returns the asset for the given handle, or `None` if has not completed loading.
     ///
     /// # Parameters

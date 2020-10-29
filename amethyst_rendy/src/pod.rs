@@ -5,7 +5,7 @@ use crate::{
     sprite::{SpriteRender, SpriteSheet},
     types::Texture,
 };
-use amethyst_assets::{AssetStorage, Handle};
+use amethyst_assets::{AssetHandle, AssetStorage, Handle};
 use amethyst_core::{
     math::{convert, Matrix4, Vector4},
     transform::Transform,
@@ -349,7 +349,7 @@ impl SpriteArgs {
         tint: Option<&TintComponent>,
     ) -> Option<(Self, &'a Handle<Texture>)> {
         let sprite_sheet = sprite_storage.get(&sprite_render.sprite_sheet)?;
-        if !tex_storage.contains(&sprite_sheet.texture) {
+        if !tex_storage.contains(sprite_sheet.texture.load_handle()) {
             return None;
         }
 

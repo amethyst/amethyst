@@ -1,6 +1,6 @@
 //! Basic shape prefabs.
-use crate::types::Mesh;
-use amethyst_assets::{AssetStorage, DefaultLoader, Handle, Progress};
+use crate::types::{Mesh, MeshData};
+use amethyst_assets::{Asset, DefaultLoader, Handle, Loader, ProcessingQueue, Progress};
 use amethyst_core::math::Vector3;
 use genmesh::{
     generators::{
@@ -109,7 +109,7 @@ pub enum Shape {
 #[allow(missing_debug_implementations)]
 pub struct ShapeUpload<'a> {
     loader: &'a DefaultLoader,
-    storage: &'a mut AssetStorage<Mesh>,
+    storage: &'a mut ProcessingQueue<MeshData>,
 }
 
 /// Vertex data for a basic shape.

@@ -1,9 +1,11 @@
 //! Renderer system
 use crate::{
     mtl::Material,
-    types::{Backend, Mesh, Texture},
+    types::{Backend, Mesh, MeshData, Texture, TextureData},
 };
-use amethyst_assets::{AssetStorage, ProcessingState};
+use amethyst_assets::{
+    error::*, AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState,
+};
 use amethyst_core::{ecs::*, timing::Time, ArcThreadPool};
 use palette::{LinSrgba, Srgba};
 use rendy::{
@@ -134,6 +136,7 @@ where
 /// Asset processing system for `Mesh` asset type.
 pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
     SystemBuilder::new("MeshProcessorSystem")
+        .write_resource::<ProcessingQueue<MeshData>>()
         .write_resource::<AssetStorage<Mesh>>()
         .read_resource::<QueueId>()
         .read_resource::<Time>()
@@ -141,11 +144,15 @@ pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
         // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
         .read_resource::<Factory<B>>()
         .build(
-            move |commands, world, (mesh_storage, queue_id, time, pool, factory), _| {
+            move |commands,
+                  world,
+                  (processing_queue, mesh_storage, queue_id, time, pool, factory),
+                  _| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("mesh_processor");
 
-                mesh_storage.process(
+                processing_queue.process(
+                    mesh_storage,
                     |b| {
                         log::trace!("Processing Mesh: {:?}", b);
 
@@ -155,11 +162,11 @@ pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
                         b.0.build(**queue_id, &factory)
                             .map(B::wrap_mesh)
                             .map(ProcessingState::Loaded)
-                            .map_err(|e| e.compat().into())
+                            .map_err(|e| Error::Source)
                     },
-                    time.frame_number(),
-                    &**pool,
-                    None, // TODO: Fix strategy optional
+                    // time.frame_number(),
+                    // &**pool,
+                    // None, // TODO: Fix strategy optional
                 )
             },
         )
@@ -168,6 +175,7 @@ pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
 /// Asset processing system for `Mesh` asset type.
 pub fn build_texture_processor<B: Backend>() -> impl Runnable {
     SystemBuilder::new("TextureProcessorSystem")
+        .write_resource::<ProcessingQueue<TextureData>>()
         .write_resource::<AssetStorage<Texture>>()
         .read_resource::<QueueId>()
         .read_resource::<Time>()
@@ -175,11 +183,15 @@ pub fn build_texture_processor<B: Backend>() -> impl Runnable {
         // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
         .write_resource::<Factory<B>>()
         .build(
-            move |commands, world, (texture_storage, queue_id, time, pool, factory), _| {
+            move |commands,
+                  world,
+                  (processing_queue, texture_storage, queue_id, time, pool, factory),
+                  _| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("texture_processor");
 
-                texture_storage.process(
+                processing_queue.process(
+                    texture_storage,
                     |b| {
                         log::trace!("Processing Texture: {:?}", b);
 
@@ -198,11 +210,10 @@ pub fn build_texture_processor<B: Backend>() -> impl Runnable {
                         )
                         .map(B::wrap_texture)
                         .map(ProcessingState::Loaded)
-                        .map_err(|e| e.compat().into())
-                    },
-                    time.frame_number(),
-                    &**pool,
-                    None, // TODO: Fix strategy optional
+                        .map_err(|e| Error::Source)
+                    }, // time.frame_number(),
+                       // &**pool,
+                       // None, // TODO: Fix strategy optional
                 );
             },
         )
@@ -211,9 +222,7 @@ pub fn build_texture_processor<B: Backend>() -> impl Runnable {
 pub(crate) fn create_default_mat<B: Backend>(resources: &Resources) -> Material {
     use crate::mtl::TextureOffset;
 
-    use amethyst_assets::Loader;
-
-    let loader = resources.get::<Loader>().unwrap();
+    let loader = resources.get::<DefaultLoader>().unwrap();
 
     let albedo = load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 1.0));
     let emission = load_from_srgba(Srgba::new(0.0, 0.0, 0.0, 0.0));
@@ -222,7 +231,7 @@ pub(crate) fn create_default_mat<B: Backend>(resources: &Resources) -> Material 
     let ambient_occlusion = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0));
     let cavity = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0));
 
-    let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
+    let tex_storage = resources.get::<ProcessingQueue<TextureData>>().unwrap();
 
     let albedo = loader.load_from_data(albedo.into(), (), &tex_storage);
     let emission = loader.load_from_data(emission.into(), (), &tex_storage);

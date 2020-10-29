@@ -14,7 +14,7 @@ use crate::{
     types::{Backend, Texture},
     util,
 };
-use amethyst_assets::{AssetStorage, Handle, WeakHandle};
+use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle, WeakHandle};
 use amethyst_core::ecs::*;
 use glsl_layout::*;
 
@@ -142,7 +142,7 @@ pub struct MaterialId(u32);
 pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
     generation: u32,
     layout: RendyHandle<DescriptorSetLayout<B>>,
-    lookup: util::LookupBuilder<u32>,
+    lookup: util::LookupBuilder<LoadHandle>,
     allocator: SlotAllocator,
     buffers: Vec<SlottedBuffer<B>>,
     materials: Vec<MaterialState<B>>,
@@ -282,7 +282,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         #[cfg(feature = "profiler")]
         profile_scope!("insert");
 
-        let id = self.lookup.forward(handle.id());
+        let id = self.lookup.forward(handle.load_handle());
         match self.materials.get_mut(id) {
             Some(MaterialState::Loaded {
                 slot,
