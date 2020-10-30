@@ -24,7 +24,7 @@ In `pong.rs`, let's create the `Ball` Component.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::prelude::{Component, DenseVecStorage};
+# use amethyst::ecs::{Component, DenseVecStorage};
 pub struct Ball {
     pub velocity: [f32; 2],
     pub radius: f32,
@@ -45,9 +45,8 @@ Then let's add an `initialise_ball` function the same way we wrote the
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage, Handle};
 # use amethyst::renderer::{Texture, SpriteRender, Sprite, SpriteSheet};
-# use amethyst::ecs::World;
 # use amethyst::core::transform::Transform;
-# use amethyst::ecs::prelude::{Component, DenseVecStorage};
+# use amethyst::ecs::{Component, DenseVecStorage, World};
 # pub struct Ball {
 #    pub velocity: [f32; 2],
 #    pub radius: f32,
@@ -96,14 +95,14 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 # use amethyst::prelude::*;
 # use amethyst::assets::Handle;
 # use amethyst::renderer::{Texture, SpriteSheet};
-# use amethyst::ecs::World;
+# use amethyst::ecs::{Component, World, VecStorage};
 # struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Self>;
+# impl Component for Paddle {
+#   type Storage = VecStorage<Self>;
 # }
 # struct Ball;
-# impl amethyst::ecs::Component for Ball {
-#   type Storage = amethyst::ecs::VecStorage<Self>;
+# impl Component for Ball {
+#   type Storage = VecStorage<Self>;
 # }
 # fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) { }
 # fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
@@ -138,7 +137,7 @@ We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::prelude::{Component, DenseVecStorage};
+# use amethyst::ecs::{Component, DenseVecStorage};
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -157,7 +156,7 @@ use amethyst::{
     core::transform::Transform,
     core::SystemDesc,
     derive::SystemDesc,
-    ecs::prelude::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage},
+    ecs::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage},
 };
 
 use crate::pong::Ball;
@@ -205,7 +204,7 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::prelude::{Component, DenseVecStorage};
+# use amethyst::ecs::{Component, DenseVecStorage};
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -239,7 +238,7 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 use amethyst::{
     core::{Transform, SystemDesc},
     derive::SystemDesc,
-    ecs::prelude::{Join, ReadStorage, System, SystemData, World, WriteStorage},
+    ecs::{Join, ReadStorage, System, SystemData, World, WriteStorage},
 };
 
 use crate::pong::{Ball, Side, Paddle, ARENA_HEIGHT};
@@ -519,5 +518,5 @@ In the next chapter, we'll add a system checking when a player loses the game,
 and add a scoring system!
 
 [pong_02_drawing]: pong-tutorial-02.html#drawing
-[doc_time]: https://docs.amethyst.rs/stable/amethyst_core/timing/struct.Time.html
+[doc_time]: https://docs.amethyst.rs/master/amethyst_core/timing/struct.Time.html
 [delta_timing]: https://en.wikipedia.org/wiki/Delta_timing

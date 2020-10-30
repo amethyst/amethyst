@@ -149,8 +149,8 @@ There are a few storage strategies for different usage scenarios. The most commo
         </div>
 </div>
 
-For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html)
-and the ["Storages" section](https://specs.amethyst.rs/docs/tutorials/05_storages.html) of the specs book.
+For more information, see the [specs storage reference]
+and the ["Storages" section] of the specs book.
 
 There are a bunch more storages, and deciding which one is the best isn't trivial and should be done based on careful benchmarking. A general rule is: if your component is used in over 30% of entities, use `VecStorage`. If you don't know which one you should use, `DenseVecStorage` is a good default. It will need more memory than `VecStorage` for pointer-sized components, but it will perform well for most scenarios.
 
@@ -161,3 +161,6 @@ The usual way to do it is to create an empty struct, and implement `Component` u
 Null storage means that it is not going to take memory space to store those components.
 
 You will learn how to use those tag components in the System chapter.
+
+[specs storage reference]: https://docs.rs/specs/~0.15/specs/storage/index.html
+["Storages" section]: https://specs.amethyst.rs/docs/tutorials/05_storages.html

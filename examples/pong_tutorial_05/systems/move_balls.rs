@@ -1,7 +1,7 @@
 use amethyst::{
     core::{timing::Time, transform::Transform},
     derive::SystemDesc,
-    ecs::prelude::{Join, Read, ReadStorage, System, SystemData, WriteStorage},
+    ecs::{Join, Read, ReadStorage, System, SystemData, WriteStorage},
 };
 
 use crate::pong::Ball;

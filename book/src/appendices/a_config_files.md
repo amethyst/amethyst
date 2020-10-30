@@ -45,9 +45,9 @@ For this project, we'll be placing a `config.ron` file in the same location as t
 * [Adding a Ball Config][1]
 * [Adding Paddle Configs][2]
 
-[pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong
-[ron]: https://docs.rs/ron/0.3.0/ron/
-[config]: https://docs.rs/amethyst_config/0.6.0/amethyst_config/trait.Config.html
+[pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong_tutorial_06
+[ron]: https://docs.rs/ron/~0.5/ron/
+[config]: https://docs.amethyst.rs/master/amethyst_config/trait.Config.html
 [0]: ./a_config_files/arena_config.html
 [1]: ./a_config_files/ball_config.html
 [2]: ./a_config_files/paddle_configs.html

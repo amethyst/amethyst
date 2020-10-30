@@ -52,7 +52,7 @@
 
 ## Window
 
-* `DisplayConfig`'s `fullscreen` field is now an `Option<MonitorIdent>`. `MonitorIdent` is `MonitorIdent(u16, String)`, indicating the native monitor display ID, and its [name](https://docs.rs/winit/0.19.1/winit/struct.MonitorId.html#method.get_name).
+* `DisplayConfig`'s `fullscreen` field is now an `Option<MonitorIdent>`. `MonitorIdent` is `MonitorIdent(u16, String)`, indicating the native monitor display ID, and its [name][monID].
 * `WindowBundle` is now separate from `amethyst_renderer`.
 
     ```rust,ignore
@@ -181,7 +181,7 @@
 
     This system is added automatically by the `RenderFlat2D` render plugin.
 
-* Sprite transparency is no longer a separate flag. Instead of `with_transparency`, you add a second render pass using `DrawFlat2DTransparent`. See the [`sprites_ordered` example](https://github.com/amethyst/amethyst/blob/7ed8432d8eef2b2727d0c4188b91e5823ae03548/examples/sprites_ordered/main.rs#L463-L482).
+* Sprite transparency is no longer a separate flag. Instead of `with_transparency`, you add a second render pass using `DrawFlat2DTransparent`. See the [`sprites_ordered` example][spri_ord].
 
 Camera changes:
 
@@ -219,3 +219,6 @@ Z-axis direction clarifications:
     ```
 
 * The `mark_render()` and `.run()` chained call is replaced by a single `run_isolated()` call.
+
+[monID]: https://docs.rs/winit/0.19.1/winit/struct.MonitorId.html#method.get_name
+[spri_ord]: https://github.com/amethyst/amethyst/blob/7ed8432d8eef2b2727d0c4188b91e5823ae03548/examples/sprites_ordered/main.rs#L463-L482

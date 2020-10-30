@@ -27,6 +27,6 @@ By placing an x in the boxes I certify that I have:
 If this modified or created any rs files:
 
 - [ ] Ran `cargo +stable fmt --all`
-- [ ] Ran `cargo clippy --all --features "empty"` (may require `cargo clean` before)
+- [ ] Ran `cargo clippy --workspace --features "empty"` (may require `cargo clean` before)
 - [ ] Ran `cargo build --features "empty"`
-- [ ] Ran `cargo test --all --features "empty"`
+- [ ] Ran `cargo test --workspace --features "empty"`

@@ -49,4 +49,4 @@ RenderingBundle::<DefaultBackend>::new()
 # Ok(()) }
 ```
 
-The render plugin requires a tile implementation, so we create a struct, `SimpleTile` and implment `Tile`, which is needed by the render plugin in order to provide the sprite number and tint (not implemented in this example) to the renderer. The tile we created will also be used later when we create the tile map.
+The render plugin requires a tile implementation, so we create a struct, `SimpleTile` and implement `Tile`, which is needed by the render plugin in order to provide the sprite number and tint (not implemented in this example) to the renderer. The tile we created will also be used later when we create the tile map.

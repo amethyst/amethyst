@@ -7,7 +7,7 @@ use amethyst::{
     audio::{output::Output, Source},
     core::transform::Transform,
     derive::SystemDesc,
-    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, WriteStorage},
+    ecs::{Join, Read, ReadExpect, ReadStorage, System, SystemData, WriteStorage},
 };
 
 /// This system is responsible for detecting collisions between balls and

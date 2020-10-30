@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_rendy"
-version = "0.5.1"
+version = "0.15.3"
 authors = ["Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "High-level rendering engine with multiple backends"
@@ -12,12 +12,12 @@ license = "MIT/Apache-2.0"
 features = ["shader-compiler", "test-support", "winit", "vulkan"]
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.11.0" }
-amethyst_core = { path = "../amethyst_core", version = "0.10.0" }
-amethyst_derive = { path = "../amethyst_derive", version = "0.8.0" }
-amethyst_error = { path = "../amethyst_error", version = "0.5.0" }
-amethyst_window = { path = "../amethyst_window", version = "0.5.0", optional = true }
-amethyst_config = { path = "../amethyst_config", version = "0.14.0" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
+amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
+amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
+amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_window = { path = "../amethyst_window", version = "0.15.3", optional = true }
+amethyst_config = { path = "../amethyst_config", version = "0.15.3" }
 derive-new = "0.5.6"
 failure = "0.1"
 genmesh = "0.6"
@@ -39,7 +39,7 @@ thread_profiler = { version = "0.3", optional = true }
 approx = "0.3.2"
 
 [dev-dependencies]
-rayon = "1.3.0"
+rayon = "1.4.0"
 more-asserts = "0.2.1"
 criterion = "0.3.0"
 winit = "0.19"

@@ -46,7 +46,7 @@ use amethyst::{
     core::transform::Transform,
     core::SystemDesc,
     derive::SystemDesc,
-    ecs::prelude::{Join, System, SystemData, World, WriteStorage},
+    ecs::{Join, System, SystemData, World, WriteStorage},
 };
 
 use crate::pong::{Ball, ARENA_WIDTH, ARENA_HEIGHT};
@@ -243,7 +243,7 @@ game. We'll start by creating some structures in `pong.rs`:
 # extern crate amethyst;
 use amethyst::{
     // --snip--
-    ecs::prelude::{Component, DenseVecStorage, Entity},
+    ecs::{Component, DenseVecStorage, Entity},
 };
 
 /// ScoreBoard contains the actual score data
@@ -366,8 +366,8 @@ it to either side, so we'll add that next!
 
 
 [font-download]: https://github.com/amethyst/amethyst/raw/master/examples/pong_tutorial_05/assets/font/square.ttf
-[input-handler]: https://docs.amethyst.rs/stable/amethyst_input/struct.InputHandler.html
-[ui-bundle]: https://docs.amethyst.rs/stable/amethyst_ui/struct.UiBundle.html
+[input-handler]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html
+[ui-bundle]: https://docs.amethyst.rs/master/amethyst_ui/struct.UiBundle.html
 
 
 ## Updating the Scoreboard
@@ -411,7 +411,7 @@ use amethyst::{
 #     core::SystemDesc,
 #     derive::SystemDesc,
     // --snip--
-    ecs::prelude::{Join, ReadExpect, System, SystemData, World, Write, WriteStorage},
+    ecs::{Join, ReadExpect, System, SystemData, World, Write, WriteStorage},
     ui::UiText,
 };
 
@@ -519,9 +519,7 @@ component to the player's score, after converting it to a string.
 And that's it! Our game now keeps track of the score for us and displays it at
 the top of our window.
 
-![Pong Game with Scores][pong-screenshot]
+![Pong Game with Scores](../images/pong_tutorial/pong_05.png)
 
 Now don't go just yet, because, in the next chapter, we'll make our Pong game
 even better by adding sound effects and even some music!
-
-[pong-screenshot]: ../images/pong_tutorial/pong_05.png
