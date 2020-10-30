@@ -2,7 +2,7 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
-    assets::{DefaultLoader, Format as AssetFormat, Handle, Loader, ProcessingQueue},
+    assets::{DefaultLoader, Format as AssetFormat, Handle, Loader, LoaderBundle, ProcessingQueue},
     core::{
         math::Vector3,
         transform::{Transform, TransformBundle},
@@ -124,6 +124,7 @@ fn main() -> Result<(), Error> {
 
     let mut dispatcher_builder = DispatcherBuilder::default();
     dispatcher_builder
+        .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
         .add_bundle(InputBundle::new())
         .add_bundle(

@@ -46,6 +46,7 @@ atelier-importer = { git = "https://github.com/amethyst/atelier-assets.git", bra
 uuid = { version = "0.8", features = ["v4"] }
 bincode = "1.1"
 type-uuid = "0.1"
+atelier-daemon = { git = "https://github.com/amethyst/atelier-assets.git", branch = "indirect_handles", default-features = false }
 
 [dev-dependencies]
 serde_json = "1"

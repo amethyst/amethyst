@@ -22,3 +22,7 @@ thumbs.db
 
 # Thread profiler output
 thread_profile.json
+
+# Atelier Assets
+.assets_db
+

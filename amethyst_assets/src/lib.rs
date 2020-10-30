@@ -60,6 +60,7 @@ pub use atelier_loader::{
     handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
     storage::LoadHandle,
 };
+pub use bundle_new::{start_asset_daemon, LoaderBundle};
 pub use loader_new::{
     create_asset_type, AssetUuid, DefaultLoader, DefaultProcessor, LoadStatus, Loader,
 };

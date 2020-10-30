@@ -13,7 +13,7 @@ use winit::Event;
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 
 use crate::{
-    assets::{DefaultLoader, Source},
+    assets::{start_asset_daemon, DefaultLoader, Source},
     core::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
@@ -527,6 +527,8 @@ where
         if let Some(hash) = rustc_meta.commit_hash {
             info!("Rustc git commit: {}", hash);
         }
+
+        start_asset_daemon();
 
         let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
             .as_ref()
