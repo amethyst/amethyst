@@ -52,6 +52,7 @@ pub fn build_audio_system() -> impl Runnable {
                         // Find entity refered by SelectedListener resource
                         world
                             .entry_ref(select_listener.0)
+                            .ok()
                             .and_then(|entry| entry.into_component::<AudioListener>().ok())
                             .map(|audio_listener| (select_listener.0, audio_listener))
                     })
@@ -65,6 +66,7 @@ pub fn build_audio_system() -> impl Runnable {
                 {
                     if let Some(listener_transform) = world
                         .entry_ref(entity)
+                        .ok()
                         .and_then(|entry| entry.into_component::<Transform>().ok())
                     {
                         let listener_transform = listener_transform.global_matrix();

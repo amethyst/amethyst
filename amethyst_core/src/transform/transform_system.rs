@@ -47,6 +47,7 @@ pub fn build() -> impl Runnable {
 
                     right
                         .entry_mut(*entity)
+                        .ok()
                         .and_then(|entry| entry.into_component_mut::<Transform>().ok())
                         .map(|transform| {
                             transform.parent_matrix = parent_matrix;
@@ -93,7 +94,7 @@ mod tests {
 
     fn transform_world() -> (Resources, World, Dispatcher) {
         let mut resources = Resources::default();
-        let mut world = Universe::new().create_world();
+        let mut world = World::default();
 
         let dispatcher = DispatcherBuilder::default()
             .add_bundle(TransformBundle)
