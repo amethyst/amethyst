@@ -1,6 +1,7 @@
 //! 2D Sprite Rendering implementation details.
 use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
 use crate::{error, types::Texture};
 use amethyst_assets::{Asset, Format, Handle};
@@ -14,7 +15,8 @@ pub type SpriteSheetHandle = Handle<SpriteSheet>;
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TypeUuid)]
+#[uuid = "93827d40-01bf-4aaa-b6c6-e9b1eb7e252b"]
 pub struct SpriteSheet {
     /// `Texture` handle of the spritesheet texture
     pub texture: Handle<Texture>,

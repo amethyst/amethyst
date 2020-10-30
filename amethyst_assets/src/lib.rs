@@ -60,7 +60,9 @@ pub use atelier_loader::{
     handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
     storage::LoadHandle,
 };
-pub use loader_new::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader};
+pub use loader_new::{
+    create_asset_type, AssetUuid, DefaultLoader, DefaultProcessor, LoadStatus, Loader,
+};
 pub use processor::{
     add_default_asset_processor_system_to_dispatcher, ProcessingQueue, ProcessingState,
 };

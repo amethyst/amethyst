@@ -26,6 +26,12 @@ impl<A> AssetStorage<A> {
         Default::default()
     }
 
+    /// Added to make api compatible with previous storage
+    pub fn unload_all(&mut self) {
+        // FIXME do the unload correctly
+        self.assets.clear();
+    }
+
     pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
         if let Some(data) = self.uncommitted.remove(&handle) {
             // uncommitted data already exists for the handle, drop it

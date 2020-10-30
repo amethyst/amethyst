@@ -2,6 +2,8 @@
 
 use crate::types::Texture;
 use amethyst_assets::{Asset, Handle};
+use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -22,7 +24,8 @@ impl Default for TextureOffset {
 }
 
 /// A physically based Material with metallic workflow, fully utilized in PBR render pass.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TypeUuid)]
+#[uuid = "e238c036-42e9-4d0e-9aa9-c6511c906820"]
 pub struct Material {
     /// Alpha cutoff: the value at which we do not draw the pixel
     pub alpha_cutoff: f32,

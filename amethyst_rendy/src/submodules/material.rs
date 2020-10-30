@@ -291,13 +291,14 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                 ..
             }) => {
                 // If handle is dead, new material was loaded (handle id reused)
-                if handle.is_dead() {
-                    self.allocator.release(*slot);
-                } else {
-                    // Material loaded and ready
-                    *generation = self.generation;
-                    return Some((MaterialId(id as u32), false));
-                }
+                // FIXME is this check needed?
+                // if handle.is_dead() {
+                //     self.allocator.release(*slot);
+                // } else {
+                // Material loaded and ready
+                *generation = self.generation;
+                return Some((MaterialId(id as u32), false));
+                // }
             }
             Some(MaterialState::Unloaded { generation }) if *generation == self.generation => {
                 return None

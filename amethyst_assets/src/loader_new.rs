@@ -17,6 +17,7 @@ use atelier_loader::{
 use bincode;
 use serde::de::Deserialize;
 use std::{
+    marker::PhantomData,
     cell::RefCell,
     collections::HashMap,
     error::Error,
@@ -464,6 +465,20 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
     }
 }
 
+pub struct DefaultProcessor<A> {
+    marker: PhantomData<A>,
+}
+
+impl<A> AddToDispatcher for DefaultProcessor<A> {
+    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder) {
+      //  add_default_asset_processor_system_to_dispatcher::<A>(dispatcher_builder);
+    }
+}
+
+pub trait AddToDispatcher {
+    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder);
+}
+
 /// Registration information about an asset type.
 #[derive(Clone)]
 pub struct AssetType {
@@ -494,12 +509,11 @@ crate::inventory::collect!(AssetType);
 ///
 /// This function is not intended to be called be directly. Use the `register_asset_type!` macro
 /// macro instead.
-pub fn create_asset_type<Intermediate, Asset>(
-    processor: fn(dispatcher_builder: &mut DispatcherBuilder),
-) -> AssetType
+pub fn create_asset_type<Intermediate, Asset, Processor>() -> AssetType
 where
     Asset: 'static + TypeUuid + Send + Sync,
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
+    Processor: AddToDispatcher,
 {
     AssetType {
         data_uuid: AssetTypeId(Intermediate::UUID),
@@ -508,7 +522,7 @@ where
             res.get_or_insert_with(|| AssetStorage::<Asset>::default());
             res.get_or_insert_with(|| ProcessingQueue::<Intermediate>::default());
         },
-        register_system: processor,
+        register_system: Processor::add_to_dipatcher,
         with_storage: |res, func| {
             func(&mut (
                 res.get::<ProcessingQueue<Intermediate>>()

@@ -20,7 +20,7 @@ use crate::{
     types::{Backend, Mesh, Texture},
     SpriteSheet,
 };
-use amethyst_assets::{AssetProcessorSystemBundle, AssetStorage};
+use amethyst_assets::{register_asset_type, AssetStorage, DefaultProcessor};
 use amethyst_core::ecs::*;
 use amethyst_error::{format_err, Error};
 use std::collections::HashMap;
@@ -67,6 +67,9 @@ impl<B: Backend> RenderingBundle<B> {
         }
     }
 }
+// FIXME
+register_asset_type!(Material => Material; DefaultProcessor<Material>);
+register_asset_type!(SpriteSheet => SpriteSheet; DefaultProcessor<SpriteSheet>);
 
 impl<B: Backend> SystemBundle for RenderingBundle<B> {
     fn load(
@@ -80,9 +83,9 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
 
         resources.insert(AssetStorage::<Texture>::default());
         builder.add_system(build_texture_processor::<B>());
-
-        builder.add_bundle(AssetProcessorSystemBundle::<Material>::default());
-        builder.add_bundle(AssetProcessorSystemBundle::<SpriteSheet>::default());
+        // FIXME
+        // builder.add_bundle(AssetProcessorSystemBundle::<Material>::default());
+        // builder.add_bundle(AssetProcessorSystemBundle::<SpriteSheet>::default());
 
         resources.insert(ActiveCamera::default());
 

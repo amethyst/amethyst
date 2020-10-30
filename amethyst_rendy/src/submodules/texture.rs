@@ -146,7 +146,8 @@ impl<B: Backend> TextureSub<B> {
         let id = self.lookup.forward(handle.load_handle());
         match self.textures.get(id) {
             // If handle is dead, new texture was loaded (handle id is reused)
-            Some(TextureState::Loaded { handle, .. }) if !handle.is_dead() => {
+            // FIXME figure out if we still need the is_dead() guard 
+            Some(TextureState::Loaded { handle, .. }) /* if !handle.is_dead() */ => {
                 return Some((TextureId(id as u32), false));
             }
             Some(TextureState::Unloaded { generation }) if *generation == self.generation => {
@@ -184,7 +185,8 @@ impl<B: Backend> TextureSub<B> {
     #[inline]
     pub fn loaded(&self, texture_id: TextureId) -> bool {
         match &self.textures[texture_id.0 as usize] {
-            TextureState::Loaded { handle, .. } if !handle.is_dead() => true,
+            // FIXME figure out if we still need the is_dead() guard 
+            TextureState::Loaded { handle, .. } /* if !handle.is_dead() */ => true,
             _ => false,
         }
     }
