@@ -9,7 +9,7 @@ use atelier_loader::{
     // self,
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
-    storage::{AtomicHandleAllocator, DefaultIndirectionResolver, AssetLoadOp, HandleAllocator, LoaderInfoProvider},
+    storage::{AtomicHandleAllocator, IndirectIdentifier, DefaultIndirectionResolver, AssetLoadOp, HandleAllocator, LoaderInfoProvider},
     AssetTypeId,
     Loader as AtelierLoader,
     RpcIO,
@@ -67,6 +67,26 @@ pub trait Loader: Send + Sync {
     ///
     /// * `T`: Asset `TypeUuid`.
     fn load_asset<T: TypeUuid>(&self, id: AssetUuid) -> Handle<T>;
+
+    /// Returns an asset handle and Loads the asset for the given UUID asynchronously.
+    ///
+    /// This is useful when loading an asset whose Rust type is known.
+    ///
+    /// # Notes
+    ///
+    /// Be careful not to confuse `AssetUuid` with `AssetTypeId`:
+    ///
+    /// * `AssetUuid`: For an asset, such as "player_texture.png".
+    /// * `AssetTypeId`: For an asset type, such as `Texture`.
+    ///
+    /// # Parameters
+    ///
+    /// * `id`: UUID of the asset.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset `TypeUuid`.
+    fn load<T: TypeUuid>(&self, path: &str) -> Handle<T>;
 
     /// Returns a weak handle to the asset of the given UUID, if any.
     ///
@@ -207,6 +227,10 @@ impl Loader for LoaderWithStorage {
     }
     fn load_asset<A: TypeUuid>(&self, id: AssetUuid) -> Handle<A> {
         Handle::new(self.ref_sender.clone(), self.loader.add_ref(id))
+    }
+    fn load<A: TypeUuid>(&self, path: &str) -> Handle<A> {
+        Handle::new(self.ref_sender.clone(),
+        self.loader.add_ref_indirect(IndirectIdentifier::Path(path.to_string())))
     }
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {
         self.loader.get_load(id).map(|h| WeakHandle::new(h))
