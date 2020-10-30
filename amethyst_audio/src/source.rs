@@ -32,7 +32,7 @@ impl Asset for Source {
 }
 
 impl ProcessableAsset for Source {
-    fn process(data: AudioData) -> Result<ProcessingState<Source>, Error> {
+    fn process(data: AudioData) -> Result<ProcessingState<AudioData, Source>, Error> {
         Ok(ProcessingState::Loaded(Source { bytes: data.0 }))
     }
 }

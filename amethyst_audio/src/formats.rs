@@ -8,7 +8,7 @@ use type_uuid::TypeUuid;
 #[uuid = "caa6e38f-9cfa-428a-91bd-4dab5a7a47d5"]
 pub struct AudioData(pub Vec<u8>);
 amethyst_assets::register_format_type!(AudioData);
-amethyst_assets::register_asset_type!(AudioData => crate::Source; amethyst_assets::Processor<crate::Source>);
+amethyst_assets::register_asset_type!(AudioData => crate::Source; amethyst_assets::DefaultProcessor<crate::Source>);
 
 /// Loads audio from wav files.
 #[derive(Clone, Copy, Default, Debug, Serialize, Deserialize, TypeUuid)]

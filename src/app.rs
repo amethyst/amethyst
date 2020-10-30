@@ -13,7 +13,7 @@ use winit::Event;
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 
 use crate::{
-    assets::{Loader, Source},
+    assets::{DefaultLoader, Source},
     core::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
@@ -555,7 +555,8 @@ where
         } else {
             pool = thread_pool_builder.build().map(Arc::new)?;
         }
-        resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
+        // FIXME check that the loader is added to the resources
+        // resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         resources.insert(pool);
         resources.insert(EventChannel::<Event>::with_capacity(2000));
         //resources.insert(EventChannel::<UiEvent>::with_capacity(40));
@@ -682,8 +683,9 @@ where
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<Loader>().unwrap();
-            loader.add_source(name, store);
+            let mut loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            // FIXME Update the source on the loader
+            // loader.add_source(name, store);
         }
         self
     }
@@ -736,8 +738,9 @@ where
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<Loader>().unwrap();
-            loader.set_default_source(store);
+            let mut loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            // FIXME Update the location on the loader
+            // loader.set_default_source(store);
         }
         self
     }
