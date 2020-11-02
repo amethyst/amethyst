@@ -5,6 +5,7 @@ use amethyst_core::ecs::{DispatcherBuilder, Resources};
 //     storage::{DefaultIndirectionResolver, IndirectIdentifier, LoadStatus},
 //     Loader, RpcIO,
 // };
+use amethyst_error::Error as AmethystError;
 use atelier_loader::{
     // self,
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
@@ -352,9 +353,16 @@ where
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error + Send>> {
+        debug!("AssetTypeStorage update_asset");
         match bincode::deserialize::<Intermediate>(data.as_ref()) {
-            Err(err) => Err(Box::new(err)),
+            Err(err) => {
+                debug!("Error in AssetTypeStorage deserialize");
+                let e = AmethystError::from_string(format!("{}", err));
+                load_op.error(err);
+                Err(e.into_error())
+            },
             Ok(asset) => {
+                debug!("Ok in AssetTypeStorag deserialize");
                 self.0.enqueue(handle, asset, Some(load_op), version);
                 Ok(())
             }

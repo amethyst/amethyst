@@ -168,5 +168,6 @@ fn deserialize_data<'de, D>(deserializer: D) -> Result<rendy::mesh::MeshBuilder<
 where
     D: serde::de::Deserializer<'de>,
 {
+    log::debug!("deserialize_data");
     Ok(rendy::mesh::MeshBuilder::deserialize(deserializer)?.into_owned())
 }

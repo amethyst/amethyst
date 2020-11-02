@@ -68,8 +68,8 @@ impl<B: Backend> RenderingBundle<B> {
     }
 }
 // FIXME processors for Material and SpriteSheet
-// register_asset_type!(Material => Material; DefaultProcessor<Material>);
-// register_asset_type!(SpriteSheet => SpriteSheet; DefaultProcessor<SpriteSheet>);
+register_asset_type!(Material => Material; DefaultProcessor<Material>);
+register_asset_type!(SpriteSheet => SpriteSheet; DefaultProcessor<SpriteSheet>);
 
 impl<B: Backend> SystemBundle for RenderingBundle<B> {
     fn load(

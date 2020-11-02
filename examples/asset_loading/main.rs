@@ -26,13 +26,15 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+use log::info;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
-
 #[derive(Default, Debug, Clone, Serialize, Deserialize, TypeUuid)]
 #[uuid = "f245dc2b-88a9-413e-bd51-f6c341c32017"]
 struct Custom;
 
+amethyst_assets::register_format!("CUSTOM", Custom as MeshData);
+amethyst_assets::register_importer!(".custom", Custom);
 impl AssetFormat<MeshData> for Custom {
     fn name(&self) -> &'static str {
         "CUSTOM"
@@ -61,6 +63,7 @@ impl AssetFormat<MeshData> for Custom {
             ]));
             tex.push(TexCoord([0.0, 0.0]))
         }
+        info!("Creating mesh");
         Ok(MeshBuilder::new()
             .with_vertices(pos)
             .with_vertices(norm)
@@ -68,8 +71,6 @@ impl AssetFormat<MeshData> for Custom {
             .into())
     }
 }
-
-amethyst_assets::register_importer!(".custom", Custom);
 
 struct AssetsExample;
 
@@ -114,6 +115,7 @@ impl SimpleState for AssetsExample {
         trans.set_translation_xyz(-5.0, 0.0, 0.0);
         trans.set_scale(Vector3::new(2.0, 2.0, 2.0));
         world.push((mesh, mtl, trans));
+        info!("End of on_start");
     }
 }
 

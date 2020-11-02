@@ -36,6 +36,10 @@ impl<A> AssetStorage<A> {
     }
 
     pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
+        debug!(
+            "AssetStorage<A>::update_asset load_handle: {:?}, version: {}",
+            handle, version
+        );
         if let Some(data) = self.uncommitted.remove(&handle) {
             debug!(
                 "uncommitted data already exists for the handle: {:?}, drop it",
