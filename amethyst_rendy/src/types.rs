@@ -1,5 +1,6 @@
 //! 'Global' rendering type declarations
-use amethyst_assets::{Asset, DefaultProcessor};
+use crate::system::{MeshProcessor, TextureProcessor};
+use amethyst_assets::Asset;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
@@ -119,6 +120,12 @@ impl_backends!(
     Empty, "empty", rendy::empty::Backend;
 );
 
+// FIXME Elsewhere there is specific processor for Meshes
+amethyst_assets::register_asset_type!(MeshData => Mesh; MeshProcessor<DefaultBackend>);
+
+// FIXME Elsewhere there is a specific processor for Textures
+amethyst_assets::register_asset_type!(TextureData => Texture; TextureProcessor<DefaultBackend>);
+
 impl Asset for Mesh {
     fn name() -> &'static str {
         "Mesh"
@@ -140,16 +147,10 @@ pub struct MeshData(
     #[serde(deserialize_with = "deserialize_data")] pub rendy::mesh::MeshBuilder<'static>,
 );
 
-// FIXME Elsewhere there is specific processor for Meshes
-amethyst_assets::register_asset_type!(MeshData => Mesh; DefaultProcessor<Mesh>);
-
 /// Newtype for TextureBuilder prefab usage.
 #[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
 #[uuid = "25063afd-6cc0-487e-982f-a63fed7d7393"]
 pub struct TextureData(pub rendy::texture::TextureBuilder<'static>);
-
-// FIXME Elsewhere there is a specific processor for Textures
-amethyst_assets::register_asset_type!(TextureData => Texture; DefaultProcessor<Texture>);
 
 impl From<rendy::mesh::MeshBuilder<'static>> for MeshData {
     fn from(builder: rendy::mesh::MeshBuilder<'static>) -> Self {

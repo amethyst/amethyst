@@ -52,6 +52,12 @@ impl Asset for Material {
     type Data = Self;
 }
 
+// impl From<Material> for Material {
+//     fn from(material: Material) -> Self {
+//         material
+//     }
+// }
+
 /// A resource providing default textures for `Material`.
 /// These will be be used by the renderer in case a texture
 /// handle points to a texture which is not loaded already.

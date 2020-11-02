@@ -1,13 +1,19 @@
-use std::sync::{Arc, Mutex};
-
 use atelier_loader::storage::AssetLoadOp;
 use crossbeam_queue::SegQueue;
+use std::borrow::Cow;
+use std::{
+    marker::PhantomData,
+    sync::{Arc, Mutex},
+};
 
 use amethyst_core::ecs::{systems::ParallelRunnable, DispatcherBuilder, SystemBuilder};
-use amethyst_error::Error as AmethystError;
+use amethyst_error::Error;
 
 use crate::{
-    asset::Asset, error::Error, loader_new::LoadHandle, progress::Tracker,
+    asset::{Asset, ProcessableAsset},
+    // error::Error,
+    loader_new::LoadHandle,
+    progress::Tracker,
     storage_new::AssetStorage,
 };
 
@@ -50,25 +56,32 @@ use crate::{
 //     }
 // }
 
-pub fn add_default_asset_processor_system_to_dispatcher<A>(
-    dispatcher_builder: &mut DispatcherBuilder,
-) where
-    A: crate::asset::Asset,
-    A::Data: Into<Result<ProcessingState<A::Data, A>, Error>>,
+pub struct DefaultProcessor<A> {
+    marker: PhantomData<A>,
+}
+
+impl<A> AddToDispatcher for DefaultProcessor<A>
+where
+    A: Asset + ProcessableAsset,
 {
-    dispatcher_builder.add_system(build_default_asset_processer_system::<A>());
+    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder) {
+        dispatcher_builder.add_system(build_default_asset_processer_system::<A>());
+    }
+}
+
+pub trait AddToDispatcher {
+    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder);
 }
 
 pub fn build_default_asset_processer_system<A>() -> impl ParallelRunnable
 where
-    A: crate::asset::Asset,
-    A::Data: Into<Result<ProcessingState<A::Data, A>, Error>>,
+    A: Asset + ProcessableAsset,
 {
     SystemBuilder::new(format!("Asset Processor {}", A::name()))
         .write_resource::<ProcessingQueue<A::Data>>()
         .write_resource::<AssetStorage<A>>()
         .build(|_, _, (queue, storage), _| {
-            queue.process(storage, Into::into);
+            queue.process(storage, ProcessableAsset::process);
             storage.process_custom_drop(|_| {});
         })
 }
@@ -222,10 +235,11 @@ impl<T> ProcessingQueue<T> {
                                 // );
                                 if let Some(tracker) = tracker {
                                     // FIXME
-                                    tracker.fail(handle.0, &"", "".to_string(), AmethystError::from_string(""));
+                                    tracker.fail(handle.0, &"", "".to_string(), Error::from_string(""));
                                 }
                                 if let Some(op) = load_op {
-                                    op.error(e);
+                                    // FIXME
+                                    op.error(ProcessingError("ProcessingError".into()));
                                 }
                                 continue;
                             }
@@ -241,3 +255,31 @@ impl<T> ProcessingQueue<T> {
         }
     }
 }
+
+/// Wrapper for string errors.
+#[derive(Debug)]
+struct ProcessingError(Cow<'static, str>);
+
+impl std::fmt::Display for ProcessingError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(fmt)
+    }
+}
+
+impl std::error::Error for ProcessingError {}
+// struct ProcessingError;
+
+// impl std::error::Error for ProcessingError {}
+// impl std::fmt::Display for ProcessingError {
+//     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         std::fmt::Display::fmt(&self.inner.error, fmt)
+//     }
+// }
+
+// impl std::fmt::Debug for ProcessingError {
+//     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         fmt.debug_struct("Error")
+//             .field("inner", &self.inner)
+//             .finish()
+//     }
+// }

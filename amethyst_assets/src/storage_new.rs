@@ -2,7 +2,10 @@ use atelier_loader::LoadHandle;
 use crossbeam_queue::SegQueue;
 use std::collections::HashMap;
 
+use crate::asset::Asset;
+
 use atelier_loader::handle::AssetHandle;
+use log::{debug, info, log_enabled, trace, Level};
 
 struct AssetState<A> {
     version: u32,
@@ -34,9 +37,17 @@ impl<A> AssetStorage<A> {
 
     pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
         if let Some(data) = self.uncommitted.remove(&handle) {
+            debug!(
+                "uncommitted data already exists for the handle: {:?}, drop it",
+                handle
+            );
             // uncommitted data already exists for the handle, drop it
             self.to_drop.push(data.asset);
         }
+        debug!(
+            "insert asset with load_handle: {:?}, version: {}",
+            handle, version
+        );
         self.uncommitted
             .insert(handle, AssetState { version, asset });
     }

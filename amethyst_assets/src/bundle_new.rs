@@ -1,6 +1,8 @@
 use crate::experimental::{DefaultLoader, Loader};
+use crate::simple_importer::get_source_importers;
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
+use atelier_importer::BoxedImporter;
 use log::{debug, info, log_enabled, trace, Level};
 use std::path::PathBuf;
 
@@ -22,12 +24,24 @@ pub fn start_asset_daemon() {
         info!("db_path: {}", db_path);
         info!("address: {}", address);
         info!("asset_dirs: {:?}", asset_dirs);
-        atelier_daemon::AssetDaemon::default()
-            // .with_importer("png", crate::image::ImageImporter)
-            .with_db_path(db_path)
-            .with_address(address.parse().unwrap())
-            .with_asset_dirs(asset_dirs)
-            .run();
+        let mut importer_map = atelier_daemon::ImporterMap::default();
+        let mut importers = atelier_daemon::default_importers();
+        importers.extend(get_source_importers());
+
+        for (ext, importer) in importers {
+            info!("Adding importer for ext {}", ext);
+            importer_map.insert(ext, importer);
+        }
+
+        let mut daemon = atelier_daemon::AssetDaemon {
+            db_dir: PathBuf::from(db_path),
+            address: address.parse().unwrap(),
+            importers: importer_map,
+            importer_contexts: atelier_daemon::default_importer_contexts(),
+            asset_dirs,
+        };
+        // .with_importer("png", crate::image::ImageImporter)
+        daemon.run();
     });
 }
 

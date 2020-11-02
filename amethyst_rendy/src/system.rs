@@ -4,9 +4,11 @@ use crate::{
     types::{Backend, Mesh, MeshData, Texture, TextureData},
 };
 use amethyst_assets::{
-    error::*, AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState,
+    /* error::*, */ AddToDispatcher, AssetStorage, DefaultLoader, Loader, ProcessingQueue,
+    ProcessingState,
 };
 use amethyst_core::{ecs::*, timing::Time, ArcThreadPool};
+use amethyst_error::Error;
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
@@ -14,6 +16,7 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
+use std::marker::PhantomData;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -133,20 +136,30 @@ where
     run_graph(&mut state, world, resources);
 }
 
+pub struct MeshProcessor<B: Backend> {
+    marker: PhantomData<B>,
+}
+
+impl<B: Backend> AddToDispatcher for MeshProcessor<B> {
+    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder) {
+        dispatcher_builder.add_system(build_mesh_processor::<B>());
+    }
+}
+
 /// Asset processing system for `Mesh` asset type.
 pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
     SystemBuilder::new("MeshProcessorSystem")
         .write_resource::<ProcessingQueue<MeshData>>()
         .write_resource::<AssetStorage<Mesh>>()
         .read_resource::<QueueId>()
-        .read_resource::<Time>()
-        .read_resource::<ArcThreadPool>()
+        // .read_resource::<Time>()
+        // .read_resource::<ArcThreadPool>()
         // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
         .read_resource::<Factory<B>>()
         .build(
             move |commands,
                   world,
-                  (processing_queue, mesh_storage, queue_id, time, pool, factory),
+                  (processing_queue, mesh_storage, queue_id, /* time, pool, */ factory),
                   _| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("mesh_processor");
@@ -162,14 +175,25 @@ pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
                         b.0.build(**queue_id, &factory)
                             .map(B::wrap_mesh)
                             .map(ProcessingState::Loaded)
-                            .map_err(|e| Error::Source)
+                            .map_err(|e| Error::from_string("Error processing mesh"))
                     },
                     // time.frame_number(),
                     // &**pool,
                     // None, // TODO: Fix strategy optional
-                )
+                );
+                mesh_storage.process_custom_drop(|_| {});
             },
         )
+}
+
+pub struct TextureProcessor<B: Backend> {
+    marker: PhantomData<B>,
+}
+
+impl<B: Backend> AddToDispatcher for TextureProcessor<B> {
+    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder) {
+        dispatcher_builder.add_system(build_texture_processor::<B>());
+    }
 }
 
 /// Asset processing system for `Mesh` asset type.
@@ -178,14 +202,14 @@ pub fn build_texture_processor<B: Backend>() -> impl Runnable {
         .write_resource::<ProcessingQueue<TextureData>>()
         .write_resource::<AssetStorage<Texture>>()
         .read_resource::<QueueId>()
-        .read_resource::<Time>()
-        .read_resource::<amethyst_core::ArcThreadPool>()
+        // .read_resource::<Time>()
+        // .read_resource::<amethyst_core::ArcThreadPool>()
         // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
         .write_resource::<Factory<B>>()
         .build(
             move |commands,
                   world,
-                  (processing_queue, texture_storage, queue_id, time, pool, factory),
+                  (processing_queue, texture_storage, queue_id, /* time, pool, */ factory),
                   _| {
                 #[cfg(feature = "profiler")]
                 profile_scope!("texture_processor");
@@ -210,11 +234,12 @@ pub fn build_texture_processor<B: Backend>() -> impl Runnable {
                         )
                         .map(B::wrap_texture)
                         .map(ProcessingState::Loaded)
-                        .map_err(|e| Error::Source)
+                        .map_err(|e| Error::from_string("Error processing texture"))
                     }, // time.frame_number(),
                        // &**pool,
                        // None, // TODO: Fix strategy optional
                 );
+                texture_storage.process_custom_drop(|_| {});
             },
         )
 }

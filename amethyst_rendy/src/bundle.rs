@@ -67,9 +67,9 @@ impl<B: Backend> RenderingBundle<B> {
         }
     }
 }
-// FIXME
-register_asset_type!(Material => Material; DefaultProcessor<Material>);
-register_asset_type!(SpriteSheet => SpriteSheet; DefaultProcessor<SpriteSheet>);
+// FIXME processors for Material and SpriteSheet
+// register_asset_type!(Material => Material; DefaultProcessor<Material>);
+// register_asset_type!(SpriteSheet => SpriteSheet; DefaultProcessor<SpriteSheet>);
 
 impl<B: Backend> SystemBundle for RenderingBundle<B> {
     fn load(
@@ -78,11 +78,11 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        resources.insert(AssetStorage::<Mesh>::default());
-        builder.add_system(build_mesh_processor::<B>());
+        // resources.insert(AssetStorage::<Mesh>::default());
+        // builder.add_system(build_mesh_processor::<B>());
 
-        resources.insert(AssetStorage::<Texture>::default());
-        builder.add_system(build_texture_processor::<B>());
+        // resources.insert(AssetStorage::<Texture>::default());
+        // builder.add_system(build_texture_processor::<B>());
         // FIXME
         // builder.add_bundle(AssetProcessorSystemBundle::<Material>::default());
         // builder.add_bundle(AssetProcessorSystemBundle::<SpriteSheet>::default());

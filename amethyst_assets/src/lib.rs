@@ -61,12 +61,8 @@ pub use atelier_loader::{
     storage::LoadHandle,
 };
 pub use bundle_new::{start_asset_daemon, LoaderBundle};
-pub use loader_new::{
-    create_asset_type, AssetUuid, DefaultLoader, DefaultProcessor, LoadStatus, Loader,
-};
-pub use processor::{
-    add_default_asset_processor_system_to_dispatcher, ProcessingQueue, ProcessingState,
-};
+pub use loader_new::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader};
+pub use processor::{AddToDispatcher, DefaultProcessor, ProcessingQueue, ProcessingState};
 
 pub use storage_new::AssetStorage;
 // used in macros. Private API otherwise.

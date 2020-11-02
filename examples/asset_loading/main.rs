@@ -26,8 +26,11 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
-#[derive(Clone, Debug)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, TypeUuid)]
+#[uuid = "f245dc2b-88a9-413e-bd51-f6c341c32017"]
 struct Custom;
 
 impl AssetFormat<MeshData> for Custom {
@@ -65,6 +68,8 @@ impl AssetFormat<MeshData> for Custom {
             .into())
     }
 }
+
+amethyst_assets::register_importer!(".custom", Custom);
 
 struct AssetsExample;
 
@@ -113,8 +118,12 @@ impl SimpleState for AssetsExample {
 }
 
 fn main() -> Result<(), Error> {
-    amethyst::start_logger(Default::default());
-
+    // amethyst::start_logger(Default::default());
+    {
+        let mut config = amethyst::LoggerConfig::default();
+        config.level_filter = amethyst::LogLevelFilter::Debug;
+        amethyst::start_logger(config);
+    }
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.

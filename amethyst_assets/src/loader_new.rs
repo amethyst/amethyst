@@ -1,4 +1,4 @@
-use crate::{Asset, progress::Progress, processor::ProcessingQueue, storage_new::AssetStorage};
+use crate::{processor::{AddToDispatcher, ProcessingQueue}, progress::Progress, storage_new::AssetStorage, Asset};
 use amethyst_core::ecs::{DispatcherBuilder, Resources};
 // use atelier_assets::loader::{
 //     handle::{self, AssetHandle, Handle, RefOp, WeakHandle},
@@ -9,7 +9,10 @@ use atelier_loader::{
     // self,
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
-    storage::{AtomicHandleAllocator, IndirectIdentifier, DefaultIndirectionResolver, AssetLoadOp, HandleAllocator, LoaderInfoProvider},
+    storage::{
+        AssetLoadOp, AtomicHandleAllocator, DefaultIndirectionResolver, HandleAllocator,
+        IndirectIdentifier, LoaderInfoProvider,
+    },
     AssetTypeId,
     Loader as AtelierLoader,
     RpcIO,
@@ -17,13 +20,15 @@ use atelier_loader::{
 use bincode;
 use serde::de::Deserialize;
 use std::{
-    marker::PhantomData,
     cell::RefCell,
     collections::HashMap,
     error::Error,
+    marker::PhantomData,
     ops::{Deref, DerefMut},
     sync::Arc,
 };
+
+use log::{debug, info, log_enabled, trace, Level};
 
 pub(crate) use atelier_loader::LoadHandle;
 pub use atelier_loader::{storage::LoadStatus, AssetUuid};
@@ -186,7 +191,10 @@ impl Default for LoaderWithStorage {
         let (tx, rx) = unbounded();
         let handle_allocator = Arc::new(AtomicHandleAllocator::default());
         Self {
-            loader: AtelierLoader::new_with_handle_allocator(Box::new(RpcIO::default()), handle_allocator.clone()),
+            loader: AtelierLoader::new_with_handle_allocator(
+                Box::new(RpcIO::default()),
+                handle_allocator.clone(),
+            ),
             storage_map: Default::default(),
             ref_sender: tx,
             ref_receiver: rx,
@@ -229,8 +237,11 @@ impl Loader for LoaderWithStorage {
         Handle::new(self.ref_sender.clone(), self.loader.add_ref(id))
     }
     fn load<A: TypeUuid>(&self, path: &str) -> Handle<A> {
-        Handle::new(self.ref_sender.clone(),
-        self.loader.add_ref_indirect(IndirectIdentifier::Path(path.to_string())))
+        Handle::new(
+            self.ref_sender.clone(),
+            self.loader
+                .add_ref_indirect(IndirectIdentifier::Path(path.to_string())),
+        )
     }
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {
         self.loader.get_load(id).map(|h| WeakHandle::new(h))
@@ -254,17 +265,10 @@ impl Loader for LoaderWithStorage {
         let tracker = progress.create_tracker();
         let tracker = Box::new(tracker);
         let handle = self.handle_allocator.alloc();
-        processing_queue.enqueue_with_tracker(
-            handle.clone(),
-            data,
-            Some(tracker),
-            None,
-            0,
-        );
+        processing_queue.enqueue_with_tracker(handle.clone(), data, Some(tracker), None, 0);
         // storage.update_asset(handle, FormatValue::data(data), 0);
         Handle::<A>::new(self.ref_sender.clone(), handle)
     }
-
 
     fn init_world(&mut self, resources: &mut Resources) {
         for (_, storage) in self.storage_map.storages_by_asset_uuid.iter() {
@@ -353,7 +357,7 @@ where
             Ok(asset) => {
                 self.0.enqueue(handle, asset, Some(load_op), version);
                 Ok(())
-            },
+            }
         }
     }
     fn commit_asset_version(&mut self, handle: LoadHandle, version: u32) {
@@ -438,24 +442,29 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
         let moved_op = RefCell::new(Some(load_op));
         let moved_data = RefCell::new(Some(data));
         let mut result = None;
+        info!("WorldStorages update_asset");
         (self
             .storage_map
             .storages_by_data_uuid
             .get(asset_type)
             .expect("could not find asset type")
             .with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
-            SerdeContext::with(
+            
+            info!("storage closure update_asset");
+            // FIXME Does this block the main thread?
+            result = futures_executor::block_on(SerdeContext::with(
                 loader_info,
                 self.ref_sender.clone(),
                 async {
-                    result = Some(storage.update_asset(
+                    info!("SerdeContext");
+                    Some(storage.update_asset(
                         load_handle,
                         moved_data.replace(None).unwrap(),
                         moved_op.replace(None).unwrap(),
                         version,
-                    ));
+                    ))
                 },
-            );
+            ));
         });
         result.unwrap()
     }
@@ -487,20 +496,6 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
             storage.free(moved_handle.replace(None).unwrap())
         });
     }
-}
-
-pub struct DefaultProcessor<A> {
-    marker: PhantomData<A>,
-}
-
-impl<A> AddToDispatcher for DefaultProcessor<A> {
-    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder) {
-      //  add_default_asset_processor_system_to_dispatcher::<A>(dispatcher_builder);
-    }
-}
-
-pub trait AddToDispatcher {
-    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder);
 }
 
 /// Registration information about an asset type.
