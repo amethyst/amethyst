@@ -1,7 +1,10 @@
 use crate::{
-    processor::{AddToDispatcher, ProcessingQueue, ProcessingState}, 
-    FormatValue,
-    progress::{Progress, Tracker}, storage_new::AssetStorage, asset::ProcessableAsset, Asset};
+    asset::ProcessableAsset,
+    processor::{AddToDispatcher, ProcessingQueue, ProcessingState},
+    progress::{Progress, Tracker},
+    storage_new::AssetStorage,
+    Asset, FormatValue,
+};
 use amethyst_core::ecs::{DispatcherBuilder, Resources};
 // use atelier_assets::loader::{
 //     handle::{self, AssetHandle, Handle, RefOp, WeakHandle},
@@ -15,7 +18,7 @@ use atelier_loader::{
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
     storage::{
         AssetLoadOp, AtomicHandleAllocator, DefaultIndirectionResolver, HandleAllocator,
-        IndirectionTable, IndirectIdentifier, LoaderInfoProvider,
+        IndirectIdentifier, IndirectionTable, LoaderInfoProvider,
     },
     AssetTypeId,
     Loader as AtelierLoader,
@@ -196,9 +199,9 @@ impl Default for LoaderWithStorage {
         let (tx, rx) = unbounded();
         let handle_allocator = Arc::new(AtomicHandleAllocator::default());
         let loader = AtelierLoader::new_with_handle_allocator(
-                Box::new(RpcIO::default()),
-                handle_allocator.clone(),
-            );
+            Box::new(RpcIO::default()),
+            handle_allocator.clone(),
+        );
         Self {
             indirection_table: loader.indirection_table(),
             loader,
@@ -353,7 +356,7 @@ pub trait AssetTypeStorage {
     /// # Parameters
     ///
     /// * `handle`: Load handle of the asset.
-    fn free(&mut self, handle: LoadHandle);
+    fn free(&mut self, handle: LoadHandle, version: u32);
 }
 
 impl<Intermediate, Asset: TypeUuid + Send + Sync> AssetTypeStorage
@@ -375,7 +378,7 @@ where
                 let e = AmethystError::from_string(format!("{}", err));
                 load_op.error(err);
                 Err(e.into_error())
-            },
+            }
             Ok(asset) => {
                 debug!("Ok in AssetTypeStorag deserialize");
                 self.0.enqueue(handle, asset, load_op, version);
@@ -386,8 +389,8 @@ where
     fn commit_asset_version(&mut self, handle: LoadHandle, version: u32) {
         self.1.commit_asset(handle, version);
     }
-    fn free(&mut self, handle: LoadHandle) {
-        self.1.remove_asset(handle);
+    fn free(&mut self, handle: LoadHandle, version: u32) {
+        self.1.remove_asset(handle, version);
     }
 }
 
@@ -472,7 +475,6 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
             .get(asset_type)
             .expect("could not find asset type")
             .with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
-            
             info!("storage closure update_asset");
             // FIXME Does this block the main thread?
             result = futures_executor::block_on(SerdeContext::with(
@@ -506,7 +508,7 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
             storage.commit_asset_version(load_handle, version);
         });
     }
-    fn free(&self, asset_type: &AssetTypeId, load_handle: LoadHandle) {
+    fn free(&self, asset_type: &AssetTypeId, load_handle: LoadHandle, version: u32) {
         // TODO: this RefCell dance is probably not needed
         // can't move into closure, so we work around it with a RefCell + Option
         let moved_handle = RefCell::new(Some(load_handle));
@@ -516,7 +518,7 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
             .get(asset_type)
             .expect("could not find asset type")
             .with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
-            storage.free(moved_handle.replace(None).unwrap())
+            storage.free(moved_handle.replace(None).unwrap(), version)
         });
     }
 }
