@@ -218,7 +218,9 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         let mat_storage = resources.get::<AssetStorage<Material>>().unwrap();
         let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
 
+        log::debug!("attempting to get material_id: {:?}", handle);
         let mat = mat_storage.get(handle)?;
+        log::debug!("try_insert got material_id: {:?}", handle);
 
         let has_tex = T::textures(mat).any(|t| {
             !tex_storage
@@ -226,6 +228,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                 .map_or(false, |tex| B::unwrap_texture(tex).is_some())
         });
         if has_tex {
+            log::debug!("has_tex: {:?}", has_tex);
             return None;
         }
 
@@ -290,6 +293,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                 handle,
                 ..
             }) => {
+                log::debug!("MaterialState::Loaded");
                 // If handle is dead, new material was loaded (handle id reused)
                 // FIXME is this check needed?
                 // if handle.is_dead() {
@@ -301,7 +305,8 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                 // }
             }
             Some(MaterialState::Unloaded { generation }) if *generation == self.generation => {
-                return None
+                log::debug!("materialstate::Unloaded");
+                return None;
             }
             _ => {}
         };
@@ -326,8 +331,10 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         }
 
         if loaded {
+            log::debug!("new_state loaded");
             Some((MaterialId(id as u32), true))
         } else {
+            log::debug!("new_state not loaded");
             None
         }
     }

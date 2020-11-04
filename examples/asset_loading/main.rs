@@ -2,6 +2,7 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
+    assets::AssetHandle,
     assets::{DefaultLoader, Format as AssetFormat, Handle, Loader, LoaderBundle, ProcessingQueue},
     core::{
         math::Vector3,
@@ -110,7 +111,11 @@ impl SimpleState for AssetsExample {
 
             (mesh, mat)
         };
-
+        log::debug!(
+            "Handle<Mesh>: {:#?}, LoadHandle: {:?}",
+            mesh,
+            mesh.load_handle()
+        );
         let mut trans = Transform::default();
         trans.set_translation_xyz(-5.0, 0.0, 0.0);
         trans.set_scale(Vector3::new(2.0, 2.0, 2.0));
@@ -126,12 +131,13 @@ fn main() -> Result<(), Error> {
         config.level_filter = amethyst::LogLevelFilter::Debug;
         amethyst::start_logger(config);
     }
-    let app_root = application_root_dir()?;
+    // let app_root = application_root_dir()?;
 
+    let app_root = std::path::PathBuf::new();
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/asset_loading/assets");
+    let assets_dir = app_root.join("assets");
 
-    let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut dispatcher_builder = DispatcherBuilder::default();
     dispatcher_builder

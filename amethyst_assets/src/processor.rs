@@ -93,6 +93,7 @@ pub(crate) struct Processed<T> {
     tracker: Option<Box<dyn Tracker>>,
     load_op: Option<AssetLoadOp>,
     version: u32,
+    commit: bool,
 }
 
 /// Returned by processor systems, describes the loading state of the asset.
@@ -124,31 +125,39 @@ impl<T> Default for ProcessingQueue<T> {
 
 impl<T> ProcessingQueue<T> {
     /// Enqueue asset data for processing
-    pub(crate) fn enqueue(
-        &self,
-        handle: LoadHandle,
-        data: T,
-        load_op: Option<AssetLoadOp>,
-        version: u32,
-    ) {
-        self.enqueue_with_tracker(handle, data, None, load_op, version)
+    pub(crate) fn enqueue(&self, handle: LoadHandle, data: T, load_op: AssetLoadOp, version: u32) {
+        self.enqueue_processed(Ok(data), handle, None, Some(load_op), version, false);
     }
-    pub(crate) fn enqueue_with_tracker(
+
+    fn enqueue_processed(
         &self,
+        data: Result<T, Error>,
         handle: LoadHandle,
-        data: T,
         tracker: Option<Box<dyn Tracker>>,
         load_op: Option<AssetLoadOp>,
         version: u32,
+        commit: bool,
     ) {
         self.processed.push(Processed {
-            data: Ok(data),
+            data,
             handle,
             tracker,
             load_op,
             version,
+            commit,
         })
     }
+
+    pub(crate) fn enqueue_from_data(
+        &self,
+        handle: LoadHandle,
+        data: T,
+        tracker: Box<dyn Tracker>,
+        version: u32,
+    ) {
+        self.enqueue_processed(Ok(data), handle, Some(tracker), None, version, true);
+    }
+
     /// Process asset data into assets
     pub fn process<F, A>(&mut self, storage: &mut AssetStorage<A>, mut f: F)
     where
@@ -168,6 +177,7 @@ impl<T> ProcessingQueue<T> {
                         tracker,
                         load_op,
                         version,
+                        commit,
                     } => {
                         let asset = match data
                             .and_then(|d| f(d))
@@ -222,6 +232,7 @@ impl<T> ProcessingQueue<T> {
                                     tracker,
                                     load_op,
                                     version,
+                                    commit,
                                 });
                                 continue;
                             }
@@ -245,6 +256,9 @@ impl<T> ProcessingQueue<T> {
                             }
                         };
                         storage.update_asset(handle, asset, version);
+                        if commit {
+                            storage.commit_asset(handle, version);
+                        }
                     }
                 };
             }

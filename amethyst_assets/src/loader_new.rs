@@ -1,4 +1,7 @@
-use crate::{processor::{AddToDispatcher, ProcessingQueue}, progress::Progress, storage_new::AssetStorage, Asset};
+use crate::{
+    processor::{AddToDispatcher, ProcessingQueue, ProcessingState}, 
+    FormatValue,
+    progress::{Progress, Tracker}, storage_new::AssetStorage, asset::ProcessableAsset, Asset};
 use amethyst_core::ecs::{DispatcherBuilder, Resources};
 // use atelier_assets::loader::{
 //     handle::{self, AssetHandle, Handle, RefOp, WeakHandle},
@@ -12,7 +15,7 @@ use atelier_loader::{
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
     storage::{
         AssetLoadOp, AtomicHandleAllocator, DefaultIndirectionResolver, HandleAllocator,
-        IndirectIdentifier, LoaderInfoProvider,
+        IndirectionTable, IndirectIdentifier, LoaderInfoProvider,
     },
     AssetTypeId,
     Loader as AtelierLoader,
@@ -146,7 +149,7 @@ pub trait Loader: Send + Sync {
         &self,
         data: A::Data,
         progress: P,
-        processing_queue: &ProcessingQueue<A::Data>,
+        storage: &ProcessingQueue<A::Data>,
     ) -> Handle<A>
     where
         A: Asset,
@@ -185,17 +188,20 @@ pub struct LoaderWithStorage {
     ref_sender: Sender<RefOp>,
     ref_receiver: Receiver<RefOp>,
     handle_allocator: Arc<AtomicHandleAllocator>,
+    indirection_table: IndirectionTable,
 }
 
 impl Default for LoaderWithStorage {
     fn default() -> Self {
         let (tx, rx) = unbounded();
         let handle_allocator = Arc::new(AtomicHandleAllocator::default());
-        Self {
-            loader: AtelierLoader::new_with_handle_allocator(
+        let loader = AtelierLoader::new_with_handle_allocator(
                 Box::new(RpcIO::default()),
                 handle_allocator.clone(),
-            ),
+            );
+        Self {
+            indirection_table: loader.indirection_table(),
+            loader,
             storage_map: Default::default(),
             ref_sender: tx,
             ref_receiver: rx,
@@ -266,14 +272,23 @@ impl Loader for LoaderWithStorage {
         let tracker = progress.create_tracker();
         let tracker = Box::new(tracker);
         let handle = self.handle_allocator.alloc();
-        processing_queue.enqueue_with_tracker(handle.clone(), data, Some(tracker), None, 0);
-        // storage.update_asset(handle, FormatValue::data(data), 0);
+        let version = 0;
+        processing_queue.enqueue_from_data(handle, data, tracker, version);
+        // let FormatValue { data, .. } = FormatValue::data(data);
+        // let asset = match ProcessingState::<A::Data, A>::Loaded(data) {
+        //     ProcessingState::Loaded(asset) => Some(asset),
+        //     _ => None,
+        // };
+        // let asset = asset.expect("data asset failed");
+        // tracker.success();
+        // storage.update_asset(handle, asset, version);
+        // storage.commit_asset(handle, version);
         Handle::<A>::new(self.ref_sender.clone(), handle)
     }
 
     fn init_world(&mut self, resources: &mut Resources) {
         for (_, storage) in self.storage_map.storages_by_asset_uuid.iter() {
-            (storage.create_storage)(resources);
+            (storage.create_storage)(resources, &self.indirection_table);
         }
     }
     fn init_dispatcher(&mut self, builder: &mut DispatcherBuilder) {
@@ -363,7 +378,7 @@ where
             },
             Ok(asset) => {
                 debug!("Ok in AssetTypeStorag deserialize");
-                self.0.enqueue(handle, asset, Some(load_op), version);
+                self.0.enqueue(handle, asset, load_op, version);
                 Ok(())
             }
         }
@@ -514,7 +529,7 @@ pub struct AssetType {
     /// UUID of the type representing the asset.
     pub asset_uuid: AssetTypeId,
     /// Function to create the `AssetTypeStorage`'s resources in the `World`.
-    pub create_storage: fn(&mut Resources),
+    pub create_storage: fn(&mut Resources, &IndirectionTable),
     pub register_system: fn(&mut DispatcherBuilder),
     /// Function that runs another function, passing in the `AssetTypeStorage`.
     pub with_storage: fn(&Resources, &mut dyn FnMut(&mut dyn AssetTypeStorage)),
@@ -545,8 +560,8 @@ where
     AssetType {
         data_uuid: AssetTypeId(Intermediate::UUID),
         asset_uuid: AssetTypeId(Asset::UUID),
-        create_storage: |res| {
-            res.get_or_insert_with(|| AssetStorage::<Asset>::default());
+        create_storage: |res, indirection_table| {
+            res.get_or_insert_with(|| AssetStorage::<Asset>::new(indirection_table.clone()));
             res.get_or_insert_with(|| ProcessingQueue::<Intermediate>::default());
         },
         register_system: Processor::add_to_dipatcher,

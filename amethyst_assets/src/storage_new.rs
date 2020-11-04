@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::asset::Asset;
 
-use atelier_loader::handle::AssetHandle;
+use atelier_loader::{handle::AssetHandle, storage::IndirectionTable};
 use log::{debug, info, log_enabled, trace, Level};
 
 struct AssetState<A> {
@@ -21,12 +21,18 @@ pub struct AssetStorage<A> {
     assets: HashMap<LoadHandle, AssetState<A>>,
     uncommitted: HashMap<LoadHandle, AssetState<A>>,
     to_drop: SegQueue<A>,
+    indirection_table: IndirectionTable,
 }
 
 impl<A> AssetStorage<A> {
     /// Creates a new asset storage.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(indirection_table: IndirectionTable) -> Self {
+        Self {
+            assets: Default::default(),
+            uncommitted: Default::default(),
+            to_drop: SegQueue::new(),
+            indirection_table,
+        }
     }
 
     /// Added to make api compatible with previous storage
@@ -87,7 +93,25 @@ impl<A> AssetStorage<A> {
     }
 
     pub fn contains(&self, load_handle: LoadHandle) -> bool {
+        let load_handle = if load_handle.is_indirect() {
+            if let Some(handle) = self.indirection_table.resolve(load_handle) {
+                handle
+            } else {
+                return false;
+            }
+        } else {
+            load_handle
+        };
         self.assets.contains_key(&load_handle)
+    }
+
+    fn get_asset_state(&self, load_handle: LoadHandle) -> Option<&AssetState<A>> {
+        let load_handle = if load_handle.is_indirect() {
+            self.indirection_table.resolve(load_handle)?
+        } else {
+            load_handle
+        };
+        self.assets.get(&load_handle)
     }
 
     /// Returns the asset for the given load handle, or `None` if has not completed loading.
@@ -96,7 +120,7 @@ impl<A> AssetStorage<A> {
     ///
     /// * `load_handle`: LoadHandle of the asset.
     pub fn get_for_load_handle(&self, load_handle: LoadHandle) -> Option<&A> {
-        self.assets.get(&load_handle).map(|a| &a.asset)
+        self.get_asset_state(load_handle).map(|a| &a.asset)
     }
 
     /// Returns the asset for the given handle, or `None` if has not completed loading.
@@ -109,7 +133,7 @@ impl<A> AssetStorage<A> {
     ///
     /// * `T`: Asset handle type.
     pub fn get<T: AssetHandle>(&self, handle: &T) -> Option<&A> {
-        self.assets.get(&handle.load_handle()).map(|a| &a.asset)
+        self.get_asset_state(handle.load_handle()).map(|a| &a.asset)
     }
 
     /// Returns the version of a loaded asset, or `None` if has not completed loading.
@@ -122,7 +146,8 @@ impl<A> AssetStorage<A> {
     ///
     /// * `T`: Asset handle type.
     pub fn get_version<T: AssetHandle>(&self, handle: &T) -> Option<u32> {
-        self.assets.get(&handle.load_handle()).map(|a| a.version)
+        self.get_asset_state(handle.load_handle())
+            .map(|a| a.version)
     }
 
     /// Returns the loaded asset and its version, or `None` if has not completed loading.
@@ -135,8 +160,7 @@ impl<A> AssetStorage<A> {
     ///
     /// * `T`: Asset handle type.
     pub fn get_asset_with_version<T: AssetHandle>(&self, handle: &T) -> Option<(&A, u32)> {
-        self.assets
-            .get(&handle.load_handle())
+        self.get_asset_state(handle.load_handle())
             .map(|a| (&a.asset, a.version))
     }
 
@@ -170,15 +194,5 @@ impl<A> atelier_loader::handle::TypedAssetStorage<A> for AssetStorage<A> {
     }
     fn get_asset_with_version<T: AssetHandle>(&self, handle: &T) -> Option<(&A, u32)> {
         self.get_asset_with_version(handle)
-    }
-}
-
-impl<A> Default for AssetStorage<A> {
-    fn default() -> Self {
-        AssetStorage {
-            assets: Default::default(),
-            uncommitted: Default::default(),
-            to_drop: SegQueue::new(),
-        }
     }
 }

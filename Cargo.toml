@@ -18,6 +18,9 @@ license = "MIT/Apache-2.0"
 [badges]
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
+[patch.crates-io]
+rendy = { git = "https://github.com/kabergstrom/rendy.git", branch = "attribute-serde-fix" }
+
 [features]
 # TODO: include animation, ui
 default = ["audio", "locale", "network", "parallel", "renderer"]
