@@ -128,7 +128,20 @@ fn main() -> Result<(), Error> {
     // amethyst::start_logger(Default::default());
     {
         let mut config = amethyst::LoggerConfig::default();
-        config.level_filter = amethyst::LogLevelFilter::Debug;
+        config.log_file = Some(std::path::PathBuf::from("asset_loading.log"));
+        config.level_filter = amethyst::LogLevelFilter::Info;
+        config.module_levels.push((
+            "amethyst_assets".to_string(),
+            amethyst::LogLevelFilter::Debug,
+        ));
+        config.module_levels.push((
+            "atelier_daemon".to_string(),
+            amethyst::LogLevelFilter::Debug,
+        ));
+        config.module_levels.push((
+            "atelier_loader".to_string(),
+            amethyst::LogLevelFilter::Trace,
+        ));
         amethyst::start_logger(config);
     }
     // let app_root = application_root_dir()?;

@@ -8,7 +8,7 @@ use std::{
 
 use amethyst_core::ecs::{systems::ParallelRunnable, DispatcherBuilder, SystemBuilder};
 use amethyst_error::Error;
-
+use log::debug;
 use crate::{
     asset::{Asset, ProcessableAsset},
     // error::Error,
@@ -184,12 +184,10 @@ impl<T> ProcessingQueue<T> {
                             // .chain_err(|| ErrorKind::Asset(name.clone()))
                         {
                             Ok(ProcessingState::Loaded(x)) => {
-                                // debug!(
-                                //         "{:?}: Asset {:?} (handle id: {:?}) has been loaded successfully",
-                                //         A::name(),
-                                //         name,
-                                //         handle,
-                                //     );
+                                debug!(
+                                        "Asset (handle id: {:?}) has been loaded successfully",
+                                        handle,
+                                    );
                                 // TODO do this in loader?
                                 // // Add a warning if a handle is unique (i.e. asset does not
                                 // // need to be loaded as it is not used by anything)
@@ -210,7 +208,7 @@ impl<T> ProcessingQueue<T> {
                                 // } else if let Some(tracker) = tracker {
                                 //     tracker.success();
                                 // }
-
+                            
                                 if let Some(tracker) = tracker {
                                     tracker.success();
                                 }

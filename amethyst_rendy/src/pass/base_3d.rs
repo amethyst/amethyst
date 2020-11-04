@@ -216,7 +216,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                 .iter()
                 .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .map(|(entity, (mat, mesh, tform, tint))| {
-                    log::debug!("(entity, (mat, mesh, tform, tint))");
+                    // log::debug!("(entity, (mat, mesh, tform, tint))");
                     if let Some(tint) = tint {
                         (
                             (mat, mesh.load_handle()),
@@ -230,11 +230,11 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                     }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
-                    log::debug!("mesh_id: {:?}, mat_id: {:?}", mesh_id, mat);
+                    // log::debug!("mesh_id: {:?}, mat_id: {:?}", mesh_id, mat);
                     if mesh_storage.contains(mesh_id) {
-                        log::debug!("if mesh_storage.contains(mesh_id)");
+                        // log::debug!("if mesh_storage.contains(mesh_id)");
                         if let Some((mat, _)) = materials_ref.insert(factory, resources, &mat) {
-                            log::debug!("statics_ref.insert(mat, mesh_id, data.drain(..))");
+                            // log::debug!("statics_ref.insert(mat, mesh_id, data.drain(..))");
                             statics_ref.insert(mat, mesh_id, data.drain(..));
                         }
                     }
