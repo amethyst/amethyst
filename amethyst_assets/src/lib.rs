@@ -32,7 +32,7 @@ pub mod error;
 mod formats;
 // mod helper;
 // mod loader;
-// mod prefab;
+pub mod prefab;
 mod progress;
 mod reload;
 mod source;

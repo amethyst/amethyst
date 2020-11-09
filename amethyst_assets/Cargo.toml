@@ -48,6 +48,10 @@ bincode = "1.1"
 type-uuid = "0.1"
 atelier-daemon = { git = "https://github.com/jlowry/atelier-assets.git", branch = "make_daemon_constructable", default-features = false }
 futures-executor = { version = "0.3", default-features = false }
+legion-transaction = { git = "https://github.com/kabergstrom/prefab" }
+legion-prefab = { git = "https://github.com/kabergstrom/prefab" }
+prefab-format = { git = "https://github.com/kabergstrom/prefab" }
+
 
 [dev-dependencies]
 serde_json = "1"

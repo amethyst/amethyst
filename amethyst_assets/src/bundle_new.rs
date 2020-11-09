@@ -1,4 +1,5 @@
 use crate::experimental::{DefaultLoader, Loader};
+use crate::prefab::{ComponentRegistryBuilder, PrefabImporter};
 use crate::simple_importer::get_source_importers;
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
@@ -26,6 +27,7 @@ pub fn start_asset_daemon() {
         info!("asset_dirs: {:?}", asset_dirs);
         let mut importer_map = atelier_daemon::ImporterMap::default();
         let mut importers = atelier_daemon::default_importers();
+        importers.push((".prefab", Box::new(PrefabImporter::default())));
         importers.extend(get_source_importers());
 
         for (ext, importer) in importers {
@@ -55,6 +57,10 @@ impl SystemBundle for LoaderBundle {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
+        let component_registry = ComponentRegistryBuilder::new()
+            .auto_register_components()
+            .build();
+        resources.insert(component_registry);
         let mut loader = DefaultLoader::default();
         loader.init_world(resources);
         loader.init_dispatcher(builder);
