@@ -3,7 +3,7 @@
 use amethyst::{
     // assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     assets::{
-        prefab::{ComponentRegistry, Prefab},
+        prefab::{register_component_type, ComponentRegistry, Prefab},
         AssetStorage, DefaultLoader, Format as AssetFormat, Handle, Loader, LoaderBundle,
         ProcessingQueue,
     },
@@ -22,8 +22,17 @@ use amethyst::{
     utils::application_root_dir,
     Error,
 };
+use serde::{Deserialize, Serialize};
+use serde_diff::SerdeDiff;
 use std::collections::HashMap;
+use type_uuid::TypeUuid;
+#[derive(TypeUuid, Serialize, Deserialize, SerdeDiff, Clone, Default)]
+#[uuid = "f5780013-bae4-49f0-ac0e-a108ff52fec0"]
+struct Position2D {
+    position: Vec<f32>,
+}
 
+register_component_type!(Position2D);
 // type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
 struct AssetsExample {
@@ -40,15 +49,17 @@ impl SimpleState for AssetsExample {
         // });
         // data.world.create_entity().with(prefab_handle).build();
         let loader = resources.get_mut::<DefaultLoader>().unwrap();
-        let prefab_handle: Handle<Prefab> = loader.load("prefab/example.prefab");
+        let prefab_handle: Handle<Prefab> = loader.load("prefab/test.prefab");
         self.prefab_handle = Some(prefab_handle);
     }
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+        log::info!("update");
         let StateData {
             world, resources, ..
         } = data;
 
         if self.prefab_handle.is_none() {
+            log::info!("No prefab");
             return Trans::None;
         }
 
@@ -72,7 +83,25 @@ impl SimpleState for AssetsExample {
 
 /// Wrapper around the main, so we can return errors easily.
 fn main() -> Result<(), Error> {
-    amethyst::start_logger(Default::default());
+    {
+        let mut config = amethyst::LoggerConfig::default();
+        // config.log_file = Some(std::path::PathBuf::from("asset_loading.log"));
+        config.level_filter = amethyst::LogLevelFilter::Info;
+        config.module_levels.push((
+            "amethyst_assets".to_string(),
+            amethyst::LogLevelFilter::Debug,
+        ));
+        config.module_levels.push((
+            "atelier_daemon".to_string(),
+            amethyst::LogLevelFilter::Debug,
+        ));
+        config.module_levels.push((
+            "atelier_loader".to_string(),
+            amethyst::LogLevelFilter::Trace,
+        ));
+        amethyst::start_logger(config);
+    }
+    // amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
 

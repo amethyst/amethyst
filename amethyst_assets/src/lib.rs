@@ -33,6 +33,7 @@ mod formats;
 // mod helper;
 // mod loader;
 pub mod prefab;
+
 mod progress;
 mod reload;
 mod source;

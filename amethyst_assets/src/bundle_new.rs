@@ -27,7 +27,7 @@ pub fn start_asset_daemon() {
         info!("asset_dirs: {:?}", asset_dirs);
         let mut importer_map = atelier_daemon::ImporterMap::default();
         let mut importers = atelier_daemon::default_importers();
-        importers.push((".prefab", Box::new(PrefabImporter::default())));
+        importers.push(("prefab", Box::new(PrefabImporter::default())));
         importers.extend(get_source_importers());
 
         for (ext, importer) in importers {

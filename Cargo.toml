@@ -158,6 +158,8 @@ genmesh = "0.6.2"
 ron = "0.5.1"
 specs-derive = "0.4.1"
 type-uuid = "0.1"
+serde-diff = "0.3"
+legion-prefab = { git = "https://github.com/kabergstrom/prefab" }
 
 [build-dependencies]
 dirs = "2.0.2"

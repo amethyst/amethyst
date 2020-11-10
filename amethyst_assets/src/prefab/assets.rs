@@ -1,6 +1,6 @@
 use crate::{
-    asset::Asset, prefab::ComponentRegistry, register_asset_type, AddToDispatcher, AssetStorage,
-    ProcessingQueue, ProcessingState,
+    asset::Asset, prefab::ComponentRegistry, register_asset_type, register_format,
+    register_format_type, AddToDispatcher, AssetStorage, ProcessingQueue, ProcessingState,
 };
 use amethyst_core::ecs::*;
 use atelier_importer::{typetag, SerdeImportable};
@@ -27,6 +27,8 @@ impl Asset for Prefab {
     type Data = RawPrefab;
 }
 
+// register_format_type!(RawPrefab);
+// register_format!(crate; "PREFAB", Ron as RawPrefab);
 register_asset_type!(crate; RawPrefab => Prefab; PrefabAssetPocessor);
 
 fn build_prefab_asset_processor() -> impl Runnable {
