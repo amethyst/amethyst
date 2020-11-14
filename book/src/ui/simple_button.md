@@ -16,7 +16,7 @@ if you want your button to have any text displayed
 if you want your button to display a texture
 
 
-You don't have to use all three at the same time of course but variations of two (`UiTransfrom` is always needed!).
+You don't have to use all three at the same time of course but variations of two (`UiTransform` is always needed!).
 
 ### Creating the `UiTransform`
 
