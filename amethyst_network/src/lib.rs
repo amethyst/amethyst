@@ -2,5 +2,10 @@
 //! The library is segmented into the simulation module and, eventually, various client library
 //! modules. Soon, we will also provide an HTTP client library.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
+
 pub mod simulation;
 pub use bytes::*;

@@ -9,6 +9,10 @@
 // Parts copied from failure:
 // https://github.com/rust-lang-nursery/failure
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
