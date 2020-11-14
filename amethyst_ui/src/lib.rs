@@ -1,5 +1,9 @@
 //! Provides components and systems to create an in game user interface.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -35,9 +39,9 @@ pub use self::{
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem, UiTransformSystemDesc},
     pass::{DrawUi, DrawUiDesc, RenderUi},
     prefab::{
-        NoCustomUi, ToNativeWidget, UiButtonData, UiCreator, UiFormat, UiImageLoadPrefab,
-        UiImagePrefab, UiLoader, UiLoaderSystem, UiLoaderSystemDesc, UiPrefab, UiTextData,
-        UiTransformData, UiWidget,
+        NoCustomUi, TextEditingPrefab, ToNativeWidget, UiButtonData, UiCreator, UiFormat,
+        UiImageLoadPrefab, UiImagePrefab, UiLoader, UiLoaderSystem, UiLoaderSystemDesc, UiPrefab,
+        UiTextData, UiTransformData, UiWidget,
     },
     resize::{ResizeSystem, ResizeSystemDesc, UiResize},
     selection::{

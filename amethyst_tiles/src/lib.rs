@@ -1,6 +1,10 @@
 //! 2D/3D Tile data structures and functionality.
 //!
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![deny(clippy::all, clippy::pedantic, missing_docs)]
 #![allow(dead_code, clippy::module_name_repetitions)]
 

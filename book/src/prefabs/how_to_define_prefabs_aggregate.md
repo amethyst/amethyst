@@ -192,9 +192,9 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
 
     The [`PrefabData`][api_pf_derive] derive implements the [`PrefabData`] trait for the type. The generated code will handle invoking the appropriate [`PrefabData`] methods when loading and attaching components to an entity. **Note:** This differs from the simple component [`PrefabData`] derive implementation &ndash; there is no `#[prefab(Component)]` attribute.
 
-    The [`#[serde(default)]`] attribute allows fields to not be specified in the prefab, and the fields' default value will be used. If this attribute is not present, then all fields must be specified in the prefab.
+    The [`#[serde(default)]`][ser_def] attribute allows fields to not be specified in the prefab, and the fields' default value will be used. If this attribute is not present, then all fields must be specified in the prefab.
 
-    Finally, the [`#[serde(deny_unknown_fields)]`] ensures that deserialization produces an error if it encounters an unknown field. This will help expose mistakes in the prefab file, such as when there is a typo.
+    Finally, the [`#[serde(deny_unknown_fields)]`][ser_unk] ensures that deserialization produces an error if it encounters an unknown field. This will help expose mistakes in the prefab file, such as when there is a typo.
 
 
 4. Now the type can be used in a prefab.
@@ -247,12 +247,12 @@ cargo run --example prefab_custom # superset prefab
 cargo run --example prefab_multi # object prefab
 ```
 
-[`#[serde(default)]`]: https://serde.rs/container-attrs.html#default
-[`#[serde(deny_unknown_fields)]`]: https://serde.rs/container-attrs.html#deny_unknown_fields
-[`Component`]: https://docs.amethyst.rs/stable/specs/trait.Component.html
-[`Prefab`]: https://docs.amethyst.rs/stable/amethyst_assets/struct.Prefab.html
-[`PrefabData`]: https://docs.amethyst.rs/stable/amethyst_assets/trait.PrefabData.html#impl-PrefabData%3C%27a%3E
-[api_pf_derive]: https://docs.amethyst.rs/stable/amethyst_derive/derive.PrefabData.html
+[ser_def]: https://serde.rs/container-attrs.html#default
+[ser_unk]: https://serde.rs/container-attrs.html#deny_unknown_fields
+[`Component`]: https://docs.rs/specs/~0.16/specs/trait.Component.html
+[`Prefab`]: https://docs.amethyst.rs/master/amethyst_assets/struct.Prefab.html
+[`PrefabData`]: https://docs.amethyst.rs/master/amethyst_assets/trait.PrefabData.html
+[api_pf_derive]: https://docs.amethyst.rs/master/amethyst_derive/derive.PrefabData.html
 [bk_prefab_prelude]: how_to_define_prefabs_prelude.html
 [repo_prefab_custom]: https://github.com/amethyst/amethyst/tree/master/examples/prefab_custom
 [repo_prefab_multi]: https://github.com/amethyst/amethyst/tree/master/examples/prefab_multi
