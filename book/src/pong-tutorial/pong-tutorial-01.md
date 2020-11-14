@@ -272,9 +272,9 @@ get a window. It should look something like this:
 ![Step one](../images/pong_tutorial/pong_01.png)
 
 [ron]: https://github.com/ron-rs/ron
-[simplestate]: https://docs.amethyst.rs/stable/amethyst/prelude/trait.SimpleState.html
-[state]: https://docs.amethyst.rs/stable/amethyst/prelude/trait.State.html
-[ap]: https://docs.amethyst.rs/stable/amethyst/type.Application.html
-[log]: https://docs.amethyst.rs/stable/amethyst/struct.Logger.html
-[displayconf]: https://docs.amethyst.rs/stable/amethyst_renderer/struct.DisplayConfig.html
+[simplestate]: https://docs.amethyst.rs/master/amethyst/prelude/trait.SimpleState.html
+[state]: https://docs.amethyst.rs/master/amethyst/prelude/trait.State.html
+[ap]: https://docs.amethyst.rs/master/amethyst/type.Application.html
+[log]: https://docs.amethyst.rs/master/amethyst/struct.Logger.html
+[displayconf]: https://docs.amethyst.rs/master/amethyst_window/struct.DisplayConfig.html
 [graph]: https://github.com/amethyst/rendy/blob/master/docs/graph.md

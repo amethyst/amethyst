@@ -67,7 +67,7 @@ impl<'s> System<'s> for ExampleSystem {
 }
 ```
 
-You can find all the methods from `InputHandler` [here](https://docs.amethyst.rs/stable/amethyst_input/struct.InputHandler.html#methods).
+You can find all the methods from `InputHandler` [here][input_ha].
 
 Now you have to add the `System` to the game data, just like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
 
@@ -84,6 +84,8 @@ let game_data = GameDataBuilder::default()
     //..
 #   ;
 ```
+
+[input_ha]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html#methods
 
 ## Defining Key Bindings in a File
 
@@ -114,7 +116,7 @@ The action is a boolean, which is set to true when the buttons are pressed. The 
 * The inner array specifies the buttons that must be pressed at the same time to send the action.
 * The outer array specifies different combinations of those buttons that send the action.
 
-The possible inputs you can specify for axes are listed [here](https://docs.amethyst.rs/stable/amethyst_input/enum.Axis.html). The possible inputs you can specify for actions are listed [here](https://docs.amethyst.rs/stable/amethyst_input/enum.Button.html).
+The possible inputs you can specify for axes are listed [here][in_axis]. The possible inputs you can specify for actions are listed [here][button].
 
 To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the `InputBundle`.
 
@@ -132,7 +134,7 @@ let input_bundle = InputBundle::<StringBindings>::new()
 # Ok(()) }
 ```
 
-And now you can get the [axis](https://docs.amethyst.rs/stable/amethyst_input/struct.InputHandler.html#method.axis_value) and [action](https://docs.amethyst.rs/stable/amethyst_input/struct.InputHandler.html#method.action_is_down) values from the `InputHandler`.
+And now you can get the [axis][axis_val] and [action][is_down] values from the `InputHandler`.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -185,3 +187,8 @@ impl<'s> System<'s> for MovementSystem {
     }
 }
 ```
+
+[in_axis]: https://docs.amethyst.rs/master/amethyst_input/enum.Axis.html
+[button]: https://docs.amethyst.rs/master/amethyst_input/enum.Button.html
+[axis_val]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html#method.axis_value
+[is_down]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html#method.action_is_down

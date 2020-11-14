@@ -14,7 +14,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+- Upgraded from `rayon 1.3.0` to `rayon 1.4.0`, drastically decreasing idle CPU usage in some situations ([#2489])
+- Make `TextEditingPrefab` public ([#2492])
+
 ### Fixed
+
+[#2489]: https://github.com/amethyst/amethyst/pull/2489
+[#2492]: https://github.com/amethyst/amethyst/pull/2492
 
 ## [0.15.3] - 2020-08-22
 

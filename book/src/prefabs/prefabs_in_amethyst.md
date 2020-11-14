@@ -283,12 +283,12 @@ cargo run --example prefab_custom
 Phew, that was long! Now that you have an understanding of how prefabs work in Amethyst, the next page covers the technical aspects in more detail.
 
 [assets]: ../assets.html
-[`Component`]: https://docs.amethyst.rs/stable/specs/trait.Component.html
-[`Entity`]: https://docs.amethyst.rs/stable/specs/struct.Entity.html
-[`Named`]: https://docs.amethyst.rs/stable/amethyst_core/struct.Named.html
+[`Component`]: https://docs.rs/specs/~0.16/specs/trait.Component.html
+[`Entity`]: https://docs.rs/specs/~0.16/specs/struct.Entity.html
+[`Named`]: https://docs.amethyst.rs/master/amethyst_core/struct.Named.html
 [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
-[`Parent`]: https://docs.amethyst.rs/stable/amethyst_core/transform/components/struct.Parent.html
-[`Prefab`]: https://docs.amethyst.rs/stable/amethyst_assets/struct.Prefab.html
-[`PrefabData`]: https://docs.amethyst.rs/stable/amethyst_assets/trait.PrefabData.html#impl-PrefabData%3C%27a%3E
-[`PrefabEntity`]: https://github.com/amethyst/amethyst/blob/v0.10.0/amethyst_assets/src/prefab/mod.rs#L110-L115
-[`PrefabLoaderSystem`]: https://docs.amethyst.rs/stable/amethyst_assets/struct.PrefabLoaderSystem.html
+[`Parent`]: https://docs.amethyst.rs/master/amethyst_core/transform/components/struct.Parent.html
+[`Prefab`]: https://docs.amethyst.rs/master/amethyst_assets/struct.Prefab.html
+[`PrefabData`]: https://docs.amethyst.rs/master/amethyst_assets/trait.PrefabData.html#impl-PrefabData
+[`PrefabEntity`]: https://github.com/amethyst/amethyst/blob/v0.15.3/amethyst_assets/src/prefab/mod.rs#L121-L126
+[`PrefabLoaderSystem`]: https://docs.amethyst.rs/master/amethyst_assets/struct.PrefabLoaderSystem.html
