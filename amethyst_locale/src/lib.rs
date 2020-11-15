@@ -2,6 +2,10 @@
 //!
 //! Localisation binding a `Fluent` file to an Asset<Locale> via the use of amethyst_assets.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
