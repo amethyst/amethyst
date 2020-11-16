@@ -20,15 +20,6 @@ edition = "2018"
 
 [dependencies.amethyst]
 version = "0.15"
-features = ["vulkan"]
-```
-
-Alternatively, if you are developing on macOS, you might want to use the `metal` rendering backend instead of `vulkan`. In this case, you should change the `features` entry in the `amethyst` dependency table.
-
-```toml
-[dependencies.amethyst]
-version = "0.15"
-features = ["metal"]
 ```
 
 We can start with editing the `main.rs` file inside `src` directory.

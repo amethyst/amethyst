@@ -31,12 +31,11 @@ The available features might change from time to time.
 
 ## Graphics features
 
-Whenever you run your game, you'll need to enable one graphics backend. The following features are
-available for the backend:
+By default the metal graphics backend will be used for macOS and iOS, and the vulkan backend will be
+used for all other platforms. If you wish to disable graphics for your game, you can use the
+following feature:
 
 * `empty`
-* `metal`
-* `vulkan`
 
 Rendy has multiple safety checks built-in to detect bugs in the data it gets submitted. However,
 those checks can become too costly for a smooth experience with larger games; you can disable

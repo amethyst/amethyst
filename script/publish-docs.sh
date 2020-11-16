@@ -10,14 +10,6 @@ set -euxo pipefail
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 LATEST_RELEASE=$(git tag -l 'v*' | sort -V | tail -n 1)
 
-
-if [[ $(uname) == "Darwin" ]] ; then
-  BACKEND="metal"
-else
-  BACKEND="vulkan"
-fi
-
-
 # Cloudfront distribution ids
 if [[ -z "$AWS_DOCS_DISTRIBUTION_ID" ]]; then
   die "AWS_DOCS_DISTRIBUTION_ID must be set"
@@ -103,7 +95,7 @@ function build_docs_wasm {
   echo "Building wasm docs for $REF..."
 
   # TODO: build wasm branch here
-  # cargo doc --no-deps --workspace --features="animation gltf ${BACKEND}"
+  # cargo doc --no-deps --workspace --features="animation gltf"
 
   # taken from run.sh for future reference:
   # # (cd amethyst_animation && cargo doc --no-deps)
@@ -158,7 +150,7 @@ function build_docs {
   rm -rf "$DIR"
   mkdir -p "$DIR"
   echo "Building docs for $REF..."
-  cargo doc --no-deps --workspace --features="animation gltf ${BACKEND}"
+  cargo doc --no-deps --workspace --features="animation gltf"
   mv target/doc/* "$DIR"/
 
   # Write the newly built rev to the rev file

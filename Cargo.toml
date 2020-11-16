@@ -22,8 +22,6 @@ travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 # TODO: include animation, ui
 default = ["audio", "locale", "network", "parallel", "renderer"]
 
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
-metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
 ui = [
@@ -340,4 +338,4 @@ path = "examples/tiles/main.rs"
 required-features = [ "tiles" ]
 
 [package.metadata.docs.rs]
-features = ["animation", "audio", "gltf", "tiles", "json", "locale", "network", "sdl_controller", "vulkan"]
+features = ["animation", "audio", "gltf", "tiles", "json", "locale", "network", "sdl_controller"]

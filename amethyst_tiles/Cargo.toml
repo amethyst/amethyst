@@ -41,8 +41,6 @@ more-asserts = "0.2"
 approx = "0.3"
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
-metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
 profiler = [ "thread_profiler/thread_profiler" ]

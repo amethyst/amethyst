@@ -42,8 +42,6 @@ glyph_brush = "0.6.0"
 thread_profiler = { version = "0.3", optional = true }
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
-metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
 profiler = [ "thread_profiler/thread_profiler" ]

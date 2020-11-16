@@ -1,12 +1,6 @@
 #! /bin/bash
 set -e
 
-BACKEND="vulkan"
-if [[ `uname` == "Darwin" ]] ; then
-  BACKEND="metal"
-fi
-
-# Wave one -- crates without `amethyst_rendy` dependency.
 # The order is important because of inter-dependencies (see docs/PUBLISHING.md)
 crates=(
   amethyst_config
@@ -20,22 +14,6 @@ crates=(
   amethyst_locale
   amethyst_input
   amethyst_controls
-)
-
-for crate in "${crates[@]}"
-do
-  echo "Publishing ${crate}"
-
-  (cd $crate && cargo publish)
-
-  # Rate limit ourselves as `crates.io` takes a while to update cache.
-  sleep 30
-done
-
-# Wave two -- crates with `amethyst_rendy` dependency.
-#
-# Must be built with a graphics backend to publish.
-crates=(
   amethyst_rendy
   amethyst_tiles
   amethyst_ui
@@ -52,11 +30,10 @@ do
 
   if test "${crate}" = "amethyst"
   then
-    cargo publish --features $BACKEND
+    cargo publish
   else
-    (cd $crate && cargo publish --features $BACKEND)
+    (cd $crate && cargo publish)
   fi
-
   # Rate limit ourselves as `crates.io` takes a while to update cache.
   sleep 30
 done
