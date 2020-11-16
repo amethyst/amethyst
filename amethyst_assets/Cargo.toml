@@ -25,6 +25,7 @@ amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 crossbeam-queue = "0.1.2"
 derivative = "2.1.1"
+crossbeam-channel = "0.3"
 derive-new = "0.5"
 fnv = "1"
 log = "0.4.6"
@@ -40,9 +41,17 @@ erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
 specs = "0.16"
+atelier-loader = { git = "https://github.com/amethyst/atelier-assets.git", optional = true }
+atelier-importer = { git = "https://github.com/amethyst/atelier-assets.git", optional = true }
+uuid = { version = "0.7", optional = true }
+bincode = { version = "1.1", optional = true }
+type-uuid = "0.1"
 
 [dev-dependencies]
 serde_json = "1"
+
+# I want this to be an optional dev-dependency, but it's not possible :(
+atelier-daemon = { git = "https://github.com/amethyst/atelier-assets.git", default-features = false }
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]

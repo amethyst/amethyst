@@ -87,6 +87,7 @@ test-support = [
     "amethyst_rendy/test-support",
     "amethyst_window/test-support",
 ]
+experimental-assets = [ "amethyst_assets/experimental-assets" ]
 experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 parallel = [
     "amethyst_core/parallel"

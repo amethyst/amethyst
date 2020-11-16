@@ -32,7 +32,7 @@ const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
 struct Inner<T: ?Sized> {
     source: Option<Box<Error>>,
     backtrace: Option<Backtrace>,
-    error: T,
+    error: Box<T>,
 }
 
 /// The error type used by Amethyst.
@@ -158,7 +158,17 @@ impl Error {
     /// **Warning:** This erases most diagnostics in favor of returning only the top error.
     /// `std::error::Error` is expanded further.
     pub fn as_error(&self) -> &(dyn error::Error + 'static) {
-        &self.inner.error
+        self.inner.error.as_ref()
+    }
+
+    /// Convert to `std::error::Error`.
+    ///
+    /// This can be useful for integrating with systems that operate on `std::error::Error`.
+    ///
+    /// **Warning:** This erases most diagnostics in favor of returning only the top error.
+    /// `std::error::Error` is expanded further.
+    pub fn into_error(self) -> Box<dyn error::Error + 'static + Send + Sync> {
+        self.inner.error
     }
 }
 

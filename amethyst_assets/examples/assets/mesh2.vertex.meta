@@ -1,0 +1,24 @@
+(
+    version: 1,
+    import_hash: Some(108934581302977238),
+    importer_version: 1,
+    importer_type: "df3c6c87-05e6-4cc9-8711-cb6a6aad9942",
+    importer_options: (),
+    importer_state: (
+        id: Some("7509a29f-9051-48f8-a54e-e94c5b8af672"),
+    ),
+    assets: [
+        (
+            id: "7509a29f-9051-48f8-a54e-e94c5b8af672",
+            search_tags: [
+                ("file_name", Some("mesh2.vertex")),
+            ],
+            build_deps: [
+            ],
+            load_deps: [
+            ],
+            build_pipeline: None,
+            asset_type: "687b6d94-c653-4663-af73-e967c92ad140",
+        ),
+    ],
+)

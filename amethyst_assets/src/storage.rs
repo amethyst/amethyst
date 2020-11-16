@@ -263,7 +263,7 @@ impl<A: Asset> AssetStorage<A> {
                             Ok((ProcessingState::Loaded(x), r)) => {
                                 debug!(
                                         "{:?}: Asset {:?} (handle id: {:?}) has been loaded successfully",
-                                        A::NAME,
+                                        A::name(),
                                         name,
                                         handle,
                                     );
@@ -277,7 +277,7 @@ impl<A: Asset> AssetStorage<A> {
                                     );
                                     tracker.fail(
                                         handle.id(),
-                                        A::NAME,
+                                        A::name(),
                                         name,
                                         Error::from(error::Error::UnusedHandle),
                                     );
@@ -290,7 +290,7 @@ impl<A: Asset> AssetStorage<A> {
                             Ok((ProcessingState::Loading(x), r)) => {
                                 debug!(
                                         "{:?}: Asset {:?} (handle id: {:?}) is not complete, readding to queue",
-                                        A::NAME,
+                                        A::name(),
                                         name,
                                         handle,
                                     );
@@ -305,12 +305,12 @@ impl<A: Asset> AssetStorage<A> {
                             Err(e) => {
                                 error!(
                                     "{:?}: Asset {:?} (handle id: {:?}) could not be loaded: {}",
-                                    A::NAME,
+                                    A::name(),
                                     name,
                                     handle,
                                     e,
                                 );
-                                tracker.fail(handle.id(), A::NAME, name, e);
+                                tracker.fail(handle.id(), A::name(), name, e);
 
                                 continue;
                             }
@@ -343,7 +343,7 @@ impl<A: Asset> AssetStorage<A> {
                             Ok((ProcessingState::Loading(x), r)) => {
                                 debug!(
                                     "{:?}: Asset {:?} (handle id: {:?}) is not complete, readding to queue",
-                                    A::NAME,
+                                    A::name(),
                                     name,
                                     handle,
                                 );
@@ -359,7 +359,7 @@ impl<A: Asset> AssetStorage<A> {
                                 error!(
                                     "{:?}: Failed to hot-reload asset {:?} (handle id: {:?}): {}\n\
                                      Falling back to old reload object.",
-                                    A::NAME,
+                                    A::name(),
                                     name,
                                     handle,
                                     e,
@@ -419,14 +419,14 @@ impl<A: Asset> AssetStorage<A> {
             });
         }
         if count != 0 {
-            debug!("{:?}: Freed {} handle ids", A::NAME, count,);
+            debug!("{:?}: Freed {} handle ids", A::name(), count,);
         }
 
         if strategy
             .map(|s| s.needs_reload(frame_number))
             .unwrap_or(false)
         {
-            trace!("{:?}: Testing for asset reloads..", A::NAME);
+            trace!("{:?}: Testing for asset reloads..", A::name());
             self.hot_reload(pool);
         }
     }
@@ -446,7 +446,7 @@ impl<A: Asset> AssetStorage<A> {
 
             debug!(
                 "{:?}: Asset {:?} (handle id: {:?}) needs a reload using format {:?}",
-                A::NAME,
+                A::name(),
                 name,
                 handle,
                 format,
@@ -489,6 +489,32 @@ impl<A: Asset> Drop for AssetStorage<A> {
     fn drop(&mut self) {
         let bitset = &self.bitset;
         unsafe { self.assets.clean(bitset) }
+    }
+}
+
+/// A default implementation for an asset processing system
+/// which converts data to assets and maintains the asset storage
+/// for `A`.
+///
+/// This system can only be used if the asset data implements
+/// `Into<Result<A, BoxedErr>>`.
+pub struct Processor<A> {
+    marker: PhantomData<A>,
+}
+
+impl<A> Default for Processor<A> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<A> Processor<A> {
+    /// Creates a new asset processor for
+    /// assets of type `A`.
+    pub fn new() -> Self {
+        Processor {
+            marker: PhantomData,
+        }
     }
 }
 

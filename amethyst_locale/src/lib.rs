@@ -14,15 +14,19 @@ use amethyst_assets::{Asset, Format, Handle};
 use amethyst_error::Error;
 pub use fluent::{concurrent::FluentBundle, FluentResource};
 use serde::{Deserialize, Serialize};
+use type_uuid::*;
 use unic_langid::langid;
 
 /// Loads the strings from localisation files.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, TypeUuid, Serialize, Deserialize)]
+#[uuid = "fe7720ec-ecb5-4f59-8a09-656805eb4eff"]
 pub struct LocaleFormat;
 
 amethyst_assets::register_format_type!(Locale);
 
 amethyst_assets::register_format!("FTL", LocaleFormat as Locale);
+// Locale doesn't impl Serialize/Deserialize, so can't register importer :(
+// amethyst_assets::register_importer!(".ftl", LocaleFormat);
 impl Format<Locale> for LocaleFormat {
     fn name(&self) -> &'static str {
         "FTL"
@@ -48,12 +52,16 @@ pub type LocaleHandle = Handle<Locale>;
 
 /// A loaded locale.
 #[allow(missing_debug_implementations)]
+#[derive(TypeUuid)]
+#[uuid = "d9e1870c-9744-40b0-969d-15ec45ea7372"]
 pub struct Locale {
     /// The bundle stores its resources for now.
     pub bundle: FluentBundle<FluentResource>,
 }
 
 impl Asset for Locale {
-    const NAME: &'static str = "locale::Locale";
+    fn name() -> &'static str {
+        "locale::Locale"
+    }
     type Data = Locale;
 }

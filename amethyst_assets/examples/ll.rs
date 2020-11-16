@@ -12,8 +12,10 @@ use amethyst_error::Error;
 struct DummyAsset(String);
 
 impl Asset for DummyAsset {
-    const NAME: &'static str = "example::DummyAsset";
     type Data = String;
+    fn name() -> &'static str {
+        "example::DummyAsset"
+    }
 }
 
 #[derive(Clone, Debug)]

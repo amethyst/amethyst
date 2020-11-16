@@ -23,7 +23,9 @@ pub struct SpriteSheet {
 }
 
 impl Asset for SpriteSheet {
-    const NAME: &'static str = "renderer::SpriteSheet";
+    fn name() -> &'static str {
+        "renderer::SpriteSheet"
+    }
     type Data = Self;
 }
 

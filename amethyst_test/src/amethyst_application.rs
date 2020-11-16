@@ -1163,7 +1163,9 @@ mod test {
     #[derive(Debug, PartialEq)]
     struct AssetZero(u32);
     impl Asset for AssetZero {
-        const NAME: &'static str = "amethyst_test::AssetZero";
+        fn name() -> &'static str {
+            "amethyst_test::AssetZero"
+        }
         type Data = Self;
         type HandleStorage = VecStorage<Handle<Self>>;
     }

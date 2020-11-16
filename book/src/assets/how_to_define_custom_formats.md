@@ -100,9 +100,11 @@ If you are defining a new format that may be useful to others, [please send us a
     # pub type EnergyBlastHandle = Handle<EnergyBlast>;
     #
     # impl Asset for EnergyBlast {
-    #     const NAME: &'static str = "my_crate::EnergyBlast";
     #     type Data = Self;
     #     type HandleStorage = VecStorage<EnergyBlastHandle>;
+    #     fn name() -> &'static str {
+    #         "my_crate::EnergyBlast"
+    #     }
     # }
     #
     # impl From<EnergyBlast> for Result<ProcessingState<EnergyBlast>, Error> {

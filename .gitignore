@@ -1,5 +1,6 @@
 # Unwanted files
 amethyst_assets/target
+amethyst_assets/examples/.asset_db
 amethyst_config/target
 amethyst_renderer/target
 book/book

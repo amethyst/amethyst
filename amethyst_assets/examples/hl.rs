@@ -74,7 +74,9 @@ pub struct MeshAsset {
 }
 
 impl Asset for MeshAsset {
-    const NAME: &'static str = "example::Mesh";
+    fn name() -> &'static str {
+        "example::Mesh"
+    }
     type Data = VertexData;
 }
 

@@ -141,7 +141,7 @@ impl Loader {
 
         debug!(
             "{:?}: Loading asset {:?} with format {:?} from source {:?} (handle id: {:?})",
-            A::NAME,
+            A::name(),
             name,
             format_name,
             source_name,

@@ -1,0 +1,26 @@
+(
+    version: 1,
+    import_hash: Some(10139302141331564556),
+    importer_version: 1,
+    importer_type: "df3c6c87-05e6-4cc9-8711-cb6a6aad9942",
+    importer_options: (),
+    importer_state: (
+        id: Some("d9548941-c021-428d-aff3-745c93760eb9"),
+    ),
+    assets: [
+        (
+            id: "d9548941-c021-428d-aff3-745c93760eb9",
+            search_tags: [
+                ("file_name", Some("mesh_subfolder.vertex")),
+            ],
+            build_deps: [
+                Path("../mesh.vertex"),
+            ],
+            load_deps: [
+                Path("../mesh.vertex"),
+            ],
+            build_pipeline: None,
+            asset_type: "687b6d94-c653-4663-af73-e967c92ad140",
+        ),
+    ],
+)

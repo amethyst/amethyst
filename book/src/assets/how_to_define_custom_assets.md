@@ -77,10 +77,12 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # }
     #
     impl Asset for EnergyBlast {
-        const NAME: &'static str = "my_crate::EnergyBlast";
         // use `Self` if the type is directly serialized.
         type Data = EnergyBlastData;
         type HandleStorage = VecStorage<EnergyBlastHandle>;
+        fn name() -> &'static str {
+            "my_crate::EnergyBlast"
+        }
     }
     #
     # /// A handle to a `EnergyBlast` asset.
@@ -125,10 +127,12 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # pub type EnergyBlastHandle = Handle<EnergyBlast>;
     #
     # impl Asset for EnergyBlast {
-    #     const NAME: &'static str = "my_crate::EnergyBlast";
     #     // use `Self` if the type is directly serialized.
     #     type Data = EnergyBlastData;
     #     type HandleStorage = VecStorage<EnergyBlastHandle>;
+    #     fn name() -> &'static str {
+    #         "my_crate::EnergyBlast"
+    #     }
     # }
     #
     # /// Separate serializable type to support different versions
@@ -204,10 +208,12 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # }
     #
     # impl Asset for EnergyBlast {
-    #     const NAME: &'static str = "my_crate::EnergyBlast";
     #     // use `Self` if the type is directly serialized.
     #     type Data = EnergyBlastData;
     #     type HandleStorage = VecStorage<EnergyBlastHandle>;
+    #     fn name() -> &'static str {
+    #         "my_crate::EnergyBlast"
+    #     }
     # }
     #
     # impl ProcessableAsset for EnergyBlast {
