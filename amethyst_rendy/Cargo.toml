@@ -40,11 +40,11 @@ approx = "0.3.2"
 [target.'cfg(target_os = "macos")'.dependencies]
 rendy = { version = "0.4.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1", "metal"] }
 
-# [target.'cfg(target_os = "windows")'.dependencies]
-# rendy = { version = "0.4.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1", "vulkan"] }
+[target.'cfg(target_os = "windows")'.dependencies]
+rendy = { version = "0.4.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1", "vulkan"] }
 
-# [target.'cfg(all(not(target_os = "windows"), not(target_os = "macos")))'.dependencies]
-# rendy = { version = "0.4.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1", "vulkan", "vulkan-x11"] }
+[target.'cfg(all(not(target_os = "windows"), not(target_os = "macos")))'.dependencies]
+rendy = { version = "0.4.1", default-features = false, features = ["base", "mesh-obj", "texture-image", "texture-palette", "serde-1", "vulkan", "vulkan-x11"] }
 
 [dev-dependencies]
 rayon = "1.4.0"
