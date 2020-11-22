@@ -17,6 +17,7 @@ pub use self::{
     shrev::EventChannel,
     timing::*,
 };
+pub use approx;
 pub use nalgebra as math;
 pub use num_traits as num;
 pub use shrev;
