@@ -271,12 +271,12 @@ where
                 let v = vertices[u];
                 let pos = scale
                     .map(|(x, y, z)| Vector3::new(v.pos.x * x, v.pos.y * y, v.pos.z * z))
-                    .unwrap_or_else(|| Vector3::from(v.pos));
+                    .unwrap_or_else(|| Vector3::new(v.pos.x, v.pos.y, v.pos.z));
                 let normal = scale
                     .map(|(x, y, z)| {
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()
                     })
-                    .unwrap_or_else(|| Vector3::from(v.normal));
+                    .unwrap_or_else(|| Vector3::new(v.normal.x, v.normal.y, v.normal.z));
                 let tangent1 = normal.cross(&Vector3::x());
                 let tangent2 = normal.cross(&Vector3::y());
                 let tangent = if tangent1.norm_squared() > tangent2.norm_squared() {

@@ -1,12 +1,11 @@
 //! Local transform component.
-use crate::{
-    alga::general::SubsetOf,
-    math::{
-        self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
-        Vector3,
-    },
+use crate::math::{
+    self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
+    Vector3,
 };
+use getset::*;
 use serde::{Deserialize, Serialize};
+use simba::scalar::SubsetOf;
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///

@@ -1,8 +1,7 @@
 //! ECS transform bundle
 
-use amethyst_error::Error;
-
 use crate::{ecs::*, transform::*};
+use amethyst_error::Error;
 
 /// Transform bundle
 pub struct TransformBundle;
