@@ -14,81 +14,6 @@ pub trait Backend: rendy::hal::Backend {
     fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture;
 }
 
-macro_rules! impl_backends {
-    ($($variant:ident, $feature:literal, $backend:ty;)*) => {
-
-
-        impl_single_default!($([$feature, $backend]),*);
-
-        static_assertions::assert_cfg!(
-            any($(feature = $feature),*),
-            concat!("You must specify at least one graphical backend feature: ", stringify!($($feature),* "See the wiki article https://book.amethyst.rs/stable/appendices/c_feature_gates.html#graphics-features for more details."))
-        );
-
-        /// Backend wrapper.
-        #[derive(Debug)]
-        pub enum BackendVariant {
-            $(
-                #[cfg(feature = $feature)]
-                #[doc = "Backend Variant"]
-                $variant,
-            )*
-        }
-
-        /// Mesh wrapper.
-        #[derive(Debug)]
-        pub enum Mesh {
-            $(
-                #[cfg(feature = $feature)]
-                #[doc = "Mesh Variant"]
-                $variant(rendy::mesh::Mesh<$backend>),
-            )*
-        }
-
-        /// Texture wrapper.
-        #[derive(Debug)]
-        pub enum Texture {
-            $(
-                #[cfg(feature = $feature)]
-                #[doc = "Texture Variant"]
-                $variant(rendy::texture::Texture<$backend>),
-            )*
-        }
-
-        $(
-            #[cfg(feature = $feature)]
-            impl Backend for $backend {
-                #[inline]
-                #[allow(irrefutable_let_patterns)]
-                fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
-                    if let Mesh::$variant(inner) = mesh {
-                        Some(inner)
-                    } else {
-                        None
-                    }
-                }
-                #[inline]
-                #[allow(irrefutable_let_patterns)]
-                fn unwrap_texture(texture: &Texture) -> Option<&rendy::texture::Texture<Self>> {
-                    if let Texture::$variant(inner) = texture {
-                        Some(inner)
-                    } else {
-                        None
-                    }
-                }
-                #[inline]
-                fn wrap_mesh(mesh: rendy::mesh::Mesh<Self>) -> Mesh {
-                    Mesh::$variant(mesh)
-                }
-                #[inline]
-                fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture {
-                    Texture::$variant(texture)
-                }
-            }
-        )*
-    };
-}
-
 // Create `DefaultBackend` type alias only when exactly one backend is selected.
 macro_rules! impl_single_default {
     ( $([$feature:literal, $backend:ty]),* ) => {
@@ -108,14 +33,139 @@ macro_rules! impl_single_default {
     };
 }
 
-impl_backends!(
-    // DirectX 12 is currently disabled because of incomplete gfx-hal support for it.
-    // It will be re-enabled when it actually works.
-    // Dx12, "dx12", rendy::dx12::Backend;
-    Metal, "metal", rendy::metal::Backend;
-    Vulkan, "vulkan", rendy::vulkan::Backend;
-    Empty, "empty", rendy::empty::Backend;
-);
+impl_single_default!(["metal", Metal], ["vulkan", Vulkan], ["empty", Empty]);
+
+/// Backend wrapper.
+#[derive(Debug)]
+pub enum BackendVariant {
+    #[cfg(feature = "metal")]
+    #[doc = "Backend Variant"]
+    Metal,
+    #[cfg(feature = "vulkan")]
+    #[doc = "Backend Variant"]
+    Vulkan,
+    #[cfg(feature = "empty")]
+    #[doc = "Backend Variant"]
+    Empty,
+}
+
+/// Mesh wrapper.
+#[derive(Debug)]
+pub enum Mesh {
+    #[cfg(feature = "metal")]
+    #[doc = "Mesh Variant"]
+    Metal(rendy::mesh::Mesh<metal>),
+    #[cfg(feature = "vulkan")]
+    #[doc = "Mesh Variant"]
+    Vulkan(rendy::mesh::Mesh<vulkan>),
+    #[cfg(feature = "empty")]
+    #[doc = "Mesh Variant"]
+    Empty(rendy::mesh::Mesh<empty>),
+}
+
+/// Texture wrapper.
+#[derive(Debug)]
+pub enum Texture {
+    #[cfg(feature = "metal")]
+    #[doc = "Texture Variant"]
+    Metal(rendy::texture::Texture<metal>),
+    #[cfg(feature = "vulkan")]
+    #[doc = "Texture Variant"]
+    Vulkan(rendy::texture::Texture<vulkan>),
+    #[cfg(feature = "empty")]
+    #[doc = "Texture Variant"]
+    Empty(rendy::texture::Texture<empty>),
+}
+
+#[cfg(feature = "metal")]
+impl Backend for Metal {
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
+        if let Mesh::Metal(inner) = mesh {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_texture(texture: &Texture) -> Option<&rendy::texture::Texture<Self>> {
+        if let Texture::Metal(inner) = texture {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn wrap_mesh(mesh: rendy::mesh::Mesh<Self>) -> Mesh {
+        Mesh::Metal(mesh)
+    }
+    #[inline]
+    fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture {
+        Texture::Metal(texture)
+    }
+}
+
+#[cfg(feature = "vulkan")]
+impl Backend for Vulkan {
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
+        if let Mesh::Vulkan(inner) = mesh {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_texture(texture: &Texture) -> Option<&rendy::texture::Texture<Self>> {
+        if let Texture::Vulkan(inner) = texture {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn wrap_mesh(mesh: rendy::mesh::Mesh<Self>) -> Mesh {
+        Mesh::Vulkan(mesh)
+    }
+    #[inline]
+    fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture {
+        Texture::Vulkan(texture)
+    }
+}
+
+#[cfg(feature = "empty")]
+impl Backend for Empty {
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
+        if let Mesh::Empty(inner) = mesh {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_texture(texture: &Texture) -> Option<&rendy::texture::Texture<Self>> {
+        if let Texture::Empty(inner) = texture {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn wrap_mesh(mesh: rendy::mesh::Mesh<Self>) -> Mesh {
+        Mesh::Empty(mesh)
+    }
+    #[inline]
+    fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture {
+        Texture::Empty(texture)
+    }
+}
 
 impl Asset for Mesh {
     const NAME: &'static str = "Mesh";
