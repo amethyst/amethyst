@@ -159,6 +159,7 @@ specs-derive = "0.4.1"
 type-uuid = "0.1"
 serde-diff = "0.3"
 legion-prefab = { git = "https://github.com/kabergstrom/prefab" }
+prefab-format = { git = "https://github.com/kabergstrom/prefab" }
 
 [build-dependencies]
 dirs = "2.0.2"
@@ -286,6 +287,10 @@ path = "examples/custom_game_data/main.rs"
 [[example]]
 name = "arc_ball_camera"
 path = "examples/arc_ball_camera/main.rs"
+
+[[example]]
+name = "prefab_atelier"
+path = "examples/prefab_atelier/main.rs"
 
 [[example]]
 name = "prefab"
