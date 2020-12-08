@@ -24,6 +24,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
         toolchain: [stable, beta, nightly]
         include:
         - os: macos-latest
