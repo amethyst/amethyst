@@ -16,9 +16,6 @@ documentation = "https://docs.amethyst.rs/stable/amethyst_assets/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }

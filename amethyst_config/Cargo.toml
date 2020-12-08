@@ -12,9 +12,6 @@ repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 ron = "0.5"
 serde = "1.0"
