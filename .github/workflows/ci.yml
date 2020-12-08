@@ -69,11 +69,9 @@ jobs:
         run: rm -rf ./target/debug/deps/libamethyst*
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - run: cargo test --workspace --features=$FEATURES,${{ matrix.BACKEND }}
+      - run: cargo test --workspace --all-targets --features=$FEATURES,${{ matrix.BACKEND }}
         env:
           MACOS: ${{ matrix.MACOS }} # Used by some tests
-
-      - run: cargo test --examples --features=$FEATURES,${{ matrix.BACKEND }}
 
       - name: install mdbook on stable, ubuntu-latest
         uses: peaceiris/actions-mdbook@v1
