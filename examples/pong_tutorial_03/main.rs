@@ -5,7 +5,7 @@ mod systems;
 
 use amethyst::{
     core::transform::TransformBundle,
-    input::{InputBundle, StringBindings},
+    input::InputBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
@@ -30,11 +30,9 @@ fn main() -> amethyst::Result<()> {
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher
         .add_bundle(TransformBundle)
-        .add_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(
-                app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
-            )?,
-        )
+        .add_bundle(InputBundle::new().with_bindings_from_file(
+            app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
+        )?)
         // We have now added our own system, the PaddleSystem, defined in systems/paddle.rs
         .add_system(systems::paddle::build())
         .add_bundle(

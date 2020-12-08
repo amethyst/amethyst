@@ -5,7 +5,7 @@ mod systems;
 
 use amethyst::{
     core::transform::TransformBundle,
-    input::{InputBundle, StringBindings},
+    input::InputBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
@@ -31,11 +31,9 @@ fn main() -> amethyst::Result<()> {
     dispatcher
         // Add the transform bundle which handles tracking entity positions
         .add_bundle(TransformBundle)
-        .add_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(
-                app_root.join("examples/pong_tutorial_04/config/bindings.ron"),
-            )?,
-        )
+        .add_bundle(InputBundle::new().with_bindings_from_file(
+            app_root.join("examples/pong_tutorial_04/config/bindings.ron"),
+        )?)
         // We have now added our own systems, defined in the systems module
         .add_system(systems::paddle::build())
         .add_system(systems::move_balls::build())
