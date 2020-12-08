@@ -11,9 +11,6 @@ repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 heck = "0.3.1"
 syn = { version = "1.0", features = ["full", "visit"] }
