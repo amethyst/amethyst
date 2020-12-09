@@ -55,30 +55,27 @@ fn draw_selection(
         lines.clear();
 
         if let Some(mouse_position) = input.mouse_position() {
-            let mut camera_transform = None;
-            {
-                // Find if such camera exists
-                camera_transform = active_camera
-                    .entity
-                    .as_ref()
-                    .and_then(|active_camera| {
-                        <(Entity, &Camera, &Transform)>::query()
-                            .filter(component::<Camera>())
-                            .get_mut(&mut subworld, *active_camera)
-                            .ok()
-                            .map(|(_, c, t)| (c, t))
-                    })
-                    .or_else(|| None);
-            }
+            
+            // Find if the active camera exists
+            let mut camera_transform = active_camera
+                .entity
+                .as_ref()
+                .and_then(|active_camera| {
+                    <(Entity, &Camera, &Transform)>::query()
+                        .filter(component::<Camera>())
+                        .get_mut(&mut subworld, *active_camera)
+                        .ok()
+                        .map(|(_, c, t)| (c, t))
+                })
+                .or_else(|| None);
 
-            {
-                // Return active camera or fetch first available
-                if camera_transform.is_none() {
-                    camera_transform = <(&Camera, &Transform)>::query()
-                        .iter_mut(&mut subworld)
-                        .nth(0)
-                }
-            }
+            // Return active camera or fetch first available
+            let mut camera_transform = match camera_transform {
+                Some(e) => Some(e),
+                None => <(&Camera, &Transform)>::query()
+                .iter_mut(&mut subworld)
+                .nth(0)
+            };
 
             if let Some((camera, camera_transform)) = camera_transform {
                 let action_down = input
@@ -198,7 +195,7 @@ fn camera_movement(
     #[resource] active_camera: &ActiveCamera,
     #[resource] input: &InputHandler,
     world: &mut SubWorld,
-    commands: &mut CommandBuffer,
+    _commands: &mut CommandBuffer,
 ) {
     let x_move = input.axis_value("camera_x").unwrap();
     let y_move = input.axis_value("camera_y").unwrap();
@@ -206,31 +203,28 @@ fn camera_movement(
     let z_move_scale = input.axis_value("camera_scale").unwrap();
 
     if x_move != 0.0 || y_move != 0.0 || z_move != 0.0 || z_move_scale != 0.0 {
-        let mut camera_transform = None;
-        {
-            // Find if such camera exists
-            camera_transform = active_camera
-                .entity
-                .as_ref()
-                .and_then(|active_camera| {
-                    <(Entity, &mut Transform)>::query()
-                        .filter(component::<Camera>())
-                        .get_mut(world, *active_camera)
-                        .ok()
-                        .map(|(_, c)| c)
-                })
-                .or_else(|| None);
-        }
-
-        {
-            // Return active camera or fetch first available
-            if camera_transform.is_none() {
-                camera_transform = <(&mut Transform)>::query()
+        // Find if the active camera exists
+        let mut camera_transform = active_camera
+            .entity
+            .as_ref()
+            .and_then(|active_camera| {
+                <(Entity, &mut Transform)>::query()
                     .filter(component::<Camera>())
-                    .iter_mut(world)
-                    .nth(0)
-            }
-        }
+                    .get_mut(world, *active_camera)
+                    .ok()
+                    .map(|(_, c)| c)
+            })
+            .or_else(|| None);
+
+        // Return active camera or fetch first available
+        let mut camera_transform = match camera_transform {
+            Some(e) => Some(e),
+            None => <(&mut Transform)>::query()
+            .filter(component::<Camera>())
+            .iter_mut(world)
+            .nth(0)
+        };
+    
         if let Some(camera_transform) = camera_transform {
             camera_transform.prepend_translation_x(x_move * 5.0);
             camera_transform.prepend_translation_y(y_move * 5.0);
@@ -264,7 +258,6 @@ impl Default for MapMovementSystemState {
 #[write_component(Transform)]
 fn map_movement(
     #[state] state: &mut MapMovementSystemState,
-    #[resource] active_camera: &ActiveCamera,
     #[resource] time: &Time,
     #[resource] input: &InputHandler,
     world: &mut SubWorld,
