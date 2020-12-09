@@ -2,9 +2,9 @@
 
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
-    ecs::{Component, HashMapStorage, World},
+    ecs::world::World,
     math::{Matrix4, Point3, Vector3},
-    Transform,
+    transform::Transform,
 };
 use amethyst_rendy::{palette::Srgba, SpriteSheet};
 
@@ -126,9 +126,6 @@ pub struct TileMap<T: Tile, E: CoordinateEncoder = crate::MortonEncoder2D> {
 impl<T: Tile, E: CoordinateEncoder> Asset for TileMap<T, E> {
     const NAME: &'static str = "tiles::map";
     type Data = Self;
-}
-impl<T: Tile, E: CoordinateEncoder> Component for TileMap<T, E> {
-    type Storage = HashMapStorage<Self>;
 }
 
 #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]

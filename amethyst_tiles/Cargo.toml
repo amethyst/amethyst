@@ -34,6 +34,8 @@ rayon = "1.4.0"
 bitintr = "0.3"
 glsl-layout = "0.3"
 err-derive = "0.2.3"
+# until https://github.com/amethyst/legion/pull/186 passed
+legion = { version = "0.3", default-features = false, features = ["serialize", "crossbeam-events", "codegen"] }
 
 [dev-dependencies]
 criterion = "0.3"
