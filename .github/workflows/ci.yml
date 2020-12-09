@@ -49,20 +49,19 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           profile: minimal
-          # Don't use a 'components:' entry--we don't need them with beta/nightly, plus nightly often doesn't have them
           override: true
 
       - run: rustup component add rustfmt
-        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
+        if: matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest'
 
-      - run: cargo fmt --all -- --check
-        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
+      - run: cargo +nightly fmt --all -- --check
+        if: matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest'
         
       - run: rustup component add clippy
-        if: matrix.toolchain == 'stable'
+        if: matrix.toolchain == 'nightly'
 
-      - run: cargo clippy --workspace --all-targets --features=$FEATURES,${{ matrix.BACKEND }} 
-        if: matrix.toolchain == 'stable'
+      - run: cargo +nightly clippy -Z unstable-options --workspace --all-targets --features=$FEATURES,${{ matrix.BACKEND }}
+        if: matrix.toolchain == 'nightly'
 
       - name: clean clippy-generated amethyst libs
         # Remove the clippy-generated amethyst files.
