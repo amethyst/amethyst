@@ -88,10 +88,7 @@ where
         _: &[Entity],
         _: &[Entity],
     ) -> Result<Handle<Animation<T>>, Error> {
-        Ok(self
-            .handle
-            .as_ref()
-            .cloned().ok_or(MissingAssetHandle)?)
+        Ok(self.handle.as_ref().cloned().ok_or(MissingAssetHandle)?)
     }
 
     fn load_sub_assets(
