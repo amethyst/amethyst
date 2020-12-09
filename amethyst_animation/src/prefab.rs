@@ -91,8 +91,7 @@ where
         Ok(self
             .handle
             .as_ref()
-            .cloned()
-            .ok_or_else(|| MissingAssetHandle)?)
+            .cloned().ok_or(MissingAssetHandle)?)
     }
 
     fn load_sub_assets(

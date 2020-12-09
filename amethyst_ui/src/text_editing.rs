@@ -405,7 +405,7 @@ fn should_skip_char(input: char) -> bool {
     || input == '\u{7F}'
     // Unicode reserves some characters for "private use".  Systems emit
     // these for no clear reason, so we're just going to ignore all of them.
-    || (input >= '\u{E000}' && input <= '\u{F8FF}')
-    || (input >= '\u{F0000}' && input <= '\u{FFFFF}')
-    || (input >= '\u{100000}' && input <= '\u{10FFFF}')
+    || ('\u{E000}'..='\u{F8FF}').contains(&input)
+    || ('\u{F0000}'..='\u{FFFFF}').contains(&input)
+    || ('\u{100000}'..='\u{10FFFF}').contains(&input)
 }

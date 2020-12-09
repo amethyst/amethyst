@@ -1,6 +1,6 @@
 #![allow(
     clippy::unneeded_field_pattern,
-    clippy::block_in_if_condition_stmt,
+    clippy::blocks_in_if_conditions,
     clippy::unneeded_field_pattern
 )]
 use amethyst_assets::{PrefabData, ProgressCounter};
