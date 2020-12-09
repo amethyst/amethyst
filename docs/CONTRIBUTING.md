@@ -64,7 +64,7 @@ done the following things first:
 2. All of the following commands completed without errors.
    * `rustup update stable nightly`
    * `cargo +nightly fmt --all`
-   * `cargo +nightly clippy --workspace --all-targets --features empty`
+   * `cargo +nightly clippy --workspace --all-targets --features empty -Z unstable-options`
    * `cargo build --all-targets --workspace --features empty`
    * `cargo test --all-targets --workspace --features empty`
    * `cargo run --example $YOUR_EXAMPLE --features $YOUR_BACKEND`
