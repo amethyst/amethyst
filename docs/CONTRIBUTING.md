@@ -61,11 +61,10 @@ done the following things first:
 
 1. You have ensured the pull request is rebased on a recent version of your
    respective branch or the latest upstream has been merged.
-2. All of the following commands completed without errors.
+2. All of the following commands completed without errors.  You can pass whatever features are relevant for your change. CI will test with all features enabled.
    * `rustup update stable nightly`
    * `cargo +nightly fmt --all`
    * `cargo +nightly clippy --workspace --all-targets --features empty -Z unstable-options`
-   * `cargo build --all-targets --workspace --features empty`
    * `cargo test --all-targets --workspace --features empty`
    * `cargo run --example $YOUR_EXAMPLE --features $YOUR_BACKEND`
 3. You have granted non-exclusive right to your source code under both the
