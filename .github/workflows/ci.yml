@@ -61,7 +61,7 @@ jobs:
       - run: rustup component add clippy
         if: matrix.toolchain == 'stable'
 
-      - run: cargo clippy --features=$FEATURES,${{ matrix.BACKEND }} --workspace
+      - run: cargo clippy --workspace --all-targets --features=$FEATURES,${{ matrix.BACKEND }} 
         if: matrix.toolchain == 'stable'
 
       - name: clean clippy-generated amethyst libs
