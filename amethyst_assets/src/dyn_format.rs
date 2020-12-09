@@ -278,8 +278,6 @@ macro_rules! register_format {
 #[cfg(test)]
 mod tests {
     use amethyst_error::Error;
-    use serde;
-    use serde_json;
 
     use super::*;
     use crate as amethyst_assets;

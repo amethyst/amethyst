@@ -45,13 +45,13 @@ pub fn build() -> impl Runnable {
                         .unwrap()
                         .global_matrix;
 
-                    right
+                    if let Some(transform) = right
                         .entry_mut(*entity)
                         .ok()
                         .and_then(|entry| entry.into_component_mut::<Transform>().ok())
-                        .map(|transform| {
-                            transform.parent_matrix = parent_matrix;
-                        });
+                    {
+                        transform.parent_matrix = parent_matrix;
+                    }
                 }
 
                 // Update global transform for entities that are children of some entity

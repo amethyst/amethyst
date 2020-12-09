@@ -42,7 +42,7 @@ impl CameraGatherer {
                     .map(|(e, _)| *e)
                     .find(|e| active_camera == *e)
             })
-            .or_else(|| None);
+            .or(None);
 
         // Return active camera or fetch first available
         match entity {
@@ -51,7 +51,7 @@ impl CameraGatherer {
                 // Fetch first available camera
                 <(Entity, Read<Camera>)>::query()
                     .iter(world)
-                    .nth(0)
+                    .next()
                     .map(|(e, _)| *e)
             }
         }

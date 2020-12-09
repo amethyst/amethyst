@@ -71,7 +71,7 @@ pub fn build_sprite_visibility_sorting_system() -> impl Runnable {
 
                 let (camera, camera_transform) = match active_camera.entity.map_or_else(
                     || {
-                        camera_query1.iter(world).nth(0)
+                        camera_query1.iter(world).next()
                     },
                     |e| {
                         camera_query2
