@@ -1,9 +1,10 @@
-use crate::event::GameEvent;
 use amethyst::{
     core::shrev::EventChannel,
     derive::SystemDesc,
     ecs::{System, SystemData, Write},
 };
+
+use crate::event::GameEvent;
 
 /// Signals the state when it's time to increase the game difficulty
 #[derive(SystemDesc)]

@@ -7,10 +7,9 @@ use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
-use winit::Event;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
+use winit::Event;
 
 use crate::{
     assets::{Loader, Source},

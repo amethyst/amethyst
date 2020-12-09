@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use amethyst_error::Error;
-
 use amethyst_animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
@@ -10,6 +8,7 @@ use amethyst_core::{
     math::{convert, Vector3, Vector4},
     Transform,
 };
+use amethyst_error::Error;
 
 use super::Buffers;
 use crate::error;

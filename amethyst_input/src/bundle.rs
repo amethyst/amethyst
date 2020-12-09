@@ -1,15 +1,16 @@
 //! ECS input bundle
 
-use crate::{build_input_system, BindingError, Bindings, InputHandler};
+use std::{error, fmt, path::Path};
+
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
 use derivative::Derivative;
-use std::{error, fmt, path::Path};
 use winit::Event;
 
 #[cfg(feature = "sdl_controller")]
 use crate::sdl_events_system::ControllerMappings;
+use crate::{build_input_system, BindingError, Bindings, InputHandler};
 
 /// Bundle for adding the `InputHandler`.
 ///

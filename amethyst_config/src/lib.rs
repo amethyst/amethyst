@@ -146,8 +146,9 @@ where
     }
 
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
-        use ron::ser::to_string_pretty;
         use std::{fs::File, io::Write};
+
+        use ron::ser::to_string_pretty;
 
         let s = to_string_pretty(self, Default::default())?;
         File::create(path)?.write_all(s.as_bytes())?;

@@ -1,10 +1,12 @@
-use crate::CoordinateEncoder;
+use std::cmp::Ordering;
+
 use amethyst_core::math::Vector3;
 use luts::{
     MORTON256_X, MORTON256_Y, MORTON256_Z, MORTON512_DECODE_X, MORTON512_DECODE_Y,
     MORTON512_DECODE_Z,
 };
-use std::cmp::Ordering;
+
+use crate::CoordinateEncoder;
 
 mod luts;
 
@@ -205,9 +207,10 @@ pub fn max(morton1: u32, morton2: u32) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use more_asserts::*;
     use rayon::prelude::*;
+
+    use super::*;
 
     pub fn test_encoder<E: CoordinateEncoder>(dimensions: Vector3<u32>) {
         let encoder = E::from_dimensions(dimensions);

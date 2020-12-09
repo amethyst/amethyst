@@ -1,5 +1,7 @@
 //! Displays spheres with physically based materials.
 
+use std::path::Path;
+
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
@@ -49,10 +51,7 @@ use amethyst::{
         tag::TagFinder,
     },
 };
-use std::path::Path;
-
 use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

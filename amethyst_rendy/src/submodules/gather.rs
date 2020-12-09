@@ -1,18 +1,18 @@
 //! Helper gatherer structures for collecting information about the world.
-use crate::{
-    camera::{ActiveCamera, Camera},
-    pod::{self, IntoPod},
-    resources::AmbientColor,
-};
 use amethyst_core::{
     ecs::*,
     math::{convert, Matrix4, Vector3},
     transform::Transform,
 };
 use glsl_layout::*;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    camera::{ActiveCamera, Camera},
+    pod::{self, IntoPod},
+    resources::AmbientColor,
+};
 
 type Std140<T> = <T as AsStd140>::Std140;
 

@@ -1,5 +1,7 @@
 //! An example showing how to create a dispatcher inside of a State.
 
+use std::marker::PhantomData;
+
 use amethyst::{
     ecs::{Dispatcher, DispatcherBuilder, WorldExt},
     prelude::*,
@@ -7,8 +9,6 @@ use amethyst::{
     utils::application_root_dir,
     Error,
 };
-
-use std::marker::PhantomData;
 
 struct StateA;
 

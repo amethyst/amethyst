@@ -1,9 +1,8 @@
 use std::fs;
 
+use amethyst_assets::{AssetStorage, Format, Loader};
 use font_kit::handle::Handle as FontKitHandle;
 use log::{error, warn};
-
-use amethyst_assets::{AssetStorage, Format, Loader};
 
 use crate::{
     font::systemfont::default_system_font,

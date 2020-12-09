@@ -4,7 +4,6 @@ use amethyst_core::{
     ecs::{Component, DenseVecStorage, Entities, Join, Read, System, WriteStorage},
     Hidden, Time,
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

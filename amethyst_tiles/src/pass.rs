@@ -1,6 +1,9 @@
 #![allow(clippy::default_trait_access, clippy::use_self)]
 #![allow(unused_imports, unused_variables)]
 
+use std::marker::PhantomData;
+
+use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     dispatcher::*,
     ecs::prelude::*,
@@ -9,8 +12,6 @@ use amethyst_core::{
     transform::Transform,
     Hidden,
 };
-
-use amethyst_assets::{AssetStorage, Handle};
 use amethyst_rendy::{
     batch::{GroupIterator, OneLevelBatch, OrderedTwoLevelBatch},
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
@@ -45,7 +46,8 @@ use amethyst_rendy::{
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use glsl_layout::AsStd140;
-use std::marker::PhantomData;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use crate::{
     iters::Region,
@@ -53,9 +55,6 @@ use crate::{
     pod::{TileArgs, TileMapArgs},
     CoordinateEncoder, MortonEncoder2D,
 };
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 lazy_static::lazy_static! {
     static ref VERTEX: SpirvShader = SpirvShader::from_bytes(

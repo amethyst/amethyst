@@ -1,6 +1,7 @@
-use crate::resources::ScreenDimensions;
 use amethyst_core::{ecs::*, EventChannel};
 use winit::{Event, EventsLoop, Window};
+
+use crate::resources::ScreenDimensions;
 
 /// Updates `ScreenDimensions` struct with the actual window size from `Window`.
 fn manage_dimensions(mut screen_dimensions: &mut ScreenDimensions, window: &Window) {

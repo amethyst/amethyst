@@ -1,21 +1,21 @@
 //! Transparency, visibility sorting and camera centroid culling for 3D Meshes.
-use crate::{
-    camera::{ActiveCamera, Camera},
-    transparent::Transparent,
-};
+use std::cmp::Ordering;
+
 use amethyst_core::{
     ecs::*,
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
     transform::Transform,
     Hidden, HiddenPropagate,
 };
-
 use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    camera::{ActiveCamera, Camera},
+    transparent::Transparent,
+};
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.

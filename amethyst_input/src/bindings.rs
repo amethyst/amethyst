@@ -363,9 +363,10 @@ impl Bindings {
 
 #[cfg(test)]
 mod tests {
+    use winit::{MouseButton, VirtualKeyCode};
+
     use super::*;
     use crate::{button::*, controller::ControllerAxis};
-    use winit::{MouseButton, VirtualKeyCode};
 
     #[test]
     fn add_and_remove_actions() {

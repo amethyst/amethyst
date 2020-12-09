@@ -3,14 +3,13 @@
     clippy::block_in_if_condition_stmt,
     clippy::unneeded_field_pattern
 )]
-use amethyst_derive::{EventReader, PrefabData};
-
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::{Component, DenseVecStorage, Entity, Read, SystemData, World, WriteStorage},
     shrev::{EventChannel, ReaderId},
     EventReader,
 };
+use amethyst_derive::{EventReader, PrefabData};
 use amethyst_error::Error;
 
 #[derive(Clone)]
@@ -100,10 +99,11 @@ pub enum EnumPrefab {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use amethyst_assets::{AssetStorage, Loader, Prefab, PrefabLoaderSystemDesc};
     use amethyst_core::ecs::{world::EntitiesRes, Builder, Join, WorldExt};
     use amethyst_test::prelude::*;
+
+    use super::*;
 
     macro_rules! assert_prefab {
         ($prefab_type:ident, $prefab:expr, $assertion:expr) => {

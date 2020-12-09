@@ -1,12 +1,7 @@
 //! ECS rendering bundle
 
-use crate::{
-    BlinkSystem, CacheSelectionOrderSystem, DragWidgetSystemDesc, FontAsset, NoCustomUi,
-    ResizeSystemDesc, SelectionKeyboardSystemDesc, SelectionMouseSystemDesc,
-    TextEditingInputSystemDesc, TextEditingMouseSystemDesc, ToNativeWidget,
-    UiButtonActionRetriggerSystemDesc, UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem,
-    UiSoundRetriggerSystemDesc, UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
-};
+use std::marker::PhantomData;
+
 use amethyst_assets::Processor;
 use amethyst_core::{
     bundle::SystemBundle,
@@ -16,7 +11,14 @@ use amethyst_core::{
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
 use derive_new::new;
-use std::marker::PhantomData;
+
+use crate::{
+    BlinkSystem, CacheSelectionOrderSystem, DragWidgetSystemDesc, FontAsset, NoCustomUi,
+    ResizeSystemDesc, SelectionKeyboardSystemDesc, SelectionMouseSystemDesc,
+    TextEditingInputSystemDesc, TextEditingMouseSystemDesc, ToNativeWidget,
+    UiButtonActionRetriggerSystemDesc, UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem,
+    UiSoundRetriggerSystemDesc, UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
+};
 
 /// UI bundle
 ///

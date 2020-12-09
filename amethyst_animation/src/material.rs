@@ -1,12 +1,11 @@
-use minterpolate::InterpolationPrimitive;
-use serde::{Deserialize, Serialize};
-
 use amethyst_assets::Handle;
 use amethyst_rendy::{
     mtl::{Material, TextureOffset},
     sprite::Sprite,
     types::Texture,
 };
+use minterpolate::InterpolationPrimitive;
+use serde::{Deserialize, Serialize};
 
 use crate::{AnimationSampling, ApplyData, BlendMethod};
 

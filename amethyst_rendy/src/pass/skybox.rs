@@ -1,13 +1,3 @@
-use crate::{
-    palette::Srgb,
-    pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::IntoPod,
-    shape::Shape,
-    submodules::{DynamicUniform, FlatEnvironmentSub},
-    system::GraphAuxData,
-    types::Backend,
-    util,
-};
 use derivative::Derivative;
 use glsl_layout::{vec3, AsStd140};
 use rendy::{
@@ -21,9 +11,19 @@ use rendy::{
     mesh::{AsVertex, Mesh, PosTex},
     shader::Shader,
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    palette::Srgb,
+    pipeline::{PipelineDescBuilder, PipelinesBuilder},
+    pod::IntoPod,
+    shape::Shape,
+    submodules::{DynamicUniform, FlatEnvironmentSub},
+    system::GraphAuxData,
+    types::Backend,
+    util,
+};
 
 #[derive(Clone, Debug, PartialEq)]
 struct SkyboxSettings {

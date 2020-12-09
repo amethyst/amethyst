@@ -1,5 +1,3 @@
-use derivative::Derivative;
-use serde::de::DeserializeOwned;
 use std::{
     fmt::{Debug, Formatter},
     marker::PhantomData,
@@ -19,8 +17,8 @@ use amethyst_core::{
 };
 use amethyst_error::{format_err, Error, ResultExt};
 use amethyst_rendy::TexturePrefab;
-
-use serde::{Deserialize, Serialize};
+use derivative::Derivative;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
     get_default_font, Anchor, Draggable, FontAsset, Interactable, LineMode, Selectable, Stretch,

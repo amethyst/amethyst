@@ -7,7 +7,6 @@ use amethyst_core::{
 };
 use amethyst_derive::SystemDesc;
 use amethyst_window::ScreenDimensions;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

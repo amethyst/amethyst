@@ -1,5 +1,5 @@
-use super::Buffers;
-use crate::{error, GltfSceneOptions};
+use std::{iter::repeat, ops::Range};
+
 use amethyst_core::math::{zero, Vector3};
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -8,7 +8,9 @@ use amethyst_rendy::{
 };
 use log::{trace, warn};
 use mikktspace::{generate_tangents, Geometry};
-use std::{iter::repeat, ops::Range};
+
+use super::Buffers;
+use crate::{error, GltfSceneOptions};
 
 fn compute_if<T, F: Fn() -> T>(predicate: bool, func: F) -> Option<T> {
     if predicate {
@@ -253,8 +255,9 @@ fn calculate_tangents(
 
 #[cfg(test)]
 mod tests {
-    use super::{calculate_tangents, Indices};
     use amethyst_rendy::rendy::mesh::{Normal, Position, Tangent, TexCoord};
+
+    use super::{calculate_tangents, Indices};
 
     const POSITIONS: &[Position] = &[
         Position([0.0, 0.0, 0.0]),

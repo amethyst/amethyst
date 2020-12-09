@@ -1,15 +1,13 @@
 //! Utilities for game state management.
 
-use amethyst_input::is_close_requested;
-
-use derivative::Derivative;
-
-use crate::{ecs::*, GameData, StateEvent};
-
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
+use amethyst_input::is_close_requested;
+use derivative::Derivative;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{ecs::*, GameData, StateEvent};
 
 /// Error type for errors occurring in `StateMachine`
 #[derive(Debug)]

@@ -1,6 +1,5 @@
 use amethyst_assets::*;
 use amethyst_error::Error;
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug)]

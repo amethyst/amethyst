@@ -1,6 +1,7 @@
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
 use shrinkwraprs::Shrinkwrap;
-use std::borrow::Cow;
 
 /// A component that gives a name to an [`Entity`].
 ///

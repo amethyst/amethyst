@@ -9,6 +9,8 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+pub(crate) use amethyst_core::ecs::prelude::Entity;
+
 pub use self::{
     blink::BlinkSystem,
     bundle::UiBundle,
@@ -54,8 +56,6 @@ pub use self::{
     transform::{get_parent_pixel_size, UiFinder, UiTransform},
     widgets::{Widget, WidgetId, Widgets},
 };
-
-pub(crate) use amethyst_core::ecs::prelude::Entity;
 
 mod blink;
 mod bundle;

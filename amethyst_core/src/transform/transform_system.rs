@@ -1,10 +1,10 @@
 //! System that updates global transform matrices based on hierarchy relations.
 
-use super::components::*;
-use crate::ecs::*;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use super::components::*;
+use crate::ecs::*;
 
 /// System that updates global transform matrices based on hierarchy relations.
 pub fn build() -> impl Runnable {

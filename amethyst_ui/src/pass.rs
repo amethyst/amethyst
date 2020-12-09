@@ -1,7 +1,5 @@
-use crate::{
-    glyphs::{UiGlyphs, UiGlyphsResource},
-    Selected, TextEditing, UiGlyphsSystemDesc, UiImage, UiTransform,
-};
+use std::cmp::Ordering;
+
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
     ecs::{
@@ -42,10 +40,13 @@ use amethyst_rendy::{
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use glsl_layout::{vec2, vec4, AsStd140};
-use std::cmp::Ordering;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    glyphs::{UiGlyphs, UiGlyphsResource},
+    Selected, TextEditing, UiGlyphsSystemDesc, UiImage, UiTransform,
+};
 
 /// A [RenderPlugin] for rendering UI elements.
 #[derive(Debug, Default)]

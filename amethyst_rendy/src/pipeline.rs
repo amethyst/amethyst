@@ -1,5 +1,4 @@
 //! Graphics pipeline abstraction
-use crate::{types::Backend, util};
 use derivative::Derivative;
 use rendy::{
     factory::Factory,
@@ -16,9 +15,10 @@ use rendy::{
     },
     mesh::VertexFormat,
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{types::Backend, util};
 
 // TODO: make gfx type cloneable
 #[derive(Derivative, Debug)]

@@ -1,8 +1,9 @@
 //! Debug Drawing library
-use crate::pod::IntoPod;
 use amethyst_core::math::{Point2, Point3, UnitQuaternion, Vector2, Vector3};
 use palette::Srgba;
 use rendy::mesh::{AsVertex, Color, PosColor, VertexFormat};
+
+use crate::pod::IntoPod;
 
 /// Debug lines are stored as a pair of position and color.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]

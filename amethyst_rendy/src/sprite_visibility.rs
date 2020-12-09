@@ -1,19 +1,20 @@
 //! Transparency, visibility sorting and camera centroid culling for 2D Sprites.
-use crate::{
-    camera::{ActiveCamera, Camera},
-    sprite::SpriteRender,
-    transparent::Transparent,
-};
+use std::cmp::Ordering;
+
 use amethyst_core::{
     ecs::*,
     math::{Point3, Vector3},
     transform::Transform,
     Hidden, HiddenPropagate,
 };
-use std::cmp::Ordering;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    camera::{ActiveCamera, Camera},
+    sprite::SpriteRender,
+    transparent::Transparent,
+};
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.

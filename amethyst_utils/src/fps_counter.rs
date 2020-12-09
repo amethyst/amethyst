@@ -5,11 +5,10 @@ use amethyst_core::{
     timing::{duration_to_nanos, Time},
 };
 use amethyst_error::Error;
-
-use crate::circular_buffer::CircularBuffer;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::circular_buffer::CircularBuffer;
 
 /// The FpsCounter resource needed by the FpsCounterSystem.
 ///

@@ -9,6 +9,12 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource.
 pub type ArcThreadPool = std::sync::Arc<rayon::ThreadPool>;
 
+pub use approx;
+pub use nalgebra as math;
+pub use num_traits as num;
+pub use shrev;
+pub use simba as simd;
+
 pub use self::{
     axis::{Axis2, Axis3},
     event::EventReader,
@@ -17,20 +23,16 @@ pub use self::{
     shrev::EventChannel,
     timing::*,
 };
-pub use approx;
-pub use nalgebra as math;
-pub use num_traits as num;
-pub use shrev;
-pub use simba as simd;
 
 /// legion ECS reexported with some convenience types.
 pub mod ecs {
-    pub use crate::dispatcher::{Dispatcher, DispatcherBuilder, SystemBundle};
     pub use legion::{
         systems::{CommandBuffer, Resource, Runnable},
         world::SubWorld,
         *,
     };
+
+    pub use crate::dispatcher::{Dispatcher, DispatcherBuilder, SystemBundle};
 }
 
 /// Dispatcher module.
