@@ -5,9 +5,7 @@ use amethyst_core::{ecs::*, Axis2};
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
 use derive_new::new;
-
 use serde::{Deserialize, Serialize};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -258,9 +256,8 @@ pub fn build_camera_normalize_system() -> impl Runnable {
 
 #[cfg(test)]
 mod test {
-    use crate::ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
-
     use super::Axis2;
+    use crate::ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
 
     // TODO: Disabled until someone fixes the formula (if possible).
     /*#[test]

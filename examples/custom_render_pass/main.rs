@@ -2,7 +2,6 @@
 
 mod custom_pass;
 
-use crate::custom_pass::{CustomUniformArgs, RenderCustom, Triangle};
 use amethyst::{
     input::{
         is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings,
@@ -12,6 +11,8 @@ use amethyst::{
     utils::application_root_dir,
     winit::VirtualKeyCode,
 };
+
+use crate::custom_pass::{CustomUniformArgs, RenderCustom, Triangle};
 
 pub struct CustomShaderState;
 

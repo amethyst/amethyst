@@ -18,12 +18,13 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
-pub use backtrace::Backtrace;
 use std::{
     borrow::Cow,
     env, error, fmt, result,
     sync::atomic::{self, AtomicUsize},
 };
+
+pub use backtrace::Backtrace;
 
 const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
 
@@ -420,8 +421,9 @@ mod tests {
     // depend on the state of the global `BACKTRACE_STATUS`.
     #[test]
     fn test_backtrace() {
-        use super::BACKTRACE_STATUS;
         use std::sync::atomic;
+
+        use super::BACKTRACE_STATUS;
 
         BACKTRACE_STATUS.store(2, atomic::Ordering::Relaxed);
 

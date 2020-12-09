@@ -1,5 +1,6 @@
-use crate::ecs::*;
 use shrinkwraprs::Shrinkwrap;
+
+use crate::ecs::*;
 
 #[derive(Shrinkwrap, Debug, Copy, Clone, Eq, PartialEq)]
 #[shrinkwrap(mutable)]

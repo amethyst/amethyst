@@ -1,8 +1,9 @@
 //! Module for mesh support.
-use crate::types::MeshData;
 use amethyst_assets::Format;
 use amethyst_error::Error;
 use serde::{Deserialize, Serialize};
+
+use crate::types::MeshData;
 
 /// 'Obj' mesh format `Format` implementation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

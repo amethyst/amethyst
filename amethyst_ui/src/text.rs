@@ -1,12 +1,5 @@
 //! Module holding the components related to text and text editing.
 
-use crate::Anchor;
-
-use derivative::Derivative;
-use serde::{Deserialize, Serialize};
-use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
-use winit::{ElementState, Event, MouseButton, WindowEvent};
-
 use amethyst_core::{
     ecs::prelude::{
         Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, System, SystemData,
@@ -17,8 +10,13 @@ use amethyst_core::{
 };
 use amethyst_derive::SystemDesc;
 use amethyst_window::ScreenDimensions;
+use derivative::Derivative;
+use serde::{Deserialize, Serialize};
+use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
+use winit::{ElementState, Event, MouseButton, WindowEvent};
 
 use super::*;
+use crate::Anchor;
 
 /// How lines should behave when they are longer than the maximum line length.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]

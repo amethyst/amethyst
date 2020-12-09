@@ -1,4 +1,5 @@
-use crate::transform::UiTransform;
+use std::{collections::HashSet, marker::PhantomData};
+
 use amethyst_core::{
     ecs::{
         prelude::{
@@ -13,8 +14,9 @@ use amethyst_core::{
 use amethyst_input::{BindingTypes, InputHandler};
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, marker::PhantomData};
 use winit::MouseButton;
+
+use crate::transform::UiTransform;
 
 /// An event that pertains to a specific `Entity`, for example a `UiEvent` for clicking on a widget
 /// entity.

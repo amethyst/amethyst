@@ -2,7 +2,6 @@
 
 mod pong;
 
-use crate::pong::Pong;
 use amethyst::{
     core::TransformBundle,
     prelude::*,
@@ -13,6 +12,8 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+
+use crate::pong::Pong;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());

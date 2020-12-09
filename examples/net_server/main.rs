@@ -1,5 +1,5 @@
 // SERVER
-use std::time::Duration;
+use std::{net::TcpListener, time::Duration};
 
 use amethyst::{
     core::{bundle::SystemBundle, frame_limiter::FrameRateLimitStrategy, SystemDesc},
@@ -11,7 +11,6 @@ use amethyst::{
     Result,
 };
 use log::{error, info};
-use std::net::TcpListener;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());

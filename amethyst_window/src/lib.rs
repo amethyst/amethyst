@@ -16,6 +16,8 @@ mod monitor;
 mod resources;
 mod system;
 
+pub use winit::{Icon, Window};
+
 #[cfg(feature = "test-support")]
 pub use crate::bundle::{SCREEN_HEIGHT, SCREEN_WIDTH};
 pub use crate::{
@@ -25,4 +27,3 @@ pub use crate::{
     resources::ScreenDimensions,
     system::*,
 };
-pub use winit::{Icon, Window};

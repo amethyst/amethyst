@@ -1,5 +1,11 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
+use std::collections::HashMap;
+
+use amethyst_assets::{AssetProcessorSystemBundle, AssetStorage};
+use amethyst_core::ecs::*;
+use amethyst_error::{format_err, Error};
+
 use crate::{
     camera::ActiveCamera,
     mtl::{Material, MaterialDefaults},
@@ -20,10 +26,6 @@ use crate::{
     types::{Backend, Mesh, Texture},
     SpriteSheet,
 };
-use amethyst_assets::{AssetProcessorSystemBundle, AssetStorage};
-use amethyst_core::ecs::*;
-use amethyst_error::{format_err, Error};
-use std::collections::HashMap;
 
 /// A bundle of systems used for rendering using `Rendy` render graph.
 ///
@@ -831,6 +833,11 @@ impl Default for Target {
 
 #[cfg(test)]
 mod tests {
+    use hal::{
+        command::{ClearDepthStencil, ClearValue},
+        format::Format,
+    };
+
     use super::*;
     use crate::{
         rendy::{
@@ -841,10 +848,6 @@ mod tests {
             },
         },
         types::{Backend, DefaultBackend},
-    };
-    use hal::{
-        command::{ClearDepthStencil, ClearValue},
-        format::Format,
     };
 
     #[derive(Debug)]

@@ -4,7 +4,6 @@ use std::{sync::Arc, time::Instant};
 
 use amethyst_core::{ecs::*, Time};
 use amethyst_error::Error;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

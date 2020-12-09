@@ -7,9 +7,7 @@ use amethyst_core::{
 };
 use amethyst_derive::SystemDesc;
 use amethyst_rendy::skinning::JointTransforms;
-
 use log::error;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

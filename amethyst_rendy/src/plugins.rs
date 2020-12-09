@@ -1,5 +1,12 @@
 //! Set of predefined implementations of `RenderPlugin` for use with `RenderingBundle`.
 
+use amethyst_core::ecs::*;
+use amethyst_error::Error;
+use palette::Srgb;
+use rendy::graph::render::RenderGroupDesc;
+#[cfg(feature = "window")]
+pub use window::RenderToWindow;
+
 use crate::{
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
     pass::*,
@@ -7,25 +14,20 @@ use crate::{
     visibility::{build_visibility_sorting_system, Visibility},
     Backend, Factory,
 };
-use amethyst_core::ecs::*;
-use amethyst_error::Error;
-use palette::Srgb;
-use rendy::graph::render::RenderGroupDesc;
-
-#[cfg(feature = "window")]
-pub use window::RenderToWindow;
 
 #[cfg(feature = "window")]
 mod window {
+    use std::path::Path;
+
+    use amethyst_config::{Config, ConfigError};
+    use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
+    use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
+
     use super::*;
     use crate::{
         bundle::{ImageOptions, OutputColor},
         Format, Kind,
     };
-    use amethyst_config::{Config, ConfigError};
-    use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
-    use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
-    use std::path::Path;
 
     /// A [RenderPlugin] for opening a window and displaying a render target to it.
     ///

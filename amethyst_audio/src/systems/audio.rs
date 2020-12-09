@@ -7,13 +7,11 @@ use std::{
     },
 };
 
+use amethyst_core::{ecs::*, math::convert, transform::Transform};
 use derive_new::new;
 use rodio::SpatialSink;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-
-use amethyst_core::{ecs::*, math::convert, transform::Transform};
 
 use crate::{
     components::{AudioEmitter, AudioListener},

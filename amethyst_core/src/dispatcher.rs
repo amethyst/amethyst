@@ -1,8 +1,9 @@
+use amethyst_error::Error;
+
 use crate::ecs::{
     systems::{Executor, ParallelRunnable, Step},
     *,
 };
-use amethyst_error::Error;
 
 /// A SystemBundle is a structure that adds multiple systems to the [Dispatcher] and loads/unloads all required resources.
 pub trait SystemBundle {

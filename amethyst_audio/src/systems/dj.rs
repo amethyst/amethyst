@@ -1,10 +1,9 @@
-use log::error;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
 use amethyst_assets::AssetStorage;
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
+use log::error;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use crate::{
     output::init_output,

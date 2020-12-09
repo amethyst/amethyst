@@ -1,10 +1,5 @@
 use std::marker::PhantomData;
 
-use derivative::Derivative;
-use derive_new::new;
-use serde::{Deserialize, Serialize};
-use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-
 use amethyst_core::{
     ecs::{
         Component, DenseVecStorage, Entities, FlaggedStorage, Join, Read, ReadStorage, ReaderId,
@@ -15,6 +10,10 @@ use amethyst_core::{
 };
 use amethyst_derive::SystemDesc;
 use amethyst_input::{BindingTypes, InputHandler};
+use derivative::Derivative;
+use derive_new::new;
+use serde::{Deserialize, Serialize};
+use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use crate::{CachedSelectionOrder, UiEvent, UiEventType};
 

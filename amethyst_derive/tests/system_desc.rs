@@ -5,9 +5,8 @@ use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     SystemDesc,
 };
-use amethyst_error::Error;
-
 use amethyst_derive::SystemDesc;
+use amethyst_error::Error;
 
 #[test]
 fn simple_derive() -> Result<(), Error> {

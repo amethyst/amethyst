@@ -2,11 +2,9 @@
 
 use std::{str::from_utf8, sync::Arc, thread::sleep, time::Duration};
 
-use rayon::ThreadPoolBuilder;
-
 use amethyst_assets::*;
-
 use amethyst_error::Error;
+use rayon::ThreadPoolBuilder;
 
 #[derive(Clone, Debug)]
 struct DummyAsset(String);

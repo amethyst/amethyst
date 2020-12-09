@@ -1,5 +1,7 @@
 //! Displays spheres with physically based materials.
 
+use std::path::Path;
+
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
@@ -49,10 +51,7 @@ use amethyst::{
         tag::TagFinder,
     },
 };
-use std::path::Path;
-
 use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -312,9 +311,7 @@ impl SimpleState for Example {
         let mut transform = Transform::default();
         transform.set_translation_xyz(0.0, 4.0, 8.0);
 
-        let mut auto_fov = AutoFov::default();
-        auto_fov.set_base_fovx(std::f32::consts::FRAC_PI_3);
-        auto_fov.set_base_aspect_ratio(1, 1);
+        let auto_fov = AutoFov::default();
 
         let camera = world
             .create_entity()

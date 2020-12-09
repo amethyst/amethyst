@@ -1,9 +1,5 @@
 //! Demonstrates how to use a custom game data structure
 
-use crate::{
-    example_system::ExampleSystem,
-    game_data::{CustomGameData, CustomGameDataBuilder},
-};
 use amethyst::{
     assets::{
         Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystemDesc, ProgressCounter,
@@ -27,6 +23,11 @@ use amethyst::{
     utils::{application_root_dir, fps_counter::FpsCounterBundle, scene::BasicScenePrefab},
     winit::VirtualKeyCode,
     Error,
+};
+
+use crate::{
+    example_system::ExampleSystem,
+    game_data::{CustomGameData, CustomGameDataBuilder},
 };
 
 mod example_system;

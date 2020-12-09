@@ -5,6 +5,8 @@ mod bundle;
 mod pong;
 mod systems;
 
+use std::time::Duration;
+
 use amethyst::{
     audio::{AudioBundle, DjSystemDesc},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
@@ -21,7 +23,6 @@ use amethyst::{
 };
 
 use crate::{audio::Music, bundle::PongBundle};
-use std::time::Duration;
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;

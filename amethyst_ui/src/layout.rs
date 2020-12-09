@@ -1,9 +1,3 @@
-use glyph_brush::{HorizontalAlign, VerticalAlign};
-use serde::{Deserialize, Serialize};
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
 use amethyst_core::{
     ecs::prelude::{
         BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, System, SystemData, World,
@@ -12,6 +6,10 @@ use amethyst_core::{
     HierarchyEvent, Parent, ParentHierarchy, SystemDesc,
 };
 use amethyst_window::ScreenDimensions;
+use glyph_brush::{HorizontalAlign, VerticalAlign};
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use super::UiTransform;
 

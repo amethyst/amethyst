@@ -1,4 +1,9 @@
 //! Texture submodule for per-image submission.
+use amethyst_assets::{AssetStorage, Handle, WeakHandle};
+use amethyst_core::ecs::*;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     rendy::{
         command::RenderPassEncoder,
@@ -9,11 +14,6 @@ use crate::{
     types::{Backend, Texture},
     util,
 };
-use amethyst_assets::{AssetStorage, Handle, WeakHandle};
-use amethyst_core::ecs::*;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 #[derive(Debug)]
 enum TextureState<B: Backend> {

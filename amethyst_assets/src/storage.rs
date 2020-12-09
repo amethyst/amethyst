@@ -6,6 +6,8 @@ use std::{
     },
 };
 
+use amethyst_core::{ecs::*, ArcThreadPool, Time};
+use amethyst_error::{Error, ResultExt};
 use crossbeam_queue::SegQueue;
 use derivative::Derivative;
 use log::{debug, error, trace, warn};
@@ -14,10 +16,6 @@ use specs::{
     hibitset::BitSet,
     storage::{UnprotectedStorage, VecStorage},
 };
-
-use amethyst_core::{ecs::*, ArcThreadPool, Time};
-use amethyst_error::{Error, ResultExt};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

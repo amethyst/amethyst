@@ -1,16 +1,17 @@
 //! World resource that handles all user input.
 
-use super::{
-    controller::{ControllerButton, ControllerEvent},
-    event::InputEvent::{self, *},
-    scroll_direction::ScrollDirection,
-    *,
-};
 use amethyst_core::shrev::EventChannel;
 use smallvec::SmallVec;
 use winit::{
     dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
     MouseScrollDelta, VirtualKeyCode, WindowEvent,
+};
+
+use super::{
+    controller::{ControllerButton, ControllerEvent},
+    event::InputEvent::{self, *},
+    scroll_direction::ScrollDirection,
+    *,
 };
 
 /// This struct holds state information about input devices.
@@ -769,11 +770,12 @@ impl InputHandler {
 mod tests {
     use std::{borrow::Cow, fmt::Debug};
 
-    use super::*;
     use winit::{
         DeviceId, ElementState, Event, KeyboardInput, ModifiersState, ScanCode, WindowEvent,
         WindowId,
     };
+
+    use super::*;
 
     const HIDPI: f32 = 1.0;
 

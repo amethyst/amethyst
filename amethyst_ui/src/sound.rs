@@ -8,15 +8,14 @@ use amethyst_core::{
     shrev::{EventChannel, ReaderId},
 };
 use amethyst_derive::SystemDesc;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use crate::{
     event::{UiEvent, UiEventType::*},
     event_retrigger::{EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc},
     EventReceiver,
 };
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// Builds a `UiSoundRetriggerSystem`.
 pub type UiSoundRetriggerSystemDesc = EventRetriggerSystemDesc<UiSoundRetrigger>;

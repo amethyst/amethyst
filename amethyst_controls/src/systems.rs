@@ -1,7 +1,4 @@
-use winit::{DeviceEvent, Event, Window, WindowEvent};
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
+use std::{borrow::Cow, collections::HashMap};
 
 use amethyst_core::{
     ecs::*,
@@ -10,10 +7,10 @@ use amethyst_core::{
     timing::Time,
     transform::Transform,
 };
-use std::borrow::Cow;
-use std::collections::HashMap;
-
 use amethyst_input::{get_input_axis_simple, InputHandler};
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+use winit::{DeviceEvent, Event, Window, WindowEvent};
 
 use crate::{
     components::{ArcBallControl, FlyControl},

@@ -22,7 +22,6 @@ use amethyst::{
         util, ChangeDetection,
     },
 };
-
 use amethyst_error::Error;
 use derivative::Derivative;
 use glsl_layout::*;

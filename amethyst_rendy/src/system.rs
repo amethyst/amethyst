@@ -1,8 +1,4 @@
 //! Renderer system
-use crate::{
-    mtl::Material,
-    types::{Backend, Mesh, Texture},
-};
 use amethyst_assets::{AssetStorage, ProcessingState};
 use amethyst_core::{ecs::*, timing::Time, ArcThreadPool};
 use palette::{LinSrgba, Srgba};
@@ -12,9 +8,13 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    mtl::Material,
+    types::{Backend, Mesh, Texture},
+};
 
 /// Auxiliary data for render graph.
 #[allow(missing_debug_implementations)]
@@ -209,9 +209,9 @@ pub fn build_texture_processor<B: Backend>() -> impl Runnable {
 }
 
 pub(crate) fn create_default_mat<B: Backend>(resources: &Resources) -> Material {
-    use crate::mtl::TextureOffset;
-
     use amethyst_assets::Loader;
+
+    use crate::mtl::TextureOffset;
 
     let loader = resources.get::<Loader>().unwrap();
 

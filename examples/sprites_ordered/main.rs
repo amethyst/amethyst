@@ -21,7 +21,6 @@ use amethyst::{
     window::ScreenDimensions,
     winit::VirtualKeyCode,
 };
-
 use log::info;
 
 use crate::sprite::SpriteSheetDefinition;

@@ -6,11 +6,12 @@ pub mod laminar;
 pub mod tcp;
 pub mod udp;
 
+use std::{collections::VecDeque, net::SocketAddr};
+
 use crate::simulation::{
     message::Message,
     requirements::{DeliveryRequirement, UrgencyRequirement},
 };
-use std::{collections::VecDeque, net::SocketAddr};
 
 /// Resource serving as the owner of the queue of messages to be sent. This resource also serves
 /// as the interface for other systems to send messages.

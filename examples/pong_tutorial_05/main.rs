@@ -3,7 +3,6 @@
 mod pong;
 mod systems;
 
-use crate::pong::Pong;
 use amethyst::{
     core::TransformBundle,
     input::{InputBundle, StringBindings},
@@ -16,6 +15,8 @@ use amethyst::{
     ui::{RenderUi, UiBundle},
     utils::application_root_dir,
 };
+
+use crate::pong::Pong;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());

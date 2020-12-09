@@ -1,10 +1,11 @@
-use crate::Paddle;
 use amethyst::{
     core::{timing::Time, transform::Transform},
     derive::SystemDesc,
     ecs::{Join, Read, ReadStorage, System, SystemData, WriteStorage},
     input::{InputHandler, StringBindings},
 };
+
+use crate::Paddle;
 
 /// This system is responsible for moving all the paddles according to the user
 /// provided input.

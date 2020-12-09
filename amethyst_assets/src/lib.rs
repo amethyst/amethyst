@@ -9,6 +9,8 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
+pub use rayon::ThreadPool;
+
 #[cfg(feature = "json")]
 pub use crate::formats::JsonFormat;
 pub use crate::{
@@ -22,8 +24,6 @@ pub use crate::{
     source::{Directory, Source},
     storage::{AssetProcessorSystemBundle, AssetStorage, Handle, ProcessingState, WeakHandle},
 };
-
-pub use rayon::ThreadPool;
 
 mod asset;
 mod cache;
@@ -39,8 +39,9 @@ mod source;
 mod storage;
 
 // used in macros. Private API otherwise.
-#[doc(hidden)]
-pub use crate::dyn_format::{DeserializeFn, Registry};
 // used in macros. Private API otherwise.
 #[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};
+
+#[doc(hidden)]
+pub use crate::dyn_format::{DeserializeFn, Registry};

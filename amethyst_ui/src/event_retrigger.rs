@@ -1,17 +1,15 @@
 use std::marker::PhantomData;
 
-use derivative::Derivative;
-
 use amethyst_core::{
     ecs::prelude::{Component, Read, ReadStorage, System, SystemData, World, Write},
     shrev::{Event, EventChannel, ReaderId},
     SystemDesc,
 };
-
-use crate::event::TargetedEvent;
-
+use derivative::Derivative;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::event::TargetedEvent;
 
 /// Describes anything that can receive events one by one or in batches. This
 /// lets whoever wants to receive triggered events decide on how they
