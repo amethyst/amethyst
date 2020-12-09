@@ -1,11 +1,13 @@
-use crate::{config::DisplayConfig, resources::ScreenDimensions};
+use std::path::Path;
+
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
     ecs::{ReadExpect, RunNow, System, SystemData, World, Write, WriteExpect},
     shrev::EventChannel,
 };
-use std::path::Path;
 use winit::{Event, EventsLoop, Window};
+
+use crate::{config::DisplayConfig, resources::ScreenDimensions};
 
 /// System for opening and managing the window.
 #[derive(Debug)]

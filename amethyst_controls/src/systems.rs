@@ -1,9 +1,3 @@
-use derive_new::new;
-use winit::{DeviceEvent, Event, Window, WindowEvent};
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
 use amethyst_core::{
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, Write, WriteStorage},
     math::{convert, Unit, Vector3},
@@ -13,6 +7,10 @@ use amethyst_core::{
 };
 use amethyst_derive::SystemDesc;
 use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
+use derive_new::new;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+use winit::{DeviceEvent, Event, Window, WindowEvent};
 
 use crate::{
     components::{ArcBallControlTag, FlyControlTag},

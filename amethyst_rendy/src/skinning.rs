@@ -1,4 +1,6 @@
 //! Skinned mesh and bone implementation for renderer.
+use std::result::Result as StdResult;
+
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage},
@@ -9,7 +11,6 @@ use rendy::{
     hal::format::Format,
     mesh::{AsAttribute, AsVertex, VertexFormat},
 };
-use std::result::Result as StdResult;
 
 /// Type for joint weights attribute of vertex
 #[repr(C)]

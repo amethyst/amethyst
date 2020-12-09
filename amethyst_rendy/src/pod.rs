@@ -1,10 +1,4 @@
 //! GPU POD data types.
-use crate::{
-    mtl,
-    resources::Tint as TintComponent,
-    sprite::{SpriteRender, SpriteSheet},
-    types::Texture,
-};
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     math::{convert, Matrix4, Vector4},
@@ -14,6 +8,13 @@ use glsl_layout::*;
 use rendy::{
     hal::format::Format,
     mesh::{AsAttribute, AsVertex, Model, VertexFormat},
+};
+
+use crate::{
+    mtl,
+    resources::Tint as TintComponent,
+    sprite::{SpriteRender, SpriteSheet},
+    types::Texture,
 };
 
 /// TextureOffset

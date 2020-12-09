@@ -1,9 +1,10 @@
+use std::{iter::Cycle, vec::IntoIter};
+
 use amethyst::{
     assets::{AssetStorage, Loader},
     audio::{output::Output, AudioSink, OggFormat, Source, SourceHandle},
     ecs::{World, WorldExt},
 };
-use std::{iter::Cycle, vec::IntoIter};
 
 pub struct Sounds {
     pub score_sfx: SourceHandle,

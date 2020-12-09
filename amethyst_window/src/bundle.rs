@@ -1,8 +1,9 @@
-use crate::{DisplayConfig, EventsLoopSystem, WindowSystem};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{bundle::SystemBundle, ecs::World, shred::DispatcherBuilder};
 use amethyst_error::Error;
 use winit::EventsLoop;
+
+use crate::{DisplayConfig, EventsLoopSystem, WindowSystem};
 
 /// Screen width used in predefined display configuration.
 #[cfg(feature = "test-support")]

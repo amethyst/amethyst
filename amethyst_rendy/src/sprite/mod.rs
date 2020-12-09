@@ -1,11 +1,11 @@
 //! 2D Sprite Rendering implementation details.
+use amethyst_assets::{Asset, Format, Handle};
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
+use amethyst_error::Error;
 use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
 
 use crate::{error, types::Texture};
-use amethyst_assets::{Asset, Format, Handle};
-use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
-use amethyst_error::Error;
 
 pub mod prefab;
 
@@ -502,9 +502,10 @@ impl Format<SpriteSheet> for SpriteSheetFormat {
 
 #[cfg(test)]
 mod test {
+    use amethyst_assets::Handle;
+
     use super::{Sprite, SpriteSheetFormat, TextureCoordinates};
     use crate::types::Texture;
-    use amethyst_assets::Handle;
 
     #[test]
     fn texture_coordinates_from_tuple_maps_fields_correctly() {
@@ -590,10 +591,12 @@ mod test {
         );
     }
     fn create_texture() -> Handle<Texture> {
-        use crate::formats::texture::TextureGenerator;
+        use std::sync::Arc;
+
         use amethyst_assets::{AssetStorage, Loader};
         use rayon::ThreadPoolBuilder;
-        use std::sync::Arc;
+
+        use crate::formats::texture::TextureGenerator;
 
         let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
         let loader = Loader::new("/examples/assets", pool);

@@ -23,12 +23,11 @@ pub trait EventReader<'a> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{
         ecs::Read,
         shrev::{EventChannel, ReaderId},
     };
-
-    use super::*;
 
     #[derive(Clone)]
     pub struct TestEvent;

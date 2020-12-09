@@ -1,9 +1,10 @@
-use super::base_3d::*;
-use crate::{mtl::TexAlbedo, skinning::JointCombined};
 use rendy::{
     mesh::{AsVertex, Position, TexCoord, VertexFormat},
     shader::SpirvShader,
 };
+
+use super::base_3d::*;
+use crate::{mtl::TexAlbedo, skinning::JointCombined};
 
 /// Implementation of `Base3DPassDef` to describe a flat 3D pass
 #[derive(Debug)]

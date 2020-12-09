@@ -4,9 +4,6 @@
 
 use std::sync::Arc;
 
-use rayon::{ThreadPool, ThreadPoolBuilder};
-use serde::{Deserialize, Serialize};
-
 use amethyst_assets::*;
 use amethyst_core::{
     ecs::prelude::{
@@ -16,6 +13,8 @@ use amethyst_core::{
     Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
+use rayon::{ThreadPool, ThreadPoolBuilder};
+use serde::{Deserialize, Serialize};
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,
@@ -85,8 +84,9 @@ impl Format<VertexData> for Ron {
     }
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<VertexData, Error> {
-        use ron::de::from_str;
         use std::str::from_utf8;
+
+        use ron::de::from_str;
 
         let s = from_utf8(&bytes)?;
 

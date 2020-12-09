@@ -1,8 +1,6 @@
 //! 2D Sprite specific prefabs.
-use crate::{
-    formats::texture::TexturePrefab,
-    sprite::{SpriteRender, SpriteSheet, Sprites},
-};
+use std::sync::Mutex;
+
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::{Entity, Read, ReadExpect, WriteStorage},
@@ -12,7 +10,11 @@ use amethyst_error::Error;
 use derivative::Derivative;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+
+use crate::{
+    formats::texture::TexturePrefab,
+    sprite::{SpriteRender, SpriteSheet, Sprites},
+};
 
 /// Defines a spritesheet prefab. Note that this prefab will only load the spritesheet in storage,
 /// no components will be added to entities. The `add_to_entity` will return the
@@ -256,18 +258,19 @@ impl<'a> PrefabData<'a> for SpriteScenePrefab {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
+    use amethyst_assets::{Handle, Loader};
+    use amethyst_core::ecs::{Builder, Read, ReadExpect, World, WorldExt};
+    use approx::assert_ulps_eq;
+    use rayon::ThreadPoolBuilder;
+
     use super::*;
     use crate::{
         rendy::texture::palette::load_from_srgb,
         sprite::{SpriteGrid, SpriteList, SpritePosition, SpriteSheet},
         Texture,
     };
-    use amethyst_assets::{Handle, Loader};
-    use amethyst_core::ecs::{Builder, Read, ReadExpect, World, WorldExt};
-    use rayon::ThreadPoolBuilder;
-    use std::sync::Arc;
-
-    use approx::assert_ulps_eq;
 
     fn setup_sprite_world() -> World {
         let mut world = World::new();

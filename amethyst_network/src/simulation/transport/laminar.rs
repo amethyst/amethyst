@@ -1,5 +1,18 @@
 //! Network systems implementation backed by the Laminar network protocol.
 
+use std::time::Instant;
+
+use amethyst_core::{
+    bundle::SystemBundle,
+    ecs::{DispatcherBuilder, Read, System, World, Write},
+    shrev::EventChannel,
+};
+use amethyst_error::Error;
+use bytes::Bytes;
+pub use laminar::{Config as LaminarConfig, ErrorKind, Socket as LaminarSocket};
+use laminar::{Packet, SocketEvent};
+use log::error;
+
 use crate::simulation::{
     events::NetworkSimulationEvent,
     requirements::DeliveryRequirement,
@@ -9,18 +22,6 @@ use crate::simulation::{
         NETWORK_SEND_SYSTEM_NAME, NETWORK_SIM_TIME_SYSTEM_NAME,
     },
 };
-use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::{DispatcherBuilder, Read, System, World, Write},
-    shrev::EventChannel,
-};
-use amethyst_error::Error;
-pub use laminar::{Config as LaminarConfig, ErrorKind, Socket as LaminarSocket};
-use laminar::{Packet, SocketEvent};
-
-use bytes::Bytes;
-use log::error;
-use std::time::Instant;
 
 /// Use this network bundle to add the laminar transport layer to your game.
 pub struct LaminarNetworkBundle {

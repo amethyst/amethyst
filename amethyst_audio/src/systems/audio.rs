@@ -7,12 +7,6 @@ use std::{
     },
 };
 
-use derive_new::new;
-use rodio::SpatialSink;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
 use amethyst_core::{
     ecs::prelude::{
         Entities, Entity, Join, Read, ReadStorage, System, SystemData, World, WriteStorage,
@@ -21,6 +15,10 @@ use amethyst_core::{
     transform::Transform,
     SystemDesc,
 };
+use derive_new::new;
+use rodio::SpatialSink;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use crate::{
     components::{AudioEmitter, AudioListener},

@@ -1,4 +1,4 @@
-use smallvec::{smallvec, SmallVec};
+use std::marker::PhantomData;
 
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_audio::SourceHandle;
@@ -10,6 +10,7 @@ use amethyst_core::{
     Parent,
 };
 use amethyst_rendy::{palette::Srgba, rendy::texture::palette::load_from_srgba, Texture};
+use smallvec::{smallvec, SmallVec};
 
 use crate::{
     font::default::get_default_font,
@@ -18,8 +19,6 @@ use crate::{
     UiButtonActionType::{self, *},
     UiImage, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
-
-use std::marker::PhantomData;
 
 const DEFAULT_Z: f32 = 1.0;
 const DEFAULT_WIDTH: f32 = 128.0;

@@ -1,5 +1,3 @@
-use derivative::Derivative;
-use rand::{self, distributions::Alphanumeric, Rng};
 use std::{
     collections::{
         hash_map::{Keys, Values, ValuesMut},
@@ -9,6 +7,9 @@ use std::{
     hash::Hash,
     ops::Index,
 };
+
+use derivative::Derivative;
+use rand::{self, distributions::Alphanumeric, Rng};
 
 /// A widget is an object that keeps track of all components and entities
 /// that make up an element of the user interface. Using the widget_components!

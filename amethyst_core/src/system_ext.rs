@@ -3,13 +3,13 @@
 //! This modules contains an extension trait for the System trait which adds useful transformation
 //! functions.
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     ecs::prelude::{Read, System, World},
     shred::{RunningTime, SystemData},
 };
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// Extension functionality associated systems.
 pub trait SystemExt {

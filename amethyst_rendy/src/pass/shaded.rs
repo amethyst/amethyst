@@ -1,11 +1,12 @@
+use rendy::{
+    mesh::{AsVertex, Normal, Position, TexCoord, VertexFormat},
+    shader::SpirvShader,
+};
+
 use super::base_3d::*;
 use crate::{
     mtl::{TexAlbedo, TexEmission},
     skinning::JointCombined,
-};
-use rendy::{
-    mesh::{AsVertex, Normal, Position, TexCoord, VertexFormat},
-    shader::SpirvShader,
 };
 
 /// Implementation of `Base3DPassDef` describing a simple shaded 3D pass.

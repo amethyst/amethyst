@@ -1,8 +1,4 @@
 //! 2D Sprite specific prefabs.
-use crate::{
-    map::{Map, Tile, TileMap},
-    CoordinateEncoder,
-};
 use amethyst_assets::{Handle, PrefabData, ProgressCounter};
 use amethyst_core::ecs::{Entity, Read, WriteStorage};
 use amethyst_error::Error;
@@ -11,6 +7,11 @@ use amethyst_rendy::sprite::{
     SpriteSheet,
 };
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    map::{Map, Tile, TileMap},
+    CoordinateEncoder,
+};
 
 /// Prefab used to add a sprite to an `Entity`.
 ///

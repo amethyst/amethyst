@@ -1,12 +1,12 @@
-use crate::{
-    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode,
-    Stretch, UiText, UiTransform, WidgetId, Widgets,
-};
-
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::ecs::{
     prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
     shred::{ResourceId, SystemData},
+};
+
+use crate::{
+    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode,
+    Stretch, UiText, UiTransform, WidgetId, Widgets,
 };
 
 const DEFAULT_Z: f32 = 1.0;

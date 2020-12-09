@@ -1,4 +1,3 @@
-use super::DemoState;
 use amethyst::{
     core::{
         math::{UnitQuaternion, Vector3},
@@ -12,6 +11,8 @@ use amethyst::{
     ui::{UiFinder, UiText},
     utils::fps_counter::FpsCounter,
 };
+
+use super::DemoState;
 
 #[derive(Default, SystemDesc)]
 pub struct ExampleSystem {

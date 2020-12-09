@@ -1,10 +1,11 @@
-use crate::{storage::ProcessingState, FormatRegisteredData, Handle, Reload, SingleFile, Source};
-use amethyst_core::ecs::storage::UnprotectedStorage;
-use amethyst_error::{Error, ResultExt};
 use std::{fmt::Debug, ops::Deref, sync::Arc};
 
+use amethyst_core::ecs::storage::UnprotectedStorage;
+use amethyst_error::{Error, ResultExt};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{storage::ProcessingState, FormatRegisteredData, Handle, Reload, SingleFile, Source};
 
 /// One of the three core traits of this crate.
 ///

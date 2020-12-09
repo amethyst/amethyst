@@ -1,16 +1,14 @@
 //! `amethyst` audio ecs components
 
-pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
-
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Entity, Read, WriteStorage},
     math::Point3,
 };
 use amethyst_error::Error;
-
 use serde::{Deserialize, Serialize};
 
+pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
 use crate::output::Output;
 
 mod audio_emitter;

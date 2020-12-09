@@ -137,8 +137,9 @@ where
 
 #[cfg(test)]
 pub mod tests {
-    use super::*;
     use approx::{assert_ulps_eq, relative_eq};
+
+    use super::*;
 
     #[test]
     #[allow(clippy::mistyped_literal_suffixes)]

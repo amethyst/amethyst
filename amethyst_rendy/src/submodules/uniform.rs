@@ -1,4 +1,8 @@
 //!  Helper abstraction for per-image uniform submission.
+use core::marker::PhantomData;
+
+use glsl_layout::AsStd140;
+
 use crate::{
     rendy::{
         command::RenderPassEncoder,
@@ -12,8 +16,6 @@ use crate::{
     types::Backend,
     util,
 };
-use core::marker::PhantomData;
-use glsl_layout::AsStd140;
 
 /// Provides per-image abstraction for an arbitrary `DescriptorSet`.
 #[derive(Debug)]

@@ -1,18 +1,20 @@
 //! World resource that handles all user input.
 
+use std::{borrow::Borrow, hash::Hash};
+
+use amethyst_core::shrev::EventChannel;
+use derivative::Derivative;
+use smallvec::SmallVec;
+use winit::{
+    dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
+    MouseScrollDelta, VirtualKeyCode, WindowEvent,
+};
+
 use super::{
     controller::{ControllerButton, ControllerEvent},
     event::InputEvent::{self, *},
     scroll_direction::ScrollDirection,
     *,
-};
-use amethyst_core::shrev::EventChannel;
-use derivative::Derivative;
-use smallvec::SmallVec;
-use std::{borrow::Borrow, hash::Hash};
-use winit::{
-    dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
-    MouseScrollDelta, VirtualKeyCode, WindowEvent,
 };
 
 /// This struct holds state information about input devices.
@@ -782,11 +784,12 @@ where
 mod tests {
     use std::fmt::Debug;
 
-    use super::*;
     use winit::{
         DeviceId, ElementState, Event, KeyboardInput, ModifiersState, ScanCode, WindowEvent,
         WindowId,
     };
+
+    use super::*;
 
     const HIDPI: f32 = 1.0;
 

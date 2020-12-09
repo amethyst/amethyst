@@ -1,5 +1,7 @@
 //! Provides utilities for building and describing scenes in your game.
 
+use std::fmt::Debug;
+
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
 use amethyst_core::{ecs::prelude::Entity, Transform};
@@ -10,7 +12,6 @@ use amethyst_rendy::{
     shape::FromShape,
 };
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
 
 use crate::removal::Removal;
 

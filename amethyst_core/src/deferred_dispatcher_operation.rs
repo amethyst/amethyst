@@ -2,9 +2,8 @@
 
 use std::marker::PhantomData;
 
-use derivative::Derivative;
-
 use amethyst_error::Error;
+use derivative::Derivative;
 
 use crate::{
     ecs::prelude::{DispatcherBuilder, RunNow, System, World},

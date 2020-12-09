@@ -1,5 +1,8 @@
 //! Scene graph system and types
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     ecs::{
         hibitset::BitSet,
@@ -8,13 +11,9 @@ use crate::{
             World, WriteStorage,
         },
     },
+    transform::{HierarchyEvent, Parent, ParentHierarchy, Transform},
     SystemDesc,
 };
-
-use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// Builds a `TransformSystem`.
 #[derive(Default, Debug)]
@@ -142,6 +141,8 @@ impl<'a> System<'a> for TransformSystem {
 
 #[cfg(test)]
 mod tests {
+    use specs_hierarchy::{Hierarchy, HierarchySystem};
+
     use crate::{
         ecs::{
             prelude::{Builder, World, WorldExt},
@@ -151,7 +152,6 @@ mod tests {
         transform::{Parent, Transform, TransformSystem, TransformSystemDesc},
         SystemDesc,
     };
-    use specs_hierarchy::{Hierarchy, HierarchySystem};
 
     // If this works, then all other tests should work.
     #[test]

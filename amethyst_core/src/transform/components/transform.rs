@@ -1,4 +1,6 @@
 //! Local transform component.
+use serde::{Deserialize, Serialize};
+
 use crate::{
     alga::general::SubsetOf,
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
@@ -7,7 +9,6 @@ use crate::{
         Vector3,
     },
 };
-use serde::{Deserialize, Serialize};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///

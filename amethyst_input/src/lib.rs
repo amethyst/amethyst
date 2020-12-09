@@ -13,6 +13,10 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+use std::iter::Iterator;
+
+pub use winit::{ElementState, VirtualKeyCode};
+
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::{
@@ -31,9 +35,6 @@ pub use self::{
         is_key_up, is_mouse_button_down,
     },
 };
-pub use winit::{ElementState, VirtualKeyCode};
-
-use std::iter::Iterator;
 
 mod axis;
 mod bindings;

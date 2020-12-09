@@ -2,17 +2,17 @@
 
 use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 
-use crate::shred::Resource;
 use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
-use winit::Event;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
+use winit::Event;
 
+#[cfg(feature = "ui")]
+use crate::ui::UiEvent;
 use crate::{
     assets::{Loader, Source},
     callback_queue::CallbackQueue,
@@ -25,12 +25,10 @@ use crate::{
     ecs::prelude::{Component, Read, World, WorldExt, Write},
     error::Error,
     game_data::{DataDispose, DataInit},
+    shred::Resource,
     state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventReader},
 };
-
-#[cfg(feature = "ui")]
-use crate::ui::UiEvent;
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.

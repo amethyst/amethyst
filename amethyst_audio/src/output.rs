@@ -7,14 +7,13 @@ use std::{
     sync::Arc,
 };
 
+use amethyst_core::ecs::World;
 use cpal::traits::DeviceTrait;
 use log::error;
 use rodio::{
     default_output_device, output_devices, Decoder, Device, Devices, OutputDevices, Sink,
     Source as RSource,
 };
-
-use amethyst_core::ecs::World;
 
 use crate::{sink::AudioSink, source::Source, DecoderError};
 

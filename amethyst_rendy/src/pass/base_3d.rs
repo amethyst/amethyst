@@ -1,16 +1,5 @@
-use crate::{
-    batch::{GroupIterator, OrderedTwoLevelBatch, TwoLevelBatch},
-    mtl::{FullTextureSet, Material, StaticTextureSet},
-    pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::{SkinnedVertexArgs, VertexArgs},
-    resources::Tint,
-    skinning::JointTransforms,
-    submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
-    transparent::Transparent,
-    types::{Backend, Mesh},
-    util,
-    visibility::Visibility,
-};
+use std::marker::PhantomData;
+
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{Join, Read, ReadExpect, ReadStorage, SystemData, World},
@@ -30,7 +19,20 @@ use rendy::{
     shader::{Shader, SpirvShader},
 };
 use smallvec::SmallVec;
-use std::marker::PhantomData;
+
+use crate::{
+    batch::{GroupIterator, OrderedTwoLevelBatch, TwoLevelBatch},
+    mtl::{FullTextureSet, Material, StaticTextureSet},
+    pipeline::{PipelineDescBuilder, PipelinesBuilder},
+    pod::{SkinnedVertexArgs, VertexArgs},
+    resources::Tint,
+    skinning::JointTransforms,
+    submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
+    transparent::Transparent,
+    types::{Backend, Mesh},
+    util,
+    visibility::Visibility,
+};
 
 macro_rules! profile_scope_impl {
     ($string:expr) => {

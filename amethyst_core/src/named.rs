@@ -1,7 +1,8 @@
 use std::borrow::Cow;
 
-use crate::ecs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, WriteStorage};
 use serde::{Deserialize, Serialize};
+
+use crate::ecs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, WriteStorage};
 
 /// A component that gives a name to an [`Entity`].
 ///

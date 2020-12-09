@@ -1,5 +1,14 @@
 //! Environment submodule for shared environmental descriptor set data.
 //! Fetches and sets projection and lighting descriptor set information.
+use amethyst_core::{
+    ecs::{Join, ReadStorage, SystemData, World},
+    math::{convert, Vector3},
+    transform::Transform,
+};
+use glsl_layout::*;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     light::Light,
     pod::{self, IntoPod},
@@ -14,15 +23,6 @@ use crate::{
     types::Backend,
     util::{self, TapCountIter},
 };
-use amethyst_core::{
-    ecs::{Join, ReadStorage, SystemData, World},
-    math::{convert, Vector3},
-    transform::Transform,
-};
-use glsl_layout::*;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 const MAX_POINT_LIGHTS: usize = 128;
 const MAX_DIR_LIGHTS: usize = 16;

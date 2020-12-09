@@ -2,13 +2,14 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use crate::resources::AmbientColor;
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
     math::Vector3,
 };
 use amethyst_error::Error;
+
+use crate::resources::AmbientColor;
 
 /// A light source.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, PrefabData)]
@@ -195,8 +196,7 @@ pub struct LightPrefab {
     ambient_color: Option<AmbientColor>,
 }
 
-use gltf::khr_lights_punctual;
-use gltf::khr_lights_punctual::Kind;
+use gltf::{khr_lights_punctual, khr_lights_punctual::Kind};
 
 /// Import a gltf light into a LightPrefab
 impl From<khr_lights_punctual::Light<'_>> for LightPrefab {

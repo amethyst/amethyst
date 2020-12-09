@@ -1,7 +1,6 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::ecs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage};
 use amethyst_error::Error;
-
 use serde::{Deserialize, Serialize};
 
 /// Add this to a camera if you want it to be a fly camera.

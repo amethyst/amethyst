@@ -1,6 +1,7 @@
 //! ECS input bundle
 
-use crate::{BindingError, BindingTypes, Bindings, InputSystemDesc};
+use std::{error, fmt, path::Path};
+
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
     ecs::prelude::{DispatcherBuilder, World},
@@ -8,10 +9,10 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use derivative::Derivative;
-use std::{error, fmt, path::Path};
 
 #[cfg(feature = "sdl_controller")]
 use crate::sdl_events_system::ControllerMappings;
+use crate::{BindingError, BindingTypes, Bindings, InputSystemDesc};
 
 /// Bundle for adding the `InputHandler`.
 ///

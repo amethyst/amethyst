@@ -1,9 +1,8 @@
-use glyph_brush::rusttype::Font;
-use serde::{Deserialize, Serialize};
-
 use amethyst_assets::{Asset, Format, Handle, ProcessableAsset, ProcessingState};
 use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::{format_err, Error, ResultExt};
+use glyph_brush::rusttype::Font;
+use serde::{Deserialize, Serialize};
 
 /// A loaded set of fonts from a file.
 #[derive(Clone)]

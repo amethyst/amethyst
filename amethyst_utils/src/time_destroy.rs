@@ -4,10 +4,8 @@ use amethyst_core::{
     ecs::{Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, WriteStorage},
     timing::Time,
 };
-
 use log::error;
 use serde::{Deserialize, Serialize};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

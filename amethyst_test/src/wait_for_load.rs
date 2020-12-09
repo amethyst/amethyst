@@ -6,7 +6,6 @@ use amethyst::{
     ecs::{World, WorldExt},
     State, StateData, Trans,
 };
-
 use derivative::Derivative;
 use log::warn;
 

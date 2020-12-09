@@ -1,5 +1,21 @@
 //! Network systems implementation backed by the TCP network protocol.
 
+use std::{
+    collections::HashMap,
+    io::{self, Read as IORead, Write as IOWrite},
+    net::{SocketAddr, TcpListener, TcpStream},
+    ops::DerefMut,
+};
+
+use amethyst_core::{
+    bundle::SystemBundle,
+    ecs::{DispatcherBuilder, Read, System, World, Write},
+    shrev::EventChannel,
+};
+use amethyst_error::Error;
+use bytes::Bytes;
+use log::warn;
+
 use crate::simulation::{
     events::NetworkSimulationEvent,
     message::Message,
@@ -9,20 +25,6 @@ use crate::simulation::{
         TransportResource, NETWORK_RECV_SYSTEM_NAME, NETWORK_SEND_SYSTEM_NAME,
         NETWORK_SIM_TIME_SYSTEM_NAME,
     },
-};
-use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::{DispatcherBuilder, Read, System, World, Write},
-    shrev::EventChannel,
-};
-use amethyst_error::Error;
-use bytes::Bytes;
-use log::warn;
-use std::{
-    collections::HashMap,
-    io::{self, Read as IORead, Write as IOWrite},
-    net::{SocketAddr, TcpListener, TcpStream},
-    ops::DerefMut,
 };
 
 const CONNECTION_LISTENER_SYSTEM_NAME: &str = "connection_listener";

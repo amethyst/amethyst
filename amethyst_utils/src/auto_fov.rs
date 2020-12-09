@@ -8,9 +8,7 @@ use amethyst_derive::{PrefabData, SystemDesc};
 use amethyst_error::Error;
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
-
 use serde::{Deserialize, Serialize};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

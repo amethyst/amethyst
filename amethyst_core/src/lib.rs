@@ -21,6 +21,8 @@ extern crate getset;
 #[macro_use]
 extern crate derive_new;
 
+use std::sync::Arc;
+
 pub use alga;
 pub use approx;
 pub use nalgebra as math;
@@ -29,22 +31,19 @@ pub use num_traits as num;
 pub use specs as ecs;
 pub use specs::{shred, shrev};
 
-use std::sync::Arc;
-
-pub use crate::{
-    bundle::SystemBundle,
-    event::EventReader,
-    system_ext::{Pausable, SystemExt},
-    timing::*,
-    transform::*,
-};
-
 pub use self::{
     axis::{Axis2, Axis3},
     hidden::{Hidden, HiddenPropagate},
     hide_system::{HideHierarchySystem, HideHierarchySystemDesc},
     named::{Named, WithNamed},
     system_desc::{RunNowDesc, SystemDesc},
+};
+pub use crate::{
+    bundle::SystemBundle,
+    event::EventReader,
+    system_ext::{Pausable, SystemExt},
+    timing::*,
+    transform::*,
 };
 
 pub mod bundle;

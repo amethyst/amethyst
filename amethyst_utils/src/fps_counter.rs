@@ -6,11 +6,10 @@ use amethyst_core::{
     SystemBundle,
 };
 use amethyst_error::Error;
-
-use crate::circular_buffer::CircularBuffer;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::circular_buffer::CircularBuffer;
 
 /// The FpsCounter resource needed by the FpsCounterSystem.
 ///

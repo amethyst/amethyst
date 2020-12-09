@@ -9,7 +9,6 @@ use amethyst_core::ecs::{
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
-
 use log::error;
 use serde::{Deserialize, Serialize};
 

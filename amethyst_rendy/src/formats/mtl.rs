@@ -1,15 +1,16 @@
 //! Material type implementation.
 
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
+use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, WriteStorage};
+use amethyst_error::Error;
+use serde::{Deserialize, Serialize};
+
 use crate::{
     formats::texture::TexturePrefab,
     mtl::{Material, MaterialDefaults, TextureOffset},
     transparent::Transparent,
     types::Texture,
 };
-use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
-use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, WriteStorage};
-use amethyst_error::Error;
-use serde::{Deserialize, Serialize};
 
 /// `PrefabData` for loading `Material`s
 #[derive(Debug, Deserialize, Serialize)]

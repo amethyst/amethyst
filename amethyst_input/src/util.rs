@@ -1,5 +1,6 @@
-use crate::{input_handler::InputHandler, BindingTypes};
 use winit::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
+
+use crate::{input_handler::InputHandler, BindingTypes};
 
 /// If this event was for manipulating a keyboard key then this will return the `VirtualKeyCode`
 /// and the new state.

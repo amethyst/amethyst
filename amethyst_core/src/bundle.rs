@@ -1,7 +1,8 @@
 //! Provides a trait for adding bundles of systems to a dispatcher.
 
-use crate::ecs::prelude::{DispatcherBuilder, World};
 use amethyst_error::Error;
+
+use crate::ecs::prelude::{DispatcherBuilder, World};
 
 /// A bundle of ECS components, resources and systems.
 pub trait SystemBundle<'a, 'b> {

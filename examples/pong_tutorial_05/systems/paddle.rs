@@ -1,10 +1,11 @@
-use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 use amethyst::{
     core::transform::Transform,
     derive::SystemDesc,
     ecs::{Join, Read, ReadStorage, System, SystemData, WriteStorage},
     input::{InputHandler, StringBindings},
 };
+
+use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
 #[derive(SystemDesc)]
 pub struct PaddleSystem;

@@ -3,10 +3,9 @@ use std::{
     sync::{atomic::AtomicBool, Arc},
 };
 
+use amethyst_core::ecs::{prelude::Component, storage::BTreeStorage};
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
-
-use amethyst_core::ecs::{prelude::Component, storage::BTreeStorage};
 
 use crate::{source::Source, DecoderError};
 

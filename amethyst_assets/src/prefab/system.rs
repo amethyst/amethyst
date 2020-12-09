@@ -1,8 +1,5 @@
 use std::{collections::HashMap, marker::PhantomData};
 
-use derivative::Derivative;
-use log::error;
-
 use amethyst_core::{
     ecs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
@@ -11,13 +8,13 @@ use amethyst_core::{
     ArcThreadPool, Parent, SystemDesc, Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
-
+use derivative::Derivative;
+use log::error;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState};
-
 use super::{Prefab, PrefabData, PrefabTag};
+use crate::{AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState};
 
 /// Builds a `PrefabLoaderSystem`.
 #[derive(Derivative, Debug)]

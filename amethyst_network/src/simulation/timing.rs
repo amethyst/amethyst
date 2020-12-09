@@ -1,11 +1,12 @@
 //! Systems and resources to have a consistent, separate simulation frame rate from the ECS
 //! frame rate.
 
+use std::{ops::RangeInclusive, time::Duration};
+
 use amethyst_core::{
     ecs::{Read, System, Write},
     timing::Time,
 };
-use std::{ops::RangeInclusive, time::Duration};
 
 /// Default number of network simulation frames per second.
 const DEFAULT_SIM_FRAME_RATE: u32 = 30;
@@ -137,8 +138,9 @@ impl Default for NetworkSimulationTime {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::time::Duration;
+
+    use super::*;
 
     #[test]
     fn test_calculated_properties_and_getters() {

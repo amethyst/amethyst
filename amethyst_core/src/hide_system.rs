@@ -1,18 +1,15 @@
+use log::error;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     ecs::prelude::{
         BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, System, SystemData, World,
         WriteStorage,
     },
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
-    SystemDesc,
+    HiddenPropagate, SystemDesc,
 };
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
-use log::error;
-
-use crate::HiddenPropagate;
 
 /// Builds a `HideHierarchySystem`.
 #[derive(Default, Debug)]

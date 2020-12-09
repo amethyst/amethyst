@@ -6,11 +6,6 @@ use std::{
     },
 };
 
-use crossbeam_queue::SegQueue;
-use derivative::Derivative;
-use log::{debug, error, trace, warn};
-use rayon::ThreadPool;
-
 use amethyst_core::{
     ecs::{
         hibitset::BitSet,
@@ -20,7 +15,10 @@ use amethyst_core::{
     SystemDesc, Time,
 };
 use amethyst_error::{Error, ResultExt};
-
+use crossbeam_queue::SegQueue;
+use derivative::Derivative;
+use log::{debug, error, trace, warn};
+use rayon::ThreadPool;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

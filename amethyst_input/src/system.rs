@@ -1,8 +1,4 @@
 //! Input system
-use derive_new::new;
-use winit::Event;
-
-use crate::{BindingTypes, Bindings, InputEvent, InputHandler};
 use amethyst_core::{
     ecs::{
         prelude::{Read, ReadExpect, System, World, Write},
@@ -12,9 +8,12 @@ use amethyst_core::{
     SystemDesc,
 };
 use amethyst_window::ScreenDimensions;
-
+use derive_new::new;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+use winit::Event;
+
+use crate::{BindingTypes, Bindings, InputEvent, InputHandler};
 
 /// Builds an `InputSystem`.
 #[derive(Debug, new)]

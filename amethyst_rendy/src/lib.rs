@@ -90,6 +90,17 @@ pub mod util;
 #[cfg(feature = "test-support")]
 mod render_test_bundle;
 
+#[cfg(feature = "test-support")]
+pub use render_test_bundle::{RenderEmptyBundle, RenderTestBundle};
+pub use rendy::{
+    factory::Factory,
+    graph::{
+        render::{RenderGroupDesc, SubpassBuilder},
+        GraphBuilder,
+    },
+    hal::{format::Format, image::Kind},
+};
+
 #[doc(inline)]
 pub use crate::{
     bundle::{RenderPlugin, RenderingBundle},
@@ -105,18 +116,6 @@ pub use crate::{
     transparent::Transparent,
     types::{Backend, Mesh, Texture},
     util::{simple_shader_set, ChangeDetection},
-};
-
-#[cfg(feature = "test-support")]
-pub use render_test_bundle::{RenderEmptyBundle, RenderTestBundle};
-
-pub use rendy::{
-    factory::Factory,
-    graph::{
-        render::{RenderGroupDesc, SubpassBuilder},
-        GraphBuilder,
-    },
-    hal::{format::Format, image::Kind},
 };
 
 pub mod loaders {

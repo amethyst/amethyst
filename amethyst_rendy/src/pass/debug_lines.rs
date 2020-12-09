@@ -1,11 +1,3 @@
-use crate::{
-    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent, DebugLinesParams},
-    pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::ViewArgs,
-    submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertexBuffer},
-    types::Backend,
-    util,
-};
 use amethyst_core::ecs::{Join, Read, SystemData, World, Write, WriteStorage};
 use derivative::Derivative;
 use glsl_layout::*;
@@ -20,9 +12,17 @@ use rendy::{
     mesh::AsVertex,
     shader::Shader,
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent, DebugLinesParams},
+    pipeline::{PipelineDescBuilder, PipelinesBuilder},
+    pod::ViewArgs,
+    submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertexBuffer},
+    types::Backend,
+    util,
+};
 
 #[derive(Debug, Clone, AsStd140)]
 struct DebugLinesArgs {

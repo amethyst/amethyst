@@ -30,7 +30,6 @@ use amethyst::{
     Error,
 };
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystemDesc};
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Default)]

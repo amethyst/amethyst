@@ -1,5 +1,4 @@
 //! Texture formats implementation.
-use crate::types::{Texture, TextureData};
 use amethyst_assets::{
     AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter, SerializableFormat,
 };
@@ -17,6 +16,8 @@ use rendy::{
     },
 };
 use serde::{Deserialize, Serialize};
+
+use crate::types::{Texture, TextureData};
 
 /// Image format description newtype wrapper for `ImageTextureConfig` from rendy.
 ///

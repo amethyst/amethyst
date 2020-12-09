@@ -3,13 +3,14 @@ pub mod mesh;
 pub mod mtl;
 pub mod texture;
 
-use self::{mesh::MeshPrefab, mtl::MaterialPrefab};
-use crate::shape::FromShape;
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::ecs::prelude::Entity;
 use amethyst_error::Error;
 use rendy::mesh::MeshBuilder;
 use serde::{Deserialize, Serialize};
+
+use self::{mesh::MeshPrefab, mtl::MaterialPrefab};
+use crate::shape::FromShape;
 
 /// `PrefabData` for loading graphics, ie `Mesh` + `Material`
 ///

@@ -11,11 +11,12 @@ const NETWORK_SEND_SYSTEM_NAME: &str = "network_send";
 const NETWORK_RECV_SYSTEM_NAME: &str = "network_recv";
 const NETWORK_POLL_SYSTEM_NAME: &str = "network_poll";
 
+use std::{collections::VecDeque, net::SocketAddr};
+
 use crate::simulation::{
     message::Message,
     requirements::{DeliveryRequirement, UrgencyRequirement},
 };
-use std::{collections::VecDeque, net::SocketAddr};
 
 /// Resource serving as the owner of the queue of messages to be sent. This resource also serves
 /// as the interface for other systems to send messages.

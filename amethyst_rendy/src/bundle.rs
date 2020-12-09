@@ -1,5 +1,14 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
+use std::collections::HashMap;
+
+use amethyst_assets::Processor;
+use amethyst_core::{
+    ecs::{DispatcherBuilder, World},
+    SystemBundle,
+};
+use amethyst_error::{format_err, Error};
+
 use crate::{
     mtl::Material,
     rendy::{
@@ -15,13 +24,6 @@ use crate::{
     types::Backend,
     SpriteSheet,
 };
-use amethyst_assets::Processor;
-use amethyst_core::{
-    ecs::{DispatcherBuilder, World},
-    SystemBundle,
-};
-use amethyst_error::{format_err, Error};
-use std::collections::HashMap;
 
 /// A bundle of systems used for rendering using `Rendy` render graph.
 ///
@@ -773,6 +775,11 @@ impl Default for Target {
 
 #[cfg(test)]
 mod tests {
+    use hal::{
+        command::{ClearDepthStencil, ClearValue},
+        format::Format,
+    };
+
     use super::*;
     use crate::{
         rendy::{
@@ -783,10 +790,6 @@ mod tests {
             },
         },
         types::{Backend, DefaultBackend},
-    };
-    use hal::{
-        command::{ClearDepthStencil, ClearValue},
-        format::Format,
     };
 
     #[derive(Debug)]

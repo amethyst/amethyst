@@ -1,6 +1,8 @@
 use derivative::Derivative;
 use winit::Event;
 
+#[cfg(feature = "ui")]
+use crate::ui::UiEvent;
 use crate::{
     core::{
         ecs::{Read, SystemData, World},
@@ -10,9 +12,6 @@ use crate::{
     derive::EventReader,
     input::{BindingTypes, InputEvent, StringBindings},
 };
-
-#[cfg(feature = "ui")]
-use crate::ui::UiEvent;
 
 /// The enum holding the different types of event that can be received in a `State` in the
 /// `handle_event` method.

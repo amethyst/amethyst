@@ -1,18 +1,16 @@
 use std::marker::PhantomData;
 
-use serde::{Deserialize, Serialize};
-
 use amethyst_core::ecs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, ResourceId, SystemData,
     World, WriteStorage,
 };
 use amethyst_error::Error;
+use serde::{Deserialize, Serialize};
 
+pub use self::system::{PrefabLoaderSystem, PrefabLoaderSystemDesc};
 use crate::{
     Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter, SerializableFormat,
 };
-
-pub use self::system::{PrefabLoaderSystem, PrefabLoaderSystemDesc};
 
 mod impls;
 mod system;
@@ -467,16 +465,14 @@ where
 mod tests {
     use std::sync::Arc;
 
-    use rayon::ThreadPoolBuilder;
-
     use amethyst_core::{
         ecs::{Builder, RunNow, World, WorldExt},
         SystemDesc, Time, Transform,
     };
-
-    use crate::Loader;
+    use rayon::ThreadPoolBuilder;
 
     use super::*;
+    use crate::Loader;
 
     type MyPrefab = Transform;
 

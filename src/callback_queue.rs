@@ -1,5 +1,6 @@
-use crate::core::ecs::World;
 use crossbeam_channel::{Receiver, Sender};
+
+use crate::core::ecs::World;
 
 /// The type of a callback.
 /// This is meant to be created from within asynchonous functions (`Future` for example).

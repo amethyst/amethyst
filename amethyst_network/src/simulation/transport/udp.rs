@@ -1,5 +1,15 @@
 //! Network systems implementation backed by the UDP network protocol.
 
+use std::{io, net::UdpSocket};
+
+use amethyst_core::{
+    bundle::SystemBundle,
+    ecs::{DispatcherBuilder, Read, System, World, Write},
+    shrev::EventChannel,
+};
+use amethyst_error::Error;
+use bytes::Bytes;
+
 use crate::simulation::{
     events::NetworkSimulationEvent,
     requirements::DeliveryRequirement,
@@ -9,14 +19,6 @@ use crate::simulation::{
         NETWORK_SIM_TIME_SYSTEM_NAME,
     },
 };
-use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::{DispatcherBuilder, Read, System, World, Write},
-    shrev::EventChannel,
-};
-use amethyst_error::Error;
-use bytes::Bytes;
-use std::{io, net::UdpSocket};
 
 /// Use this network bundle to add the UDP transport layer to your game.
 pub struct UdpNetworkBundle {

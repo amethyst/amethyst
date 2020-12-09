@@ -1,5 +1,6 @@
-use crate::event::{GameEvent, MyExtendedStateEvent};
 use amethyst::prelude::*;
+
+use crate::event::{GameEvent, MyExtendedStateEvent};
 
 pub(crate) struct GameplayState {
     game_difficulty: i32,

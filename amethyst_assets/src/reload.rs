@@ -2,14 +2,12 @@
 
 use std::{sync::Arc, time::Instant};
 
-use derive_new::new;
-
 use amethyst_core::{
     ecs::prelude::{DispatcherBuilder, Read, System, SystemData, World, Write},
     SystemBundle, SystemDesc, Time,
 };
 use amethyst_error::Error;
-
+use derive_new::new;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

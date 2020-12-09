@@ -1,16 +1,6 @@
 //! Renderer system
-use crate::{
-    camera::{ActiveCamera, Camera},
-    debug_drawing::DebugLinesComponent,
-    light::Light,
-    mtl::{Material, MaterialDefaults},
-    resources::Tint,
-    skinning::JointTransforms,
-    sprite::SpriteRender,
-    transparent::Transparent,
-    types::{Backend, Mesh, Texture},
-    visibility::Visibility,
-};
+use std::{marker::PhantomData, sync::Arc};
+
 use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
 use amethyst_core::{
     components::Transform,
@@ -25,10 +15,21 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-use std::{marker::PhantomData, sync::Arc};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    camera::{ActiveCamera, Camera},
+    debug_drawing::DebugLinesComponent,
+    light::Light,
+    mtl::{Material, MaterialDefaults},
+    resources::Tint,
+    skinning::JointTransforms,
+    sprite::SpriteRender,
+    transparent::Transparent,
+    types::{Backend, Mesh, Texture},
+    visibility::Visibility,
+};
 
 /// Graph trait implementation required by consumers. Builds a graph and manages signaling when
 /// the graph needs to be rebuilt.
@@ -268,9 +269,9 @@ impl<'a, B: Backend> System<'a> for TextureProcessorSystem<B> {
 }
 
 fn create_default_mat<B: Backend>(world: &mut World) -> Material {
-    use crate::mtl::TextureOffset;
-
     use amethyst_assets::Loader;
+
+    use crate::mtl::TextureOffset;
 
     let loader = world.fetch::<Loader>();
 

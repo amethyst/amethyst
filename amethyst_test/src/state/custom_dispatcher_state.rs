@@ -8,7 +8,6 @@ use amethyst::{
     ecs::prelude::*,
     prelude::*,
 };
-
 use derivative::Derivative;
 use derive_new::new;
 

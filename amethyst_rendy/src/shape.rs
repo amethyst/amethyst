@@ -1,5 +1,6 @@
 //! Basic shape prefabs.
-use crate::types::Mesh;
+use std::marker::PhantomData;
+
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
 use amethyst_core::{
     ecs::{
@@ -19,7 +20,8 @@ use genmesh::{
 use rendy::mesh::{
     MeshBuilder, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Tangent, TexCoord,
 };
-use std::marker::PhantomData;
+
+use crate::types::Mesh;
 
 fn option_none<T>() -> Option<T> {
     None
