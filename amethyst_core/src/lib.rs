@@ -48,8 +48,10 @@ pub mod timing;
 /// The transformation module.
 pub mod transform;
 
+/// The hide hierarchy system
+pub mod hide_hierarchy_system;
+
 mod axis;
 mod event;
 mod hidden;
-//mod hide_system;
 mod named;
