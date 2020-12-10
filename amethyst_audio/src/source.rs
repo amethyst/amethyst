@@ -1,5 +1,4 @@
 //! Provides structures used to load audio files.
-//!
 use amethyst_assets::{Asset, Handle, ProcessableAsset, ProcessingState};
 use amethyst_error::Error;
 

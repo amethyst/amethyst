@@ -27,23 +27,24 @@ use shrinkwraprs::Shrinkwrap;
 /// Creating a name from string constant:
 ///
 /// ```
-/// use amethyst::core::{Named, WithNamed};
-/// use amethyst::ecs::prelude::*;
+/// use amethyst::{
+///     core::{Named, WithNamed},
+///     ecs::prelude::*,
+/// };
 ///
 /// let mut world = World::new();
 /// world.register::<Named>();
 ///
-/// world
-///     .create_entity()
-///     .named("Super Cool Entity")
-///     .build();
+/// world.create_entity().named("Super Cool Entity").build();
 /// ```
 ///
 /// Creating a name from a dynamically generated string:
 ///
 /// ```
-/// use amethyst::core::{Named, WithNamed};
-/// use amethyst::ecs::prelude::*;
+/// use amethyst::{
+///     core::{Named, WithNamed},
+///     ecs::prelude::*,
+/// };
 ///
 /// let mut world = World::new();
 /// world.register::<Named>();
@@ -59,16 +60,12 @@ use shrinkwraprs::Shrinkwrap;
 /// Accessing a named entity in a system:
 ///
 /// ```
-/// use amethyst::core::Named;
-/// use amethyst::ecs::prelude::*;
+/// use amethyst::{core::Named, ecs::prelude::*};
 ///
 /// pub struct NameSystem;
 ///
 /// impl<'s> System<'s> for NameSystem {
-///     type SystemData = (
-///         Entities<'s>,
-///         ReadStorage<'s, Named>,
-///     );
+///     type SystemData = (Entities<'s>, ReadStorage<'s, Named>);
 ///
 ///     fn run(&mut self, (entities, names): Self::SystemData) {
 ///         for (entity, name) in (&*entities, &names).join() {

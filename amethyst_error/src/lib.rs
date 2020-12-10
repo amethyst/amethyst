@@ -110,8 +110,9 @@ impl Error {
     /// [`with_context`](trait.ResultExt.html#method.with_context).
     ///
     /// ```rust
-    /// use amethyst_error::{Error, ResultExt};
     /// use std::io;
+    ///
+    /// use amethyst_error::{Error, ResultExt};
     ///
     /// let e = io::Error::new(io::ErrorKind::Other, "wrapped");
     /// let a = Error::new(e);
@@ -267,7 +268,8 @@ impl<'a> Iterator for Causes<'a> {
 /// Constructs an `Error` using the standard string interpolation syntax.
 ///
 /// ```rust
-/// #[macro_use] extern crate amethyst_error;
+/// #[macro_use]
+/// extern crate amethyst_error;
 ///
 /// fn main() {
 ///     let err = format_err!("number: {}", 42);

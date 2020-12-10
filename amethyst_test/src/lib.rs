@@ -201,13 +201,13 @@
 //! #
 //! // #[test]
 //! fn bundle_registers_system_with_resource() {
-//!     assert!(
-//!         AmethystApplication::blank()
-//!             .with_bundle(MyBundle)
-//!             .with_assertion(|world| { world.read_resource::<ApplicationResource>(); })
-//!             .run()
-//!             .is_ok()
-//!     );
+//!     assert!(AmethystApplication::blank()
+//!         .with_bundle(MyBundle)
+//!         .with_assertion(|world| {
+//!             world.read_resource::<ApplicationResource>();
+//!         })
+//!         .run()
+//!         .is_ok());
 //! }
 //! #
 //! # bundle_registers_system_with_resource();
@@ -243,27 +243,25 @@
 //! #
 //! // #[test]
 //! fn system_increases_component_value_by_one() {
-//!     assert!(
-//!         AmethystApplication::blank()
-//!             .with_system(MySystem, "my_system", &[])
-//!             .with_effect(|world| {
-//!                 let entity = world.create_entity().with(MyComponent(0)).build();
-//!                 world.insert(EffectReturn(entity));
-//!             })
-//!             .with_assertion(|world| {
-//!                 let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
+//!     assert!(AmethystApplication::blank()
+//!         .with_system(MySystem, "my_system", &[])
+//!         .with_effect(|world| {
+//!             let entity = world.create_entity().with(MyComponent(0)).build();
+//!             world.insert(EffectReturn(entity));
+//!         })
+//!         .with_assertion(|world| {
+//!             let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
 //!
-//!                 let my_component_storage = world.read_storage::<MyComponent>();
-//!                 let my_component = my_component_storage
-//!                     .get(entity)
-//!                     .expect("Entity should have a `MyComponent` component.");
+//!             let my_component_storage = world.read_storage::<MyComponent>();
+//!             let my_component = my_component_storage
+//!                 .get(entity)
+//!                 .expect("Entity should have a `MyComponent` component.");
 //!
-//!                 // If the system ran, the value in the `MyComponent` should be 1.
-//!                 assert_eq!(1, my_component.0);
-//!             })
-//!             .run()
-//!             .is_ok()
-//!     );
+//!             // If the system ran, the value in the `MyComponent` should be 1.
+//!             assert_eq!(1, my_component.0);
+//!         })
+//!         .run()
+//!         .is_ok());
 //! }
 //! #
 //! # system_increases_component_value_by_one();
@@ -295,21 +293,19 @@
 //! #
 //! // #[test]
 //! fn system_increases_resource_value_by_one() {
-//!     assert!(
-//!         AmethystApplication::blank()
-//!             .with_setup(|world| {
-//!                 world.insert(MyResource(0));
-//!             })
-//!             .with_system_single(MySystem, "my_system", &[])
-//!             .with_assertion(|world| {
-//!                 let my_resource = world.read_resource::<MyResource>();
+//!     assert!(AmethystApplication::blank()
+//!         .with_setup(|world| {
+//!             world.insert(MyResource(0));
+//!         })
+//!         .with_system_single(MySystem, "my_system", &[])
+//!         .with_assertion(|world| {
+//!             let my_resource = world.read_resource::<MyResource>();
 //!
-//!                 // If the system ran, the value in the `MyResource` should be 1.
-//!                 assert_eq!(1, my_resource.0);
-//!             })
-//!             .run()
-//!             .is_ok()
-//!     );
+//!             // If the system ran, the value in the `MyResource` should be 1.
+//!             assert_eq!(1, my_resource.0);
+//!         })
+//!         .run()
+//!         .is_ok());
 //! }
 //! #
 //! # system_increases_resource_value_by_one();

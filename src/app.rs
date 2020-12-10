@@ -76,10 +76,11 @@ where
 /// you've created your `CoreApplication` instance:
 ///
 /// ```
-/// use amethyst::prelude::*;
-/// use amethyst::core::transform::{Parent, Transform};
-/// use amethyst::ecs::prelude::System;
-///
+/// use amethyst::{
+///     core::transform::{Parent, Transform},
+///     ecs::prelude::System,
+///     prelude::*,
+/// };
 /// use log::{info, warn};
 ///
 /// struct NullState;
@@ -90,8 +91,7 @@ where
 ///
 ///     // Build the application instance to initialize the default logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
-///         .build(())?;
+///     let mut game = Application::build(assets_dir, NullState)?.build(())?;
 ///
 ///     // Now logging can be performed as normal.
 ///     info!("Using the default logger provided by amethyst");
@@ -105,9 +105,11 @@ where
 /// [log], and it will be used instead of the default logger:
 ///
 /// ```
-/// use amethyst::prelude::*;
-/// use amethyst::core::transform::{Parent, Transform};
-/// use amethyst::ecs::prelude::System;
+/// use amethyst::{
+///     core::transform::{Parent, Transform},
+///     ecs::prelude::System,
+///     prelude::*,
+/// };
 ///
 /// struct NullState;
 /// impl EmptyState for NullState {}
@@ -120,8 +122,7 @@ where
 ///     // The default logger will be automatically disabled and any logging amethyst does
 ///     // will go through your custom logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
-///         .build(())?;
+///     let mut game = Application::build(assets_dir, NullState)?.build(())?;
 ///
 ///     Ok(())
 /// }

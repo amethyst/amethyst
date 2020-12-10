@@ -76,8 +76,8 @@ pub fn main() -> amethyst::Result<()> {
                 // Without this, all of our beautiful UI would not get drawn.
                 // It will work, but we won't see a thing.
                 .with_plugin(RenderUi::default()),
-            // If you want to draw Sprites and such, you would need this additionally:
-            // .with_plugin(RenderFlat2D::default())
+            /* If you want to draw Sprites and such, you would need this additionally:
+             * .with_plugin(RenderFlat2D::default()) */
         )?;
 
     // creating the Application with the assets_dir, the first Screen, and the game_data with it's

@@ -20,7 +20,7 @@ use crate::types::TextureData;
 ///
 /// # Example Usage
 /// ```ignore
-///
+/// 
 ///    let loader = res.fetch_mut::<Loader>();
 ///    let texture_storage = res.fetch_mut::<AssetStorage<Texture>>();
 ///

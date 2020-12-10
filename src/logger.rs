@@ -66,7 +66,8 @@ impl Default for LoggerConfig {
 ///         target = record.target(),
 ///         message = message,
 ///     ))
-/// }).start();
+/// })
+/// .start();
 /// ```
 #[allow(missing_debug_implementations)]
 pub struct Logger {

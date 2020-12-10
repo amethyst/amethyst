@@ -26,7 +26,6 @@ use crate::{build_input_system, BindingError, Bindings, InputHandler};
 /// ## Errors
 ///
 /// No errors returned from this bundle.
-///
 #[derive(Debug, Default)]
 pub struct InputBundle {
     bindings: Option<Bindings>,

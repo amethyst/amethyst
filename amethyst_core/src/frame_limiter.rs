@@ -20,8 +20,7 @@
 //! ```
 //! use std::time::Duration;
 //!
-//! use amethyst::prelude::*;
-//! use amethyst::core::frame_limiter::FrameRateLimitStrategy;
+//! use amethyst::{core::frame_limiter::FrameRateLimitStrategy, prelude::*};
 //!
 //! # struct GameState;
 //! # impl SimpleState for GameState {}
@@ -115,8 +114,7 @@ impl Default for FrameRateLimitStrategy {
 /// # Examples
 ///
 /// ```no_run
-/// use amethyst::prelude::*;
-/// use amethyst::core::frame_limiter::FrameRateLimitConfig;
+/// use amethyst::{core::frame_limiter::FrameRateLimitConfig, prelude::*};
 ///
 /// let config = FrameRateLimitConfig::load("./config/frame_limiter.ron");
 /// ```

@@ -97,7 +97,7 @@ impl<'a> System<'a> for SpamSystem {
         Write<'a, TransportResource>,
         Read<'a, EventChannel<NetworkSimulationEvent>>,
     );
-    fn run(&mut self, (sim_time, time, mut net, event /*, tx*/): Self::SystemData) {
+    fn run(&mut self, (sim_time, time, mut net, event /* , tx */): Self::SystemData) {
         let server_addr = "127.0.0.1:3457".parse().unwrap();
         for frame in sim_time.sim_frames_to_run() {
             info!("Sending message for sim frame {}.", frame);

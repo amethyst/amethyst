@@ -1,5 +1,4 @@
 //! `amethyst` rendering ecs resources
-//!
 
 // use amethyst_assets::PrefabData;
 // use amethyst_error::Error;

@@ -1,5 +1,4 @@
 //! 2D/3D Tile data structures and functionality.
-//!
 
 #![deny(clippy::all, clippy::pedantic, missing_docs)]
 #![allow(dead_code, clippy::module_name_repetitions)]

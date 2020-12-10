@@ -31,7 +31,6 @@ use crate::circular_buffer::CircularBuffer;
 /// # let counter = FpsCounter::new(2);
 /// # world.insert(counter);
 /// let mut counter = world.write_resource::<FpsCounter>();
-///
 /// ```
 #[derive(Debug)]
 pub struct FpsCounter {
