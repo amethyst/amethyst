@@ -8,8 +8,11 @@ mod sprite_sheet_loader;
 
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
-    core::{Hidden, Transform, TransformBundle},
-    ecs::{Entity, World, WorldExt},
+    core::{
+        transform::{Transform, TransformBundle},
+        Hidden,
+    },
+    ecs::{Entity, World},
     input::{get_key, is_close_requested, is_key_down, ElementState},
     prelude::*,
     renderer::{
@@ -83,18 +86,21 @@ impl Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let StateData { world, .. } = data;
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let StateData {
+            world, resources, ..
+        } = data;
 
-        self.loaded_sprite_sheet = Some(load_sprite_sheet(world));
+        self.loaded_sprite_sheet = Some(load_sprite_sheet(world, resources));
 
         self.initialise_camera(world);
+        self.adjust_camera(world, resources);
         self.redraw_sprites(world);
     }
 
     fn handle_event(
         &mut self,
-        mut data: StateData<'_, GameData<'_, '_>>,
+        mut data: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
@@ -141,14 +147,14 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::Up, ElementState::Pressed)) => {
                     self.camera_z += 1.0;
                     info!("Camera Z position is: {}", self.camera_z);
-                    self.adjust_camera(&mut data.world);
+                    self.adjust_camera(&mut data.world, &data.resources);
                     self.redraw_sprites(&mut data.world);
                 }
 
                 Some((VirtualKeyCode::Down, ElementState::Pressed)) => {
                     self.camera_z -= 1.0;
                     info!("Camera Z position is: {}", self.camera_z);
-                    self.adjust_camera(&mut data.world);
+                    self.adjust_camera(&mut data.world, &data.resources);
                     self.redraw_sprites(&mut data.world);
                 }
 
@@ -157,14 +163,14 @@ impl SimpleState for Example {
                         self.camera_depth_vision -= 1.0;
                         info!("Camera depth vision: {}", self.camera_depth_vision);
                     }
-                    self.adjust_camera(&mut data.world);
+                    self.adjust_camera(&mut data.world, &data.resources);
                     self.redraw_sprites(&mut data.world);
                 }
 
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
                     self.camera_depth_vision += 1.0;
                     info!("Camera depth vision: {}", self.camera_depth_vision);
-                    self.adjust_camera(&mut data.world);
+                    self.adjust_camera(&mut data.world, &data.resources);
                     self.redraw_sprites(&mut data.world);
                 }
 
@@ -189,40 +195,35 @@ impl Example {
         self.camera_z = 1.0;
         self.camera_depth_vision =
             self.loaded_sprite_sheet.as_ref().unwrap().sprite_count as f32 + 1.0;
-
-        self.adjust_camera(world);
     }
 
-    fn adjust_camera(&mut self, world: &mut World) {
+    fn adjust_camera(&mut self, world: &mut World, resources: &Resources) {
         if let Some(camera) = self.camera.take() {
-            world
-                .delete_entity(camera)
-                .expect("Failed to delete camera entity.");
+            world.remove(camera);
         }
 
         let (width, height) = {
-            let dim = world.read_resource::<ScreenDimensions>();
+            let dim = resources.get::<ScreenDimensions>().unwrap();
             (dim.width(), dim.height())
         };
 
         let mut camera_transform = Transform::default();
         camera_transform.set_translation_xyz(0.0, 0.0, self.camera_z);
 
-        let camera = world
-            .create_entity()
-            .with(camera_transform)
+        let camera = world.push((
+            camera_transform,
             // Define the view that the camera can see. It makes sense to keep the `near` value as
             // 0.0, as this means it starts seeing anything that is 0 units in front of it. The
             // `far` value is the distance the camera can see facing the origin.
-            .with(Camera::orthographic(
+            Camera::orthographic(
                 -width / 2.0,
                 width / 2.0,
                 -height / 2.0,
                 height / 2.0,
                 0.0,
                 self.camera_depth_vision,
-            ))
-            .build();
+            ),
+        ));
 
         self.camera = Some(camera);
     }
@@ -239,9 +240,7 @@ impl Example {
 
         // Delete any existing entities
         self.entities.drain(..).for_each(|entity| {
-            world
-                .delete_entity(entity)
-                .expect("Failed to delete entity.")
+            world.remove(entity);
         });
 
         // Calculate offset to centre all sprites
@@ -290,24 +289,23 @@ impl Example {
 
             let sprite_render = SpriteRender::new(sprite_sheet_handle.clone(), i as usize);
 
-            let mut entity_builder = world
-                .create_entity()
-                // Render info of the default sprite
-                .with(sprite_render)
+            let sprite = world.push((
+                sprite_render,
                 // Shift sprite to some part of the window
-                .with(sprite_transform);
+                sprite_transform,
+            ));
+            let mut entry = world.entry(sprite).unwrap();
 
             // The `Transparent` component indicates that the pixel color should blend instead of
             // replacing the existing drawn pixel.
             if self.transparent {
-                entity_builder = entity_builder.with(Transparent);
+                entry.add_component(Transparent);
             }
             if self.hidden {
-                entity_builder = entity_builder.with(Hidden);
+                entry.add_component(Hidden);
             }
 
-            // Store the entity
-            self.entities.push(entity_builder.build());
+            self.entities.push(sprite);
         }
     }
 }
@@ -318,10 +316,10 @@ impl Example {
 ///
 /// * texture: the pixel data
 /// * `SpriteSheet`: the layout information of the sprites on the image
-fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
-    let loader = world.read_resource::<Loader>();
+fn load_sprite_sheet(world: &mut World, resources: &Resources) -> LoadedSpriteSheet {
+    let loader = resources.get::<Loader>().unwrap();
     let texture_handle = {
-        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+        let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
         loader.load(
             "texture/arrow_semi_transparent.png",
             ImageFormat::default(),
@@ -337,11 +335,11 @@ fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
     let sprite_count = sprite_sheet.sprites.len() as u32;
 
     let sprite_sheet_handle = {
-        let loader = world.read_resource::<Loader>();
+        let loader = resources.get::<Loader>().unwrap();
         loader.load_from_data(
             sprite_sheet,
             (),
-            &world.read_resource::<AssetStorage<SpriteSheet>>(),
+            &resources.get::<AssetStorage<SpriteSheet>>().unwrap(),
         )
     };
 
@@ -362,18 +360,20 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = app_root.join("examples/sprites_ordered/assets/");
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
-                )
-                .with_plugin(RenderFlat2D::default()),
-        )?;
+    let mut dispatcher = DispatcherBuilder::default();
+    dispatcher.add_bundle(TransformBundle).add_bundle(
+        RenderingBundle::<DefaultBackend>::new()
+            // The RenderToWindow plugin provides all the scaffolding for opening a window and
+            // drawing on it
+            .with_plugin(
+                RenderToWindow::from_config_path(display_config_path)?
+                    .with_clear([0.34, 0.36, 0.52, 1.0]),
+            )
+            // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
+            .with_plugin(RenderFlat2D::default()),
+    );
 
-    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
+    let mut game = Application::new(assets_dir, Example::new(), dispatcher)?;
     game.run();
 
     Ok(())
