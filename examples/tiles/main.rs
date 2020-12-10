@@ -146,45 +146,55 @@ fn camera_switch(
     world: &mut SubWorld,
     commands: &mut CommandBuffer,
 ) {
-    // if input.action_is_down("camera_switch").unwrap() {
-    //     state.pressed = true;
-    // }
-    // if state.pressed && !input.action_is_down("camera_switch").unwrap() {
-    //     state.pressed = false;
+    if input.action_is_down("camera_switch").unwrap() {
+        state.pressed = true;
+    }
+    if state.pressed && !input.action_is_down("camera_switch").unwrap() {
+        state.pressed = false;
 
-    //     // Lazily delete the old camera
-    //     let mut camera_query = <(&Entity, &mut Camera, &mut Transform, &Parent)>::query();
+        // Lazily delete the old camera
+        let mut camera_query = <(&Entity,  &Parent)>::query().filter(component::<Camera>() & component::<Transform>());
 
-    //     let (old_camera_entity, &mut camera, &mut transform, old_parent) = active_camera
-    //         .entity
-    //         .and_then(|a| camera_query.get_mut(world, a).ok())
-    //         .or_else(|| camera_query.iter_mut(world).nth(0))
-    //         .expect("Could not fetch entity with Camera and Transform");
-    //     let old_camera_entity = old_camera_entity;
+        let entity_and_parent = active_camera
+            .entity
+            .and_then(|a| camera_query.get_mut(world, a).ok())
+            .or_else(|| None);
 
-    //     let new_parent = old_parent.0;
+        let entity_and_parent = match entity_and_parent {
+            Some((old_camera_entity, old_parent)) => Some((old_camera_entity, old_parent)),
+            None => camera_query
+            .iter_mut(world)
+            .nth(0)
+        };
+        if let Some((old_camera_entity, old_parent)) = entity_and_parent {
 
-    //     state.perspective = !state.perspective;
-    //     let (new_camera, new_position) = if state.perspective {
-    //         (
-    //             Camera::standard_3d(dimensions.width(), dimensions.height()),
-    //             Vector3::new(0.0, 0.0, 500.1),
-    //         )
-    //     } else {
-    //         (
-    //             Camera::standard_2d(dimensions.width(), dimensions.height()),
-    //             Vector3::new(0.0, 0.0, 1.1),
-    //         )
-    //     };
-    //     // @todo lazy insert new camera
-    //     // let mut command_buffer = CommandBuffer::new(world);
-    //     // let new_camera = command_buffer.push(init_camera(world, new_parent, Transform::from(new_position), new_camera));
+            
+            let old_camera_entity = old_camera_entity;
 
-    //     // active_camera.entity = Some(new_camera);
+            let new_parent = old_parent.0;
 
-    //     // command_buffer.remove(old_camera_entity);
-    //     // command_buffer.flush(&mut world);
-    // }
+            state.perspective = !state.perspective;
+            let (new_camera, new_position) = if state.perspective {
+                (
+                    Camera::standard_3d(dimensions.width(), dimensions.height()),
+                    Vector3::new(0.0, 0.0, 500.1),
+                )
+            } else {
+                (
+                    Camera::standard_2d(dimensions.width(), dimensions.height()),
+                    Vector3::new(0.0, 0.0, 1.1),
+                )
+            };
+            // @todo lazy insert new camera
+            let mut command_buffer = CommandBuffer::new(world);
+            let new_camera = command_buffer.push(init_camera(new_parent, Transform::from(new_position), new_camera));
+
+            active_camera.entity = Some(new_camera);
+
+            command_buffer.remove(*old_camera_entity);
+            command_buffer.flush(world);
+        }
+    }
 }
 
 #[system]
