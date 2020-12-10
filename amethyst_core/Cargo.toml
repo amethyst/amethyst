@@ -18,7 +18,7 @@ derive-new = "0.5.8"
 getset = "0.1.1"
 legion = { version = "0.3.1", default-features = false, features = ["serialize", "crossbeam-events", "codegen"] }
 log = "0.4"
-nalgebra = { version = "0.23.0", features = ["serde-serialize"] }
+nalgebra = { version = "0.23.1", features = ["serde-serialize"] }
 num-traits = "0.2"
 rayon = "1.5"
 serde = { version = "1", features = ["derive"] }
@@ -29,7 +29,7 @@ smallvec = "1.4"
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-#amethyst = { path = "..", version = "0.15.3" }
+amethyst = { path = "..", version = "0.15.3" }
 ron = "0.5.1"
 
 [features]

@@ -27,57 +27,40 @@ use shrinkwraprs::Shrinkwrap;
 /// Creating a name from string constant:
 ///
 /// ```
-/// use amethyst::core::{Named, WithNamed};
-/// use amethyst::ecs::prelude::*;
+/// use amethyst::{core::Named, ecs::*};
 ///
-/// let mut world = World::new();
-/// world.register::<Named>();
-///
-/// world
-///     .create_entity()
-///     .named("Super Cool Entity")
-///     .build();
+/// let mut world = World::default();
+/// let entity: Entity = world.push((Named {
+///     name: "Reginald".into(),
+/// },));
 /// ```
 ///
 /// Creating a name from a dynamically generated string:
 ///
 /// ```
-/// use amethyst::core::{Named, WithNamed};
-/// use amethyst::ecs::prelude::*;
+/// use amethyst::{core::Named, ecs::*};
 ///
-/// let mut world = World::new();
-/// world.register::<Named>();
-///
+/// let mut world = World::default();
+
 /// for entity_num in 0..10 {
-///     world
-///         .create_entity()
-///         .named(format!("Entity Number {}", entity_num))
-///         .build();
+///     world.push((Named { name: format!("Entity Number {}", entity_num).into() },));
 /// }
 /// ```
-///
+/// 
 /// Accessing a named entity in a system:
-///
 /// ```
 /// use amethyst::core::Named;
-/// use amethyst::ecs::prelude::*;
+/// use amethyst::ecs::*;
 ///
-/// pub struct NameSystem;
-///
-/// impl<'s> System<'s> for NameSystem {
-///     type SystemData = (
-///         Entities<'s>,
-///         ReadStorage<'s, Named>,
-///     );
-///
-///     fn run(&mut self, (entities, names): Self::SystemData) {
-///         for (entity, name) in (&*entities, &names).join() {
+/// SystemBuilder::new("NamedSystem")
+///   .with_query(<(Entity, Read<Named>)>::query())
+///   .build(move |_commands, world, _resource, query| {
+///         for (entity, name) in query.iter(world) {
 ///             println!("Entity {:?} is named {}", entity, name.name);
 ///         }
-///     }
-/// }
+/// });
 /// ```
-#[derive(Shrinkwrap, Debug, Clone, Serialize, Deserialize)]
+#[derive(Shrinkwrap, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[shrinkwrap(mutable)]
 pub struct Named {
     /// The name of the entity this component is attached to.
