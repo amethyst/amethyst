@@ -2,7 +2,6 @@ use std::borrow::Cow;
 
 use amethyst_core::{ecs::*, math::one, shrev::EventChannel};
 use amethyst_error::Error;
-use amethyst_input::MouseAxis;
 use winit::Event;
 
 use super::*;

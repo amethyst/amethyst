@@ -19,6 +19,7 @@ use crate::{
 };
 
 /// The system that manages the fly movement.
+#[derive(Debug)]
 pub struct FlyMovementSystem {
     pub(crate) speed: f32,
     pub(crate) horizontal_axis: Option<Cow<'static, str>>,
@@ -58,6 +59,7 @@ impl System<'static> for FlyMovementSystem {
 ///
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
 /// `FreeRotationSystem`.
+#[derive(Debug)]
 pub struct ArcBallRotationSystem;
 
 impl System<'_> for ArcBallRotationSystem {
@@ -109,6 +111,7 @@ impl System<'_> for ArcBallRotationSystem {
 ///
 /// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
 /// `HideCursor.hide = false`
+#[derive(Debug)]
 pub struct FreeRotationSystem {
     pub(crate) sensitivity_x: f32,
     pub(crate) sensitivity_y: f32,
@@ -152,8 +155,10 @@ impl System<'static> for FreeRotationSystem {
     }
 }
 
-/// Builds the mouse focus update System.
+/// Reports the status of window focus.
+#[derive(Debug)]
 pub struct MouseFocusUpdateSystem {
+    // reads WindowEvent from winit
     pub(crate) reader: ReaderId<Event>,
 }
 
@@ -181,6 +186,7 @@ impl System<'static> for MouseFocusUpdateSystem {
 
 /// System which hides the cursor when the window is focused.
 /// Requires the usage MouseFocusUpdateSystem at the same time.
+#[derive(Debug)]
 pub struct CursorHideSystem;
 
 impl System<'_> for CursorHideSystem {
