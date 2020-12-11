@@ -37,7 +37,12 @@ mod test {
         let mut resources = Resources::default();
         let mut world = World::default();
 
-        let mut schedule = Schedule::builder().add_system(build()).build();
+        let mut schedule = Schedule::from(vec![
+            systems::Step::Systems(systems::Executor::new(vec![
+                MissingPreviousParentSystem.build()
+            ])),
+            systems::Step::FlushCmdBuffers,
+        ]);
 
         let e1 = world.push((Transform::default(),));
 

@@ -137,18 +137,21 @@ impl System<'_> for ParentUpdateSystem {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::transform::missing_previous_parent_system;
+    use crate::transform::MissingPreviousParentSystem;
 
     #[test]
     fn correct_children() {
         let mut resources = Resources::default();
         let mut world = World::default();
 
-        let mut schedule = Schedule::builder()
-            .add_system(missing_previous_parent_system::build())
-            .flush()
-            .add_system(build())
-            .build();
+        let mut schedule = Schedule::from(vec![
+            systems::Step::Systems(systems::Executor::new(vec![
+                MissingPreviousParentSystem.build()
+            ])),
+            systems::Step::FlushCmdBuffers,
+            systems::Step::Systems(systems::Executor::new(vec![ParentUpdateSystem.build()])),
+            systems::Step::FlushCmdBuffers,
+        ]);
 
         // Add parent entities
         let parent = world.push((Transform::default(),));

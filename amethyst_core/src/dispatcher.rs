@@ -206,6 +206,20 @@ pub mod tests {
 
     struct MyResource(bool);
 
+    struct MySystem;
+
+    impl System<'_> for MySystem {
+        fn build(&mut self) -> Box<dyn ParallelRunnable> {
+            Box::new(
+                SystemBuilder::new("test")
+                    .write_resource::<MyResource>()
+                    .build(|_, _, res, _| {
+                        res.0 = true;
+                    }),
+            )
+        }
+    }
+
     #[test]
     fn dispatcher_loads_and_unloads() {
         struct MyBundle;
@@ -257,14 +271,8 @@ pub mod tests {
 
         resources.insert(MyResource(false));
 
-        let system = SystemBuilder::new("test")
-            .write_resource::<MyResource>()
-            .build(|_, _, res, _| {
-                res.0 = true;
-            });
-
         let mut dispatcher = DispatcherBuilder::default()
-            .add_system(system)
+            .add_system(Box::new(MySystem))
             .build(&mut world, &mut resources)
             .unwrap();
 
