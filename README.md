@@ -52,7 +52,7 @@ Using the [ECS][ecs] architecture, the code of games can be cleanly divided betw
 
 ### Community
 
-While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of Amethyst will thrive as we move forward!
+* [Discord](https://discord.gg/amethyst) - Announcements, help, general discussion.
 
 ## Features
 
