@@ -53,7 +53,7 @@ pub use self::{
     selection_order_cache::{CacheSelectionOrderSystem, CachedSelectionOrder},
     sound::{
         UiPlaySoundAction, UiSoundRetrigger, UiSoundRetriggerSystem, UiSoundRetriggerSystemDesc,
-        UiSoundSystem, UiSoundSystemDesc,
+        UiSoundSystem,
     },
     text::{LineMode, TextEditing, TextEditingMouseSystem, TextEditingMouseSystemDesc, UiText},
     text_editing::{TextEditingInputSystem, TextEditingInputSystemDesc},
