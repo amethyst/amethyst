@@ -140,8 +140,9 @@ If you are defining a new format that may be useful to others, [please send us a
     #  }
     #
     impl SimpleState for LoadingState {
-        fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-            let loader = &data.world.read_resource::<Loader>();
+        fn on_start(&mut self, data: StateData<'_, GameData>) {
+            let loader = data.resources.get::<Loader>().unwrap(); 
+
             let energy_blast_handle = loader.load(
                 "energy_blast.mylang",
                 MyLangFormat,
@@ -154,7 +155,7 @@ If you are defining a new format that may be useful to others, [please send us a
     #
     #     fn update(
     #         &mut self,
-    #         _data: &mut StateData<'_, GameData<'_, '_>>,
+    #         _data: &mut StateData<'_, GameData>,
     #     ) -> SimpleTrans {
     #         Trans::Quit
     #     }
@@ -165,9 +166,9 @@ If you are defining a new format that may be useful to others, [please send us a
     #     let app_root = application_root_dir()?;
     #     let assets_dir = app_root.join("assets");
     #
-    #     let game_data = GameDataBuilder::default()
+    #     let game_data = DispatcherBuilder::default()
     #         .with(Processor::<EnergyBlast>::new(), "", &[]);
-    #     let mut game = Application::new(
+    #     let mut game = Application::build(
     #         assets_dir,
     #         LoadingState {
     #             progress_counter: ProgressCounter::new(),

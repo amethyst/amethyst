@@ -72,7 +72,8 @@ Once you have ron file ready, you can load it using the texture handle of the sh
 #
 # fn load_sprite_sheet() {
 #   let world = World::new();
-#   let loader = world.read_resource::<Loader>();
+#   let loader = data.resources.get::<Loader>().unwrap(); 
+
 #   let texture_handle = load_texture();
 #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
 let spritesheet_handle = loader.load(

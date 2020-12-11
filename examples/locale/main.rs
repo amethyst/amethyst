@@ -26,7 +26,7 @@ impl Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         data.world.insert(AssetStorage::<Locale>::new());
         let mut progress_counter = ProgressCounter::default();
         self.handle_en = Some(data.world.exec(
@@ -52,7 +52,7 @@ impl SimpleState for Example {
         self.progress_counter = Some(progress_counter);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         // Check if the locale has been loaded.
         if self.progress_counter.as_ref().unwrap().is_complete() {
             let store = data.world.read_resource::<AssetStorage<Locale>>();
@@ -86,9 +86,9 @@ fn main() -> Result<(), Error> {
 
     let assets_dir = application_root_dir()?.join("examples/locale/assets");
 
-    let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
+    let game_data = DispatcherBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
 
-    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
+    let mut game = Application::build(assets_dir, Example::new())?.build(game_data)?;
     game.run();
     Ok(())
 }

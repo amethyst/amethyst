@@ -43,7 +43,7 @@ pub struct CustomPrefabState {
 }
 
 impl SimpleState for CustomPrefabState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let prefab_handle = data.world.exec(|loader: PrefabLoader<'_, Player>| {
             loader.load(
                 "prefab/prefab_multi.ron",
@@ -63,7 +63,7 @@ impl SimpleState for CustomPrefabState {
         self.prefab_handle = Some(prefab_handle);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         if self.progress_counter.is_complete() {
             self.display_loaded_prefab(&data.world);
             self.display_loaded_entities(&mut data.world);
@@ -157,13 +157,13 @@ fn main() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let assets_dir = app_root.join("examples/prefab_multi/assets");
 
-    let game_data = GameDataBuilder::default().with_system_desc(
+    let game_data = DispatcherBuilder::default().with_system_desc(
         PrefabLoaderSystemDesc::<Player>::default(),
         "",
         &[],
     );
 
-    let mut game = Application::new(assets_dir, CustomPrefabState::new(), game_data)?;
+    let mut game = Application::build(assets_dir, CustomPrefabState::new())?.build(game_data)?;
     game.run();
     Ok(())
 }

@@ -14,7 +14,8 @@ pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
 where
     N: Into<String>,
 {
-    let loader = world.read_resource::<Loader>();
+    let loader = data.resources.get::<Loader>().unwrap(); 
+
     loader.load(
         name,
         ImageFormat::default(),
@@ -27,7 +28,7 @@ where
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
     }
 }

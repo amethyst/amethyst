@@ -28,14 +28,14 @@ fn main() -> Result<()> {
 
     let assets_dir = application_root_dir()?.join("examples/net_server");
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         //        // UDP
-        //        .with_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
+        //        .add_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
         // TCP
-        .with_bundle(TcpNetworkBundle::new(Some(listener), 2048))?
+        .add_bundle(TcpNetworkBundle::new(Some(listener), 2048))?
         //        // Laminar
-        //        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
-        .with_bundle(SpamReceiveBundle)?;
+        //        .add_bundle(LaminarNetworkBundle::new(Some(socket)))?
+        .add_bundle(SpamReceiveBundle)?;
 
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(

@@ -28,14 +28,14 @@ fn main() -> Result<()> {
     //    // Laminar
     //    let socket = LaminarSocket::bind("0.0.0.0:3455")?;
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         //        // UDP
-        //        .with_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
+        //        .add_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
         // TCP
-        .with_bundle(TcpNetworkBundle::new(None, 2048))?
+        .add_bundle(TcpNetworkBundle::new(None, 2048))?
         //        // Laminar
-        //        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
-        .with_bundle(SpamBundle)?;
+        //        .add_bundle(LaminarNetworkBundle::new(Some(socket)))?
+        .add_bundle(SpamBundle)?;
 
     let mut game = Application::build(assets_dir, GameState)?
         .with_frame_limit(

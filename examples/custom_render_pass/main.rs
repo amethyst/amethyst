@@ -17,7 +17,7 @@ use crate::custom_pass::{CustomUniformArgs, RenderCustom, Triangle};
 pub struct CustomShaderState;
 
 impl SimpleState for CustomShaderState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
         // Add some triangles
@@ -56,11 +56,7 @@ impl SimpleState for CustomShaderState {
             .build();
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -93,9 +89,9 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/custom_render_pass/config/display.ron");
     let assets_dir = app_root.join("examples/custom_render_pass/assets/");
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(
+    let game_data = DispatcherBuilder::default()
+        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?
@@ -105,7 +101,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderCustom::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, CustomShaderState, game_data)?;
+    let mut game = Application::build(assets_dir, CustomShaderState)?.build(game_data)?;
 
     game.run();
     Ok(())

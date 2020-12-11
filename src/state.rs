@@ -90,7 +90,7 @@ impl<T, E> Debug for Trans<T, E> {
 
 /// Event queue to trigger state `Trans` from other places than a `State`'s methods.
 /// # Example:
-/// ```rust, ignore
+/// ```rust
 /// world.write_resource::<EventChannel<TransEvent<MyGameData, StateEvent>>>().single_write(Box::new(|| Trans::Quit));
 /// ```
 ///

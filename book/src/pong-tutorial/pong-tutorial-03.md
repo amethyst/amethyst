@@ -71,12 +71,12 @@ let input_bundle = InputBundle::<StringBindings>::new()
 # let assets_dir = "assets";
 # struct Pong;
 # impl SimpleState for Pong { }
-let game_data = GameDataBuilder::default()
-    .with_bundle(TransformBundle::new())?
-    .with_bundle(input_bundle)?
+let game_data = DispatcherBuilder::default()
+    .add_bundle(TransformBundle::new())?
+    .add_bundle(input_bundle)?
     // ..
     ;
-let mut game = Application::new(assets_dir, Pong, game_data)?;
+let mut game = Application::build(assets_dir, Pong)?.build(game_data)?;
 game.run();
 # Ok(())
 # }
@@ -199,7 +199,7 @@ immutable for the `Paddle` and mutable for the `Transform`.
 > by using `par_join` instead of `join`, but here the overhead introduced is not
 > worth the gain offered by parallelism.
 
-Let's add this system to our `GameDataBuilder` in `main.rs`:
+Let's add this system to our `DispatcherBuilder` in `main.rs`:
 
 ```rust,ignore
 mod systems; // Import the module
@@ -231,17 +231,17 @@ fn main() -> amethyst::Result<()> {
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
     // ...
-    .with_bundle(TransformBundle::new())?
-    .with_bundle(input_bundle)?
+    .add_bundle(TransformBundle::new())?
+    .add_bundle(input_bundle)?
     .with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
     // ...
 #   ;
 # let assets_dir = "/";
 # struct Pong;
 # impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data)?;
+# let mut game = Application::build(assets_dir, Pong)?.build(game_data)?;
 # Ok(())
 }
 ```
@@ -390,7 +390,7 @@ will take care of that for us, as well as set up the storage.
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+fn on_start(&mut self, data: StateData<'_, GameData>) {
     let world = data.world;
 
     // Load the spritesheet necessary to render the graphics.

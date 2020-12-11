@@ -15,7 +15,7 @@ pub const PADDLE_WIDTH: f32 = 4.0;
 pub struct Pong;
 
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
         // Load the spritesheet necessary to render the graphics.
@@ -58,7 +58,8 @@ impl Component for Paddle {
 
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     let texture_handle = {
-        let loader = world.read_resource::<Loader>();
+        let loader = data.resources.get::<Loader>().unwrap();
+
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
             "texture/pong_spritesheet.png",
@@ -68,7 +69,8 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
         )
     };
 
-    let loader = world.read_resource::<Loader>();
+    let loader = data.resources.get::<Loader>().unwrap();
+
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         "texture/pong_spritesheet.ron",

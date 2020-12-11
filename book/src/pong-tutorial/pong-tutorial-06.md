@@ -41,7 +41,8 @@ fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle 
 /// we'll just work on sound effects.
 pub fn initialise_audio(world: &mut World) {
     let sound_effects = {
-        let loader = world.read_resource::<Loader>();
+        let loader = data.resources.get::<Loader>().unwrap(); 
+
 
         let sound = Sounds {
             bounce_sfx: load_audio_track(&loader, &world, BOUNCE_SOUND),
@@ -63,7 +64,7 @@ Then, we'll need to add the Sounds Resource to our World. Update `pong.rs`:
 use crate::audio::initialise_audio;
 
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         // --snip--
 
         initialise_audio(world);
@@ -76,15 +77,15 @@ Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
-# use amethyst::GameDataBuilder;
+# use amethyst::DispatcherBuilder;
 use amethyst::audio::AudioBundle;
 
 fn main() -> amethyst::Result<()> {
     // --snip--
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         // ... other bundles
-        .with_bundle(AudioBundle::default())?
+        .add_bundle(AudioBundle::default())?
         // ... systems
     ;
 
@@ -330,7 +331,8 @@ use amethyst::{
 
 pub fn initialise_audio(world: &mut World) {
     let (sound_effects, music) = {
-        let loader = world.read_resource::<Loader>();
+        let loader = data.resources.get::<Loader>().unwrap(); 
+
 
         let mut sink = world.write_resource::<AudioSink>();
         sink.set_volume(0.25); // Music is a bit loud, reduce the volume.
@@ -367,7 +369,7 @@ use crate::audio::Music;
 fn main() -> amethyst::Result<()> {
     // --snip--
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         // ... bundles
         .with_system_desc(
             DjSystemDesc::new(|music: &mut Music| music.music.next()),

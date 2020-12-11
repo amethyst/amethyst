@@ -81,7 +81,7 @@ pub struct CustomState<'a, 'b> {
 }
 
 impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
-    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, mut data: StateData<'_, GameData>) {
         let world = &mut data.world;
         
         // Create the `DispatcherBuilder` and register some `System`s that should only run for this `State`.
@@ -122,7 +122,7 @@ The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifeti
 # impl<'a> System<'a> for MovePaddlesSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
 # 
 impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
-    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, mut data: StateData<'_, GameData>) {
         let world = &mut data.world;
          
         // Create the `DispatcherBuilder` and register some `System`s that should only run for this `State`.

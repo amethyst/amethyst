@@ -145,9 +145,9 @@ keep playing after someone scores and log who got the point.
 # let config = DisplayConfig::load(&path)?;
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
 #
-let game_data = GameDataBuilder::default()
-#    .with_bundle(TransformBundle::new())?
-#    .with_bundle(input_bundle)?
+let game_data = DispatcherBuilder::default()
+#    .add_bundle(TransformBundle::new())?
+#    .add_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
 #    .with(systems::MoveBallsSystem, "ball_system", &[])
 #    .with(
@@ -160,7 +160,7 @@ let game_data = GameDataBuilder::default()
 # let assets_dir = "/";
 # struct Pong;
 # impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data)?;
+# let mut game = Application::build(assets_dir, Pong)?.build(game_data)?;
 # Ok(())
 # }
 ```
@@ -196,8 +196,8 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 #     ui::RenderUi,
 # };
 # fn main() -> Result<(), amethyst::Error>{
-# let game_data = GameDataBuilder::default()
-    .with_bundle(RenderingBundle::<DefaultBackend>::new()
+# let game_data = DispatcherBuilder::default()
+    .add_bundle(RenderingBundle::<DefaultBackend>::new()
         // ...
             .with_plugin(RenderUi::default()),
     )?;
@@ -217,8 +217,8 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # fn main() -> Result<(), amethyst::Error>{
 # let display_config_path = "";
 # struct Pong;
-# let game_data = GameDataBuilder::default()
-.with_bundle(UiBundle::<StringBindings>::new())?
+# let game_data = DispatcherBuilder::default()
+.add_bundle(UiBundle::<StringBindings>::new())?
 # ;
 #
 # Ok(())
@@ -281,7 +281,7 @@ use amethyst::{
 # pub struct Pong;
 #
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
 #       let world = data.world;
         // --snip--
 

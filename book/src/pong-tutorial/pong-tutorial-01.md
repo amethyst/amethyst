@@ -176,17 +176,17 @@ In `main()` in `main.rs` we are going to add the basic application setup:
 # };
 # fn main() -> Result<(), amethyst::Error> {
 # struct Pong; impl SimpleState for Pong {}
-let game_data = GameDataBuilder::default();
+let game_data = DispatcherBuilder::default();
 
 # let app_root = application_root_dir()?;
 let assets_dir = app_root.join("assets");
-let mut game = Application::new(assets_dir, Pong, game_data)?;
+let mut game = Application::build(assets_dir, Pong)?.build(game_data)?;
 game.run();
 #     Ok(())
 # }
 ```
 
-Here we're creating a new instance of `GameDataBuilder`, a central repository
+Here we're creating a new instance of `DispatcherBuilder`, a central repository
 of all the game logic that runs periodically during the game runtime. Right now it's empty,
 but soon we will start adding all sorts of systems and bundles to it - which will run our game code.
 
@@ -212,7 +212,7 @@ to do by adding a renderer!
 ## Setting up basic rendering
 
 After preparing the display config and application scaffolding, it's time to actually use it.
-Last time we left our `GameDataBuilder` instance empty, now we'll add some systems to it.
+Last time we left our `DispatcherBuilder` instance empty, now we'll add some systems to it.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -230,8 +230,8 @@ let app_root = application_root_dir()?;
 
 let display_config_path = app_root.join("config").join("display.ron");
 
-let game_data = GameDataBuilder::default()
-    .with_bundle(
+let game_data = DispatcherBuilder::default()
+    .add_bundle(
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
             .with_plugin(

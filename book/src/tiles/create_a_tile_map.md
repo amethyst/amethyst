@@ -33,7 +33,7 @@ use amethyst::{
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, mut data: StateData<'_, GameData>) {
 #        let world = data.world;
         let sprite_sheet_handle = load_sprite_sheet();
         // ...

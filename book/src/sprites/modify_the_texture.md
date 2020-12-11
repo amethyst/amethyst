@@ -39,12 +39,13 @@ use amethyst::window::ScreenDimensions;
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, mut data: StateData<'_, GameData>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
 #
 #         let sprite_sheet = load_sprite_sheet(texture_handle);
 #         let sprite_sheet_handle = {
-#             let loader = data.world.read_resource::<Loader>();
+#             let loader = data.resources.get::<Loader>().unwrap(); 
+
 #             loader.load_from_data(
 #                 sprite_sheet,
 #                 (),

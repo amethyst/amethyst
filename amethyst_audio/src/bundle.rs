@@ -1,7 +1,7 @@
 //! ECS audio bundles
 
 use amethyst_assets::AssetProcessorSystemBundle;
-use amethyst_core::{dispatcher::System, ecs::*};
+use amethyst_core::ecs::*;
 use amethyst_error::Error;
 
 use crate::{output::Output, source::*, systems::*};
@@ -22,7 +22,7 @@ impl SystemBundle for AudioBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         builder
-            .add_system(&AudioSystem {})
+            .add_system(Box::new(AudioSystem))
             .add_bundle(AssetProcessorSystemBundle::<Source>::default());
         Ok(())
     }

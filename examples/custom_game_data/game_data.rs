@@ -36,26 +36,26 @@ impl<'a, 'b> CustomGameData<'a, 'b> {
     }
 }
 
-impl DataDispose for CustomGameData<'_, '_> {
+impl DataDispose for CustomGameData {
     fn dispose(&mut self, world: &mut World) {
         self.dispose(world);
     }
 }
 
-pub struct CustomGameDataBuilder<'a, 'b> {
+pub struct CustomDispatcherBuilder<'a, 'b> {
     base_dispatcher_operations: Vec<Box<dyn DispatcherOperation<'a, 'b>>>,
     running_dispatcher_operations: Vec<Box<dyn DispatcherOperation<'a, 'b>>>,
 }
 
-impl<'a, 'b> Default for CustomGameDataBuilder<'a, 'b> {
+impl<'a, 'b> Default for CustomDispatcherBuilder<'a, 'b> {
     fn default() -> Self {
-        CustomGameDataBuilder::new()
+        CustomDispatcherBuilder::new()
     }
 }
 
-impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
+impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
     pub fn new() -> Self {
-        CustomGameDataBuilder {
+        CustomDispatcherBuilder {
             base_dispatcher_operations: vec![],
             running_dispatcher_operations: vec![],
         }
@@ -112,7 +112,7 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
     }
 }
 
-impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
+impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         let base = build_dispatcher(world, self.base_dispatcher_operations);
         let running = build_dispatcher(world, self.running_dispatcher_operations);
