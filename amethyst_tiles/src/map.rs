@@ -278,8 +278,8 @@ fn create_transform(map_dimensions: &Vector3<u32>, tile_dimensions: &Vector3<u32
     );
 
     let half_dimensions = Vector3::new(
-        -1.0 * (map_dimensions.x as f32 / 2.0),
-        map_dimensions.y as f32 / 2.0,
+        -1.0 * (map_dimensions.x as f32 / 2.0) + 0.5,
+        map_dimensions.y as f32 / 2.0 - 0.5,
         0.0,
     );
 
