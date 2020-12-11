@@ -1,13 +1,10 @@
 use amethyst_assets::AssetStorage;
 use amethyst_audio::{output::Output, Source, SourceHandle};
 use amethyst_core::{
-    ecs::{
-        prelude::{Component, DenseVecStorage},
-        Read, System, SystemData, Write,
-    },
+    ecs::*,
     shrev::{EventChannel, ReaderId},
 };
-use amethyst_derive::SystemDesc;
+
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -16,6 +13,7 @@ use crate::{
     event_retrigger::{EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc},
     EventReceiver,
 };
+use amethyst_core::ecs::systems::ParallelRunnable;
 
 /// Builds a `UiSoundRetriggerSystem`.
 pub type UiSoundRetriggerSystemDesc = EventRetriggerSystemDesc<UiSoundRetrigger>;
@@ -43,10 +41,6 @@ pub struct UiSoundRetrigger {
     pub on_hover_stop: Option<UiPlaySoundAction>,
 }
 
-impl Component for UiSoundRetrigger {
-    type Storage = DenseVecStorage<Self>;
-}
-
 impl EventRetrigger for UiSoundRetrigger {
     type In = UiEvent;
     type Out = UiPlaySoundAction;
@@ -71,10 +65,8 @@ impl EventRetrigger for UiSoundRetrigger {
 
 /// Handles any dispatches `UiPlaySoundAction`s and plays the received
 /// sounds through the set `Output`.
-#[derive(Debug, SystemDesc)]
-#[system_desc(name(UiSoundSystemDesc))]
+#[derive(Debug)]
 pub struct UiSoundSystem {
-    #[system_desc(event_channel_reader)]
     event_reader: ReaderId<UiPlaySoundAction>,
 }
 
@@ -85,27 +77,25 @@ impl UiSoundSystem {
     pub fn new(event_reader: ReaderId<UiPlaySoundAction>) -> Self {
         Self { event_reader }
     }
-}
 
-impl<'s> System<'s> for UiSoundSystem {
-    type SystemData = (
-        Write<'s, EventChannel<UiPlaySoundAction>>,
-        Read<'s, AssetStorage<Source>>,
-        Option<Read<'s, Output>>,
-    );
-
-    fn run(&mut self, (sound_events, audio_storage, audio_output): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("ui_sound_system");
-
-        let event_reader = &mut self.event_reader;
-
-        for event in sound_events.read(event_reader) {
-            if let Some(output) = audio_output.as_ref() {
-                if let Some(sound) = audio_storage.get(&event.0) {
-                    output.play_once(sound, 1.0);
-                }
-            }
-        }
+    pub fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("BlinkSystem")
+                .write_resource::<EventChannel<UiPlaySoundAction>>()
+                .read_resource::<AssetStorage<Source>>()
+                .read_resource::<Option<Output>>()
+                .build( move | _commands, _world, (sound_events, audio_storage, audio_output), _| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("ui_sound_system");
+                    let event_reader = &mut self.event_reader;
+                    for event in sound_events.read(event_reader) {
+                        if let Some(output) = audio_output.as_ref() {
+                            if let Some(sound) = audio_storage.get(&event.0) {
+                                output.play_once(sound, 1.0);
+                            }
+                        }
+                    }
+                } )
+        )
     }
 }
