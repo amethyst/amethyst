@@ -1,9 +1,9 @@
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::ecs::*;
+use amethyst_core::{dispatcher::System, ecs::*};
 use amethyst_error::Error;
 use winit::EventsLoop;
 
-use crate::{build_events_loop_system, build_window_system, DisplayConfig, ScreenDimensions};
+use crate::{DisplayConfig, ScreenDimensions, WindowEventsSystem, WindowSystem};
 
 /// Screen width used in predefined display configuration.
 #[cfg(feature = "test-support")]
@@ -77,8 +77,8 @@ impl SystemBundle for WindowBundle {
         resources.insert(window);
 
         builder
-            .add_system(build_window_system())
-            .add_thread_local(build_events_loop_system(events_loop));
+            .add_system(Box::new(WindowSystem {}))
+            .add_thread_local(Box::new(WindowEventsSystem { events_loop }));
 
         Ok(())
     }

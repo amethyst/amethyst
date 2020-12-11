@@ -2,7 +2,8 @@
 use std::cmp::Ordering;
 
 use amethyst_core::{
-    ecs::*,
+    dispatcher::System,
+    ecs::{systems::ParallelRunnable, *},
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
     transform::Transform,
     Hidden, HiddenPropagate,
@@ -25,13 +26,6 @@ pub struct Visibility {
     pub visible_unordered: IndexSet<Entity>,
     /// Visible entities that need to be drawn in the given order
     pub visible_ordered: Vec<Entity>,
-}
-
-/// Holds internal state of the visibility sorting system
-#[derive(Default, Debug)]
-struct VisibilitySortingSystemState {
-    centroids: Vec<Internals>,
-    transparent: Vec<Internals>,
 }
 
 /// Defines a object's bounding sphere used by frustum culling.
@@ -80,103 +74,116 @@ struct Internals {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-pub fn build_visibility_sorting_system() -> impl Runnable {
-    let mut state = VisibilitySortingSystemState::default();
+#[derive(Default, Debug)]
+pub struct VisibilitySortingSystem {
+    centroids: Vec<Internals>,
+    transparent: Vec<Internals>,
+}
 
-    SystemBuilder::new("VisibilitySortingSystem")
-        .read_resource::<ActiveCamera>()
-        .write_resource::<Visibility>()
-        .with_query(<(&Camera, &Transform)>::query())
-        .with_query(<(Entity, &Camera, &Transform)>::query())
-        .with_query(
-            <(
-                Entity,
-                &Transform,
-                Option<&Transparent>,
-                Option<&BoundingSphere>,
-            )>::query()
-            .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
-        )
-        .build(
-            move |commands,
-                  world,
-                  (active_camera, visibility),
-                  (camera_query1, camera_query2, entity_query)| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("visibility_sorting_system");
+impl System<'static> for VisibilitySortingSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("VisibilitySortingSystem")
+                .read_resource::<ActiveCamera>()
+                .write_resource::<Visibility>()
+                .with_query(<(&Camera, &Transform)>::query())
+                .with_query(<(Entity, &Camera, &Transform)>::query())
+                .with_query(
+                    <(
+                        Entity,
+                        &Transform,
+                        Option<&Transparent>,
+                        Option<&BoundingSphere>,
+                    )>::query()
+                    .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
+                )
+                .build(
+                    move |commands,
+                          world,
+                          (active_camera, visibility),
+                          (camera_query1, camera_query2, entity_query)| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("visibility_sorting_system");
 
-                visibility.visible_unordered.clear();
-                visibility.visible_ordered.clear();
-                state.transparent.clear();
-                state.centroids.clear();
+                        visibility.visible_unordered.clear();
+                        visibility.visible_ordered.clear();
+                        self.transparent.clear();
+                        self.centroids.clear();
 
-                let origin = Point3::origin();
+                        let origin = Point3::origin();
 
-                let (camera, camera_transform) = match active_camera.entity.map_or_else(
-                    || camera_query1.iter(world).next(),
-                    |e| {
-                        camera_query2
-                            .iter(world)
-                            .find(|(camera_entity, _, _)| **camera_entity == e)
-                            .map(|(_entity, camera, camera_transform)| (camera, camera_transform))
+                        let (camera, camera_transform) = match active_camera.entity.map_or_else(
+                            || camera_query1.iter(world).next(),
+                            |e| {
+                                camera_query2
+                                    .iter(world)
+                                    .find(|(camera_entity, _, _)| **camera_entity == e)
+                                    .map(|(_entity, camera, camera_transform)| {
+                                        (camera, camera_transform)
+                                    })
+                            },
+                        ) {
+                            Some(r) => r,
+                            None => return,
+                        };
+
+                        let camera_centroid =
+                            camera_transform.global_matrix().transform_point(&origin);
+                        let frustum = Frustum::new(
+                            convert::<_, Matrix4<f32>>(camera.matrix)
+                                * camera_transform.global_matrix().try_inverse().unwrap(),
+                        );
+
+                        self.centroids.extend(
+                            entity_query
+                                .iter(world)
+                                .map(|(entity, transform, transparent, sphere)| {
+                                    let pos = sphere.clone().map_or(origin, |s| s.center);
+                                    let matrix = transform.global_matrix();
+                                    (
+                                        *entity,
+                                        transparent.is_some(),
+                                        matrix.transform_point(&pos),
+                                        sphere.map_or(1.0, |s| s.radius)
+                                            * matrix[(0, 0)]
+                                                .max(matrix[(1, 1)])
+                                                .max(matrix[(2, 2)]),
+                                    )
+                                })
+                                .filter(|(_, _, centroid, radius)| {
+                                    frustum.check_sphere(centroid, *radius)
+                                })
+                                .map(|(entity, transparent, centroid, _)| Internals {
+                                    entity,
+                                    transparent,
+                                    centroid,
+                                    camera_distance: distance_squared(&centroid, &camera_centroid),
+                                }),
+                        );
+
+                        self.transparent
+                            .extend(self.centroids.iter().filter(|c| c.transparent).cloned());
+
+                        self.transparent.sort_by(|a, b| {
+                            b.camera_distance
+                                .partial_cmp(&a.camera_distance)
+                                .unwrap_or(Ordering::Equal)
+                        });
+
+                        visibility.visible_unordered.extend(
+                            self.centroids
+                                .iter()
+                                .filter(|c| !c.transparent)
+                                .map(|c| c.entity),
+                        );
+
+                        visibility
+                            .visible_ordered
+                            .extend(self.transparent.iter().map(|c| c.entity));
                     },
-                ) {
-                    Some(r) => r,
-                    None => return,
-                };
-
-                let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
-                let frustum = Frustum::new(
-                    convert::<_, Matrix4<f32>>(camera.matrix)
-                        * camera_transform.global_matrix().try_inverse().unwrap(),
-                );
-
-                state.centroids.extend(
-                    entity_query
-                        .iter(world)
-                        .map(|(entity, transform, transparent, sphere)| {
-                            let pos = sphere.clone().map_or(origin, |s| s.center);
-                            let matrix = transform.global_matrix();
-                            (
-                                *entity,
-                                transparent.is_some(),
-                                matrix.transform_point(&pos),
-                                sphere.map_or(1.0, |s| s.radius)
-                                    * matrix[(0, 0)].max(matrix[(1, 1)]).max(matrix[(2, 2)]),
-                            )
-                        })
-                        .filter(|(_, _, centroid, radius)| frustum.check_sphere(centroid, *radius))
-                        .map(|(entity, transparent, centroid, _)| Internals {
-                            entity,
-                            transparent,
-                            centroid,
-                            camera_distance: distance_squared(&centroid, &camera_centroid),
-                        }),
-                );
-
-                state
-                    .transparent
-                    .extend(state.centroids.iter().filter(|c| c.transparent).cloned());
-
-                state.transparent.sort_by(|a, b| {
-                    b.camera_distance
-                        .partial_cmp(&a.camera_distance)
-                        .unwrap_or(Ordering::Equal)
-                });
-
-                visibility.visible_unordered.extend(
-                    state
-                        .centroids
-                        .iter()
-                        .filter(|c| !c.transparent)
-                        .map(|c| c.entity),
-                );
-
-                visibility
-                    .visible_ordered
-                    .extend(state.transparent.iter().map(|c| c.entity));
-            },
+                ),
         )
+    }
 }
 
 /// Simple view Frustum implementation

@@ -1,5 +1,10 @@
+use std::{marker::PhantomData, rc::Rc};
+
 use amethyst_assets::AssetStorage;
-use amethyst_core::ecs::*;
+use amethyst_core::{
+    dispatcher::System,
+    ecs::{systems::ParallelRunnable, *},
+};
 use amethyst_error::Error;
 use log::error;
 #[cfg(feature = "profiler")]
@@ -15,30 +20,30 @@ use crate::{
 #[derive(Debug)]
 pub struct DjSystemBundle<F, R>
 where
-    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static + Copy,
     R: Send + Sync + 'static,
 {
-    f: Option<F>,
-    _phantom: std::marker::PhantomData<R>,
+    f: F,
+    _marker: PhantomData<R>,
 }
 
 impl<F, R> DjSystemBundle<F, R>
 where
-    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static + Copy,
     R: Send + Sync + 'static,
 {
     /// Creates a new [DjSystemBundle] where [f] is a function which produces music [SourceHandle].
     pub fn new(f: F) -> Self {
         Self {
-            f: Some(f),
-            _phantom: Default::default(),
+            f,
+            _marker: PhantomData,
         }
     }
 }
 
 impl<F, R> SystemBundle for DjSystemBundle<F, R>
 where
-    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static + Copy,
     R: Send + Sync + 'static,
 {
     fn load(
@@ -48,37 +53,50 @@ where
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         init_output(resources);
-        builder.add_system(build_dj_system(
-            self.f
-                .take()
-                .expect("DJ system function not provided or bundle loaded multiple times"),
-        ));
+        builder.add_system(Box::new(DjSystem {
+            f: self.f,
+            _phantom: PhantomData,
+        }));
         Ok(())
     }
 }
 
 /// Calls a closure if the `AudioSink` is empty.
-pub fn build_dj_system<F, R>(mut f: F) -> impl Runnable
+#[derive(Debug, Clone)]
+pub struct DjSystem<F, R>
 where
-    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
-    R: Send + Sync + 'static,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync,
+    R: Send + Sync,
 {
-    SystemBuilder::new("DjSystem")
-        .read_resource::<AssetStorage<Source>>()
-        .read_resource::<Option<AudioSink>>()
-        .write_resource::<R>()
-        .build(move |_commands, _world, (storage, sink, res), _queries| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("dj_system");
+    f: F,
+    _phantom: std::marker::PhantomData<R>,
+}
 
-            if let Some(sink) = &**sink {
-                if sink.empty() {
-                    if let Some(source) = f(res).and_then(|h| storage.get(&h)) {
-                        if let Err(e) = sink.append(source) {
-                            error!("DJ Cannot append source to sink. {}", e);
+impl<F, R> System<'static> for DjSystem<F, R>
+where
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync,
+    R: Send + Sync,
+{
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("DjSystem")
+                .read_resource::<AssetStorage<Source>>()
+                .read_resource::<Option<AudioSink>>()
+                .write_resource::<R>()
+                .build(move |_commands, _world, (storage, sink, res), _queries| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("dj_system");
+
+                    if let Some(sink) = &**sink {
+                        if sink.empty() {
+                            if let Some(source) = (self.f)(res).and_then(|h| storage.get(&h)) {
+                                if let Err(e) = sink.append(source) {
+                                    error!("DJ Cannot append source to sink. {}", e);
+                                }
+                            }
                         }
                     }
-                }
-            }
-        })
+                }),
+        )
+    }
 }

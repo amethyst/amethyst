@@ -10,8 +10,8 @@ pub use window::RenderToWindow;
 use crate::{
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
     pass::*,
-    sprite_visibility::{build_sprite_visibility_sorting_system, SpriteVisibility},
-    visibility::{build_visibility_sorting_system, Visibility},
+    sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
+    visibility::{Visibility, VisibilitySortingSystem},
     Backend, Factory,
 };
 
@@ -190,7 +190,7 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(Visibility::default());
-        builder.add_system(build_visibility_sorting_system());
+        builder.add_system(Box::new(VisibilitySortingSystem::default()));
         Ok(())
     }
 
@@ -244,7 +244,7 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(SpriteVisibility::default());
-        builder.add_system(build_sprite_visibility_sorting_system());
+        builder.add_system(Box::new(SpriteVisibilitySortingSystem));
         Ok(())
     }
 

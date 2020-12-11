@@ -10,7 +10,7 @@ use winit::Event;
 
 #[cfg(feature = "sdl_controller")]
 use crate::sdl_events_system::ControllerMappings;
-use crate::{build_input_system, BindingError, Bindings, InputHandler};
+use crate::{BindingError, Bindings, InputHandler, InputSystem};
 
 /// Bundle for adding the `InputHandler`.
 ///
@@ -102,7 +102,7 @@ impl SystemBundle for InputBundle {
 
         resources.insert(handler);
 
-        builder.add_system(build_input_system(reader));
+        builder.add_system(Box::new(InputSystem { reader }));
 
         Ok(())
     }

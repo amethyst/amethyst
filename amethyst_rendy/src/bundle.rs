@@ -1,6 +1,6 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, marker::PhantomData};
 
 use amethyst_assets::{AssetProcessorSystemBundle, AssetStorage};
 use amethyst_core::ecs::*;
@@ -20,8 +20,8 @@ use crate::{
         wsi::Surface,
     },
     system::{
-        build_mesh_processor, build_texture_processor, create_default_mat, make_graph_aux_data,
-        render, GraphAuxData, GraphCreator, RenderState,
+        create_default_mat, make_graph_aux_data, render, GraphAuxData, GraphCreator,
+        MeshProcessorSystem, RenderState, TextureProcessorSystem,
     },
     types::{Backend, Mesh, Texture},
     SpriteSheet,
@@ -78,10 +78,14 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(AssetStorage::<Mesh>::default());
-        builder.add_system(build_mesh_processor::<B>());
+        builder.add_system(Box::new(MeshProcessorSystem::<B> {
+            _marker: PhantomData,
+        }));
 
         resources.insert(AssetStorage::<Texture>::default());
-        builder.add_system(build_texture_processor::<B>());
+        builder.add_system(Box::new(TextureProcessorSystem::<B> {
+            _marker: PhantomData,
+        }));
 
         builder.add_bundle(AssetProcessorSystemBundle::<Material>::default());
         builder.add_bundle(AssetProcessorSystemBundle::<SpriteSheet>::default());

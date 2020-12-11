@@ -1,23 +1,31 @@
 //! System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
 
+use legion::systems::ParallelRunnable;
+
 use super::components::*;
-use crate::ecs::*;
+use crate::{dispatcher::System, ecs::*};
+
+pub struct MissingPreviousParentSystem;
 
 /// System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
-pub fn build() -> impl Runnable {
-    SystemBuilder::new("MissingPreviousParentSystem")
-        // Entities with missing `PreviousParent`
-        .with_query(
-            <(Entity, &Parent)>::query()
-                .filter(component::<Transform>() & !component::<PreviousParent>()),
+impl System<'_> for MissingPreviousParentSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MissingPreviousParentSystem")
+                // Entities with missing `PreviousParent`
+                .with_query(
+                    <(Entity, &Parent)>::query()
+                        .filter(component::<Transform>() & !component::<PreviousParent>()),
+                )
+                .build(move |commands, world, _resource, query| {
+                    // Add missing `PreviousParent` components
+                    for (entity, _parent) in query.iter(world) {
+                        log::trace!("Adding missing PreviousParent to {:?}", entity);
+                        commands.add_component(*entity, PreviousParent(None));
+                    }
+                }),
         )
-        .build(move |commands, world, _resource, query| {
-            // Add missing `PreviousParent` components
-            for (entity, _parent) in query.iter(world) {
-                log::trace!("Adding missing PreviousParent to {:?}", entity);
-                commands.add_component(*entity, PreviousParent(None));
-            }
-        })
+    }
 }
 
 #[cfg(test)]
