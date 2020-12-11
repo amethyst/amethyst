@@ -1,22 +1,18 @@
-use std::{collections::HashSet, marker::PhantomData};
+use std::{collections::HashSet};
 
 use amethyst_core::{
-    ecs::{
-        prelude::{
-            Component, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System, Write,
-        },
-        storage::NullStorage,
-    },
+    ecs::*,
     math::Vector2,
     shrev::EventChannel,
     Hidden, HiddenPropagate,
 };
-use amethyst_input::{BindingTypes, InputHandler};
+use amethyst_input::InputHandler;
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
 use winit::MouseButton;
 
 use crate::transform::UiTransform;
+use amethyst_core::ecs::systems::ParallelRunnable;
 
 /// An event that pertains to a specific `Entity`, for example a `UiEvent` for clicking on a widget
 /// entity.
@@ -92,106 +88,88 @@ impl TargetedEvent for UiEvent {
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct Interactable;
 
-impl Component for Interactable {
-    type Storage = NullStorage<Interactable>;
-}
-
 /// The system that generates events for `Interactable` enabled entities.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
 #[derive(Default, Debug)]
-pub struct UiMouseSystem<T: BindingTypes> {
+pub struct UiMouseSystem{
     was_down: bool,
     click_started_on: HashSet<Entity>,
     last_targets: HashSet<Entity>,
-    _marker: PhantomData<T>,
 }
 
-impl<T: BindingTypes> UiMouseSystem<T> {
+impl UiMouseSystem {
     /// Creates a new UiMouseSystem.
     pub fn new() -> Self {
         UiMouseSystem {
             was_down: false,
             click_started_on: HashSet::new(),
             last_targets: HashSet::new(),
-            _marker: PhantomData,
         }
     }
-}
 
-impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
-    type SystemData = (
-        Entities<'a>,
-        ReadStorage<'a, Hidden>,
-        ReadStorage<'a, HiddenPropagate>,
-        ReadStorage<'a, UiTransform>,
-        ReadStorage<'a, Interactable>,
-        Read<'a, InputHandler<T>>,
-        ReadExpect<'a, ScreenDimensions>,
-        Write<'a, EventChannel<UiEvent>>,
-    );
+    pub fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("UiMouseSystem")
+                .write_resource::<EventChannel<UiEvent>>()
+                .read_resource::<InputHandler>()
+                .read_resource::<ScreenDimensions>()
+                // Interactable entities with an UiTransform, without Hidden or HiddenPropagate
+                .with_query(<(Entity, &UiTransform, Option<&Interactable>)>::query()
+                    .filter(!component::<Hidden>() & !component::<HiddenPropagate>()))
+                .build(move |_commands, world, (events, input, screen_dimensions), interactables_entities| {
+                    let down = input.mouse_button_is_down(MouseButton::Left);
 
-    fn run(
-        &mut self,
-        (entities, hiddens, hidden_props, transform, react, input, screen_dimensions, mut events): Self::SystemData,
-    ) {
-        let down = input.mouse_button_is_down(MouseButton::Left);
+                    // FIXME: To replace on InputHandler generate OnMouseDown and OnMouseUp events See #2496
+                    let click_started = down && !self.was_down;
+                    let click_stopped = !down && self.was_down;
+                    if let Some((pos_x, pos_y)) = input.mouse_position() {
+                        let x = pos_x as f32;
+                        let y = screen_dimensions.height() - pos_y as f32;
 
-        // TODO: To replace on InputHandler generate OnMouseDown and OnMouseUp events
-        let click_started = down && !self.was_down;
-        let click_stopped = !down && self.was_down;
+                        let targets = targeted(
+                            (x, y),
+                            interactables_entities.iter(world),
+                        );
 
-        if let Some((pos_x, pos_y)) = input.mouse_position() {
-            let x = pos_x as f32;
-            let y = screen_dimensions.height() - pos_y as f32;
+                        for target in targets.difference(&self.last_targets) {
+                            events.single_write(UiEvent::new(UiEventType::HoverStart, *target));
+                        }
 
-            let targets = targeted(
-                (x, y),
-                (
-                    &*entities,
-                    &transform,
-                    react.maybe(),
-                    !&hiddens,
-                    !&hidden_props,
-                )
-                    .join(),
-            );
-            for target in targets.difference(&self.last_targets) {
-                events.single_write(UiEvent::new(UiEventType::HoverStart, *target));
-            }
-            for last_target in self.last_targets.difference(&targets) {
-                events.single_write(UiEvent::new(UiEventType::HoverStop, *last_target));
-            }
+                        for last_target in self.last_targets.difference(&targets) {
+                            events.single_write(UiEvent::new(UiEventType::HoverStop, *last_target));
+                        }
 
-            if click_started {
-                self.click_started_on = targets.clone();
-                for target in targets.iter() {
-                    events.single_write(UiEvent::new(UiEventType::ClickStart, *target));
-                }
-            } else if click_stopped {
-                for click_start_target in self.click_started_on.intersection(&targets) {
-                    events.single_write(UiEvent::new(UiEventType::Click, *click_start_target));
-                }
-            }
+                        if click_started {
+                            self.click_started_on = targets.clone();
+                            for target in targets.iter() {
+                                events.single_write(UiEvent::new(UiEventType::ClickStart, *target));
+                            }
+                        } else if click_stopped {
+                            for click_start_target in self.click_started_on.intersection(&targets) {
+                                events.single_write(UiEvent::new(UiEventType::Click, *click_start_target));
+                            }
+                        }
 
-            self.last_targets = targets;
-        }
+                        self.last_targets = targets;
+                    }
 
-        // Could be used for drag and drop
-        if click_stopped {
-            for click_start_target in self.click_started_on.drain() {
-                events.single_write(UiEvent::new(UiEventType::ClickStop, click_start_target));
-            }
-        }
-
-        self.was_down = down;
+                    // Could be used for drag and drop
+                    if click_stopped {
+                        for click_start_target in self.click_started_on.drain() {
+                            events.single_write(UiEvent::new(UiEventType::ClickStop, click_start_target));
+                        }
+                    }
+                    self.was_down = down;
+                })
+        )
     }
 }
 
 /// Finds all interactable entities at the position `pos` which don't have any opaque entities on
 /// top blocking them.
 pub fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> HashSet<Entity>
-where
-    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>, (), ())> + 'a,
+    where
+        I: Iterator<Item=(Entity, &'a UiTransform, Option<&'a Interactable>)> + 'a,
 {
     let mut entity_transforms: Vec<(Entity, &UiTransform)> = transforms
         .filter(|(_e, t, _m, _, _)| {
@@ -216,8 +194,8 @@ where
 /// Checks if an interactable entity is at the position `pos`, doesn't have anything on top blocking
 /// the check, and is below specified height.
 pub fn targeted_below<'a, I>(pos: (f32, f32), height: f32, transforms: I) -> Option<Entity>
-where
-    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>, (), ())> + 'a,
+    where
+        I: Iterator<Item=(Entity, &'a UiTransform, Option<&'a Interactable>, (), ())> + 'a,
 {
     transforms
         .filter(|(_e, t, _m, _, _)| {
