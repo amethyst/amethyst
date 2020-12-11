@@ -1,15 +1,13 @@
 //! System that updates global transform matrices based on hierarchy relations.
 
 use legion::systems::ParallelRunnable;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use super::components::*;
 use crate::{dispatcher::System, ecs::*};
 
+/// System that updates global transform matrices based on hierarchy relations.
 pub struct TransformSystem;
 
-/// System that updates global transform matrices based on hierarchy relations.
 impl System<'_> for TransformSystem {
     fn build(&mut self) -> Box<dyn ParallelRunnable> {
         Box::new(

@@ -5,9 +5,9 @@ use legion::systems::ParallelRunnable;
 use super::components::*;
 use crate::{dispatcher::System, ecs::*};
 
+/// System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
 pub struct MissingPreviousParentSystem;
 
-/// System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
 impl System<'_> for MissingPreviousParentSystem {
     fn build(&mut self) -> Box<dyn ParallelRunnable> {
         Box::new(

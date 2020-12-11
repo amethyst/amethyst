@@ -8,9 +8,9 @@ use smallvec::SmallVec;
 use super::components::*;
 use crate::{dispatcher::System, ecs::*};
 
+/// System that generates [Children] components for entities that are targeted by [Parent] component.
 pub struct ParentUpdateSystem;
 
-/// System that generates [Children] components for entities that are targeted by [Parent] component.
 impl System<'_> for ParentUpdateSystem {
     fn build(&mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
