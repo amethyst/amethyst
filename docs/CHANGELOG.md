@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Make `TextEditingPrefab` public ([#2492])
 - Replace `clipboard` crate with `copypasta` (see #2438)
 - Make ui a default but optional feature ([#2490])
+- Tile maps are now properly centered at their transform location
 
 ### Fixed
 
