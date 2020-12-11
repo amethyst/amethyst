@@ -52,7 +52,7 @@ Using the [ECS][ecs] architecture, the code of games can be cleanly divided betw
 
 ### Community
 
-* [Discord](https://discord.gg/amethyst) - Announcements, help, general discussion.
+* [Discord](https://discord.gg/amethyst) - Announcements, help, useful information, general discussion.
 
 ## Features
 
