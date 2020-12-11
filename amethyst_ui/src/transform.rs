@@ -1,35 +1,24 @@
 use std::marker::PhantomData;
 
 use amethyst_core::{
-    ecs::{
-        prelude::{
-            Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage, World,
-        },
-        shred::{ResourceId, SystemData},
-        storage::GenericReadStorage,
-    },
-    ParentHierarchy,
+    ecs::*
 };
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
 
 use super::{Anchor, ScaleMode, Stretch};
+use amethyst_core::transform::Parent;
 
-/// Utility `SystemData` for finding UI entities based on `UiTransform` id
-#[derive(SystemData)]
-#[allow(missing_debug_implementations)]
-pub struct UiFinder<'a> {
-    entities: Entities<'a>,
-    storage: ReadStorage<'a, UiTransform>,
-}
+/// Utility lookup for finding UI entities based on `UiTransform` id
+pub struct UiFinder<'a>;
 
 impl<'a> UiFinder<'a> {
     /// Find the `UiTransform` entity with the given id
-    pub fn find(&self, id: &str) -> Option<Entity> {
-        (&*self.entities, &self.storage)
-            .join()
-            .find(|(_, transform)| transform.id == id)
-            .map(|(entity, _)| entity)
+    pub fn find(&self, subworld: &mut SubWorld<'_>, id: &str) -> Option<Entity> {
+        <(Entity, Read<UiTransform>)>::query()
+            .iter(subworld)
+            .filter(|(_, transform)| transform.id == id)
+            .next()
     }
 }
 
@@ -182,28 +171,20 @@ impl UiTransform {
     }
 }
 
-impl Component for UiTransform {
-    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
-}
-
 /// Get the (width, height) in pixels of the parent of this `UiTransform`.
-pub fn get_parent_pixel_size<S: GenericReadStorage<Component = UiTransform>>(
-    entity: Entity,
-    hierarchy: &ParentHierarchy,
-    ui_transforms: &S,
+pub fn get_parent_pixel_size(
+    maybe_parent: Option<Parent>,
+    subworld: &mut SubWorld<'_>,
     screen_dimensions: &ScreenDimensions,
 ) -> (f32, f32) {
-    let mut parent_width = screen_dimensions.width();
-    let mut parent_height = screen_dimensions.height();
-
-    if let Some(parent) = hierarchy.parent(entity) {
-        if let Some(ui_transform) = ui_transforms.get(parent) {
-            parent_width = ui_transform.pixel_width();
-            parent_height = ui_transform.pixel_height();
+    if let Some(parent) = maybe_parent {
+        if let Some(entry) = subworld.entry(parent.0){
+            if let Some(ui_transform) =  entry.get_component::<UiTransform>() {
+                return (ui_transform.pixel_width(), ui_transform.pixel_height())
+            }
         }
     }
-
-    (parent_width, parent_height)
+    (screen_dimensions.width(), screen_dimensions.height())
 }
 
 #[cfg(test)]
