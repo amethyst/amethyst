@@ -1,15 +1,15 @@
 use std::marker::PhantomData;
 
 use amethyst_core::{
-    ecs::prelude::{Component, Read, ReadStorage, System, SystemData, World, Write},
+    ecs::*,
     shrev::{Event, EventChannel, ReaderId},
-    SystemDesc,
 };
 use derivative::Derivative;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use crate::event::TargetedEvent;
+use amethyst_core::ecs::systems::ParallelRunnable;
 
 /// Describes anything that can receive events one by one or in batches. This
 /// lets whoever wants to receive triggered events decide on how they
@@ -36,7 +36,7 @@ where
 }
 
 /// Trait that denotes which event gets retriggered to which other event and how
-pub trait EventRetrigger: Component {
+pub trait EventRetrigger {
     /// Event type that causes retrigger
     type In: Clone + Send + Sync + TargetedEvent;
     /// Event type that gets retriggered
@@ -57,19 +57,6 @@ pub struct EventRetriggerSystemDesc<T> {
     marker: PhantomData<T>,
 }
 
-impl<'a, 'b, T> SystemDesc<'a, 'b, EventRetriggerSystem<T>> for EventRetriggerSystemDesc<T>
-where
-    T: EventRetrigger,
-{
-    fn build(self, world: &mut World) -> EventRetriggerSystem<T> {
-        <EventRetriggerSystem<T> as System<'_>>::SystemData::setup(world);
-
-        let event_reader = world.fetch_mut::<EventChannel<T::In>>().register_reader();
-
-        EventRetriggerSystem::new(event_reader)
-    }
-}
-
 /// Links up the given in- and output types' `EventChannel`s listening
 /// to incoming events and calling `apply` on the respective `Retrigger`
 /// components.
@@ -88,28 +75,24 @@ where
     pub fn new(event_reader: ReaderId<T::In>) -> Self {
         Self { event_reader }
     }
-}
 
-impl<'s, T> System<'s> for EventRetriggerSystem<T>
-where
-    T: EventRetrigger,
-{
-    type SystemData = (
-        Read<'s, EventChannel<T::In>>,
-        Write<'s, EventChannel<T::Out>>,
-        ReadStorage<'s, T>,
-    );
-
-    fn run(&mut self, (in_channel, mut out_channel, retrigger): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("event_retrigger_system");
-
-        let event_reader = &mut self.event_reader;
-
-        for event in in_channel.read(event_reader) {
-            if let Some(entity_retrigger) = retrigger.get(event.get_target()) {
-                entity_retrigger.apply(&event, &mut *out_channel);
-            }
-        }
+    pub fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("EventRetriggerSystem")
+                .read_resource::<EventChannel<T::In>>()
+                .write_resource::<EventChannel<EventChannel<T::Out>>>()
+                .read_resource::<T>()
+                .build( move | _commands, _world, (in_channel, mut out_channel, retrigger), _| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("event_retrigger_system");
+                    let event_reader = &mut self.event_reader;
+                    for event in in_channel.read(event_reader) {
+                        if let Some(entity_retrigger) = retrigger.get(event.get_target()) {
+                            entity_retrigger.apply(&event, &mut *out_channel);
+                        }
+                    }
+                }
+            )
+        )
     }
 }
