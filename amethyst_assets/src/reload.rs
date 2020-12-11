@@ -136,9 +136,9 @@ enum HotReloadStrategyInner {
     Never,
 }
 
+/// Hot reload system that manages asset reload polling
 pub struct HotReloadSystem;
 
-/// Hot reload system that manages asset reload polling
 impl System<'_> for HotReloadSystem {
     fn build(&mut self) -> Box<dyn ParallelRunnable> {
         Box::new(

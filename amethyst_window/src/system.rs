@@ -50,7 +50,9 @@ impl System<'_> for WindowSystem {
 }
 
 /// reports new window events from winit to the EventChannel
+#[derive(Debug)]
 pub struct WindowEventsSystem {
+    /// winit EventsLoop for window events
     pub events_loop: EventsLoop,
 }
 

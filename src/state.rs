@@ -89,9 +89,10 @@ impl<T, E> Debug for Trans<T, E> {
 }
 
 /// Event queue to trigger state `Trans` from other places than a `State`'s methods.
+/// FIXME: needs example
 /// # Example:
-/// ```rust
-/// world.write_resource::<EventChannel<TransEvent<MyGameData, StateEvent>>>().single_write(Box::new(|| Trans::Quit));
+/// ```rust, ignore
+/// resources.get_mut::<EventChannel<TransEvent<MyGameData, StateEvent>>>().single_write(Box::new(|| Trans::Quit));
 /// ```
 ///
 /// Transitions will be executed sequentially by Amethyst's `CoreApplication` update loop.

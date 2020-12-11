@@ -11,11 +11,11 @@ use winit::Event;
 
 use crate::{InputEvent, InputHandler};
 
-/// Input system
-///
 /// Will read `winit::Event` from `EventHandler<winit::Event>`, process them with `InputHandler`,
 /// and push the results in `EventHandler<InputEvent>`.
+#[derive(Debug)]
 pub struct InputSystem {
+    // reads input events from winit
     pub(crate) reader: ReaderId<Event>,
 }
 

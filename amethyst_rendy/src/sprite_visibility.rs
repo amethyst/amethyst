@@ -43,6 +43,7 @@ struct Internals {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
+#[derive(Debug)]
 pub struct SpriteVisibilitySortingSystem;
 
 impl System<'_> for SpriteVisibilitySortingSystem {

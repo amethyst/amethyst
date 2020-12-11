@@ -1,5 +1,5 @@
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{dispatcher::System, ecs::*};
+use amethyst_core::ecs::*;
 use amethyst_error::Error;
 use winit::EventsLoop;
 

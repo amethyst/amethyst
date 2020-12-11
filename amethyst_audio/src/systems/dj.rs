@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, rc::Rc};
+use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
