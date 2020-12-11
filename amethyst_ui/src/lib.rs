@@ -13,10 +13,10 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
-pub(crate) use amethyst_core::ecs::prelude::Entity;
+pub(crate) use amethyst_core::ecs::Entity;
 
 pub use self::{
-    blink::BlinkSystem,
+    blink::*,
     bundle::UiBundle,
     button::{
         UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
