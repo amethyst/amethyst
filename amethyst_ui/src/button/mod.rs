@@ -4,7 +4,7 @@ use amethyst_rendy::Texture;
 
 pub use self::{
     actions::{UiButtonAction, UiButtonActionType},
-    builder::{UiButtonBuilder, UiButtonBuilderResources},
+    builder::{UiButtonBuilder},
     retrigger::{
         UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
     },
