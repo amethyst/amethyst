@@ -10,13 +10,10 @@ use thread_profiler::profile_scope;
 
 use crate::{
     event::{UiEvent, UiEventType::*},
-    event_retrigger::{EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc},
+    event_retrigger::{EventRetrigger, EventRetriggerSystem},
     EventReceiver,
 };
 use amethyst_core::ecs::systems::ParallelRunnable;
-
-/// Builds a `UiSoundRetriggerSystem`.
-pub type UiSoundRetriggerSystemDesc = EventRetriggerSystemDesc<UiSoundRetrigger>;
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvent`s
 /// and trigger `UiPlaySoundAction`s for entities with attached

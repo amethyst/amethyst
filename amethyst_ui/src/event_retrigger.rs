@@ -1,10 +1,7 @@
-use std::marker::PhantomData;
-
 use amethyst_core::{
     ecs::*,
     shrev::{Event, EventChannel, ReaderId},
 };
-use derivative::Derivative;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -46,15 +43,6 @@ pub trait EventRetrigger {
     fn apply<R>(&self, event: &Self::In, out: &mut R)
     where
         R: EventReceiver<Self::Out>;
-}
-
-// Unable to derive `SystemDesc` on `EventRetriggerSystem` because the proc macro doesn't yet
-// support creating a `PhantomData` for computed fields.
-/// Builds an `EventRetriggerSystem`.
-#[derive(Derivative, Debug)]
-#[derivative(Default(bound = ""))]
-pub struct EventRetriggerSystemDesc<T> {
-    marker: PhantomData<T>,
 }
 
 /// Links up the given in- and output types' `EventChannel`s listening
