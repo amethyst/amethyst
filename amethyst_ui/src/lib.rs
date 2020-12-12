@@ -13,15 +13,12 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
-pub(crate) use amethyst_core::ecs::Entity;
-
 pub use self::{
     blink::*,
     bundle::UiBundle,
     button::{
         UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
-        UiButtonActionType, UiButtonBuilder,
-        UiButtonBuilderResources, UiButtonSystem,
+        UiButtonActionType, UiButtonBuilder, UiButtonSystem,
     },
     drag::{DragWidgetSystemDesc, Draggable},
     event::{
@@ -45,7 +42,7 @@ pub use self::{
         UiImageLoadPrefab, UiImagePrefab, UiLoader, UiLoaderSystem, UiLoaderSystemDesc, UiPrefab,
         UiTextData, UiTransformData, UiWidget,
     },
-    resize::{ResizeSystem, ResizeSystemDesc, UiResize},
+    resize::{ResizeSystem, UiResize},
     selection::{
         Selectable, Selected, SelectionKeyboardSystem, SelectionKeyboardSystemDesc,
         SelectionMouseSystem, SelectionMouseSystemDesc,
