@@ -1,14 +1,14 @@
 use amethyst_assets::Handle;
-use amethyst_core::Parent;
+use amethyst_core::transform::Parent;
 use amethyst_rendy::Texture;
 
 pub use self::{
     actions::{UiButtonAction, UiButtonActionType},
     builder::{UiButtonBuilder, UiButtonBuilderResources},
     retrigger::{
-        UiButtonActionRetrigger, UiButtonActionRetriggerSystem, UiButtonActionRetriggerSystemDesc,
+        UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
     },
-    system::{UiButtonSystem, UiButtonSystemDesc},
+    system::UiButtonSystem,
 };
 use crate::{define_widget, Interactable, UiSoundRetrigger, UiText, UiTransform};
 

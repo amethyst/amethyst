@@ -1,13 +1,8 @@
-use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
-
 use crate::{
     event::{UiEvent, UiEventType},
-    event_retrigger::{EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc},
+    event_retrigger::{EventRetrigger, EventRetriggerSystem},
     EventReceiver, UiButtonAction,
 };
-
-/// Builds a `UiButtonActionRetriggerSystem`.
-pub type UiButtonActionRetriggerSystemDesc = EventRetriggerSystemDesc<UiButtonActionRetrigger>;
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvents`
 /// and trigger `UiButtonAction`s for `UiButton`s with an attached
@@ -30,10 +25,6 @@ pub struct UiButtonActionRetrigger {
     /// The `UiButtonAction`s that should happen when the user stops hovering
     /// over the `UiButton`
     pub on_hover_stop: Vec<UiButtonAction>,
-}
-
-impl Component for UiButtonActionRetrigger {
-    type Storage = DenseVecStorage<Self>;
 }
 
 impl EventRetrigger for UiButtonActionRetrigger {
