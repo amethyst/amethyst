@@ -195,7 +195,7 @@ pub fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> HashSet<Entity>
 /// the check, and is below specified height.
 pub fn targeted_below<'a, I>(pos: (f32, f32), height: f32, transforms: I) -> Option<Entity>
     where
-        I: Iterator<Item=(Entity, &'a UiTransform, Option<&'a Interactable>, (), ())> + 'a,
+        I: Iterator<Item=(Entity, &'a UiTransform, Option<&'a Interactable>)> + 'a,
 {
     transforms
         .filter(|(_e, t, _m, _, _)| {

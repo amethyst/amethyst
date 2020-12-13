@@ -20,7 +20,7 @@ pub use self::{
         UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
         UiButtonActionType, UiButtonBuilder, UiButtonSystem,
     },
-    drag::{DragWidgetSystemDesc, Draggable},
+    drag::Draggable,
     event::{
         targeted, targeted_below, Interactable, TargetedEvent, UiEvent, UiEventType, UiMouseSystem,
     },
