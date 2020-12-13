@@ -55,7 +55,7 @@ pub use self::{
         UiSoundSystem,
     },
     text::{LineMode, TextEditing, TextEditingMouseSystem, UiText},
-    text_editing::{TextEditingInputSystem, TextEditingInputSystemDesc},
+    text_editing::{TextEditingInputSystem},
     transform::{get_parent_pixel_size, UiFinder, UiTransform},
     widgets::{Widget, WidgetId, Widgets},
 };
