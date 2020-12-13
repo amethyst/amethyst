@@ -2,11 +2,8 @@ use std::cmp::Ordering;
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
-    ecs::{
-        hibitset::BitSet, DispatcherBuilder, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-        SystemData, World,
-    },
-    Hidden, HiddenPropagate, SystemDesc,
+    ecs::*,
+    Hidden, HiddenPropagate,
 };
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -43,10 +40,8 @@ use glsl_layout::{vec2, vec4, AsStd140};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{
-    glyphs::{UiGlyphs, UiGlyphsResource},
-    Selected, TextEditing, UiGlyphsSystemDesc, UiImage, UiTransform,
-};
+use crate::{glyphs::{UiGlyphs, UiGlyphsResource}, Selected, TextEditing, UiImage, UiTransform, UiGlyphsSystem};
+use amethyst_rendy::system::GraphAuxData;
 
 /// A [RenderPlugin] for rendering UI elements.
 #[derive(Debug, Default)]
@@ -65,14 +60,11 @@ impl RenderUi {
 impl<B: Backend> RenderPlugin<B> for RenderUi {
     fn on_build<'a, 'b>(
         &mut self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        _world: &mut World,
+        _resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add(
-            UiGlyphsSystemDesc::<B>::default().build(world),
-            "ui_glyphs_system",
-            &[],
-        );
+        builder.add_system(UiGlyphsSystem::<B>::default().build());
         Ok(())
     }
 
@@ -81,6 +73,7 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
         _world: &World,
+        _resources: &Resources,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(RenderOrder::Overlay, DrawUiDesc::new().builder())?;
@@ -148,7 +141,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawUiDesc {
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        resources: &World,
+        resources: &Resources,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
@@ -170,8 +163,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawUiDesc {
             vec![env.raw_layout(), textures.raw_layout()],
         )?;
 
-        let (loader, tex_storage) =
-            <(ReadExpect<'_, Loader>, Read<'_, AssetStorage<Texture>>)>::fetch(resources);
+        let (loader, tex_storage) = (resources.get::<Loader>().unwrap(), resources.get::<AssetStorage<Texture>>().unwrap());
         let white_tex = loader.load_from_data(
             load_from_srgba(palette::Srgba::new(1., 1., 1., 1.)).into(),
             (),
@@ -209,7 +201,6 @@ pub struct DrawUi<B: Backend> {
 #[derive(Clone, Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 struct CachedDrawOrder {
-    pub cached: BitSet,
     pub cache: Vec<(f32, Entity)>,
 }
 
@@ -220,36 +211,15 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        aux: &GraphAuxData,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
-        let (
-            entities,
-            images,
-            transforms,
-            text_editings,
-            hiddens,
-            hidden_propagates,
-            selected,
-            tints,
-            glyphs,
-            glyphs_res,
-            screen_dimesnions,
-        ) = <(
-            Entities<'_>,
-            ReadStorage<'_, UiImage>,
-            ReadStorage<'_, UiTransform>,
-            ReadStorage<'_, TextEditing>,
-            ReadStorage<'_, Hidden>,
-            ReadStorage<'_, HiddenPropagate>,
-            ReadStorage<'_, Selected>,
-            ReadStorage<'_, Tint>,
-            ReadStorage<'_, UiGlyphs>,
-            ReadExpect<'_, UiGlyphsResource>,
-            ReadExpect<'_, ScreenDimensions>,
-        ) as SystemData>::fetch(resources);
+        let GraphAuxData { world, resources } = aux;
+
+        let glyphs_res = resources.get::<UiGlyphsResource>().unwrap();
+        let screen_dimensions = resources.get::<ScreenDimensions>().unwrap();
 
         self.batches.swap_clear();
         let mut changed = false;
@@ -282,49 +252,48 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
 
         // Populate and update the draw order cache.
         let bitset = &mut self.cached_draw_order.cached;
+        let mut query_transforms =
+            <(Entity, &UiTransform)>::query();
 
-        self.cached_draw_order.cache.retain(|&(_z, entity)| {
-            let keep = transforms.contains(entity);
-            if !keep {
-                bitset.remove(entity.id());
-            }
-            keep
-        });
+        /* TODO: I think this isn't needed. If it is, will need a reimplem because no mask method from legion
+
+           // Attempt to insert the new entities in sorted position. Should reduce work during
+           // the sorting step.
+           let transform_set = query_transforms.iter(world).mask().clone();
+           // Create a bitset containing only the new indices.
+           let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
+           for (entity, transform, _new) in (&*entities, &transforms, &new).join() {
+               let pos = self
+                   .cached_draw_order
+                   .cache
+                   .iter()
+                   .position(|&(cached_z, _)| transform.global_z() >= cached_z);
+
+               match pos {
+                   Some(pos) => self
+                       .cached_draw_order
+                       .cache
+                       .insert(pos, (transform.global_z(), entity)),
+                   None => self
+                       .cached_draw_order
+                       .cache
+                       .push((transform.global_z(), entity)),
+               }
+           }
+
+           self.cached_draw_order.cached = transform_set;
+        */
+
+
+        self.cached_draw_order.cache.retain(|&(_z, entity)| query_transforms.get(world, entity).is_ok());
 
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
-            *z = transforms
-                .get(entity)
+            *z = query_transforms.iter(world)
+                .find(|(e, t)| e == entity)
                 .expect("Unreachable: Enities are collected from a cache of prepopulate entities")
+                .1
                 .global_z();
         }
-
-        // Attempt to insert the new entities in sorted position. Should reduce work during
-        // the sorting step.
-        let transform_set = transforms.mask().clone();
-
-        // Create a bitset containing only the new indices.
-        let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
-        for (entity, transform, _new) in (&*entities, &transforms, &new).join() {
-            let pos = self
-                .cached_draw_order
-                .cache
-                .iter()
-                .position(|&(cached_z, _)| transform.global_z() >= cached_z);
-
-            match pos {
-                Some(pos) => self
-                    .cached_draw_order
-                    .cache
-                    .insert(pos, (transform.global_z(), entity)),
-                None => self
-                    .cached_draw_order
-                    .cache
-                    .push((transform.global_z(), entity)),
-            }
-        }
-
-        self.cached_draw_order.cached = transform_set;
-
         // Sort from largest z value to smallest z value.
         // Most of the time this shouldn't do anything but you still need it
         // for if the z values change.
@@ -332,23 +301,20 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
             .cache
             .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
 
+        let mut query =
+            <(&UiTransform, Option<&Tint>,  Option<&UiImage>, Option<&UiGlyphs>,  Option<&Selected>, Option<&TextEditing>)>::query()
+                .filter(!component::<Hidden>() & !component::<HiddenPropagate>());
+
         for &(_z, entity) in &self.cached_draw_order.cache {
-            // Skip hidden entities
-            if hiddens.contains(entity) || hidden_propagates.contains(entity) {
-                continue;
-            }
+            let (transform, maybe_tint, maybe_image, maybe_glyph, maybe_selected, maybe_txt_editing)
+            = query.get(world, entity).expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
 
-            let transform = transforms
-                .get(entity)
-                .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
-
-            let tint = tints.get(entity).map(|t| {
+            let tint = maybe_tint.map(|t| {
                 let (r, g, b, a) = t.0.into_components();
                 [r, g, b, a]
             });
 
-            let image = images.get(entity);
-            if let Some(image) = image {
+            if let Some(image) = maybe_image {
                 let this_changed = render_image(
                     factory,
                     resources,
@@ -362,15 +328,15 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
                 changed = changed || this_changed;
             };
 
-            if let Some(glyph_data) = glyphs.get(entity) {
+            if let Some(glyph_data) = maybe_glyph {
                 if !glyph_data.sel_vertices.is_empty() {
                     self.batches
                         .insert(white_tex_id, glyph_data.sel_vertices.iter().cloned());
                 }
 
                 // blinking cursor
-                if selected.contains(entity) {
-                    if let Some(editing) = text_editings.get(entity) {
+                if maybe_selected.is_some() {
+                    if let Some(editing) = maybe_txt_editing {
                         let blink_on = editing.cursor_blink_timer < 0.25;
                         let (w, h) = match (blink_on, editing.use_block_cursor) {
                             // use degenerate quad, but still insert so batches will not change
@@ -436,10 +402,10 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
 
             let view_args = UiViewArgs {
                 inverse_window_size: [
-                    1.0 / screen_dimesnions.width() as f32,
-                    1.0 / screen_dimesnions.height() as f32,
+                    1.0 / screen_dimensions.width() as f32,
+                    1.0 / screen_dimensions.height() as f32,
                 ]
-                .into(),
+                    .into(),
             };
             changed = self.env.write(factory, index, view_args.std140()) || changed;
         }
@@ -535,7 +501,7 @@ fn mul_blend(a: &[f32; 4], b: &[f32; 4]) -> [f32; 4] {
 
 fn render_image<B: Backend>(
     factory: &Factory<B>,
-    resources: &World,
+    resources: &Resources,
     transform: &UiTransform,
     raw_image: &UiImage,
     tint: &Option<[f32; 4]>,
@@ -694,7 +660,7 @@ fn render_image<B: Backend>(
                             x_tex_coord_bound[x + 1],
                             y_tex_coord_bound[y + 1],
                         ]
-                        .into();
+                            .into();
                         temp_args.dimensions = [x_dimensions[x], y_dimensions[y]].into();
                         temp_args.coords = [x_coords[x], y_coords[y]].into();
                         batches.insert(tex_id, Some(temp_args));
