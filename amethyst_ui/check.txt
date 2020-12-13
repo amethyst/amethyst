@@ -1,0 +1,101 @@
+    Checking amethyst_ui v0.15.3 (/home/grzi/workspace/personal/git/amethyst/amethyst_ui)
+error[E0432]: unresolved import `amethyst_assets::Processor`
+ --> amethyst_ui/src/bundle.rs:5:5
+  |
+5 | use amethyst_assets::Processor;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^ no `Processor` in the root
+
+error[E0432]: unresolved imports `amethyst_core::bundle`, `amethyst_core::ecs::prelude`, `amethyst_core::SystemDesc`
+ --> amethyst_ui/src/bundle.rs:7:5
+  |
+7 |     bundle::SystemBundle,
+  |     ^^^^^^ could not find `bundle` in `amethyst_core`
+8 |     ecs::prelude::{DispatcherBuilder, World},
+  |          ^^^^^^^ could not find `prelude` in `ecs`
+9 |     SystemDesc,
+  |     ^^^^^^^^^^ no `SystemDesc` in the root
+
+error[E0432]: unresolved import `amethyst_input::BindingTypes`
+  --> amethyst_ui/src/bundle.rs:12:5
+   |
+12 | use amethyst_input::BindingTypes;
+   |     ^^^^^^^^^^^^^^^^------------
+   |     |               |
+   |     |               help: a similar name exists in the module: `Bindings`
+   |     no `BindingTypes` in the root
+
+error[E0432]: unresolved imports `amethyst_core::ecs::prelude`, `amethyst_core::HierarchyEvent`, `amethyst_core::Parent`, `amethyst_core::ParentHierarchy`, `amethyst_core::SystemDesc`
+ --> amethyst_ui/src/layout.rs:2:10
+  |
+2 |     ecs::prelude::{
+  |          ^^^^^^^ could not find `prelude` in `ecs`
+...
+6 |     HierarchyEvent, Parent, ParentHierarchy, SystemDesc,
+  |     ^^^^^^^^^^^^^^  ^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^ no `SystemDesc` in the root
+  |     |               |       |
+  |     |               |       no `ParentHierarchy` in the root
+  |     |               no `Parent` in the root
+  |     no `HierarchyEvent` in the root
+
+error[E0432]: unresolved imports `crate::DragWidgetSystemDesc`, `crate::NoCustomUi`, `crate::ResizeSystemDesc`, `crate::SelectionKeyboardSystemDesc`, `crate::SelectionMouseSystemDesc`, `crate::TextEditingInputSystemDesc`, `crate::TextEditingMouseSystemDesc`, `crate::ToNativeWidget`, `crate::UiButtonSystemDesc`, `crate::UiLoaderSystemDesc`, `crate::UiSoundRetriggerSystemDesc`, `crate::UiSoundSystemDesc`
+  --> amethyst_ui/src/bundle.rs:16:45
+   |
+16 |     BlinkSystem, CacheSelectionOrderSystem, DragWidgetSystemDesc, FontAsset, NoCustomUi,
+   |                                             ^^^^^^^^^^^^^^^^^^^^             ^^^^^^^^^^ no `NoCustomUi` in the root
+   |                                             |
+   |                                             no `DragWidgetSystemDesc` in the root
+17 |     ResizeSystemDesc, SelectionKeyboardSystemDesc, SelectionMouseSystemDesc,
+   |     ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^ no `SelectionMouseSystemDesc` in the root
+   |     |                 |
+   |     |                 no `SelectionKeyboardSystemDesc` in the root
+   |     no `ResizeSystemDesc` in the root
+18 |     TextEditingInputSystemDesc, TextEditingMouseSystemDesc, ToNativeWidget,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^ no `ToNativeWidget` in the root
+   |     |                           |
+   |     |                           no `TextEditingMouseSystemDesc` in the root
+   |     no `TextEditingInputSystemDesc` in the root
+19 |     UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem,
+   |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^ no `UiLoaderSystemDesc` in the root
+   |     |
+   |     no `UiButtonSystemDesc` in the root
+20 |     UiSoundRetriggerSystemDesc, UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+   |
+help: a similar name exists in the module
+   |
+17 |     ResizeSystem, SelectionKeyboardSystemDesc, SelectionMouseSystemDesc,
+   |     ^^^^^^^^^^^^
+help: a similar name exists in the module
+   |
+17 |     ResizeSystemDesc, SelectionKeyboardSystem, SelectionMouseSystemDesc,
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^
+help: a similar name exists in the module
+   |
+17 |     ResizeSystemDesc, SelectionKeyboardSystemDesc, SelectionMouseSystem,
+   |                                                    ^^^^^^^^^^^^^^^^^^^^
+help: a similar name exists in the module
+   |
+18 |     TextEditingInputSystem, TextEditingMouseSystemDesc, ToNativeWidget,
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+help: a similar name exists in the module
+   |
+18 |     TextEditingInputSystemDesc, TextEditingMouseSystem, ToNativeWidget,
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^
+help: a similar name exists in the module
+   |
+19 |     UiButtonSystem, UiLoaderSystemDesc, UiMouseSystem,
+   |     ^^^^^^^^^^^^^^
+
+error[E0433]: failed to resolve: use of undeclared type `UiButtonActionRetriggerSystemDesc`
+   --> amethyst_ui/src/bundle.rs:111:13
+    |
+111 |             UiButtonActionRetriggerSystemDesc::default().build(world),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ use of undeclared type `UiButtonActionRetriggerSystemDesc`
+
+error: aborting due to 6 previous errors
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `amethyst_ui`
+
+To learn more, run the command again with --verbose.
