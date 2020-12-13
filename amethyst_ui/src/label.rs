@@ -1,8 +1,5 @@
 use amethyst_assets::{AssetStorage, Loader};
-use amethyst_core::ecs::{
-    prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
-    shred::{ResourceId, SystemData},
-};
+use amethyst_core::ecs::*;
 
 use crate::{
     define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode,
@@ -21,21 +18,6 @@ define_widget!(UiLabel =>
         (has UiText as text on text_entity)
     ]
 );
-
-/// Container for all the resources the builder needs to make a new UiLabel.
-#[allow(missing_debug_implementations)]
-#[derive(SystemData)]
-pub struct UiLabelBuilderResources<'a, I: WidgetId = u32>
-where
-    I: WidgetId,
-{
-    font_asset: Read<'a, AssetStorage<FontAsset>>,
-    loader: ReadExpect<'a, Loader>,
-    entities: Entities<'a>,
-    text: WriteStorage<'a, UiText>,
-    transform: WriteStorage<'a, UiTransform>,
-    label_widgets: WriteExpect<'a, Widgets<UiLabel, I>>,
-}
 
 /// Convenience structure for building a label
 #[derive(Debug)]
@@ -188,25 +170,26 @@ where
     }
 
     /// Build this with the `UiLabelBuilderResources`.
-    pub fn build(self, mut res: UiLabelBuilderResources<'a, I>) -> (I, UiLabel) {
-        let text_entity = res.entities.create();
+    pub fn build_from_world_and_resources(mut self, world: &mut World, resources: &mut Resources) -> (I, UiLabel) {
+        let text_entity = world.push(());
         let widget = UiLabel::new(text_entity);
 
         let id = {
             let widget = widget.clone();
-
+            let mut label_widgets = resources.get_mut::<Widgets<UiLabel>>().unwrap();
             if let Some(id) = self.id {
                 let added_id = id.clone();
-                res.label_widgets.add_with_id(id, widget);
+                label_widgets.add_with_id(id, widget);
                 added_id
             } else {
-                res.label_widgets.add(widget)
+                label_widgets.add(widget)
             }
         };
 
-        res.transform
-            .insert(
-                text_entity,
+        let mut text_entry = world.entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity");
+
+        text_entry.add_component(
                 UiTransform::new(
                     format!("{}_label", id),
                     self.anchor,
@@ -218,16 +201,21 @@ where
                     self.height,
                 )
                 .with_stretch(self.stretch),
-            )
-            .expect("Unreachable: Inserting newly created entity");
+            );
+
+        let font_asset_storage = resources.get::<AssetStorage<FontAsset>>().unwrap();
+
+        let loader = resources
+            .get::<Loader>()
+            .expect("Could not get Loader resource");
 
         let font_handle = self
             .font
-            .unwrap_or_else(|| get_default_font(&res.loader, &res.font_asset));
+            .unwrap_or_else(|| get_default_font(&loader, &font_asset_storage));
 
-        res.text
-            .insert(
-                text_entity,
+
+
+        text_entry.add_component(
                 UiText::new(
                     font_handle,
                     self.text,
@@ -236,14 +224,8 @@ where
                     self.line_mode,
                     self.align,
                 ),
-            )
-            .expect("Unreachable: Inserting newly created entity");
+            );
 
         (id, widget)
-    }
-
-    /// Create the UiLabel based on provided configuration parameters.
-    pub fn build_from_world(self, world: &World) -> (I, UiLabel) {
-        self.build(UiLabelBuilderResources::<I>::fetch(&world))
     }
 }
