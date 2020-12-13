@@ -32,7 +32,7 @@ pub use self::{
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
     },
     format::{FontAsset, FontHandle, TtfFormat},
-    glyphs::{UiGlyphsSystem, UiGlyphsSystemDesc},
+    glyphs::UiGlyphsSystem,
     image::UiImage,
     label::{UiLabel, UiLabelBuilder, UiLabelBuilderResources},
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem, UiTransformSystemDesc},
