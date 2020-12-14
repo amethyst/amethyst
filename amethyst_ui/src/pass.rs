@@ -42,6 +42,7 @@ use thread_profiler::profile_scope;
 
 use crate::{glyphs::{UiGlyphs, UiGlyphsResource}, Selected, TextEditing, UiImage, UiTransform, UiGlyphsSystem};
 use amethyst_rendy::system::GraphAuxData;
+use std::collections::HashSet;
 
 /// A [RenderPlugin] for rendering UI elements.
 #[derive(Debug, Default)]
@@ -201,6 +202,7 @@ pub struct DrawUi<B: Backend> {
 #[derive(Clone, Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 struct CachedDrawOrder {
+    pub cached: HashSet<Entity>,
     pub cache: Vec<(f32, Entity)>,
 }
 
@@ -250,42 +252,16 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
             }
         };
 
-        // Populate and update the draw order cache.
-        let bitset = &mut self.cached_draw_order.cached;
         let mut query_transforms =
             <(Entity, &UiTransform)>::query();
 
-        /* TODO: I think this isn't needed. If it is, will need a reimplem because no mask method from legion
-
-           // Attempt to insert the new entities in sorted position. Should reduce work during
-           // the sorting step.
-           let transform_set = query_transforms.iter(world).mask().clone();
-           // Create a bitset containing only the new indices.
-           let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
-           for (entity, transform, _new) in (&*entities, &transforms, &new).join() {
-               let pos = self
-                   .cached_draw_order
-                   .cache
-                   .iter()
-                   .position(|&(cached_z, _)| transform.global_z() >= cached_z);
-
-               match pos {
-                   Some(pos) => self
-                       .cached_draw_order
-                       .cache
-                       .insert(pos, (transform.global_z(), entity)),
-                   None => self
-                       .cached_draw_order
-                       .cache
-                       .push((transform.global_z(), entity)),
-               }
-           }
-
-           self.cached_draw_order.cached = transform_set;
-        */
-
-
-        self.cached_draw_order.cache.retain(|&(_z, entity)| query_transforms.get(world, entity).is_ok());
+        self.cached_draw_order.cache.retain(|&(_z, entity)| {
+            let keep = query_transforms.get(world, entity).is_ok();
+            if !keep {
+                self.cached_draw_order.cached.remove(entity);
+            }
+            keep
+        });
 
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
             *z = query_transforms.iter(world)
@@ -294,6 +270,38 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
                 .1
                 .global_z();
         }
+
+        // Attempt to insert the new entities in sorted position. Should reduce work during
+        // the sorting step.
+        {
+            query_transforms.for_each(world, |(entity, transform)| {
+                // We only want the new ones.
+                // The old way (pre legion) to do it was with bitset :
+                // let new = (&transform_set ^ &cache.cached) & &transform_set;
+                if !self.cached_draw_order.cached.contains(entity) {
+                    let pos = self
+                        .cached_draw_order
+                        .cache
+                        .iter()
+                        .position(|&(cached_z, _)| transform.global_z() >= cached_z);
+                    match pos {
+                        Some(pos) => self
+                            .cached_draw_order
+                            .cache
+                            .insert(pos, (transform.global_z(), entity)),
+                        None => self
+                            .cached_draw_order
+                            .cache
+                            .push((transform.global_z(), entity)),
+                    }
+                }
+            });
+            self.cached_draw_order.cached.clear();
+            query_transforms.for_each(world, | (entity, _)| {
+                self.cached_draw_order.cached.insert(entity);
+            });
+        }
+
         // Sort from largest z value to smallest z value.
         // Most of the time this shouldn't do anything but you still need it
         // for if the z values change.
@@ -302,12 +310,12 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
             .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
 
         let mut query =
-            <(&UiTransform, Option<&Tint>,  Option<&UiImage>, Option<&UiGlyphs>,  Option<&Selected>, Option<&TextEditing>)>::query()
+            <(&UiTransform, Option<&Tint>, Option<&UiImage>, Option<&UiGlyphs>, Option<&Selected>, Option<&TextEditing>)>::query()
                 .filter(!component::<Hidden>() & !component::<HiddenPropagate>());
 
         for &(_z, entity) in &self.cached_draw_order.cache {
             let (transform, maybe_tint, maybe_image, maybe_glyph, maybe_selected, maybe_txt_editing)
-            = query.get(world, entity).expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
+                = query.get(world, entity).expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
 
             let tint = maybe_tint.map(|t| {
                 let (r, g, b, a) = t.0.into_components();
