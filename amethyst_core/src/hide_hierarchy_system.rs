@@ -1,10 +1,10 @@
-use crate::{
-    ecs::*
-};
-
-use crate::HiddenPropagate;
-use crate::transform::{Children, Parent};
 use std::collections::HashSet;
+
+use crate::{
+    ecs::*,
+    transform::{Children, Parent},
+    HiddenPropagate,
+};
 
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children
 /// of an entity with a [HiddenPropagate](struct.HiddenPropagate.html) and removes it when it is removed
@@ -16,7 +16,7 @@ pub fn build() -> impl Runnable {
         .write_component::<HiddenPropagate>()
         .build(move |commands, world, _resources, (parent, children)| {
             #[cfg(feature = "profiler")]
-        	profile_scope!("hide_hierarchy_system");
+            profile_scope!("hide_hierarchy_system");
 
             let mut children_with_hidden_parent: HashSet<&Entity> = HashSet::new();
             let mut children_without_hidden_parent: HashSet<&Entity> = HashSet::new();
@@ -24,33 +24,45 @@ pub fn build() -> impl Runnable {
             for (current_children, hidden) in parent.iter(world) {
                 if let Some(hidden_propagate) = hidden {
                     if hidden_propagate.is_propagated() {
-                        current_children.0.iter().for_each(|e| { children_with_hidden_parent.insert(e); });
+                        current_children.0.iter().for_each(|e| {
+                            children_with_hidden_parent.insert(e);
+                        });
                     }
                 } else {
-                    current_children.0.iter().for_each(|e| { children_without_hidden_parent.insert(e); });
+                    current_children.0.iter().for_each(|e| {
+                        children_without_hidden_parent.insert(e);
+                    });
                 }
             }
 
-            for (entity, _, hidden) in children.iter(world){
+            for (entity, _, hidden) in children.iter(world) {
                 if let Some(hidden_propagate) = hidden {
                     if children_with_hidden_parent.contains(&entity) {
                         children_with_hidden_parent.remove(&entity);
-                    }else if !hidden_propagate.is_propagated() && children_without_hidden_parent.contains(&entity){
+                    } else if !hidden_propagate.is_propagated()
+                        && children_without_hidden_parent.contains(&entity)
+                    {
                         children_without_hidden_parent.remove(&entity);
                     }
-                }else if children_without_hidden_parent.contains(&entity){
+                } else if children_without_hidden_parent.contains(&entity) {
                     children_without_hidden_parent.remove(&entity);
                 }
             }
-            children_with_hidden_parent.iter().for_each(|e| commands.add_component(**e, HiddenPropagate::new_propagated()));
-            children_without_hidden_parent.iter().for_each(|e| commands.remove_component::<HiddenPropagate>(**e));
+            children_with_hidden_parent
+                .iter()
+                .for_each(|e| commands.add_component(**e, HiddenPropagate::new_propagated()));
+            children_without_hidden_parent
+                .iter()
+                .for_each(|e| commands.remove_component::<HiddenPropagate>(**e));
         })
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::transform::{Transform, Parent, parent_update_system, missing_previous_parent_system};
+    use crate::transform::{
+        missing_previous_parent_system, parent_update_system, Parent, Transform,
+    };
 
     #[test]
     fn should_not_add_hidden_to_child_if_not_propagated() {
@@ -63,8 +75,8 @@ mod test {
             .add_system(build())
             .build();
 
-        let parent = world.push((Transform::default(), ));
-        let children = world.extend(vec![(Transform::default(), ), (Transform::default(), )]);
+        let parent = world.push((Transform::default(),));
+        let children = world.extend(vec![(Transform::default(),), (Transform::default(),)]);
         let (e1, e2) = (children[0], children[1]);
         // Parent `e1` and `e2` to `parent`.
         world.entry(e1).unwrap().add_component(Parent(parent));
@@ -99,7 +111,10 @@ mod test {
                 .is_err()
         );
 
-        world.entry(parent).unwrap().add_component(HiddenPropagate::new());
+        world
+            .entry(parent)
+            .unwrap()
+            .add_component(HiddenPropagate::new());
 
         schedule.execute(&mut world, &mut resources);
 
@@ -144,12 +159,15 @@ mod test {
             .add_system(build())
             .build();
 
-        let parent = world.push((Transform::default(), ));
-        let children = world.extend(vec![(Transform::default(), )]);
+        let parent = world.push((Transform::default(),));
+        let children = world.extend(vec![(Transform::default(),)]);
         let e1 = children[0];
         // Parent `e1` and `e2` to `parent`.
         world.entry(e1).unwrap().add_component(Parent(parent));
-        world.entry(e1).unwrap().add_component(HiddenPropagate::new());
+        world
+            .entry(e1)
+            .unwrap()
+            .add_component(HiddenPropagate::new());
 
         schedule.execute(&mut world, &mut resources);
 
@@ -171,7 +189,10 @@ mod test {
                 .is_ok()
         );
 
-        world.entry(parent).unwrap().add_component(HiddenPropagate::new());
+        world
+            .entry(parent)
+            .unwrap()
+            .add_component(HiddenPropagate::new());
         schedule.execute(&mut world, &mut resources);
 
         assert_eq!(
@@ -192,7 +213,10 @@ mod test {
                 .is_ok()
         );
 
-        world.entry(parent).unwrap().remove_component::<HiddenPropagate>();
+        world
+            .entry(parent)
+            .unwrap()
+            .remove_component::<HiddenPropagate>();
         schedule.execute(&mut world, &mut resources);
 
         assert_eq!(
@@ -225,8 +249,8 @@ mod test {
             .add_system(build())
             .build();
 
-        let parent = world.push((Transform::default(), ));
-        let children = world.extend(vec![(Transform::default(), ), (Transform::default(), )]);
+        let parent = world.push((Transform::default(),));
+        let children = world.extend(vec![(Transform::default(),), (Transform::default(),)]);
         let (e1, e2) = (children[0], children[1]);
         // Parent `e1` and `e2` to `parent`.
         world.entry(e1).unwrap().add_component(Parent(parent));
@@ -261,7 +285,9 @@ mod test {
                 .is_err()
         );
 
-        world.entry(parent).unwrap().add_component(HiddenPropagate{is_propagated: true});
+        world.entry(parent).unwrap().add_component(HiddenPropagate {
+            is_propagated: true,
+        });
 
         schedule.execute(&mut world, &mut resources);
 
@@ -294,7 +320,10 @@ mod test {
                 .is_ok()
         );
 
-        world.entry(parent).unwrap().remove_component::<HiddenPropagate>();
+        world
+            .entry(parent)
+            .unwrap()
+            .remove_component::<HiddenPropagate>();
 
         assert_eq!(
             true,

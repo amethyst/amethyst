@@ -11,6 +11,8 @@ use sentry::integrations::panic::register_panic_handler;
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 use winit::Event;
 
+#[cfg(feature = "ui")]
+use crate::ui::UiEvent;
 use crate::{
     assets::{Loader, Source},
     core::{
@@ -25,9 +27,6 @@ use crate::{
     state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventReader},
 };
-
-#[cfg(feature = "ui")]
-use crate::ui::UiEvent;
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.

@@ -1,6 +1,6 @@
 use amethyst_core::{
-    transform::Transform,
     math::{convert, Matrix4, Translation3, UnitQuaternion},
+    transform::Transform,
 };
 use criterion::{criterion_group, criterion_main, Criterion};
 

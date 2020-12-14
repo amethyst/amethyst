@@ -1,5 +1,7 @@
 use winit::Event;
 
+#[cfg(feature = "ui")]
+use crate::ui::UiEvent;
 use crate::{
     core::{
         ecs::*,
@@ -9,9 +11,6 @@ use crate::{
     derive::EventReader,
     input::InputEvent,
 };
-
-#[cfg(feature = "ui")]
-use crate::ui::UiEvent;
 
 /// The enum holding the different types of event that can be received in a `State` in the
 /// `handle_event` method.
