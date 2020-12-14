@@ -266,7 +266,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
 
         let id = {
             let widget = widget.clone();
-            let mut button_widgets = resources.get_mut::<Widgets<UiButton>>().unwrap();
+            let mut button_widgets = resources.get_mut::<Widgets<UiButton, I>>().unwrap();
             if let Some(id) = self.id {
                 let added_id = id.clone();
                 button_widgets.add_with_id(id, widget);
@@ -276,11 +276,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
             }
         };
 
-        let mut image_entry = world.entry(image_entity)
-            .expect("Unreachable: Inserting newly created entity");
-
-        let mut text_entry = world.entry(text_entity)
-            .expect("Unreachable: Inserting newly created entity");
+        
 
         if !self.on_click_start.is_empty()
             || !self.on_click_stop.is_empty()
@@ -306,7 +302,8 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 ),
             };
 
-            image_entry.add_component(button_action_retrigger);
+            world.entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component(button_action_retrigger);
         }
 
         if self.on_click_start_sound.is_some()
@@ -320,10 +317,12 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 on_hover_stop: None,
             };
 
-            image_entry.add_component(sound_retrigger);
+            world.entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component(sound_retrigger);
         }
 
-        image_entry.add_component(
+        world.entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component(
                 UiTransform::new(
                     format!("{}_btn", id),
                     self.anchor,
@@ -337,7 +336,8 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 .with_stretch(self.stretch),
             );
 
-        image_entry.add_component( Selectable::<G>::new(self.tab_order));
+        world.entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component( Selectable::<G>::new(self.tab_order));
 
         let asset_storage = resources.get::<AssetStorage<Texture>>().unwrap();
         let loader = resources
@@ -359,14 +359,18 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
             )
         });
 
-        image_entry.add_component(image);
-        image_entry.add_component(Interactable);
+        world.entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component(image);
+        world.entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component(Interactable);
 
         if let Some(parent) = self.parent.take() {
-           image_entry.add_component(Parent(parent));
+           world.entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component(Parent(parent));
         }
 
-        text_entry.add_component(
+        world.entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component(
                 UiTransform::new(
                     format!("{}_btn_text", id),
                     Anchor::Middle,
@@ -388,7 +392,8 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         let font_handle = self
             .font
             .unwrap_or_else(|| get_default_font(&loader, &font_storage));
-        text_entry.add_component(
+        world.entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component(
                 UiText::new(
                     font_handle,
                     self.text,
@@ -398,7 +403,8 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                     self.align,
                 ),
             );
-        text_entry.add_component(Parent (image_entity));
+        world.entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity").add_component(Parent (image_entity));
 
         (id, widget)
     }

@@ -176,7 +176,7 @@ where
 
         let id = {
             let widget = widget.clone();
-            let mut label_widgets = resources.get_mut::<Widgets<UiLabel>>().unwrap();
+            let mut label_widgets = resources.get_mut::<Widgets<UiLabel, I>>().unwrap();
             if let Some(id) = self.id {
                 let added_id = id.clone();
                 label_widgets.add_with_id(id, widget);

@@ -40,7 +40,7 @@ use glsl_layout::{vec2, vec4, AsStd140};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{glyphs::{UiGlyphs, UiGlyphsResource}, Selected, TextEditing, UiImage, UiTransform, UiGlyphsSystem};
+use crate::{glyphs::{UiGlyphs, UiGlyphsResource}, Selected, TextEditing, UiImage, UiTransform, build_ui_glyphs_system};
 use amethyst_rendy::system::GraphAuxData;
 use std::collections::HashSet;
 
@@ -65,7 +65,7 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(UiGlyphsSystem::<B>::default().build());
+        builder.add_system(build_ui_glyphs_system::<B>());
         Ok(())
     }
 
@@ -136,19 +136,19 @@ impl DrawUiDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawUiDesc {
+impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawUiDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        resources: &Resources,
+        data: &GraphAuxData,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -164,7 +164,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawUiDesc {
             vec![env.raw_layout(), textures.raw_layout()],
         )?;
 
-        let (loader, tex_storage) = (resources.get::<Loader>().unwrap(), resources.get::<AssetStorage<Texture>>().unwrap());
+        let (loader, tex_storage) = (data.resources.get::<Loader>().unwrap(),data.resources.get::<AssetStorage<Texture>>().unwrap());
         let white_tex = loader.load_from_data(
             load_from_srgba(palette::Srgba::new(1., 1., 1., 1.)).into(),
             (),
@@ -206,7 +206,7 @@ struct CachedDrawOrder {
     pub cache: Vec<(f32, Entity)>,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
+impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -255,17 +255,21 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
         let mut query_transforms =
             <(Entity, &UiTransform)>::query();
 
-        self.cached_draw_order.cache.retain(|&(_z, entity)| {
-            let keep = query_transforms.get(world, entity).is_ok();
+        let mut to_remove = HashSet::new();
+
+        self.cached_draw_order.cache.retain(|(_z, entity)| {
+            let keep = query_transforms.get(*world, *entity).is_ok();
             if !keep {
-                self.cached_draw_order.cached.remove(entity);
+                to_remove.insert(*entity);
             }
             keep
         });
 
+        to_remove.iter().for_each(|e| {self.cached_draw_order.cached.remove(e);});
+
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
-            *z = query_transforms.iter(world)
-                .find(|(e, t)| e == entity)
+            *z = query_transforms.iter(*world)
+                .find(|(e, t)| *e == &entity)
                 .expect("Unreachable: Enities are collected from a cache of prepopulate entities")
                 .1
                 .global_z();
@@ -274,7 +278,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
         // Attempt to insert the new entities in sorted position. Should reduce work during
         // the sorting step.
         {
-            query_transforms.for_each(world, |(entity, transform)| {
+            query_transforms.for_each(*world, |(entity, transform)| {
                 // We only want the new ones.
                 // The old way (pre legion) to do it was with bitset :
                 // let new = (&transform_set ^ &cache.cached) & &transform_set;
@@ -288,17 +292,17 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
                         Some(pos) => self
                             .cached_draw_order
                             .cache
-                            .insert(pos, (transform.global_z(), entity)),
+                            .insert(pos, (transform.global_z(), *entity)),
                         None => self
                             .cached_draw_order
                             .cache
-                            .push((transform.global_z(), entity)),
+                            .push((transform.global_z(), *entity)),
                     }
                 }
             });
             self.cached_draw_order.cached.clear();
-            query_transforms.for_each(world, | (entity, _)| {
-                self.cached_draw_order.cached.insert(entity);
+            query_transforms.for_each(*world, | (entity, _)| {
+                self.cached_draw_order.cached.insert(*entity);
             });
         }
 
@@ -315,7 +319,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
 
         for &(_z, entity) in &self.cached_draw_order.cache {
             let (transform, maybe_tint, maybe_image, maybe_glyph, maybe_selected, maybe_txt_editing)
-                = query.get(world, entity).expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
+                = query.get(*world, entity).expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
 
             let tint = maybe_tint.map(|t| {
                 let (r, g, b, a) = t.0.into_components();
@@ -325,7 +329,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
             if let Some(image) = maybe_image {
                 let this_changed = render_image(
                     factory,
-                    resources,
+                    aux,
                     transform,
                     image,
                     &tint,
@@ -426,7 +430,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &World,
+        _resources: &GraphAuxData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -445,7 +449,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &GraphAuxData) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -509,7 +513,7 @@ fn mul_blend(a: &[f32; 4], b: &[f32; 4]) -> [f32; 4] {
 
 fn render_image<B: Backend>(
     factory: &Factory<B>,
-    resources: &Resources,
+    aux: &GraphAuxData,
     transform: &UiTransform,
     raw_image: &UiImage,
     tint: &Option<[f32; 4]>,
@@ -526,7 +530,7 @@ fn render_image<B: Backend>(
 
     let tex_coords = match raw_image {
         UiImage::Sprite(sprite_renderer) => {
-            let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
+            let sprite_sheets = aux.resources.get::<AssetStorage<SpriteSheet>>().unwrap();
             if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
                 let tex_coord = &sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords;
                 [
@@ -561,7 +565,7 @@ fn render_image<B: Backend>(
         UiImage::Texture(tex) => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
-                resources,
+                aux.resources,
                 tex,
                 hal::image::Layout::ShaderReadOnlyOptimal,
             ) {
@@ -574,7 +578,7 @@ fn render_image<B: Backend>(
         UiImage::PartialTexture { tex, .. } => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
-                resources,
+                aux.resources,
                 tex,
                 hal::image::Layout::ShaderReadOnlyOptimal,
             ) {
@@ -585,11 +589,11 @@ fn render_image<B: Backend>(
             }
         }
         UiImage::Sprite(sprite_renderer) => {
-            let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
+            let sprite_sheets = aux.resources.get::<AssetStorage<SpriteSheet>>().unwrap();
             if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
                 if let Some((tex_id, this_changed)) = textures.insert(
                     factory,
-                    resources,
+                    aux.resources,
                     &sprite_sheet.texture,
                     hal::image::Layout::ShaderReadOnlyOptimal,
                 ) {
@@ -616,7 +620,7 @@ fn render_image<B: Backend>(
         } => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
-                resources,
+                aux.resources,
                 tex,
                 hal::image::Layout::ShaderReadOnlyOptimal,
             ) {
