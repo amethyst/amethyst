@@ -136,7 +136,6 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/material/assets/");
 
     let mut builder = DispatcherBuilder::default();
-
     builder.add_bundle(TransformBundle).add_bundle(
         RenderingBundle::<DefaultBackend>::new()
             .with_plugin(
@@ -146,7 +145,7 @@ fn main() -> amethyst::Result<()> {
             .with_plugin(RenderPbr3D::default()),
     );
 
-    let mut game = Application::new(assets_dir, Example, builder)?;
+    let mut game = Application::build(assets_dir, Example)?.build(builder)?;
     game.run();
     Ok(())
 }
