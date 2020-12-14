@@ -140,7 +140,7 @@ struct Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
         // Crates new progress counter
         self.progress_counter = Some(Default::default());
@@ -186,7 +186,7 @@ impl SimpleState for Example {
         init_camera(world);
     }
 
-    fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, _: &mut StateData<'_, GameData>) -> SimpleTrans {
         Trans::None
     }
 }

@@ -54,7 +54,7 @@ impl<'s> System<'s> for ExampleLinesSystem {
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         // Setup debug lines as a resource
         data.world.insert(DebugLines::new());
         // Configure width of lines. Optional step

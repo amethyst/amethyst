@@ -61,7 +61,7 @@ struct ScenePrefabData {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
 
         self.progress = Some(ProgressCounter::default());
@@ -79,7 +79,7 @@ impl SimpleState for Example {
 
     fn handle_event(
         &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
+        data: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         let StateData { world, .. } = data;
@@ -102,7 +102,7 @@ impl SimpleState for Example {
         }
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,

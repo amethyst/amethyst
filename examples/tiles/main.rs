@@ -338,7 +338,7 @@ impl Tile for ExampleTile {
 
 struct Example;
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
         world.register::<Named>();
         world.register::<Player>();
@@ -388,7 +388,7 @@ impl SimpleState for Example {
 
     fn handle_event(
         &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
+        data: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         let StateData { .. } = data;

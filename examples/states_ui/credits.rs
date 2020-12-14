@@ -17,7 +17,7 @@ pub struct CreditsScreen {
 }
 
 impl SimpleState for CreditsScreen {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
         self.ui_handle =
@@ -26,7 +26,7 @@ impl SimpleState for CreditsScreen {
 
     fn handle_event(
         &mut self,
-        _: StateData<'_, GameData<'_, '_>>,
+        _: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         match &event {

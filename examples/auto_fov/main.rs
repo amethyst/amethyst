@@ -110,7 +110,7 @@ impl SimpleState for Loading {
         self.scene = Some(handle);
     }
 
-    fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, _: &mut StateData<'_, GameData>) -> SimpleTrans {
         match self.progress.complete() {
             Completion::Loading => Trans::None,
             Completion::Failed => {
@@ -132,7 +132,7 @@ struct Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         data.world.create_entity().with(self.scene.clone()).build();
         data.world
             .exec(|finder: UiFinder| finder.find("loading"))
@@ -148,7 +148,7 @@ impl SimpleState for Example {
 
     fn handle_event(
         &mut self,
-        _: StateData<'_, GameData<'_, '_>>,
+        _: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         if let StateEvent::Window(ref event) = event {
