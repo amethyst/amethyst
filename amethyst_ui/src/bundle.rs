@@ -2,23 +2,12 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::Processor;
 use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::prelude::{DispatcherBuilder, World},
-    SystemDesc,
+    ecs::*,
 };
 use amethyst_error::Error;
-use amethyst_input::BindingTypes;
 use derive_new::new;
-
-use crate::{
-    BlinkSystem, CacheSelectionOrderSystem, DragWidgetSystemDesc, FontAsset, NoCustomUi,
-    ResizeSystemDesc, SelectionKeyboardSystemDesc, SelectionMouseSystemDesc,
-    TextEditingInputSystemDesc, TextEditingMouseSystemDesc, ToNativeWidget,
-    UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem,
-    UiSoundRetriggerSystemDesc, UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
-};
+use crate::{WidgetId, UiTransformSystem};
 
 /// UI bundle
 ///
@@ -27,105 +16,81 @@ use crate::{
 ///
 /// Will fail with error 'No resource with the given id' if either the InputBundle or TransformBundle are not added.
 #[derive(new, Debug)]
-pub struct UiBundle<T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
+pub struct UiBundle</*C = NoCustomUi, */W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(T, C, W, G)>,
+    _marker: PhantomData<(/*C,*/ W, G)>,
 }
 
-impl<'a, 'b, T, C, W, G> SystemBundle<'a, 'b> for UiBundle<T, C, W, G>
+impl</*C,*/ W, G> SystemBundle for UiBundle</*C,*/ W, G>
 where
-    T: BindingTypes,
-    C: ToNativeWidget,
+    //C: ToNativeWidget,
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
 {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
-        builder.add(
-            UiLoaderSystemDesc::<<C as ToNativeWidget>::PrefabData, W>::default().build(world),
-            "ui_loader",
-            &[],
-        );
-        builder.add(
-            UiTransformSystemDesc::default().build(world),
-            "ui_transform",
-            &["transform_system"],
-        );
-        builder.add(
-            UiMouseSystem::<T>::new(),
-            "ui_mouse_system",
-            &["input_system", "ui_transform"],
-        );
-        builder.add(
-            Processor::<FontAsset>::new(),
-            "font_processor",
-            &["ui_loader"],
-        );
-        builder.add(
-            CacheSelectionOrderSystem::<G>::new(),
-            "selection_order_cache",
-            &[],
-        );
-        builder.add(
-            SelectionMouseSystemDesc::<G, T>::default().build(world),
-            "ui_mouse_selection",
-            &["ui_mouse_system"],
-        );
-        builder.add(
-            SelectionKeyboardSystemDesc::<G>::default().build(world),
-            "ui_keyboard_selection",
-            // Because when you press tab, you want to override the previously selected elements.
-            &["ui_mouse_selection"],
-        );
-        builder.add(
-            TextEditingMouseSystemDesc::default().build(world),
-            "ui_text_editing_mouse_system",
-            &["ui_mouse_selection", "ui_keyboard_selection"],
-        );
-        builder.add(
-            TextEditingInputSystemDesc::default().build(world),
-            "ui_text_editing_input_system",
-            // Hard requirement. The system assumes the text to edit is selected.
-            &["ui_mouse_selection", "ui_keyboard_selection"],
-        );
-        builder.add(
-            ResizeSystemDesc::default().build(world),
-            "ui_resize_system",
-            &[],
-        );
-        builder.add(
-            UiButtonSystemDesc::default().build(world),
-            "ui_button_system",
-            &["ui_mouse_system"],
-        );
-        builder.add(
-            DragWidgetSystemDesc::<T>::default().build(world),
-            "ui_drag_system",
-            &["ui_mouse_system"],
-        );
+    fn load(&mut self, world: &mut World, resources: &mut Resources, builder: &mut DispatcherBuilder) -> Result<(), Error> {
+        /*
+                builder.add_system(UiTransformSystem::new().build());
 
-        builder.add(
-            UiButtonActionRetriggerSystemDesc::default().build(world),
-            "ui_button_action_retrigger_system",
-            &["ui_button_system"],
-        );
-        builder.add(
-            UiSoundSystemDesc::default().build(world),
-            "ui_sound_system",
-            &[],
-        );
-        builder.add(
-            UiSoundRetriggerSystemDesc::default().build(world),
-            "ui_sound_retrigger_system",
-            &["ui_sound_system"],
-        );
 
-        // Required for text editing. You want the cursor image to blink.
-        builder.add(BlinkSystem, "blink_system", &[]);
 
+
+
+                builder.add_system(
+                    UiLoaderSystemDesc::<<C as ToNativeWidget>::PrefabData, W>::default().build(world),
+                );
+
+
+                builder.add_system(
+                    UiTransformSystemDesc::default().build(world),
+                );
+                builder.add_system(
+                    UiMouseSystem::<T>::new(),
+                );
+                builder.add_system(
+                    Processor::<FontAsset>::new(),
+                );
+                builder.add_system(
+                    CacheSelectionOrderSystem::<G>::new(),
+                );
+                builder.add_system(
+                    SelectionMouseSystemDesc::<G, T>::default().build(world),
+                );
+                builder.add_system(
+                    SelectionKeyboardSystemDesc::<G>::default().build(world),
+                );
+                builder.add_system(
+                    TextEditingMouseSystemDesc::default().build(world),
+                );
+                builder.add_system(
+                    TextEditingInputSystemDesc::default().build(world),
+                );
+                builder.add_system(
+                    ResizeSystemDesc::default().build(world),
+                );
+                builder.add_system(
+                    UiButtonSystemDesc::default().build(world),
+                );
+                builder.add_system(
+                    DragWidgetSystemDesc::<T>::default().build(world),
+                );
+
+                builder.add_system(
+                    UiButtonActionRetriggerSystemDesc::default().build(world),
+                );
+                builder.add_system(
+                    UiSoundSystemDesc::default().build(world),
+                );
+                builder.add_system(
+                    UiSoundRetriggerSystemDesc::default().build(world),
+                );
+
+                // Required for text editing. You want the cursor image to blink.
+                builder.add_system(BlinkSystem);
+        */
         Ok(())
+    }
+
+    fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> {
+        unimplemented!()
     }
 }

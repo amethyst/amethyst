@@ -10,9 +10,9 @@ use super::{Anchor, ScaleMode, Stretch};
 use amethyst_core::transform::Parent;
 
 /// Utility lookup for finding UI entities based on `UiTransform` id
-pub struct UiFinder<'a>;
+pub struct UiFinder;
 
-impl<'a> UiFinder<'a> {
+impl UiFinder{
     /// Find the `UiTransform` entity with the given id
     pub fn find(&self, subworld: &mut SubWorld<'_>, id: &str) -> Option<Entity> {
         <(Entity, Read<UiTransform>)>::query()
