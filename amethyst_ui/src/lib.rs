@@ -46,8 +46,8 @@ pub use self::{
     */
     resize::{ResizeSystem, UiResize},
     selection::{
-        Selectable, Selected, SelectionKeyboardSystem, SelectionKeyboardSystemDesc,
-        SelectionMouseSystem, SelectionMouseSystemDesc,
+        Selectable, Selected, SelectionKeyboardSystem,
+        SelectionMouseSystem,
     },
     selection_order_cache::{CacheSelectionOrderSystem, CachedSelectionOrder},
     sound::{
