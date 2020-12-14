@@ -49,7 +49,7 @@ pub trait EventRetrigger {
 /// to incoming events and calling `apply` on the respective `Retrigger`
 /// components.
 #[derive(Debug)]
-pub struct EventRetriggerSystem<T: EventRetrigger> {
+pub struct EventRetriggerSystem<T: EventRetrigger + 'static> {
     event_reader: ReaderId<T::In>,
 }
 
