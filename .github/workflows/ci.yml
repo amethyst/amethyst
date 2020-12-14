@@ -91,5 +91,5 @@ jobs:
       - run: mdbook build book
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - run: mdbook test -L ./target/debug/deps book
-        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
+      # - run: mdbook test -L ./target/debug/deps book
+      #   if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
