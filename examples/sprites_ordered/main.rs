@@ -91,9 +91,9 @@ impl SimpleState for Example {
             world, resources, ..
         } = data;
 
-        self.loaded_sprite_sheet = Some(load_sprite_sheet(world, resources));
+        self.loaded_sprite_sheet = Some(load_sprite_sheet(resources));
 
-        self.initialise_camera(world);
+        self.initialise_camera();
         self.adjust_camera(world, resources);
         self.redraw_sprites(world);
     }
@@ -184,7 +184,7 @@ impl SimpleState for Example {
 
 impl Example {
     /// This method initialises a camera which will view our sprite.
-    fn initialise_camera(&mut self, world: &mut World) {
+    fn initialise_camera(&mut self) {
         // Position the camera. Here we translate it forward (out of the screen) far enough to view
         // all of the sprites. Note that camera_z is 1.0, whereas the furthest sprite is -11.0.
         //
@@ -316,7 +316,7 @@ impl Example {
 ///
 /// * texture: the pixel data
 /// * `SpriteSheet`: the layout information of the sprites on the image
-fn load_sprite_sheet(world: &mut World, resources: &Resources) -> LoadedSpriteSheet {
+fn load_sprite_sheet(resources: &Resources) -> LoadedSpriteSheet {
     let loader = resources.get::<Loader>().unwrap();
     let texture_handle = {
         let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
