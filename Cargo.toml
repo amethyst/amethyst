@@ -36,7 +36,7 @@ network = ["amethyst_network"]
 
 renderer = ["amethyst_rendy"]
 
-ui = ["amethyst_ui"]
+ui = ["amethyst_ui", "amethyst_animation/ui"]
 
 profiler = [
     "thread_profiler",
