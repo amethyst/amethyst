@@ -34,15 +34,14 @@ mod cache;
 mod dyn_format;
 mod error;
 mod formats;
-// mod helper;
 mod loader;
+// FIXME: new prefab system
 // mod prefab;
 mod progress;
 mod reload;
 mod source;
 mod storage;
 
-// used in macros. Private API otherwise.
 // used in macros. Private API otherwise.
 #[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};
