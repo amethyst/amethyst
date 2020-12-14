@@ -3,7 +3,7 @@ use amethyst_core::{
     ecs::*,
     shrev::{EventChannel, ReaderId},
 };
-use clipboard::{ClipboardContext, ClipboardProvider};
+use copypasta::{ClipboardContext,ClipboardProvider};
 use log::error;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
