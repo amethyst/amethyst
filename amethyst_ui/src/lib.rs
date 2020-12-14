@@ -35,7 +35,7 @@ pub use self::{
     glyphs::UiGlyphsSystem,
     image::UiImage,
     label::{UiLabel, UiLabelBuilder},
-    layout::{Anchor, ScaleMode, Stretch, UiTransformSystem, UiTransformSystemDesc},
+    layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
     pass::{DrawUi, DrawUiDesc, RenderUi},
     /*
     prefab::{
