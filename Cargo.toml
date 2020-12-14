@@ -24,9 +24,6 @@ vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
-ui = [
-    "amethyst_ui"
-]
 tiles = [
     "amethyst_tiles"
 ]
