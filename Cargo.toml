@@ -24,11 +24,6 @@ autoexamples = false
 [features]
 default = ["audio", "locale", "network", "parallel", "renderer"]
 
-# FIXME: remove these fake features after legion port
-ui = []
-tiles = []
-gltf = []
-
 vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]

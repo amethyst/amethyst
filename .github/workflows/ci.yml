@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.toolchain == 'nightly' }}
     env:
-      FEATURES: ui,tiles,gltf
+      FEATURES: #ui,tiles,gltf
     strategy:
       fail-fast: true
       matrix:
