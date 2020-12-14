@@ -1,5 +1,5 @@
 use amethyst_core::{
-    components::Transform,
+    transform::Transform,
     math::{convert, Matrix4, Translation3, UnitQuaternion},
 };
 use criterion::{criterion_group, criterion_main, Criterion};

@@ -29,21 +29,21 @@ vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
-tiles = ["amethyst_tiles"]
-animation = ["amethyst_animation"]
+#tiles = ["amethyst_tiles"]
+#animation = ["amethyst_animation"]
 audio = ["amethyst_audio"]
-gltf = ["amethyst_gltf", "amethyst_animation"]
+#gltf = ["amethyst_gltf", "amethyst_animation"]
 locale = ["amethyst_locale"]
 network = ["amethyst_network"]
 
 renderer = ["amethyst_rendy"]
 
-ui = ["amethyst_ui", "amethyst_animation/ui"]
+#ui = ["amethyst_ui", "amethyst_animation/ui"]
 
 profiler = [
     "thread_profiler",
     "thread_profiler/thread_profiler",
-    "amethyst_animation/profiler",
+    #"amethyst_animation/profiler",
     "amethyst_assets/profiler",
     "amethyst_audio/profiler",
     "amethyst_config/profiler",
@@ -52,9 +52,9 @@ profiler = [
     "amethyst_input/profiler",
     "amethyst_locale/profiler",
     "amethyst_rendy/profiler",
-    "amethyst_ui/profiler",
+    #"amethyst_ui/profiler",
     "amethyst_utils/profiler",
-    "amethyst_tiles/profiler",
+    #"amethyst_tiles/profiler",
 ]
 sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
@@ -86,13 +86,13 @@ members = [
     "amethyst_input",
     #"amethyst_ui",
     "amethyst_utils",
-    "amethyst_test",
+    #"amethyst_test",
     #"amethyst_tiles",
     "amethyst_window",
 ]
 
 [dependencies]
-amethyst_animation = { path = "amethyst_animation", version = "0.15.3", optional = true }
+#amethyst_animation = { path = "amethyst_animation", version = "0.15.3", optional = true }
 amethyst_assets = { path = "amethyst_assets", version = "0.15.3" }
 amethyst_audio = { path = "amethyst_audio", version = "0.15.3", optional = true }
 amethyst_config = { path = "amethyst_config", version = "0.15.3" }
@@ -100,15 +100,15 @@ amethyst_core = { path = "amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "amethyst_error", version = "0.15.3" }
 amethyst_controls = { path = "amethyst_controls", version = "0.15.3" }
 amethyst_derive = { path = "amethyst_derive", version = "0.15.3" }
-amethyst_gltf = { path = "amethyst_gltf", version = "0.15.3", optional = true }
+#amethyst_gltf = { path = "amethyst_gltf", version = "0.15.3", optional = true }
 amethyst_network = { path = "amethyst_network", version = "0.15.3", optional = true }
 amethyst_locale = { path = "amethyst_locale", version = "0.15.3", optional = true }
 amethyst_rendy = { path = "amethyst_rendy", version = "0.15.3", features = ["window"], optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.15.3" }
-amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
+#amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3" }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
-amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
+#amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
 crossbeam-channel = "0.4.2"
 derivative = "2.1.1"
 fern = { version = "0.6.0", features = ["colored"] }
