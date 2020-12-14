@@ -784,67 +784,75 @@ mod tests {
 
     #[test]
     fn switch_pop() {
-        use crate::ecs::prelude::{World, WorldExt};
+        use crate::ecs::World;
 
-        let mut world = World::new();
+        let mut world = World::default();
+        let mut resources = Resources::default();
 
         let mut sm = StateMachine::new(State1(7));
         // Unwrap here is fine because start can only fail when there are no states in the machine.
-        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+        sm.start(StateData::new(&mut world, &mut resources, &mut ()))
+            .unwrap();
 
         for _ in 0..8 {
-            sm.update(StateData::new(&mut world, &mut ()));
+            sm.update(StateData::new(&mut world, &mut resources, &mut ()));
             assert!(sm.is_running());
         }
 
-        sm.update(StateData::new(&mut world, &mut ()));
+        sm.update(StateData::new(&mut world, &mut resources, &mut ()));
         assert!(!sm.is_running());
     }
 
     #[test]
     fn new_stack() {
-        use crate::ecs::prelude::{World, WorldExt};
+        use crate::ecs::World;
 
-        let mut world = World::new();
+        let mut world = World::default();
+        let mut resources = Resources::default();
 
         let mut sm = StateMachine::new(StateNewStack);
         // Unwrap here is fine because start can only fail when there are no states in the machine.
-        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+        sm.start(StateData::new(&mut world, &mut resources, &mut ()))
+            .unwrap();
 
-        sm.update(StateData::new(&mut world, &mut ()));
+        sm.update(StateData::new(&mut world, &mut resources, &mut ()));
         assert_eq!(sm.state_stack.len(), 4);
     }
 
     #[test]
     fn sequence() {
-        use crate::ecs::prelude::{World, WorldExt};
+        use crate::ecs::World;
 
-        let mut world = World::new();
+        let mut world = World::default();
+        let mut resources = Resources::default();
 
         let mut sm = StateMachine::new(StateSequence);
         // Unwrap here is fine because start can only fail when there are no states in the machine.
-        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+        sm.start(StateData::new(&mut world, &mut resources, &mut ()))
+            .unwrap();
 
-        sm.update(StateData::new(&mut world, &mut ()));
+        sm.update(StateData::new(&mut world, &mut resources, &mut ()));
         assert_eq!(sm.state_stack.len(), 3);
     }
 
     #[test]
     fn replace() {
-        use crate::ecs::prelude::{World, WorldExt};
+        use crate::ecs::World;
 
-        let mut world = World::new();
+        let mut world = World::default();
+        let mut resources = Resources::default();
 
         let mut sm = StateMachine::new(StateReplace(3));
         // Unwrap here is fine because start can only fail when there are no states in the machine.
-        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+        sm.start(StateData::new(&mut world, &mut resources, &mut ()))
+            .unwrap();
 
         for i in 0..3 {
-            sm.update(StateData::new(&mut world, &mut ()));
+            sm.update(StateData::new(&mut world, &mut resources, &mut ()));
             assert_eq!(sm.state_stack.len(), i + 2);
         }
 
-        sm.update(StateData::new(&mut world, &mut ()));
+        sm.update(StateData::new(&mut world, &mut resources, &mut ()));
         assert_eq!(sm.state_stack.len(), 1);
     }
 }
