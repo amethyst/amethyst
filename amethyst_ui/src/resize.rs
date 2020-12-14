@@ -6,7 +6,6 @@ use amethyst_window::ScreenDimensions;
 use thread_profiler::profile_scope;
 
 use super::*;
-use amethyst_core::ecs::systems::ParallelRunnable;
 
 /// Whenever the window is resized the function in this component will be called on this
 /// entity's UiTransform, along with the new width and height of the window.
@@ -31,53 +30,50 @@ impl UiResize {
     }
 }
 
-/// This system rearranges UI elements whenever the screen is resized using their `UiResize`
-/// component.
+
 #[derive(Debug)]
-pub struct ResizeSystem {
+pub struct ResizeSystemResource {
     screen_size: (f32, f32)
 }
 
-impl ResizeSystem {
+impl ResizeSystemResource {
     /// Creates a new ResizeSystem that listens with the given reader Id.
-    pub fn new() -> ResizeSystem {
+    pub fn new() -> ResizeSystemResource {
         let screen_size = (0.0, 0.0);
 
-        ResizeSystem {
+        ResizeSystemResource {
             screen_size,
         }
     }
+}
 
-    pub fn build(&mut self) -> Box<dyn ParallelRunnable> {
-        Box::new(
-            SystemBuilder::new("ResizeSystem")
-                .with_query(<(&mut UiTransform, &mut UiResize)>::query()
-                        .filter(maybe_changed::<UiResize>()),
-                )
-                .with_query(<(&mut UiTransform, &mut UiResize)>::query())
-                .read_resource::<ScreenDimensions>()
-                .build(move |(_commands, world, screen_dimensions, (resized, all_with_resize))| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("resize_system");
-                    self.local_modified.clear();
-                    let self_local_modified = &mut self.local_modified;
-                    let self_resize_events_id = &mut self.resize_events_id;
-                    let screen_size = (screen_dimensions.width() as f32, screen_dimensions.height() as f32);
-
-                    // If the screen_size changed, we resize everything with UiResize
-                    if self.screen_size != screen_size {
-                        self.screen_size = screen_size;
-                        all_with_resize.for_each_mut(world, |mut transform, mut resize| {
-                            (resize.function)(transform, screen_size);
-                        });
-                    }
-                    // Else, we only try to resize the modified ones
-                    else{
-                        resized.for_each_mut(world, |mut transform, mut resize| {
-                            (resize.function)(transform, screen_size);
-                        });
-                    }
-                })
+/// This system rearranges UI elements whenever the screen is resized using their `UiResize`
+/// component.
+pub fn build_resize_system() -> impl Runnable {
+    SystemBuilder::new("ResizeSystem")
+        .write_resource::<ResizeSystemResource>()
+        .read_resource::<ScreenDimensions>()
+        .with_query(<(&mut UiTransform, &mut UiResize)>::query()
+                .filter(maybe_changed::<UiResize>()),
         )
-    }
+        .with_query(<(&mut UiTransform, &mut UiResize)>::query())
+        .build(move |_commands, world, (resource, screen_dimensions), (resized, all_with_resize)| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("resize_system");
+            let screen_size = (screen_dimensions.width() as f32, screen_dimensions.height() as f32);
+
+            // If the screen_size changed, we resize everything with UiResize
+            if resource.screen_size != screen_size {
+                resource.screen_size = screen_size;
+                all_with_resize.for_each_mut(world, |(transform, resize)| {
+                    (resize.function)(transform, screen_size);
+                });
+            }
+            // Else, we only try to resize the modified ones
+            else{
+                resized.for_each_mut(world, |(transform, resize)| {
+                    (resize.function)(transform, screen_size);
+                });
+            }
+        })
 }

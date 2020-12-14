@@ -61,7 +61,7 @@ impl WidgetId for String {
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
 #[allow(missing_debug_implementations)]
-pub struct Widgets<T: Widget, I: WidgetId = u32> {
+pub struct Widgets<T: Widget, I: WidgetId> {
     items: HashMap<I, T>,
     last_key: Option<I>,
 }
@@ -135,7 +135,8 @@ macro_rules! define_widget_component_fn_impl {
                 where
                     I: Iterator<Item=(amethyst_core::ecs::Entity,&'a $t)> + 'a {
                     // TODO: Better error message
-                    chunk_iter.filter(|e, t| e == self.$entity)
+                    chunk_iter.filter(|(e, t)| *e == self.$entity)
+                        .map(|(e, t)| t)
                         .next()
                         .expect("Component should exist on entity")
                 }
@@ -151,7 +152,8 @@ macro_rules! define_widget_component_fn_impl {
                     I: Iterator<Item=(amethyst_core::ecs::Entity,&'a mut $t)> + 'a {
 
                     // TODO: Better error message
-                    chunk_iter.filter(|e, t| e == self.$entity)
+                    chunk_iter.filter(|(e, t)| *e == self.$entity)
+                        .map(|(e, t)| t)
                         .next()
                         .expect("Component should exist on entity")
 
@@ -170,8 +172,10 @@ macro_rules! define_widget_component_fn_impl {
             ) -> Option<&'a $t>
              where
                 I: Iterator<Item=(amethyst_core::ecs::Entity,Option<&'a $t>)> + 'a {
-                chunk_iter.filter(|e, t| e == self.$entity)
+                chunk_iter.filter(|(e, t)| *e == self.$entity)
+                    .map(|(e, t)| t)
                     .next()
+                    .expect("Option<Component> should exist on iterator")
             }
         }
 
@@ -183,9 +187,11 @@ macro_rules! define_widget_component_fn_impl {
                 chunk_iter: I
             ) -> Option<&'a mut $t>
             where
-                I: Iterator<Item=(amethyst_core::ecs::Entity,Option<&'a mut $t>)> + 'a {
-                 chunk_iter.filter(|e, t| e == self.$entity)
+                I: Iterator<Item=(amethyst_core::ecs::Entity, Option<&'a mut $t>)> + 'a {
+                 chunk_iter.filter(|(e, t)| *e == self.$entity)
+                    .map(|(e, t)| t)
                     .next()
+                    .expect("Option<Component> should exist on iterator")
             }
         }
     };

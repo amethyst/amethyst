@@ -1,13 +1,16 @@
 use crate::{
     event::{UiEvent, UiEventType},
-    event_retrigger::{EventRetrigger, EventRetriggerSystem},
+    event_retrigger::{EventRetrigger, build_event_retrigger_system},
     EventReceiver, UiButtonAction,
 };
+use amethyst_core::ecs::Runnable;
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvents`
 /// and trigger `UiButtonAction`s for `UiButton`s with an attached
 /// `UiButtonActionRetrigger` component.
-pub type UiButtonActionRetriggerSystem = EventRetriggerSystem<UiButtonActionRetrigger>;
+pub fn build_button_action_retrigger_system () -> impl Runnable {
+    build_event_retrigger_system::<UiButtonActionRetrigger>()
+}
 
 /// Attach this to an entity with a `UiButton` attached to it to
 /// trigger specific events when a user interaction happens.

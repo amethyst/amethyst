@@ -7,7 +7,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use derive_new::new;
-use crate::{WidgetId, UiTransformSystem};
+use crate::{WidgetId, build_ui_transform_system};
 
 /// UI bundle
 ///

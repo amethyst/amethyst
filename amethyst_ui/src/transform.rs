@@ -18,6 +18,7 @@ impl UiFinder{
         <(Entity, Read<UiTransform>)>::query()
             .iter(subworld)
             .filter(|(_, transform)| transform.id == id)
+            .map(|(e,_)| *e)
             .next()
     }
 }
@@ -173,15 +174,18 @@ impl UiTransform {
 
 /// Get the (width, height) in pixels of the parent of this `UiTransform`.
 pub fn get_parent_pixel_size<'a, I>(
-    maybe_parent: Option<Parent>,
+    maybe_parent: Option<&Parent>,
     maybe_transforms: I,
     screen_dimensions: &ScreenDimensions,
 ) -> (f32, f32)
-where I: Iterator<Item=(Entity,&'a UiTransform)>  {
+where I: Iterator<Item=(&'a Entity, Option<&'a UiTransform>)>  {
     if let Some(parent) = maybe_parent {
-        let maybe_transform = maybe_transforms.filter(|(e, t)| e == parent.0).next();
+        let maybe_transform = maybe_transforms.filter(|(e, t)| *e == &parent.0).next();
         if let Some((_, ui_transform)) = maybe_transform {
-            return (ui_transform.pixel_width(), ui_transform.pixel_height())
+            if ui_transform.is_some() {
+                let t = ui_transform.unwrap();
+                return (t.pixel_width(), t.pixel_height())
+            }
         }
     }
     (screen_dimensions.width(), screen_dimensions.height())
