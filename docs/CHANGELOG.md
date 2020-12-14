@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Replaced `alga` dependency with `simba` to be compatible with `nalgebra 0.23`. ([#2521])
 - Upgraded from `rayon 1.3.0` to `rayon 1.4.0`, drastically decreasing idle CPU usage in some situations ([#2489])
 - Make `TextEditingPrefab` public ([#2492])
+- Replace `clipboard` crate with `copypasta` (see #2438)
+- Make ui a default but optional feature ([#2490])
 
 ### Fixed
 

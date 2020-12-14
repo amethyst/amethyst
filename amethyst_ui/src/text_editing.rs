@@ -1,5 +1,4 @@
 use std::ops::Range;
-
 use amethyst_core::{
     ecs::prelude::{Entities, Join, Read, ReadStorage, System, SystemData, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
@@ -224,7 +223,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             if ctrl_or_cmd(modifiers) {
                                 let new_clip = extract_highlighted(focused_edit, focused_text);
                                 if !new_clip.is_empty() {
-                                    match ClipboardProvider::new().and_then(
+                                    match ClipboardContext::new().and_then(
                                         |mut ctx: ClipboardContext| ctx.set_contents(new_clip),
                                     ) {
                                         Ok(_) => edit_events.single_write(UiEvent::new(
@@ -243,7 +242,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             if ctrl_or_cmd(modifiers) {
                                 let new_clip = read_highlighted(focused_edit, focused_text);
                                 if !new_clip.is_empty() {
-                                    if let Err(e) = ClipboardProvider::new().and_then(
+                                    if let Err(e) = ClipboardContext::new().and_then(
                                         |mut ctx: ClipboardContext| {
                                             ctx.set_contents(new_clip.to_owned())
                                         },
@@ -257,7 +256,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             if ctrl_or_cmd(modifiers) {
                                 delete_highlighted(focused_edit, focused_text);
 
-                                match ClipboardProvider::new()
+                                match ClipboardContext::new()
                                     .and_then(|mut ctx: ClipboardContext| ctx.get_contents())
                                 {
                                     Ok(contents) => {

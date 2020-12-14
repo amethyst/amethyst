@@ -10,6 +10,9 @@ use crate::{
     input::InputEvent,
 };
 
+#[cfg(feature = "ui")]
+use crate::ui::UiEvent;
+
 /// The enum holding the different types of event that can be received in a `State` in the
 /// `handle_event` method.
 #[derive(Clone, Debug, EventReader)]
@@ -19,7 +22,7 @@ pub enum StateEvent {
     Window(Event),
     /// Events sent by the ui system.
     #[cfg(feature = "ui")]
-    Ui(ui::UiEvent),
+    Ui(UiEvent),
     /// Events sent by the input system.
     Input(InputEvent),
 }

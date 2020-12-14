@@ -26,6 +26,9 @@ use crate::{
     state_event::{StateEvent, StateEventReader},
 };
 
+#[cfg(feature = "ui")]
+use crate::ui::UiEvent;
+
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.
 ///

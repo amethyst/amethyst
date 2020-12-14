@@ -19,6 +19,7 @@ license = "MIT/Apache-2.0"
 # TODO: include animation, ui
 default = ["audio", "locale", "network", "parallel", "renderer"]
 
+
 vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
@@ -48,6 +49,10 @@ network = [
 
 renderer = [
     "amethyst_rendy",
+]
+
+ui = [
+    "amethyst_ui",
 ]
 
 profiler = [
@@ -125,7 +130,7 @@ amethyst_network = { path = "amethyst_network", version = "0.15.3", optional = t
 amethyst_locale = { path = "amethyst_locale", version = "0.15.3", optional = true }
 amethyst_rendy = { path = "amethyst_rendy", version = "0.15.3", features = ["window"], optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.15.3" }
-amethyst_ui = { path = "amethyst_ui", version = "0.15.3" , optional = true }
+amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true}
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3" }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
 amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
@@ -337,4 +342,4 @@ path = "examples/tiles/main.rs"
 required-features = [ "tiles" ]
 
 [package.metadata.docs.rs]
-features = ["animation", "audio", "gltf", "tiles", "json", "locale", "network", "sdl_controller", "vulkan"]
+features = ["animation", "audio", "gltf", "tiles", "json", "locale", "network", "ui", "sdl_controller", "vulkan"]

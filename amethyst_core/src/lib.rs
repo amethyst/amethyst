@@ -1,5 +1,14 @@
 //! A collection of structures and functions useful across the entire amethyst project.
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 

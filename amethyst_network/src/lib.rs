@@ -4,6 +4,10 @@
 
 #[macro_use]
 extern crate derive_new;
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 
 pub mod simulation;
 pub use bytes::*;

@@ -1,5 +1,9 @@
 //! Loads RON files into a structure for easy / statically typed usage.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![crate_name = "amethyst_config"]
 #![warn(
     missing_debug_implementations,
