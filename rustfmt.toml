@@ -2,4 +2,5 @@ unstable_features = true
 reorder_imports = true
 merge_imports = true
 group_imports = "StdExternalCrate"
-format_code_in_doc_comments = true
+# Consider the following after the legion port
+#format_code_in_doc_comments = true
