@@ -269,7 +269,9 @@ impl <B: Backend> UiGlyphsSystem<B> {
                                 // There is no other way to inject some glyph metadata than using Z.
                                 // Fortunately depth is not required, so this slot is instead used to
                                 // distinguish computed glyphs indented to be used for various entities.
-                                z: f32::from_bits(entity.0),
+
+                                // FIXME: This will be a problem because entities are now u64 and not u32....
+                                z: f32::from_bits(entity as u32),
                                 layout: Default::default(), // overriden on queue
                                 text,
                             };
@@ -445,7 +447,7 @@ impl <B: Backend> UiGlyphsSystem<B> {
                                 }
 
                                 texts_not_hidden_query.for_each_mut(&world, |entity, transform, mut ui_text, editing, tint| {
-                                    let e_id = entity.0;
+                                    let e_id = entity as u64;
                                     let len = vertices[glyph_ctr..]
                                         .iter()
                                         .take_while(|(id, _)| *id == e_id)
