@@ -3,23 +3,29 @@
 
 use std::{ops::RangeInclusive, time::Duration};
 
-use amethyst_core::{ecs::*, timing::Time};
+use amethyst_core::{dispatcher::System, ecs::*, timing::Time};
 
 /// Default number of network simulation frames per second.
 const DEFAULT_SIM_FRAME_RATE: u32 = 30;
 
 /// This system is used exclusively to update the state of the `NetworkSimulationTime` resource.
-pub fn build_network_simulation_time_system() -> impl Runnable {
-    SystemBuilder::new("NetworkSimulationTimeSystem")
-        .write_resource::<NetworkSimulationTime>()
-        .read_resource::<Time>()
-        .build(move |_commands, _world, (sim_time, game_time), _| {
-            sim_time.update_elapsed(game_time.delta_time());
-            sim_time.reset_frame_lag();
-            while sim_time.elapsed_duration() > sim_time.per_frame_duration() {
-                sim_time.increment_frame_number();
-            }
-        })
+pub struct NetworkSimulationTimeSystem;
+
+impl System<'_> for NetworkSimulationTimeSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("NetworkSimulationTimeSystem")
+                .write_resource::<NetworkSimulationTime>()
+                .read_resource::<Time>()
+                .build(move |_commands, _world, (sim_time, game_time), _| {
+                    sim_time.update_elapsed(game_time.delta_time());
+                    sim_time.reset_frame_lag();
+                    while sim_time.elapsed_duration() > sim_time.per_frame_duration() {
+                        sim_time.increment_frame_number();
+                    }
+                }),
+        )
+    }
 }
 
 /// Resource to track the state of the network simulation separately from the ECS frame timings

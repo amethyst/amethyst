@@ -208,13 +208,13 @@ name = "sprites_ordered"
 # name = "pong_tutorial_06"
 # required-features = ["audio"]
 
-# [[example]]
-# name = "net_client"
-# required-features = ["network"]
+[[example]]
+name = "net_client"
+required-features = ["network"]
 
-# [[example]]
-# name = "net_server"
-# required-features = ["network"]
+[[example]]
+name = "net_server"
+required-features = ["network"]
 
 # [[example]]
 # name = "locale"

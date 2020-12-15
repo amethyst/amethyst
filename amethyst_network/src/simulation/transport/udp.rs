@@ -2,14 +2,14 @@
 
 use std::{io, net::UdpSocket};
 
-use amethyst_core::{ecs::*, EventChannel};
+use amethyst_core::{dispatcher::System, ecs::*, EventChannel};
 use amethyst_error::Error;
 use bytes::Bytes;
 
 use crate::simulation::{
     events::NetworkSimulationEvent,
     requirements::DeliveryRequirement,
-    timing::{build_network_simulation_time_system, NetworkSimulationTime},
+    timing::{NetworkSimulationTime, NetworkSimulationTimeSystem},
     transport::TransportResource,
 };
 
@@ -33,79 +33,93 @@ impl SystemBundle for UdpNetworkBundle {
         ));
 
         builder
-            .add_system(build_network_simulation_time_system())
-            .add_system(build_udp_network_receive_system())
-            .add_system(build_udp_network_send_system());
+            .add_system(Box::new(NetworkSimulationTimeSystem))
+            .add_system(Box::new(UdpNetworkReceiveSystem))
+            .add_system(Box::new(UdpNetworkSendSystem));
 
         Ok(())
     }
 }
 
 /// Creates a new network simulation time system.
-pub fn build_udp_network_send_system() -> impl Runnable {
-    SystemBuilder::new("UdpNetworkSendSystem")
-        .write_resource::<TransportResource>()
-        .write_resource::<UdpSocketResource>()
-        .read_resource::<NetworkSimulationTime>()
-        .write_resource::<EventChannel<NetworkSimulationEvent>>()
-        .build(
-            move |_commands, _world, (transport, socket, sim_time, channel), _| {
-                if let Some(socket) = socket.get_mut() {
-                    let messages =
-                        transport.drain_messages_to_send(|_| sim_time.should_send_message_now());
-                    for message in messages {
-                        match message.delivery {
-                            DeliveryRequirement::Unreliable | DeliveryRequirement::Default => {
-                                if let Err(e) =
-                                    socket.send_to(&message.payload, message.destination)
-                                {
-                                    channel.single_write(NetworkSimulationEvent::SendError(
-                                        e, message,
-                                    ));
-                                }
-                            }
-                            delivery => panic!(
+pub struct UdpNetworkSendSystem;
+
+impl System<'_> for UdpNetworkSendSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("UdpNetworkSendSystem")
+                .write_resource::<TransportResource>()
+                .write_resource::<UdpSocketResource>()
+                .read_resource::<NetworkSimulationTime>()
+                .write_resource::<EventChannel<NetworkSimulationEvent>>()
+                .build(
+                    move |_commands, _world, (transport, socket, sim_time, channel), _| {
+                        if let Some(socket) = socket.get_mut() {
+                            let messages = transport
+                                .drain_messages_to_send(|_| sim_time.should_send_message_now());
+                            for message in messages {
+                                match message.delivery {
+                                    DeliveryRequirement::Unreliable
+                                    | DeliveryRequirement::Default => {
+                                        if let Err(e) =
+                                            socket.send_to(&message.payload, message.destination)
+                                        {
+                                            channel.single_write(
+                                                NetworkSimulationEvent::SendError(e, message),
+                                            );
+                                        }
+                                    }
+                                    delivery => panic!(
                                 "{:?} is unsupported. UDP only supports Unreliable by design.",
                                 delivery
                             ),
+                                }
+                            }
                         }
-                    }
-                }
-            },
+                    },
+                ),
         )
+    }
 }
 
 /// Creates a new udp network receiver system
-pub fn build_udp_network_receive_system() -> impl Runnable {
-    SystemBuilder::new("UdpNetworkReceiveSystem")
-        .write_resource::<UdpSocketResource>()
-        .write_resource::<EventChannel<NetworkSimulationEvent>>()
-        .build(move |_commands, _world, (socket, event_channel), _| {
-            let UdpSocketResource {
-                ref mut socket,
-                ref mut recv_buffer,
-            } = **socket;
-            if let Some(socket) = socket {
-                loop {
-                    match socket.recv_from(recv_buffer) {
-                        Ok((recv_len, address)) => {
-                            let event = NetworkSimulationEvent::Message(
-                                address,
-                                Bytes::copy_from_slice(&recv_buffer[..recv_len]),
-                            );
-                            // TODO: Handle other types of events.
-                            event_channel.single_write(event);
-                        }
-                        Err(e) => {
-                            if e.kind() != io::ErrorKind::WouldBlock {
-                                event_channel.single_write(NetworkSimulationEvent::RecvError(e));
+pub struct UdpNetworkReceiveSystem;
+
+impl System<'_> for UdpNetworkReceiveSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("UdpNetworkReceiveSystem")
+                .write_resource::<UdpSocketResource>()
+                .write_resource::<EventChannel<NetworkSimulationEvent>>()
+                .build(move |_commands, _world, (socket, event_channel), _| {
+                    let UdpSocketResource {
+                        ref mut socket,
+                        ref mut recv_buffer,
+                    } = **socket;
+                    if let Some(socket) = socket {
+                        loop {
+                            match socket.recv_from(recv_buffer) {
+                                Ok((recv_len, address)) => {
+                                    let event = NetworkSimulationEvent::Message(
+                                        address,
+                                        Bytes::copy_from_slice(&recv_buffer[..recv_len]),
+                                    );
+                                    // TODO: Handle other types of events.
+                                    event_channel.single_write(event);
+                                }
+                                Err(e) => {
+                                    if e.kind() != io::ErrorKind::WouldBlock {
+                                        event_channel
+                                            .single_write(NetworkSimulationEvent::RecvError(e));
+                                    }
+                                    break;
+                                }
                             }
-                            break;
                         }
                     }
-                }
-            }
-        })
+                }),
+        )
+    }
 }
 
 /// Resource to own the UDP socket.
