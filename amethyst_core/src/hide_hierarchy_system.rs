@@ -1,79 +1,92 @@
 use std::collections::HashSet;
 
+use legion::systems::ParallelRunnable;
+
 use crate::{
+    dispatcher::System,
     ecs::*,
     transform::{Children, Parent},
     HiddenPropagate,
 };
 
+pub struct HideHierarchySystem;
+
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children
 /// of an entity with a [HiddenPropagate](struct.HiddenPropagate.html) and removes it when it is removed
 /// from the parent.
-pub fn build() -> impl Runnable {
-    SystemBuilder::new("HideHierarchySystem")
-        .with_query(<(&Children, Option<&HiddenPropagate>)>::query())
-        .with_query(<(Entity, &Parent, Option<&HiddenPropagate>)>::query())
-        .write_component::<HiddenPropagate>()
-        .build(move |commands, world, _resources, (parent, children)| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("hide_hierarchy_system");
+impl System<'_> for HideHierarchySystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("HideHierarchySystem")
+                .with_query(<(&Children, Option<&HiddenPropagate>)>::query())
+                .with_query(<(Entity, &Parent, Option<&HiddenPropagate>)>::query())
+                .write_component::<HiddenPropagate>()
+                .build(move |commands, world, _resources, (parent, children)| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("hide_hierarchy_system");
 
-            let mut children_with_hidden_parent: HashSet<&Entity> = HashSet::new();
-            let mut children_without_hidden_parent: HashSet<&Entity> = HashSet::new();
+                    let mut children_with_hidden_parent: HashSet<&Entity> = HashSet::new();
+                    let mut children_without_hidden_parent: HashSet<&Entity> = HashSet::new();
 
-            for (current_children, hidden) in parent.iter(world) {
-                if let Some(hidden_propagate) = hidden {
-                    if hidden_propagate.is_propagated() {
-                        current_children.0.iter().for_each(|e| {
-                            children_with_hidden_parent.insert(e);
-                        });
+                    for (current_children, hidden) in parent.iter(world) {
+                        if let Some(hidden_propagate) = hidden {
+                            if hidden_propagate.is_propagated() {
+                                current_children.0.iter().for_each(|e| {
+                                    children_with_hidden_parent.insert(e);
+                                });
+                            }
+                        } else {
+                            current_children.0.iter().for_each(|e| {
+                                children_without_hidden_parent.insert(e);
+                            });
+                        }
                     }
-                } else {
-                    current_children.0.iter().for_each(|e| {
-                        children_without_hidden_parent.insert(e);
+
+                    for (entity, _, hidden) in children.iter(world) {
+                        if let Some(hidden_propagate) = hidden {
+                            if children_with_hidden_parent.contains(&entity) {
+                                children_with_hidden_parent.remove(&entity);
+                            } else if !hidden_propagate.is_propagated()
+                                && children_without_hidden_parent.contains(&entity)
+                            {
+                                children_without_hidden_parent.remove(&entity);
+                            }
+                        } else if children_without_hidden_parent.contains(&entity) {
+                            children_without_hidden_parent.remove(&entity);
+                        }
+                    }
+                    children_with_hidden_parent.iter().for_each(|e| {
+                        commands.add_component(**e, HiddenPropagate::new_propagated())
                     });
-                }
-            }
-
-            for (entity, _, hidden) in children.iter(world) {
-                if let Some(hidden_propagate) = hidden {
-                    if children_with_hidden_parent.contains(&entity) {
-                        children_with_hidden_parent.remove(&entity);
-                    } else if !hidden_propagate.is_propagated()
-                        && children_without_hidden_parent.contains(&entity)
-                    {
-                        children_without_hidden_parent.remove(&entity);
-                    }
-                } else if children_without_hidden_parent.contains(&entity) {
-                    children_without_hidden_parent.remove(&entity);
-                }
-            }
-            children_with_hidden_parent
-                .iter()
-                .for_each(|e| commands.add_component(**e, HiddenPropagate::new_propagated()));
-            children_without_hidden_parent
-                .iter()
-                .for_each(|e| commands.remove_component::<HiddenPropagate>(**e));
-        })
+                    children_without_hidden_parent
+                        .iter()
+                        .for_each(|e| commands.remove_component::<HiddenPropagate>(**e));
+                }),
+        )
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::transform::{
-        missing_previous_parent_system, parent_update_system, Parent, Transform,
-    };
+    use crate::transform::{MissingPreviousParentSystem, Parent, ParentUpdateSystem, Transform};
 
     #[test]
     fn should_not_add_hidden_to_child_if_not_propagated() {
         let mut resources = Resources::default();
         let mut world = World::default();
 
-        let mut schedule = Schedule::builder()
-            .add_system(missing_previous_parent_system::build())
-            .add_system(parent_update_system::build())
-            .add_system(build())
-            .build();
+        let mut schedule = Schedule::from(vec![
+            systems::Step::Systems(systems::Executor::new(vec![
+                MissingPreviousParentSystem.build()
+            ])),
+            systems::Step::FlushCmdBuffers,
+            systems::Step::Systems(systems::Executor::new(vec![
+                HideHierarchySystem.build(),
+                ParentUpdateSystem.build(),
+            ])),
+            systems::Step::FlushCmdBuffers,
+        ]);
 
         let parent = world.push((Transform::default(),));
         let children = world.extend(vec![(Transform::default(),), (Transform::default(),)]);
@@ -153,12 +166,17 @@ mod test {
         let mut resources = Resources::default();
         let mut world = World::default();
 
-        let mut schedule = Schedule::builder()
-            .add_system(missing_previous_parent_system::build())
-            .add_system(parent_update_system::build())
-            .add_system(build())
-            .build();
-
+        let mut schedule = Schedule::from(vec![
+            systems::Step::Systems(systems::Executor::new(vec![
+                MissingPreviousParentSystem.build()
+            ])),
+            systems::Step::FlushCmdBuffers,
+            systems::Step::Systems(systems::Executor::new(vec![
+                HideHierarchySystem.build(),
+                ParentUpdateSystem.build(),
+            ])),
+            systems::Step::FlushCmdBuffers,
+        ]);
         let parent = world.push((Transform::default(),));
         let children = world.extend(vec![(Transform::default(),)]);
         let e1 = children[0];
@@ -243,11 +261,17 @@ mod test {
         let mut resources = Resources::default();
         let mut world = World::default();
 
-        let mut schedule = Schedule::builder()
-            .add_system(missing_previous_parent_system::build())
-            .add_system(parent_update_system::build())
-            .add_system(build())
-            .build();
+        let mut schedule = Schedule::from(vec![
+            systems::Step::Systems(systems::Executor::new(vec![
+                MissingPreviousParentSystem.build()
+            ])),
+            systems::Step::FlushCmdBuffers,
+            systems::Step::Systems(systems::Executor::new(vec![
+                HideHierarchySystem.build(),
+                ParentUpdateSystem.build(),
+            ])),
+            systems::Step::FlushCmdBuffers,
+        ]);
 
         let parent = world.push((Transform::default(),));
         let children = world.extend(vec![(Transform::default(),), (Transform::default(),)]);
