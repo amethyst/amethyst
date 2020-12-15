@@ -7,7 +7,7 @@ use amethyst::{
         frame_limiter::FrameRateLimitStrategy,
         transform::{Transform, TransformBundle},
     },
-    input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
+    input::{is_key_down, is_mouse_button_down, InputBundle},
     prelude::*,
     renderer::{
         camera::Camera,
@@ -164,10 +164,8 @@ fn main() -> Result<(), Error> {
     let mut builder = DispatcherBuilder::default();
     builder
         .add_bundle(TransformBundle)
-        .add_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
-        )
-        .add_bundle(ArcBallControlBundle::<StringBindings>::new().with_sensitivity(0.1, 0.1))
+        .add_bundle(InputBundle::new().with_bindings_from_file(&key_bindings_path)?)
+        .add_bundle(ArcBallControlBundle::new().with_sensitivity(0.1, 0.1))
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

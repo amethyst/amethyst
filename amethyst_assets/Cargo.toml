@@ -1,7 +1,10 @@
 [package]
 name = "amethyst_assets"
 version = "0.15.3"
-authors = ["torkleyy <torkleyy@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "torkleyy <torkleyy@gmail.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 readme = "README.md"
 edition = "2018"
 description = """
@@ -18,7 +21,7 @@ repository = "https://github.com/amethyst/amethyst"
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
+#amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 crossbeam-queue = "0.1.2"
 derivative = "2.1.1"
@@ -42,5 +45,5 @@ specs = "0.16"
 serde_json = "1"
 
 [features]
-profiler = [ "thread_profiler/thread_profiler" ]
-json = [ "serde_json" ]
+profiler = ["thread_profiler/thread_profiler"]
+json = ["serde_json"]

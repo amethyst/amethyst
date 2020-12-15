@@ -87,5 +87,6 @@ mod skinning;
 mod sprite;
 mod systems;
 mod transform;
+#[cfg(feature = "ui")]
 mod ui_transform;
 mod util;

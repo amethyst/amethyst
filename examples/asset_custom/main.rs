@@ -1,9 +1,8 @@
 use amethyst::{
     assets::{
-        Asset, AssetStorage, Format, Handle, Loader, ProcessingState, Processor, ProgressCounter,
-        Source,
+        Asset, AssetProcessorSystemBundle, AssetStorage, Format, Handle, Loader, ProcessingState,
+        ProgressCounter, Source,
     },
-    ecs::VecStorage,
     error::{format_err, Error, ResultExt},
     prelude::*,
     utils::application_root_dir,
@@ -27,7 +26,6 @@ pub type EnergyBlastHandle = Handle<EnergyBlast>;
 impl Asset for EnergyBlast {
     const NAME: &'static str = "my_crate::EnergyBlast";
     type Data = Self;
-    type HandleStorage = VecStorage<EnergyBlastHandle>;
 }
 
 impl From<EnergyBlast> for Result<ProcessingState<EnergyBlast>, Error> {
@@ -82,28 +80,28 @@ impl Source for CodeSource {
 }
 
 impl SimpleState for LoadingState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         {
-            let mut loader = data.world.write_resource::<Loader>();
+            let mut loader = data.resources.get_mut::<Loader>().unwrap();
             loader.add_source("code_source", CodeSource);
         }
 
-        let loader = &data.world.read_resource::<Loader>();
+        let loader = data.resources.get::<Loader>().unwrap();
 
         let energy_blast_handle = loader.load_from(
             "energy_blast.mylang",
             self::MyLangFormat,
             "code_source",
             &mut self.progress_counter,
-            &data.world.read_resource::<AssetStorage<EnergyBlast>>(),
+            &data.resources.get::<AssetStorage<EnergyBlast>>().unwrap(),
         );
 
         self.energy_blast_handle = Some(energy_blast_handle);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         if self.progress_counter.is_complete() {
-            let energy_blast_assets = data.world.read_resource::<AssetStorage<EnergyBlast>>();
+            let energy_blast_assets = data.resources.get::<AssetStorage<EnergyBlast>>().unwrap();
             let energy_blast = energy_blast_assets
                 .get(
                     self.energy_blast_handle
@@ -124,15 +122,17 @@ fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
     let assets_dir = app_root.join("example/asset_custom/assets");
 
-    let game_data = GameDataBuilder::default().with(Processor::<EnergyBlast>::new(), "", &[]);
-    let mut game = Application::new(
+    let mut builder = DispatcherBuilder::default();
+    builder.add_bundle(AssetProcessorSystemBundle::<EnergyBlast>::default());
+
+    let mut game = Application::build(
         assets_dir,
         LoadingState {
             progress_counter: ProgressCounter::new(),
             energy_blast_handle: None,
         },
-        game_data,
-    )?;
+    )?
+    .build(builder)?;
 
     game.run();
     Ok(())
