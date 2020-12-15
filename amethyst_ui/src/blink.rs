@@ -28,45 +28,43 @@ pub struct Blink {
 
 
 pub struct BlinkSystem;
-
-impl BlinkSystem {
     /// System updating the `Blink` component.
-    pub fn build() -> impl Runnable {
-        SystemBuilder::new("BlinkSystem")
-            .read_resource::<Time>()
-            .with_query(<&mut Hidden>::query())
-            .with_query(<(Entity, Write<Blink>)>::query())
-            .build(move |commands, world, time, (hiddens,blinks)| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("blink_system");
+pub fn build_blink_system() -> impl Runnable {
+    SystemBuilder::new("BlinkSystem")
+        .read_resource::<Time>()
+        .with_query(<&mut Hidden>::query())
+        .with_query(<(Entity, Write<Blink>)>::query())
+        .build(move |commands, world, time, (hiddens,blinks)| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("blink_system");
 
-                let abs_sec = time.delta_seconds();
-                let abs_unscaled_sec = time.delta_real_seconds();
+            let abs_sec = time.delta_seconds();
+            let abs_unscaled_sec = time.delta_real_seconds();
 
-                let (mut blinks_world, mut subworld) = world.split_for_query(&blinks);
+            let (mut blinks_world, mut subworld) = world.split_for_query(&blinks);
 
-                blinks.for_each_mut(&mut blinks_world, |(entity, mut blink)| {
-                    if blink.absolute_time {
-                        blink.timer += abs_unscaled_sec;
-                    } else {
-                        blink.timer += abs_sec;
-                    }
+            blinks.for_each_mut(&mut blinks_world, |(entity, mut blink)| {
+                if blink.absolute_time {
+                    blink.timer += abs_unscaled_sec;
+                } else {
+                    blink.timer += abs_sec;
+                }
 
-                    // Reset timer because we ended the last cycle.
-                    // Keeps the overflow time.
-                    if blink.timer > blink.delay {
-                         blink.timer -= blink.delay;
-                    }
+                // Reset timer because we ended the last cycle.
+                // Keeps the overflow time.
+                if blink.timer > blink.delay {
+                     blink.timer -= blink.delay;
+                }
 
-                    // We could cache the division, but that would require a stricter api on Blink.
-                    let on = blink.timer < blink.delay / 2.0;
+                // We could cache the division, but that would require a stricter api on Blink.
+                let on = blink.timer < blink.delay / 2.0;
 
-                    match (on, hiddens.get_mut(&mut subworld, *entity).is_ok()) {
-                        (true, false) => {commands.add_component(*entity, Hidden);},
-                        (false, true) => {commands.remove_component::<Hidden>(*entity);},
-                        _ => {},
-                    };
-                });
-            })
-    }
+                match (on, hiddens.get_mut(&mut subworld, *entity).is_ok()) {
+                    (true, false) => {commands.add_component(*entity, Hidden);},
+                    (false, true) => {commands.remove_component::<Hidden>(*entity);},
+                    _ => {},
+                };
+            });
+        })
 }
+

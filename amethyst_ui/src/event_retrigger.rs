@@ -66,8 +66,12 @@ where
     }
 }
 
-pub fn build_event_retrigger_system<T: EventRetrigger + 'static>() -> impl Runnable {
-        SystemBuilder::new("EventRetriggerSystem")
+pub fn build_event_retrigger_system<T: EventRetrigger + 'static>(resources: &mut Resources) -> impl Runnable {
+    let reader_id = resources.get_mut::<EventChannel<T::In>>().unwrap().register_reader();
+    resources.insert(EventRetriggerSystemResource::<T>::new(reader_id));
+
+    let system_name = format!("{}System", std::any::type_name::<T>());
+    SystemBuilder::new(system_name)
             .write_resource::<EventRetriggerSystemResource<T>>()
             .read_resource::<EventChannel<T::In>>()
             .write_resource::<EventChannel<T::Out>>()

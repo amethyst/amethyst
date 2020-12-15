@@ -132,7 +132,6 @@ impl TextEditing {
     }
 }
 
-/// This system processes the underlying UI data as needed.
 #[derive(Debug)]
 pub struct TextEditingMouseSystemResource {
     /// A reader for winit events.
@@ -154,7 +153,10 @@ impl TextEditingMouseSystemResource {
     }
 }
 
-pub fn build_text_editing_mouse_system() -> impl Runnable {
+/// This system processes the underlying UI data as needed.
+pub fn build_text_editing_mouse_system(resources: &mut Resources) -> impl Runnable {
+    let reader_id = resources.get_mut::<EventChannel<Event>>().unwrap().register_reader();
+    resources.insert(TextEditingMouseSystemResource::new(reader_id));
     SystemBuilder::new("TextEditingMouseSystem")
         .write_resource::<TextEditingMouseSystemResource>()
         .read_resource::<Time>()

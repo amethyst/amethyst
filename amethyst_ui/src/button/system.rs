@@ -75,7 +75,9 @@ impl UiButtonSystemResource {
         }
     }
 }
-    pub fn build_ui_button_system() -> impl Runnable {
+    pub fn build_ui_button_system(resources: &mut Resources) -> impl Runnable {
+        let reader_id = resources.get_mut::<EventChannel<UiButtonAction>>().unwrap().register_reader();
+        resources.insert(UiButtonSystemResource::new(reader_id));
         SystemBuilder::new("UiButtonSystem")
             .write_resource::<UiButtonSystemResource>()
             .write_resource::<EventChannel<UiButtonAction>>()

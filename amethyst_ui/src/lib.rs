@@ -48,7 +48,7 @@ pub use self::{
     selection::{
         Selectable, Selected, build_selection_keyboard_system, build_selection_mouse_system,
     },
-    selection_order_cache::{build_cache_selection_system, CachedSelectionOrder},
+    selection_order_cache::{build_cache_selection_system, CachedSelectionOrderResource},
     sound::{
         UiPlaySoundAction, UiSoundRetrigger, build_ui_sound_retrigger_system,
         build_ui_sound_system,

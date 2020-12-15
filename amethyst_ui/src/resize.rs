@@ -49,7 +49,8 @@ impl ResizeSystemResource {
 
 /// This system rearranges UI elements whenever the screen is resized using their `UiResize`
 /// component.
-pub fn build_resize_system() -> impl Runnable {
+pub fn build_resize_system(resources: &mut Resources) -> impl Runnable {
+    resources.insert(ResizeSystemResource::new());
     SystemBuilder::new("ResizeSystem")
         .write_resource::<ResizeSystemResource>()
         .read_resource::<ScreenDimensions>()

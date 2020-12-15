@@ -46,8 +46,10 @@ impl DragWidgetSystemResource {
     }
 }
 
-pub fn build_drag_widget_system() -> impl Runnable {
-       SystemBuilder::new("DragWidgetSystem")
+pub fn build_drag_widget_system(resources: &mut Resources) -> impl Runnable {
+    let reader_id = resources.get_mut::<EventChannel<UiEvent>>().unwrap().register_reader();
+    resources.insert(DragWidgetSystemResource::new(reader_id));
+    SystemBuilder::new("DragWidgetSystem")
             .write_resource::<DragWidgetSystemResource>()
             .write_resource::<EventChannel<UiEvent>>()
             .read_resource::<InputHandler>()

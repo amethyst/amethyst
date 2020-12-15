@@ -7,7 +7,9 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use derive_new::new;
-use crate::{WidgetId, build_ui_transform_system};
+use crate::{WidgetId, build_ui_transform_system, build_ui_mouse_system, FontAsset, build_cache_selection_system, build_selection_mouse_system, build_selection_keyboard_system, build_text_editing_mouse_system, build_text_editing_input_system, build_resize_system, build_ui_button_system, build_drag_widget_system, build_button_action_retrigger_system, build_ui_sound_system, build_ui_sound_retrigger_system, build_blink_system};
+use amethyst_rendy::build_texture_processor;
+use amethyst_assets::build_asset_processor_system;
 
 /// UI bundle
 ///
@@ -27,70 +29,33 @@ where
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
 {
-    fn load(&mut self, world: &mut World, resources: &mut Resources, builder: &mut DispatcherBuilder) -> Result<(), Error> {
+    fn load(&mut self, _world: &mut World, resources: &mut Resources, builder: &mut DispatcherBuilder) -> Result<(), Error> {
+
+        builder
+            .add_system(build_ui_transform_system(resources))
+            .add_system(build_ui_mouse_system(resources))
+            .add_system(build_asset_processor_system::<FontAsset>())
+            .add_system(build_cache_selection_system::<G>( resources))
+            .add_system(build_selection_mouse_system::<G>( resources))
+            .add_system(build_selection_keyboard_system::<G>( resources))
+            .add_system(build_text_editing_mouse_system(resources))
+            .add_system(build_text_editing_input_system(resources))
+            .add_system(build_resize_system(resources))
+            .add_system(build_ui_button_system(resources))
+            .add_system(build_drag_widget_system(resources))
+            .add_system(build_button_action_retrigger_system(resources))
+            .add_system(build_ui_sound_system(resources))
+            .add_system(build_ui_sound_retrigger_system(resources))
+            .add_system(build_blink_system());
         /*
-                builder.add_system(UiTransformSystem::new().build());
-
-
-
-
-
                 builder.add_system(
                     UiLoaderSystemDesc::<<C as ToNativeWidget>::PrefabData, W>::default().build(world),
                 );
-
-
-                builder.add_system(
-                    UiTransformSystemDesc::default().build(world),
-                );
-                builder.add_system(
-                    UiMouseSystem::<T>::new(),
-                );
-                builder.add_system(
-                    Processor::<FontAsset>::new(),
-                );
-                builder.add_system(
-                    CacheSelectionOrderSystem::<G>::new(),
-                );
-                builder.add_system(
-                    SelectionMouseSystemDesc::<G, T>::default().build(world),
-                );
-                builder.add_system(
-                    SelectionKeyboardSystemDesc::<G>::default().build(world),
-                );
-                builder.add_system(
-                    TextEditingMouseSystemDesc::default().build(world),
-                );
-                builder.add_system(
-                    TextEditingInputSystemDesc::default().build(world),
-                );
-                builder.add_system(
-                    ResizeSystemDesc::default().build(world),
-                );
-                builder.add_system(
-                    UiButtonSystemDesc::default().build(world),
-                );
-                builder.add_system(
-                    DragWidgetSystemDesc::<T>::default().build(world),
-                );
-
-                builder.add_system(
-                    UiButtonActionRetriggerSystemDesc::default().build(world),
-                );
-                builder.add_system(
-                    UiSoundSystemDesc::default().build(world),
-                );
-                builder.add_system(
-                    UiSoundRetriggerSystemDesc::default().build(world),
-                );
-
-                // Required for text editing. You want the cursor image to blink.
-                builder.add_system(BlinkSystem);
         */
         Ok(())
     }
 
-    fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> {
+    fn unload(&mut self, _world: &mut World,  _resources: &mut Resources) -> Result<(), Error> {
         unimplemented!()
     }
 }

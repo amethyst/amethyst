@@ -9,7 +9,7 @@ use derive_new::new;
 use serde::{Deserialize, Serialize};
 use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
-use crate::{CachedSelectionOrder, UiEvent, UiEventType};
+use crate::{CachedSelectionOrderResource, UiEvent, UiEventType};
 use amethyst_core::shrev::ReaderId;
 
 // TODO: If none selected and there is a Selectable in the World, select the lower ordered one automatically?
@@ -63,12 +63,14 @@ where
     }
 }
 
-pub fn build_selection_keyboard_system<G>() -> impl Runnable
+pub fn build_selection_keyboard_system<G>(resources: &mut Resources) -> impl Runnable
     where G: Send + Sync + 'static + PartialEq  {
+    let reader_id = resources.get_mut::<EventChannel<Event>>().unwrap().register_reader();
+    resources.insert(SelectionKeyboardSystemResource::<G>::new(reader_id));
     SystemBuilder::new("SelectionKeyboardSystem")
         .write_resource::<SelectionKeyboardSystemResource<G>>()
         .read_resource::<EventChannel<Event>>()
-        .read_resource::<CachedSelectionOrder>()
+        .read_resource::<CachedSelectionOrderResource>()
         .write_resource::<EventChannel<UiEvent>>()
         .with_query(<(Entity, &mut Selected)>::query())
         .build(move |commands, world,
@@ -171,11 +173,13 @@ where
     }
 }
 
-pub fn build_selection_mouse_system<G>() -> impl Runnable
+pub fn build_selection_mouse_system<G>(resources: &mut Resources) -> impl Runnable
     where G: Send + Sync + 'static + PartialEq  {
+    let reader_id = resources.get_mut::<EventChannel<UiEvent>>().unwrap().register_reader();
+    resources.insert(SelectionMouseSystemResource::<G>::new(reader_id));
     SystemBuilder::new("SelectionMouseSystem")
         .write_resource::<SelectionMouseSystemResource<G>>()
-        .read_resource::<CachedSelectionOrder>()
+        .read_resource::<CachedSelectionOrderResource>()
         .read_resource::<InputHandler>()
         .write_resource::<EventChannel<UiEvent>>()
         .with_query(<(Entity, &Selectable<G>)>::query())
