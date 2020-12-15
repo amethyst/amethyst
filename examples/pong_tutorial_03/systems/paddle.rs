@@ -5,6 +5,8 @@ use amethyst::{
     prelude::*,
 };
 
+use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT}; 
+
 pub fn build() -> impl Runnable {
     SystemBuilder::new("PaddleSystem")
         .with_query(<(&Paddle, &mut Transform)>::query())
