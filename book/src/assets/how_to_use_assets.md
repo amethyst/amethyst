@@ -32,9 +32,9 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
         //..
     #   let world = World::new();
-    #   let game_data = DispatcherBuilder::default();
+    #   let game_data = GameDataBuilder::default();
 
-        let mut game = Application::build(assets_dir, LoadingState)?.build(game_data)?;
+        let mut game = Application::new(assets_dir, LoadingState, game_data)?;
     #
     #   game.run();
     #   Ok(())
@@ -70,9 +70,8 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     }
 
     impl SimpleState for LoadingState {
-        fn on_start(&mut self, data: StateData<'_, GameData>) {
-            let loader = data.resources.get::<Loader>().unwrap(); 
-
+        fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+            let loader = &data.world.read_resource::<Loader>();
             let texture_handle = loader.load(
                 "player.png",
                 ImageFormat::default(),
@@ -88,8 +87,8 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     #   let app_root = application_root_dir()?;
     #   let assets_dir = app_root.join("assets");
     #
-    #   let game_data = DispatcherBuilder::default();
-    #   let mut game = Application::build(
+    #   let game_data = GameDataBuilder::default();
+    #   let mut game = Application::new(
     #       assets_dir,
     #       LoadingState {
     #           progress_counter: ProgressCounter::new(),
@@ -132,7 +131,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     impl SimpleState for LoadingState {
         fn update(
             &mut self,
-            _data: &mut StateData<'_, GameData>,
+            _data: &mut StateData<'_, GameData<'_, '_>>,
         ) -> SimpleTrans {
             if self.progress_counter.is_complete() {
                 Trans::Switch(Box::new(GameState {
@@ -166,7 +165,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     # }
     #
     impl SimpleState for GameState {
-        fn on_start(&mut self, data: StateData<'_, GameData>) {
+        fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
             // Create the player entity.
             data.world
                 .create_entity()

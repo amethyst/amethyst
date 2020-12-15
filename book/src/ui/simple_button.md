@@ -62,8 +62,7 @@ to set the area big enough for the text to fit in!
 #
 # fn some_function(world: &mut World) {
 #    let font_handle = {
-#        let loader = data.resources.get::<Loader>().unwrap(); 
-
+#        let loader = world.read_resource::<Loader>();
 #        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
 #        get_default_font(&loader, &font_storage)
 #    };
@@ -96,7 +95,7 @@ If you had some state implemented you can create the button on its `on_start` me
 #
 # impl SimpleState for State {
 #
-fn on_start(&mut self, data: StateData<'_, GameData>) {
+fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     let world = data.world;
 
     /* Create the transform */
@@ -113,8 +112,7 @@ fn on_start(&mut self, data: StateData<'_, GameData>) {
     );
 #
 #    let font_handle = {
-#        let loader = data.resources.get::<Loader>().unwrap(); 
-
+#        let loader = world.read_resource::<Loader>();
 #        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
 #        get_default_font(&loader, &font_storage)
 #    };
@@ -137,7 +135,7 @@ fn on_start(&mut self, data: StateData<'_, GameData>) {
         .build();
 }
 #
-#     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+#     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
 #         Trans::None
 #     }
 # }
@@ -181,8 +179,7 @@ The code snippet would look like this now:
 #    );
 #
 #    let font_handle = {
-#        let loader = data.resources.get::<Loader>().unwrap(); 
-
+#        let loader = world.read_resource::<Loader>();
 #        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
 #        get_default_font(&loader, &font_storage)
 #    };

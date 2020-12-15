@@ -110,7 +110,7 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData>) {
+fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     let world = data.world;
 
     // Load the spritesheet necessary to render the graphics.
@@ -348,9 +348,9 @@ as well as adding our new systems to the game data:
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-let game_data = DispatcherBuilder::default()
-#    .add_bundle(TransformBundle::new())?
-#    .add_bundle(input_bundle)?
+let game_data = GameDataBuilder::default()
+#    .with_bundle(TransformBundle::new())?
+#    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
     // ...other systems...
     .with(systems::MoveBallsSystem, "ball_system", &[])
@@ -362,7 +362,7 @@ let game_data = DispatcherBuilder::default()
 # let assets_dir = "/";
 # struct Pong;
 # impl SimpleState for Pong { }
-# let mut game = Application::build(assets_dir, Pong)?.build(game_data)?;
+# let mut game = Application::new(assets_dir, Pong, game_data)?;
 # Ok(())
 # }
 ```
@@ -394,7 +394,7 @@ Let's add that `update` method just below `on_start`:
 # use amethyst::prelude::*;
 # struct MyState;
 # impl SimpleState for MyState {
-fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
     Trans::None
 }
 # }
@@ -437,10 +437,10 @@ default empty state. Now let's use that inside our `Application` creation code i
 # #[derive(Default)] struct Pong;
 # impl SimpleState for Pong { }
 # fn main() -> amethyst::Result<()> {
-#   let game_data = DispatcherBuilder::default();
+#   let game_data = GameDataBuilder::default();
 #   let assets_dir = "/";
 #   let world = World::new();
-let mut game = Application::build(assets_dir, Pong::default())?.build(game_data)?;
+let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
 #   Ok(())
 # }
 ```
@@ -473,7 +473,7 @@ use amethyst::core::timing::Time;
 # }
 #
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
         // Wait one second before spawning the ball.
@@ -487,7 +487,7 @@ impl SimpleState for Pong {
         initialise_camera(world);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
             // If the timer isn't expired yet, subtract the time that passed since the last update.
             {

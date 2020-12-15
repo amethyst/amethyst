@@ -103,7 +103,7 @@ struct GameplayState {
 }
 
 impl SimpleState for GameplayState {
-    fn on_start(&mut self, _data: StateData<'_, GameData>) {
+    fn on_start(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
         println!("Number of players: {}", self.player_count);
     }
 }

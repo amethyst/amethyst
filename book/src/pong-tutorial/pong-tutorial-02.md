@@ -58,13 +58,13 @@ This method is called when the State starts. We will leave it empty for now.
 # use amethyst::prelude::*;
 # struct Pong;
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 
     }
 }
 ```
 
-The `StateData<'_, GameData>` is a structure given to all State methods.
+The `StateData<'_, GameData<'_, '_>>` is a structure given to all State methods.
 The important part of its content here is its `world` field.
 
 The `World` structure stores all of the game's runtime data -- entities and components.
@@ -144,7 +144,7 @@ will.
     # fn initialise_camera(world: &mut World) { }
     # struct MyState;
     # impl SimpleState for MyState {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
         initialise_camera(world);
@@ -305,7 +305,7 @@ compiles. Update the `on_start` method to the following:
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData>) {
+fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     let world = data.world;
 
     initialise_paddles(world);
@@ -364,7 +364,7 @@ Let's run the game again.
 Amethyst has a lot of internal systems it uses to keep things running we need
 to bring into the context of the `World`. For simplicity, these have been
 grouped into "Bundles" which include related systems and resources. We can
-add these to our Application's `GameData` using the `add_bundle` method,
+add these to our Application's `GameData` using the `with_bundle` method,
 similarly to how you would register a system. We already have `RenderBundle` in place,
 registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
@@ -390,14 +390,14 @@ fn main() -> amethyst::Result<()> {
 #       app_root.join("examples/pong_tutorial_02/config/display.ron");
 #
     // ...
-    let game_data = DispatcherBuilder::default()
+    let game_data = GameDataBuilder::default()
         // ...
 
         // Add the transform bundle which handles tracking entity positions
-        .add_bundle(TransformBundle::new())?;
+        .with_bundle(TransformBundle::new())?;
 
 #   let assets_dir = "/";
-#   let mut game = Application::build(assets_dir, Pong)?.build(game_data)?;
+#   let mut game = Application::new(assets_dir, Pong, game_data)?;
 #   Ok(())
 }
 ```
@@ -438,8 +438,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // The texture is the pixel data
     // `texture_handle` is a cloneable reference to the texture
     let texture_handle = {
-        let loader = data.resources.get::<Loader>().unwrap(); 
-
+        let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
             "texture/pong_spritesheet.png",
@@ -525,8 +524,7 @@ Finally, we load the file containing the position of each sprite on the sheet.
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #
 #   let texture_handle = {
-#       let loader = data.resources.get::<Loader>().unwrap(); 
-
+#       let loader = world.read_resource::<Loader>();
 #       let texture_storage = world.read_resource::<AssetStorage<Texture>>();
 #       loader.load(
 #           "texture/pong_spritesheet.png",
@@ -538,8 +536,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #
     // ...
 
-    let loader = data.resources.get::<Loader>().unwrap(); 
-
+    let loader = world.read_resource::<Loader>();
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file
@@ -634,7 +631,7 @@ all together in the `on_start()` method:
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData>) {
+fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     let world = data.world;
 
     // Load the spritesheet necessary to render the graphics.

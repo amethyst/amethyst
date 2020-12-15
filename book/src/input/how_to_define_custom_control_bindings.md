@@ -128,9 +128,9 @@ And add the `InputBundle` to the game data just like before.
 # let input_bundle = InputBundle::<StringBindings>::default();
 #
 let mut world = World::new();
-let game_data = DispatcherBuilder::default()
+let game_data = GameDataBuilder::default()
     //..
-    .add_bundle(input_bundle)?
+    .with_bundle(input_bundle)?
     //..
 #   ;
 #
@@ -210,7 +210,7 @@ And don't forget to add the `MovementSystem` to the game data.
 # #[derive(SystemDesc)]
 # struct MovementSystem;
 # impl<'a> System<'a> for MovementSystem {type SystemData=(); fn run(&mut self, _: ()) {}}
-let game_data = DispatcherBuilder::default()
+let game_data = GameDataBuilder::default()
 //..
     .with(MovementSystem, "movement_system", &["input_system"])
 //..

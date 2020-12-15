@@ -52,7 +52,7 @@ and modify the `main.rs`'s `run()` function to add our `PaddleConfig`s.
     .with_resource(pong_config.arena)
     .with_resource(pong_config.ball)
     .with_resource(pong_config.paddles)
-    .add_bundle(PongBundle::default())?
+    .with_bundle(PongBundle::default())?
 ```
 
 We add the `PaddlesConfig` to the `World`, rather than as separate `left` and `right` configurations because

@@ -58,7 +58,7 @@
     ```rust,ignore
     use amethyst::window::WindowBundle;
 
-    game_data.add_bundle(WindowBundle::from_config_file(display_config_path))?;
+    game_data.with_bundle(WindowBundle::from_config_file(display_config_path))?;
     ```
 
     This system is loaded automatically by the `RenderToWindow` render plugin.
@@ -87,8 +87,7 @@
         },
     };
 
-    let loader = data.resources.get::<Loader>().unwrap(); 
-
+    let loader = world.read_resource::<Loader>();
     let texture_assets = world.read_resource::<AssetStorage<Texture>>();
     let texture_builder = load_from_srgba(Srgba::new(0., 0., 0., 0.));
     let texture_handle: Handle<Texture> =
@@ -102,8 +101,8 @@
     ```rust,ignore
     use amethyst::renderer::{types::DefaultBackend, RenderingSystem};
 
-    let game_data = DispatcherBuilder::default()
-        .add_bundle(
+    let game_data = GameDataBuilder::default()
+        .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config)
@@ -216,7 +215,7 @@ Z-axis direction clarifications:
     -AmethystApplication::render_base("test_name", visibility);
     +use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
     +AmethystApplication::blank()
-    +    .add_bundle(RenderEmptyBundle::<DefaultBackend>::new());
+    +    .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
     ```
 
 * The `mark_render()` and `.run()` chained call is replaced by a single `run_isolated()` call.
