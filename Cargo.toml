@@ -216,9 +216,9 @@ required-features = ["network"]
 name = "net_server"
 required-features = ["network"]
 
-# [[example]]
-# name = "locale"
-# required-features = ["locale"]
+[[example]]
+name = "locale"
+required-features = ["locale"]
 
 # [[example]]
 # name = "custom_game_data"
