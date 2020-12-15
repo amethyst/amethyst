@@ -5,7 +5,7 @@ use amethyst::{
     prelude::*,
 };
 
-use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT}; 
+use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
 pub fn build() -> impl Runnable {
     SystemBuilder::new("PaddleSystem")
