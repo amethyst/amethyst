@@ -22,7 +22,7 @@ license = "MIT/Apache-2.0"
 autoexamples = false
 
 [features]
-default = ["audio", "locale", "network", "parallel", "renderer"]
+default = ["audio", "parallel", "renderer"]
 
 vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
