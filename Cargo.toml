@@ -58,7 +58,6 @@ profiler = [
 ]
 sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
-saveload = []
 server = ["locale", "network"]
 no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
 shader-compiler = ["amethyst_rendy/shader-compiler"]

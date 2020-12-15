@@ -21,7 +21,6 @@ At the time of writing, the list of features of this type is the following:
 * `locale`
 * `network`
 * `renderer`
-* `saveload`
 * `ui`
 * `sdl_controller`
 
