@@ -9,7 +9,6 @@ use std::{
 
 use amethyst_core::{ecs::*, math::convert, transform::Transform};
 use rodio::SpatialSink;
-use systems::ParallelRunnable;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

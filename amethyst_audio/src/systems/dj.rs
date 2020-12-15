@@ -17,7 +17,7 @@ use crate::{
 #[derive(Debug)]
 pub struct DjSystemBundle<F, R>
 where
-    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static + Copy,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
     R: Send + Sync + 'static,
 {
     f: F,
@@ -26,7 +26,7 @@ where
 
 impl<F, R> DjSystemBundle<F, R>
 where
-    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static + Copy,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
     R: Send + Sync + 'static,
 {
     /// Creates a new [DjSystemBundle] where [f] is a function which produces music [SourceHandle].
