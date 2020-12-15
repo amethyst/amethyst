@@ -2,7 +2,6 @@
 use std::cmp::Ordering;
 
 use amethyst_core::{
-    dispatcher::System,
     ecs::{systems::ParallelRunnable, *},
     math::{Point3, Vector3},
     transform::Transform,

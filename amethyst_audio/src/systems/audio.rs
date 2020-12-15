@@ -7,7 +7,7 @@ use std::{
     },
 };
 
-use amethyst_core::{dispatcher::System, ecs::*, math::convert, transform::Transform};
+use amethyst_core::{ecs::*, math::convert, transform::Transform};
 use rodio::SpatialSink;
 use systems::ParallelRunnable;
 #[cfg(feature = "profiler")]

@@ -2,7 +2,7 @@
 
 use std::{io, net::UdpSocket};
 
-use amethyst_core::{dispatcher::System, ecs::*, EventChannel};
+use amethyst_core::{ecs::*, EventChannel};
 use amethyst_error::Error;
 use bytes::Bytes;
 

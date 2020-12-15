@@ -1,9 +1,7 @@
 //! System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
 
-use legion::systems::ParallelRunnable;
-
 use super::components::*;
-use crate::{dispatcher::System, ecs::*};
+use crate::ecs::*;
 
 /// System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
 pub struct MissingPreviousParentSystem;

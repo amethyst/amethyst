@@ -2,7 +2,7 @@
 
 use std::time::Instant;
 
-use amethyst_core::{dispatcher::System, ecs::*, EventChannel};
+use amethyst_core::{ecs::*, EventChannel};
 use amethyst_error::Error;
 use bytes::Bytes;
 pub use laminar::{Config as LaminarConfig, ErrorKind, Socket as LaminarSocket};

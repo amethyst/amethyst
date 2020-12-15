@@ -1,9 +1,6 @@
 use std::collections::HashSet;
 
-use legion::systems::ParallelRunnable;
-
 use crate::{
-    dispatcher::System,
     ecs::*,
     transform::{Children, Parent},
     HiddenPropagate,

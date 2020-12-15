@@ -2,14 +2,16 @@
 use std::{net::TcpListener, time::Duration};
 
 use amethyst::{
-    core::{ecs::SystemBundle, frame_limiter::FrameRateLimitStrategy},
+    core::{
+        ecs::{System, SystemBundle},
+        frame_limiter::FrameRateLimitStrategy,
+    },
     network::simulation::{tcp::TcpNetworkBundle, NetworkSimulationEvent, TransportResource},
     prelude::*,
     shrev::{EventChannel, ReaderId},
     utils::application_root_dir,
     Result,
 };
-use amethyst_core::dispatcher::System;
 use amethyst_network::simulation::NetworkSimulationTime;
 use log::{error, info};
 

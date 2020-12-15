@@ -1,6 +1,5 @@
 //! Input system
 use amethyst_core::{
-    dispatcher::System,
     ecs::*,
     shrev::{EventChannel, ReaderId},
 };

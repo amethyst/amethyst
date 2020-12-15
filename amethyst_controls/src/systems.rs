@@ -1,7 +1,6 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use amethyst_core::{
-    dispatcher::System,
     ecs::*,
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},

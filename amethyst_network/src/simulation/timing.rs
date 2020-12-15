@@ -3,7 +3,7 @@
 
 use std::{ops::RangeInclusive, time::Duration};
 
-use amethyst_core::{dispatcher::System, ecs::*, timing::Time};
+use amethyst_core::{ecs::*, timing::Time};
 
 /// Default number of network simulation frames per second.
 const DEFAULT_SIM_FRAME_RATE: u32 = 30;

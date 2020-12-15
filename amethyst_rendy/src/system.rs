@@ -1,7 +1,6 @@
 //! Renderer system
 use amethyst_assets::{AssetStorage, ProcessingState};
 use amethyst_core::{
-    dispatcher::System,
     ecs::{systems::ParallelRunnable, SystemBuilder, *},
     timing::Time,
     ArcThreadPool,

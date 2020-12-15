@@ -41,7 +41,7 @@ pub mod ecs {
         *,
     };
 
-    pub use crate::dispatcher::{Dispatcher, DispatcherBuilder, SystemBundle};
+    pub use crate::dispatcher::{Dispatcher, DispatcherBuilder, System, SystemBundle};
 }
 
 /// Dispatcher module.

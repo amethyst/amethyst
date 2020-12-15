@@ -2,7 +2,11 @@
 use std::time::Duration;
 
 use amethyst::{
-    core::{ecs::SystemBundle, frame_limiter::FrameRateLimitStrategy, Time},
+    core::{
+        ecs::{System, SystemBundle},
+        frame_limiter::FrameRateLimitStrategy,
+        Time,
+    },
     network::simulation::{
         tcp::TcpNetworkBundle, NetworkSimulationEvent, NetworkSimulationTime, TransportResource,
     },
@@ -11,7 +15,6 @@ use amethyst::{
     utils::application_root_dir,
     Result,
 };
-use amethyst_core::dispatcher::System;
 use log::{error, info};
 
 fn main() -> Result<()> {

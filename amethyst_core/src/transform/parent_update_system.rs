@@ -2,11 +2,10 @@
 
 use std::collections::HashMap;
 
-use legion::systems::ParallelRunnable;
 use smallvec::SmallVec;
 
 use super::components::*;
-use crate::{dispatcher::System, ecs::*};
+use crate::ecs::*;
 
 /// System that generates [Children] components for entities that are targeted by [Parent] component.
 pub struct ParentUpdateSystem;

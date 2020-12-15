@@ -1,9 +1,7 @@
 //! System that updates global transform matrices based on hierarchy relations.
 
-use legion::systems::ParallelRunnable;
-
 use super::components::*;
-use crate::{dispatcher::System, ecs::*};
+use crate::ecs::*;
 
 /// System that updates global transform matrices based on hierarchy relations.
 pub struct TransformSystem;
