@@ -77,7 +77,6 @@ exclude = [
     "amethyst_ui",
     "amethyst_tiles",
     "amethyst_test",
-    "amethyst_network",
 ]
 
 [dependencies]
