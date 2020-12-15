@@ -37,7 +37,7 @@ impl SystemBundle for HotReloadBundle {
         resources.insert(self.strategy.clone());
         resources.get_mut::<Loader>().unwrap().set_hot_reload(true);
 
-        builder.add_system(Box::new(HotReloadSystem {}));
+        builder.add_system(Box::new(HotReloadSystem));
 
         Ok(())
     }
