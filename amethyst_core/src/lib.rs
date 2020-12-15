@@ -36,7 +36,7 @@ pub use self::{
 /// legion ECS reexported with some convenience types.
 pub mod ecs {
     pub use legion::{
-        systems::{CommandBuffer, Resource, Runnable, ParallelRunnable},
+        systems::{CommandBuffer, ParallelRunnable, Resource, Runnable},
         world::SubWorld,
         *,
     };
