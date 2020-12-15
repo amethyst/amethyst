@@ -10,6 +10,7 @@ use super::{Anchor, ScaleMode, Stretch};
 use amethyst_core::transform::Parent;
 
 /// Utility lookup for finding UI entities based on `UiTransform` id
+#[derive(Debug)]
 pub struct UiFinder;
 
 impl UiFinder{

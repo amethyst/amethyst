@@ -26,7 +26,7 @@ pub use crate::{
     progress::{Completion, Progress, ProgressCounter, Tracker},
     reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
     source::{Directory, Source},
-    storage::{AssetProcessorSystemBundle, AssetStorage, Handle, ProcessingState, WeakHandle},
+    storage::{AssetProcessorSystemBundle, AssetStorage, Handle, ProcessingState, WeakHandle, build_asset_processor_system},
 };
 
 mod asset;

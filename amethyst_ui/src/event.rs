@@ -107,7 +107,8 @@ impl UiMouseSystemResource {
     }
 }
 
-pub fn build_ui_mouse_system() -> impl Runnable {
+pub fn build_ui_mouse_system(resources: &mut Resources) -> impl Runnable {
+    resources.insert(UiMouseSystemResource::new());
     SystemBuilder::new("UiMouseSystem")
         .write_resource::<UiMouseSystemResource>()
         .write_resource::<EventChannel<UiEvent>>()

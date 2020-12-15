@@ -17,8 +17,8 @@ use crate::{
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvent`s
 /// and trigger `UiPlaySoundAction`s for entities with attached
 /// `UiSoundRetrigger` components.
-pub fn build_ui_sound_retrigger_system () -> impl Runnable {
-    build_event_retrigger_system::<UiSoundRetrigger>()
+pub fn build_ui_sound_retrigger_system (resources: &mut Resources) -> impl Runnable {
+    build_event_retrigger_system::<UiSoundRetrigger>(resources)
 }
 
 /// Action that will trigger a sound to play in `UiSoundSystem`.
@@ -61,8 +61,6 @@ impl EventRetrigger for UiSoundRetrigger {
     }
 }
 
-/// Handles any dispatches `UiPlaySoundAction`s and plays the received
-/// sounds through the set `Output`.
 #[derive(Debug)]
 pub struct UiSoundSystemResource {
     event_reader: ReaderId<UiPlaySoundAction>,
@@ -77,7 +75,12 @@ impl UiSoundSystemResource {
     }
 }
 
-pub fn build_ui_sound_system() -> impl Runnable {
+/// Handles any dispatches `UiPlaySoundAction`s and plays the received
+/// sounds through the set `Output`.
+pub fn build_ui_sound_system(resources: &mut Resources) -> impl Runnable {
+    let reader_id = resources.get_mut::<EventChannel<UiPlaySoundAction>>().unwrap().register_reader();
+    resources.insert(UiSoundSystemResource::new(reader_id));
+
     SystemBuilder::new("BlinkSystem")
         .write_resource::<UiSoundSystemResource>()
         .write_resource::<EventChannel<UiPlaySoundAction>>()

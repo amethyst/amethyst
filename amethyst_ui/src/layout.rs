@@ -138,7 +138,8 @@ impl UiTransformSystemResource {
 /// Manages the `Parent` component on entities having `UiTransform`
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
-pub fn build_ui_transform_system() -> impl Runnable {
+pub fn build_ui_transform_system(resources: &mut Resources) -> impl Runnable {
+    resources.insert(UiTransformSystemResource::new());
     SystemBuilder::new("UiTransformSystem")
         .write_resource::<UiTransformSystemResource>()
         .read_resource::<ScreenDimensions>()

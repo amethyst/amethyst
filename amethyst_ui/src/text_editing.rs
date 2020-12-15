@@ -11,11 +11,6 @@ use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, 
 
 use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 
-/// System managing the keyboard inputs for the editable text fields.
-/// ## Features
-/// * Adds and removes text.
-/// * Moves selection cursor.
-/// * Grows and shrinks selected text zone.
 #[derive(Debug)]
 pub struct TextEditingInputSystemResource {
     /// A reader for winit events.
@@ -29,7 +24,15 @@ impl TextEditingInputSystemResource {
     }
 }
 
-pub fn build_text_editing_input_system() -> impl Runnable {
+/// System managing the keyboard inputs for the editable text fields.
+/// ## Features
+/// * Adds and removes text.
+/// * Moves selection cursor.
+/// * Grows and shrinks selected text zone.
+pub fn build_text_editing_input_system(resources: &mut Resources) -> impl Runnable {
+    let reader_id = resources.get_mut::<EventChannel<Event>>().unwrap().register_reader();
+    resources.insert(TextEditingInputSystemResource::new(reader_id));
+
     SystemBuilder::new("TextEditingInputSystem")
         .write_resource::<TextEditingInputSystemResource>()
         .read_resource::<EventChannel<Event>>()
