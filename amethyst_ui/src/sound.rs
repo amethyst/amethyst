@@ -4,20 +4,19 @@ use amethyst_core::{
     ecs::*,
     shrev::{EventChannel, ReaderId},
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use crate::{
     event::{UiEvent, UiEventType::*},
-    event_retrigger::{EventRetrigger, build_event_retrigger_system},
+    event_retrigger::{build_event_retrigger_system, EventRetrigger},
     EventReceiver,
 };
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvent`s
 /// and trigger `UiPlaySoundAction`s for entities with attached
 /// `UiSoundRetrigger` components.
-pub fn build_ui_sound_retrigger_system (resources: &mut Resources) -> impl Runnable {
+pub fn build_ui_sound_retrigger_system(resources: &mut Resources) -> impl Runnable {
     build_event_retrigger_system::<UiSoundRetrigger>(resources)
 }
 
@@ -78,24 +77,27 @@ impl UiSoundSystemResource {
 /// Handles any dispatches `UiPlaySoundAction`s and plays the received
 /// sounds through the set `Output`.
 pub fn build_ui_sound_system(resources: &mut Resources) -> impl Runnable {
-    let reader_id = resources.get_mut::<EventChannel<UiPlaySoundAction>>().unwrap().register_reader();
+    let reader_id = resources
+        .get_mut::<EventChannel<UiPlaySoundAction>>()
+        .unwrap()
+        .register_reader();
     resources.insert(UiSoundSystemResource::new(reader_id));
 
-    SystemBuilder::new("BlinkSystem")
+    SystemBuilder::new("UiSoundSystem")
         .write_resource::<UiSoundSystemResource>()
         .write_resource::<EventChannel<UiPlaySoundAction>>()
         .read_resource::<AssetStorage<Source>>()
-        .read_resource::<Option<Output>>()
-        .build( move | _commands, _world, (resource, sound_events, audio_storage, audio_output), _| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("ui_sound_system");
-            let event_reader = &mut resource.event_reader;
-            for event in sound_events.read(event_reader) {
-                if let Some(output) = audio_output.as_ref() {
+        .read_resource::<Output>()
+        .build(
+            move |_commands, _world, (resource, sound_events, audio_storage, audio_output), _| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("ui_sound_system");
+                let event_reader = &mut resource.event_reader;
+                for event in sound_events.read(event_reader) {
                     if let Some(sound) = audio_storage.get(&event.0) {
-                        output.play_once(sound, 1.0);
+                        audio_output.play_once(sound, 1.0);
                     }
                 }
-            }
-        } )
+            },
+        )
 }

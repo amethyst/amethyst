@@ -1,10 +1,8 @@
+use std::marker::PhantomData;
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::ecs::*;
 
-use crate::{
-    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode,
-    Stretch, UiText, UiTransform, WidgetId, Widgets,
-};
+use crate::{define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode, Stretch, UiText, UiTransform, WidgetId, Widgets, Selectable};
 
 const DEFAULT_Z: f32 = 1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
@@ -20,10 +18,8 @@ define_widget!(UiLabel =>
 );
 
 /// Convenience structure for building a label
-#[derive(Debug)]
-pub struct UiLabelBuilder<I = u32>
-where
-    I: WidgetId,
+#[derive(Debug, Clone)]
+pub struct UiLabelBuilder<G, I : WidgetId>
 {
     id: Option<I>,
     x: f32,
@@ -40,11 +36,13 @@ where
     line_mode: LineMode,
     align: Anchor,
     parent: Option<Entity>,
+    selectable: Option<u32>,
+    _phantom: PhantomData<G>,
 }
 
-impl<'a, I> Default for UiLabelBuilder<I>
+impl<G, I> Default for UiLabelBuilder<G,I>
 where
-    I: WidgetId + 'static,
+    I: WidgetId
 {
     fn default() -> Self {
         UiLabelBuilder {
@@ -63,19 +61,19 @@ where
             line_mode: LineMode::Single,
             align: Anchor::Middle,
             parent: None,
+            selectable: None,
+            _phantom: PhantomData,
         }
     }
 }
 
-impl<'a, I> UiLabelBuilder<I>
-where
-    I: WidgetId + 'static,
+impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G,I>
 {
     /// Construct a new UiLabelBuilder.
     /// This allows the user to easily build a UI element with a text that can
     /// easily be retrieved and updated through the appropriate resource,
     /// see [`Widgets`](../struct.Widgets.html).
-    pub fn new<S: ToString>(text: S) -> UiLabelBuilder<I> {
+    pub fn new<S: ToString>(text: S) -> UiLabelBuilder<G, I> {
         let mut builder = UiLabelBuilder::default();
         builder.text = text.to_string();
         builder
@@ -169,8 +167,18 @@ where
         self
     }
 
+    /// Add a Selectable component to the label with the desired order
+    pub fn with_selectable(mut self, order: u32) -> Self {
+        self.selectable = Some(order);
+        self
+    }
+
     /// Build this with the `UiLabelBuilderResources`.
-    pub fn build_from_world_and_resources(mut self, world: &mut World, resources: &mut Resources) -> (I, UiLabel) {
+    pub fn build_from_world_and_resources(
+        self,
+        world: &mut World,
+        resources: &mut Resources,
+    ) -> (I, UiLabel) {
         let text_entity = world.push(());
         let widget = UiLabel::new(text_entity);
 
@@ -186,22 +194,23 @@ where
             }
         };
 
-        let mut text_entry = world.entry(text_entity)
+        let mut text_entry = world
+            .entry(text_entity)
             .expect("Unreachable: Inserting newly created entity");
 
         text_entry.add_component(
-                UiTransform::new(
-                    format!("{}_label", id),
-                    self.anchor,
-                    Anchor::Middle,
-                    self.x,
-                    self.y,
-                    self.z,
-                    self.width,
-                    self.height,
-                )
-                .with_stretch(self.stretch),
-            );
+            UiTransform::new(
+                format!("{}_label", id),
+                self.anchor,
+                Anchor::Middle,
+                self.x,
+                self.y,
+                self.z,
+                self.width,
+                self.height,
+            )
+            .with_stretch(self.stretch),
+        );
 
         let font_asset_storage = resources.get::<AssetStorage<FontAsset>>().unwrap();
 
@@ -213,18 +222,19 @@ where
             .font
             .unwrap_or_else(|| get_default_font(&loader, &font_asset_storage));
 
+        text_entry.add_component(UiText::new(
+            font_handle,
+            self.text,
+            self.text_color,
+            self.font_size,
+            self.line_mode,
+            self.align,
+        ));
 
+        if let Some(order) = self.selectable {
+            text_entry.add_component( Selectable::<G>::new(order));
+        }
 
-        text_entry.add_component(
-                UiText::new(
-                    font_handle,
-                    self.text,
-                    self.text_color,
-                    self.font_size,
-                    self.line_mode,
-                    self.align,
-                ),
-            );
 
         (id, widget)
     }

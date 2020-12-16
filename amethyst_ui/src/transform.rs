@@ -1,25 +1,22 @@
 use std::marker::PhantomData;
 
-use amethyst_core::{
-    ecs::*
-};
+use amethyst_core::{ecs::*, transform::Parent};
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
 
 use super::{Anchor, ScaleMode, Stretch};
-use amethyst_core::transform::Parent;
 
 /// Utility lookup for finding UI entities based on `UiTransform` id
 #[derive(Debug)]
 pub struct UiFinder;
 
-impl UiFinder{
+impl UiFinder {
     /// Find the `UiTransform` entity with the given id
-    pub fn find(&self, subworld: &mut SubWorld<'_>, id: &str) -> Option<Entity> {
-        <(Entity, Read<UiTransform>)>::query()
-            .iter(subworld)
+    pub fn find(&self, world: &mut World, id: &str) -> Option<Entity> {
+        <(Entity, &UiTransform)>::query()
+            .iter(world)
             .filter(|(_, transform)| transform.id == id)
-            .map(|(e,_)| *e)
+            .map(|(e, _)| *e)
             .next()
     }
 }
@@ -179,13 +176,15 @@ pub fn get_parent_pixel_size<'a, I>(
     maybe_transforms: I,
     screen_dimensions: &ScreenDimensions,
 ) -> (f32, f32)
-where I: Iterator<Item=(&'a Entity, Option<&'a UiTransform>)>  {
+where
+    I: Iterator<Item = (&'a Entity, Option<&'a UiTransform>)>,
+{
     if let Some(parent) = maybe_parent {
-        let maybe_transform = maybe_transforms.filter(|(e, t)| *e == &parent.0).next();
+        let maybe_transform = maybe_transforms.filter(|(e, _)| *e == &parent.0).next();
         if let Some((_, ui_transform)) = maybe_transform {
             if ui_transform.is_some() {
                 let t = ui_transform.unwrap();
-                return (t.pixel_width(), t.pixel_height())
+                return (t.pixel_width(), t.pixel_height());
             }
         }
     }

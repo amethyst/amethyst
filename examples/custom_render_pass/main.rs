@@ -65,6 +65,7 @@ impl SimpleState for CustomShaderState {
                 }
                 Trans::None
             }
+            _ => {}
         }
     }
 }

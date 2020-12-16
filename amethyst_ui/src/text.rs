@@ -155,115 +155,120 @@ impl TextEditingMouseSystemResource {
 
 /// This system processes the underlying UI data as needed.
 pub fn build_text_editing_mouse_system(resources: &mut Resources) -> impl Runnable {
-    let reader_id = resources.get_mut::<EventChannel<Event>>().unwrap().register_reader();
+    let reader_id = resources
+        .get_mut::<EventChannel<Event>>()
+        .unwrap()
+        .register_reader();
     resources.insert(TextEditingMouseSystemResource::new(reader_id));
     SystemBuilder::new("TextEditingMouseSystem")
         .write_resource::<TextEditingMouseSystemResource>()
         .read_resource::<Time>()
         .read_resource::<EventChannel<Event>>()
         .read_resource::<ScreenDimensions>()
-        .with_query(<Write<UiText>>::query())
-        .with_query(<(Write<TextEditing>, &Selected)>::query())
-        .with_query(<(Write<UiText>, Write<TextEditing>, Option<&Selected>)>::query())
-        .build(move |_commands, world,
-                     (resource, time, events, screen_dimensions),
-                     (texts, selected_text_editings, maybe_selected_texts ) | {
-            // Normalize text to ensure we can properly count the characters.
-            // TODO: Possible improvement to be made if this can be moved only when inserting characters into ui text.
-            texts.for_each_mut(world, |mut text| {
-                if (*text.text).chars().any(is_combining_mark) {
-                    let normalized = text.text.nfd().collect::<String>();
-                    text.text = normalized;
-                }
-            });
-
-            // TODO: Finish TextEditingCursorSystem and remove this
-            selected_text_editings.for_each_mut(world, |(text_editing, _)| {
-                text_editing.cursor_blink_timer += time.delta_real_seconds();
-                if text_editing.cursor_blink_timer >= 0.5 {
-                    text_editing.cursor_blink_timer = 0.0;
-                }
-            });
-
-            let mut just_pressed = false;
-            let mut moved_while_pressed = false;
-
-            let event_reader = &mut resource.event_reader;
-
-            // Process only if an editable text is selected.
-            for event in events.read(event_reader) {
-                // Process events for the whole UI.
-                match *event {
-                    Event::WindowEvent {
-                        event: WindowEvent::CursorMoved { position, .. },
-                        ..
-                    } => {
-                        let hidpi = screen_dimensions.hidpi_factor() as f32;
-                        resource.mouse_position = (
-                            position.x as f32 * hidpi,
-                            (screen_dimensions.height() - position.y as f32) * hidpi,
-                        );
-                        if resource.left_mouse_button_pressed {
-                            moved_while_pressed = true;
-                        }
+        .with_query(<&mut UiText>::query())
+        .with_query(<(&mut TextEditing, &Selected)>::query())
+        .with_query(<(&mut UiText, &mut TextEditing, Option<&Selected>)>::query())
+        .build(
+            move |_commands,
+                  world,
+                  (resource, time, events, screen_dimensions),
+                  (texts, selected_text_editings, maybe_selected_texts)| {
+                // Normalize text to ensure we can properly count the characters.
+                // TODO: Possible improvement to be made if this can be moved only when inserting characters into ui text.
+                texts.for_each_mut(world, |mut text| {
+                    if (*text.text).chars().any(is_combining_mark) {
+                        let normalized = text.text.nfd().collect::<String>();
+                        text.text = normalized;
                     }
-                    Event::WindowEvent {
-                        event:
-                        WindowEvent::MouseInput {
-                            button: MouseButton::Left,
-                            state,
+                });
+
+                // TODO: Finish TextEditingCursorSystem and remove this
+                selected_text_editings.for_each_mut(world, |(text_editing, _)| {
+                    text_editing.cursor_blink_timer += time.delta_real_seconds();
+                    if text_editing.cursor_blink_timer >= 0.5 {
+                        text_editing.cursor_blink_timer = 0.0;
+                    }
+                });
+
+                let mut just_pressed = false;
+                let mut moved_while_pressed = false;
+
+                let event_reader = &mut resource.event_reader;
+
+                // Process only if an editable text is selected.
+                for event in events.read(event_reader) {
+                    // Process events for the whole UI.
+                    match *event {
+                        Event::WindowEvent {
+                            event: WindowEvent::CursorMoved { position, .. },
                             ..
+                        } => {
+                            let hidpi = screen_dimensions.hidpi_factor() as f32;
+                            resource.mouse_position = (
+                                position.x as f32 * hidpi,
+                                (screen_dimensions.height() - position.y as f32) * hidpi,
+                            );
+                            if resource.left_mouse_button_pressed {
+                                moved_while_pressed = true;
+                            }
+                        }
+                        Event::WindowEvent {
+                            event:
+                                WindowEvent::MouseInput {
+                                    button: MouseButton::Left,
+                                    state,
+                                    ..
+                                },
+                            ..
+                        } => match state {
+                            ElementState::Pressed => {
+                                just_pressed = true;
+                                resource.left_mouse_button_pressed = true;
+                            }
+                            ElementState::Released => {
+                                resource.left_mouse_button_pressed = false;
+                            }
                         },
-                        ..
-                    } => match state {
-                        ElementState::Pressed => {
-                            just_pressed = true;
-                            resource.left_mouse_button_pressed = true;
-                        }
-                        ElementState::Released => {
-                            resource.left_mouse_button_pressed = false;
-                        }
-                    },
-                    _ => {}
-                }
-            }
-
-            maybe_selected_texts.for_each_mut(world, |(text, mut text_editing, selected)| {
-                if selected.is_none() {
-                    // If an editable text field is no longer selected, we should reset
-                    // the highlight vector.
-                    text_editing.highlight_vector = 0;
-                } else if just_pressed {
-                    // If we focused an editable text field be sure to position the cursor
-                    // in it.
-                    let (mouse_x, mouse_y) = resource.mouse_position;
-                    text_editing.highlight_vector = 0;
-                    text_editing.cursor_position =
-                        closest_glyph_index_to_mouse(mouse_x, mouse_y, &text.cached_glyphs);
-                    text_editing.cursor_blink_timer = 0.0;
-
-                    // The end of the text, while not a glyph, is still something
-                    // you'll likely want to click your cursor to, so if the cursor is
-                    // near the end of the text, check if we should put it at the end
-                    // of the text.
-                    if should_advance_to_end(mouse_x, text_editing, text) {
-                        text_editing.cursor_position += 1;
-                    }
-                } else if moved_while_pressed {
-                    let (mouse_x, mouse_y) = resource.mouse_position;
-                    text_editing.highlight_vector =
-                        closest_glyph_index_to_mouse(mouse_x, mouse_y, &text.cached_glyphs)
-                            - text_editing.cursor_position;
-                    // The end of the text, while not a glyph, is still something
-                    // you'll likely want to click your cursor to, so if the cursor is
-                    // near the end of the text, check if we should put it at the end
-                    // of the text.
-                    if should_advance_to_end(mouse_x, text_editing, text) {
-                        text_editing.highlight_vector += 1;
+                        _ => {}
                     }
                 }
-            });
-        }
+
+                maybe_selected_texts.for_each_mut(world, |(text, mut text_editing, selected)| {
+                    if selected.is_none() {
+                        // If an editable text field is no longer selected, we should reset
+                        // the highlight vector.
+                        text_editing.highlight_vector = 0;
+                    } else if just_pressed {
+                        // If we focused an editable text field be sure to position the cursor
+                        // in it.
+                        let (mouse_x, mouse_y) = resource.mouse_position;
+                        text_editing.highlight_vector = 0;
+                        text_editing.cursor_position =
+                            closest_glyph_index_to_mouse(mouse_x, mouse_y, &text.cached_glyphs);
+                        text_editing.cursor_blink_timer = 0.0;
+
+                        // The end of the text, while not a glyph, is still something
+                        // you'll likely want to click your cursor to, so if the cursor is
+                        // near the end of the text, check if we should put it at the end
+                        // of the text.
+                        if should_advance_to_end(mouse_x, text_editing, text) {
+                            text_editing.cursor_position += 1;
+                        }
+                    } else if moved_while_pressed {
+                        let (mouse_x, mouse_y) = resource.mouse_position;
+                        text_editing.highlight_vector =
+                            closest_glyph_index_to_mouse(mouse_x, mouse_y, &text.cached_glyphs)
+                                - text_editing.cursor_position;
+                        // The end of the text, while not a glyph, is still something
+                        // you'll likely want to click your cursor to, so if the cursor is
+                        // near the end of the text, check if we should put it at the end
+                        // of the text.
+                        if should_advance_to_end(mouse_x, text_editing, text) {
+                            text_editing.highlight_vector += 1;
+                        }
+                    }
+                });
+            },
         )
 }
 

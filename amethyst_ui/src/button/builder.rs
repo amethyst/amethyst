@@ -1,16 +1,17 @@
 use std::marker::PhantomData;
 
-use smallvec::{smallvec, SmallVec};
-
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_audio::SourceHandle;
-use amethyst_core::ecs::*;
-use amethyst_core::transform::Parent;
+use amethyst_core::{
+    ecs::*,
+    transform::{Children, Parent, Transform},
+};
 use amethyst_rendy::{palette::Srgba, rendy::texture::palette::load_from_srgba, Texture};
+use smallvec::{smallvec, SmallVec};
 
 use crate::{
-    Anchor,
-    font::default::get_default_font, FontAsset, FontHandle, Interactable, LineMode, Selectable, Stretch, UiButton,
+    font::default::get_default_font,
+    Anchor, FontAsset, FontHandle, Interactable, LineMode, Selectable, Stretch, UiButton,
     UiButtonAction, UiButtonActionRetrigger,
     UiButtonActionType::{self, *},
     UiImage, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
@@ -254,18 +255,24 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Build this with the `UiButtonBuilderResources`.
-    pub fn build_from_world_and_resources(mut self, world: &mut World, resources: &mut Resources) -> (I, UiButton) {
+    pub fn build_from_world_and_resources(
+        mut self,
+        world: &mut World,
+        resources: &mut Resources,
+    ) -> (I, UiButton) {
+        let entities = world.extend(vec![(), ()]);
 
-        let entities = world.extend(
-            vec![(), ()]
-        );
+        let (image_entity, text_entity) = (entities[0], entities[1]);
 
-        let (image_entity, text_entity) = (entities[0],entities[1]);
-
-        let widget = UiButton::new(image_entity, text_entity);
+        let widget = UiButton::new(text_entity, image_entity);
 
         let id = {
             let widget = widget.clone();
+
+            if !resources.contains::<Widgets<UiButton, I>>() {
+                resources.insert(Widgets::<UiButton, I>::new());
+            }
+
             let mut button_widgets = resources.get_mut::<Widgets<UiButton, I>>().unwrap();
             if let Some(id) = self.id {
                 let added_id = id.clone();
@@ -275,8 +282,6 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 button_widgets.add(widget)
             }
         };
-
-        
 
         if !self.on_click_start.is_empty()
             || !self.on_click_stop.is_empty()
@@ -302,8 +307,10 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 ),
             };
 
-            world.entry(image_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component(button_action_retrigger);
+            world
+                .entry(image_entity)
+                .expect("Unreachable: Inserting newly created entity")
+                .add_component(button_action_retrigger);
         }
 
         if self.on_click_start_sound.is_some()
@@ -317,12 +324,16 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 on_hover_stop: None,
             };
 
-            world.entry(image_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component(sound_retrigger);
+            world
+                .entry(image_entity)
+                .expect("Unreachable: Inserting newly created entity")
+                .add_component(sound_retrigger);
         }
 
-        world.entry(image_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component(
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(
                 UiTransform::new(
                     format!("{}_btn", id),
                     self.anchor,
@@ -336,8 +347,10 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 .with_stretch(self.stretch),
             );
 
-        world.entry(image_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component( Selectable::<G>::new(self.tab_order));
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Selectable::<G>::new(self.tab_order));
 
         let asset_storage = resources.get::<AssetStorage<Texture>>().unwrap();
         let loader = resources
@@ -359,18 +372,26 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
             )
         });
 
-        world.entry(image_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component(image);
-        world.entry(image_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component(Interactable);
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(image);
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Interactable);
 
         if let Some(parent) = self.parent.take() {
-           world.entry(image_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component(Parent(parent));
+            world
+                .entry(image_entity)
+                .expect("Unreachable: Inserting newly created entity")
+                .add_component(Parent(parent));
         }
 
-        world.entry(text_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component(
+        world
+            .entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(
                 UiTransform::new(
                     format!("{}_btn_text", id),
                     Anchor::Middle,
@@ -392,19 +413,39 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         let font_handle = self
             .font
             .unwrap_or_else(|| get_default_font(&loader, &font_storage));
-        world.entry(text_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component(
-                UiText::new(
-                    font_handle,
-                    self.text,
-                    self.text_color,
-                    self.font_size,
-                    self.line_mode,
-                    self.align,
-                ),
-            );
-        world.entry(text_entity)
-            .expect("Unreachable: Inserting newly created entity").add_component(Parent (image_entity));
+        world
+            .entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(UiText::new(
+                font_handle,
+                self.text,
+                self.text_color,
+                self.font_size,
+                self.line_mode,
+                self.align,
+            ));
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Children(smallvec![text_entity]));
+
+        world
+            .entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Parent(image_entity));
+
+        //FIXME : The current parent update system in amethyst_core is updating based on the Transform component...
+        // That's actually a 'bad' linkage. Later to legion port, we'll replace the system by legion_transform which is better,
+        // the following 4 lines won't be usefull anymore.
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Transform::default());
+
+        world
+            .entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Transform::default());
 
         (id, widget)
     }

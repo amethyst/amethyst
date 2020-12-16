@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use amethyst_core::{
     ecs::*,
-    shrev::EventChannel,
+    shrev::{EventChannel, ReaderId},
 };
 use amethyst_input::InputHandler;
 use derive_new::new;
@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use crate::{CachedSelectionOrderResource, UiEvent, UiEventType};
-use amethyst_core::shrev::ReaderId;
 
 // TODO: If none selected and there is a Selectable in the World, select the lower ordered one automatically?
 
@@ -43,8 +42,8 @@ pub struct Selectable<G> {
 pub struct Selected;
 
 pub struct SelectionKeyboardSystemResource<G>
-    where
-        G: Send + Sync + 'static + PartialEq,
+where
+    G: Send + Sync + 'static + PartialEq,
 {
     window_reader_id: ReaderId<Event>,
     phantom: PhantomData<G>,
@@ -63,9 +62,17 @@ where
     }
 }
 
+/// System managing the selection of entities.
+/// Reacts to `UiEvent`.
+/// Reacts to Tab and Shift+Tab.
 pub fn build_selection_keyboard_system<G>(resources: &mut Resources) -> impl Runnable
-    where G: Send + Sync + 'static + PartialEq  {
-    let reader_id = resources.get_mut::<EventChannel<Event>>().unwrap().register_reader();
+where
+    G: Send + Sync + 'static + PartialEq,
+{
+    let reader_id = resources
+        .get_mut::<EventChannel<Event>>()
+        .unwrap()
+        .register_reader();
     resources.insert(SelectionKeyboardSystemResource::<G>::new(reader_id));
     SystemBuilder::new("SelectionKeyboardSystem")
         .write_resource::<SelectionKeyboardSystemResource<G>>()
@@ -152,10 +159,8 @@ pub fn build_selection_keyboard_system<G>(resources: &mut Resources) -> impl Run
         })
 }
 
-/// System handling the clicks on ui entities and selecting them, if applicable.
 #[derive(Debug)]
-pub struct SelectionMouseSystemResource<G>
-{
+pub struct SelectionMouseSystemResource<G> {
     ui_reader_id: ReaderId<UiEvent>,
     phantom: PhantomData<G>,
 }
@@ -173,9 +178,15 @@ where
     }
 }
 
+/// System handling the clicks on ui entities and selecting them, if applicable.
 pub fn build_selection_mouse_system<G>(resources: &mut Resources) -> impl Runnable
-    where G: Send + Sync + 'static + PartialEq  {
-    let reader_id = resources.get_mut::<EventChannel<UiEvent>>().unwrap().register_reader();
+where
+    G: Send + Sync + 'static + PartialEq,
+{
+    let reader_id = resources
+        .get_mut::<EventChannel<UiEvent>>()
+        .unwrap()
+        .register_reader();
     resources.insert(SelectionMouseSystemResource::<G>::new(reader_id));
     SystemBuilder::new("SelectionMouseSystem")
         .write_resource::<SelectionMouseSystemResource<G>>()

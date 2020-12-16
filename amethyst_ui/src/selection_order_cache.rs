@@ -1,9 +1,10 @@
+use std::collections::HashSet;
+
 use amethyst_core::ecs::*;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use crate::{Selectable, Selected};
-use std::collections::HashSet;
 
 /// Resource dedicated to the CacheSelectionOrderSystem behaviour
 #[derive(Debug, Clone, Default)]
@@ -16,12 +17,11 @@ pub struct CachedSelectionOrderResource {
 
 impl CachedSelectionOrderResource {
     /// Returns the index of the highest cached element (index in the cache!) that is currently selected.
-    pub fn highest_order_selected_index<'a, T>(
-        &self,
-        selected_storage: T,
-    ) -> Option<usize>
-        where T: Iterator<Item=(&'a Entity, &'a mut Selected)> {
-        let everything: Vec<&'a Entity> = selected_storage.into_iter().map(|(e, t)| e).collect();
+    pub fn highest_order_selected_index<'a, T>(&self, selected_storage: T) -> Option<usize>
+    where
+        T: Iterator<Item = (&'a Entity, &'a mut Selected)>,
+    {
+        let everything: Vec<&'a Entity> = selected_storage.into_iter().map(|(e, _)| e).collect();
 
         self.cache
             .iter()
@@ -45,14 +45,14 @@ impl CachedSelectionOrderResource {
 /// A cache sorted by tab order and then by Entity.
 /// Used to quickly find the next or previous selectable entities.
 pub fn build_cache_selection_system<G>(resources: &mut Resources) -> impl Runnable
-    where
-        G: Send + Sync + 'static + PartialEq {
+where
+    G: Send + Sync + 'static + PartialEq,
+{
     resources.insert(CachedSelectionOrderResource::default());
     SystemBuilder::new("CacheSelectionOrderSystem")
         .write_resource::<CachedSelectionOrderResource>()
         .with_query(<(Entity, &Selectable<G>)>::query())
-        .build(move |_commands, world, cache,
-                     selectables| {
+        .build(move |_commands, world, cache, selectables| {
             #[cfg(feature = "profiler")]
             profile_scope!("cache_selection_order_system");
 
@@ -99,20 +99,22 @@ pub fn build_cache_selection_system<G>(resources: &mut Resources) -> impl Runnab
                         }
                     });
                 }
-                inserts.iter().for_each(|(pos, t)| cache.cache.insert(*pos, (t.0, *t.1)));
-                pushes.iter().for_each(|(order, t)| cache.cache.push((*order, **t)));
+                inserts
+                    .iter()
+                    .for_each(|(pos, t)| cache.cache.insert(*pos, (t.0, *t.1)));
+                pushes
+                    .iter()
+                    .for_each(|(order, t)| cache.cache.push((*order, **t)));
             }
             // Update the cached with all entities
 
             cache.cached.clear();
-            selectables.for_each(world, |(entity, selectable)| {
+            selectables.for_each(world, |(entity, _)| {
                 cache.cached.insert(*entity);
             });
 
             cache
                 .cache
-                .sort_unstable_by(|&(t1, ref e1), &(t2, ref e2)| {
-                    t1.cmp(&t2)
-                });
+                .sort_unstable_by(|&(t1, _), &(t2, _)| t1.cmp(&t2));
         })
 }
