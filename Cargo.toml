@@ -22,7 +22,7 @@ license = "MIT/Apache-2.0"
 autoexamples = false
 
 [features]
-default = ["parallel", "renderer"]
+default = ["parallel", "renderer", "ui"]
 optional = ["audio", "network", "locale"]
 
 vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
@@ -38,7 +38,7 @@ network = ["amethyst_network"]
 
 renderer = ["amethyst_rendy"]
 
-#ui = ["amethyst_ui", "amethyst_animation/ui"]
+ui = ["amethyst_ui"]#, "amethyst_animation/ui"]
 
 profiler = [
     "thread_profiler",
@@ -73,7 +73,6 @@ members = ["amethyst_*"]
 exclude = [
     "amethyst_gltf",
     "amethyst_animation",
-    "amethyst_ui",
     "amethyst_tiles",
     "amethyst_test",
 ]
@@ -92,7 +91,7 @@ amethyst_network = { path = "amethyst_network", version = "0.15.3", optional = t
 amethyst_locale = { path = "amethyst_locale", version = "0.15.3", optional = true }
 amethyst_rendy = { path = "amethyst_rendy", version = "0.15.3", features = ["window"], optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.15.3" }
-#amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
+amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true}
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3" }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
 #amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
@@ -156,6 +155,9 @@ name = "material"
 # [[example]]
 # name = "ui"
 # required-features = ["audio"]
+
+[[example]]
+name = "ui_from_code"
 
 # [[example]]
 # name = "states_ui"

@@ -33,7 +33,7 @@ unicode-normalization = "0.1"
 unicode-segmentation = "1.6"
 winit = { version = "0.19", features = ["serde"] }
 log = "0.4.6"
-font-kit = "0.5"
+font-kit = "0.10.0"
 paste = "0.1"
 rand = "0.7"
 lazy_static = "1.4"

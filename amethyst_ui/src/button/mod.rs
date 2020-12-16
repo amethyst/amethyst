@@ -4,10 +4,8 @@ use amethyst_rendy::Texture;
 
 pub use self::{
     actions::{UiButtonAction, UiButtonActionType},
-    builder::{UiButtonBuilder},
-    retrigger::{
-        UiButtonActionRetrigger, build_button_action_retrigger_system,
-    },
+    builder::UiButtonBuilder,
+    retrigger::{build_button_action_retrigger_system, UiButtonActionRetrigger},
     system::build_ui_button_system,
 };
 use crate::{define_widget, Interactable, UiSoundRetrigger, UiText, UiTransform};

@@ -11,8 +11,6 @@ use sentry::integrations::panic::register_panic_handler;
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 use winit::Event;
 
-#[cfg(feature = "ui")]
-use crate::ui::UiEvent;
 use crate::{
     assets::{Loader, Source},
     core::{

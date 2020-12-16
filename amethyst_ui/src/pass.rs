@@ -1,10 +1,7 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, collections::HashSet};
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
-use amethyst_core::{
-    ecs::*,
-    Hidden, HiddenPropagate,
-};
+use amethyst_core::{ecs::*, Hidden, HiddenPropagate};
 use amethyst_error::Error;
 use amethyst_rendy::{
     batch::OrderedOneLevelBatch,
@@ -31,6 +28,7 @@ use amethyst_rendy::{
     resources::Tint,
     simple_shader_set,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
+    system::GraphAuxData,
     types::{Backend, Texture},
     ChangeDetection, SpriteSheet,
 };
@@ -40,9 +38,11 @@ use glsl_layout::{vec2, vec4, AsStd140};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{glyphs::{UiGlyphs, UiGlyphsResource}, Selected, TextEditing, UiImage, UiTransform, build_ui_glyphs_system};
-use amethyst_rendy::system::GraphAuxData;
-use std::collections::HashSet;
+use crate::{
+    build_ui_glyphs_system,
+    glyphs::{UiGlyphs, UiGlyphsResource},
+    Selected, TextEditing, UiImage, UiTransform,
+};
 
 /// A [RenderPlugin] for rendering UI elements.
 #[derive(Debug, Default)]
@@ -62,10 +62,10 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
     fn on_build<'a, 'b>(
         &mut self,
         _world: &mut World,
-        _resources: &mut Resources,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(build_ui_glyphs_system::<B>());
+        builder.add_system(build_ui_glyphs_system::<B>(resources));
         Ok(())
     }
 
@@ -164,7 +164,10 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawUiDesc {
             vec![env.raw_layout(), textures.raw_layout()],
         )?;
 
-        let (loader, tex_storage) = (data.resources.get::<Loader>().unwrap(),data.resources.get::<AssetStorage<Texture>>().unwrap());
+        let (loader, tex_storage) = (
+            data.resources.get::<Loader>().unwrap(),
+            data.resources.get::<AssetStorage<Texture>>().unwrap(),
+        );
         let white_tex = loader.load_from_data(
             load_from_srgba(palette::Srgba::new(1., 1., 1., 1.)).into(),
             (),
@@ -217,7 +220,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
-
         let GraphAuxData { world, resources } = aux;
 
         let glyphs_res = resources.get::<UiGlyphsResource>().unwrap();
@@ -252,8 +254,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
             }
         };
 
-        let mut query_transforms =
-            <(Entity, &UiTransform)>::query();
+        let mut query_transforms = <(Entity, &UiTransform)>::query();
 
         let mut to_remove = HashSet::new();
 
@@ -265,11 +266,13 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
             keep
         });
 
-        to_remove.iter().for_each(|e| {self.cached_draw_order.cached.remove(e);});
+        to_remove.iter().for_each(|e| {
+            self.cached_draw_order.cached.remove(e);
+        });
 
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
-            *z = query_transforms.iter(*world)
-                .find(|(e, t)| *e == &entity)
+            *z = query_transforms
+                .get(*world, entity)
                 .expect("Unreachable: Enities are collected from a cache of prepopulate entities")
                 .1
                 .global_z();
@@ -301,7 +304,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
                 }
             });
             self.cached_draw_order.cached.clear();
-            query_transforms.for_each(*world, | (entity, _)| {
+            query_transforms.for_each(*world, |(entity, _)| {
                 self.cached_draw_order.cached.insert(*entity);
             });
         }
@@ -313,13 +316,27 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
             .cache
             .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
 
-        let mut query =
-            <(&UiTransform, Option<&Tint>, Option<&UiImage>, Option<&UiGlyphs>, Option<&Selected>, Option<&TextEditing>)>::query()
-                .filter(!component::<Hidden>() & !component::<HiddenPropagate>());
+        let mut query = <(
+            &UiTransform,
+            Option<&Tint>,
+            Option<&UiImage>,
+            Option<&UiGlyphs>,
+            Option<&Selected>,
+            Option<&TextEditing>,
+        )>::query()
+        .filter(!component::<Hidden>() & !component::<HiddenPropagate>());
 
         for &(_z, entity) in &self.cached_draw_order.cache {
-            let (transform, maybe_tint, maybe_image, maybe_glyph, maybe_selected, maybe_txt_editing)
-                = query.get(*world, entity).expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
+            let (
+                transform,
+                maybe_tint,
+                maybe_image,
+                maybe_glyph,
+                maybe_selected,
+                maybe_txt_editing,
+            ) = query
+                .get(*world, entity)
+                .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
 
             let tint = maybe_tint.map(|t| {
                 let (r, g, b, a) = t.0.into_components();
@@ -417,7 +434,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
                     1.0 / screen_dimensions.width() as f32,
                     1.0 / screen_dimensions.height() as f32,
                 ]
-                    .into(),
+                .into(),
             };
             changed = self.env.write(factory, index, view_args.std140()) || changed;
         }
@@ -672,7 +689,7 @@ fn render_image<B: Backend>(
                             x_tex_coord_bound[x + 1],
                             y_tex_coord_bound[y + 1],
                         ]
-                            .into();
+                        .into();
                         temp_args.dimensions = [x_dimensions[x], y_dimensions[y]].into();
                         temp_args.coords = [x_coords[x], y_coords[y]].into();
                         batches.insert(tex_id, Some(temp_args));

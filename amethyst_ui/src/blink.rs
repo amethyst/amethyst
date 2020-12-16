@@ -1,9 +1,6 @@
 //! Module for the Blink component and BlinkSystem.
 
-use amethyst_core::{
-    ecs::*,
-    Hidden, Time,
-};
+use amethyst_core::{ecs::*, Hidden, Time};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -25,16 +22,13 @@ pub struct Blink {
     /// Whether to use the scaled or unscaled time.
     pub absolute_time: bool,
 }
-
-
-pub struct BlinkSystem;
-    /// System updating the `Blink` component.
+/// System updating the `Blink` component.
 pub fn build_blink_system() -> impl Runnable {
     SystemBuilder::new("BlinkSystem")
         .read_resource::<Time>()
         .with_query(<&mut Hidden>::query())
         .with_query(<(Entity, Write<Blink>)>::query())
-        .build(move |commands, world, time, (hiddens,blinks)| {
+        .build(move |commands, world, time, (hiddens, blinks)| {
             #[cfg(feature = "profiler")]
             profile_scope!("blink_system");
 
@@ -53,18 +47,21 @@ pub fn build_blink_system() -> impl Runnable {
                 // Reset timer because we ended the last cycle.
                 // Keeps the overflow time.
                 if blink.timer > blink.delay {
-                     blink.timer -= blink.delay;
+                    blink.timer -= blink.delay;
                 }
 
                 // We could cache the division, but that would require a stricter api on Blink.
                 let on = blink.timer < blink.delay / 2.0;
 
                 match (on, hiddens.get_mut(&mut subworld, *entity).is_ok()) {
-                    (true, false) => {commands.add_component(*entity, Hidden);},
-                    (false, true) => {commands.remove_component::<Hidden>(*entity);},
-                    _ => {},
+                    (true, false) => {
+                        commands.add_component(*entity, Hidden);
+                    }
+                    (false, true) => {
+                        commands.remove_component::<Hidden>(*entity);
+                    }
+                    _ => {}
                 };
             });
         })
 }
-

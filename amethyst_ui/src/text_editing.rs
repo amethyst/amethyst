@@ -1,9 +1,10 @@
 use std::ops::Range;
+
 use amethyst_core::{
     ecs::*,
     shrev::{EventChannel, ReaderId},
 };
-use copypasta::{ClipboardContext,ClipboardProvider};
+use copypasta::{ClipboardContext, ClipboardProvider};
 use log::error;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
@@ -30,7 +31,10 @@ impl TextEditingInputSystemResource {
 /// * Moves selection cursor.
 /// * Grows and shrinks selected text zone.
 pub fn build_text_editing_input_system(resources: &mut Resources) -> impl Runnable {
-    let reader_id = resources.get_mut::<EventChannel<Event>>().unwrap().register_reader();
+    let reader_id = resources
+        .get_mut::<EventChannel<Event>>()
+        .unwrap()
+        .register_reader();
     resources.insert(TextEditingInputSystemResource::new(reader_id));
 
     SystemBuilder::new("TextEditingInputSystem")
@@ -323,8 +327,6 @@ pub fn build_text_editing_input_system(resources: &mut Resources) -> impl Runnab
             }
 
         })
-
-
 }
 /// Returns if the command key is down on OSX, and the CTRL key for everything else.
 fn ctrl_or_cmd(modifiers: ModifiersState) -> bool {

@@ -1,5 +1,8 @@
+use std::collections::HashSet;
+
 use amethyst_core::{
     ecs::*,
+    transform::{Children, Parent},
 };
 use amethyst_window::ScreenDimensions;
 use glyph_brush::{HorizontalAlign, VerticalAlign};
@@ -8,8 +11,6 @@ use serde::{Deserialize, Serialize};
 use thread_profiler::profile_scope;
 
 use super::UiTransform;
-use amethyst_core::transform::{Parent, Children};
-use std::collections::HashSet;
 
 /// Indicates if the position and margins should be calculated in pixel or
 /// relative to their parent size.
@@ -120,10 +121,10 @@ pub enum Stretch {
     },
 }
 
-
 #[derive(Debug)]
 pub struct UiTransformSystemResource {
-    screen_size: (f32, f32)
+    screen_size: (f32, f32),
+    modified_last_iter: HashSet<Entity>,
 }
 
 impl UiTransformSystemResource {
@@ -131,10 +132,10 @@ impl UiTransformSystemResource {
     pub fn new() -> Self {
         Self {
             screen_size: (0.0, 0.0),
+            modified_last_iter: HashSet::default(),
         }
     }
 }
-
 /// Manages the `Parent` component on entities having `UiTransform`
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
@@ -143,74 +144,112 @@ pub fn build_ui_transform_system(resources: &mut Resources) -> impl Runnable {
     SystemBuilder::new("UiTransformSystem")
         .write_resource::<UiTransformSystemResource>()
         .read_resource::<ScreenDimensions>()
+        .with_query(<(Entity, &mut UiTransform)>::query().filter(maybe_changed::<UiTransform>()))
+        .with_query(<&mut UiTransform>::query())
+        .with_query(<(Entity, &mut Parent)>::query().filter(maybe_changed::<Parent>()))
+        .with_query(<(Entity, &Children)>::query())
+        .with_query(<(Entity, &mut UiTransform, &Children)>::query())
+        .with_query(<(Entity, &mut UiTransform, &Parent)>::query())
         .with_query(
             <(Entity, &mut UiTransform)>::query()
-                .filter(maybe_changed::<UiTransform>()) )
-        .with_query(
-            <&mut UiTransform>::query())
-        .with_query(<(Entity, &mut Parent)>::query()
-                .filter(maybe_changed::<Parent>()))
-        .with_query(<(Entity, &Children)>::query())
-        .with_query(<(Entity, &mut UiTransform)>::query()
-                .filter(!component::<Parent>()))
-        .with_query(<(Entity, &mut UiTransform, &Parent)>::query())
+                .filter(!component::<Parent>() & !component::<Children>()),
+        )
+        .build(
+            move |_commands,
+                  world,
+                  (resource, screen_dimensions),
+                  (
+                changed_transforms_query,
+                all_transforms_query,
+                children_with_changed_parent,
+                parents_query,
+                transform_with_children_query,
+                transform_with_parent_query,
+                transform_isolated_query,
+            )| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("ui_transform_system");
 
-        .build(move |_commands, world,(resource, screen_dimensions),
-                     (changed_transforms_query, all_transforms_query, children_with_changed_parent, parents_query,
-                         transform_without_parent_query, transform_with_parent_query)| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("ui_transform_system");
+                let mut modified_entities: HashSet<Entity> = HashSet::new();
 
-            let mut modified_entities: HashSet<Entity> = HashSet::new();
+                changed_transforms_query.for_each_mut(world, |(e, _)| {
+                    if !resource.modified_last_iter.contains(e) {
+                        modified_entities.insert(*e);
+                    }
+                });
+                children_with_changed_parent.for_each_mut(world, |(e, _)| {
+                    modified_entities.insert(*e);
+                });
 
-            changed_transforms_query.for_each_mut(world, |(e, _)| { modified_entities.insert(*e); });
-            children_with_changed_parent.for_each_mut(world, |(e, _)| { modified_entities.insert(*e); });
+                let current_screen_size = (screen_dimensions.width(), screen_dimensions.height());
 
-            let current_screen_size = (screen_dimensions.width(), screen_dimensions.height());
+                let screen_resized = current_screen_size != resource.screen_size;
+                resource.screen_size = current_screen_size;
+                if screen_resized {
+                    // Then we process for everyone
+                    process_root_iter(
+                        transform_with_children_query
+                            .iter_mut(world)
+                            .map(|(_, t, _)| t),
+                        &*screen_dimensions,
+                    );
+                    process_root_iter(
+                        transform_isolated_query.iter_mut(world).map(|(_, t)| t),
+                        &*screen_dimensions,
+                    );
+                } else {
+                    // We process only modified
+                    process_root_iter(
+                        transform_with_children_query
+                            .iter_mut(world)
+                            .filter(|(e, _, _)| modified_entities.contains(e))
+                            .map(|(_, t, _)| t),
+                        &*screen_dimensions,
+                    );
+                    process_root_iter(
+                        transform_isolated_query
+                            .iter_mut(world)
+                            .filter(|(e, _)| modified_entities.contains(e))
+                            .map(|(_, t)| t),
+                        &*screen_dimensions,
+                    );
+                }
 
-            let screen_resized = current_screen_size != resource.screen_size;
-            resource.screen_size = current_screen_size;
-            if screen_resized {
-                // Then we process for everyone
-                process_root_iter(
-                    transform_without_parent_query.iter_mut(world).map(|(_,t)| t),
-                    &*screen_dimensions,
-                );
-            } else {
-                // We process only modified
-                process_root_iter(
-                    transform_without_parent_query.iter_mut(world)
-                        .filter(|(e,_)| modified_entities.contains(e))
-                        .map(|(_,t)| t),
-                    &*screen_dimensions,
-                );
-            }
+                let (mut parent_world, mut else_world) = world.split_for_query(parents_query);
 
-            let (mut subworld_1, mut subworld_2) = world.split_for_query(transform_with_parent_query);
+                let modified_children: Vec<(Entity, Entity)> = transform_with_parent_query
+                    .iter_mut(&mut else_world)
+                    .filter(|(entity, _, parent)| {
+                        let self_dirty = modified_entities.contains(&entity);
+                        match parents_query.get(&mut parent_world, parent.0).ok() {
+                            Some((e, _)) => {
+                                let parent_dirty = modified_entities.contains(&e);
+                                parent_dirty || self_dirty || screen_resized
+                            }
+                            None => false,
+                        }
+                    })
+                    .map(|(entity, _, parent)| (*entity, parent.0))
+                    .collect();
 
-            for (entity, transform, parent) in transform_with_parent_query.iter_mut(&mut subworld_1) {
-                let self_dirty = modified_entities.contains(&entity);
-                let parent_entity = match parents_query.get(&mut subworld_2, *entity).ok() {
-                    Some((e, _)) => *e,
-                    None => continue, // Skip this entity iteration, as its dirty
-                };
-                let parent_dirty = modified_entities.contains(&parent_entity);
-                if parent_dirty || self_dirty || screen_resized {
+                for (entity, parent_entity) in modified_children.iter() {
                     let parent_transform_copy = {
-                        if let Some(transform) = all_transforms_query.get_mut(&mut subworld_2, parent_entity).ok(){
+                        if let Some(transform) =
+                            all_transforms_query.get_mut(world, *parent_entity).ok()
+                        {
                             Some(transform.clone())
-                        }else{
+                        } else {
                             None
                         }
                     };
-                    let transform = all_transforms_query.get_mut(&mut subworld_2, *entity).ok();
+
+                    let child_transform = all_transforms_query.get_mut(world, *entity).ok();
 
                     let (mut transform, parent_transform_copy) =
-                        match (transform, parent_transform_copy) {
+                        match (child_transform, parent_transform_copy) {
                             (Some(v1), Some(v2)) => (v1, v2),
                             _ => continue,
                         };
-
                     let norm = transform.anchor.norm_offset();
                     transform.pixel_x =
                         parent_transform_copy.pixel_x + parent_transform_copy.pixel_width * norm.0;
@@ -275,13 +314,22 @@ pub fn build_ui_transform_system(resources: &mut Resources) -> impl Runnable {
                     transform.pixel_x += transform.pixel_width * -pivot_norm.0;
                     transform.pixel_y += transform.pixel_height * -pivot_norm.1;
                 }
-            }
-        })
+
+                resource.modified_last_iter.clear();
+                for e in modified_entities.iter() {
+                    resource.modified_last_iter.insert(*e);
+                }
+
+                for (e, _) in modified_children.iter() {
+                    resource.modified_last_iter.insert(*e);
+                }
+            },
+        )
 }
 
 fn process_root_iter<'a, I>(iter: I, screen_dim: &ScreenDimensions)
-    where
-        I: Iterator<Item = &'a mut UiTransform>,
+where
+    I: Iterator<Item = &'a mut UiTransform>,
 {
     for transform in iter {
         let norm = transform.anchor.norm_offset();
