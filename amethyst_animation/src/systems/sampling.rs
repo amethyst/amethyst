@@ -28,10 +28,7 @@ use crate::resources::{
 ///
 /// - `T`: the component type that the animation should be applied to
 
-pub fn build_sampler_interpolation_system<T: AnimationSampling>(
-    world: &mut World,
-    resources: &mut Resources,
-) -> impl ParallelRunnable {
+pub fn build_sampler_interpolation_system<T: AnimationSampling>() -> impl ParallelRunnable {
     let mut inner = Vec::default();
     let mut channels = Vec::default();
 

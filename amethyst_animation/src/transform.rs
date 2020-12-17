@@ -29,7 +29,7 @@ impl AnimationSampling for Transform {
         &mut self,
         channel: &Self::Channel,
         data: &Self::Primitive,
-        buffer: &mut CommandBuffer,
+        _buffer: &mut CommandBuffer,
     ) {
         use self::TransformChannel::*;
         use crate::util::SamplerPrimitive::*;

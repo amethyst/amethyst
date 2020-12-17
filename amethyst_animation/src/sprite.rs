@@ -66,7 +66,7 @@ impl AnimationSampling for SpriteRender {
         &mut self,
         channel: &Self::Channel,
         data: &Self::Primitive,
-        buffer: &mut CommandBuffer,
+        _buffer: &mut CommandBuffer,
     ) {
         use self::{SpriteRenderChannel as Channel, SpriteRenderPrimitive as Primitive};
         match (channel, data) {

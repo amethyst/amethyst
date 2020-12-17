@@ -107,7 +107,7 @@ impl AnimationSampling for Material {
         &mut self,
         channel: &Self::Channel,
         data: &Self::Primitive,
-        buffer: &mut CommandBuffer,
+        _buffer: &mut CommandBuffer,
     ) {
         match (channel, data) {
             (MaterialChannel::AlbedoTexture, MaterialPrimitive::Texture(i)) => {

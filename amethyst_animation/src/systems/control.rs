@@ -179,7 +179,7 @@ pub fn build_animation_control_system<
                     }
                 }
             }
-            for entity in remove_sets {
+            for _entity in remove_sets {
                 todo!("remove control set from entity");
             }
              })
@@ -231,7 +231,7 @@ where
 /// control object.
 fn process_animation_control<T>(
     entity: Entity,
-    world: &mut SubWorld,
+    world: &mut SubWorld<'_>,
     animation: &Animation<T>,
     control: &mut AnimationControl<T>,
     hierarchy: Option<&AnimationHierarchy<T>>,
@@ -385,7 +385,7 @@ fn start_animation<T>(
     animation: &Animation<T>,
     sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
     control: &AnimationControl<T>,
-    world: &mut SubWorld,
+    world: &mut SubWorld<'_>,
     buffer: &mut CommandBuffer,
     hierarchy: &AnimationHierarchy<T>,
 ) -> bool
@@ -422,7 +422,7 @@ where
             if let Ok(component) = entry
                 .get_component::<RestState<T>>()
                 .map(RestState::state)
-                .or_else(|x| entry.get_component::<T>())
+                .or_else(|_| entry.get_component::<T>())
             {
                 let sampler_control = SamplerControl::<T> {
                     control_id: control.id,
@@ -453,7 +453,7 @@ where
 fn pause_animation<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    world: &mut SubWorld,
+    world: &mut SubWorld<'_>,
 ) where
     T: AnimationSampling,
 {
@@ -466,7 +466,7 @@ fn pause_animation<T>(
     }
 }
 
-fn unpause_animation<T>(control_id: u64, hierarchy: &AnimationHierarchy<T>, world: &mut SubWorld)
+fn unpause_animation<T>(control_id: u64, hierarchy: &AnimationHierarchy<T>, world: &mut SubWorld<'_>)
 where
     T: AnimationSampling,
 {
@@ -482,7 +482,7 @@ where
 fn step_animation<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    world: &mut SubWorld,
+    world: &mut SubWorld<'_>,
     sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
     direction: &StepDirection,
 ) where
@@ -500,7 +500,7 @@ fn step_animation<T>(
 fn set_animation_input<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    world: &mut SubWorld,
+    world: &mut SubWorld<'_>,
     input: f32,
 ) where
     T: AnimationSampling,
@@ -517,7 +517,7 @@ fn set_animation_input<T>(
 fn set_blend_weights<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    world: &mut SubWorld,
+    world: &mut SubWorld<'_>,
     weights: &[(usize, T::Channel, f32)],
 ) where
     T: AnimationSampling,
@@ -536,7 +536,7 @@ fn set_blend_weights<T>(
 fn update_animation_rate<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    world: &mut SubWorld,
+    world: &mut SubWorld<'_>,
     rate_multiplier: f32,
 ) where
     T: AnimationSampling,
@@ -555,7 +555,7 @@ fn update_animation_rate<T>(
 fn check_and_terminate_animation<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    world: &mut SubWorld,
+    world: &mut SubWorld<'_>,
     buffer: &mut CommandBuffer,
 ) -> bool
 where
@@ -597,7 +597,7 @@ where
 fn check_termination<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    world: &mut SubWorld,
+    world: &mut SubWorld<'_>,
 ) -> bool
 where
     T: AnimationSampling,

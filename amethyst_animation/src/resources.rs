@@ -162,7 +162,7 @@ where
 
     /// Create rest state for the hierarchy. Will copy the values from the base components for each
     /// entity in the hierarchy.
-    pub fn rest_state(&self, world: &SubWorld, buffer: &mut CommandBuffer)
+    pub fn rest_state(&self, world: &SubWorld<'_>, buffer: &mut CommandBuffer)
     where
         T: AnimationSampling + Clone,
     {
