@@ -27,6 +27,7 @@ pub trait SystemBundle {
 /// all system bundles are evaluated by calling [SystemBundle::load]. This structure is used to split systems
 /// (executable by [Schedule]) and system bundles (used for cleanup with unload).
 #[derive(Default)]
+#[allow(missing_debug_implementations)]
 pub struct DispatcherData {
     /// Holds all steps that can be executed by [Schedule].
     steps: Vec<Step>,
@@ -49,6 +50,7 @@ impl DispatcherData {
 
 /// A builder which is used to construct [Dispatcher] from multiple systems and system bundles.
 #[derive(Default)]
+#[allow(missing_debug_implementations)]
 pub struct DispatcherBuilder {
     items: Vec<DispatcherItem>,
 }
@@ -145,6 +147,7 @@ impl DispatcherBuilder {
 }
 
 /// Dispatcher items. This is different from [Step] in that it contains [SystemBundle].
+#[allow(missing_debug_implementations)]
 pub enum DispatcherItem {
     /// A simple system.
     System(Box<dyn ParallelRunnable>),
@@ -159,6 +162,7 @@ pub enum DispatcherItem {
 }
 
 /// Dispatcher is created by [DispatcherBuilder] and contains [Schedule] used to execute all systems.
+#[allow(missing_debug_implementations)]
 pub struct Dispatcher {
     // Used to execute unload on system bundles once dispatcher is disposed.
     bundles: Vec<Box<dyn SystemBundle>>,

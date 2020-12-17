@@ -1,32 +1,34 @@
+<!--- Provide a general summary of your changes in the Title above -->
+
 ## Description
+<!--- Describe your changes in detail -->
+<!--- Separate Additions, Removals and Modifications -->
 
-Add a brief summary of your PR here, between one sentence and two paragraphs
+## Motivation and Context
+<!--- Why is this change required? What problem does it solve? -->
+<!--- If it fixes an open issue, please link to the issue here. -->
 
-## Additions
+## How Has This Been Tested?
+<!--- Please describe in detail how you tested your changes. -->
+<!--- Include details of your testing environment, and the tests you ran to -->
+<!--- see how your change affects other areas of the code, etc. -->
 
-- Detail API additions here if any
-- Do not list changes or removals
+## Screenshots (if appropriate):
 
-## Removals
+## Types of changes
+<!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to change)
 
-- List API removals here if any
-
-## Modifications
-
-- List changes to existing structures and functions here if any
-
-## PR Checklist
-
-By placing an x in the boxes I certify that I have:
-
-- [ ] Added unit tests for new code added in this PR.
+## Checklist:
+<!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
+<!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
 - [ ] Acknowledged that by making this pull request I release this code under an MIT/Apache 2.0 dual licensing scheme.
 - [ ] Added a changelog entry if this will impact users, or modified more than 5 lines of Rust that wasn't a doc comment.
+- [ ] My code follows the code style of this project.
+- [ ] My change requires a change to the documentation.
+- [ ] I have updated the documentation accordingly.
 - [ ] Updated the content of the book if this PR would make the book outdated.
-
-If this modified or created any rs files:
-
-- [ ] Ran `cargo +stable fmt --all`
-- [ ] Ran `cargo clippy --workspace --features "empty"` (may require `cargo clean` before)
-- [ ] Ran `cargo build --features "empty"`
-- [ ] Ran `cargo test --workspace --features "empty"`
+- [ ] I have added tests to cover my changes.
+- [ ] My code is used in an example.
