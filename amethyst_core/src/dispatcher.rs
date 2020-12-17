@@ -39,6 +39,7 @@ pub trait ThreadLocalSystem<'a> {
 /// all system bundles are evaluated by calling [SystemBundle::load]. This structure is used to split systems
 /// (executable by [Schedule]) and system bundles (used for cleanup with unload).
 #[derive(Default)]
+#[allow(missing_debug_implementations)]
 pub struct DispatcherData<'a> {
     /// Holds all steps that can be executed by [Schedule].
     steps: Vec<Step>,
@@ -61,6 +62,7 @@ impl<'a> DispatcherData<'a> {
 
 /// A builder which is used to construct [Dispatcher] from multiple systems and system bundles.
 #[derive(Default)]
+#[allow(missing_debug_implementations)]
 pub struct DispatcherBuilder {
     items: Vec<DispatcherItem<'static>>,
 }
@@ -162,6 +164,7 @@ impl<'a> DispatcherBuilder {
 }
 
 /// Dispatcher items. This is different from [Step] in that it contains [SystemBundle].
+#[allow(missing_debug_implementations)]
 pub enum DispatcherItem<'a> {
     /// A simple system.
     System(Box<dyn ParallelRunnable + 'a>),
@@ -176,6 +179,7 @@ pub enum DispatcherItem<'a> {
 }
 
 /// Dispatcher is created by [DispatcherBuilder] and contains [Schedule] used to execute all systems.
+#[allow(missing_debug_implementations)]
 pub struct Dispatcher {
     // Used to execute unload on system bundles once dispatcher is disposed.
     bundles: Vec<Box<dyn SystemBundle>>,
