@@ -161,8 +161,8 @@ name = "material"
 # name = "states_ui"
 # required-features = ["audio"]
 
-# [[example]]
-# name = "custom_render_pass"
+[[example]]
+name = "custom_render_pass"
 
 # [[example]]
 # name = "custom_ui"

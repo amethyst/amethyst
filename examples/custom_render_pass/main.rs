@@ -3,9 +3,7 @@
 mod custom_pass;
 
 use amethyst::{
-    input::{
-        is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings,
-    },
+    input::{is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection},
     prelude::*,
     renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
@@ -21,39 +19,26 @@ impl SimpleState for CustomShaderState {
         let world = data.world;
 
         // Add some triangles
-        world
-            .create_entity()
-            .with(Triangle {
-                points: [[0., 0.], [0., 1.], [1., 0.0]],
-                colors: [[1., 0., 0., 1.], [0., 1., 0., 1.], [0., 0., 1., 1.]],
-            })
-            .build();
-        world
-            .create_entity()
-            .with(Triangle {
-                points: [[-1., -1.], [0., -1.], [-1., 1.0]],
-                colors: [[1., 1., 0., 1.], [0., 1., 1., 1.], [1., 0., 1., 1.]],
-            })
-            .build();
-        world
-            .create_entity()
-            .with(Triangle {
-                points: [[0.2, -0.7], [0.4, -0.1], [0.8, -1.5]],
-                colors: [[1., 0., 0., 1.], [0., 0., 0., 1.], [1., 1., 1., 1.]],
-            })
-            .build();
-
-        world
-            .create_entity()
-            .with(Triangle {
-                points: [[-0.2, 0.7], [-0.4, 0.1], [-0.8, 0.5]],
-                colors: [
-                    [0.337, 0.176, 0.835, 1.],
-                    [0.337, 0.176, 0.835, 1.],
-                    [0.337, 0.176, 0.835, 1.],
-                ],
-            })
-            .build();
+        world.push((Triangle {
+            points: [[0., 0.], [0., 1.], [1., 0.0]],
+            colors: [[1., 0., 0., 1.], [0., 1., 0., 1.], [0., 0., 1., 1.]],
+        },));
+        world.push((Triangle {
+            points: [[-1., -1.], [0., -1.], [-1., 1.0]],
+            colors: [[1., 1., 0., 1.], [0., 1., 1., 1.], [1., 0., 1., 1.]],
+        },));
+        world.push((Triangle {
+            points: [[0.2, -0.7], [0.4, -0.1], [0.8, -1.5]],
+            colors: [[1., 0., 0., 1.], [0., 0., 0., 1.], [1., 1., 1., 1.]],
+        },));
+        world.push((Triangle {
+            points: [[-0.2, 0.7], [-0.4, 0.1], [-0.8, 0.5]],
+            colors: [
+                [0.337, 0.176, 0.835, 1.],
+                [0.337, 0.176, 0.835, 1.],
+                [0.337, 0.176, 0.835, 1.],
+            ],
+        },));
     }
 
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
@@ -68,7 +53,7 @@ impl SimpleState for CustomShaderState {
             // Using the Mouse Wheel to control the scale
             StateEvent::Input(input) => {
                 if let InputEvent::MouseWheelMoved(dir) = input {
-                    let mut scale = data.world.write_resource::<CustomUniformArgs>();
+                    let mut scale = data.resources.get_mut::<CustomUniformArgs>().unwrap();
                     match dir {
                         ScrollDirection::ScrollUp => (*scale).scale *= 1.1,
                         ScrollDirection::ScrollDown => (*scale).scale /= 1.1,
@@ -89,17 +74,16 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/custom_render_pass/config/display.ron");
     let assets_dir = app_root.join("examples/custom_render_pass/assets/");
 
-    let game_data = DispatcherBuilder::default()
-        .add_bundle(InputBundle::<StringBindings>::new())?
-        .add_bundle(
-            RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([1.0, 1.0, 1.0, 1.0]),
-                )
-                // Add our custom render plugin to the rendering bundle.
-                .with_plugin(RenderCustom::default()),
-        )?;
+    let mut game_data = DispatcherBuilder::default();
+    game_data.add_bundle(InputBundle::new()).add_bundle(
+        RenderingBundle::<DefaultBackend>::new()
+            .with_plugin(
+                RenderToWindow::from_config_path(display_config_path)?
+                    .with_clear([1.0, 1.0, 1.0, 1.0]),
+            )
+            // Add our custom render plugin to the rendering bundle.
+            .with_plugin(RenderCustom::default()),
+    );
 
     let mut game = Application::build(assets_dir, CustomShaderState)?.build(game_data)?;
 
