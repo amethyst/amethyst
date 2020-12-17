@@ -15,7 +15,7 @@ pub const PADDLE_WIDTH: f32 = 4.0;
 pub struct Pong;
 
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
         // Load the spritesheet necessary to render the graphics.

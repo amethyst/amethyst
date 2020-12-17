@@ -17,7 +17,7 @@ use crate::custom_pass::{CustomUniformArgs, RenderCustom, Triangle};
 pub struct CustomShaderState;
 
 impl SimpleState for CustomShaderState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
         // Add some triangles
@@ -58,7 +58,7 @@ impl SimpleState for CustomShaderState {
 
     fn handle_event(
         &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
+        data: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         match &event {

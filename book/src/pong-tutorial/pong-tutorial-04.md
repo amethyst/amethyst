@@ -110,7 +110,7 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+fn on_start(&mut self, data: StateData<'_, GameData>) {
     let world = data.world;
 
     // Load the spritesheet necessary to render the graphics.
@@ -394,7 +394,7 @@ Let's add that `update` method just below `on_start`:
 # use amethyst::prelude::*;
 # struct MyState;
 # impl SimpleState for MyState {
-fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
     Trans::None
 }
 # }
@@ -473,7 +473,7 @@ use amethyst::core::timing::Time;
 # }
 #
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
         // Wait one second before spawning the ball.
@@ -487,7 +487,7 @@ impl SimpleState for Pong {
         initialise_camera(world);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
             // If the timer isn't expired yet, subtract the time that passed since the last update.
             {
