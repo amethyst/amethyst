@@ -95,7 +95,7 @@ If you had some state implemented you can create the button on its `on_start` me
 #
 # impl SimpleState for State {
 #
-fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+fn on_start(&mut self, data: StateData<'_, GameData>) {
     let world = data.world;
 
     /* Create the transform */
@@ -135,7 +135,7 @@ fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         .build();
 }
 #
-#     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+#     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
 #         Trans::None
 #     }
 # }

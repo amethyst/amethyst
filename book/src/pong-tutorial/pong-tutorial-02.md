@@ -58,13 +58,13 @@ This method is called when the State starts. We will leave it empty for now.
 # use amethyst::prelude::*;
 # struct Pong;
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
 
     }
 }
 ```
 
-The `StateData<'_, GameData<'_, '_>>` is a structure given to all State methods.
+The `StateData<'_, GameData>` is a structure given to all State methods.
 The important part of its content here is its `world` field.
 
 The `World` structure stores all of the game's runtime data -- entities and components.
@@ -144,7 +144,7 @@ will.
     # fn initialise_camera(world: &mut World) { }
     # struct MyState;
     # impl SimpleState for MyState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
         initialise_camera(world);
@@ -305,7 +305,7 @@ compiles. Update the `on_start` method to the following:
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+fn on_start(&mut self, data: StateData<'_, GameData>) {
     let world = data.world;
 
     initialise_paddles(world);
@@ -631,7 +631,7 @@ all together in the `on_start()` method:
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+fn on_start(&mut self, data: StateData<'_, GameData>) {
     let world = data.world;
 
     // Load the spritesheet necessary to render the graphics.
