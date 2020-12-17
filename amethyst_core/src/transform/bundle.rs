@@ -5,6 +5,7 @@ use amethyst_error::Error;
 use crate::{ecs::*, transform::*};
 
 /// Transform bundle
+#[allow(missing_debug_implementations)]
 pub struct TransformBundle;
 
 impl SystemBundle for TransformBundle {
