@@ -1,7 +1,7 @@
 use amethyst_core::{
-    alga::general::{SubsetOf, SupersetOf},
-    ecs::prelude::*,
+    ecs::*,
     math::{convert, RealField, Vector2, Vector3, Vector4},
+    simd::scalar::*,
 };
 use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
@@ -18,8 +18,7 @@ use crate::resources::{AnimationControlSet, AnimationSampling};
 ///        with the same id
 /// - `T`: the component type that the animation applies to
 pub fn get_animation_set<'a, I, T>(
-    // controls: &'a mut WriteStorage<'_, AnimationControlSet<I, T>>,
-    world: &mut SubWorld,
+    world: &'a mut SubWorld<'a>,
     buffer: &mut CommandBuffer,
     entity: Entity,
 ) -> Option<&'a mut AnimationControlSet<I, T>>
@@ -27,17 +26,18 @@ where
     I: Send + Sync + 'static,
     T: AnimationSampling,
 {
-    if world.has_component(entity) {
-        world.get_component(entity)
+    if let Ok(entry) = world.entry_mut(entity) {
+        let c = entry.into_component_mut::<AnimationControlSet<I, T>>();
+        if c.is_ok() {
+            c.ok()
+        } else {
+            let set = AnimationControlSet::<I, T>::default();
+            buffer.add_component(entity, set);
+            None
+        }
     } else {
-        let set = AnimationControlSet::default();
-        buffer.add_component(entity, set);
-        Some(set)
-     }
-    // controls
-    //     .entry(entity)
-    //     .ok()
-    //     .map(|entry| entry.or_insert_with(AnimationControlSet::default))
+        None
+    }
 }
 
 /// Sampler primitive

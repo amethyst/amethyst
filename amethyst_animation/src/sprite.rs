@@ -1,11 +1,9 @@
 use amethyst_assets::Handle;
+use amethyst_core::ecs::{CommandBuffer, SubWorld};
 use amethyst_rendy::sprite::{SpriteRender, SpriteSheet};
 use log::error;
 use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
-
-use amethyst_assets::Handle;
-use amethyst_rendy::sprite::{SpriteRender, SpriteSheet};
 
 use crate::{AnimationSampling, BlendMethod};
 
@@ -64,7 +62,12 @@ impl AnimationSampling for SpriteRender {
     type Primitive = SpriteRenderPrimitive;
     type Channel = SpriteRenderChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive, _: &()) {
+    fn apply_sample<'a>(
+        &mut self,
+        channel: &Self::Channel,
+        data: &Self::Primitive,
+        buffer: &mut CommandBuffer,
+    ) {
         use self::{SpriteRenderChannel as Channel, SpriteRenderPrimitive as Primitive};
         match (channel, data) {
             (Channel::SpriteSheet, Primitive::SpriteSheet(handle)) => {
@@ -92,7 +95,7 @@ impl AnimationSampling for SpriteRender {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> Self::Primitive {
+    fn current_sample<'a>(&self, channel: &Self::Channel) -> Self::Primitive {
         use self::{SpriteRenderChannel as Channel, SpriteRenderPrimitive as Primitive};
 
         match channel {

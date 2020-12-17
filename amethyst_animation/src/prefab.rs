@@ -5,17 +5,14 @@ use std::{
     marker::PhantomData,
 };
 
-use derivative::Derivative;
-use serde::{Deserialize, Serialize};
-
 use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter};
-use amethyst_core::ecs::prelude::*;
+use amethyst_core::ecs::*;
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
-use crate::{Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
+use crate::{Animation, AnimationSampling, RestState, Sampler};
 
 /// `PrefabData` for loading a single `Animation`
 ///
@@ -237,7 +234,7 @@ pub struct AnimationHierarchyPrefab<T> {
 ///
 /// - `I`: Id type of `Animation`s in `AnimationSet`s
 /// - `T`: The animatable `Component`
-#[derive(Derivative, Clone, Debug, Deserialize, Serialize/*, PrefabData*/)]
+#[derive(Derivative, Clone, Debug, Deserialize, Serialize /*, PrefabData*/)]
 #[serde(
     default,
     bound(

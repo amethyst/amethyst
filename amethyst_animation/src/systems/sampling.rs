@@ -1,8 +1,10 @@
-use std::{marker, time::Duration};
+use std::time::Duration;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    duration_to_nanos, duration_to_secs, ecs::prelude::*, nanos_to_duration, secs_to_duration, Time,
+    duration_to_nanos, duration_to_secs,
+    ecs::{systems::ParallelRunnable, *},
+    nanos_to_duration, secs_to_duration, Time,
 };
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
@@ -28,59 +30,54 @@ use crate::resources::{
 
 pub fn build_sampler_interpolation_system<T: AnimationSampling>(
     world: &mut World,
-    resources: &mut Resources
-) -> Box<dyn Schedulable> {
-
+    resources: &mut Resources,
+) -> impl ParallelRunnable {
     let mut inner = Vec::default();
     let mut channels = Vec::default();
 
-    SystemBuilder::<()>::new("SamplerInterpolationSystem")
+    SystemBuilder::new("SamplerInterpolationSystem")
         .read_resource::<Time>()
-        .read_resource::<AssetStorage<Sampler<T::Primitive>>>()        
+        .read_resource::<AssetStorage<Sampler<T::Primitive>>>()
         .with_query(<(Write<SamplerControlSet<T>>, Write<T>)>::query())
-        .build(
-            move |_commands, world, (time, samplers), query| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("sampler_interpolation_system");
+        .build(move |commands, world, (time, samplers), query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("sampler_interpolation_system");
 
-                for (mut control_set, mut comp) in query.iter_mut(world) {
-                    inner.clear();
+            for (control_set, comp) in query.iter_mut(world) {
+                inner.clear();
 
-                    for control in control_set.samplers.iter_mut() {
-                        if let Some(ref sampler) = samplers.get(&control.sampler) {
-                            process_sampler(control, sampler, &time, &mut inner);
-                        }
+                for control in control_set.samplers.iter_mut() {
+                    if let Some(ref sampler) = samplers.get(&control.sampler) {
+                        process_sampler(control, sampler, &time, &mut inner);
                     }
-                    if !inner.is_empty() {
-                        channels.clear();
-                        channels
-                            .extend(inner.iter().map(|o| &o.1).unique().cloned());
-                        for channel in &channels {
-                            match comp.blend_method(channel) {
-                                None => {
-                                    if let Some(p) = inner
-                                        .iter()
-                                        .filter(|p| p.1 == *channel)
-                                        .map(|p| p.2.clone())
-                                        .last()
-                                    {
-                                        comp.apply_sample(channel, &p);
-                                    }
+                }
+                if !inner.is_empty() {
+                    channels.clear();
+                    channels.extend(inner.iter().map(|o| &o.1).unique().cloned());
+                    for channel in &channels {
+                        match comp.blend_method(channel) {
+                            None => {
+                                if let Some(p) = inner
+                                    .iter()
+                                    .filter(|p| p.1 == *channel)
+                                    .map(|p| p.2.clone())
+                                    .last()
+                                {
+                                    comp.apply_sample(channel, &p, commands);
                                 }
-        
-                                Some(BlendMethod::Linear) => {
-                                    if let Some(p) = linear_blend::<T>(channel, &inner) {
-                                        comp.apply_sample(channel, &p);
-                                    }
+                            }
+
+                            Some(BlendMethod::Linear) => {
+                                if let Some(p) = linear_blend::<T>(channel, &inner) {
+                                    comp.apply_sample(channel, &p, commands);
                                 }
                             }
                         }
                     }
                 }
-            },
-        );
+            }
+        })
 }
-
 
 /// Process a single `SamplerControl` object.
 ///

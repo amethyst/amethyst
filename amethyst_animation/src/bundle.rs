@@ -1,19 +1,11 @@
 use std::{hash::Hash, marker};
 
-use amethyst_core::{
-    ecs::prelude::{Component, DispatcherBuilder, World},
-    SystemBundle, SystemDesc,
-};
+use amethyst_assets::AssetProcessorSystemBundle;
+use amethyst_core::ecs::*;
 use amethyst_error::Error;
+use marker::PhantomData;
 
-use crate::{
-    resources::AnimationSampling,
-    skinning::VertexSkinningSystemDesc,
-    systems::{
-        build_sampler_processor,
-        build_animation_processor
-    }, build_sampler_interpolation_system,
-};
+use crate::{build_sampler_interpolation_system, resources::AnimationSampling, Animation, Sampler};
 
 /// Bundle for vertex skinning
 ///
@@ -38,17 +30,15 @@ impl<'a> VertexSkinningBundle<'a> {
 }
 
 impl<'a, 'c> SystemBundle for VertexSkinningBundle<'c> {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         world: &mut World,
-        builder: &mut DispatcherBuilder<'a>,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        todo!("Check this");
-        builder.add(
-            VertexSkinningSystemDesc::default().build(world),
-            "vertex_skinning_system",
-            self.dep,
-        );
+        // builder.add_system(
+        //     VertexSkinningSystemDesc::default().build(world)
+        // );
         Ok(())
     }
 }
@@ -62,47 +52,23 @@ impl<'a, 'c> SystemBundle for VertexSkinningBundle<'c> {
 ///
 /// - `T`: the component type that sampling should be applied to
 #[derive(Default, Debug)]
-pub struct SamplingBundle<'a, T> {
-    name: &'a str,
-    dep: &'a [&'a str],
+pub struct SamplingBundle<T> {
     m: marker::PhantomData<T>,
 }
 
-impl<'a, T> SamplingBundle<'a, T> {
-    /// Create a new sampling bundle
-    ///
-    /// ### Parameters:
-    ///
-    /// - `name`: name of the `SamplerInterpolationSystem`
-    pub fn new(name: &'a str) -> Self {
-        Self {
-            name,
-            dep: &[],
-            m: marker::PhantomData,
-        }
-    }
-
-    /// Set dependencies for the `SamplerInterpolationSystem`
-    pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
-        self.dep = dep;
-        self
-    }
-}
-
-impl<'a, 'c, T> SystemBundle for SamplingBundle<'c, T>
+impl<'a, T> SystemBundle for SamplingBundle<T>
 where
     T: AnimationSampling,
 {
-    fn build(
-        self,
-        _world: &mut World,
+    fn load(
+        &mut self,
+        world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'a>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
+        builder.add_system(build_sampler_interpolation_system::<T>(world, resources));
+        builder.add_bundle(AssetProcessorSystemBundle::<Sampler<T::Primitive>>::default());
 
-        builder.add_system(Stage::Begin, build_sampler_interpolation_system::<T>);
-        builder.add_system(Stage::Begin, build_sampler_processor::<T::Primitive>());
-            
         Ok(())
     }
 }
@@ -150,28 +116,27 @@ impl<'a, I, T> AnimationBundle<'a, I, T> {
     }
 }
 
-impl<'a, 'b, 'c, I, T> SystemBundle for AnimationBundle<'c, I, T>
+impl<'a, I, T> SystemBundle for AnimationBundle<'static, I, T>
 where
     I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Clone,
 {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         world: &mut World,
         resources: &mut Resources,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
+        builder.add_bundle(AssetProcessorSystemBundle::<Animation<T>>::default());
 
-        builder.add_system(Stage::Begin, build_animation_processor::<T>());        
-
-        compile_error!("error what's this?");
         /*builder.add(
             AnimationControlSystemDesc::<I, T>::default().build(world),
             self.animation_name,
             self.dep,
         );*/
-        SamplingBundle::<T>::new(self.sampling_name)
-            .with_dep(&[self.animation_name])
-            .build(world, resources, builder)
+
+        builder.add_bundle(SamplingBundle::<T> { m: PhantomData });
+
+        Ok(())
     }
 }

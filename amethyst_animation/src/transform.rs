@@ -1,6 +1,7 @@
 use amethyst_core::{
+    ecs::{CommandBuffer, SubWorld},
     math::{zero, Quaternion, Unit, Vector3, Vector4},
-    // Transform,
+    transform::Transform,
 };
 use serde::{Deserialize, Serialize};
 
@@ -20,14 +21,16 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl ApplyData for Transform {
-}
-
 impl AnimationSampling for Transform {
     type Primitive = SamplerPrimitive<f32>;
     type Channel = TransformChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
+    fn apply_sample(
+        &mut self,
+        channel: &Self::Channel,
+        data: &Self::Primitive,
+        buffer: &mut CommandBuffer,
+    ) {
         use self::TransformChannel::*;
         use crate::util::SamplerPrimitive::*;
 
@@ -45,7 +48,7 @@ impl AnimationSampling for Transform {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
+    fn current_sample(&self, channel: &Self::Channel) -> Self::Primitive {
         use self::TransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),
@@ -53,6 +56,7 @@ impl AnimationSampling for Transform {
             Scale => SamplerPrimitive::Vec3((*self.scale()).into()),
         }
     }
+
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
         use self::TransformChannel::*;
         match channel {

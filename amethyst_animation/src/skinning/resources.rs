@@ -1,18 +1,14 @@
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{ProgressCounter};
 use amethyst_core::{
     ecs::{
         prelude::*,
     },
     math::Matrix4,
 };
-use amethyst_derive::PrefabData;
-use amethyst_error::Error;
 use amethyst_rendy::skinning::JointTransformsPrefab;
 use derivative::Derivative;
-use serde::{Deserialize, Serialize};
 
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]

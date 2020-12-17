@@ -1,19 +1,10 @@
 use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
 
-use derivative::Derivative;
-use fnv::FnvHashMap;
-use log::error;
-use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
-use serde::{Deserialize, Serialize};
-
-use amethyst_assets::{Asset, AssetStorage, Handle/*, PrefabData*/};
+use amethyst_assets::{Asset, AssetStorage, Handle};
 use amethyst_core::{
-    ecs::prelude::*,
-    // shred::SystemData,
+    ecs::*,
     timing::{duration_to_secs, secs_to_duration},
 };
-//use amethyst_derive::PrefabData;
-use amethyst_error::Error;
 use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::error;
@@ -27,17 +18,8 @@ pub enum BlendMethod {
     Linear,
 }
 
-/// Extra data to extract from `World`, for use when applying or fetching a sample
-pub trait ApplyData {
-    /// The actual data, must implement `SystemData`
-    //type ApplyData;//: SystemData<'a>;
-    fn extra_data(mut builder: SystemBuilder) -> SystemBuilder {
-
-    }
-}
-
 /// Master trait used to define animation sampling on a component
-pub trait AnimationSampling: Send + Sync + 'static + ApplyData {
+pub trait AnimationSampling: Send + Sync + 'static {
     /// The interpolation primitive
     type Primitive: InterpolationPrimitive + Debug + Clone + Send + Sync + 'static;
     /// An independent grouping or type of functions that operate on attributes of a component
@@ -51,7 +33,6 @@ pub trait AnimationSampling: Send + Sync + 'static + ApplyData {
         &mut self,
         channel: &Self::Channel,
         data: &Self::Primitive,
-        world: &mut SubWorld,
         buffer: &mut CommandBuffer,
         // extra: &<Self as ApplyData<'a>>::ApplyData,
     );
@@ -60,8 +41,6 @@ pub trait AnimationSampling: Send + Sync + 'static + ApplyData {
     fn current_sample<'a>(
         &self,
         channel: &Self::Channel,
-        world: &mut SubWorld,
-        buffer: &mut CommandBuffer,
         // extra: &<Self as ApplyData<'a>>::ApplyData,
     ) -> Self::Primitive;
 
@@ -114,7 +93,7 @@ where
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize/*, PrefabData*/)]
+#[derive(Debug, Clone, Deserialize, Serialize /*, PrefabData*/)]
 // #[prefab(Component)]
 pub struct RestState<T>
 where
@@ -137,7 +116,6 @@ where
         &self.state
     }
 }
-
 
 /// Defines the hierarchy of nodes that a single animation can control.
 /// Attached to the root entity that an animation can be defined for.
@@ -185,28 +163,18 @@ where
 
     /// Create rest state for the hierarchy. Will copy the values from the base components for each
     /// entity in the hierarchy.
-    // pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<'_, RestState<T>>)
-    pub fn rest_state<F>(&self, get_component: F, world: &mut SubWorld, buffer: &mut CommandBuffer)
+    pub fn rest_state(&self, world: &SubWorld, buffer: &mut CommandBuffer)
     where
         T: AnimationSampling + Clone,
-        F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {
-            if !world.has_component(*entity) {
-                if let Some(comp) = get_component(*entity) {
-                    buffer.add_component(*entity, RestState::new(comp));
+            if let Ok(entry) = world.entry_ref(*entity) {
+                if entry.get_component::<RestState<T>>().is_err() {
+                    if let Some(comp) = entry.get_component::<T>().ok().cloned() {
+                        buffer.add_component(*entity, RestState::new(comp));
+                    }
                 }
             }
-            // if !states.contains(*entity) {
-            //     if let Some(comp) = get_component(*entity) {
-            //         if let Err(err) = states.insert(*entity, RestState::new(comp)) {
-            //             error!(
-            //                 "Failed creating rest state for AnimationHierarchy, because of: {}",
-            //                 err
-            //             );
-            //         }
-            //     }
-            // }
         }
     }
 }

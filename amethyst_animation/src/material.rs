@@ -1,4 +1,5 @@
 use amethyst_assets::Handle;
+use amethyst_core::ecs::{CommandBuffer, SubWorld};
 use amethyst_rendy::{
     mtl::{Material, TextureOffset},
     sprite::Sprite,
@@ -90,7 +91,6 @@ pub enum MaterialChannel {
     UvOffset,
 }
 
-
 fn offset(offset: &TextureOffset) -> MaterialPrimitive {
     MaterialPrimitive::Offset(offset.u, offset.v)
 }
@@ -103,7 +103,12 @@ impl AnimationSampling for Material {
     type Primitive = MaterialPrimitive;
     type Channel = MaterialChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive, _: &()) {
+    fn apply_sample<'a>(
+        &mut self,
+        channel: &Self::Channel,
+        data: &Self::Primitive,
+        buffer: &mut CommandBuffer,
+    ) {
         match (channel, data) {
             (MaterialChannel::AlbedoTexture, MaterialPrimitive::Texture(i)) => {
                 self.albedo = i.clone();
@@ -132,7 +137,7 @@ impl AnimationSampling for Material {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> Self::Primitive {
+    fn current_sample<'a>(&self, channel: &Self::Channel) -> Self::Primitive {
         match *channel {
             MaterialChannel::AlbedoTexture => MaterialPrimitive::Texture(self.albedo.clone()),
             MaterialChannel::EmissionTexture => MaterialPrimitive::Texture(self.emission.clone()),
