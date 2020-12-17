@@ -1,4 +1,9 @@
 //! 3D Skinned per-image buffer handling.
+use amethyst_core::ecs::*;
+use fnv::FnvHashMap;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     rendy::{
         command::RenderPassEncoder,
@@ -11,12 +16,6 @@ use crate::{
     types::Backend,
     util,
 };
-use fnv::FnvHashMap;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
-use amethyst_core::ecs::*;
 
 /// Provides per-image abstraction for submitting skinned mesh skeletal information.
 #[derive(Debug)]

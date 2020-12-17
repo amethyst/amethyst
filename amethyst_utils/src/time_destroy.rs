@@ -1,9 +1,7 @@
 //! Allows you to automatically delete an entity after a set time has elapsed.
 
 use amethyst_core::{ecs::*, timing::Time};
-
 use serde::{Deserialize, Serialize};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

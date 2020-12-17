@@ -5,7 +5,6 @@ use amethyst::{
         Texture,
     },
 };
-
 use log::debug;
 
 use crate::sprite;

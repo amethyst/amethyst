@@ -15,7 +15,6 @@ use amethyst::{
     ui::{RenderUi, ToNativeWidget, UiBundle, UiCreator, UiTransformData, UiWidget},
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
-
 use serde::Deserialize;
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;

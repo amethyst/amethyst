@@ -1,13 +1,14 @@
-use crate::{
-    audio::{play_bounce, Sounds},
-    Ball, Paddle, Side,
-};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
     core::transform::Transform,
     derive::SystemDesc,
     ecs::{Join, Read, ReadExpect, ReadStorage, System, SystemData, WriteStorage},
+};
+
+use crate::{
+    audio::{play_bounce, Sounds},
+    Ball, Paddle, Side,
 };
 
 /// This system is responsible for detecting collisions between balls and

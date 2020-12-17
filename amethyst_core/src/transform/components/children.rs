@@ -1,6 +1,7 @@
-use crate::ecs::*;
 use shrinkwraprs::Shrinkwrap;
 use smallvec::SmallVec;
+
+use crate::ecs::*;
 
 #[derive(Shrinkwrap, Default, Clone)]
 #[shrinkwrap(mutable)]

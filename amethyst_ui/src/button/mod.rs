@@ -1,3 +1,7 @@
+use amethyst_assets::Handle;
+use amethyst_core::Parent;
+use amethyst_rendy::Texture;
+
 pub use self::{
     actions::{UiButtonAction, UiButtonActionType},
     builder::{UiButtonBuilder, UiButtonBuilderResources},
@@ -7,9 +11,6 @@ pub use self::{
     system::{UiButtonSystem, UiButtonSystemDesc},
 };
 use crate::{define_widget, Interactable, UiSoundRetrigger, UiText, UiTransform};
-use amethyst_assets::Handle;
-use amethyst_core::Parent;
-use amethyst_rendy::Texture;
 
 mod actions;
 mod builder;

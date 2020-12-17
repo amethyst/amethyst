@@ -5,7 +5,6 @@ use amethyst::{
     ecs::prelude::*,
     error::Error,
 };
-
 use derive_new::new;
 
 /// Adds a specified `System` to the dispatcher.

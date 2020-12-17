@@ -14,9 +14,8 @@ pub trait EventReader {
 
 #[cfg(test)]
 mod tests {
-    use crate::shrev::{EventChannel, ReaderId};
-
     use super::*;
+    use crate::shrev::{EventChannel, ReaderId};
 
     #[derive(Clone)]
     pub struct TestEvent;

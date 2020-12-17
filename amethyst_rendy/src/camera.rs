@@ -334,15 +334,15 @@ mod tests {
     //! Our view space is +Y Down, +X Right, +Z Away
     //! Current render target is +Y Down, +X Right, +Z Away
 
-    use super::*;
     use amethyst_core::{
         math::{convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3},
         transform::Transform,
     };
-    use ron::{de::from_str, ser::to_string_pretty};
-
     use approx::{assert_abs_diff_eq, assert_ulps_eq};
     use more_asserts::{assert_ge, assert_gt, assert_le, assert_lt};
+    use ron::{de::from_str, ser::to_string_pretty};
+
+    use super::*;
 
     #[test]
     fn screen_to_world_3d() {

@@ -7,7 +7,7 @@ use amethyst::{
         frame_limiter::FrameRateLimitStrategy,
         transform::{Transform, TransformBundle},
     },
-    input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
+    input::{is_key_down, is_mouse_button_down, InputBundle},
     prelude::*,
     renderer::{
         camera::Camera,
@@ -28,6 +28,8 @@ use amethyst::{
     winit::{MouseButton, VirtualKeyCode},
     Error,
 };
+use amethyst_assets::{DefaultLoader, Handle, LoaderBundle, ProcessingQueue};
+use amethyst_rendy::types::{MeshData, TextureData};
 
 //type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
@@ -40,13 +42,13 @@ impl SimpleState for ExampleState {
         } = data;
 
         let mat_defaults = resources.get::<MaterialDefaults>().unwrap().0.clone();
-        let loader = resources.get::<Loader>().unwrap();
-        let mesh_storage = resources.get::<AssetStorage<Mesh>>().unwrap();
-        let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        let mtl_storage = resources.get::<AssetStorage<Material>>().unwrap();
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        let mesh_storage = resources.get::<ProcessingQueue<MeshData>>().unwrap();
+        let tex_storage = resources.get::<ProcessingQueue<TextureData>>().unwrap();
+        let mtl_storage = resources.get::<ProcessingQueue<Material>>().unwrap();
 
         println!("Load mesh");
-        let (mesh, albedo) = {
+        let (mesh, albedo): (Handle<Mesh>, Handle<Texture>) = {
             let mesh = loader.load_from_data(
                 Shape::Sphere(32, 32)
                     .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(None)
@@ -82,7 +84,7 @@ impl SimpleState for ExampleState {
                     &tex_storage,
                 );
 
-                loader.load_from_data(
+                loader.load_from_data::<Material, ()>(
                     Material {
                         albedo: albedo.clone(),
                         metallic_roughness,
@@ -165,14 +167,13 @@ fn main() -> Result<(), Error> {
 
     let mut builder = DispatcherBuilder::default();
     builder
+        .add_bundle(LoaderBundle)
+        .add_bundle(InputBundle::new().with_bindings_from_file(&key_bindings_path)?)
         .add_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
-        )
-        .add_bundle(
-            FlyControlBundle::<StringBindings>::new(
-                Some(String::from("move_x")),
-                Some(String::from("move_y")),
-                Some(String::from("move_z")),
+            FlyControlBundle::new(
+                Some("move_x".into()),
+                Some("move_y".into()),
+                Some("move_z".into()),
             )
             .with_sensitivity(0.1, 0.1),
         )

@@ -1,11 +1,9 @@
 //! Renderer system
-use crate::{
-    mtl::Material,
-    types::{Backend, Mesh, MeshData, Texture, TextureData},
-};
+
+use std::marker::PhantomData;
+
 use amethyst_assets::{
-    /* error::*, */ AddToDispatcher, AssetStorage, DefaultLoader, Loader, ProcessingQueue,
-    ProcessingState,
+    AddToDispatcher, AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState,
 };
 use amethyst_core::{ecs::*, timing::Time, ArcThreadPool};
 use amethyst_error::Error;
@@ -16,10 +14,13 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-use std::marker::PhantomData;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    mtl::Material,
+    types::{Backend, Mesh, MeshData, Texture, TextureData},
+};
 
 /// Auxiliary data for render graph.
 #[allow(missing_debug_implementations)]
@@ -248,7 +249,6 @@ pub(crate) fn create_default_mat<B: Backend>(resources: &Resources) -> Material 
     use crate::mtl::TextureOffset;
 
     let loader = resources.get::<DefaultLoader>().unwrap();
-
     let albedo = load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 1.0));
     let emission = load_from_srgba(Srgba::new(0.0, 0.0, 0.0, 0.0));
     let normal = load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 1.0, 1.0));

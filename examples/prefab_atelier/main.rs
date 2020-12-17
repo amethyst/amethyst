@@ -1,35 +1,23 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
 
+use std::collections::HashMap;
+
 use amethyst::{
-    // assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     assets::{
-        prefab::{
-            register_component_type, ComponentRegistry, ComponentRegistryBuilder, Prefab, RawPrefab,
-        },
-        AssetStorage, DefaultLoader, Format as AssetFormat, Handle, Loader, LoaderBundle,
-        ProcessingQueue,
+        prefab::{register_component_type, ComponentRegistry, Prefab, RawPrefab},
+        AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle,
     },
-    core::{
-        math::Vector3,
-        transform::{Transform, TransformBundle},
-    },
-    ecs::{query, Resources, World},
+    core::transform::{Transform, TransformBundle},
+    ecs::{query, World},
     prelude::*,
     renderer::{
-        light::Light,
-        mtl::Material,
         plugins::{RenderShaded3D, RenderToWindow},
-        rendy::mesh::{Normal, Position, TexCoord},
-        types::{DefaultBackend, Mesh},
+        types::DefaultBackend,
         RenderingBundle,
     },
     utils::application_root_dir,
     Error,
 };
-use serde::{Deserialize, Serialize};
-use serde_diff::SerdeDiff;
-use std::collections::HashMap;
-use type_uuid::TypeUuid;
 
 // type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 

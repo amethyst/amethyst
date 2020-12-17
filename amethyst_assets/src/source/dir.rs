@@ -4,10 +4,9 @@ use std::{
     time::UNIX_EPOCH,
 };
 
+use amethyst_error::{format_err, Error, ResultExt};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-
-use amethyst_error::{format_err, Error, ResultExt};
 
 use crate::{error, source::Source};
 
@@ -81,9 +80,8 @@ impl Source for Directory {
 mod test {
     use std::path::Path;
 
-    use crate::source::Source;
-
     use super::Directory;
+    use crate::source::Source;
 
     #[test]
     fn loads_asset_from_assets_directory() {

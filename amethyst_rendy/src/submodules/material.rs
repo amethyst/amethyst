@@ -1,4 +1,10 @@
 //! Material abstraction submodule.
+use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle, WeakHandle};
+use amethyst_core::ecs::*;
+use glsl_layout::*;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     mtl::{Material, StaticTextureSet},
     pod,
@@ -14,12 +20,6 @@ use crate::{
     types::{Backend, Texture},
     util,
 };
-use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle, WeakHandle};
-use amethyst_core::ecs::*;
-use glsl_layout::*;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 #[derive(Debug)]
 struct SlotAllocator {

@@ -6,18 +6,12 @@ use std::{
     },
 };
 
+use amethyst_core::{ecs::*, ArcThreadPool, Time};
+use amethyst_error::{Error, ResultExt};
 use crossbeam_queue::SegQueue;
 use derivative::Derivative;
 use log::{debug, error, trace, warn};
 use rayon::ThreadPool;
-use specs::{
-    hibitset::BitSet,
-    storage::{UnprotectedStorage, VecStorage},
-};
-
-use amethyst_core::{ecs::*, ArcThreadPool, Time};
-use amethyst_error::{Error, ResultExt};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -276,7 +270,7 @@ impl<A: Asset> AssetStorage<A> {
                                         handle.id()
                                     );
                                     tracker.fail(
-                                        handle.id(),
+                                        handle.id().into(),
                                         A::name(),
                                         name,
                                         Error::from(error::Error::UnusedHandle),
@@ -310,7 +304,7 @@ impl<A: Asset> AssetStorage<A> {
                                     handle,
                                     e,
                                 );
-                                tracker.fail(handle.id(), A::name(), name, e);
+                                tracker.fail(handle.id().into(), A::name(), name, e);
 
                                 continue;
                             }

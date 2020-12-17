@@ -1,11 +1,15 @@
-use crate::experimental::{DefaultLoader, Loader};
-use crate::prefab::{ComponentRegistryBuilder, PrefabImporter};
-use crate::simple_importer::get_source_importers;
+use std::path::PathBuf;
+
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
 use atelier_importer::BoxedImporter;
 use log::{debug, info, log_enabled, trace, Level};
-use std::path::PathBuf;
+
+use crate::{
+    experimental::{DefaultLoader, Loader},
+    prefab::{ComponentRegistryBuilder, PrefabImporter},
+    simple_importer::get_source_importers,
+};
 
 fn asset_loading_tick(_: &mut World, resources: &mut Resources) {
     let mut loader = resources

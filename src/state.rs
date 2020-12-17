@@ -1,15 +1,13 @@
 //! Utilities for game state management.
 
-use amethyst_input::is_close_requested;
-
-use derivative::Derivative;
-
-use crate::{ecs::*, GameData, StateEvent};
-
 use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
+use amethyst_input::is_close_requested;
+use derivative::Derivative;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{ecs::*, GameData, StateEvent};
 
 /// Error type for errors occurring in `StateMachine`
 #[derive(Debug)]
@@ -786,67 +784,75 @@ mod tests {
 
     #[test]
     fn switch_pop() {
-        use crate::ecs::prelude::{World, WorldExt};
+        use crate::ecs::World;
 
-        let mut world = World::new();
+        let mut world = World::default();
+        let mut resources = Resources::default();
 
         let mut sm = StateMachine::new(State1(7));
         // Unwrap here is fine because start can only fail when there are no states in the machine.
-        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+        sm.start(StateData::new(&mut world, &mut resources, &mut ()))
+            .unwrap();
 
         for _ in 0..8 {
-            sm.update(StateData::new(&mut world, &mut ()));
+            sm.update(StateData::new(&mut world, &mut resources, &mut ()));
             assert!(sm.is_running());
         }
 
-        sm.update(StateData::new(&mut world, &mut ()));
+        sm.update(StateData::new(&mut world, &mut resources, &mut ()));
         assert!(!sm.is_running());
     }
 
     #[test]
     fn new_stack() {
-        use crate::ecs::prelude::{World, WorldExt};
+        use crate::ecs::World;
 
-        let mut world = World::new();
+        let mut world = World::default();
+        let mut resources = Resources::default();
 
         let mut sm = StateMachine::new(StateNewStack);
         // Unwrap here is fine because start can only fail when there are no states in the machine.
-        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+        sm.start(StateData::new(&mut world, &mut resources, &mut ()))
+            .unwrap();
 
-        sm.update(StateData::new(&mut world, &mut ()));
+        sm.update(StateData::new(&mut world, &mut resources, &mut ()));
         assert_eq!(sm.state_stack.len(), 4);
     }
 
     #[test]
     fn sequence() {
-        use crate::ecs::prelude::{World, WorldExt};
+        use crate::ecs::World;
 
-        let mut world = World::new();
+        let mut world = World::default();
+        let mut resources = Resources::default();
 
         let mut sm = StateMachine::new(StateSequence);
         // Unwrap here is fine because start can only fail when there are no states in the machine.
-        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+        sm.start(StateData::new(&mut world, &mut resources, &mut ()))
+            .unwrap();
 
-        sm.update(StateData::new(&mut world, &mut ()));
+        sm.update(StateData::new(&mut world, &mut resources, &mut ()));
         assert_eq!(sm.state_stack.len(), 3);
     }
 
     #[test]
     fn replace() {
-        use crate::ecs::prelude::{World, WorldExt};
+        use crate::ecs::World;
 
-        let mut world = World::new();
+        let mut world = World::default();
+        let mut resources = Resources::default();
 
         let mut sm = StateMachine::new(StateReplace(3));
         // Unwrap here is fine because start can only fail when there are no states in the machine.
-        sm.start(StateData::new(&mut world, &mut ())).unwrap();
+        sm.start(StateData::new(&mut world, &mut resources, &mut ()))
+            .unwrap();
 
         for i in 0..3 {
-            sm.update(StateData::new(&mut world, &mut ()));
+            sm.update(StateData::new(&mut world, &mut resources, &mut ()));
             assert_eq!(sm.state_stack.len(), i + 2);
         }
 
-        sm.update(StateData::new(&mut world, &mut ()));
+        sm.update(StateData::new(&mut world, &mut resources, &mut ()));
         assert_eq!(sm.state_stack.len(), 1);
     }
 }

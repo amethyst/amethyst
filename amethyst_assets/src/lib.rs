@@ -7,7 +7,13 @@
 //! * Asynchronous & Parallel using Rayon
 //! * Allow different sources
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+
+pub use rayon::ThreadPool;
 
 #[cfg(feature = "json")]
 pub use crate::formats::JsonFormat;
@@ -16,24 +22,18 @@ pub use crate::{
     cache::Cache,
     dyn_format::FormatRegisteredData,
     formats::RonFormat,
-    // loader::Loader,
     progress::{Completion, Progress, ProgressCounter, Tracker},
     reload::{build_hot_reload_system, HotReloadBundle, HotReloadStrategy, Reload, SingleFile},
     source::{Directory, Source},
-    // storage::{AssetProcessorSystemBundle, AssetStorage, Handle, ProcessingState, WeakHandle},
 };
-
-pub use rayon::ThreadPool;
 
 mod asset;
 mod cache;
 mod dyn_format;
 pub mod error;
 mod formats;
-// mod helper;
 // mod loader;
 pub mod prefab;
-
 mod progress;
 mod reload;
 mod source;
@@ -46,6 +46,12 @@ mod simple_importer;
 mod storage_new;
 /// Experimental module for testing new asset loading features
 pub mod experimental {
+    pub use atelier_core::TypeUuidDynamic;
+    pub use atelier_loader::{
+        asset_uuid,
+        handle::{AssetHandle, GenericHandle, Handle},
+    };
+
     pub use crate::{
         bundle_new::LoaderBundle,
         loader_new::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
@@ -53,9 +59,6 @@ pub mod experimental {
         simple_importer::{SimpleImporter, SourceFileImporter},
         storage_new::AssetStorage,
     };
-    pub use atelier_core::TypeUuidDynamic;
-    pub use atelier_loader::asset_uuid;
-    pub use atelier_loader::handle::{AssetHandle, GenericHandle, Handle};
 }
 pub use atelier_loader::{
     handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
@@ -64,11 +67,10 @@ pub use atelier_loader::{
 pub use bundle_new::{start_asset_daemon, LoaderBundle};
 pub use loader_new::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader};
 pub use processor::{AddToDispatcher, DefaultProcessor, ProcessingQueue, ProcessingState};
-
 pub use storage_new::AssetStorage;
 // used in macros. Private API otherwise.
 #[doc(hidden)]
-pub use crate::dyn_format::{DeserializeFn, Registry};
-// used in macros. Private API otherwise.
-#[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};
+
+#[doc(hidden)]
+pub use crate::dyn_format::{DeserializeFn, Registry};

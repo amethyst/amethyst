@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use amethyst::{assets::Source, error::format_err, Error};
-
 use derive_deref::{Deref, DerefMut};
 use derive_new::new;
 

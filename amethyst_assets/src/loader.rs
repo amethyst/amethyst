@@ -1,10 +1,9 @@
 use std::{borrow::Borrow, hash::Hash, path::PathBuf, sync::Arc};
 
+use amethyst_error::ResultExt;
 use fnv::FnvHashMap;
 use log::debug;
 use rayon::ThreadPool;
-
-use amethyst_error::ResultExt;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

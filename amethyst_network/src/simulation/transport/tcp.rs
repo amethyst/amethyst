@@ -1,21 +1,23 @@
 //! Network systems implementation backed by the TCP network protocol.
 
+use std::{
+    collections::HashMap,
+    io::{self, Read as IORead, Write as IOWrite},
+    net::{SocketAddr, TcpListener, TcpStream},
+    ops::DerefMut,
+};
+
+use amethyst_core::{ecs::*, EventChannel};
+use amethyst_error::Error;
+use bytes::Bytes;
+use log::warn;
+
 use crate::simulation::{
     events::NetworkSimulationEvent,
     message::Message,
     requirements::DeliveryRequirement,
     timing::{build_network_simulation_time_system, NetworkSimulationTime},
     transport::TransportResource,
-};
-use amethyst_core::{ecs::*, EventChannel};
-use amethyst_error::Error;
-use bytes::Bytes;
-use log::warn;
-use std::{
-    collections::HashMap,
-    io::{self, Read as IORead, Write as IOWrite},
-    net::{SocketAddr, TcpListener, TcpStream},
-    ops::DerefMut,
 };
 
 /// Use this network bundle to add the TCP transport layer to your game.

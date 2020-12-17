@@ -1,16 +1,17 @@
 //! Module containing structures useful for batching draw calls
 //! in scenarios with various known assumptions, e.g. order independence.
-use crate::util::TapCountIter;
-use derivative::Derivative;
-use smallvec::{smallvec, SmallVec};
 use std::{
     collections::hash_map::Entry,
     iter::{Extend, FromIterator},
     ops::Range,
 };
 
+use derivative::Derivative;
+use smallvec::{smallvec, SmallVec};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::util::TapCountIter;
 
 /// Iterator trait for grouping iterated 2-tuples `(K, V)` by contiguous ranges with equal `K`,
 /// providing access in a group-by-group manner.

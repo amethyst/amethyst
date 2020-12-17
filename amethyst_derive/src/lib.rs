@@ -1,6 +1,10 @@
 //! This crate implements various derive macros for easing the use of various amethyst features.
 //! At the moment, this consists of event readers, prefab and UI widget derives.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![recursion_limit = "256"]
 #![warn(
     missing_debug_implementations,
@@ -19,7 +23,6 @@ use syn::{parse_macro_input, DeriveInput};
 
 mod event_reader;
 mod prefab_data;
-mod system_desc;
 mod widget_id;
 
 /// EventReader
@@ -50,18 +53,5 @@ pub fn prefab_data_derive(input: TokenStream) -> TokenStream {
 pub fn widget_id_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let gen = widget_id::impl_widget_id(&ast);
-    gen.into()
-}
-
-/// Derive a `SystemDesc` implementation.
-///
-/// The `SystemDesc` is passed to the `GameData` to instantiate the `System` when building the
-/// dispatcher.
-///
-/// This derive may be used for `System`s that do not require special code for `System::setup`.
-#[proc_macro_derive(SystemDesc, attributes(system_desc))]
-pub fn system_desc_derive(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    let gen = system_desc::impl_system_desc(&ast);
     gen.into()
 }

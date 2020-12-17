@@ -1,15 +1,15 @@
 //! Environment submodule for shared environmental descriptor set data.
 //! Fetches and sets projection set information for a flat pass.
+use amethyst_core::ecs::*;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     pod::ViewArgs,
     rendy::{command::RenderPassEncoder, factory::Factory},
     submodules::{gather::CameraGatherer, uniform::DynamicUniform},
     types::Backend,
 };
-use amethyst_core::ecs::*;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// Submodule for loading and binding descriptor sets for a flat, unlit environment.
 /// This also abstracts away the need for handling multiple images in flight, as it provides

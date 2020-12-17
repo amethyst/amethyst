@@ -1,7 +1,8 @@
 use std::borrow::Cow;
 
-use crate::input_handler::InputHandler;
 use winit::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
+
+use crate::input_handler::InputHandler;
 
 /// If this event was for manipulating a keyboard key then this will return the `VirtualKeyCode`
 /// and the new state.

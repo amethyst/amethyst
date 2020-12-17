@@ -1,4 +1,5 @@
-use super::{get_image_data, Buffers, ImageFormat as ImportDataFormat};
+use std::sync::Arc;
+
 use amethyst_assets::Source;
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -13,9 +14,9 @@ use amethyst_rendy::{
         },
     },
 };
-
 use gltf::{self, material::AlphaMode};
-use std::sync::Arc;
+
+use super::{get_image_data, Buffers, ImageFormat as ImportDataFormat};
 
 // Load a single material, and transform into a format usable by the engine
 pub fn load_material(

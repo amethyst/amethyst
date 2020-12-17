@@ -1,5 +1,9 @@
 //! A collection of abstractions for various input devices to be used with Amethyst.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -8,6 +12,10 @@
 )]
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
+
+use std::iter::Iterator;
+
+pub use winit::{ElementState, VirtualKeyCode};
 
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
@@ -27,9 +35,6 @@ pub use self::{
         is_key_down, is_key_up, is_mouse_button_down,
     },
 };
-pub use winit::{ElementState, VirtualKeyCode};
-
-use std::iter::Iterator;
 
 mod axis;
 mod bindings;

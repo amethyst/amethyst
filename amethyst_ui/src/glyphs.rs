@@ -1,9 +1,7 @@
 //! Module containing the system managing glyphbrush state for visible UI Text components.
 
-use crate::{
-    pass::UiArgs, text::CachedGlyph, FontAsset, LineMode, Selected, TextEditing, UiText,
-    UiTransform,
-};
+use std::{collections::HashMap, marker::PhantomData};
+
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{
@@ -27,8 +25,12 @@ use glyph_brush::{
     rusttype::Scale, BrushAction, BrushError, BuiltInLineBreaker, FontId, GlyphBrush,
     GlyphBrushBuilder, GlyphCruncher, Layout, LineBreak, LineBreaker, SectionText, VariedSection,
 };
-use std::{collections::HashMap, marker::PhantomData};
 use unicode_segmentation::UnicodeSegmentation;
+
+use crate::{
+    pass::UiArgs, text::CachedGlyph, FontAsset, LineMode, Selected, TextEditing, UiText,
+    UiTransform,
+};
 
 #[derive(Debug)]
 pub struct UiGlyphsResource {

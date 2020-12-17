@@ -1,15 +1,3 @@
-use crate::{
-    batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
-    pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::SpriteArgs,
-    resources::Tint,
-    sprite::{SpriteRender, SpriteSheet},
-    sprite_visibility::SpriteVisibility,
-    submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
-    system::GraphAuxData,
-    types::{Backend, Texture},
-    util,
-};
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{systems::ResourceSet, *},
@@ -27,9 +15,21 @@ use rendy::{
     mesh::AsVertex,
     shader::Shader,
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
+    pipeline::{PipelineDescBuilder, PipelinesBuilder},
+    pod::SpriteArgs,
+    resources::Tint,
+    sprite::{SpriteRender, SpriteSheet},
+    sprite_visibility::SpriteVisibility,
+    submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
+    system::GraphAuxData,
+    types::{Backend, Texture},
+    util,
+};
 
 /// Draw opaque sprites without lighting.
 #[derive(Clone, Debug, PartialEq, Derivative)]

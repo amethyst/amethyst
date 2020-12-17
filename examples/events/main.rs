@@ -1,5 +1,7 @@
 extern crate amethyst;
 
+use core::result::Result;
+
 use amethyst::{
     core::{
         bundle::SystemBundle,
@@ -11,10 +13,8 @@ use amethyst::{
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     prelude::*,
     utils::application_root_dir,
+    Error,
 };
-
-use amethyst::Error;
-use core::result::Result;
 
 #[derive(Debug)]
 struct MyBundle;

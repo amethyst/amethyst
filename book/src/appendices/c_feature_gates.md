@@ -22,6 +22,7 @@ At the time of writing, the list of features of this type is the following:
 * `network`
 * `renderer`
 * `saveload`
+* `ui`
 * `sdl_controller`
 
 The full list of available features is available in the [Cargo.toml] file.

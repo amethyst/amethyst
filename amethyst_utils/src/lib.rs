@@ -1,5 +1,9 @@
 //! A collection of useful amethyst utilities, designed to make your game dev life easier.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,

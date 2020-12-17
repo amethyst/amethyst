@@ -1,11 +1,11 @@
 //! Misc. rendy and rendering utility functions and types.
-use crate::types::{Backend, Texture};
-use amethyst_core::num::PrimInt;
 use core::{
     hash::Hash,
     iter::{DoubleEndedIterator, ExactSizeIterator, FusedIterator},
     ops::{Add, Range},
 };
+
+use amethyst_core::num::PrimInt;
 use derivative::Derivative;
 use glsl_layout::*;
 use rendy::{
@@ -17,9 +17,10 @@ use rendy::{
     resource::{BufferInfo, Escape},
 };
 use smallvec::SmallVec;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::types::{Backend, Texture};
 
 /// Helper function to clone ranges.
 #[inline]
