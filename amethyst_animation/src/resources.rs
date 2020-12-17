@@ -7,7 +7,6 @@ use amethyst_core::{
 };
 use derivative::Derivative;
 use fnv::FnvHashMap;
-use log::error;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 use serde::{Deserialize, Serialize};
 
@@ -159,15 +158,6 @@ where
             nodes,
             m: marker::PhantomData,
         }
-    }
-
-    pub fn into_mut_entries(&self, world: &SubWorld) -> Vec<(Entity, world::EntryMut)> {
-        self.nodes
-            .values()
-            .map(|entity| (*entity, world.entry_mut(*entity).ok()))
-            .filter(|x| x.1.is_some())
-            .map(|x| (x.0, x.1.unwrap()))
-            .collect()
     }
 
     /// Create rest state for the hierarchy. Will copy the values from the base components for each

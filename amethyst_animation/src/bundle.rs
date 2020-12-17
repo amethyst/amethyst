@@ -5,7 +5,7 @@ use amethyst_core::ecs::*;
 use amethyst_error::Error;
 use marker::PhantomData;
 
-use crate::{build_sampler_interpolation_system, resources::AnimationSampling, Animation, Sampler};
+use crate::{resources::AnimationSampling, Animation, Sampler};
 
 /// Bundle for vertex skinning
 ///
@@ -66,7 +66,9 @@ where
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(build_sampler_interpolation_system::<T>(world, resources));
+        builder.add_system(crate::systems::build_sampler_interpolation_system::<T>(
+            world, resources,
+        ));
         builder.add_bundle(AssetProcessorSystemBundle::<Sampler<T::Primitive>>::default());
 
         Ok(())
@@ -128,13 +130,7 @@ where
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         builder.add_bundle(AssetProcessorSystemBundle::<Animation<T>>::default());
-
-        /*builder.add(
-            AnimationControlSystemDesc::<I, T>::default().build(world),
-            self.animation_name,
-            self.dep,
-        );*/
-
+        builder.add_system(crate::systems::build_animation_control_system::<I, T>());
         builder.add_bundle(SamplingBundle::<T> { m: PhantomData });
 
         Ok(())

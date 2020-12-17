@@ -1,9 +1,7 @@
 use std::{
     hash::Hash,
-    marker::{self},
-    time::Duration,
+    time::Duration
 };
-
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{ecs::*, timing::secs_to_duration};
 use fnv::FnvHashMap;
@@ -11,9 +9,6 @@ use log::error;
 use minterpolate::InterpolationPrimitive;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-use world::EntryRef;
 
 use crate::resources::{
     Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
@@ -32,19 +27,11 @@ use crate::resources::{
 /// - `I`: identifier type for running animations, only one animation can be run at the same time
 ///        with the same id
 /// - `T`: the component type that the animation should be applied to
-#[derive(Default, Debug)]
-pub struct AnimationControlSystem<I, T>
-where
-    I: Eq + Hash,
-{
-    m: marker::PhantomData<(I, T)>,
-}
-
 pub fn build_animation_control_system<
     I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Clone,
->() -> Box<dyn Runnable> {
-    Box::new(SystemBuilder::new("AnimationControlSystem")
+>() -> impl systems::ParallelRunnable {
+    SystemBuilder::new("AnimationControlSystem")
         .read_resource::<AssetStorage<Animation<T>>>()
         .read_resource::<AssetStorage<Sampler<T::Primitive>>>()
         .read_component::<AnimationHierarchy<T>>()
@@ -53,17 +40,17 @@ pub fn build_animation_control_system<
         .write_component::<SamplerControlSet<T>>()
         .write_component::<RestState<T>>()
         .with_query(<(Read<Entity>, Write<AnimationControlSet<I, T>>, TryRead<AnimationHierarchy<T>>)>::query())
-        .build(|mut buffer, mut world, (animation_storage, sampler_storage),  query| {
+        .build(|mut buffer,  world, (animation_storage, sampler_storage),  query| {
             let mut remove_sets = Vec::default();
-            let mut remove_ids = Vec::default();
-            let mut deferred_start = Vec::default();
             let mut next_id = 1;
-            let mut state_set = FnvHashMap::default();
 
-            for (entity, control_set, hierarchy) in query.iter_mut(world) {
-                remove_ids.clear();
-                state_set.clear();
+            let (mut query_world, mut world) = world.split_for_query(&query);
 
+            for (entity, control_set, hierarchy) in query.iter_mut(&mut query_world) {
+                let mut remove_ids = Vec::default();
+                let mut state_set = FnvHashMap::default();
+
+                // process each animation in control set
                 for  (ref id, ref mut control) in control_set.animations.iter_mut() {
                     let mut remove = false;
                     if let Some(state) =
@@ -83,9 +70,11 @@ pub fn build_animation_control_system<
                                 )
                             })
                     {
+                        // update the current state of this animation
                         control.state = state;
                     }
 
+                    // update command for next iteration
                     if let AnimationCommand::Step(_) = control.command {
                         control.command = AnimationCommand::Start;
                     }
@@ -93,21 +82,39 @@ pub fn build_animation_control_system<
                         control.command = AnimationCommand::Start;
                     }
                     
+                    // remove completed animations
                     if remove {
                         remove_ids.push(*id);
                     } else {
+                        // record current position of running animations to know when to trigger deferred
                         state_set.insert(
                             *id,
-                            get_running_duration(*entity, control, hierarchy, &mut world),
-                        );
+                            match control.state {
+                                ControlState::Running(_) => find_max_duration(
+                                    control.id,
+                                    world
+                                        .entry_ref(
+                                            *hierarchy
+                                                .and_then(|h| h.nodes.values().next())
+                                                .unwrap_or(&entity),
+                                        )
+                                        .unwrap()
+                                        .get_component::<SamplerControlSet<T>>()
+                                        .ok(),
+                                ),
+                                _ => -1.0,
+                            }
+                                                );
                     }
                 }
 
+                // record deferred animation as not started
                 for deferred_animation in &control_set.deferred_animations {
                     state_set.insert(deferred_animation.animation_id, -1.0);
                 }
+                
+                let mut deferred_start = Vec::default();
 
-                deferred_start.clear();
                 for deferred_animation in &control_set.deferred_animations {
                     let (start, start_dur) =
                         if let Some(dur) = state_set.get(&deferred_animation.relation.0) {
@@ -131,8 +138,6 @@ pub fn build_animation_control_system<
                             .insert(deferred_animation.animation_id, start_dur);
                     }
                 }
-
-                // let mut next_id = next_id;
                 
                 for &(id, start_dur) in &deferred_start {
                     let index = control_set
@@ -175,49 +180,9 @@ pub fn build_animation_control_system<
                 }
             }
             for entity in remove_sets {
-                buffer.remove(*entity)
+                todo!("remove control set from entity");
             }
-             }))
-}
-
-impl<I, T> AnimationControlSystem<I, T>
-where
-    I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
-    T: AnimationSampling + Clone,
-{
-    /// Creates a new `AnimationControlSystem`
-    pub fn new() -> Self {
-        AnimationControlSystem {
-            m: marker::PhantomData,
-        }
-    }
-}
-
-fn get_running_duration<T>(
-    entity: Entity,
-    control: &AnimationControl<T>,
-    hierarchy: Option<&AnimationHierarchy<T>>,
-    world: &mut SubWorld,
-    // samplers: &WriteStorage<'_, SamplerControlSet<T>>,
-) -> f32
-where
-    T: AnimationSampling,
-{
-    match control.state {
-        ControlState::Running(_) => find_max_duration(
-            control.id,
-            world
-                .entry_ref(
-                    *hierarchy
-                        .and_then(|h| h.nodes.values().next())
-                        .unwrap_or(&entity),
-                )
-                .unwrap()
-                .get_component::<SamplerControlSet<T>>()
-                .ok(),
-        ),
-        _ => -1.0,
-    }
+             })
 }
 
 fn find_max_duration<T>(control_id: u64, samplers: Option<&SamplerControlSet<T>>) -> f32
@@ -488,7 +453,6 @@ where
 fn pause_animation<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    //samplers: &mut WriteStorage<'_, SamplerControlSet<T>>,
     world: &mut SubWorld,
 ) where
     T: AnimationSampling,

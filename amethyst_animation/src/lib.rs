@@ -68,7 +68,6 @@ pub use self::{
         RestState, Sampler, SamplerControl, SamplerControlSet, StepDirection,
     },
     sprite::{SpriteRenderChannel, SpriteRenderPrimitive},
-    systems::{build_sampler_interpolation_system, AnimationControlSystem},
     transform::TransformChannel,
     util::{get_animation_set, SamplerPrimitive},
 };

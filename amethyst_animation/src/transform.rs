@@ -1,5 +1,5 @@
 use amethyst_core::{
-    ecs::{CommandBuffer, SubWorld},
+    ecs::CommandBuffer,
     math::{zero, Quaternion, Unit, Vector3, Vector4},
     transform::Transform,
 };

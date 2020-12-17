@@ -1,5 +1,5 @@
 use amethyst_assets::Handle;
-use amethyst_core::ecs::{CommandBuffer, SubWorld};
+use amethyst_core::ecs::CommandBuffer;
 use amethyst_rendy::sprite::{SpriteRender, SpriteSheet};
 use log::error;
 use minterpolate::InterpolationPrimitive;
