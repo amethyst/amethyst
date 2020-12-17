@@ -199,7 +199,7 @@ fn get_running_duration<T>(
     hierarchy: Option<&AnimationHierarchy<T>>,
     world: &mut SubWorld,
     // samplers: &WriteStorage<'_, SamplerControlSet<T>>,
- ) -> f32
+) -> f32
 where
     T: AnimationSampling,
 {
@@ -298,7 +298,7 @@ where
         // Check for aborted or done animation
         (_, &AnimationCommand::Abort) | (&ControlState::Abort, _) | (&ControlState::Done, _) => {
             // signal samplers to abort, and remove control object if all samplers are done and removed
-            if check_and_terminate_animation(control.id, hierarchy,world,  buffer) {
+            if check_and_terminate_animation(control.id, hierarchy, world, buffer) {
                 *remove = true;
             }
             Some(ControlState::Abort)
@@ -311,7 +311,14 @@ where
         (&ControlState::Requested, &AnimationCommand::Start) => {
             control.id = *next_id;
             *next_id += 1;
-            if start_animation(animation, sampler_storage, control,world, buffer, hierarchy) {
+            if start_animation(
+                animation,
+                sampler_storage,
+                control,
+                world,
+                buffer,
+                hierarchy,
+            ) {
                 Some(ControlState::Running(Duration::from_secs(0)))
             } else {
                 None // Try again next frame, might just be that samplers haven't finished loading
@@ -321,7 +328,14 @@ where
         (&ControlState::Deferred(..), &AnimationCommand::Start) => {
             control.id = *next_id;
             *next_id += 1;
-            if start_animation(animation, sampler_storage, control,world,  buffer, hierarchy) {
+            if start_animation(
+                animation,
+                sampler_storage,
+                control,
+                world,
+                buffer,
+                hierarchy,
+            ) {
                 Some(ControlState::Running(Duration::from_secs(0)))
             } else {
                 None // Try again next frame, might just be that samplers haven't finished loading
@@ -488,11 +502,8 @@ fn pause_animation<T>(
     }
 }
 
-fn unpause_animation<T>(
-    control_id: u64,
-    hierarchy: &AnimationHierarchy<T>,
-    world: &mut SubWorld,
-) where
+fn unpause_animation<T>(control_id: u64, hierarchy: &AnimationHierarchy<T>, world: &mut SubWorld)
+where
     T: AnimationSampling,
 {
     for node_entity in hierarchy.nodes.values() {
