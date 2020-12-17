@@ -36,7 +36,7 @@ use amethyst::renderer::{SpriteSheet, Texture};
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, mut data: StateData<'_, GameData>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
         // ...
 
@@ -82,7 +82,7 @@ use amethyst::window::ScreenDimensions;
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, mut data: StateData<'_, GameData>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
 #
 #         let sprite_sheet = load_sprite_sheet(texture_handle);

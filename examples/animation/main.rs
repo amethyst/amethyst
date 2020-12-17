@@ -50,7 +50,7 @@ impl Default for Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
@@ -98,7 +98,7 @@ impl SimpleState for Example {
 
     fn handle_event(
         &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
+        data: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         let StateData { world, .. } = data;

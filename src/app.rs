@@ -670,7 +670,7 @@ where
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
-    ///     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
     ///         let storage = data.world.read_resource();
     ///
     ///         let loader = data.world.read_resource::<Loader>();
@@ -727,7 +727,7 @@ where
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
-    ///     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
     ///         let storage = data.world.read_resource();
     ///
     ///         let loader = data.world.read_resource::<Loader>();

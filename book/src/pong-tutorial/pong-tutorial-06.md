@@ -63,7 +63,7 @@ Then, we'll need to add the Sounds Resource to our World. Update `pong.rs`:
 use crate::audio::initialise_audio;
 
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         // --snip--
 
         initialise_audio(world);

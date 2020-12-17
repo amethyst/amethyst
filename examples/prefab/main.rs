@@ -1,7 +1,8 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
 
+use std::collections::HashMap;
+
 use amethyst::{
-    // assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     assets::{
         prefab::{register_component_type, ComponentRegistry, Prefab},
         AssetStorage, DefaultLoader, Format as AssetFormat, Handle, Loader, LoaderBundle,
@@ -24,7 +25,6 @@ use amethyst::{
 };
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
-use std::collections::HashMap;
 use type_uuid::TypeUuid;
 #[derive(TypeUuid, Serialize, Deserialize, SerdeDiff, Clone, Default)]
 #[uuid = "f5780013-bae4-49f0-ac0e-a108ff52fec0"]

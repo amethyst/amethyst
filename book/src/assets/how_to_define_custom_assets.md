@@ -243,7 +243,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # }
     #
     impl SimpleState for LoadingState {
-        fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        fn on_start(&mut self, data: StateData<'_, GameData>) {
             let loader = &data.world.read_resource::<Loader>();
             let energy_blast_handle = loader.load(
                 "energy_blast.ron",

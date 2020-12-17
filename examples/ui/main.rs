@@ -36,7 +36,7 @@ struct Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { mut world, .. } = data;
 
         // Make a button using the UiButtonBuilder.
@@ -63,7 +63,7 @@ impl SimpleState for Example {
 
     fn handle_event(
         &mut self,
-        _: StateData<'_, GameData<'_, '_>>,
+        _: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         match &event {
@@ -88,7 +88,7 @@ impl SimpleState for Example {
         }
     }
 
-    fn update(&mut self, state_data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, state_data: &mut StateData<'_, GameData>) -> SimpleTrans {
         let StateData { world, .. } = state_data;
 
         if self.fps_display.is_none() {
