@@ -161,6 +161,15 @@ where
         }
     }
 
+    pub fn into_mut_entries(&self, world: &SubWorld) -> Vec<(Entity, world::EntryMut)> {
+        self.nodes
+            .values()
+            .map(|entity| (*entity, world.entry_mut(*entity).ok()))
+            .filter(|x| x.1.is_some())
+            .map(|x| (x.0, x.1.unwrap()))
+            .collect()
+    }
+
     /// Create rest state for the hierarchy. Will copy the values from the base components for each
     /// entity in the hierarchy.
     pub fn rest_state(&self, world: &SubWorld, buffer: &mut CommandBuffer)
