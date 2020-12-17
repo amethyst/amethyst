@@ -1,14 +1,7 @@
-use derivative::Derivative;
-use serde::{Deserialize, Serialize};
-
-use amethyst_core::{
-    ecs::{
-        prelude::*,
-    },
-    math::Matrix4,
-};
+use amethyst_core::{ecs::prelude::*, math::Matrix4};
 use amethyst_rendy::skinning::JointTransformsPrefab;
 use derivative::Derivative;
+use serde::{Deserialize, Serialize};
 
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
@@ -16,7 +9,6 @@ pub struct Joint {
     /// The skins attached to this joint.
     pub skins: Vec<Entity>,
 }
-
 
 /// Skin, attach to the root entity in the mesh hierarchy
 #[derive(Debug)]
@@ -128,7 +120,7 @@ pub struct SkinPrefab {
 // }
 
 /// `PrefabData` for full skinning support
-#[derive(Clone, Debug, Default, Derivative, Serialize, Deserialize/*, PrefabData*/)]
+#[derive(Clone, Debug, Default, Derivative, Serialize, Deserialize)]
 #[serde(default)]
 pub struct SkinnablePrefab {
     /// Place `Skin` on the `Entity`

@@ -234,7 +234,7 @@ pub struct AnimationHierarchyPrefab<T> {
 ///
 /// - `I`: Id type of `Animation`s in `AnimationSet`s
 /// - `T`: The animatable `Component`
-#[derive(Derivative, Clone, Debug, Deserialize, Serialize /*, PrefabData*/)]
+#[derive(Derivative, Clone, Debug, Deserialize, Serialize)]
 #[serde(
     default,
     bound(

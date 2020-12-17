@@ -1,7 +1,5 @@
-use std::{
-    hash::Hash,
-    time::Duration
-};
+use std::{hash::Hash, time::Duration};
+
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{ecs::*, timing::secs_to_duration};
 use fnv::FnvHashMap;
@@ -31,7 +29,7 @@ pub fn build_animation_control_system<
     I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Clone,
 >() -> impl systems::ParallelRunnable {
-    SystemBuilder::new("AnimationControlSystem")
+    SystemBuilder::new("AnimationControlSystem")  
         .read_resource::<AssetStorage<Animation<T>>>()
         .read_resource::<AssetStorage<Sampler<T::Primitive>>>()
         .read_component::<AnimationHierarchy<T>>()
@@ -40,7 +38,7 @@ pub fn build_animation_control_system<
         .write_component::<SamplerControlSet<T>>()
         .write_component::<RestState<T>>()
         .with_query(<(Read<Entity>, Write<AnimationControlSet<I, T>>, TryRead<AnimationHierarchy<T>>)>::query())
-        .build(|mut buffer,  world, (animation_storage, sampler_storage),  query| {
+        .build(|mut buffer, world, (animation_storage, sampler_storage), query| {
             let mut remove_sets = Vec::default();
             let mut next_id = 1;
 
@@ -81,7 +79,6 @@ pub fn build_animation_control_system<
                     if let AnimationCommand::SetInputValue(_) = control.command {
                         control.command = AnimationCommand::Start;
                     }
-                    
                     // remove completed animations
                     if remove {
                         remove_ids.push(*id);
@@ -112,9 +109,7 @@ pub fn build_animation_control_system<
                 for deferred_animation in &control_set.deferred_animations {
                     state_set.insert(deferred_animation.animation_id, -1.0);
                 }
-                
                 let mut deferred_start = Vec::default();
-
                 for deferred_animation in &control_set.deferred_animations {
                     let (start, start_dur) =
                         if let Some(dur) = state_set.get(&deferred_animation.relation.0) {
@@ -138,7 +133,6 @@ pub fn build_animation_control_system<
                             .insert(deferred_animation.animation_id, start_dur);
                     }
                 }
-                
                 for &(id, start_dur) in &deferred_start {
                     let index = control_set
                         .deferred_animations
@@ -181,8 +175,7 @@ pub fn build_animation_control_system<
             }
             for _entity in remove_sets {
                 todo!("remove control set from entity");
-            }
-             })
+            }})
 }
 
 fn find_max_duration<T>(control_id: u64, samplers: Option<&SamplerControlSet<T>>) -> f32
@@ -252,8 +245,8 @@ where
                 &h_fallback
             } else {
                 error!(
-                "Animation control which target multiple nodes without a hierarchy detected, dropping"
-            );
+                    "Animation control which target multiple nodes without a hierarchy detected, dropping"
+                );
                 *remove = true;
                 return None;
             }
@@ -442,7 +435,10 @@ where
                     buffer.add_component(*node_entity, set);
                 }
             } else {
-                error!("Failed to acquire animated component. Is the component you are trying to animate present on the target entity: {:?}", node_entity);
+                error!(
+                    "Failed to acquire animated component. Is the component you are trying to animate present on the target entity: {:?}",
+                    node_entity
+                );
                 return false;
             }
         }
@@ -450,11 +446,8 @@ where
     true
 }
 
-fn pause_animation<T>(
-    control_id: u64,
-    hierarchy: &AnimationHierarchy<T>,
-    world: &mut SubWorld<'_>,
-) where
+fn pause_animation<T>(control_id: u64, hierarchy: &AnimationHierarchy<T>, world: &mut SubWorld<'_>)
+where
     T: AnimationSampling,
 {
     for node_entity in hierarchy.nodes.values() {
@@ -466,8 +459,11 @@ fn pause_animation<T>(
     }
 }
 
-fn unpause_animation<T>(control_id: u64, hierarchy: &AnimationHierarchy<T>, world: &mut SubWorld<'_>)
-where
+fn unpause_animation<T>(
+    control_id: u64,
+    hierarchy: &AnimationHierarchy<T>,
+    world: &mut SubWorld<'_>,
+) where
     T: AnimationSampling,
 {
     for node_entity in hierarchy.nodes.values() {
