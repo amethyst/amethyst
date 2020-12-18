@@ -69,7 +69,10 @@ where
     }
 }
 
+/// attaches Asset processing systems to the dispatcher schedule
+/// required for create_asset_type
 pub trait AddToDispatcher {
+    /// add asset processing systems to the dispatcher
     fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder);
 }
 
@@ -179,35 +182,12 @@ impl<T> ProcessingQueue<T> {
                         version,
                         commit,
                     } => {
-                        let asset = match data
-                            .and_then(|d| f(d))
-                            // .chain_err(|| ErrorKind::Asset(name.clone()))
-                        {
+                        let asset = match data.and_then(|d| f(d)) {
                             Ok(ProcessingState::Loaded(x)) => {
                                 debug!(
-                                        "Asset (handle id: {:?}) has been loaded successfully",
-                                        handle,
-                                    );
-                                // TODO do this in loader?
-                                // // Add a warning if a handle is unique (i.e. asset does not
-                                // // need to be loaded as it is not used by anything)
-                                // // https://github.com/amethyst/amethyst/issues/628
-                                // if handle.is_unique() {
-                                //     warn!(
-                                //         "Loading unnecessary asset. Handle {} is unique ",
-                                //         handle.id()
-                                //     );
-                                //     if let Some(tracker) = tracker {
-                                //         tracker.fail(
-                                //             handle.id(),
-                                //             A::name(),
-                                //             name,
-                                //             Error::from_kind(ErrorKind::UnusedHandle),
-                                //         );
-                                //     }
-                                // } else if let Some(tracker) = tracker {
-                                //     tracker.success();
-                                // }
+                                    "Asset (handle id: {:?}) has been loaded successfully",
+                                    handle,
+                                );
 
                                 if let Some(tracker) = tracker {
                                     tracker.success();
@@ -218,12 +198,6 @@ impl<T> ProcessingQueue<T> {
                                 x
                             }
                             Ok(ProcessingState::Loading(x)) => {
-                                // debug!(
-                                //         "{:?}: Asset {:?} (handle id: {:?}) is not complete, readding to queue",
-                                //         A::name(),
-                                //         name,
-                                //         handle,
-                                //     );
                                 requeue.push(Processed {
                                     data: Ok(x),
                                     handle,
@@ -235,19 +209,10 @@ impl<T> ProcessingQueue<T> {
                                 continue;
                             }
                             Err(e) => {
-                                // error!(
-                                //     "{:?}: Asset {:?} (handle id: {:?}) could not be loaded: {}",
-                                //     A::name(),
-                                //     name,
-                                //     handle,
-                                //     e,
-                                // );
                                 if let Some(tracker) = tracker {
-                                    // FIXME
-                                    tracker.fail(handle.0, &"", "".to_string(), Error::from_string(""));
+                                    tracker.fail(handle.0, &"", "".to_string(), e);
                                 }
                                 if let Some(op) = load_op {
-                                    // FIXME
                                     op.error(ProcessingError("ProcessingError".into()));
                                 }
                                 continue;
@@ -279,19 +244,3 @@ impl std::fmt::Display for ProcessingError {
 }
 
 impl std::error::Error for ProcessingError {}
-// struct ProcessingError;
-
-// impl std::error::Error for ProcessingError {}
-// impl std::fmt::Display for ProcessingError {
-//     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         std::fmt::Display::fmt(&self.inner.error, fmt)
-//     }
-// }
-
-// impl std::fmt::Debug for ProcessingError {
-//     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         fmt.debug_struct("Error")
-//             .field("inner", &self.inner)
-//             .finish()
-//     }
-// }

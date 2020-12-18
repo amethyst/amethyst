@@ -19,6 +19,7 @@ fn asset_loading_tick(_: &mut World, resources: &mut Resources) {
         .expect("Error in Loader processing");
 }
 
+/// starts the asset thread with atelier_daemon
 pub fn start_asset_daemon(asset_dirs: Vec<PathBuf>) {
     std::thread::spawn(move || {
         let db_path = ".assets_db";
@@ -37,7 +38,7 @@ pub fn start_asset_daemon(asset_dirs: Vec<PathBuf>) {
             importer_map.insert(ext, importer);
         }
 
-        let mut daemon = atelier_daemon::AssetDaemon {
+        let daemon = atelier_daemon::AssetDaemon {
             db_dir: PathBuf::from(db_path),
             address: address.parse().unwrap(),
             importers: importer_map,

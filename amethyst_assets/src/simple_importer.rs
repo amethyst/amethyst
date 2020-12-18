@@ -82,7 +82,9 @@ where
 /// Use [inventory::submit!] to register an importer to use for a file extension.
 #[derive(Debug)]
 pub struct SourceFileImporter {
+    /// File extension for this type of file
     pub extension: &'static str,
+    /// closure that creates Importer for given Format
     pub instantiator: fn() -> Box<dyn BoxedImporter>,
 }
 inventory::collect!(SourceFileImporter);
@@ -94,6 +96,7 @@ pub fn get_source_importers(
         .into_iter()
         .map(|s| (s.extension.trim_start_matches("."), (s.instantiator)()))
 }
+
 // Associates the given file extension with a `Format` implementation
 //
 // The `AssetDaemon` will automatically re-import the asset when a file of that format is created

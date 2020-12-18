@@ -15,18 +15,6 @@
 
 pub use rayon::ThreadPool;
 
-#[cfg(feature = "json")]
-pub use crate::formats::JsonFormat;
-pub use crate::{
-    asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
-    cache::Cache,
-    dyn_format::FormatRegisteredData,
-    formats::RonFormat,
-    progress::{Completion, Progress, ProgressCounter, Tracker},
-    reload::{build_hot_reload_system, HotReloadBundle, HotReloadStrategy, Reload, SingleFile},
-    source::{Directory, Source},
-};
-
 mod asset;
 mod bundle;
 mod cache;
@@ -46,14 +34,25 @@ pub use atelier_loader::{
     handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
     storage::LoadHandle,
 };
-pub use bundle::{start_asset_daemon, LoaderBundle};
-pub use loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader};
-pub use processor::{AddToDispatcher, DefaultProcessor, ProcessingQueue, ProcessingState};
-pub use simple_importer::{SimpleImporter, SourceFileImporter};
-pub use storage::AssetStorage;
 // used in macros. Private API otherwise.
 #[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};
 
 #[doc(hidden)]
 pub use crate::dyn_format::{DeserializeFn, Registry};
+#[cfg(feature = "json")]
+pub use crate::formats::JsonFormat;
+pub use crate::{
+    asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
+    bundle::{start_asset_daemon, LoaderBundle},
+    cache::Cache,
+    dyn_format::FormatRegisteredData,
+    formats::RonFormat,
+    loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
+    processor::{AddToDispatcher, DefaultProcessor, ProcessingQueue, ProcessingState},
+    progress::{Completion, Progress, ProgressCounter, Tracker},
+    reload::{build_hot_reload_system, HotReloadBundle, HotReloadStrategy, Reload, SingleFile},
+    simple_importer::{SimpleImporter, SourceFileImporter},
+    source::{Directory, Source},
+    storage::AssetStorage,
+};
