@@ -265,7 +265,7 @@ pub struct RenderCustom {}
 impl<B: Backend> RenderPlugin<B> for RenderCustom {
     fn on_build<'a, 'b>(
         &mut self,
-        world: &mut World,
+        _world: &mut World,
         resources: &mut Resources,
         _builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
@@ -279,7 +279,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
         _world: &World,
-        resources: &Resources,
+        _resources: &Resources,
     ) -> Result<(), Error> {
         plan.extend_target(Target::Main, |ctx| {
             ctx.add(RenderOrder::Transparent, DrawCustomDesc::new().builder())?;

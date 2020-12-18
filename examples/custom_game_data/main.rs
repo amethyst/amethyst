@@ -1,4 +1,4 @@
-//! Demonstrates how to use a custom game data structure
+//! Demonstrates how to use a custom game data structure with multiple dispatchers
 
 use amethyst::{
     assets::{

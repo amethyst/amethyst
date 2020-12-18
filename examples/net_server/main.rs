@@ -2,10 +2,7 @@
 use std::{net::TcpListener, time::Duration};
 
 use amethyst::{
-    core::{
-        ecs::{System, SystemBundle},
-        frame_limiter::FrameRateLimitStrategy,
-    },
+    core::{ecs::SystemBundle, frame_limiter::FrameRateLimitStrategy},
     network::simulation::{tcp::TcpNetworkBundle, NetworkSimulationEvent, TransportResource},
     prelude::*,
     shrev::{EventChannel, ReaderId},
@@ -14,31 +11,19 @@ use amethyst::{
 };
 use amethyst_network::simulation::NetworkSimulationTime;
 use log::{error, info};
+use systems::ParallelRunnable;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-    //    // UDP
-    //    let socket = UdpSocket::bind("0.0.0.0:3457")?;
-    //    socket.set_nonblocking(true)?;
-
-    // TCP
     let listener = TcpListener::bind("0.0.0.0:3457")?;
     listener.set_nonblocking(true)?;
-
-    //    // Laminar
-    //    let socket = LaminarSocket::bind("0.0.0.0:3457")?;
 
     let assets_dir = application_root_dir()?.join("examples/net_server");
 
     let mut game_data = DispatcherBuilder::default();
-    //        // UDP
-    //        .add_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
-    // TCP
     game_data
         .add_bundle(TcpNetworkBundle::new(Some(listener), 2048))
-        //        // Laminar
-        //        .add_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .add_bundle(SpamReceiveBundle);
 
     let mut game = Application::build(assets_dir, GameState)?
@@ -51,9 +36,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-/// Default empty state
 pub struct GameState;
-
 impl SimpleState for GameState {}
 
 #[derive(Debug)]
@@ -73,47 +56,37 @@ impl SystemBundle for SpamReceiveBundle {
         resources.insert(TransportResource::default());
         resources.insert(NetworkSimulationTime::default());
 
-        builder.add_system(Box::new(SpamReceiveSystem { reader }));
+        builder.add_system(build(reader));
         Ok(())
     }
 }
 
-/// A simple system that receives a ton of network events.
-#[derive(Debug)]
-struct SpamReceiveSystem {
-    reader: ReaderId<NetworkSimulationEvent>,
-}
-
-impl System<'static> for SpamReceiveSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
-        Box::new(
-            SystemBuilder::new("SpamReceiveSystem")
-                .read_resource::<EventChannel<NetworkSimulationEvent>>()
-                .write_resource::<TransportResource>()
-                .build(move |_commands, world, (channel, net), query| {
-                    for event in channel.read(&mut self.reader) {
-                        match event {
-                            NetworkSimulationEvent::Message(addr, payload) => {
-                                info!("{}: {:?}", addr, payload);
-                                // In a typical client/server simulation, both the client and the server will
-                                // be exchanging messages at a constant rate. Laminar makes use of this by
-                                // packaging message acks with the next sent message. Therefore, in order for
-                                // reliability to work properly, we'll send a generic "ok" response.
-                                net.send(*addr, b"ok");
-                            }
-                            NetworkSimulationEvent::Connect(addr) => {
-                                info!("New client connection: {}", addr)
-                            }
-                            NetworkSimulationEvent::Disconnect(addr) => {
-                                info!("Client Disconnected: {}", addr);
-                            }
-                            NetworkSimulationEvent::RecvError(e) => {
-                                error!("Recv Error: {:?}", e);
-                            }
-                            _ => {}
-                        }
+fn build(mut reader: ReaderId<NetworkSimulationEvent>) -> impl ParallelRunnable {
+    SystemBuilder::new("SpamReceiveSystem")
+        .read_resource::<EventChannel<NetworkSimulationEvent>>()
+        .write_resource::<TransportResource>()
+        .build(move |_commands, _, (channel, net), _| {
+            for event in channel.read(&mut reader) {
+                match event {
+                    NetworkSimulationEvent::Message(addr, payload) => {
+                        info!("{}: {:?}", addr, payload);
+                        // In a typical client/server simulation, both the client and the server will
+                        // be exchanging messages at a constant rate. Laminar makes use of this by
+                        // packaging message acks with the next sent message. Therefore, in order for
+                        // reliability to work properly, we'll send a generic "ok" response.
+                        net.send(*addr, b"ok");
                     }
-                }),
-        )
-    }
+                    NetworkSimulationEvent::Connect(addr) => {
+                        info!("New client connection: {}", addr)
+                    }
+                    NetworkSimulationEvent::Disconnect(addr) => {
+                        info!("Client Disconnected: {}", addr);
+                    }
+                    NetworkSimulationEvent::RecvError(e) => {
+                        error!("Recv Error: {:?}", e);
+                    }
+                    _ => {}
+                }
+            }
+        })
 }

@@ -15,7 +15,7 @@ pub struct Pong {
 }
 
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         use crate::audio::initialise_audio;
 
@@ -32,7 +32,7 @@ impl SimpleState for Pong {
         initialise_score(world);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
             // If the timer isn't expired yet, substract the time that passed since last update.
             {
@@ -58,8 +58,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // `texture_handle` is a cloneable reference to the texture
 
     let texture_handle = {
-        let loader = data.resources.get::<Loader>().unwrap();
-
+        let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
             "texture/pong_spritesheet.png",
@@ -69,8 +68,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
         )
     };
 
-    let loader = data.resources.get::<Loader>().unwrap();
-
+    let loader = world.read_resource::<Loader>();
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file

@@ -60,21 +60,21 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = app_root.join("examples/pong_tutorial_06/assets/");
 
-    let game_data = DispatcherBuilder::default()
+    let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
-        .add_bundle(TransformBundle::new())?
-        .add_bundle(
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
         )?
-        .add_bundle(PongBundle)?
-        .add_bundle(AudioBundle::default())?
+        .with_bundle(PongBundle)?
+        .with_bundle(AudioBundle::default())?
         .with_system_desc(
             DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )
-        .add_bundle(UiBundle::<StringBindings>::new())?
-        .add_bundle(
+        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it

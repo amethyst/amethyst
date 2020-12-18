@@ -1,8 +1,4 @@
-mod bounce;
-mod move_balls;
-mod paddle;
-mod winner;
-
-pub use self::{
-    bounce::BounceSystem, move_balls::MoveBallsSystem, paddle::PaddleSystem, winner::WinnerSystem,
-};
+pub mod bounce;
+pub mod move_balls;
+pub mod paddle;
+pub mod winner;
