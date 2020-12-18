@@ -82,7 +82,6 @@ impl SimpleState for AssetsExample {
         self.prefab_handle = Some(prefab_handle);
     }
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        log::info!("update");
         let StateData {
             world, resources, ..
         } = data;
@@ -92,8 +91,8 @@ impl SimpleState for AssetsExample {
             return Trans::None;
         }
 
-        let mut component_registry = resources.get_mut::<ComponentRegistry>().unwrap();
-        let mut prefab_storage = resources.get_mut::<AssetStorage<Prefab>>().unwrap();
+        let component_registry = resources.get_mut::<ComponentRegistry>().unwrap();
+        let prefab_storage = resources.get_mut::<AssetStorage<Prefab>>().unwrap();
         if let Some(opened_prefab) = prefab_storage.get(self.prefab_handle.as_ref().unwrap()) {
             let mut clone_impl_result = HashMap::default();
             let mut spawn_impl =

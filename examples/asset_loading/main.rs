@@ -21,10 +21,9 @@ use amethyst::{
             mesh::{MeshBuilder, Normal, Position, TexCoord},
             texture::palette::load_from_srgba,
         },
-        types::{DefaultBackend, Mesh, MeshData, TextureData},
+        types::{DefaultBackend, Mesh, MeshData},
         RenderingBundle,
     },
-    utils::application_root_dir,
 };
 use amethyst_assets::{AssetHandle, DefaultLoader, LoaderBundle};
 use log::info;

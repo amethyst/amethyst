@@ -32,12 +32,10 @@ mod cache;
 mod dyn_format;
 pub mod error;
 mod formats;
-// mod loader;
 pub mod prefab;
 mod progress;
 mod reload;
 mod source;
-// mod storage;
 
 mod bundle_new;
 mod loader_new;

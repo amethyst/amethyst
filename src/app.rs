@@ -680,13 +680,13 @@ where
     ///     }
     /// }
     /// ~~~
-    pub fn with_source<I, O>(self, name: I, store: O) -> Self
+    pub fn with_source<I, O>(self, _name: I, _store: O) -> Self
     where
         I: Into<String>,
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
             // FIXME Update the source on the loader
             // loader.add_source(name, store);
         }
@@ -736,12 +736,12 @@ where
     ///     }
     /// }
     /// ~~~
-    pub fn with_default_source<O>(self, store: O) -> Self
+    pub fn with_default_source<O>(self, _store: O) -> Self
     where
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
             // FIXME Update the location on the loader
             // loader.set_default_source(store);
         }

@@ -7,7 +7,7 @@ mod sprite;
 mod sprite_sheet_loader;
 
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{Handle, Loader},
     core::{
         transform::{Transform, TransformBundle},
         Hidden,
@@ -18,13 +18,13 @@ use amethyst::{
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
         types::DefaultBackend,
-        Camera, ImageFormat, RenderingBundle, SpriteRender, SpriteSheet, Texture, Transparent,
+        Camera, RenderingBundle, SpriteRender, SpriteSheet, Transparent,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
     winit::VirtualKeyCode,
 };
-use amethyst_assets::{DefaultLoader, ProcessingQueue};
+use amethyst_assets::{DefaultLoader, LoaderBundle, ProcessingQueue};
 use log::info;
 
 use crate::sprite::SpriteSheetDefinition;
@@ -354,17 +354,20 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/sprites_ordered/assets/");
 
     let mut dispatcher = DispatcherBuilder::default();
-    dispatcher.add_bundle(TransformBundle).add_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            // The RenderToWindow plugin provides all the scaffolding for opening a window and
-            // drawing on it
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.34, 0.36, 0.52, 1.0]),
-            )
-            // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
-            .with_plugin(RenderFlat2D::default()),
-    );
+    dispatcher
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                // The RenderToWindow plugin provides all the scaffolding for opening a window and
+                // drawing on it
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
+                .with_plugin(RenderFlat2D::default()),
+        );
 
     let mut game = Application::new(assets_dir, Example::new(), dispatcher)?;
     game.run();

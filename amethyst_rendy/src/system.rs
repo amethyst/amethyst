@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use amethyst_assets::{
     AddToDispatcher, AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState,
 };
-use amethyst_core::{ecs::*, timing::Time, ArcThreadPool};
+use amethyst_core::ecs::*;
 use amethyst_error::Error;
 use palette::{LinSrgba, Srgba};
 use rendy::{

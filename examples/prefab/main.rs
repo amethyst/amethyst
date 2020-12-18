@@ -5,18 +5,13 @@ use std::collections::HashMap;
 use amethyst::{
     assets::{
         prefab::{register_component_type, ComponentRegistry, Prefab},
-        AssetStorage, DefaultLoader, Format as AssetFormat, Handle, Loader, LoaderBundle,
-        ProcessingQueue,
+        AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle,
     },
-    core::{
-        math::Vector3,
-        transform::{Transform, TransformBundle},
-    },
-    ecs::{query, Resources, World},
+    core::transform::TransformBundle,
+    ecs::query,
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
-        rendy::mesh::{Normal, Position, TexCoord},
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -41,9 +36,7 @@ struct AssetsExample {
 
 impl SimpleState for AssetsExample {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let StateData {
-            world, resources, ..
-        } = data;
+        let StateData { resources, .. } = data;
         // let prefab_handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
         //     loader.load("prefab/example.prefab", RonFormat, ())
         // });
@@ -53,7 +46,6 @@ impl SimpleState for AssetsExample {
         self.prefab_handle = Some(prefab_handle);
     }
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        log::info!("update");
         let StateData {
             world, resources, ..
         } = data;
@@ -63,8 +55,8 @@ impl SimpleState for AssetsExample {
             return Trans::None;
         }
 
-        let mut component_registry = resources.get_mut::<ComponentRegistry>().unwrap();
-        let mut prefab_storage = resources.get_mut::<AssetStorage<Prefab>>().unwrap();
+        let component_registry = resources.get_mut::<ComponentRegistry>().unwrap();
+        let prefab_storage = resources.get_mut::<AssetStorage<Prefab>>().unwrap();
         if let Some(opened_prefab) = prefab_storage.get(self.prefab_handle.as_ref().unwrap()) {
             let mut clone_impl_result = HashMap::default();
             let mut spawn_impl =

@@ -336,7 +336,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                         .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                     for (mesh_id, batch_data) in batches {
                         debug_assert!(mesh_storage.contains(*mesh_id));
-                        if let Some(mesh) = B::unwrap_mesh(unsafe {
+                        if let Some(mesh) = B::unwrap_mesh({
                             mesh_storage
                                 .get_for_load_handle(*mesh_id)
                                 .expect("Could not get mesh.")
@@ -372,7 +372,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                             .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                         for (mesh_id, batch_data) in batches {
                             debug_assert!(mesh_storage.contains(*mesh_id));
-                            if let Some(mesh) = B::unwrap_mesh(unsafe {
+                            if let Some(mesh) = B::unwrap_mesh({
                                 mesh_storage
                                     .get_for_load_handle(*mesh_id)
                                     .expect("Could not get mesh.")
@@ -689,7 +689,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                     self.materials.bind(layout, 1, mat, encoder);
                     for (mesh, range) in batches {
                         debug_assert!(mesh_storage.contains(*mesh));
-                        if let Some(mesh) = B::unwrap_mesh(unsafe {
+                        if let Some(mesh) = B::unwrap_mesh({
                             mesh_storage
                                 .get_for_load_handle(*mesh)
                                 .expect("Could not get mesh.")
@@ -723,7 +723,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                         self.materials.bind(layout, 1, mat, encoder);
                         for (mesh, range) in batches {
                             debug_assert!(mesh_storage.contains(*mesh));
-                            if let Some(mesh) = B::unwrap_mesh(unsafe {
+                            if let Some(mesh) = B::unwrap_mesh({
                                 mesh_storage
                                     .get_for_load_handle(*mesh)
                                     .expect("Could not get mesh.")

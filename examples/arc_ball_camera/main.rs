@@ -1,7 +1,7 @@
 //! Demonstrates the arc ball camera
 
 use amethyst::{
-    assets::{Asset, AssetStorage, Loader},
+    assets::Loader,
     controls::{ArcBallControl, ArcBallControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,

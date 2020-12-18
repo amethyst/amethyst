@@ -1,7 +1,7 @@
 //! Basic shape prefabs.
 use std::marker::PhantomData;
 
-use amethyst_assets::{Asset, DefaultLoader, Handle, Loader, ProcessingQueue, Progress};
+use amethyst_assets::{DefaultLoader, Handle, Loader, ProcessingQueue, Progress};
 use amethyst_core::math::Vector3;
 use genmesh::{
     generators::{

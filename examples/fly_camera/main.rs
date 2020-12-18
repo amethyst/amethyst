@@ -1,7 +1,7 @@
 //! Demonstrates how to use the fly camera
 
 use amethyst::{
-    assets::{AssetStorage, Loader},
+    assets::Loader,
     controls::{FlyControl, FlyControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,

@@ -20,8 +20,7 @@ use crate::{
         wsi::Surface,
     },
     system::{
-        build_mesh_processor, build_texture_processor, create_default_mat, make_graph_aux_data,
-        render, GraphAuxData, GraphCreator, RenderState,
+        create_default_mat, make_graph_aux_data, render, GraphAuxData, GraphCreator, RenderState,
     },
     types::{Backend, Mesh, Texture},
     SpriteSheet,
