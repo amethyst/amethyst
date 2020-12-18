@@ -560,7 +560,7 @@ macro_rules! register_asset_type {
     ($krate:ident; $intermediate:ty => $asset:ty; $system:ty) => {
         $crate::inventory::submit!{
             #![crate = $krate]
-            $crate::experimental::create_asset_type::<$intermediate, $asset, $system>()
+            $crate::create_asset_type::<$intermediate, $asset, $system>()
         }
     };
 }

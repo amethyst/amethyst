@@ -41,22 +41,7 @@ mod reload;
 mod simple_importer;
 mod source;
 mod storage;
-/// Experimental module for testing new asset loading features
-pub mod experimental {
-    pub use atelier_core::TypeUuidDynamic;
-    pub use atelier_loader::{
-        asset_uuid,
-        handle::{AssetHandle, GenericHandle, Handle},
-    };
 
-    pub use crate::{
-        bundle::LoaderBundle,
-        loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
-        processor::{ProcessingQueue, ProcessingState},
-        simple_importer::{SimpleImporter, SourceFileImporter},
-        storage::AssetStorage,
-    };
-}
 pub use atelier_loader::{
     handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
     storage::LoadHandle,
@@ -64,6 +49,7 @@ pub use atelier_loader::{
 pub use bundle::{start_asset_daemon, LoaderBundle};
 pub use loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader};
 pub use processor::{AddToDispatcher, DefaultProcessor, ProcessingQueue, ProcessingState};
+pub use simple_importer::{SimpleImporter, SourceFileImporter};
 pub use storage::AssetStorage;
 // used in macros. Private API otherwise.
 #[doc(hidden)]

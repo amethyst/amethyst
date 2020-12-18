@@ -5,9 +5,9 @@ use amethyst_error::Error;
 use log::info;
 
 use crate::{
-    experimental::{DefaultLoader, Loader},
     prefab::{ComponentRegistryBuilder, PrefabImporter},
     simple_importer::get_source_importers,
+    DefaultLoader, Loader,
 };
 
 fn asset_loading_tick(_: &mut World, resources: &mut Resources) {

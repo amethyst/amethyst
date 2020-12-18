@@ -8,7 +8,7 @@ use atelier_importer::{
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
-use crate::{experimental::AssetUuid, Format};
+use crate::{AssetUuid, Format};
 
 /// A simple state for Importer to retain the same UUID between imports
 /// for all single-asset source files
@@ -117,9 +117,9 @@ macro_rules! register_importer {
     ($krate:ident; $ext:literal, $format:ty) => {
         $crate::inventory::submit!{
             #![crate = $krate]
-            $crate::experimental::SourceFileImporter {
+            $crate::SourceFileImporter {
                 extension: $ext,
-                instantiator: || Box::new($crate::experimental::SimpleImporter::from(<$format as Default>::default())),
+                instantiator: || Box::new($crate::SimpleImporter::from(<$format as Default>::default())),
             }
         }
     };

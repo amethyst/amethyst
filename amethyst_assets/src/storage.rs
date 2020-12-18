@@ -95,6 +95,7 @@ impl<A> AssetStorage<A> {
         }
     }
 
+    /// returns true when asset is loaded for this handle
     pub fn contains(&self, load_handle: LoadHandle) -> bool {
         let load_handle = if load_handle.is_indirect() {
             if let Some(handle) = self.indirection_table.resolve(load_handle) {

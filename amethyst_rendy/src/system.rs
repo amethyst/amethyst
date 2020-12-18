@@ -180,6 +180,8 @@ pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
         )
 }
 
+/// Converts TextureData in to Texture
+#[derive(Debug)]
 pub struct TextureProcessor<B: Backend> {
     marker: PhantomData<B>,
 }
