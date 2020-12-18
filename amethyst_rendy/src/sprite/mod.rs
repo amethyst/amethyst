@@ -591,17 +591,16 @@ mod test {
     fn create_texture() -> Handle<Texture> {
         use std::sync::Arc;
 
-        use amethyst_assets::{AssetStorage, Loader};
+        use amethyst_assets::{DefaultLoader, Loader, ProcessingQueue};
         use rayon::ThreadPoolBuilder;
 
         use crate::formats::texture::TextureGenerator;
 
         let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
-        let loader = Loader::new("/examples/assets", pool);
+        let loader = DefaultLoader::default();
         let generator = TextureGenerator::Srgba(1.0, 1., 1., 1.);
 
-        let storage: AssetStorage<Texture> = AssetStorage::default();
-
+        let storage = ProcessingQueue::default();
         loader.load_from_data(generator.data(), (), &storage)
     }
     #[test]
