@@ -27,17 +27,17 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("examples/pong_tutorial_03/assets/");
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(
                 app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
             )?,
         )?
         // We have now added our own system, the PaddleSystem, defined in systems/paddle.rs
         .with(systems::PaddleSystem, "paddle_system", &["input_system"])
-        .with_bundle(
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it
@@ -49,7 +49,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
+    let mut game = Application::build(assets_dir, Pong)?.build(game_data)?;
     game.run();
     Ok(())
 }

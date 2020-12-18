@@ -8,7 +8,7 @@ use amethyst::{
     ecs::{Entity, ReadExpect, ReadStorage, System, SystemData, WorldExt, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
-        Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
+        Application, Builder, DispatcherBuilder, GameData, SimpleState, SimpleTrans, StateData,
         StateEvent, Trans,
     },
     renderer::{
@@ -41,7 +41,7 @@ fn main() -> Result<(), Error> {
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
     let assets_dir = app_dir.join("auto_fov/assets");
 
-    let game_data = GameDataBuilder::new()
+    let game_data = DispatcherBuilder::new()
         .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefab>::default(),
             "prefab",
@@ -51,10 +51,10 @@ fn main() -> Result<(), Error> {
         // frame), preventing any flickering
         .with(AutoFovSystem::new(), "auto_fov", &["prefab"])
         .with(ShowFovSystem::new(), "show_fov", &["auto_fov"])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?.with_clear(CLEAR_COLOR),
@@ -146,11 +146,7 @@ impl SimpleState for Example {
             );
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         if let StateEvent::Window(ref event) = event {
             if is_close_requested(event) || is_key_down(event, VirtualKeyCode::Escape) {
                 Trans::Quit

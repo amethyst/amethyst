@@ -114,10 +114,10 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/debug_lines_ortho/config/display.ron");
     let assets_dir = app_root.join("examples/debug_lines_ortho/assets/");
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         .with(ExampleLinesSystem::new(), "example_lines_system", &[])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?
@@ -126,7 +126,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderDebugLines::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, ExampleState, game_data)?;
+    let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

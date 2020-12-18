@@ -38,10 +38,10 @@ fn main() -> Result<(), Error> {
 
     let display_config_path = app_root.join("examples/prefab/config/display.ron");
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?
@@ -50,7 +50,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, AssetsExample, game_data)?;
+    let mut game = Application::build(assets_dir, AssetsExample)?.build(game_data)?;
     game.run();
     Ok(())
 }

@@ -27,7 +27,7 @@ use amethyst::{
 
 use crate::{
     example_system::ExampleSystem,
-    game_data::{CustomGameData, CustomGameDataBuilder},
+    game_data::{CustomDispatcherBuilder, CustomGameData},
 };
 
 mod example_system;
@@ -204,7 +204,7 @@ fn main() -> Result<(), Error> {
 
     let display_config_path = app_root.join("examples/custom_game_data/config/display.ron");
 
-    let game_data = CustomGameDataBuilder::default()
+    let game_data = CustomDispatcherBuilder::default()
         .with_base(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_running(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(TransformBundle::new())

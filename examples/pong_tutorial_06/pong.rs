@@ -58,7 +58,8 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // `texture_handle` is a cloneable reference to the texture
 
     let texture_handle = {
-        let loader = world.read_resource::<Loader>();
+        let loader = data.resources.get::<Loader>().unwrap();
+
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
             "texture/pong_spritesheet.png",
@@ -68,7 +69,8 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
         )
     };
 
-    let loader = world.read_resource::<Loader>();
+    let loader = data.resources.get::<Loader>().unwrap();
+
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file

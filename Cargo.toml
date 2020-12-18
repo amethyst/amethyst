@@ -140,8 +140,8 @@ name = "hello_world"
 [[example]]
 name = "window"
 
-# [[example]]
-# name = "sphere"
+[[example]]
+name = "sphere"
 
 # [[example]]
 # name = "renderable"

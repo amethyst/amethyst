@@ -98,11 +98,7 @@ impl SimpleState for Example {
         world.create_entity().with(self.scene.clone()).build();
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let w = data.world;
         if let StateEvent::Window(event) = &event {
             // Exit if user hits Escape or closes the window
@@ -205,14 +201,14 @@ fn main() -> Result<(), Error> {
         .join("config")
         .join("display.ron");
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FpsCounterBundle::default())?
+        .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(HotReloadBundle::default())?
+        .add_bundle(FpsCounterBundle::default())?
         // The below Systems, are used to handle some rendering resources.
         // Most likely these must be always called as last thing.
         .with_system_desc(
@@ -241,7 +237,7 @@ fn main() -> Result<(), Error> {
             &[],
         )
         .with(Processor::<Material>::new(), "material_processor", &[])
-        .with_bundle(WindowBundle::from_config_path(display_config_path)?)?
+        .add_bundle(WindowBundle::from_config_path(display_config_path)?)?
         // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
         // which will always execute on the main thread.
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
