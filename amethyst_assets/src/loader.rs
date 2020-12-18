@@ -27,7 +27,7 @@ pub use type_uuid::TypeUuid;
 use crate::{
     processor::{AddToDispatcher, ProcessingQueue},
     progress::Progress,
-    storage_new::AssetStorage,
+    storage::AssetStorage,
     Asset,
 };
 

@@ -14,7 +14,7 @@ use crate::{
     asset::{Asset, ProcessableAsset},
     loader::LoadHandle,
     progress::Tracker,
-    storage_new::AssetStorage,
+    storage::AssetStorage,
 };
 
 /// A default implementation for an asset processing system

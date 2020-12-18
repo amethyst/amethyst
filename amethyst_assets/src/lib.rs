@@ -40,7 +40,7 @@ mod progress;
 mod reload;
 mod simple_importer;
 mod source;
-mod storage_new;
+mod storage;
 /// Experimental module for testing new asset loading features
 pub mod experimental {
     pub use atelier_core::TypeUuidDynamic;
@@ -54,7 +54,7 @@ pub mod experimental {
         loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
         processor::{ProcessingQueue, ProcessingState},
         simple_importer::{SimpleImporter, SourceFileImporter},
-        storage_new::AssetStorage,
+        storage::AssetStorage,
     };
 }
 pub use atelier_loader::{
@@ -64,7 +64,7 @@ pub use atelier_loader::{
 pub use bundle::{start_asset_daemon, LoaderBundle};
 pub use loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader};
 pub use processor::{AddToDispatcher, DefaultProcessor, ProcessingQueue, ProcessingState};
-pub use storage_new::AssetStorage;
+pub use storage::AssetStorage;
 // used in macros. Private API otherwise.
 #[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};
