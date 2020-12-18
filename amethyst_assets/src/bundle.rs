@@ -2,8 +2,7 @@ use std::path::PathBuf;
 
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
-use atelier_importer::BoxedImporter;
-use log::{debug, info, log_enabled, trace, Level};
+use log::info;
 
 use crate::{
     experimental::{DefaultLoader, Loader},
@@ -20,11 +19,10 @@ fn asset_loading_tick(_: &mut World, resources: &mut Resources) {
         .expect("Error in Loader processing");
 }
 
-pub fn start_asset_daemon() {
+pub fn start_asset_daemon(asset_dirs: Vec<PathBuf>) {
     std::thread::spawn(move || {
         let db_path = ".assets_db";
         let address = "127.0.0.1:9999";
-        let asset_dirs = vec![PathBuf::from("assets")];
         info!("Starting AssetDaemon...");
         info!("db_path: {}", db_path);
         info!("address: {}", address);
@@ -46,7 +44,6 @@ pub fn start_asset_daemon() {
             importer_contexts: atelier_daemon::default_importer_contexts(),
             asset_dirs,
         };
-        // .with_importer("png", crate::image::ImageImporter)
         daemon.run();
     });
 }

@@ -529,7 +529,8 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
-        start_asset_daemon();
+        let asset_dirs = vec![path.as_ref().to_path_buf()];
+        start_asset_daemon(asset_dirs);
 
         let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
             .as_ref()
