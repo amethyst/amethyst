@@ -7,8 +7,10 @@ use std::sync::Arc;
 use amethyst_assets::*;
 use amethyst_core::{ecs::*, Time};
 use amethyst_error::{format_err, Error, ResultExt};
+use amethyst_rendy::{Backend, Mesh};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use serde::{Deserialize, Serialize};
+use type_uuid::*;
 
 struct App {
     scheduler: Schedule,
@@ -20,17 +22,11 @@ struct App {
 impl App {
     fn new(path: &str, state: State) -> Self {
         let mut world = World::default();
-
-        // Note: in an actual application, you'd want to share the thread pool.
-        let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
         let mut resources = Resources::default();
 
-        resources.insert(AssetStorage::<MeshAsset>::new());
-        resources.insert(Loader::new(path, pool.clone()));
-        resources.insert(Time::default());
-        resources.insert(pool);
-        resources.insert(Time::default());
-        resources.insert::<Option<HotReloadStrategy>>(None);
+        let mut loader = DefaultLoader::default();
+        loader.init_world(&mut resources);
+        resources.insert(loader);
 
         let scheduler = Schedule::builder()
             .add_system(build_rendering_system())
@@ -66,6 +62,8 @@ impl App {
 
 type MeshHandle = Handle<MeshAsset>;
 
+#[derive(TypeUuid)]
+#[uuid = "28d51c52-be81-4d99-8cdc-20b26eb12448"]
 pub struct MeshAsset {
     /// Left out for simplicity
     /// This would for example be the gfx handle
@@ -78,6 +76,25 @@ impl Asset for MeshAsset {
     }
     type Data = VertexData;
 }
+
+#[derive(Serialize, Deserialize, TypeUuid)]
+#[uuid = "687b6d94-c653-4663-af73-e967c92ad140"]
+pub struct VertexData {
+    positions: Vec<[f32; 3]>,
+    tex_coords: Vec<[f32; 2]>,
+}
+
+pub struct MeshProcessor<B: Backend> {
+    marker: std::marker::PhantomData<B>,
+}
+
+impl<B: Backend> AddToDispatcher for MeshProcessor<B> {
+    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder) {
+        ()
+    }
+}
+
+amethyst_assets::register_asset_type!(VertexData => MeshAsset; MeshProcessor<amethyst_rendy::types::DefaultBackend>);
 
 /// A format the mesh data could be stored with.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,25 +118,14 @@ impl Format<VertexData> for Ron {
 
 pub fn build_rendering_system() -> impl Runnable {
     SystemBuilder::new("RenderingSystem")
-        .read_resource::<Time>()
-        .read_resource::<Arc<ThreadPool>>()
-        .read_resource::<Option<HotReloadStrategy>>()
+        .write_resource::<ProcessingQueue<VertexData>>()
         .write_resource::<AssetStorage<MeshAsset>>()
         .build(
-            move |_commands, _world, (time, pool, strategy, mesh_storage), _query| {
-                use std::ops::Deref;
-                let strategy = strategy.as_ref();
-
-                mesh_storage.process(
-                    |vertex_data| {
-                        // Upload vertex data to GPU and give back an asset
-
-                        Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
-                    },
-                    time.frame_number(),
-                    &**pool,
-                    strategy,
-                );
+            move |_commands, _world, (mesh_queue, mesh_storage), _query| {
+                mesh_queue.process(mesh_storage, |vertex_data| {
+                    // Upload vertex data to GPU and give back an asset
+                    Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
+                });
             },
         )
 }
@@ -138,10 +144,9 @@ impl State {
                 let (mesh, progress) = {
                     let mut progress = ProgressCounter::new();
                     let loader = resources
-                        .get::<Loader>()
+                        .get::<DefaultLoader>()
                         .expect("Could not get Loader resource");
-                    let a: MeshHandle =
-                        loader.load("mesh.ron", Ron, &mut progress, &resources.get().unwrap());
+                    let a: MeshHandle = loader.load("mesh.ron");
 
                     (a, progress)
                 };
@@ -178,12 +183,6 @@ impl State {
             }
         }
     }
-}
-
-#[derive(Deserialize)]
-pub struct VertexData {
-    positions: Vec<[f32; 3]>,
-    tex_coords: Vec<[f32; 2]>,
 }
 
 fn main() {
