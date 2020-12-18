@@ -1,6 +1,6 @@
 //! Displays spheres with physically based materials.
 use amethyst::{
-    assets::{AssetStorage, Loader},
+    assets::Loader,
     core::{
         ecs::*,
         transform::{Transform, TransformBundle},
@@ -23,7 +23,7 @@ use amethyst::{
     window::ScreenDimensions,
     Application, GameData, SimpleState, StateData,
 };
-use amethyst_assets::{DefaultLoader, Handle, ProcessingQueue};
+use amethyst_assets::{DefaultLoader, Handle, LoaderBundle, ProcessingQueue};
 use amethyst_rendy::types::{MeshData, TextureData};
 
 struct Example;
@@ -138,14 +138,17 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/material/assets/");
 
     let mut builder = DispatcherBuilder::default();
-    builder.add_bundle(TransformBundle).add_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.34, 0.36, 0.52, 1.0]),
-            )
-            .with_plugin(RenderPbr3D::default()),
-    );
+    builder
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                .with_plugin(RenderPbr3D::default()),
+        );
 
     let mut game = Application::build(assets_dir, Example)?.build(builder)?;
     game.run();

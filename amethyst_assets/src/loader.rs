@@ -2,17 +2,11 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     error::Error,
-    marker::PhantomData,
     ops::{Deref, DerefMut},
     sync::Arc,
 };
 
 use amethyst_core::ecs::{DispatcherBuilder, Resources};
-// use atelier_assets::loader::{
-//     handle::{self, AssetHandle, Handle, RefOp, WeakHandle},
-//     storage::{DefaultIndirectionResolver, IndirectIdentifier, LoadStatus},
-//     Loader, RpcIO,
-// };
 use amethyst_error::Error as AmethystError;
 pub(crate) use atelier_loader::LoadHandle;
 use atelier_loader::{
@@ -26,16 +20,15 @@ use atelier_loader::{
 };
 pub use atelier_loader::{storage::LoadStatus, AssetUuid};
 use bincode;
-use log::{debug, info, log_enabled, trace, Level};
+use log::{debug, info};
 use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
 
 use crate::{
-    asset::ProcessableAsset,
-    processor::{AddToDispatcher, ProcessingQueue, ProcessingState},
-    progress::{Progress, Tracker},
+    processor::{AddToDispatcher, ProcessingQueue},
+    progress::Progress,
     storage_new::AssetStorage,
-    Asset, FormatValue,
+    Asset,
 };
 
 /// Manages asset loading and storage for an application.
@@ -181,7 +174,6 @@ pub trait Loader: Send + Sync {
 pub type DefaultLoader = LoaderWithStorage;
 
 /// Asset loader and storage.
-//#[derive(Debug)]
 pub struct LoaderWithStorage {
     loader: AtelierLoader,
     storage_map: AssetStorageMap,
@@ -209,32 +201,6 @@ impl Default for LoaderWithStorage {
         }
     }
 }
-// impl<T: AtelierLoader + Send + Sync> AtelierLoader for LoaderWithStorage<T> {
-//     fn add_ref(&self, id: AssetUuid) -> LoadHandle {
-//         self.loader.add_ref(id)
-//     }
-//     fn remove_ref(&self, load_handle: LoadHandle) {
-//         self.loader.remove_ref(load_handle)
-//     }
-//     fn get_asset(&self, load: LoadHandle) -> Option<(AssetTypeId, LoadHandle)> {
-//         self.loader.get_asset(load)
-//     }
-//     fn get_load(&self, id: AssetUuid) -> Option<LoadHandle> {
-//         self.loader.get_load(id)
-//     }
-//     fn get_load_info(&self, load: LoadHandle) -> Option<LoadInfo> {
-//         self.loader.get_load_info(load)
-//     }
-//     fn get_load_status(&self, load: LoadHandle) -> LoadStatus {
-//         self.loader.get_load_status(load)
-//     }
-//     fn process(
-//         &mut self,
-//         asset_storage: &dyn atelier_loader::storage::AssetStorage,
-//     ) -> Result<(), Box<dyn Error>> {
-//         self.loader.process(asset_storage)
-//     }
-// }
 
 impl Loader for LoaderWithStorage {
     fn load_asset_generic(&self, id: AssetUuid) -> GenericHandle {

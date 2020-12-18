@@ -74,9 +74,7 @@ impl SimpleState for AssetsExample {
         // .build();
         // let raw_prefab = generate_prefab();
         // write_prefab(&component_registry, &raw_prefab.raw_prefab, "prefab.ron");
-        let StateData {
-            world, resources, ..
-        } = data;
+        let StateData { resources, .. } = data;
         let loader = resources.get_mut::<DefaultLoader>().unwrap();
         let prefab_handle: Handle<Prefab> = loader.load("prefab/entity_with_a_transform.prefab");
         self.prefab_handle = Some(prefab_handle);

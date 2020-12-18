@@ -12,7 +12,7 @@ use log::debug;
 
 use crate::{
     asset::{Asset, ProcessableAsset},
-    loader_new::LoadHandle,
+    loader::LoadHandle,
     progress::Tracker,
     storage_new::AssetStorage,
 };

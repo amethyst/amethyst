@@ -28,19 +28,18 @@ pub use crate::{
 };
 
 mod asset;
+mod bundle;
 mod cache;
 mod dyn_format;
 pub mod error;
 mod formats;
+mod loader;
 pub mod prefab;
+mod processor;
 mod progress;
 mod reload;
-mod source;
-
-mod bundle_new;
-mod loader_new;
-mod processor;
 mod simple_importer;
+mod source;
 mod storage_new;
 /// Experimental module for testing new asset loading features
 pub mod experimental {
@@ -51,8 +50,8 @@ pub mod experimental {
     };
 
     pub use crate::{
-        bundle_new::LoaderBundle,
-        loader_new::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
+        bundle::LoaderBundle,
+        loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
         processor::{ProcessingQueue, ProcessingState},
         simple_importer::{SimpleImporter, SourceFileImporter},
         storage_new::AssetStorage,
@@ -62,8 +61,8 @@ pub use atelier_loader::{
     handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
     storage::LoadHandle,
 };
-pub use bundle_new::{start_asset_daemon, LoaderBundle};
-pub use loader_new::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader};
+pub use bundle::{start_asset_daemon, LoaderBundle};
+pub use loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader};
 pub use processor::{AddToDispatcher, DefaultProcessor, ProcessingQueue, ProcessingState};
 pub use storage_new::AssetStorage;
 // used in macros. Private API otherwise.
