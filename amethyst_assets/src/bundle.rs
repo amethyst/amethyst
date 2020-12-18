@@ -1,11 +1,14 @@
-use crate::experimental::{DefaultLoader, Loader};
-use crate::prefab::{ComponentRegistryBuilder, PrefabImporter};
-use crate::simple_importer::get_source_importers;
+use std::path::PathBuf;
+
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
-use atelier_importer::BoxedImporter;
-use log::{debug, info, log_enabled, trace, Level};
-use std::path::PathBuf;
+use log::info;
+
+use crate::{
+    prefab::{ComponentRegistryBuilder, PrefabImporter},
+    simple_importer::get_source_importers,
+    DefaultLoader, Loader,
+};
 
 fn asset_loading_tick(_: &mut World, resources: &mut Resources) {
     let mut loader = resources
@@ -16,11 +19,11 @@ fn asset_loading_tick(_: &mut World, resources: &mut Resources) {
         .expect("Error in Loader processing");
 }
 
-pub fn start_asset_daemon() {
+/// starts the asset thread with atelier_daemon
+pub fn start_asset_daemon(asset_dirs: Vec<PathBuf>) {
     std::thread::spawn(move || {
         let db_path = ".assets_db";
         let address = "127.0.0.1:9999";
-        let asset_dirs = vec![PathBuf::from("assets")];
         info!("Starting AssetDaemon...");
         info!("db_path: {}", db_path);
         info!("address: {}", address);
@@ -35,14 +38,13 @@ pub fn start_asset_daemon() {
             importer_map.insert(ext, importer);
         }
 
-        let mut daemon = atelier_daemon::AssetDaemon {
+        let daemon = atelier_daemon::AssetDaemon {
             db_dir: PathBuf::from(db_path),
             address: address.parse().unwrap(),
             importers: importer_map,
             importer_contexts: atelier_daemon::default_importer_contexts(),
             asset_dirs,
         };
-        // .with_importer("png", crate::image::ImageImporter)
         daemon.run();
     });
 }

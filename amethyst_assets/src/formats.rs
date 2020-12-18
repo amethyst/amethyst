@@ -1,6 +1,7 @@
-use crate::Format;
 use amethyst_error::{format_err, Error, ResultExt};
 use serde::{Deserialize, Serialize};
+
+use crate::Format;
 
 /// Format for loading from RON files. Mostly useful for prefabs.
 /// This type cannot be used for tagged deserialization.

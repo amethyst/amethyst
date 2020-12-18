@@ -1,9 +1,10 @@
 //! Physically-based material.
 
-use crate::types::Texture;
 use amethyst_assets::{Asset, Handle};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
+
+use crate::types::Texture;
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]

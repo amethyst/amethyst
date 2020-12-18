@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
     marker::PhantomData,
@@ -16,6 +15,7 @@ use amethyst_core::{
 use amethyst_derive::SystemDesc;
 use amethyst_input::{BindingTypes, InputHandler};
 use amethyst_window::ScreenDimensions;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     get_parent_pixel_size, targeted_below, Interactable, ScaleMode, UiEvent, UiEventType,

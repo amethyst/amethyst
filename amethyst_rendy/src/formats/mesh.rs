@@ -1,9 +1,10 @@
 //! Module for mesh support.
-use crate::types::MeshData;
 use amethyst_assets::Format;
 use amethyst_error::Error;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
+
+use crate::types::MeshData;
 
 /// 'Obj' mesh format `Format` implementation.
 #[derive(

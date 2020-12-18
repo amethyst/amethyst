@@ -18,11 +18,11 @@
 //! struct GameState;
 //!
 //! impl SimpleState for GameState {
-//!     fn on_start(&mut self, _: StateData<'_, GameData<'_, '_>>) {
+//!     fn on_start(&mut self, _: StateData<'_, GameData>) {
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
+//!     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
 //!         if let StateEvent::Window(event) = &event {
 //!             match event {
 //!                  Event::WindowEvent { event, .. } => match event {
@@ -39,7 +39,7 @@
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+//!     fn update(&mut self, _: &mut StateData<'_, GameData>) -> SimpleTrans {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }
@@ -52,8 +52,10 @@
 //!     Ok(())
 //! }
 //! ```
-
-#![doc(html_logo_url = "https://amethyst.rs/brand/logo-standard.svg")]
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -90,10 +92,6 @@ pub use amethyst_utils as utils;
 pub use amethyst_window as window;
 pub use winit;
 
-pub use crate::core::{ecs, shrev};
-#[doc(hidden)]
-pub use crate::derive::*;
-
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     error::Error,
@@ -105,6 +103,9 @@ pub use self::{
     },
     state_event::{StateEvent, StateEventReader},
 };
+pub use crate::core::{ecs, shrev};
+#[doc(hidden)]
+pub use crate::derive::*;
 
 /// Convenience alias for use in main functions that uses Amethyst.
 pub type Result<T> = std::result::Result<T, error::Error>;

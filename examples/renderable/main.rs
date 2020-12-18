@@ -53,7 +53,7 @@ struct Example {
 }
 
 impl SimpleState for Loading {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         self.prefab = Some(data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, &mut self.progress)
         }));
@@ -64,7 +64,7 @@ impl SimpleState for Loading {
         });
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         match self.progress.complete() {
             Completion::Failed => {
                 println!("Failed loading assets: {:?}", self.progress.errors());
@@ -88,7 +88,7 @@ impl SimpleState for Loading {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
 
         world.create_entity().with(self.scene.clone()).build();
@@ -96,7 +96,7 @@ impl SimpleState for Example {
 
     fn handle_event(
         &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
+        data: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         let w = data.world;

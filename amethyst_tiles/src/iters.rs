@@ -1,7 +1,8 @@
 //! Various helper iterators for efficiently iterating in coordinate encoded spaces in a locality-friendly fashion.
 
-use crate::morton;
 use amethyst_core::math::Point3;
+
+use crate::morton;
 
 /// Axis aligned quantized region of space represented in tile coordinates of `u32`. This behaves
 /// like a bounding box volume with `min` and `max` coordinates for iteration. This regions limits are *inclusive*,

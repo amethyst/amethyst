@@ -137,8 +137,9 @@ where
 
 #[cfg(test)]
 pub mod tests {
+    use approx::{assert_relative_eq, assert_ulps_eq};
+
     use super::*;
-    use approx::{assert_ulps_eq, relative_eq};
 
     #[test]
     #[allow(clippy::mistyped_literal_suffixes)]
@@ -164,13 +165,13 @@ pub mod tests {
 
     #[test]
     fn at_distance() {
-        relative_eq!(
+        assert_relative_eq!(
             Ray {
-                origin: Point3::new(0.020_277_506, -0.033_236_53, 51.794),
-                direction: Vector3::new(0.179_559_51, -0.294_313_04, -0.938_689_65),
+                origin: Point3::new(0.0, 0.0, 50.0),
+                direction: Vector3::new(0.2, -0.3, -0.9),
             }
             .at_distance(5.0),
-            Point3::new(0.918_075_1, -1.504_801_8, 47.100_55)
-        );
+            Point3::new(-1., 1.5, 54.5)
+        )
     }
 }

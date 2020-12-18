@@ -1,12 +1,14 @@
-use crate::{experimental::AssetUuid, Format};
+use std::io::Read;
+
 // FIXME
 // pub use atelier_importer::SourceFileImporter;
 use atelier_importer::{
     self as importer, BoxedImporter, ImportedAsset, Importer, ImporterValue, SerdeObj,
 };
 use serde::{Deserialize, Serialize};
-use std::io::Read;
-use type_uuid::{TypeUuid, TypeUuidDynamic};
+use type_uuid::TypeUuid;
+
+use crate::{AssetUuid, Format};
 
 /// A simple state for Importer to retain the same UUID between imports
 /// for all single-asset source files
@@ -80,7 +82,9 @@ where
 /// Use [inventory::submit!] to register an importer to use for a file extension.
 #[derive(Debug)]
 pub struct SourceFileImporter {
+    /// File extension for this type of file
     pub extension: &'static str,
+    /// closure that creates Importer for given Format
     pub instantiator: fn() -> Box<dyn BoxedImporter>,
 }
 inventory::collect!(SourceFileImporter);
@@ -92,6 +96,7 @@ pub fn get_source_importers(
         .into_iter()
         .map(|s| (s.extension.trim_start_matches("."), (s.instantiator)()))
 }
+
 // Associates the given file extension with a `Format` implementation
 //
 // The `AssetDaemon` will automatically re-import the asset when a file of that format is created
@@ -115,9 +120,9 @@ macro_rules! register_importer {
     ($krate:ident; $ext:literal, $format:ty) => {
         $crate::inventory::submit!{
             #![crate = $krate]
-            $crate::experimental::SourceFileImporter {
+            $crate::SourceFileImporter {
                 extension: $ext,
-                instantiator: || Box::new($crate::experimental::SimpleImporter::from(<$format as Default>::default())),
+                instantiator: || Box::new($crate::SimpleImporter::from(<$format as Default>::default())),
             }
         }
     };

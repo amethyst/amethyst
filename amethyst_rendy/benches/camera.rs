@@ -1,8 +1,7 @@
 use amethyst_core::{
-    components::Transform,
     math::{convert, Matrix4, Translation3, UnitQuaternion},
+    transform::Transform,
 };
-
 use criterion::{criterion_group, criterion_main, Criterion};
 
 // Our world-space is +Y Up, +X Right and -Z Away

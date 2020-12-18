@@ -1,5 +1,6 @@
-use crate::event::{GameEvent, MyExtendedStateEvent};
 use amethyst::prelude::*;
+
+use crate::event::{GameEvent, MyExtendedStateEvent};
 
 pub(crate) struct GameplayState {
     game_difficulty: i32,
@@ -14,7 +15,7 @@ impl Default for GameplayState {
 impl<'a, 'b> State<GameData<'a, 'b>, MyExtendedStateEvent> for GameplayState {
     fn handle_event(
         &mut self,
-        _data: StateData<'_, GameData<'_, '_>>,
+        _data: StateData<'_, GameData>,
         event: MyExtendedStateEvent,
     ) -> Trans<GameData<'a, 'b>, MyExtendedStateEvent> {
         if let MyExtendedStateEvent::Game(GameEvent::IncreaseDifficulty) = event {

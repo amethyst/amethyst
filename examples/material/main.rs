@@ -1,6 +1,6 @@
 //! Displays spheres with physically based materials.
 use amethyst::{
-    assets::{AssetStorage, Loader},
+    assets::Loader,
     core::{
         ecs::*,
         transform::{Transform, TransformBundle},
@@ -23,6 +23,8 @@ use amethyst::{
     window::ScreenDimensions,
     Application, GameData, SimpleState, StateData,
 };
+use amethyst_assets::{DefaultLoader, Handle, LoaderBundle, ProcessingQueue};
+use amethyst_rendy::types::{MeshData, TextureData};
 
 struct Example;
 
@@ -32,13 +34,13 @@ impl SimpleState for Example {
             world, resources, ..
         } = data;
         let mat_defaults = resources.get::<MaterialDefaults>().unwrap().0.clone();
-        let loader = resources.get::<Loader>().unwrap();
-        let mesh_storage = resources.get::<AssetStorage<Mesh>>().unwrap();
-        let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        let mtl_storage = resources.get::<AssetStorage<Material>>().unwrap();
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        let mesh_storage = resources.get::<ProcessingQueue<MeshData>>().unwrap();
+        let tex_storage = resources.get::<ProcessingQueue<TextureData>>().unwrap();
+        let mtl_storage = resources.get::<ProcessingQueue<Material>>().unwrap();
 
         println!("Load mesh");
-        let (mesh, albedo) = {
+        let (mesh, albedo): (Handle<Mesh>, Handle<Texture>) = {
             let mesh = loader.load_from_data(
                 Shape::Sphere(32, 32)
                     .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(None)
@@ -67,7 +69,7 @@ impl SimpleState for Example {
             let mut pos = Transform::default();
             pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
-            let mtl = {
+            let mtl: Handle<Material> = {
                 let metallic_roughness = loader.load_from_data(
                     load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0)).into(),
                     (),
@@ -136,17 +138,19 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/material/assets/");
 
     let mut builder = DispatcherBuilder::default();
+    builder
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                .with_plugin(RenderPbr3D::default()),
+        );
 
-    builder.add_bundle(TransformBundle).add_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.34, 0.36, 0.52, 1.0]),
-            )
-            .with_plugin(RenderPbr3D::default()),
-    );
-
-    let mut game = Application::new(assets_dir, Example, builder)?;
+    let mut game = Application::build(assets_dir, Example)?.build(builder)?;
     game.run();
     Ok(())
 }

@@ -1,13 +1,11 @@
 //! Renderer system
-use crate::{
-    mtl::Material,
-    types::{Backend, Mesh, MeshData, Texture, TextureData},
-};
+
+use std::marker::PhantomData;
+
 use amethyst_assets::{
-    /* error::*, */ AddToDispatcher, AssetStorage, DefaultLoader, Loader, ProcessingQueue,
-    ProcessingState,
+    AddToDispatcher, AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState,
 };
-use amethyst_core::{ecs::*, timing::Time, ArcThreadPool};
+use amethyst_core::ecs::*;
 use amethyst_error::Error;
 use palette::{LinSrgba, Srgba};
 use rendy::{
@@ -16,10 +14,13 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-use std::marker::PhantomData;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    mtl::Material,
+    types::{Backend, Mesh, MeshData, Texture, TextureData},
+};
 
 /// Auxiliary data for render graph.
 #[allow(missing_debug_implementations)]
@@ -136,6 +137,8 @@ where
     run_graph(&mut state, world, resources);
 }
 
+/// Processes MeshData in to Mesh usable by B
+#[allow(missing_debug_implementations)]
 pub struct MeshProcessor<B: Backend> {
     marker: PhantomData<B>,
 }
@@ -152,9 +155,6 @@ pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
         .write_resource::<ProcessingQueue<MeshData>>()
         .write_resource::<AssetStorage<Mesh>>()
         .read_resource::<QueueId>()
-        // .read_resource::<Time>()
-        // .read_resource::<ArcThreadPool>()
-        // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
         .read_resource::<Factory<B>>()
         .build(
             move |commands,
@@ -164,28 +164,24 @@ pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
                 #[cfg(feature = "profiler")]
                 profile_scope!("mesh_processor");
 
-                processing_queue.process(
-                    mesh_storage,
-                    |b| {
-                        log::trace!("Processing Mesh: {:?}", b);
+                processing_queue.process(mesh_storage, |b| {
+                    log::trace!("Processing Mesh: {:?}", b);
 
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("process_mesh");
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("process_mesh");
 
-                        b.0.build(**queue_id, &factory)
-                            .map(B::wrap_mesh)
-                            .map(ProcessingState::Loaded)
-                            .map_err(|e| Error::from_string("Error processing mesh"))
-                    },
-                    // time.frame_number(),
-                    // &**pool,
-                    // None, // TODO: Fix strategy optional
-                );
+                    b.0.build(**queue_id, &factory)
+                        .map(B::wrap_mesh)
+                        .map(ProcessingState::Loaded)
+                        .map_err(|e| Error::from_string("Error processing mesh"))
+                });
                 mesh_storage.process_custom_drop(|_| {});
             },
         )
 }
 
+/// Converts TextureData in to Texture
+#[derive(Debug)]
 pub struct TextureProcessor<B: Backend> {
     marker: PhantomData<B>,
 }
@@ -202,9 +198,6 @@ pub fn build_texture_processor<B: Backend>() -> impl Runnable {
         .write_resource::<ProcessingQueue<TextureData>>()
         .write_resource::<AssetStorage<Texture>>()
         .read_resource::<QueueId>()
-        // .read_resource::<Time>()
-        // .read_resource::<amethyst_core::ArcThreadPool>()
-        // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
         .write_resource::<Factory<B>>()
         .build(
             move |commands,
@@ -214,31 +207,26 @@ pub fn build_texture_processor<B: Backend>() -> impl Runnable {
                 #[cfg(feature = "profiler")]
                 profile_scope!("texture_processor");
 
-                processing_queue.process(
-                    texture_storage,
-                    |b| {
-                        log::trace!("Processing Texture: {:?}", b);
+                processing_queue.process(texture_storage, |b| {
+                    log::trace!("Processing Texture: {:?}", b);
 
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("process_texture");
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("process_texture");
 
-                        b.0.build(
-                            ImageState {
-                                queue: **queue_id,
-                                stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
-                                    | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
-                                access: rendy::hal::image::Access::SHADER_READ,
-                                layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
-                            },
-                            &mut *factory,
-                        )
-                        .map(B::wrap_texture)
-                        .map(ProcessingState::Loaded)
-                        .map_err(|e| Error::from_string("Error processing texture"))
-                    }, // time.frame_number(),
-                       // &**pool,
-                       // None, // TODO: Fix strategy optional
-                );
+                    b.0.build(
+                        ImageState {
+                            queue: **queue_id,
+                            stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
+                                | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
+                            access: rendy::hal::image::Access::SHADER_READ,
+                            layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
+                        },
+                        &mut *factory,
+                    )
+                    .map(B::wrap_texture)
+                    .map(ProcessingState::Loaded)
+                    .map_err(|e| Error::from_string("Error processing texture"))
+                });
                 texture_storage.process_custom_drop(|_| {});
             },
         )
@@ -248,7 +236,6 @@ pub(crate) fn create_default_mat<B: Backend>(resources: &Resources) -> Material 
     use crate::mtl::TextureOffset;
 
     let loader = resources.get::<DefaultLoader>().unwrap();
-
     let albedo = load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 1.0));
     let emission = load_from_srgba(Srgba::new(0.0, 0.0, 0.0, 0.0));
     let normal = load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 1.0, 1.0));

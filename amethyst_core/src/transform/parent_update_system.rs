@@ -1,9 +1,11 @@
 //! System that generates [Children] components for entities that are targeted by [Parent] component.
 
+use std::collections::HashMap;
+
+use smallvec::SmallVec;
+
 use super::components::*;
 use crate::ecs::*;
-use smallvec::SmallVec;
-use std::collections::HashMap;
 
 /// System that generates [Children] components for entities that are targeted by [Parent] component.
 pub fn build() -> impl Runnable {

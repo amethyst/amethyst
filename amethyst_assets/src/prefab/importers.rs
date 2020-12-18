@@ -1,17 +1,13 @@
+use std::{collections::HashMap, io::Read};
+
 use atelier_core::AssetUuid;
-// use atelier_importer::{ImportedAsset, Importer, ImporterValue};
-use atelier_importer::{
-    self as atelier_importer, BoxedImporter, ImportedAsset, Importer, ImporterValue, SerdeObj,
-};
+use atelier_importer::{self as atelier_importer, ImportedAsset, Importer, ImporterValue};
+use legion_prefab::ComponentRegistration;
+use prefab_format::ComponentTypeUuid;
 use serde::{Deserialize, Serialize};
-use std::io::Read;
 use type_uuid::TypeUuid;
 
 use crate::prefab::RawPrefab;
-
-use legion_prefab::ComponentRegistration;
-use prefab_format::ComponentTypeUuid;
-use std::collections::HashMap;
 
 #[derive(Default, Deserialize, Serialize, TypeUuid, Clone, Copy)]
 #[uuid = "80583980-24d4-4034-8394-ea749b43f55d"]
@@ -28,8 +24,6 @@ pub struct PrefabImporterState {
 #[derive(Default, TypeUuid)]
 #[uuid = "5bdf4d06-a1cb-437b-b182-d6d8cb23512c"]
 pub struct PrefabImporter {}
-
-// use atelier_assets::importer as atelier_importer;
 
 impl Importer for PrefabImporter {
     type State = PrefabImporterState;
@@ -91,7 +85,6 @@ impl Importer for PrefabImporter {
         ///////////////////////////////////////////////////////////////
 
         {
-            // Print for debug
             let legion_world_str =
                 ron::ser::to_string_pretty(&prefab_asset, ron::ser::PrettyConfig::default())
                     .unwrap();

@@ -1,15 +1,14 @@
 //! Input system
-use winit::Event;
-
-use crate::{InputEvent, InputHandler};
 use amethyst_core::{
     ecs::*,
     shrev::{EventChannel, ReaderId},
 };
 use amethyst_window::ScreenDimensions;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+use winit::Event;
+
+use crate::{InputEvent, InputHandler};
 
 /// Input system
 ///

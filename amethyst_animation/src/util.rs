@@ -1,15 +1,13 @@
-use minterpolate::InterpolationPrimitive;
-use serde::{Deserialize, Serialize};
-
 use amethyst_core::{
     alga::general::{SubsetOf, SupersetOf},
     ecs::prelude::{Entity, WriteStorage},
     math::{convert, RealField, Vector2, Vector3, Vector4},
 };
-
-use crate::resources::{AnimationControlSet, AnimationSampling};
+use minterpolate::InterpolationPrimitive;
+use serde::{Deserialize, Serialize};
 
 use self::SamplerPrimitive::*;
+use crate::resources::{AnimationControlSet, AnimationSampling};
 
 /// Get the animation set for an entity. If none exists, one will be added. If entity is invalid,
 /// (eg. removed before) None will be returned.

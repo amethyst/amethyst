@@ -1,5 +1,9 @@
 //! Provides components and systems to create an in game user interface.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -8,6 +12,8 @@
 )]
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
+
+pub(crate) use amethyst_core::ecs::prelude::Entity;
 
 pub use self::{
     blink::BlinkSystem,
@@ -54,8 +60,6 @@ pub use self::{
     transform::{get_parent_pixel_size, UiFinder, UiTransform},
     widgets::{Widget, WidgetId, Widgets},
 };
-
-pub(crate) use amethyst_core::ecs::prelude::Entity;
 
 mod blink;
 mod bundle;

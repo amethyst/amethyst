@@ -2,15 +2,14 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
-    assets::AssetHandle,
-    assets::{DefaultLoader, Format as AssetFormat, Handle, Loader, LoaderBundle, ProcessingQueue},
+    assets::{Format as AssetFormat, Handle, Loader},
     core::{
         math::Vector3,
         transform::{Transform, TransformBundle},
     },
-    ecs::{Resources, World},
+    ecs::World,
     error::Error,
-    input::{Bindings, InputBundle},
+    input::InputBundle,
     prelude::*,
     renderer::{
         camera::Camera,
@@ -22,11 +21,11 @@ use amethyst::{
             mesh::{MeshBuilder, Normal, Position, TexCoord},
             texture::palette::load_from_srgba,
         },
-        types::{DefaultBackend, Mesh, MeshData, TextureData},
+        types::{DefaultBackend, Mesh, MeshData},
         RenderingBundle,
     },
-    utils::application_root_dir,
 };
+use amethyst_assets::{AssetHandle, DefaultLoader, LoaderBundle};
 use log::info;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -80,7 +79,7 @@ impl SimpleState for AssetsExample {
         let StateData {
             world, resources, ..
         } = data;
-        //world.insert(0usize);
+        world.push((0usize,));
 
         initialise_camera(world);
         initialise_lights(world);
@@ -88,11 +87,10 @@ impl SimpleState for AssetsExample {
         // Add custom cube object to scene
         let (mesh, mtl) = {
             let mat_defaults = resources.get::<MaterialDefaults>().unwrap();
-            let loader = resources.get_mut::<DefaultLoader>().unwrap();
+            let loader = resources.get::<DefaultLoader>().unwrap();
 
-            // let meshes = resources.get().unwrap();
-            let textures = &mut resources.get_mut::<ProcessingQueue<TextureData>>().unwrap();
-            let materials = &mut resources.get_mut::<ProcessingQueue<Material>>().unwrap();
+            let textures = &resources.get().unwrap();
+            let materials = &resources.get().unwrap();
 
             let mesh: Handle<Mesh> = loader.load("mesh/cuboid.custom");
             let albedo = loader.load_from_data(
@@ -120,12 +118,10 @@ impl SimpleState for AssetsExample {
         trans.set_translation_xyz(-5.0, 0.0, 0.0);
         trans.set_scale(Vector3::new(2.0, 2.0, 2.0));
         world.push((mesh, mtl, trans));
-        info!("End of on_start");
     }
 }
 
 fn main() -> Result<(), Error> {
-    // amethyst::start_logger(Default::default());
     {
         let mut config = amethyst::LoggerConfig::default();
         config.log_file = Some(std::path::PathBuf::from("asset_loading.log"));
@@ -144,7 +140,6 @@ fn main() -> Result<(), Error> {
         ));
         amethyst::start_logger(config);
     }
-    // let app_root = application_root_dir()?;
 
     let app_root = std::path::PathBuf::new();
     // Add our meshes directory to the asset loader.

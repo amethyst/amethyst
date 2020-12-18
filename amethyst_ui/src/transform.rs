@@ -11,7 +11,6 @@ use amethyst_core::{
     ParentHierarchy,
 };
 use amethyst_window::ScreenDimensions;
-
 use serde::{Deserialize, Serialize};
 
 use super::{Anchor, ScaleMode, Stretch};

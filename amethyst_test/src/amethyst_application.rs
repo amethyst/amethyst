@@ -1040,7 +1040,7 @@ mod test {
         S: State<GameData<'a, 'b>, E> + 'static,
         E: Send + Sync + 'static,
     {
-        fn update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> Trans<GameData<'a, 'b>, E> {
+        fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData<'a, 'b>, E> {
             data.data.update(&data.world);
             data.world.insert(LoadResource);
             Trans::Switch(Box::new(self.next_state.take().unwrap()))

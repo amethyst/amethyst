@@ -22,7 +22,7 @@ use amethyst::{
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
+    Application, DispatcherBuilder, GameData, SimpleState, SimpleTrans, StateData, Trans,
 };
 use serde::{Deserialize, Serialize};
 
@@ -49,7 +49,7 @@ struct Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
         // Crates new progress counter
         self.progress_counter = Some(Default::default());
@@ -75,7 +75,7 @@ impl SimpleState for Example {
         initialise_camera(world);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         // Checks if we are still loading data
 
         if let Some(ref progress_counter) = self.progress_counter {
@@ -135,21 +135,21 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/sprite_animation/assets/");
     let display_config_path = app_root.join("examples/sprite_animation/config/display.ron");
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         .with_system_desc(
             PrefabLoaderSystemDesc::<MyPrefabData>::default(),
             "scene_loader",
             &[],
         )
-        .with_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
+        .add_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
             "sprite_animation_control",
             "sprite_sampler_interpolation",
         ))?
-        .with_bundle(
+        .add_bundle(
             TransformBundle::new()
                 .with_dep(&["sprite_animation_control", "sprite_sampler_interpolation"]),
         )?
-        .with_bundle(
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?
@@ -158,7 +158,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, Example::default(), game_data)?;
+    let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
 
     Ok(())

@@ -1,16 +1,5 @@
-use crate::{
-    batch::{GroupIterator, OrderedTwoLevelBatch, TwoLevelBatch},
-    mtl::{FullTextureSet, Material, StaticTextureSet},
-    pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::{SkinnedVertexArgs, VertexArgs},
-    resources::Tint,
-    skinning::JointTransforms,
-    submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
-    system::GraphAuxData,
-    types::{Backend, Mesh},
-    util,
-    visibility::Visibility,
-};
+use std::marker::PhantomData;
+
 use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle};
 use amethyst_core::{ecs::*, transform::Transform};
 use derivative::Derivative;
@@ -26,7 +15,20 @@ use rendy::{
     shader::{Shader, SpirvShader},
 };
 use smallvec::SmallVec;
-use std::marker::PhantomData;
+
+use crate::{
+    batch::{GroupIterator, OrderedTwoLevelBatch, TwoLevelBatch},
+    mtl::{FullTextureSet, Material, StaticTextureSet},
+    pipeline::{PipelineDescBuilder, PipelinesBuilder},
+    pod::{SkinnedVertexArgs, VertexArgs},
+    resources::Tint,
+    skinning::JointTransforms,
+    submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
+    system::GraphAuxData,
+    types::{Backend, Mesh},
+    util,
+    visibility::Visibility,
+};
 
 macro_rules! profile_scope_impl {
     ($string:expr) => {
@@ -334,7 +336,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                         .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                     for (mesh_id, batch_data) in batches {
                         debug_assert!(mesh_storage.contains(*mesh_id));
-                        if let Some(mesh) = B::unwrap_mesh(unsafe {
+                        if let Some(mesh) = B::unwrap_mesh({
                             mesh_storage
                                 .get_for_load_handle(*mesh_id)
                                 .expect("Could not get mesh.")
@@ -370,7 +372,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                             .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                         for (mesh_id, batch_data) in batches {
                             debug_assert!(mesh_storage.contains(*mesh_id));
-                            if let Some(mesh) = B::unwrap_mesh(unsafe {
+                            if let Some(mesh) = B::unwrap_mesh({
                                 mesh_storage
                                     .get_for_load_handle(*mesh_id)
                                     .expect("Could not get mesh.")
@@ -687,7 +689,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                     self.materials.bind(layout, 1, mat, encoder);
                     for (mesh, range) in batches {
                         debug_assert!(mesh_storage.contains(*mesh));
-                        if let Some(mesh) = B::unwrap_mesh(unsafe {
+                        if let Some(mesh) = B::unwrap_mesh({
                             mesh_storage
                                 .get_for_load_handle(*mesh)
                                 .expect("Could not get mesh.")
@@ -721,7 +723,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                         self.materials.bind(layout, 1, mat, encoder);
                         for (mesh, range) in batches {
                             debug_assert!(mesh_storage.contains(*mesh));
-                            if let Some(mesh) = B::unwrap_mesh(unsafe {
+                            if let Some(mesh) = B::unwrap_mesh({
                                 mesh_storage
                                     .get_for_load_handle(*mesh)
                                     .expect("Could not get mesh.")

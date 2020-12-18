@@ -1,6 +1,5 @@
 use amethyst_assets::Format;
 use amethyst_error::Error;
-
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 

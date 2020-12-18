@@ -1,6 +1,7 @@
 //! Basic shape prefabs.
-use crate::types::{Mesh, MeshData};
-use amethyst_assets::{Asset, DefaultLoader, Handle, Loader, ProcessingQueue, Progress};
+use std::marker::PhantomData;
+
+use amethyst_assets::{DefaultLoader, Handle, Loader, ProcessingQueue, Progress};
 use amethyst_core::math::Vector3;
 use genmesh::{
     generators::{
@@ -12,8 +13,8 @@ use genmesh::{
 use rendy::mesh::{
     MeshBuilder, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Tangent, TexCoord,
 };
-use std::marker::PhantomData;
 
+use crate::types::{Mesh, MeshData};
 fn option_none<T>() -> Option<T> {
     None
 }
@@ -271,12 +272,12 @@ where
                 let v = vertices[u];
                 let pos = scale
                     .map(|(x, y, z)| Vector3::new(v.pos.x * x, v.pos.y * y, v.pos.z * z))
-                    .unwrap_or_else(|| Vector3::from(v.pos));
+                    .unwrap_or_else(|| Vector3::new(v.pos.x, v.pos.y, v.pos.z));
                 let normal = scale
                     .map(|(x, y, z)| {
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()
                     })
-                    .unwrap_or_else(|| Vector3::from(v.normal));
+                    .unwrap_or_else(|| Vector3::new(v.normal.x, v.normal.y, v.normal.z));
                 let tangent1 = normal.cross(&Vector3::x());
                 let tangent2 = normal.cross(&Vector3::y());
                 let tangent = if tangent1.norm_squared() > tangent2.norm_squared() {

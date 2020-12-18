@@ -4,7 +4,7 @@
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
 
-use crate::{output::Output, source::*, systems::*};
+use crate::{output::Output, systems::*};
 
 /// Audio bundle
 ///

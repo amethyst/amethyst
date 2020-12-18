@@ -6,13 +6,15 @@
 //! of asset data types and their formats, and embedding the format name into
 //! the serialization format itself.
 
-use crate::SerializableFormat;
+use std::{collections::BTreeMap, marker::PhantomData};
+
 use serde::{
     de::{self, DeserializeSeed, Expected, SeqAccess, Visitor},
     ser::{Serialize, SerializeTupleStruct, Serializer},
     Deserialize, Deserializer,
 };
-use std::{collections::BTreeMap, marker::PhantomData};
+
+use crate::SerializableFormat;
 
 /// A trait for all asset types that have their format types.
 /// Use this as a bound for asset data types when used inside boxed format types intended for deserialization.
@@ -275,13 +277,11 @@ macro_rules! register_format {
 
 #[cfg(test)]
 mod tests {
-    use serde;
-    use serde_json;
+    use amethyst_error::Error;
 
     use super::*;
     use crate as amethyst_assets;
     use crate::Format;
-    use amethyst_error::Error;
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     struct TestPrefab {

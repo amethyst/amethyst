@@ -4,11 +4,10 @@ use std::{sync::Arc, time::Instant};
 
 use amethyst_core::{ecs::*, Time};
 use amethyst_error::Error;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{loader_new::DefaultLoader, Format, FormatValue, Source};
+use crate::{DefaultLoader, Format, FormatValue, Source};
 
 /// This bundle activates hot reload for the `Loader`,
 /// adds a `HotReloadStrategy` and the `HotReloadSystem`.
@@ -32,11 +31,11 @@ impl SystemBundle for HotReloadBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(self.strategy.clone());
-        // FIXME
-        // resources
-        //     .get_mut::<DefaultLoader>()
-        //     .expect("Could not get_mut DefaultLoader")
-        //     .set_hot_reload(true);
+
+        resources
+            .get_mut::<DefaultLoader>()
+            .expect("Could not get_mut DefaultLoader");
+        // FIXME .set_hot_reload(true);
 
         builder.add_system(build_hot_reload_system());
 

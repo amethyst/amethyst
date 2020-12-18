@@ -1,8 +1,9 @@
 //! 'Global' rendering type declarations
-use crate::system::{MeshProcessor, TextureProcessor};
 use amethyst_assets::Asset;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
+
+use crate::system::{MeshProcessor, TextureProcessor};
 
 /// Extension of the rendy Backend trait.
 pub trait Backend: rendy::hal::Backend {

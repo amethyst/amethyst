@@ -7,11 +7,12 @@ use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
-use winit::Event;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
+use winit::Event;
 
+#[cfg(feature = "ui")]
+use crate::ui::UiEvent;
 use crate::{
     assets::{start_asset_daemon, DefaultLoader, Source},
     core::{
@@ -528,7 +529,8 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
-        start_asset_daemon();
+        let asset_dirs = vec![path.as_ref().to_path_buf()];
+        start_asset_daemon(asset_dirs);
 
         let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
             .as_ref()
@@ -669,7 +671,7 @@ where
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
-    ///     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
     ///         let storage = data.world.read_resource();
     ///
     ///         let loader = data.world.read_resource::<Loader>();
@@ -679,13 +681,13 @@ where
     ///     }
     /// }
     /// ~~~
-    pub fn with_source<I, O>(self, name: I, store: O) -> Self
+    pub fn with_source<I, O>(self, _name: I, _store: O) -> Self
     where
         I: Into<String>,
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
             // FIXME Update the source on the loader
             // loader.add_source(name, store);
         }
@@ -726,7 +728,7 @@ where
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
-    ///     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
     ///         let storage = data.world.read_resource();
     ///
     ///         let loader = data.world.read_resource::<Loader>();
@@ -735,12 +737,12 @@ where
     ///     }
     /// }
     /// ~~~
-    pub fn with_default_source<O>(self, store: O) -> Self
+    pub fn with_default_source<O>(self, _store: O) -> Self
     where
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
             // FIXME Update the location on the loader
             // loader.set_default_source(store);
         }

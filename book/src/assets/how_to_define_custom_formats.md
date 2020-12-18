@@ -142,7 +142,7 @@ If you are defining a new format that may be useful to others, [please send us a
     #  }
     #
     impl SimpleState for LoadingState {
-        fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        fn on_start(&mut self, data: StateData<'_, GameData>) {
             let loader = &data.world.read_resource::<Loader>();
             let energy_blast_handle = loader.load(
                 "energy_blast.mylang",
@@ -156,7 +156,7 @@ If you are defining a new format that may be useful to others, [please send us a
     #
     #     fn update(
     #         &mut self,
-    #         _data: &mut StateData<'_, GameData<'_, '_>>,
+    #         _data: &mut StateData<'_, GameData>,
     #     ) -> SimpleTrans {
     #         Trans::Quit
     #     }

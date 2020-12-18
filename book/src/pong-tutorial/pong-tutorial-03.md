@@ -390,7 +390,7 @@ will take care of that for us, as well as set up the storage.
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+fn on_start(&mut self, data: StateData<'_, GameData>) {
     let world = data.world;
 
     // Load the spritesheet necessary to render the graphics.

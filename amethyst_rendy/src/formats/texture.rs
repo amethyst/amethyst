@@ -1,5 +1,4 @@
 //! Texture formats implementation.
-use crate::types::TextureData;
 use amethyst_assets::Format;
 use amethyst_error::Error;
 use rendy::{
@@ -15,6 +14,8 @@ use rendy::{
 };
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
+
+use crate::types::TextureData;
 
 /// Image format description newtype wrapper for `ImageTextureConfig` from rendy.
 ///
