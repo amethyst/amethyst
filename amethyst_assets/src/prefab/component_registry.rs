@@ -63,12 +63,12 @@ impl ComponentRegistryBuilder {
         FromT: Component,
         IntoT: Component,
         F: Fn(
-            &Resources,                             // resources
-            Range<usize>,                           // src_entity_range
-            &Archetype,                             // src_arch
-            &Components,                            // src_components
-            &mut ComponentWriter<IntoT>,            // dst
-            fn(&mut ComponentWriter<IntoT>, IntoT), // push_fn
+            &Resources,                                 // resources
+            Range<usize>,                               // src_entity_range
+            &Archetype,                                 // src_arch
+            &Components,                                // src_components
+            &mut ComponentWriter<'_, IntoT>,            // dst
+            fn(&mut ComponentWriter<'_, IntoT>, IntoT), // push_fn
         ) + Send
             + Sync
             + 'static,
@@ -101,7 +101,7 @@ impl ComponentRegistry {
         &self.components_by_uuid
     }
 
-    pub fn copy_clone_impl(&self) -> CopyCloneImpl<FnvBuildHasher> {
+    pub fn copy_clone_impl(&self) -> CopyCloneImpl<'_, FnvBuildHasher> {
         CopyCloneImpl::new(&self.components)
     }
 

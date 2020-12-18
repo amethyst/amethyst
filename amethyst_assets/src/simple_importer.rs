@@ -6,7 +6,7 @@ use atelier_importer::{
     self as importer, BoxedImporter, ImportedAsset, Importer, ImporterValue, SerdeObj,
 };
 use serde::{Deserialize, Serialize};
-use type_uuid::{TypeUuid, TypeUuidDynamic};
+use type_uuid::TypeUuid;
 
 use crate::{experimental::AssetUuid, Format};
 

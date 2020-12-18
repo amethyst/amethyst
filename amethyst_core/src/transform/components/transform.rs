@@ -628,10 +628,11 @@ impl From<Vector3<f64>> for Transform {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, TypeUuid, SerdeDiff)]
+/// Format for prefab Transform serialization
+#[derive(Clone, Debug, Serialize, Deserialize, TypeUuid, SerdeDiff)]
 #[uuid = "f062a20b-250f-44b3-a58a-4a00f7692c22"]
 #[serde(rename = "Transform", default)]
-struct TransformValues {
+pub struct TransformValues {
     translation: [f32; 3],
     rotation: [f32; 4],
     scale: [f32; 3],

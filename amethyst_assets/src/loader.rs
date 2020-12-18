@@ -74,17 +74,6 @@ pub trait Loader: Send + Sync {
     ///
     /// This is useful when loading an asset whose Rust type is known.
     ///
-    /// # Notes
-    ///
-    /// Be careful not to confuse `AssetUuid` with `AssetTypeId`:
-    ///
-    /// * `AssetUuid`: For an asset, such as "player_texture.png".
-    /// * `AssetTypeId`: For an asset type, such as `Texture`.
-    ///
-    /// # Parameters
-    ///
-    /// * `id`: UUID of the asset.
-    ///
     /// # Type Parameters
     ///
     /// * `T`: Asset `TypeUuid`.
