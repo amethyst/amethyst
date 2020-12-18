@@ -18,6 +18,7 @@ use amethyst::{
     utils::application_root_dir,
     Error,
 };
+use amethyst_assets::prefab::ComponentRegistryBuilder;
 
 // type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
@@ -62,12 +63,13 @@ struct AssetsExample {
 
 impl SimpleState for AssetsExample {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        // let component_registry = ComponentRegistryBuilder::new()
-        //     .auto_register_components()
-        //     //.add_spawn_mapping::<TransformValues, Transform>()
-        //     .build();
-        // let raw_prefab = generate_prefab();
-        // write_prefab(&component_registry, &raw_prefab.raw_prefab, "prefab.ron");
+        let component_registry = ComponentRegistryBuilder::new()
+            .auto_register_components()
+            //.add_spawn_mapping::<TransformValues, Transform>()
+            .build();
+        let raw_prefab = generate_prefab();
+        write_prefab(&component_registry, &raw_prefab.raw_prefab, "prefab.ron")
+            .expect("Could not serialize Prefab");
         let StateData { resources, .. } = data;
         let loader = resources.get_mut::<DefaultLoader>().unwrap();
         let prefab_handle: Handle<Prefab> = loader.load("prefab/example.prefab");
