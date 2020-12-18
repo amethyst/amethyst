@@ -4,7 +4,6 @@ use atelier_loader::{
     crossbeam_channel::Sender,
     handle::{AssetHandle, Handle, RefOp, WeakHandle},
 };
-use derivative::Derivative;
 use fnv::FnvHashMap;
 
 /// A simple cache for asset handles of type `A`.
@@ -41,20 +40,13 @@ where
         K: ?Sized + Hash + Eq,
         String: Borrow<K>,
     {
-        // FIXME
-        // self.map.get(key).and(|weak_handle: WeakHandle| {
-        //     Handle::<A>::new(self.tx.clone(), weak_handle.load_handle())
-        // })
-        None
+        self.map.get(key).and_then(|weak_handle: &WeakHandle| {
+            Some(Handle::<A>::new(self.tx.clone(), weak_handle.load_handle()))
+        })
     }
 
-    // /// Deletes all cached handles which are invalid.
-    // pub fn clear_dead<F>(&mut self) {
-    //     self.map.retain(|_, h| !h.is_dead());
-    // }
-
-    // /// Clears all values.
-    // pub fn clear_all(&mut self) {
-    //     self.map.clear();
-    // }
+    /// Clears all values.
+    pub fn clear_all(&mut self) {
+        self.map.clear();
+    }
 }
