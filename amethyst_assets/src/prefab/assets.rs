@@ -1,12 +1,14 @@
+use std::collections::HashMap;
+
+use amethyst_core::ecs::*;
+use atelier_importer::{typetag, SerdeImportable};
+use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
+
 use crate::{
     asset::Asset, prefab::ComponentRegistry, register_asset_type, register_format,
     register_format_type, AddToDispatcher, AssetStorage, ProcessingQueue, ProcessingState,
 };
-use amethyst_core::ecs::*;
-use atelier_importer::{typetag, SerdeImportable};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use type_uuid::TypeUuid;
 
 #[derive(TypeUuid, Serialize, Deserialize, SerdeImportable)]
 #[uuid = "5e751ea4-e63b-4192-a008-f5bf8674e45b"]

@@ -3,11 +3,10 @@
 
 use std::path::PathBuf;
 
-use serde::{Deserialize, Serialize};
-
 use amethyst_assets::{experimental::*, Format};
 use amethyst_core::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt, Write};
 use amethyst_error::{format_err, Error, ResultExt};
+use serde::{Deserialize, Serialize};
 use type_uuid::*;
 
 #[derive(Debug, TypeUuid)]

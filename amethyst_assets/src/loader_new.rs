@@ -1,31 +1,3 @@
-use crate::{
-    asset::ProcessableAsset,
-    processor::{AddToDispatcher, ProcessingQueue, ProcessingState},
-    progress::{Progress, Tracker},
-    storage_new::AssetStorage,
-    Asset, FormatValue,
-};
-use amethyst_core::ecs::{DispatcherBuilder, Resources};
-// use atelier_assets::loader::{
-//     handle::{self, AssetHandle, Handle, RefOp, WeakHandle},
-//     storage::{DefaultIndirectionResolver, IndirectIdentifier, LoadStatus},
-//     Loader, RpcIO,
-// };
-use amethyst_error::Error as AmethystError;
-use atelier_loader::{
-    // self,
-    crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
-    handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
-    storage::{
-        AssetLoadOp, AtomicHandleAllocator, DefaultIndirectionResolver, HandleAllocator,
-        IndirectIdentifier, IndirectionTable, LoaderInfoProvider,
-    },
-    AssetTypeId,
-    Loader as AtelierLoader,
-    RpcIO,
-};
-use bincode;
-use serde::de::Deserialize;
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -35,11 +7,36 @@ use std::{
     sync::Arc,
 };
 
-use log::{debug, info, log_enabled, trace, Level};
-
+use amethyst_core::ecs::{DispatcherBuilder, Resources};
+// use atelier_assets::loader::{
+//     handle::{self, AssetHandle, Handle, RefOp, WeakHandle},
+//     storage::{DefaultIndirectionResolver, IndirectIdentifier, LoadStatus},
+//     Loader, RpcIO,
+// };
+use amethyst_error::Error as AmethystError;
 pub(crate) use atelier_loader::LoadHandle;
+use atelier_loader::{
+    crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
+    handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
+    storage::{
+        AssetLoadOp, AtomicHandleAllocator, DefaultIndirectionResolver, HandleAllocator,
+        IndirectIdentifier, IndirectionTable, LoaderInfoProvider,
+    },
+    AssetTypeId, Loader as AtelierLoader, RpcIO,
+};
 pub use atelier_loader::{storage::LoadStatus, AssetUuid};
+use bincode;
+use log::{debug, info, log_enabled, trace, Level};
+use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
+
+use crate::{
+    asset::ProcessableAsset,
+    processor::{AddToDispatcher, ProcessingQueue, ProcessingState},
+    progress::{Progress, Tracker},
+    storage_new::AssetStorage,
+    Asset, FormatValue,
+};
 
 /// Manages asset loading and storage for an application.
 pub trait Loader: Send + Sync {

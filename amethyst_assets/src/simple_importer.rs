@@ -1,12 +1,14 @@
-use crate::{experimental::AssetUuid, Format};
+use std::io::Read;
+
 // FIXME
 // pub use atelier_importer::SourceFileImporter;
 use atelier_importer::{
     self as importer, BoxedImporter, ImportedAsset, Importer, ImporterValue, SerdeObj,
 };
 use serde::{Deserialize, Serialize};
-use std::io::Read;
 use type_uuid::{TypeUuid, TypeUuidDynamic};
+
+use crate::{experimental::AssetUuid, Format};
 
 /// A simple state for Importer to retain the same UUID between imports
 /// for all single-asset source files

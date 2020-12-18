@@ -1,16 +1,15 @@
+use std::{collections::HashMap, ops::Range};
+
 use amethyst_core::ecs::{
     storage::{Archetype, Component, ComponentTypeId, ComponentWriter, Components},
     world::EntityHasher,
     Entity, Resources,
 };
-use legion_prefab::ComponentRegistration;
-use prefab_format::ComponentTypeUuid;
-use std::collections::HashMap;
-
-use legion_prefab::{CopyCloneImpl, SpawnCloneImpl, SpawnCloneImplHandlerSet, SpawnInto};
-use std::ops::Range;
-
 use fnv::{FnvBuildHasher, FnvHashMap};
+use legion_prefab::{
+    ComponentRegistration, CopyCloneImpl, SpawnCloneImpl, SpawnCloneImplHandlerSet, SpawnInto,
+};
+use prefab_format::ComponentTypeUuid;
 
 pub struct ComponentRegistryBuilder {
     components: FnvHashMap<ComponentTypeId, ComponentRegistration>,
@@ -64,13 +63,13 @@ impl ComponentRegistryBuilder {
         FromT: Component,
         IntoT: Component,
         F: Fn(
-                &Resources,                             // resources
-                Range<usize>,                           // src_entity_range
-                &Archetype,                             // src_arch
-                &Components,                            // src_components
-                &mut ComponentWriter<IntoT>,            // dst
-                fn(&mut ComponentWriter<IntoT>, IntoT), // push_fn
-            ) + Send
+            &Resources,                             // resources
+            Range<usize>,                           // src_entity_range
+            &Archetype,                             // src_arch
+            &Components,                            // src_components
+            &mut ComponentWriter<IntoT>,            // dst
+            fn(&mut ComponentWriter<IntoT>, IntoT), // push_fn
+        ) + Send
             + Sync
             + 'static,
     {

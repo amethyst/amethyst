@@ -1,17 +1,17 @@
-use atelier_loader::storage::AssetLoadOp;
-use crossbeam_queue::SegQueue;
-use std::borrow::Cow;
 use std::{
+    borrow::Cow,
     marker::PhantomData,
     sync::{Arc, Mutex},
 };
 
 use amethyst_core::ecs::{systems::ParallelRunnable, DispatcherBuilder, SystemBuilder};
 use amethyst_error::Error;
+use atelier_loader::storage::AssetLoadOp;
+use crossbeam_queue::SegQueue;
 use log::debug;
+
 use crate::{
     asset::{Asset, ProcessableAsset},
-    // error::Error,
     loader_new::LoadHandle,
     progress::Tracker,
     storage_new::AssetStorage,
@@ -208,7 +208,7 @@ impl<T> ProcessingQueue<T> {
                                 // } else if let Some(tracker) = tracker {
                                 //     tracker.success();
                                 // }
-                            
+
                                 if let Some(tracker) = tracker {
                                     tracker.success();
                                 }

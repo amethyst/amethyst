@@ -1,10 +1,11 @@
+use std::{borrow::Borrow, hash::Hash, marker::PhantomData};
+
 use atelier_loader::{
     crossbeam_channel::Sender,
     handle::{AssetHandle, Handle, RefOp, WeakHandle},
 };
 use derivative::Derivative;
 use fnv::FnvHashMap;
-use std::{borrow::Borrow, hash::Hash, marker::PhantomData};
 
 /// A simple cache for asset handles of type `A`.
 /// This stores `WeakHandle`, so it doesn't keep the assets alive.
