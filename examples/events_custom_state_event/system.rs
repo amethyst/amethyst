@@ -1,19 +1,34 @@
 use amethyst::{
     core::shrev::EventChannel,
-    derive::SystemDesc,
-    ecs::{System, SystemData, Write},
+    ecs::{systems::ParallelRunnable, *},
+    Error,
 };
 
 use crate::event::GameEvent;
 
-/// Signals the state when it's time to increase the game difficulty
-#[derive(SystemDesc)]
-pub(crate) struct IncreaseGameDifficultySystem;
+#[derive(Debug)]
+pub(crate) struct MyBundle;
 
-impl<'a> System<'a> for IncreaseGameDifficultySystem {
-    type SystemData = Write<'a, EventChannel<GameEvent>>;
+impl<'a, 'b> SystemBundle for MyBundle {
+    fn load(
+        &mut self,
+        world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), Error> {
+        let chan = EventChannel::<GameEvent>::default();
+        resources.insert(chan);
 
-    fn run(&mut self, mut my_event_channel: Self::SystemData) {
-        my_event_channel.single_write(GameEvent::IncreaseDifficulty);
+        builder.add_system(build_difficulty_system());
+        Ok(())
     }
+}
+
+/// Signals the state when it's time to increase the game difficulty
+pub(crate) fn build_difficulty_system() -> impl ParallelRunnable {
+    SystemBuilder::new("DifficultySystem")
+        .write_resource::<EventChannel<GameEvent>>()
+        .build(|_, _, my_event_channel, _| {
+            my_event_channel.single_write(GameEvent::IncreaseDifficulty);
+        })
 }

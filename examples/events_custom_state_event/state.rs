@@ -12,12 +12,12 @@ impl Default for GameplayState {
     }
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>, MyExtendedStateEvent> for GameplayState {
+impl<'a, 'b> State<GameData, MyExtendedStateEvent> for GameplayState {
     fn handle_event(
         &mut self,
         _data: StateData<'_, GameData>,
         event: MyExtendedStateEvent,
-    ) -> Trans<GameData<'a, 'b>, MyExtendedStateEvent> {
+    ) -> Trans<GameData, MyExtendedStateEvent> {
         if let MyExtendedStateEvent::Game(GameEvent::IncreaseDifficulty) = event {
             self.game_difficulty += 1;
             println!(
@@ -28,11 +28,8 @@ impl<'a, 'b> State<GameData<'a, 'b>, MyExtendedStateEvent> for GameplayState {
         Trans::None
     }
 
-    fn update(
-        &mut self,
-        data: StateData<'_, GameData<'a, 'b>>,
-    ) -> Trans<GameData<'a, 'b>, MyExtendedStateEvent> {
-        data.data.update(&data.world);
+    fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData, MyExtendedStateEvent> {
+        data.data.update(data.world, data.resources);
         Trans::None
     }
 }

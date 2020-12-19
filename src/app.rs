@@ -316,41 +316,33 @@ where
         }
 
         // Read the Trans queue and apply changes.
-        {
-            let world = &mut self.world;
-            let resources = &mut self.resources;
-            let states = &mut self.states;
-            let reader = &mut self.trans_reader_id;
 
-            let trans = resources
-                .get_mut::<EventChannel<TransEvent<T, E>>>()
-                .unwrap()
-                .read(reader)
-                .map(|e| e())
-                .collect::<Vec<_>>();
-            for tr in trans {
-                states.transition(tr, StateData::new(world, resources, &mut self.data));
-            }
+        let world = &mut self.world;
+        let resources = &mut self.resources;
+        let states = &mut self.states;
+        let reader = &mut self.trans_reader_id;
+
+        let trans = resources
+            .get_mut::<EventChannel<TransEvent<T, E>>>()
+            .unwrap()
+            .read(reader)
+            .map(|e| e())
+            .collect::<Vec<_>>();
+        for tr in trans {
+            states.transition(tr, StateData::new(world, resources, &mut self.data));
         }
 
         {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            {
-                let events = &mut self.events;
-                self.reader.read(&mut self.resources, events);
-            }
+            self.reader.read(resources, &mut self.events);
 
-            {
-                let world = &mut self.world;
-                let resources = &mut self.resources;
-                let states = &mut self.states;
-                for e in self.events.drain(..) {
-                    states.handle_event(StateData::new(world, resources, &mut self.data), e);
-                }
+            for e in self.events.drain(..) {
+                states.handle_event(StateData::new(world, resources, &mut self.data), e);
             }
         }
+
         {
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
@@ -437,6 +429,7 @@ pub struct ApplicationBuilder<S, T, E, R> {
 impl<S, T, E, X> ApplicationBuilder<S, T, E, X>
 where
     T: DataDispose + 'static,
+    E: 'static,
 {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
@@ -558,9 +551,7 @@ where
         }
         resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         resources.insert(pool);
-        resources.insert(EventChannel::<Event>::with_capacity(2000));
         //resources.insert(EventChannel::<UiEvent>::with_capacity(40));
-        resources.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         resources.insert(FrameLimiter::default());
         resources.insert(Stopwatch::default());
         resources.insert(Time::default());
@@ -839,21 +830,18 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let mut reader = X::default();
-        reader.setup(&mut self.resources);
         let data = init.build(&mut self.world, &mut self.resources)?;
 
-        let event_reader_id = self
-            .resources
-            .get_mut::<EventChannel<Event>>()
-            .unwrap()
-            .register_reader();
+        let mut winit_event_channel = EventChannel::<winit::Event>::with_capacity(2000);
+        let event_reader_id = winit_event_channel.register_reader();
+        self.resources.insert(winit_event_channel);
 
-        let trans_reader_id = self
-            .resources
-            .get_mut::<EventChannel<TransEvent<T, E>>>()
-            .unwrap()
-            .register_reader();
+        let mut trans_event_channel = EventChannel::<TransEvent<T, E>>::with_capacity(2);
+        let trans_reader_id = trans_event_channel.register_reader();
+        self.resources.insert(trans_event_channel);
+
+        let mut reader = X::default();
+        reader.setup(&mut self.resources);
 
         Ok(CoreApplication {
             world: self.world,
