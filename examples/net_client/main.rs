@@ -2,11 +2,7 @@
 use std::time::Duration;
 
 use amethyst::{
-    core::{
-        ecs::{System, SystemBundle},
-        frame_limiter::FrameRateLimitStrategy,
-        Time,
-    },
+    core::{ecs::SystemBundle, frame_limiter::FrameRateLimitStrategy, Time},
     network::simulation::{
         tcp::TcpNetworkBundle, NetworkSimulationEvent, NetworkSimulationTime, TransportResource,
     },
@@ -16,29 +12,16 @@ use amethyst::{
     Result,
 };
 use log::{error, info};
+use systems::ParallelRunnable;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let assets_dir = application_root_dir()?.join("examples/net_client/");
 
-    //    // UDP
-    //    let socket = UdpSocket::bind("0.0.0.0:3455")?;
-    //    socket.set_nonblocking(true)?;
-
-    //    // TCP: No listener needed for the client.
-
-    //    // Laminar
-    //    let socket = LaminarSocket::bind("0.0.0.0:3455")?;
-
     let mut game_data = DispatcherBuilder::default();
-    //        // UDP
-    //        .add_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
-    // TCP
     game_data
         .add_bundle(TcpNetworkBundle::new(None, 2048))
-        //        // Laminar
-        //        .add_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .add_bundle(SpamBundle);
 
     let mut game = Application::build(assets_dir, GameState)?
@@ -51,7 +34,6 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-/// Default empty state
 pub struct GameState;
 impl SimpleState for GameState {}
 

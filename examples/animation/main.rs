@@ -220,7 +220,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/animation/assets/");
 
     let game_data = DispatcherBuilder::default()
-        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        //.with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .add_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",

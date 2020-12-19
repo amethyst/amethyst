@@ -11,11 +11,8 @@ use amethyst::{
         Named, WithNamed,
     },
     derive::SystemDesc,
-    ecs::{
-        prelude::Entity, Entities, Join, Read, ReadExpect, ReadStorage, System, SystemData,
-        WriteStorage,
-    },
-    input::{InputBundle, InputHandler, StringBindings},
+    ecs::*,
+    input::{InputBundle, InputHandler},
     prelude::{Builder, World, WorldExt},
     renderer::{
         camera::{ActiveCamera, Camera},

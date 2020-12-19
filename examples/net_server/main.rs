@@ -14,31 +14,19 @@ use amethyst::{
 };
 use amethyst_network::simulation::NetworkSimulationTime;
 use log::{error, info};
+use systems::ParallelRunnable;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-    //    // UDP
-    //    let socket = UdpSocket::bind("0.0.0.0:3457")?;
-    //    socket.set_nonblocking(true)?;
-
-    // TCP
     let listener = TcpListener::bind("0.0.0.0:3457")?;
     listener.set_nonblocking(true)?;
-
-    //    // Laminar
-    //    let socket = LaminarSocket::bind("0.0.0.0:3457")?;
 
     let assets_dir = application_root_dir()?.join("examples/net_server");
 
     let mut game_data = DispatcherBuilder::default();
-    //        // UDP
-    //        .add_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
-    // TCP
     game_data
         .add_bundle(TcpNetworkBundle::new(Some(listener), 2048))
-        //        // Laminar
-        //        .add_bundle(LaminarNetworkBundle::new(Some(socket)))?
         .add_bundle(SpamReceiveBundle);
 
     let mut game = Application::build(assets_dir, GameState)?
@@ -51,9 +39,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-/// Default empty state
 pub struct GameState;
-
 impl SimpleState for GameState {}
 
 #[derive(Debug)]
