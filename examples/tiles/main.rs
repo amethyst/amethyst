@@ -262,11 +262,13 @@ impl<'s> System<'s> for MapMovementSystem {
 
 fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> SpriteSheetHandle {
     let texture_handle = {
-        let loader = world.read_resource::<Loader>();
+        let loader = data.resources.get::<Loader>().unwrap();
+
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(png_path, ImageFormat::default(), (), &texture_storage)
     };
-    let loader = world.read_resource::<Loader>();
+    let loader = data.resources.get::<Loader>().unwrap();
+
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         ron_path,
@@ -386,11 +388,7 @@ impl SimpleState for Example {
             .build();
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
@@ -413,9 +411,9 @@ fn main() -> amethyst::Result<()> {
     let assets_directory = app_root.join("examples/tiles/assets");
     let display_config_path = app_root.join("examples/tiles/config/display.ron");
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
+    let game_data = DispatcherBuilder::default()
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(
             InputBundle::<StringBindings>::new()
                 .with_bindings_from_file("examples/tiles/config/input.ron")?,
         )?
@@ -439,7 +437,7 @@ fn main() -> amethyst::Result<()> {
             "DrawSelectionSystem",
             &["camera_switch"],
         )
-        .with_bundle(
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?

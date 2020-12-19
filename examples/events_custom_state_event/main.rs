@@ -18,7 +18,8 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = application_root_dir()?.join("examples/events_custom_state_event/assets");
 
-    let game_data = GameDataBuilder::default().with(system::IncreaseGameDifficultySystem, "", &[]);
+    let game_data =
+        DispatcherBuilder::default().with(system::IncreaseGameDifficultySystem, "", &[]);
 
     let mut game = CoreApplication::<_, MyExtendedStateEvent, MyExtendedStateEventReader>::build(
         assets_dir,
