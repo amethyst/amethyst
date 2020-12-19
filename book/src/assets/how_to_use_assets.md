@@ -70,7 +70,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     }
 
     impl SimpleState for LoadingState {
-        fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        fn on_start(&mut self, data: StateData<'_, GameData>) {
             let loader = &data.world.read_resource::<Loader>();
             let texture_handle = loader.load(
                 "player.png",
@@ -131,7 +131,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     impl SimpleState for LoadingState {
         fn update(
             &mut self,
-            _data: &mut StateData<'_, GameData<'_, '_>>,
+            _data: &mut StateData<'_, GameData>,
         ) -> SimpleTrans {
             if self.progress_counter.is_complete() {
                 Trans::Switch(Box::new(GameState {
@@ -165,7 +165,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     # }
     #
     impl SimpleState for GameState {
-        fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        fn on_start(&mut self, data: StateData<'_, GameData>) {
             // Create the player entity.
             data.world
                 .create_entity()

@@ -328,7 +328,11 @@ impl SimpleState for Example {
         world.insert(DebugLines::new());
     }
 
-    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         #[cfg(feature = "profiler")]
         profile_scope!("example handle_event");
         let StateData { world, .. } = data;

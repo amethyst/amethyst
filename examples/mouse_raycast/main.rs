@@ -11,11 +11,8 @@ use amethyst::{
         Named, WithNamed,
     },
     derive::SystemDesc,
-    ecs::{
-        prelude::Entity, Entities, Join, Read, ReadExpect, ReadStorage, System, SystemData,
-        WriteStorage,
-    },
-    input::{InputBundle, InputHandler, StringBindings},
+    ecs::*,
+    input::{InputBundle, InputHandler},
     prelude::{Builder, World, WorldExt},
     renderer::{
         camera::{ActiveCamera, Camera},
@@ -27,7 +24,7 @@ use amethyst::{
     ui::{RenderUi, UiBundle, UiCreator, UiFinder, UiText},
     utils::application_root_dir,
     window::ScreenDimensions,
-    Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
+    Application, DispatcherBuilder, GameData, SimpleState, SimpleTrans, StateData, Trans,
 };
 
 #[derive(SystemDesc)]
@@ -140,7 +137,7 @@ struct Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
         // Crates new progress counter
         self.progress_counter = Some(Default::default());
@@ -186,7 +183,7 @@ impl SimpleState for Example {
         init_camera(world);
     }
 
-    fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, _: &mut StateData<'_, GameData>) -> SimpleTrans {
         Trans::None
     }
 }
@@ -238,11 +235,13 @@ where
     P: Progress,
 {
     let texture_handle = {
-        let loader = world.read_resource::<Loader>();
+        let loader = data.resources.get::<Loader>().unwrap();
+
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(png_path, ImageFormat::default(), (), &texture_storage)
     };
-    let loader = world.read_resource::<Loader>();
+    let loader = data.resources.get::<Loader>().unwrap();
+
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         ron_path,
@@ -259,11 +258,11 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/mouse_raycast/assets/");
     let display_config_path = app_root.join("examples/mouse_raycast/config/display.ron");
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(
+    let game_data = DispatcherBuilder::default()
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?
@@ -274,7 +273,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with(MouseRaycastSystem, "MouseRaycastSystem", &["input_system"]);
 
-    let mut game = Application::new(assets_dir, Example::default(), game_data)?;
+    let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
 
     Ok(())
