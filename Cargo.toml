@@ -140,8 +140,8 @@ name = "hello_world"
 [[example]]
 name = "window"
 
-# [[example]]
-# name = "sphere"
+[[example]]
+name = "sphere"
 
 # [[example]]
 # name = "renderable"
@@ -173,8 +173,8 @@ name = "material"
 # name = "states_ui"
 # required-features = ["audio"]
 
-# [[example]]
-# name = "custom_render_pass"
+[[example]]
+name = "custom_render_pass"
 
 # [[example]]
 # name = "custom_ui"
@@ -194,41 +194,36 @@ name = "fly_camera"
 [[example]]
 name = "sprites_ordered"
 
-# [[example]]
-# name = "pong_tutorial_01"
-# required-features = ["audio"]
+[[example]]
+name = "pong_tutorial_01"
 
-# [[example]]
-# name = "pong_tutorial_02"
-# required-features = ["audio"]
+[[example]]
+name = "pong_tutorial_02"
 
-# [[example]]
-# name = "pong_tutorial_03"
-# required-features = ["audio"]
+[[example]]
+name = "pong_tutorial_03"
 
-# [[example]]
-# name = "pong_tutorial_04"
-# required-features = ["audio"]
+[[example]]
+name = "pong_tutorial_04"
 
 # [[example]]
 # name = "pong_tutorial_05"
-# required-features = ["audio"]
 
 # [[example]]
 # name = "pong_tutorial_06"
 # required-features = ["audio"]
 
-# [[example]]
-# name = "net_client"
-# required-features = ["network"]
+[[example]]
+name = "net_client"
+required-features = ["network"]
 
-# [[example]]
-# name = "net_server"
-# required-features = ["network"]
+[[example]]
+name = "net_server"
+required-features = ["network"]
 
-# [[example]]
-# name = "locale"
-# required-features = ["locale"]
+[[example]]
+name = "locale"
+required-features = ["locale"]
 
 # [[example]]
 # name = "custom_game_data"

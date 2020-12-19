@@ -37,21 +37,21 @@ pub fn main() -> amethyst::Result<()> {
     // other assets ('*.ron' files, '*.png' textures, '*.ogg' audio files, ui prefab files, ...) are here
     let assets_dir = app_root.join("examples/states_ui/assets");
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         // a lot of other bundles/systems depend on this (without it being explicitly clear), so it
         // makes sense to add it early on
-        .with_bundle(TransformBundle::new())?
+        .add_bundle(TransformBundle::new())?
         // This system is in 'events.rs'. Basically, it registers UI events that
         // happen. Without it, the buttons will not react.
-        .with_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(InputBundle::<StringBindings>::new())?
         // this bundle allows us to 'find' the Buttons and other UI elements later on
-        .with_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(UiBundle::<StringBindings>::new())?
         // this allows us to reload '*.ron' files during execution
-        .with_bundle(HotReloadBundle::default())?
+        .add_bundle(HotReloadBundle::default())?
         // without this Bundle, our Program will silently (!) fail when trying to start the 'Game'.
         // (try it!)
         // It takes care of Audio (in this case, the Button audio for hovering/clicking)
-        .with_bundle(AudioBundle::default())?
+        .add_bundle(AudioBundle::default())?
         // With this System, we can register UI events and act accordingly.
         // In this example it simply prints the events, excluding it does not provide less
         // functionality.
@@ -63,9 +63,9 @@ pub fn main() -> amethyst::Result<()> {
         // Necessary for the FPS counter in the upper left corner to work.
         // (simply uncommenting will fail at runtime, since the resource is expected to exist, you
         // need to uncomment line 107-114 in game.rs for it to still work)
-        .with_bundle(FpsCounterBundle)?
+        .add_bundle(FpsCounterBundle)?
         // Without this, we would not get a picture.
-        .with_bundle(
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // This creates the window and draws a background, if we don't specify a
                 // background in the loaded ui prefab file.
@@ -82,7 +82,7 @@ pub fn main() -> amethyst::Result<()> {
 
     // creating the Application with the assets_dir, the first Screen, and the game_data with it's
     // systems.
-    let mut game = Application::new(
+    let mut game = Application::build(
         assets_dir,
         crate::welcome::WelcomeScreen::default(),
         game_data,

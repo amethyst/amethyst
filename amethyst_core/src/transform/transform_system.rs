@@ -38,19 +38,27 @@ pub fn build() -> impl Runnable {
                 // Update parent transforms for entities in the hierarchy
                 let (left, mut right) = world.split_for_query(query_parent);
                 for (entity, parent) in query_parent.iter(&left) {
-                    let parent_matrix = right
-                        .entry_ref(**parent)
+                    let parent_has_transform = right
+                        .entry_ref(parent.0)
                         .unwrap()
                         .into_component::<Transform>()
-                        .unwrap()
-                        .global_matrix;
+                        .is_ok();
 
-                    if let Some(transform) = right
-                        .entry_mut(*entity)
-                        .ok()
-                        .and_then(|entry| entry.into_component_mut::<Transform>().ok())
-                    {
-                        transform.parent_matrix = parent_matrix;
+                    if parent_has_transform {
+                        let parent_matrix = right
+                            .entry_ref(**parent)
+                            .unwrap()
+                            .into_component::<Transform>()
+                            .unwrap()
+                            .global_matrix;
+
+                        if let Some(transform) = right
+                            .entry_mut(*entity)
+                            .ok()
+                            .and_then(|entry| entry.into_component_mut::<Transform>().ok())
+                        {
+                            transform.parent_matrix = parent_matrix;
+                        }
                     }
                 }
 

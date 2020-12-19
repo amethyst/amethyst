@@ -50,11 +50,13 @@ impl<'s> System<'s> for MovementSystem {
 
 fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Handle<SpriteSheet> {
     let texture_handle = {
-        let loader = world.read_resource::<Loader>();
+        let loader = data.resources.get::<Loader>().unwrap();
+
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(png_path, ImageFormat::default(), (), &texture_storage)
     };
-    let loader = world.read_resource::<Loader>();
+    let loader = data.resources.get::<Loader>().unwrap();
+
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         ron_path,
@@ -141,7 +143,7 @@ fn initialise_camera(world: &mut World, parent: Entity) -> Entity {
 struct Example;
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
         world.register::<Named>();
 
@@ -160,11 +162,7 @@ impl SimpleState for Example {
         let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
@@ -196,15 +194,15 @@ fn main() -> amethyst::Result<()> {
     let assets_directory = app_root.join("examples/sprite_camera_follow/assets");
     let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
+    let game_data = DispatcherBuilder::default()
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(
                 app_root.join("examples/sprite_camera_follow/config/input.ron"),
             )?,
         )?
         .with(MovementSystem, "movement", &[])
-        .with_bundle(
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?

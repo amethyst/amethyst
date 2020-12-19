@@ -53,7 +53,7 @@ struct Example {
 }
 
 impl SimpleState for Loading {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         self.prefab = Some(data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, &mut self.progress)
         }));
@@ -64,7 +64,7 @@ impl SimpleState for Loading {
         });
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         match self.progress.complete() {
             Completion::Failed => {
                 println!("Failed loading assets: {:?}", self.progress.errors());
@@ -88,17 +88,13 @@ impl SimpleState for Loading {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
 
         world.create_entity().with(self.scene.clone()).build();
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let w = data.world;
         if let StateEvent::Window(event) = &event {
             // Exit if user hits Escape or closes the window
@@ -198,19 +194,19 @@ fn main() -> Result<(), Error> {
         .join("config")
         .join("display.ron");
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .with_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(InputBundle::<StringBindings>::new())?
         .with(
             ExampleSystem::default(),
             "example_system",
             &["input_system"],
         )
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(
+        .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(HotReloadBundle::default())?
+        .add_bundle(FpsCounterBundle::default())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?

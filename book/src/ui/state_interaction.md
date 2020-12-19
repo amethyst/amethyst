@@ -36,7 +36,7 @@ previous chapters, but here we will save the entity in our struct:
 #   button: Option<Entity>,
 # }
 impl SimpleState for MenuState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
 #
@@ -102,7 +102,7 @@ method of our state:
 #   button: Option<Entity>,
 # }
 impl SimpleState for MenuState {
-#   fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+#   fn on_start(&mut self, data: StateData<'_, GameData>) {
     // ...
 #       let world = data.world;
 #
@@ -149,7 +149,7 @@ impl SimpleState for MenuState {
 
     fn handle_event(
         &mut self,
-    	_data: StateData<'_, GameData<'_, '_>>,
+    	_data: StateData<'_, GameData>,
     	event: StateEvent) -> SimpleTrans {
     	if let StateEvent::Ui(ui_event) = event {
     		let is_target = ui_event.target == self.button.unwrap();
@@ -206,7 +206,7 @@ component to our button:
 # }
 impl SimpleState for MenuState {
     // ...
-#   fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+#   fn on_start(&mut self, data: StateData<'_, GameData>) {
 #       let world = data.world;
 #
 #
@@ -252,7 +252,7 @@ impl SimpleState for MenuState {
 #
 #   fn handle_event(
 #       &mut self,
-#       _data: StateData<'_, GameData<'_, '_>>,
+#       _data: StateData<'_, GameData>,
 #       event: StateEvent) -> SimpleTrans {
 #       if let StateEvent::Ui(ui_event) = event {
 #           let is_target = ui_event.target == self.button.unwrap();
@@ -270,7 +270,7 @@ impl SimpleState for MenuState {
 #       SimpleTrans::None
 #   }
 
-    fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_pause(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
         let mut hiddens = world.write_storage::<Hidden>();
 
@@ -300,7 +300,7 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 # }
 impl SimpleState for MenuState {
     // ...
-#   fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+#   fn on_start(&mut self, data: StateData<'_, GameData>) {
 #       let world = data.world;
 #
 #
@@ -346,7 +346,7 @@ impl SimpleState for MenuState {
 #
 #   fn handle_event(
 #   &mut self,
-#   _data: StateData<'_, GameData<'_, '_>>,
+#   _data: StateData<'_, GameData>,
 #   event: StateEvent) -> SimpleTrans {
 #       if let StateEvent::Ui(ui_event) = event {
 #           let is_target = ui_event.target == self.button.unwrap();
@@ -364,7 +364,7 @@ impl SimpleState for MenuState {
 #       SimpleTrans::None
 #   }
 #
-#   fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+#   fn on_pause(&mut self, data: StateData<'_, GameData>) {
 #   let world = data.world;
 #   let mut hiddens = world.write_storage::<Hidden>();
 #
@@ -373,7 +373,7 @@ impl SimpleState for MenuState {
 #   }
 # }
 
-    fn on_resume(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_resume(&mut self, data: StateData<'_, GameData>) {
         let world = data.world; 	
         let mut hiddens = world.write_storage::<Hidden>();
 
