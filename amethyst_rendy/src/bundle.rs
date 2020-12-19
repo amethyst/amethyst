@@ -841,6 +841,7 @@ mod tests {
         command::{ClearDepthStencil, ClearValue},
         format::Format,
     };
+    use winit::{event_loop::EventLoop, window::WindowBuilder};
 
     use super::*;
     use crate::{
@@ -952,22 +953,17 @@ mod tests {
             format!("{:?}", manual_graph)
         );
     }
-
+    /*
     #[test]
     #[ignore] // CI can't run tests requiring actual backend
     #[cfg(feature = "window")]
     fn main_pass_surface_plan() {
-        use winit::{EventsLoop, WindowBuilder};
-
-        let ev_loop = EventsLoop::new();
+        let ev_loop = EventLoop::new();
         let mut window_builder = WindowBuilder::new();
         window_builder.window.visible = false;
         let window = window_builder.build(&ev_loop).unwrap();
 
-        let size = window
-            .get_inner_size()
-            .unwrap()
-            .to_physical(window.get_hidpi_factor());
+        let size = window.inner_size();
         let window_kind = crate::Kind::D2(size.width as u32, size.height as u32, 1, 1);
 
         let config: rendy::factory::Config = Default::default();
@@ -1028,5 +1024,5 @@ mod tests {
             format!("{:?}", planned_graph),
             format!("{:?}", manual_graph)
         );
-    }
+    }*/
 }

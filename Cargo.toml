@@ -61,10 +61,7 @@ json = ["amethyst_assets/json"]
 server = ["locale", "network"]
 no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
 shader-compiler = ["amethyst_rendy/shader-compiler"]
-test-support = [
-    "amethyst_rendy/test-support",
-    "amethyst_window/test-support",
-]
+test-support = ["amethyst_rendy/test-support", "amethyst_window/test-support"]
 experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 parallel = ["amethyst_core/parallel"]
 
@@ -103,7 +100,7 @@ log = { version = "0.4.8", features = ["serde"] }
 rayon = "1.4.0"
 rustc_version_runtime = "0.2.0"
 sentry = { version = "0.18.0", optional = true }
-winit = { version = "0.19", features = ["serde", "icon_loading"] }
+winit = { version = "0.24.0", features = ["serde"] }
 serde = { version = "1.0.104", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
 failure = "0.1.7"

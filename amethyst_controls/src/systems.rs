@@ -10,7 +10,10 @@ use amethyst_core::{
 use amethyst_input::{get_input_axis_simple, InputHandler};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-use winit::{DeviceEvent, Event, Window, WindowEvent};
+use winit::{
+    event::{DeviceEvent, Event, WindowEvent},
+    window::Window,
+};
 
 use crate::{
     components::{ArcBallControl, FlyControl},
@@ -114,14 +117,14 @@ impl System<'_> for ArcBallRotationSystem {
 pub struct FreeRotationSystem {
     pub(crate) sensitivity_x: f32,
     pub(crate) sensitivity_y: f32,
-    pub(crate) reader: ReaderId<Event>,
+    pub(crate) reader: ReaderId<Event<'static, ()>>,
 }
 
 impl System<'static> for FreeRotationSystem {
     fn build(&'static mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("FreeRotationSystem")
-                .read_resource::<EventChannel<Event>>()
+                .read_resource::<EventChannel<Event<'static, ()>>>()
                 .read_resource::<WindowFocus>()
                 .read_resource::<HideCursor>()
                 .with_query(
@@ -158,14 +161,14 @@ impl System<'static> for FreeRotationSystem {
 #[derive(Debug)]
 pub struct MouseFocusUpdateSystem {
     // reads WindowEvent from winit
-    pub(crate) reader: ReaderId<Event>,
+    pub(crate) reader: ReaderId<Event<'static, ()>>,
 }
 
 impl System<'static> for MouseFocusUpdateSystem {
     fn build(&'static mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MouseFocusUpdateSystem")
-                .read_resource::<EventChannel<Event>>()
+                .read_resource::<EventChannel<Event<'static, ()>>>()
                 .write_resource::<WindowFocus>()
                 .build(move |_commands, _world, (events, focus), ()| {
                     #[cfg(feature = "profiler")]
@@ -203,16 +206,16 @@ impl System<'_> for CursorHideSystem {
 
                     let should_be_hidden = focus.is_focused && hide.hide;
                     if !is_hidden && should_be_hidden {
-                        if let Err(err) = window.grab_cursor(true) {
+                        if let Err(err) = window.set_cursor_grab(true) {
                             log::error!("Unable to grab the cursor. Error: {:?}", err);
                         }
-                        window.hide_cursor(true);
+                        window.set_cursor_visible(false);
                         is_hidden = true;
                     } else if is_hidden && !should_be_hidden {
-                        if let Err(err) = window.grab_cursor(false) {
+                        if let Err(err) = window.set_cursor_grab(false) {
                             log::error!("Unable to release the cursor. Error: {:?}", err);
                         }
-                        window.hide_cursor(false);
+                        window.set_cursor_visible(true);
                         is_hidden = false;
                     }
                 }),

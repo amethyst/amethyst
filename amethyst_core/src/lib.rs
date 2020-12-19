@@ -18,6 +18,8 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource.
 pub type ArcThreadPool = std::sync::Arc<rayon::ThreadPool>;
 
+pub use core::fmt; //FIXME https://github.com/amethyst/amethyst/issues/2478
+
 pub use approx;
 pub use nalgebra as math;
 pub use num_traits as num;

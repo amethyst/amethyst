@@ -20,8 +20,11 @@ mod window {
     use std::path::Path;
 
     use amethyst_config::{Config, ConfigError};
-    use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
-    use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
+    use amethyst_window::{DisplayConfig, ScreenDimensions, WindowBundle};
+    use rendy::{
+        hal::command::{ClearColor, ClearDepthStencil, ClearValue},
+        wsi::winit::Window,
+    };
 
     use super::*;
     use crate::{

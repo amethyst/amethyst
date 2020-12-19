@@ -1,9 +1,9 @@
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
-use winit::EventsLoop;
+use winit::{event::Event, event_loop::EventLoop};
 
-use crate::{DisplayConfig, ScreenDimensions, WindowEventsSystem, WindowSystem};
+use crate::{DisplayConfig, ScreenDimensions, WindowSystem};
 
 /// Screen width used in predefined display configuration.
 #[cfg(feature = "test-support")]
@@ -57,7 +57,7 @@ impl SystemBundle for WindowBundle {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        let events_loop = EventsLoop::new();
+        let events_loop: EventLoop<()> = EventLoop::new();
 
         let window = self
             .config
@@ -66,19 +66,13 @@ impl SystemBundle for WindowBundle {
             .build(&events_loop)
             .expect("Unable to create window");
 
-        let hidpi = window.get_hidpi_factor();
-        let (width, height) = window
-            .get_inner_size()
-            .expect("Window closed during initialization!")
-            .to_physical(hidpi)
-            .into();
+        let (width, height) = window.inner_size().into();
 
-        resources.insert(ScreenDimensions::new(width, height, hidpi));
+        resources.insert(ScreenDimensions::new(width, height));
         resources.insert(window);
+        resources.insert(events_loop);
 
-        builder
-            .add_system(Box::new(WindowSystem {}))
-            .add_thread_local(Box::new(WindowEventsSystem { events_loop }));
+        builder.add_system(Box::new(WindowSystem));
 
         Ok(())
     }

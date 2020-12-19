@@ -25,7 +25,7 @@ use amethyst::{
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    winit::{MouseButton, VirtualKeyCode},
+    winit::event::{MouseButton, VirtualKeyCode},
     Error,
 };
 

@@ -47,7 +47,7 @@ approx = "0.4.0"
 rayon = "1.4.0"
 more-asserts = "0.2.1"
 criterion = "0.3.0"
-winit = "0.19"
+winit = "0.24.0"
 
 [features]
 metal = ["rendy/metal"]

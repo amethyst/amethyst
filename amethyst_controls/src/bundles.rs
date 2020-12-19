@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use amethyst_core::{ecs::*, math::one, shrev::EventChannel};
 use amethyst_error::Error;
-use winit::Event;
+use winit::event::Event;
 
 use super::*;
 
@@ -83,7 +83,7 @@ impl SystemBundle for FlyControlBundle {
         }));
 
         let reader = resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'static, ()>>>()
             .expect("Window event channel not found in resources")
             .register_reader();
 
@@ -96,7 +96,7 @@ impl SystemBundle for FlyControlBundle {
         resources.insert(WindowFocus::new());
 
         let reader = resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'static, ()>>>()
             .expect("Window event channel not found in resources")
             .register_reader();
 
@@ -153,7 +153,7 @@ impl SystemBundle for ArcBallControlBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         let reader = resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'static, ()>>>()
             .expect("Window event channel not found in resources")
             .register_reader();
 
@@ -168,7 +168,7 @@ impl SystemBundle for ArcBallControlBundle {
         resources.insert(WindowFocus::new());
 
         let reader = resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'static, ()>>>()
             .expect("Window event channel not found in resources")
             .register_reader();
 

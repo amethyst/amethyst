@@ -322,7 +322,7 @@
 #[cfg(feature = "animation")]
 pub use crate::fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture};
 pub use crate::{
-    amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH},
+    amethyst_application::{AmethystApplication, SCREEN_HEIGHT, SCREEN_WIDTH},
     effect_return::EffectReturn,
     game_update::GameUpdate,
     in_memory_source::{InMemorySource, IN_MEMORY_SOURCE_ID},

@@ -15,7 +15,7 @@
 
 use std::iter::Iterator;
 
-pub use winit::{ElementState, VirtualKeyCode};
+pub use winit::event::{ElementState, VirtualKeyCode};
 
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
