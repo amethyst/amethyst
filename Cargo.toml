@@ -208,7 +208,6 @@ name = "pong_tutorial_04"
 
 # [[example]]
 # name = "pong_tutorial_05"
-# required-features = ["audio"]
 
 # [[example]]
 # name = "pong_tutorial_06"
