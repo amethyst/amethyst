@@ -1,8 +1,15 @@
 use amethyst_core::{
-    dispatcher::System,
-    ecs::{systems::ParallelRunnable, SystemBuilder},
+    dispatcher::{System, ThreadLocalSystem},
+    ecs::{systems::ParallelRunnable, Runnable, SystemBuilder},
+    EventChannel,
 };
-use winit::{dpi::Size, window::Window};
+use winit::{
+    dpi::Size,
+    event::Event,
+    event_loop::{ControlFlow, EventLoop},
+    platform::run_return::EventLoopExtRunReturn,
+    window::Window,
+};
 
 use crate::resources::ScreenDimensions;
 
@@ -39,6 +46,39 @@ impl System<'_> for WindowSystem {
                             screen_dimensions.dirty = false;
                         }
                     }
+                }),
+        )
+    }
+}
+/// System that polls the window events and pushes them to appropriate event channels.
+///
+/// This system must be active for any `GameState` to receive
+/// any `StateEvent::Window` event into it's `handle_event` method.
+pub struct EventLoopSystem {
+    pub(crate) event_loop: EventLoop<()>,
+}
+
+impl ThreadLocalSystem<'static> for EventLoopSystem {
+    fn build(&'static mut self) -> Box<dyn Runnable> {
+        let mut events = Vec::with_capacity(128);
+
+        Box::new(
+            SystemBuilder::new("EventsLoopSystem")
+                .write_resource::<EventChannel<Event<'static, ()>>>()
+                .build(move |_commands, _world, event_channel, _query| {
+                    self.event_loop.run_return(|event, _, flow| {
+                        match event {
+                            Event::WindowEvent { .. } => {
+                                events.push(event.to_static().unwrap());
+                            }
+                            Event::DeviceEvent { .. } => {
+                                events.push(event.to_static().unwrap());
+                            }
+                            _ => {}
+                        }
+                        *flow = ControlFlow::Exit;
+                    });
+                    event_channel.drain_vec_write(&mut events);
                 }),
         )
     }

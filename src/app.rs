@@ -236,44 +236,29 @@ where
         } else {
             None
         };
-        let event_loop = { self.resources.remove::<EventLoop<()>>().unwrap() };
 
         self.initialize();
-        {
-            let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
-            stopwatch.start();
-        }
-        event_loop.run(move |event, target, flow| {
-            if self.states.is_running() {
-                self.advance_frame();
-                {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("frame_limiter wait");
-                    self.resources.get_mut::<FrameLimiter>().unwrap().wait();
-                }
-                {
-                    let elapsed = self.resources.get::<Stopwatch>().unwrap().elapsed();
-                    let mut time = self.resources.get_mut::<Time>().unwrap();
-                    time.increment_frame_number();
-                    time.set_delta_time(elapsed);
-                }
+
+        self.resources.get_mut::<Stopwatch>().unwrap().start();
+
+        while self.states.is_running() {
+            self.advance_frame();
+            {
+                #[cfg(feature = "profiler")]
+                profile_scope!("frame_limiter wait");
+                //self.resources.get_mut::<FrameLimiter>().unwrap().wait();
+            }
+            {
                 let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
+                let elapsed = stopwatch.elapsed();
+                let mut time = self.resources.get_mut::<Time>().unwrap();
+                time.increment_frame_number();
+                time.set_delta_time(elapsed);
                 stopwatch.stop();
                 stopwatch.restart();
-
-                let mut winit_events_channel = self
-                    .resources
-                    .get_mut::<EventChannel<Event<'_, ()>>>()
-                    .unwrap();
-
-                let mut events = Vec::new();
-
-                winit_events_channel.drain_vec_write(&mut events);
-            } else {
-                self.shutdown();
-                *flow = ControlFlow::Exit;
             }
-        });
+        }
+        self.shutdown();
     }
 
     /// Sets up the application.
