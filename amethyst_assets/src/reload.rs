@@ -33,7 +33,7 @@ impl SystemBundle for HotReloadBundle {
         resources.insert(self.strategy.clone());
         resources.get_mut::<Loader>().unwrap().set_hot_reload(true);
 
-        builder.add_system(build_hot_reload_system());
+        builder.add_system(Box::new(HotReloadSystem));
 
         Ok(())
     }
@@ -133,37 +133,43 @@ enum HotReloadStrategyInner {
 }
 
 /// Hot reload system that manages asset reload polling
-pub fn build_hot_reload_system() -> impl Runnable {
-    SystemBuilder::new("HotReloadSystem")
-        .write_resource::<HotReloadStrategy>()
-        .read_resource::<Time>()
-        .build(move |_commands, _world, (strategy, time), _query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("hot_reload_system");
+pub struct HotReloadSystem;
 
-            match strategy.inner {
-                HotReloadStrategyInner::Trigger {
-                    ref mut triggered,
-                    ref mut frame_number,
-                } => {
-                    if *triggered {
-                        *frame_number = time.frame_number() + 1;
+impl System<'_> for HotReloadSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("HotReloadSystem")
+                .write_resource::<HotReloadStrategy>()
+                .read_resource::<Time>()
+                .build(move |_commands, _world, (strategy, time), _query| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("hot_reload_system");
+
+                    match strategy.inner {
+                        HotReloadStrategyInner::Trigger {
+                            ref mut triggered,
+                            ref mut frame_number,
+                        } => {
+                            if *triggered {
+                                *frame_number = time.frame_number() + 1;
+                            }
+                            *triggered = false;
+                        }
+                        HotReloadStrategyInner::Every {
+                            interval,
+                            ref mut last,
+                            ref mut frame_number,
+                        } => {
+                            if last.elapsed().as_secs() > u64::from(interval) {
+                                *frame_number = time.frame_number() + 1;
+                                *last = Instant::now();
+                            }
+                        }
+                        HotReloadStrategyInner::Never => {}
                     }
-                    *triggered = false;
-                }
-                HotReloadStrategyInner::Every {
-                    interval,
-                    ref mut last,
-                    ref mut frame_number,
-                } => {
-                    if last.elapsed().as_secs() > u64::from(interval) {
-                        *frame_number = time.frame_number() + 1;
-                        *last = Instant::now();
-                    }
-                }
-                HotReloadStrategyInner::Never => {}
-            }
-        })
+                }),
+        )
+    }
 }
 
 /// The `Reload` trait provides a method which checks if an asset needs to be reloaded.

@@ -14,6 +14,7 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+use systems::paddle::PaddleSystem;
 
 use crate::pong::Pong;
 
@@ -34,7 +35,7 @@ fn main() -> amethyst::Result<()> {
             app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
         )?)
         // We have now added our own system, the PaddleSystem, defined in systems/paddle.rs
-        .add_system(systems::paddle::build())
+        .add_system(Box::new(PaddleSystem))
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and

@@ -11,8 +11,6 @@ use crate::{output::Output, source::*, systems::*};
 /// This will only add the audio system and the asset processor for `Source`.
 ///
 /// `DjSystem` must be added separately if you want to use our background music system.
-///
-/// The generic N type should be the same as the one in `Transform`.
 #[derive(Default, Debug)]
 pub struct AudioBundle(Output);
 
@@ -24,7 +22,7 @@ impl SystemBundle for AudioBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         builder
-            .add_system(build_audio_system())
+            .add_system(Box::new(AudioSystem))
             .add_bundle(AssetProcessorSystemBundle::<Source>::default());
         Ok(())
     }

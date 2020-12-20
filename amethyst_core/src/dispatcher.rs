@@ -23,21 +23,33 @@ pub trait SystemBundle {
     }
 }
 
+/// A System builds a ParallelRunnable for the Dispatcher
+pub trait System<'a> {
+    /// builds the Runnable part of System
+    fn build(&'a mut self) -> Box<dyn ParallelRunnable>;
+}
+
+/// A System builds a Runnable for the Dispatcher
+pub trait ThreadLocalSystem<'a> {
+    /// builds the Runnable part of System
+    fn build(&'a mut self) -> Box<dyn Runnable>;
+}
+
 /// This structure is an intermediate step for building [Dispatcher]. When [DispatcherBuilder::build] is called,
 /// all system bundles are evaluated by calling [SystemBundle::load]. This structure is used to split systems
 /// (executable by [Schedule]) and system bundles (used for cleanup with unload).
 #[derive(Default)]
 #[allow(missing_debug_implementations)]
-pub struct DispatcherData {
+pub struct DispatcherData<'a> {
     /// Holds all steps that can be executed by [Schedule].
     steps: Vec<Step>,
     /// Temporarily holds systems which are later combined into [Executor].
     accumulator: Vec<Box<dyn ParallelRunnable>>,
     /// Bundles that can be later used for cleanup by calling [SystemBundle::unload].
-    bundles: Vec<Box<dyn SystemBundle>>,
+    bundles: Vec<Box<dyn SystemBundle + 'a>>,
 }
 
-impl DispatcherData {
+impl<'a> DispatcherData<'a> {
     fn finalize_executor(&mut self) {
         if !self.accumulator.is_empty() {
             let mut systems = Vec::new();
@@ -52,19 +64,31 @@ impl DispatcherData {
 #[derive(Default)]
 #[allow(missing_debug_implementations)]
 pub struct DispatcherBuilder {
-    items: Vec<DispatcherItem>,
+    items: Vec<DispatcherItem<'static>>,
 }
 
-impl DispatcherBuilder {
+impl<'a> DispatcherBuilder {
     /// Adds a system to the schedule.
-    pub fn add_system<T: ParallelRunnable + 'static>(&mut self, system: T) -> &mut Self {
-        self.items.push(DispatcherItem::System(Box::new(system)));
+    pub fn add_system<S: System<'static> + 'static>(&mut self, system: Box<S>) -> &mut Self {
+        let s: &'static mut S = Box::leak(system);
+        self.items.push(DispatcherItem::System(s.build()));
+        self
+    }
+
+    /// Adds a thread local system to the schedule. This system will be executed on the main thread.
+    pub fn add_thread_local<T: ThreadLocalSystem<'static> + 'static>(
+        &mut self,
+        system: Box<T>,
+    ) -> &mut Self {
+        let s: &'static mut T = Box::leak(system);
+        self.items
+            .push(DispatcherItem::ThreadLocalSystem(s.build()));
         self
     }
 
     /// Waits for executing systems to complete, and the flushes all outstanding system
     /// command buffers.
-    pub fn flush(&mut self) -> &mut Self {
+    pub fn flush(&'a mut self) -> &mut Self {
         self.items.push(DispatcherItem::FlushCmdBuffers);
         self
     }
@@ -77,13 +101,6 @@ impl DispatcherBuilder {
         self.items.push(DispatcherItem::ThreadLocalFn(
             Box::new(f) as Box<dyn FnMut(&mut World, &mut Resources)>
         ));
-        self
-    }
-
-    /// Adds a thread local system to the schedule. This system will be executed on the main thread.
-    pub fn add_thread_local<S: Runnable + 'static>(&mut self, system: S) -> &mut Self {
-        let system = Box::new(system) as Box<dyn Runnable>;
-        self.items.push(DispatcherItem::ThreadLocalSystem(system));
         self
     }
 
@@ -100,7 +117,7 @@ impl DispatcherBuilder {
         &mut self,
         world: &mut World,
         resources: &mut Resources,
-        data: &mut DispatcherData,
+        data: &mut DispatcherData<'a>,
     ) -> Result<(), Error> {
         for item in self.items.drain(..) {
             match item {
@@ -131,7 +148,7 @@ impl DispatcherBuilder {
 
     /// Finalizes the builder into a [Dispatcher]. This also evaluates all system bundles by calling [SystemBundle::load].
     pub fn build(
-        &mut self,
+        &'a mut self,
         world: &mut World,
         resources: &mut Resources,
     ) -> Result<Dispatcher, Error> {
@@ -148,17 +165,17 @@ impl DispatcherBuilder {
 
 /// Dispatcher items. This is different from [Step] in that it contains [SystemBundle].
 #[allow(missing_debug_implementations)]
-pub enum DispatcherItem {
+pub enum DispatcherItem<'a> {
     /// A simple system.
-    System(Box<dyn ParallelRunnable>),
+    System(Box<dyn ParallelRunnable + 'a>),
     /// Flush system command buffers.
     FlushCmdBuffers,
     /// A thread local function.
-    ThreadLocalFn(Box<dyn FnMut(&mut World, &mut Resources)>),
+    ThreadLocalFn(Box<dyn FnMut(&mut World, &mut Resources) + 'a>),
     /// A thread local system.
-    ThreadLocalSystem(Box<dyn Runnable>),
+    ThreadLocalSystem(Box<dyn Runnable + 'a>),
     /// A system bundle
-    SystemBundle(Box<dyn SystemBundle>),
+    SystemBundle(Box<dyn SystemBundle + 'a>),
 }
 
 /// Dispatcher is created by [DispatcherBuilder] and contains [Schedule] used to execute all systems.
@@ -192,6 +209,20 @@ pub mod tests {
     use super::*;
 
     struct MyResource(bool);
+
+    struct MySystem;
+
+    impl System<'_> for MySystem {
+        fn build(&mut self) -> Box<dyn ParallelRunnable> {
+            Box::new(
+                SystemBuilder::new("test")
+                    .write_resource::<MyResource>()
+                    .build(|_, _, res, _| {
+                        res.0 = true;
+                    }),
+            )
+        }
+    }
 
     #[test]
     fn dispatcher_loads_and_unloads() {
@@ -244,14 +275,8 @@ pub mod tests {
 
         resources.insert(MyResource(false));
 
-        let system = SystemBuilder::new("test")
-            .write_resource::<MyResource>()
-            .build(|_, _, res, _| {
-                res.0 = true;
-            });
-
         let mut dispatcher = DispatcherBuilder::default()
-            .add_system(system)
+            .add_system(Box::new(MySystem))
             .build(&mut world, &mut resources)
             .unwrap();
 

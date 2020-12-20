@@ -22,7 +22,8 @@ license = "MIT/Apache-2.0"
 autoexamples = false
 
 [features]
-default = ["audio", "locale", "network", "parallel", "renderer"]
+default = ["parallel", "renderer"]
+optional = ["audio", "network", "locale"]
 
 vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
@@ -57,7 +58,6 @@ profiler = [
 ]
 sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
-saveload = []
 server = ["locale", "network"]
 no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
 shader-compiler = ["amethyst_rendy/shader-compiler"]
@@ -69,25 +69,13 @@ experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 parallel = ["amethyst_core/parallel"]
 
 [workspace]
-members = [
-    #"amethyst_animation",
-    "amethyst_assets",
-    "amethyst_audio",
-    "amethyst_config",
-    "amethyst_core",
-    "amethyst_error",
-    "amethyst_controls",
-    "amethyst_derive",
-    #"amethyst_gltf",
-    "amethyst_network",
-    "amethyst_locale",
-    "amethyst_rendy",
-    "amethyst_input",
-    #"amethyst_ui",
-    "amethyst_utils",
-    #"amethyst_test",
-    #"amethyst_tiles",
-    "amethyst_window",
+members = ["amethyst_*"]
+exclude = [
+    "amethyst_gltf",
+    "amethyst_animation",
+    "amethyst_ui",
+    "amethyst_tiles",
+    "amethyst_test",
 ]
 
 [dependencies]

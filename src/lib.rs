@@ -47,7 +47,8 @@
 //!
 //! fn main() -> amethyst::Result<()> {
 //!     let assets_dir = "assets/";
-//!     let mut game = Application::new(assets_dir, GameState, GameDataBuilder::default())?;
+//!     let game_data = DispatcherBuilder::default();
+//!     let mut game = Application::build(assets_dir, GameState)?.build(game_data)?;
 //!     game.run();
 //!     Ok(())
 //! }

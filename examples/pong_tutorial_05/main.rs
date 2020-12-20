@@ -36,9 +36,9 @@ fn main() -> amethyst::Result<()> {
             app_root.join("examples/pong_tutorial_04/config/bindings.ron"),
         )?)
         // We have now added our own systems, defined in the systems module
-        .add_system(systems::paddle::build())
-        .add_system(systems::move_balls::build())
-        .add_system(systems::bounce::build())
+        .add_system(Box::new(systems::paddle::build()))
+        .add_system(Box::new(systems::move_balls::build()))
+        .add_system(Box::new(systems::bounce::build()))
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and

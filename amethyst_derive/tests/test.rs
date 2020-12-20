@@ -115,7 +115,7 @@ mod tests {
                 )
                 .with_effect(|world| {
                     let handle = {
-                        let loader = world.read_resource::<Loader>();
+                        let loader = data.resources.get::<Loader>().unwrap();
                         let storage = world.read_resource::<AssetStorage<Prefab<$prefab_type>>>();
                         let mut prefab = Prefab::new();
                         prefab.main(Some($prefab));

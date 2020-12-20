@@ -54,51 +54,61 @@ impl SystemBundle for SpamBundle {
         resources.insert(TransportResource::default());
         resources.insert(NetworkSimulationTime::default());
 
-        builder.add_system(build_network_simulation_system(reader));
+        builder.add_system(Box::new(SpamSystem { reader }));
 
         Ok(())
     }
 }
 
-fn build_network_simulation_system(
-    mut reader: ReaderId<NetworkSimulationEvent>,
-) -> impl ParallelRunnable {
-    SystemBuilder::new("TransformSystem")
-        .read_resource::<NetworkSimulationTime>()
-        .read_resource::<Time>()
-        .read_resource::<EventChannel<NetworkSimulationEvent>>()
-        .write_resource::<TransportResource>()
-        .build(move |_commands, _, (sim_time, time, event, net), _| {
-            let server_addr = "127.0.0.1:3457".parse().unwrap();
-            for frame in sim_time.sim_frames_to_run() {
-                info!("Sending message for sim frame {}.", frame);
-                let payload = format!(
-                    "CL: sim_frame:{},abs_time:{}",
-                    frame,
-                    time.absolute_time_seconds()
-                );
-                net.send(server_addr, payload.as_bytes());
-            }
+/// A simple system that receives a ton of network events.
+#[derive(Debug)]
+struct SpamSystem {
+    reader: ReaderId<NetworkSimulationEvent>,
+}
 
-            for event in event.read(&mut reader) {
-                match event {
-                    NetworkSimulationEvent::Message(_addr, payload) => {
-                        info!("Payload: {:?}", payload)
-                    }
-                    NetworkSimulationEvent::Connect(addr) => {
-                        info!("New client connection: {}", addr)
-                    }
-                    NetworkSimulationEvent::Disconnect(addr) => {
-                        info!("Server Disconnected: {}", addr)
-                    }
-                    NetworkSimulationEvent::RecvError(e) => {
-                        error!("Recv Error: {:?}", e);
-                    }
-                    NetworkSimulationEvent::SendError(e, msg) => {
-                        error!("Send Error: {:?}, {:?}", e, msg);
-                    }
-                    _ => {}
-                }
-            }
-        })
+impl System<'static> for SpamSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("TransformSystem")
+                .read_resource::<NetworkSimulationTime>()
+                .read_resource::<Time>()
+                .read_resource::<EventChannel<NetworkSimulationEvent>>()
+                .write_resource::<TransportResource>()
+                .build(
+                    move |_commands, world, (sim_time, time, event, net), query| {
+                        let server_addr = "127.0.0.1:3457".parse().unwrap();
+                        for frame in sim_time.sim_frames_to_run() {
+                            info!("Sending message for sim frame {}.", frame);
+                            let payload = format!(
+                                "CL: sim_frame:{},abs_time:{}",
+                                frame,
+                                time.absolute_time_seconds()
+                            );
+                            net.send(server_addr, payload.as_bytes());
+                        }
+
+                        for event in event.read(&mut self.reader) {
+                            match event {
+                                NetworkSimulationEvent::Message(_addr, payload) => {
+                                    info!("Payload: {:?}", payload)
+                                }
+                                NetworkSimulationEvent::Connect(addr) => {
+                                    info!("New client connection: {}", addr)
+                                }
+                                NetworkSimulationEvent::Disconnect(addr) => {
+                                    info!("Server Disconnected: {}", addr)
+                                }
+                                NetworkSimulationEvent::RecvError(e) => {
+                                    error!("Recv Error: {:?}", e);
+                                }
+                                NetworkSimulationEvent::SendError(e, msg) => {
+                                    error!("Send Error: {:?}, {:?}", e, msg);
+                                }
+                                _ => {}
+                            }
+                        }
+                    },
+                ),
+        )
+    }
 }

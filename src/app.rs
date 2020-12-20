@@ -80,7 +80,6 @@ where
 /// ```
 /// use amethyst::prelude::*;
 /// use amethyst::core::transform::{Parent, Transform};
-/// use amethyst::ecs::prelude::System;
 ///
 /// use log::{info, warn};
 ///
@@ -109,7 +108,6 @@ where
 /// ```
 /// use amethyst::prelude::*;
 /// use amethyst::core::transform::{Parent, Transform};
-/// use amethyst::ecs::prelude::System;
 ///
 /// struct NullState;
 /// impl EmptyState for NullState {}
@@ -186,10 +184,10 @@ where
     /// # fn main() -> amethyst::Result<()> {
     /// #
     /// let assets_dir = "assets/";
-    /// let mut game = Application::new(assets_dir, NullState, ())?;
+    /// let mut game = Application::build(assets_dir, NullState)?.build(())?;
     /// game.run();
     ///
-    /// #     Ok(())
+    /// #  Ok(())
     /// # }
     /// ~~~
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self, Error>
@@ -474,7 +472,6 @@ where
     /// ~~~no_run
     /// use amethyst::prelude::*;
     /// use amethyst::core::transform::{Parent, Transform};
-    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl EmptyState for NullState {}
@@ -487,11 +484,6 @@ where
     /// // returning a new object with the modified configuration.
     /// let assets_dir = "assets/";
     /// let mut game = Application::build(assets_dir, NullState)?
-    ///
-    /// // components can be registered at this stage
-    ///     .register::<Parent>()
-    ///     .register::<Transform>()
-    ///
     /// // lastly we can build the Application object
     /// // the `build` function takes the user defined game data initializer as input
     ///     .build(())?;
@@ -653,14 +645,13 @@ where
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
-    /// use amethyst::ecs::prelude::World;
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
     /// let mut game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" under the name "resources".
     ///     .with_source("custom_store", Directory::new("custom_directory"))
-    ///     .build(GameDataBuilder::default())?
+    ///     .build(DispatcherBuilder::default())?
     ///     .run();
     /// #     Ok(())
     /// # }
@@ -668,9 +659,9 @@ where
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
-    ///         let storage = data.world.read_resource();
+    ///         let loader = data.resources.get::<Loader>().unwrap();
+    ///         let storage = data.resources.get().unwrap();
     ///
-    ///         let loader = data.world.read_resource::<Loader>();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh: Handle<Mesh> =
     ///             loader.load_from("teapot", ObjFormat, "custom_directory", (), &storage);
@@ -709,14 +700,13 @@ where
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
-    /// use amethyst::ecs::prelude::World;
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
     /// let mut game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" as default source for the loader.
     ///     .with_default_source(Directory::new("custom_directory"))
-    ///     .build(GameDataBuilder::default())?
+    ///     .build(DispatcherBuilder::default())?
     ///     .run();
     /// #     Ok(())
     /// # }
@@ -724,9 +714,8 @@ where
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
-    ///         let storage = data.world.read_resource();
-    ///
-    ///         let loader = data.world.read_resource::<Loader>();
+    ///         let loader = data.resources.get::<Loader>().unwrap();
+    ///         let storage = data.resources.get().unwrap();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh: Handle<Mesh> = loader.load("teapot", ObjFormat, (), &storage);
     ///     }
