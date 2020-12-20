@@ -17,6 +17,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         Camera, ImageFormat, RenderingBundle, SpriteRender, SpriteSheet, Texture, Transparent,
     },
@@ -366,8 +367,9 @@ fn main() -> amethyst::Result<()> {
             // The RenderToWindow plugin provides all the scaffolding for opening a window and
             // drawing on it
             .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.34, 0.36, 0.52, 1.0]),
+                RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                    float32: [0.34, 0.36, 0.52, 1.0],
+                }),
             )
             // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
             .with_plugin(RenderFlat2D::default()),

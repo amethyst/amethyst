@@ -14,7 +14,7 @@ use rendy::{
     hal::{self, buffer::Usage, format, pso},
     memory::MemoryUsage,
     mesh::VertexFormat,
-    resource::{BufferInfo, Escape},
+    resource::{BufferCreationError, BufferInfo, Escape},
 };
 use smallvec::SmallVec;
 #[cfg(feature = "profiler")]
@@ -50,7 +50,7 @@ pub fn ensure_buffer<B: Backend>(
     usage: Usage,
     memory_usage: impl MemoryUsage,
     min_size: u64,
-) -> Result<bool, failure::Error> {
+) -> Result<bool, BufferCreationError> {
     #[cfg(feature = "profiler")]
     profile_scope!("ensure_buffer");
 

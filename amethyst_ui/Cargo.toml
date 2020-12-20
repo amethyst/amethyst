@@ -41,12 +41,11 @@ font-kit = "0.5"
 paste = "0.1"
 rand = "0.7"
 lazy_static = "1.4"
-failure = "0.1"
 glyph_brush = "0.6.0"
 thread_profiler = { version = "0.3", optional = true }
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 

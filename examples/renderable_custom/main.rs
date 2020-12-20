@@ -308,18 +308,20 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
     ) -> GraphBuilder<DefaultBackend, World> {
         use amethyst::renderer::rendy::{
             graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
+            hal::command::{ClearColor, ClearDepthStencil, ClearValue},
         };
 
         self.dirty = false;
 
         // Retrieve a reference to the target window, which is created by the WindowBundle
         let window = <ReadExpect<'_, Window>>::fetch(world);
+        // Explicitly deref so we get a type that implements HasRawWindowHandle.
+        let window: &Window = &window;
         let dimensions = self.dimensions.as_ref().unwrap();
         let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         // Create a new drawing surface in our window
-        let surface = factory.create_surface(&window);
+        let surface = factory.create_surface(window).unwrap();
         let surface_format = factory.get_surface_format(&surface);
 
         // Begin building our RenderGraph
@@ -329,14 +331,23 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             1,
             surface_format,
             // clear screen to black
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+            Some(ClearValue {
+                color: ClearColor {
+                    float32: [0.34, 0.36, 0.52, 1.0],
+                },
+            }),
         );
 
         let depth = graph_builder.create_image(
             window_kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+            Some(ClearValue {
+                depth_stencil: ClearDepthStencil {
+                    depth: 0.0,
+                    stencil: 0,
+                },
+            }),
         );
 
         // Create our first `Subpass`, which contains the DrawShaded and DrawUi render groups.

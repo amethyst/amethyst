@@ -166,7 +166,7 @@ impl<B: Backend> System<'_> for MeshProcessorSystem<B> {
                                 b.0.build(**queue_id, &factory)
                                     .map(B::wrap_mesh)
                                     .map(ProcessingState::Loaded)
-                                    .map_err(|e| e.compat().into())
+                                    .map_err(|e| e.into())
                             },
                             time.frame_number(),
                             &**pool,
@@ -218,7 +218,7 @@ impl<B: Backend> System<'_> for TextureProcessorSystem<B> {
                                 )
                                 .map(B::wrap_texture)
                                 .map(ProcessingState::Loaded)
-                                .map_err(|e| e.compat().into())
+                                .map_err(|e| amethyst_error::err_msg(format!("{:?}", e)))
                             },
                             time.frame_number(),
                             &**pool,

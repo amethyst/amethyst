@@ -4,7 +4,10 @@ use amethyst::{
     core::transform::TransformBundle,
     input::{InputBundle, StringBindings},
     prelude::*,
-    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
+    renderer::{
+        plugins::RenderToWindow, rendy::hal::command::ClearColor, types::DefaultBackend,
+        RenderingBundle,
+    },
     ui::{RenderUi, UiBundle},
     utils::{application_root_dir, fps_counter::FpsCounterBundle},
 };
@@ -70,8 +73,9 @@ pub fn main() -> amethyst::Result<()> {
                 // This creates the window and draws a background, if we don't specify a
                 // background in the loaded ui prefab file.
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.005, 0.005, 0.005, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.005, 0.005, 0.005, 1.0],
+                    }),
                 )
                 // Without this, all of our beautiful UI would not get drawn.
                 // It will work, but we won't see a thing.

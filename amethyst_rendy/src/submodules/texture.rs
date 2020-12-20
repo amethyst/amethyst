@@ -44,7 +44,7 @@ pub struct TextureSub<B: Backend> {
 
 impl<B: Backend> TextureSub<B> {
     /// Create a new Texture for submission, allocated using the provided `Factory`
-    pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+    pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
         Ok(Self {
             layout: set_layout! {factory, [1] CombinedImageSampler hal::pso::ShaderStageFlags::FRAGMENT},
             lookup: util::LookupBuilder::new(),

@@ -34,7 +34,7 @@ struct PerImageSkinningSub<B: Backend> {
 
 impl<B: Backend> SkinningSub<B> {
     /// Create a new `SkinningSub`, allocating using the provided `Factory`
-    pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+    pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
         Ok(Self {
             layout: set_layout! {factory, [1] StorageBuffer hal::pso::ShaderStageFlags::VERTEX},
             skin_offset_map: Default::default(),

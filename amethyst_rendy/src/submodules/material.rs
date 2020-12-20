@@ -11,7 +11,12 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor},
+        hal::{
+            self,
+            adapter::PhysicalDevice,
+            device::Device,
+            pso::{CreationError, Descriptor},
+        },
         memory::Write as _,
         resource::{
             Buffer, BufferInfo, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle,
@@ -84,15 +89,24 @@ impl<B: Backend> SlottedBuffer<B> {
         elem_size: u64,
         capacity: usize,
         usage: hal::buffer::Usage,
-    ) -> Result<Self, failure::Error> {
+    ) -> Result<Self, CreationError> {
         Ok(Self {
-            buffer: factory.create_buffer(
-                BufferInfo {
-                    size: elem_size * (capacity as u64),
-                    usage,
-                },
-                rendy::memory::Dynamic,
-            )?,
+            buffer: factory
+                .create_buffer(
+                    BufferInfo {
+                        size: elem_size * (capacity as u64),
+                        usage,
+                    },
+                    rendy::memory::Dynamic,
+                )
+                .map_err(|e| match e {
+                    rendy::resource::CreationError::Allocate(
+                        rendy::memory::HeapsError::AllocationError(
+                            hal::device::AllocationError::OutOfMemory(oom),
+                        ),
+                    ) => oom.into(),
+                    _ => CreationError::Other,
+                })?,
             elem_size,
         })
     }
@@ -151,7 +165,7 @@ pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
 
 impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Create a new `MaterialSub` using the provided rendy `Factory`
-    pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+    pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
         Ok(Self {
             layout: set_layout! {
                 factory,
@@ -167,7 +181,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         })
     }
 
-    fn create_buffer(factory: &Factory<B>) -> Result<SlottedBuffer<B>, failure::Error> {
+    fn create_buffer(factory: &Factory<B>) -> Result<SlottedBuffer<B>, hal::pso::CreationError> {
         let align = factory
             .physical()
             .limits()

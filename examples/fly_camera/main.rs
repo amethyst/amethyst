@@ -16,6 +16,7 @@ use amethyst::{
         palette::{LinSrgba, Srgb},
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::{
+            hal::command::ClearColor,
             mesh::{Normal, Position, Tangent, TexCoord},
             texture::palette::load_from_linear_rgba,
         },
@@ -178,8 +179,9 @@ fn main() -> Result<(), Error> {
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderShaded3D::default()),
         );

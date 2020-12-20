@@ -15,6 +15,7 @@ use amethyst::{
     renderer::{
         palette::Srgb,
         plugins::{RenderShaded3D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         rendy::mesh::{Normal, Position, TexCoord},
         types::DefaultBackend,
         RenderingBundle,
@@ -214,8 +215,9 @@ fn main() -> Result<(), Error> {
         .with_base_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.0, 0.0, 0.0, 1.0],
+                    }),
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),

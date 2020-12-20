@@ -15,7 +15,12 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor},
+        hal::{
+            self,
+            adapter::PhysicalDevice,
+            device::Device,
+            pso::{CreationError, Descriptor},
+        },
         memory::Write as _,
         resource::{Buffer, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     },
@@ -52,7 +57,7 @@ impl<B: Backend> EnvironmentSub<B> {
     pub fn new(
         factory: &Factory<B>,
         flags: [hal::pso::ShaderStageFlags; 2],
-    ) -> Result<Self, failure::Error> {
+    ) -> Result<Self, CreationError> {
         Ok(Self {
             layout: set_layout! {factory, [1] UniformBuffer flags[0], [4] UniformBuffer flags[1]},
             per_image: Vec::new(),

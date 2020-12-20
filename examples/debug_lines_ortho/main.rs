@@ -13,6 +13,7 @@ use amethyst::{
         debug_drawing::{DebugLines, DebugLinesComponent, DebugLinesParams},
         palette::Srgba,
         plugins::{RenderDebugLines, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -120,8 +121,9 @@ fn main() -> amethyst::Result<()> {
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.0, 0.0, 0.0, 1.0],
+                    }),
                 )
                 .with_plugin(RenderDebugLines::default()),
         )?;

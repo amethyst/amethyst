@@ -9,6 +9,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderPbr3D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         rendy::mesh::{Normal, Position, Tangent, TexCoord},
         types::DefaultBackend,
         RenderingBundle,
@@ -23,7 +24,9 @@ type MyPrefabData = (
     Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
 
-const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+const CLEAR_COLOR: ClearColor = ClearColor {
+    float32: [0.0, 0.0, 0.0, 1.0],
+};
 
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
 enum AnimationId {
