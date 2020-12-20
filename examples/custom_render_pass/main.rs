@@ -11,6 +11,9 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+use amethyst_input::VirtualKeyCode;
+
+use crate::custom_pass::{CustomUniformArgs, RenderCustom, Triangle};
 
 pub struct CustomShaderState;
 

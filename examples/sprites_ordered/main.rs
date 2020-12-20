@@ -23,7 +23,7 @@ use amethyst::{
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
 };
 use log::info;
 

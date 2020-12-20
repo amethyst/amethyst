@@ -1,6 +1,6 @@
 use amethyst::{
     input::is_key_down, prelude::*, utils::application_root_dir, window::WindowBundle,
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
 };
 
 struct ExampleState;
