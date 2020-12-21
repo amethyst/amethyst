@@ -14,7 +14,7 @@ use rendy::{
     hal::{self, buffer::Usage, format, pso},
     memory::MemoryUsage,
     mesh::VertexFormat,
-    resource::{BufferCreationError, BufferInfo, Escape},
+    resource::{BufferCreationError, BufferInfo, Escape, SubRange},
 };
 use smallvec::SmallVec;
 #[cfg(feature = "profiler")]
@@ -32,6 +32,15 @@ pub fn next_range<T: Add<Output = T> + Clone>(prev: &Range<T>, length: T) -> Ran
 #[inline]
 pub fn opt_range<T>(range: Range<T>) -> Range<Option<T>> {
     Some(range.start)..Some(range.end)
+}
+
+/// Helper function to convert `Range` to a `SubRange`
+#[inline]
+pub fn sub_range(range: Range<u64>) -> SubRange {
+    SubRange {
+        offset: range.start,
+        size: Some(range.end - range.start),
+    }
 }
 
 /// Helper function to convert `Range` types.

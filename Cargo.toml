@@ -93,6 +93,7 @@ amethyst_input = { path = "amethyst_input", version = "0.15.3" }
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3" }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
 #amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
+winit = { git = "https://git@github.com/rust-windowing/winit", branch = "master", features = ["serde"] }
 crossbeam-channel = "0.4.2"
 derivative = "2.1.1"
 fern = { version = "0.6.0", features = ["colored"] }
@@ -100,7 +101,6 @@ log = { version = "0.4.8", features = ["serde"] }
 rayon = "1.4.0"
 rustc_version_runtime = "0.2.0"
 sentry = { version = "0.18.0", optional = true }
-winit = { version = "0.24.0", features = ["serde"] }
 serde = { version = "1.0.104", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
 thread_profiler = { version = "0.3.0", optional = true }

@@ -23,7 +23,7 @@ use crate::{
         },
     },
     types::{Backend, Texture},
-    util,
+    util::{self, sub_range},
 };
 
 #[derive(Debug)]
@@ -115,7 +115,7 @@ impl<B: Backend> SlottedBuffer<B> {
         let offset = (id as u64) * self.elem_size;
         Descriptor::Buffer(
             self.buffer.raw(),
-            Some(offset)..Some(offset + self.elem_size),
+            sub_range((offset)..(offset + self.elem_size)),
         )
     }
 
@@ -166,12 +166,32 @@ pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
 impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Create a new `MaterialSub` using the provided rendy `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
+        use rendy::hal::pso::*;
+
+        let layout = factory
+            .create_descriptor_set_layout(util::set_layout_bindings(vec![
+                (
+                    1,
+                    DescriptorType::Buffer {
+                        ty: BufferDescriptorType::Uniform,
+                        format: BufferDescriptorFormat::Structured {
+                            dynamic_offset: false,
+                        },
+                    },
+                    ShaderStageFlags::FRAGMENT,
+                ),
+                (
+                    T::len() as u32,
+                    DescriptorType::Image {
+                        ty: ImageDescriptorType::Sampled { with_sampler: true },
+                    },
+                    ShaderStageFlags::FRAGMENT,
+                ),
+            ]))?
+            .into();
+
         Ok(Self {
-            layout: set_layout! {
-                factory,
-                [1] UniformBuffer hal::pso::ShaderStageFlags::FRAGMENT,
-                [T::len()] CombinedImageSampler hal::pso::ShaderStageFlags::FRAGMENT
-            },
+            layout,
             lookup: util::LookupBuilder::new(),
             allocator: SlotAllocator::new(1024),
             buffers: vec![Self::create_buffer(factory)?],

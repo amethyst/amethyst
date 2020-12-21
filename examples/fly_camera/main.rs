@@ -143,11 +143,11 @@ impl SimpleState for ExampleState {
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { resources, .. } = data;
         if let StateEvent::Window(event) = &event {
+            let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
+
             if is_key_down(&event, VirtualKeyCode::Escape) {
-                let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
                 hide_cursor.hide = false;
             } else if is_mouse_button_down(&event, MouseButton::Left) {
-                let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
                 hide_cursor.hide = true;
             }
         }

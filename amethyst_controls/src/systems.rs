@@ -193,7 +193,7 @@ pub struct CursorHideSystem;
 
 impl System<'_> for CursorHideSystem {
     fn build(&mut self) -> Box<dyn systems::ParallelRunnable> {
-        let mut is_hidden = true;
+        let mut is_hidden = false;
 
         Box::new(
             SystemBuilder::new("CursorHideSystem")
@@ -204,19 +204,14 @@ impl System<'_> for CursorHideSystem {
                     #[cfg(feature = "profiler")]
                     profile_scope!("cursor_hide_system");
 
-                    let should_be_hidden = focus.is_focused && hide.hide;
-                    if !is_hidden && should_be_hidden {
-                        if let Err(err) = window.set_cursor_grab(true) {
-                            log::error!("Unable to grab the cursor. Error: {:?}", err);
-                        }
-                        window.set_cursor_visible(false);
-                        is_hidden = true;
-                    } else if is_hidden && !should_be_hidden {
-                        if let Err(err) = window.set_cursor_grab(false) {
-                            log::error!("Unable to release the cursor. Error: {:?}", err);
-                        }
-                        window.set_cursor_visible(true);
-                        is_hidden = false;
+                    let should_be_hidden = !focus.is_focused && hide.hide;
+
+                    if should_be_hidden != is_hidden {
+                        println!("Grabbing Cursor");
+                        window.set_cursor_grab(should_be_hidden);
+                        println!("Hiding Cursor");
+                        window.set_cursor_visible(should_be_hidden);
+                        is_hidden = !is_hidden;
                     }
                 }),
         )

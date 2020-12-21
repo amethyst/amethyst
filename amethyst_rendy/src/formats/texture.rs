@@ -54,7 +54,7 @@ pub struct ImageFormat(pub ImageTextureConfig);
 impl Default for ImageFormat {
     fn default() -> Self {
         use rendy::{
-            hal::image::{Anisotropic, Lod, PackedColor, SamplerDesc, WrapMode},
+            hal::image::{Lod, PackedColor, SamplerDesc, WrapMode},
             texture::image::{Repr, TextureKind},
         };
 
@@ -75,7 +75,7 @@ impl Default for ImageFormat {
                 comparison: None,
                 border: PackedColor(0),
                 normalized: true,
-                anisotropic: Anisotropic::Off,
+                anisotropy_clamp: None,
             },
             generate_mips: false,
             premultiply_alpha: true,

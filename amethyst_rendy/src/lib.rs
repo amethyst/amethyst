@@ -49,9 +49,6 @@
 #![allow(clippy::new_without_default)]
 #![allow(unused_variables, dead_code)]
 
-#[macro_use]
-mod macros;
-
 #[doc(inline)]
 pub use palette;
 #[doc(inline)]
