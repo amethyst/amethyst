@@ -29,7 +29,7 @@ vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
-#tiles = ["amethyst_tiles"]
+tiles = ["amethyst_tiles"]
 #animation = ["amethyst_animation"]
 audio = ["amethyst_audio"]
 #gltf = ["amethyst_gltf", "amethyst_animation"]
@@ -54,7 +54,7 @@ profiler = [
     "amethyst_rendy/profiler",
     #"amethyst_ui/profiler",
     "amethyst_utils/profiler",
-    #"amethyst_tiles/profiler",
+    "amethyst_tiles/profiler",
 ]
 sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
@@ -74,7 +74,6 @@ exclude = [
     "amethyst_gltf",
     "amethyst_animation",
     "amethyst_ui",
-    "amethyst_tiles",
     "amethyst_test",
 ]
 
@@ -95,7 +94,7 @@ amethyst_input = { path = "amethyst_input", version = "0.15.3" }
 #amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3" }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
-#amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
+amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
 crossbeam-channel = "0.4.2"
 derivative = "2.1.1"
 fern = { version = "0.6.0", features = ["colored"] }
@@ -267,9 +266,9 @@ name = "arc_ball_camera"
 # name = "rendy"
 # required-features = ["animation", "gltf"]
 
-# [[example]]
-# name = "tiles"
-# required-features = ["tiles"]
+[[example]]
+name = "tiles"
+required-features = ["tiles"]
 
 [package.metadata.docs.rs]
 features = [
