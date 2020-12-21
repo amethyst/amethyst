@@ -22,8 +22,8 @@ license = "MIT/Apache-2.0"
 autoexamples = false
 
 [features]
-default = ["parallel", "renderer", "ui"]
-optional = ["audio", "network", "locale"]
+default = ["parallel", "renderer",]
+optional = ["audio", "network", "locale",  "ui"]
 
 vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
 metal = ["amethyst_rendy/metal"]
@@ -158,6 +158,7 @@ name = "material"
 
 [[example]]
 name = "ui_from_code"
+required-features = ["ui", "audio"]
 
 # [[example]]
 # name = "states_ui"

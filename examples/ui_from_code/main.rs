@@ -1,4 +1,8 @@
-use amethyst::{Application, GameData, LoggerConfig, renderer::{RenderingBundle, RenderToWindow, types::DefaultBackend}, SimpleState, StateData, ui::AudioUiBundle};
+use amethyst::{
+    renderer::{types::DefaultBackend, RenderToWindow, RenderingBundle},
+    ui::AudioUiBundle,
+    Application, GameData, LoggerConfig, SimpleState, StateData,
+};
 use amethyst_assets::AssetProcessorSystemBundle;
 use amethyst_audio::{output::init_output, Source};
 use amethyst_core::{dispatcher::DispatcherBuilder, transform::TransformBundle};
@@ -12,9 +16,7 @@ struct Example;
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData {
-            world,
-            resources,
-            ..
+            world, resources, ..
         } = data;
 
         example_utils::build_example_button(world, resources);
@@ -64,11 +66,11 @@ mod example_utils {
     use amethyst::ecs::{Resources, World};
     use amethyst_assets::{AssetStorage, Format, Loader};
     use amethyst_audio::{OggFormat, Source};
-    use amethyst_rendy::{
-        ImageFormat,
-        Texture,
+    use amethyst_rendy::{ImageFormat, Texture};
+    use amethyst_ui::{
+        Anchor, Draggable, FontAsset, Interactable, LineMode, TextEditing, TtfFormat,
+        UiButtonBuilder, UiImage, UiLabelBuilder, UiTransform,
     };
-    use amethyst_ui::{Anchor, Draggable, FontAsset, Interactable, LineMode,  TextEditing, TtfFormat, UiButtonBuilder, UiImage, UiLabelBuilder, UiTransform};
 
     pub fn build_example_button(world: &mut World, resources: &mut Resources) {
         UiButtonBuilder::<(), u32>::new("Made with UiButtonBuilder".to_string())
@@ -125,15 +127,16 @@ mod example_utils {
             .with_selectable(1)
             .build_from_world_and_resources(world, resources);
 
-        let editing = TextEditing::new(
-            2000,
-            [0.09, 0.02, 0.25, 1.0],
-            [1.0, 0.5, 0.8, 1.0],
-            false,
-        );
+        let editing = TextEditing::new(2000, [0.09, 0.02, 0.25, 1.0], [1.0, 0.5, 0.8, 1.0], false);
 
-         world.entry(text.1.text_entity).unwrap().add_component(editing);
-        world.entry(text.1.text_entity).unwrap().add_component( Interactable);
+        world
+            .entry(text.1.text_entity)
+            .unwrap()
+            .add_component(editing);
+        world
+            .entry(text.1.text_entity)
+            .unwrap()
+            .add_component(Interactable);
     }
 
     pub fn build_complex_button_with_font_and_sound(world: &mut World, resources: &mut Resources) {

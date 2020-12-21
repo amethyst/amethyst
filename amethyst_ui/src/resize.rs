@@ -28,53 +28,56 @@ impl UiResize {
     }
 }
 
+/// This system rearranges UI elements whenever the screen is resized using their `UiResize`
+/// component.
 #[derive(Debug)]
-pub struct ResizeSystemResource {
+pub struct ResizeSystem {
     screen_size: (f32, f32),
 }
 
-impl ResizeSystemResource {
+impl ResizeSystem {
     /// Creates a new ResizeSystem that listens with the given reader Id.
-    pub fn new() -> ResizeSystemResource {
+    pub fn new() -> ResizeSystem {
         let screen_size = (0.0, 0.0);
 
-        ResizeSystemResource { screen_size }
+        ResizeSystem { screen_size }
     }
 }
 
-/// This system rearranges UI elements whenever the screen is resized using their `UiResize`
-/// component.
-pub fn build_resize_system(resources: &mut Resources) -> impl Runnable {
-    resources.insert(ResizeSystemResource::new());
-    SystemBuilder::new("ResizeSystem")
-        .write_resource::<ResizeSystemResource>()
-        .read_resource::<ScreenDimensions>()
-        .with_query(
-            <(&mut UiTransform, &mut UiResize)>::query().filter(maybe_changed::<UiResize>()),
-        )
-        .with_query(<(&mut UiTransform, &mut UiResize)>::query())
-        .build(
-            move |_commands, world, (resource, screen_dimensions), (resized, all_with_resize)| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("resize_system");
-                let screen_size = (
-                    screen_dimensions.width() as f32,
-                    screen_dimensions.height() as f32,
-                );
+impl System<'static> for ResizeSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("ResizeSystem")
+                .read_resource::<ScreenDimensions>()
+                .with_query(
+                    <(&mut UiTransform, &mut UiResize)>::query()
+                        .filter(maybe_changed::<UiResize>()),
+                )
+                .with_query(<(&mut UiTransform, &mut UiResize)>::query())
+                .build(
+                    move |_commands, world, screen_dimensions, (resized, all_with_resize)| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("resize_system");
+                        let screen_size = (
+                            screen_dimensions.width() as f32,
+                            screen_dimensions.height() as f32,
+                        );
 
-                // If the screen_size changed, we resize everything with UiResize
-                if resource.screen_size != screen_size {
-                    resource.screen_size = screen_size;
-                    all_with_resize.for_each_mut(world, |(transform, resize)| {
-                        (resize.function)(transform, screen_size);
-                    });
-                }
-                // Else, we only try to resize the modified ones
-                else {
-                    resized.for_each_mut(world, |(transform, resize)| {
-                        (resize.function)(transform, screen_size);
-                    });
-                }
-            },
+                        // If the screen_size changed, we resize everything with UiResize
+                        if self.screen_size != screen_size {
+                            self.screen_size = screen_size;
+                            all_with_resize.for_each_mut(world, |(transform, resize)| {
+                                (resize.function)(transform, screen_size);
+                            });
+                        }
+                        // Else, we only try to resize the modified ones
+                        else {
+                            resized.for_each_mut(world, |(transform, resize)| {
+                                (resize.function)(transform, screen_size);
+                            });
+                        }
+                    },
+                ),
         )
+    }
 }

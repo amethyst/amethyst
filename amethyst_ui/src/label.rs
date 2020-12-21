@@ -1,8 +1,12 @@
 use std::marker::PhantomData;
+
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::ecs::*;
 
-use crate::{define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode, Stretch, UiText, UiTransform, WidgetId, Widgets, Selectable};
+use crate::{
+    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode,
+    Selectable, Stretch, UiText, UiTransform, WidgetId, Widgets,
+};
 
 const DEFAULT_Z: f32 = 1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
@@ -19,8 +23,7 @@ define_widget!(UiLabel =>
 
 /// Convenience structure for building a label
 #[derive(Debug, Clone)]
-pub struct UiLabelBuilder<G, I : WidgetId>
-{
+pub struct UiLabelBuilder<G, I: WidgetId> {
     id: Option<I>,
     x: f32,
     y: f32,
@@ -40,9 +43,9 @@ pub struct UiLabelBuilder<G, I : WidgetId>
     _phantom: PhantomData<G>,
 }
 
-impl<G, I> Default for UiLabelBuilder<G,I>
+impl<G, I> Default for UiLabelBuilder<G, I>
 where
-    I: WidgetId
+    I: WidgetId,
 {
     fn default() -> Self {
         UiLabelBuilder {
@@ -67,8 +70,7 @@ where
     }
 }
 
-impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G,I>
-{
+impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I> {
     /// Construct a new UiLabelBuilder.
     /// This allows the user to easily build a UI element with a text that can
     /// easily be retrieved and updated through the appropriate resource,
@@ -232,9 +234,8 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G,I>
         ));
 
         if let Some(order) = self.selectable {
-            text_entry.add_component( Selectable::<G>::new(order));
+            text_entry.add_component(Selectable::<G>::new(order));
         }
-
 
         (id, widget)
     }

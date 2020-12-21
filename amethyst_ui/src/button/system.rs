@@ -54,14 +54,18 @@ where
     }
 }
 
+/// This system manages button mouse events.  It changes images and text colors, as well as playing audio
+/// when necessary.
+///
+/// It's automatically registered with the `UiBundle`.
 #[derive(Debug)]
-pub struct UiButtonSystemResource {
+pub struct UiButtonSystem {
     event_reader: ReaderId<UiButtonAction>,
     set_images: HashMap<Entity, ActionChangeStack<UiImage>>,
     set_text_colors: HashMap<Entity, ActionChangeStack<[f32; 4]>>,
 }
 
-impl UiButtonSystemResource {
+impl UiButtonSystem {
     /// Creates a new instance of this structure
     pub fn new(event_reader: ReaderId<UiButtonAction>) -> Self {
         Self {
@@ -71,89 +75,92 @@ impl UiButtonSystemResource {
         }
     }
 }
-/// This system manages button mouse events.  It changes images and text colors, as well as playing audio
-/// when necessary.
-///
-/// It's automatically registered with the `UiBundle`.
-pub fn build_ui_button_system(resources: &mut Resources) -> impl Runnable {
-    resources.insert(EventChannel::<UiButtonAction>::new());
-    let reader_id = resources
-        .get_mut::<EventChannel<UiButtonAction>>()
-        .unwrap()
-        .register_reader();
-    resources.insert(UiButtonSystemResource::new(reader_id));
-    SystemBuilder::new("UiButtonSystem")
-        .write_resource::<UiButtonSystemResource>()
-        .write_resource::<EventChannel<UiButtonAction>>()
-        .with_query(<(Entity, &Parent, &mut UiText)>::query())
-        .with_query(<(Entity, &mut UiImage)>::query())
-        .build(
-            move |commands, world, (resource, button_events), (children_with_text, images)| {
-                let event_reader = &mut resource.event_reader;
-                for event in button_events.read(event_reader) {
-                    match event.event_type {
-                        SetTextColor(ref color) => {
-                            children_with_text.for_each_mut(world, |(_, parent, text)| {
-                                if parent.0 == event.target {
-                                    resource
-                                        .set_text_colors
-                                        .entry(event.target)
-                                        .or_insert_with(|| ActionChangeStack::new(text.color))
-                                        .add(*color);
-                                    text.color = *color;
+
+impl System<'static> for UiButtonSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("UiButtonSystem")
+                .write_resource::<EventChannel<UiButtonAction>>()
+                .with_query(<(Entity, &Parent, &mut UiText)>::query())
+                .with_query(<(Entity, &mut UiImage)>::query())
+                .build(
+                    move |commands, world, button_events, (children_with_text, images)| {
+                        let event_reader = &mut self.event_reader;
+                        for event in button_events.read(event_reader) {
+                            match event.event_type {
+                                SetTextColor(ref color) => {
+                                    children_with_text.for_each_mut(world, |(_, parent, text)| {
+                                        if parent.0 == event.target {
+                                            self.set_text_colors
+                                                .entry(event.target)
+                                                .or_insert_with(|| {
+                                                    ActionChangeStack::new(text.color)
+                                                })
+                                                .add(*color);
+                                            text.color = *color;
+                                        }
+                                    });
                                 }
-                            });
-                        }
-                        UnsetTextColor(ref color) => {
-                            children_with_text.for_each_mut(world, |(_, parent, mut text)| {
-                                if parent.0 == event.target {
-                                    if resource.set_text_colors.contains_key(&event.target) {
-                                        resource
-                                            .set_text_colors
+                                UnsetTextColor(ref color) => {
+                                    children_with_text.for_each_mut(
+                                        world,
+                                        |(_, parent, mut text)| {
+                                            if parent.0 == event.target {
+                                                if self.set_text_colors.contains_key(&event.target)
+                                                {
+                                                    self.set_text_colors
+                                                        .get_mut(&event.target)
+                                                        .and_then(|it| it.remove(color));
+
+                                                    text.color = self.set_text_colors
+                                                        [&event.target]
+                                                        .current();
+
+                                                    if self.set_text_colors[&event.target]
+                                                        .is_empty()
+                                                    {
+                                                        self.set_text_colors.remove(&event.target);
+                                                    }
+                                                }
+                                            }
+                                        },
+                                    );
+                                }
+                                SetImage(ref set_image) => {
+                                    if let Some((_, image)) =
+                                        images.get_mut(world, event.target).ok()
+                                    {
+                                        self.set_images
+                                            .entry(event.target)
+                                            .or_insert_with(|| {
+                                                ActionChangeStack::new(image.clone())
+                                            })
+                                            .add(set_image.clone());
+
+                                        commands.remove_component::<UiImage>(event.target);
+                                        commands.add_component(event.target, set_image.clone());
+                                    }
+                                }
+                                UnsetTexture(ref unset_image) => {
+                                    if self.set_images.contains_key(&event.target) {
+                                        self.set_images
                                             .get_mut(&event.target)
-                                            .and_then(|it| it.remove(color));
+                                            .and_then(|it| it.remove(unset_image));
+                                        commands.remove_component::<UiImage>(event.target);
+                                        commands.add_component(
+                                            event.target,
+                                            self.set_images[&event.target].current().clone(),
+                                        );
 
-                                        text.color =
-                                            resource.set_text_colors[&event.target].current();
-
-                                        if resource.set_text_colors[&event.target].is_empty() {
-                                            resource.set_text_colors.remove(&event.target);
+                                        if self.set_images[&event.target].is_empty() {
+                                            self.set_images.remove(&event.target);
                                         }
                                     }
                                 }
-                            });
+                            };
                         }
-                        SetImage(ref set_image) => {
-                            if let Some((_, image)) = images.get_mut(world, event.target).ok() {
-                                resource
-                                    .set_images
-                                    .entry(event.target)
-                                    .or_insert_with(|| ActionChangeStack::new(image.clone()))
-                                    .add(set_image.clone());
-
-                                commands.remove_component::<UiImage>(event.target);
-                                commands.add_component(event.target, set_image.clone());
-                            }
-                        }
-                        UnsetTexture(ref unset_image) => {
-                            if resource.set_images.contains_key(&event.target) {
-                                resource
-                                    .set_images
-                                    .get_mut(&event.target)
-                                    .and_then(|it| it.remove(unset_image));
-                                commands.remove_component::<UiImage>(event.target);
-                                commands.add_component(
-                                    event.target,
-                                    resource.set_images[&event.target].current().clone(),
-                                );
-
-                                if resource.set_images[&event.target].is_empty() {
-                                    resource.set_images.remove(&event.target);
-                                }
-                            }
-                        }
-                    };
-                }
-            },
+                    },
+                ),
         )
+    }
 }

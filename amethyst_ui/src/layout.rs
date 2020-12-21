@@ -121,13 +121,16 @@ pub enum Stretch {
     },
 }
 
+/// Manages the `Parent` component on entities having `UiTransform`
+/// It does almost the same as the `TransformSystem`, but with some differences,
+/// like `UiTransform` alignment and stretching.
 #[derive(Debug)]
-pub struct UiTransformSystemResource {
+pub struct UiTransformSystem {
     screen_size: (f32, f32),
     modified_last_iter: HashSet<Entity>,
 }
 
-impl UiTransformSystemResource {
+impl UiTransformSystem {
     /// Creates a new `UiTransformSystem`.
     pub fn new() -> Self {
         Self {
@@ -136,195 +139,199 @@ impl UiTransformSystemResource {
         }
     }
 }
-/// Manages the `Parent` component on entities having `UiTransform`
-/// It does almost the same as the `TransformSystem`, but with some differences,
-/// like `UiTransform` alignment and stretching.
-pub fn build_ui_transform_system(resources: &mut Resources) -> impl Runnable {
-    resources.insert(UiTransformSystemResource::new());
-    SystemBuilder::new("UiTransformSystem")
-        .write_resource::<UiTransformSystemResource>()
-        .read_resource::<ScreenDimensions>()
-        .with_query(<(Entity, &mut UiTransform)>::query().filter(maybe_changed::<UiTransform>()))
-        .with_query(<&mut UiTransform>::query())
-        .with_query(<(Entity, &mut Parent)>::query().filter(maybe_changed::<Parent>()))
-        .with_query(<(Entity, &Children)>::query())
-        .with_query(<(Entity, &mut UiTransform, &Children)>::query())
-        .with_query(<(Entity, &mut UiTransform, &Parent)>::query())
-        .with_query(
-            <(Entity, &mut UiTransform)>::query()
-                .filter(!component::<Parent>() & !component::<Children>()),
-        )
-        .build(
-            move |_commands,
-                  world,
-                  (resource, screen_dimensions),
-                  (
-                changed_transforms_query,
-                all_transforms_query,
-                children_with_changed_parent,
-                parents_query,
-                transform_with_children_query,
-                transform_with_parent_query,
-                transform_isolated_query,
-            )| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("ui_transform_system");
 
-                let mut modified_entities: HashSet<Entity> = HashSet::new();
+impl System<'static> for UiTransformSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("UiTransformSystem")
+                .read_resource::<ScreenDimensions>()
+                .with_query(
+                    <(Entity, &mut UiTransform)>::query().filter(maybe_changed::<UiTransform>()),
+                )
+                .with_query(<&mut UiTransform>::query())
+                .with_query(<(Entity, &mut Parent)>::query().filter(maybe_changed::<Parent>()))
+                .with_query(<(Entity, &Children)>::query())
+                .with_query(<(Entity, &mut UiTransform, &Children)>::query())
+                .with_query(<(Entity, &mut UiTransform, &Parent)>::query())
+                .with_query(
+                    <(Entity, &mut UiTransform)>::query()
+                        .filter(!component::<Parent>() & !component::<Children>()),
+                )
+                .build(
+                    move |_commands,
+                          world,
+                          screen_dimensions,
+                          (
+                        changed_transforms_query,
+                        all_transforms_query,
+                        children_with_changed_parent,
+                        parents_query,
+                        transform_with_children_query,
+                        transform_with_parent_query,
+                        transform_isolated_query,
+                    )| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("ui_transform_system");
 
-                changed_transforms_query.for_each_mut(world, |(e, _)| {
-                    if !resource.modified_last_iter.contains(e) {
-                        modified_entities.insert(*e);
-                    }
-                });
-                children_with_changed_parent.for_each_mut(world, |(e, _)| {
-                    modified_entities.insert(*e);
-                });
+                        let mut modified_entities: HashSet<Entity> = HashSet::new();
 
-                let current_screen_size = (screen_dimensions.width(), screen_dimensions.height());
-
-                let screen_resized = current_screen_size != resource.screen_size;
-                resource.screen_size = current_screen_size;
-                if screen_resized {
-                    // Then we process for everyone
-                    process_root_iter(
-                        transform_with_children_query
-                            .iter_mut(world)
-                            .map(|(_, t, _)| t),
-                        &*screen_dimensions,
-                    );
-                    process_root_iter(
-                        transform_isolated_query.iter_mut(world).map(|(_, t)| t),
-                        &*screen_dimensions,
-                    );
-                } else {
-                    // We process only modified
-                    process_root_iter(
-                        transform_with_children_query
-                            .iter_mut(world)
-                            .filter(|(e, _, _)| modified_entities.contains(e))
-                            .map(|(_, t, _)| t),
-                        &*screen_dimensions,
-                    );
-                    process_root_iter(
-                        transform_isolated_query
-                            .iter_mut(world)
-                            .filter(|(e, _)| modified_entities.contains(e))
-                            .map(|(_, t)| t),
-                        &*screen_dimensions,
-                    );
-                }
-
-                let (mut parent_world, mut else_world) = world.split_for_query(parents_query);
-
-                let modified_children: Vec<(Entity, Entity)> = transform_with_parent_query
-                    .iter_mut(&mut else_world)
-                    .filter(|(entity, _, parent)| {
-                        let self_dirty = modified_entities.contains(&entity);
-                        match parents_query.get(&mut parent_world, parent.0).ok() {
-                            Some((e, _)) => {
-                                let parent_dirty = modified_entities.contains(&e);
-                                parent_dirty || self_dirty || screen_resized
+                        changed_transforms_query.for_each_mut(world, |(e, _)| {
+                            if !self.modified_last_iter.contains(e) {
+                                modified_entities.insert(*e);
                             }
-                            None => false,
-                        }
-                    })
-                    .map(|(entity, _, parent)| (*entity, parent.0))
-                    .collect();
+                        });
+                        children_with_changed_parent.for_each_mut(world, |(e, _)| {
+                            modified_entities.insert(*e);
+                        });
 
-                for (entity, parent_entity) in modified_children.iter() {
-                    let parent_transform_copy = {
-                        if let Some(transform) =
-                            all_transforms_query.get_mut(world, *parent_entity).ok()
-                        {
-                            Some(transform.clone())
-                        } else {
-                            None
-                        }
-                    };
+                        let current_screen_size =
+                            (screen_dimensions.width(), screen_dimensions.height());
 
-                    let child_transform = all_transforms_query.get_mut(world, *entity).ok();
-
-                    let (mut transform, parent_transform_copy) =
-                        match (child_transform, parent_transform_copy) {
-                            (Some(v1), Some(v2)) => (v1, v2),
-                            _ => continue,
-                        };
-                    let norm = transform.anchor.norm_offset();
-                    transform.pixel_x =
-                        parent_transform_copy.pixel_x + parent_transform_copy.pixel_width * norm.0;
-                    transform.pixel_y =
-                        parent_transform_copy.pixel_y + parent_transform_copy.pixel_height * norm.1;
-                    transform.global_z = parent_transform_copy.global_z + transform.local_z;
-
-                    let new_size = match transform.stretch {
-                        Stretch::NoStretch => (transform.width, transform.height),
-                        Stretch::X { x_margin } => (
-                            parent_transform_copy.pixel_width - x_margin * 2.0,
-                            transform.height,
-                        ),
-                        Stretch::Y { y_margin } => (
-                            transform.width,
-                            parent_transform_copy.pixel_height - y_margin * 2.0,
-                        ),
-                        Stretch::XY {
-                            keep_aspect_ratio: false,
-                            x_margin,
-                            y_margin,
-                        } => (
-                            parent_transform_copy.pixel_width - x_margin * 2.0,
-                            parent_transform_copy.pixel_height - y_margin * 2.0,
-                        ),
-                        Stretch::XY {
-                            keep_aspect_ratio: true,
-                            x_margin,
-                            y_margin,
-                        } => {
-                            let scale = f32::min(
-                                (parent_transform_copy.pixel_width - x_margin * 2.0)
-                                    / transform.width,
-                                (parent_transform_copy.pixel_height - y_margin * 2.0)
-                                    / transform.height,
+                        let screen_resized = current_screen_size != self.screen_size;
+                        self.screen_size = current_screen_size;
+                        if screen_resized {
+                            // Then we process for everyone
+                            process_root_iter(
+                                transform_with_children_query
+                                    .iter_mut(world)
+                                    .map(|(_, t, _)| t),
+                                &*screen_dimensions,
                             );
-
-                            (transform.width * scale, transform.height * scale)
+                            process_root_iter(
+                                transform_isolated_query.iter_mut(world).map(|(_, t)| t),
+                                &*screen_dimensions,
+                            );
+                        } else {
+                            // We process only modified
+                            process_root_iter(
+                                transform_with_children_query
+                                    .iter_mut(world)
+                                    .filter(|(e, _, _)| modified_entities.contains(e))
+                                    .map(|(_, t, _)| t),
+                                &*screen_dimensions,
+                            );
+                            process_root_iter(
+                                transform_isolated_query
+                                    .iter_mut(world)
+                                    .filter(|(e, _)| modified_entities.contains(e))
+                                    .map(|(_, t)| t),
+                                &*screen_dimensions,
+                            );
                         }
-                    };
-                    transform.width = new_size.0;
-                    transform.height = new_size.1;
-                    match transform.scale_mode {
-                        ScaleMode::Pixel => {
-                            transform.pixel_x += transform.local_x;
-                            transform.pixel_y += transform.local_y;
-                            transform.pixel_width = transform.width;
-                            transform.pixel_height = transform.height;
-                        }
-                        ScaleMode::Percent => {
-                            transform.pixel_x +=
-                                transform.local_x * parent_transform_copy.pixel_width;
-                            transform.pixel_y +=
-                                transform.local_y * parent_transform_copy.pixel_height;
-                            transform.pixel_width =
-                                transform.width * parent_transform_copy.pixel_width;
-                            transform.pixel_height =
-                                transform.height * parent_transform_copy.pixel_height;
-                        }
-                    }
-                    let pivot_norm = transform.pivot.norm_offset();
-                    transform.pixel_x += transform.pixel_width * -pivot_norm.0;
-                    transform.pixel_y += transform.pixel_height * -pivot_norm.1;
-                }
 
-                resource.modified_last_iter.clear();
-                for e in modified_entities.iter() {
-                    resource.modified_last_iter.insert(*e);
-                }
+                        let (mut parent_world, mut else_world) =
+                            world.split_for_query(parents_query);
 
-                for (e, _) in modified_children.iter() {
-                    resource.modified_last_iter.insert(*e);
-                }
-            },
+                        let modified_children: Vec<(Entity, Entity)> = transform_with_parent_query
+                            .iter_mut(&mut else_world)
+                            .filter(|(entity, _, parent)| {
+                                let self_dirty = modified_entities.contains(&entity);
+                                match parents_query.get(&mut parent_world, parent.0).ok() {
+                                    Some((e, _)) => {
+                                        let parent_dirty = modified_entities.contains(&e);
+                                        parent_dirty || self_dirty || screen_resized
+                                    }
+                                    None => false,
+                                }
+                            })
+                            .map(|(entity, _, parent)| (*entity, parent.0))
+                            .collect();
+
+                        for (entity, parent_entity) in modified_children.iter() {
+                            let parent_transform_copy = {
+                                if let Some(transform) =
+                                    all_transforms_query.get_mut(world, *parent_entity).ok()
+                                {
+                                    Some(transform.clone())
+                                } else {
+                                    None
+                                }
+                            };
+
+                            let child_transform = all_transforms_query.get_mut(world, *entity).ok();
+
+                            let (mut transform, parent_transform_copy) =
+                                match (child_transform, parent_transform_copy) {
+                                    (Some(v1), Some(v2)) => (v1, v2),
+                                    _ => continue,
+                                };
+                            let norm = transform.anchor.norm_offset();
+                            transform.pixel_x = parent_transform_copy.pixel_x
+                                + parent_transform_copy.pixel_width * norm.0;
+                            transform.pixel_y = parent_transform_copy.pixel_y
+                                + parent_transform_copy.pixel_height * norm.1;
+                            transform.global_z = parent_transform_copy.global_z + transform.local_z;
+
+                            let new_size = match transform.stretch {
+                                Stretch::NoStretch => (transform.width, transform.height),
+                                Stretch::X { x_margin } => (
+                                    parent_transform_copy.pixel_width - x_margin * 2.0,
+                                    transform.height,
+                                ),
+                                Stretch::Y { y_margin } => (
+                                    transform.width,
+                                    parent_transform_copy.pixel_height - y_margin * 2.0,
+                                ),
+                                Stretch::XY {
+                                    keep_aspect_ratio: false,
+                                    x_margin,
+                                    y_margin,
+                                } => (
+                                    parent_transform_copy.pixel_width - x_margin * 2.0,
+                                    parent_transform_copy.pixel_height - y_margin * 2.0,
+                                ),
+                                Stretch::XY {
+                                    keep_aspect_ratio: true,
+                                    x_margin,
+                                    y_margin,
+                                } => {
+                                    let scale = f32::min(
+                                        (parent_transform_copy.pixel_width - x_margin * 2.0)
+                                            / transform.width,
+                                        (parent_transform_copy.pixel_height - y_margin * 2.0)
+                                            / transform.height,
+                                    );
+
+                                    (transform.width * scale, transform.height * scale)
+                                }
+                            };
+                            transform.width = new_size.0;
+                            transform.height = new_size.1;
+                            match transform.scale_mode {
+                                ScaleMode::Pixel => {
+                                    transform.pixel_x += transform.local_x;
+                                    transform.pixel_y += transform.local_y;
+                                    transform.pixel_width = transform.width;
+                                    transform.pixel_height = transform.height;
+                                }
+                                ScaleMode::Percent => {
+                                    transform.pixel_x +=
+                                        transform.local_x * parent_transform_copy.pixel_width;
+                                    transform.pixel_y +=
+                                        transform.local_y * parent_transform_copy.pixel_height;
+                                    transform.pixel_width =
+                                        transform.width * parent_transform_copy.pixel_width;
+                                    transform.pixel_height =
+                                        transform.height * parent_transform_copy.pixel_height;
+                                }
+                            }
+                            let pivot_norm = transform.pivot.norm_offset();
+                            transform.pixel_x += transform.pixel_width * -pivot_norm.0;
+                            transform.pixel_y += transform.pixel_height * -pivot_norm.1;
+                        }
+
+                        self.modified_last_iter.clear();
+                        for e in modified_entities.iter() {
+                            self.modified_last_iter.insert(*e);
+                        }
+
+                        for (e, _) in modified_children.iter() {
+                            self.modified_last_iter.insert(*e);
+                        }
+                    },
+                ),
         )
+    }
 }
 
 fn process_root_iter<'a, I>(iter: I, screen_dim: &ScreenDimensions)

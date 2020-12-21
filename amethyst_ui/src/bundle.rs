@@ -2,13 +2,27 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::{AssetProcessorSystemBundle};
+use amethyst_assets::AssetProcessorSystemBundle;
 use amethyst_audio::Source;
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
 use derive_new::new;
+use winit::Event;
 
-use crate::{build_blink_system, build_button_action_retrigger_system, build_cache_selection_system, build_drag_widget_system, build_resize_system, build_selection_keyboard_system, build_selection_mouse_system, build_text_editing_input_system, build_text_editing_mouse_system, build_ui_button_system, build_ui_mouse_system, build_ui_sound_retrigger_system, build_ui_sound_system, build_ui_transform_system, FontAsset, UiButtonAction, UiPlaySoundAction, WidgetId, Widgets, UiLabel};
+use crate::{
+    button::{ui_button_action_retrigger_event_system, UiButtonSystem},
+    drag::DragWidgetSystem,
+    event::UiMouseSystem,
+    layout::UiTransformSystem,
+    resize::ResizeSystem,
+    selection::{SelectionKeyboardSystem, SelectionMouseSystem},
+    selection_order_cache::CacheSelectionSystem,
+    sound::{ui_sound_event_retrigger_system, UiSoundSystem},
+    text::TextEditingMouseSystem,
+    text_editing::TextEditingInputSystem,
+    BlinkSystem, CachedSelectionOrderResource, FontAsset, UiButtonAction, UiEvent, UiLabel,
+    UiPlaySoundAction, WidgetId, Widgets,
+};
 
 /// UI bundle
 ///
@@ -36,23 +50,65 @@ where
     ) -> Result<(), Error> {
         resources.insert(EventChannel::<UiButtonAction>::new());
         resources.insert(Widgets::<UiLabel, W>::new());
+        resources.insert(CachedSelectionOrderResource::default());
 
+        let ui_btn_reader = resources
+            .get_mut::<EventChannel<UiButtonAction>>()
+            .unwrap()
+            .register_reader();
+
+        let ui_btn_action_retrigger_reader = resources
+            .get_mut::<EventChannel<UiEvent>>()
+            .unwrap()
+            .register_reader();
+
+        let text_editing_mouse_reader = resources
+            .get_mut::<EventChannel<Event>>()
+            .unwrap()
+            .register_reader();
+
+        let selection_mouse_reader = resources
+            .get_mut::<EventChannel<UiEvent>>()
+            .unwrap()
+            .register_reader();
+
+        let selection_keyboard_reader = resources
+            .get_mut::<EventChannel<Event>>()
+            .unwrap()
+            .register_reader();
+        let text_editing_input_reader = resources
+            .get_mut::<EventChannel<Event>>()
+            .unwrap()
+            .register_reader();
+        let drag_widget_reader = resources
+            .get_mut::<EventChannel<UiEvent>>()
+            .unwrap()
+            .register_reader();
         builder
-            .add_system(build_ui_transform_system(resources))
-            .add_system(build_ui_mouse_system(resources))
+            .add_system(Box::new(UiTransformSystem::new()))
+            .add_system(Box::new(UiMouseSystem::new()))
             .add_bundle(AssetProcessorSystemBundle::<FontAsset>::default())
-            .add_system(build_ui_button_system(resources))
-            .add_system(build_button_action_retrigger_system(resources))
-            .add_system(build_cache_selection_system::<G>(resources))
-            .add_system(build_text_editing_mouse_system(resources))
-            .add_system(build_selection_mouse_system::<G>(resources))
-            .add_system(build_selection_keyboard_system::<G>(resources))
-            .add_system(build_text_editing_input_system(resources))
-            .add_system(build_resize_system(resources))
-            .add_system(build_drag_widget_system(resources))
+            .add_system(Box::new(UiButtonSystem::new(ui_btn_reader)))
+            .add_system(Box::new(ui_button_action_retrigger_event_system(
+                ui_btn_action_retrigger_reader,
+            )))
+            .add_system(Box::new(CacheSelectionSystem::<G>::new()))
+            .add_system(Box::new(TextEditingMouseSystem::new(
+                text_editing_mouse_reader,
+            )))
+            .add_system(Box::new(SelectionMouseSystem::<G>::new(
+                selection_mouse_reader,
+            )))
+            .add_system(Box::new(SelectionKeyboardSystem::<G>::new(
+                selection_keyboard_reader,
+            )))
+            .add_system(Box::new(TextEditingInputSystem::new(
+                text_editing_input_reader,
+            )))
+            .add_system(Box::new(ResizeSystem::new()))
+            .add_system(Box::new(DragWidgetSystem::new(drag_widget_reader)))
             .add_bundle(AssetProcessorSystemBundle::<Source>::default())
-            .add_system(build_blink_system())
-            ;
+            .add_system(Box::new(BlinkSystem));
 
         /*
                 builder.add_system(
@@ -85,10 +141,20 @@ impl SystemBundle for AudioUiBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(EventChannel::<UiPlaySoundAction>::new());
+
         builder
-            .add_system(build_ui_sound_system(resources))
-            .add_system(build_ui_sound_retrigger_system(resources))
-        ;
+            .add_system(Box::new(UiSoundSystem::new(
+                resources
+                    .get_mut::<EventChannel<UiPlaySoundAction>>()
+                    .unwrap()
+                    .register_reader(),
+            )))
+            .add_system(Box::new(ui_sound_event_retrigger_system(
+                resources
+                    .get_mut::<EventChannel<UiEvent>>()
+                    .unwrap()
+                    .register_reader(),
+            )));
         Ok(())
     }
 
