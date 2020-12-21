@@ -9,15 +9,17 @@ use thread_profiler::profile_scope;
 
 use crate::{
     event::{UiEvent, UiEventType::*},
-    event_retrigger::{build_event_retrigger_system, EventRetrigger},
+    event_retrigger::{EventRetrigger, EventRetriggerSystem},
     EventReceiver,
 };
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvent`s
 /// and trigger `UiPlaySoundAction`s for entities with attached
 /// `UiSoundRetrigger` components.
-pub fn build_ui_sound_retrigger_system(resources: &mut Resources) -> impl Runnable {
-    build_event_retrigger_system::<UiSoundRetrigger>(resources)
+pub fn ui_sound_event_retrigger_system(
+    reader_id: ReaderId<UiEvent>,
+) -> EventRetriggerSystem<UiSoundRetrigger> {
+    EventRetriggerSystem::<UiSoundRetrigger>::new(reader_id)
 }
 
 /// Action that will trigger a sound to play in `UiSoundSystem`.
@@ -60,12 +62,14 @@ impl EventRetrigger for UiSoundRetrigger {
     }
 }
 
+/// Handles any dispatches `UiPlaySoundAction`s and plays the received
+/// sounds through the set `Output`.
 #[derive(Debug)]
-pub struct UiSoundSystemResource {
+pub struct UiSoundSystem {
     event_reader: ReaderId<UiPlaySoundAction>,
 }
 
-impl UiSoundSystemResource {
+impl UiSoundSystem {
     /// Constructs a default `UiSoundSystem`. Since the `event_reader`
     /// will automatically be fetched when the system is set up, this should
     /// always be used to construct the `UiSoundSystem`.
@@ -74,30 +78,25 @@ impl UiSoundSystemResource {
     }
 }
 
-/// Handles any dispatches `UiPlaySoundAction`s and plays the received
-/// sounds through the set `Output`.
-pub fn build_ui_sound_system(resources: &mut Resources) -> impl Runnable {
-    let reader_id = resources
-        .get_mut::<EventChannel<UiPlaySoundAction>>()
-        .unwrap()
-        .register_reader();
-    resources.insert(UiSoundSystemResource::new(reader_id));
-
-    SystemBuilder::new("UiSoundSystem")
-        .write_resource::<UiSoundSystemResource>()
-        .write_resource::<EventChannel<UiPlaySoundAction>>()
-        .read_resource::<AssetStorage<Source>>()
-        .read_resource::<Output>()
-        .build(
-            move |_commands, _world, (resource, sound_events, audio_storage, audio_output), _| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("ui_sound_system");
-                let event_reader = &mut resource.event_reader;
-                for event in sound_events.read(event_reader) {
-                    if let Some(sound) = audio_storage.get(&event.0) {
-                        audio_output.play_once(sound, 1.0);
-                    }
-                }
-            },
+impl System<'static> for UiSoundSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("UiSoundSystem")
+                .write_resource::<EventChannel<UiPlaySoundAction>>()
+                .read_resource::<AssetStorage<Source>>()
+                .read_resource::<Output>()
+                .build(
+                    move |_commands, _world, (sound_events, audio_storage, audio_output), _| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("ui_sound_system");
+                        let event_reader = &mut self.event_reader;
+                        for event in sound_events.read(event_reader) {
+                            if let Some(sound) = audio_storage.get(&event.0) {
+                                audio_output.play_once(sound, 1.0);
+                            }
+                        }
+                    },
+                ),
         )
+    }
 }

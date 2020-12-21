@@ -46,12 +46,15 @@ pub trait EventRetrigger: Component {
         R: EventReceiver<Self::Out>;
 }
 
+/// Links up the given in- and output types' `EventChannel`s listening
+/// to incoming events and calling `apply` on the respective `Retrigger`
+/// components.
 #[derive(Debug)]
-pub struct EventRetriggerSystemResource<T: EventRetrigger + 'static> {
+pub struct EventRetriggerSystem<T: EventRetrigger + 'static> {
     event_reader: ReaderId<T::In>,
 }
 
-impl<T> EventRetriggerSystemResource<T>
+impl<T> EventRetriggerSystem<T>
 where
     T: EventRetrigger,
 {
@@ -63,36 +66,28 @@ where
     }
 }
 
-/// Links up the given in- and output types' `EventChannel`s listening
-/// to incoming events and calling `apply` on the respective `Retrigger`
-/// components.
-pub fn build_event_retrigger_system<T: EventRetrigger + 'static>(
-    resources: &mut Resources,
-) -> impl Runnable {
-    let reader_id = resources
-        .get_mut::<EventChannel<T::In>>()
-        .unwrap()
-        .register_reader();
-    resources.insert(EventRetriggerSystemResource::<T>::new(reader_id));
-
-    let system_name = format!("{}System", std::any::type_name::<T>());
-    SystemBuilder::new(system_name)
-        .write_resource::<EventRetriggerSystemResource<T>>()
-        .read_resource::<EventChannel<T::In>>()
-        .write_resource::<EventChannel<T::Out>>()
-        .with_query(<(Entity, &mut T)>::query())
-        .build(
-            move |_commands, world, (resource, in_channel, out_channel), retrigger| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("event_retrigger_system");
-                let event_reader = &mut resource.event_reader;
-                for event in in_channel.read(event_reader) {
-                    if let Some((_, entity_retrigger)) =
-                        retrigger.get_mut(world, event.get_target()).ok()
-                    {
-                        entity_retrigger.apply(&event, out_channel.deref_mut());
-                    }
-                }
-            },
+impl<T: EventRetrigger + 'static> System<'static> for EventRetriggerSystem<T> {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        let system_name = format!("{}System", std::any::type_name::<T>());
+        Box::new(
+            SystemBuilder::new(system_name)
+                .read_resource::<EventChannel<T::In>>()
+                .write_resource::<EventChannel<T::Out>>()
+                .with_query(<(Entity, &mut T)>::query())
+                .build(
+                    move |_commands, world, (in_channel, out_channel), retrigger| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("event_retrigger_system");
+                        let event_reader = &mut self.event_reader;
+                        for event in in_channel.read(event_reader) {
+                            if let Some((_, entity_retrigger)) =
+                                retrigger.get_mut(world, event.get_target()).ok()
+                            {
+                                entity_retrigger.apply(&event, out_channel.deref_mut());
+                            }
+                        }
+                    },
+                ),
         )
+    }
 }

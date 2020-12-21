@@ -39,8 +39,7 @@ use glsl_layout::{vec2, vec4, AsStd140};
 use thread_profiler::profile_scope;
 
 use crate::{
-    build_ui_glyphs_system,
-    glyphs::{UiGlyphs, UiGlyphsResource},
+    glyphs::{UiGlyphs, UiGlyphsResource, UiGlyphsSystem},
     Selected, TextEditing, UiImage, UiTransform,
 };
 
@@ -65,7 +64,8 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(build_ui_glyphs_system::<B>(resources));
+        resources.insert(UiGlyphsResource::default());
+        builder.add_system(Box::new(UiGlyphsSystem::<B>::default()));
         Ok(())
     }
 

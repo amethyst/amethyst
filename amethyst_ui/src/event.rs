@@ -82,17 +82,20 @@ impl TargetedEvent for UiEvent {
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct Interactable;
 
+/// The system that generates events for `Interactable` enabled entities.
+/// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
+
 #[derive(Default, Debug)]
-pub struct UiMouseSystemResource {
+pub struct UiMouseSystem {
     was_down: bool,
     click_started_on: HashSet<Entity>,
     last_targets: HashSet<Entity>,
 }
 
-impl UiMouseSystemResource {
+impl UiMouseSystem {
     /// Creates a new UiMouseSystem.
     pub fn new() -> Self {
-        UiMouseSystemResource {
+        UiMouseSystem {
             was_down: false,
             click_started_on: HashSet::new(),
             last_targets: HashSet::new(),
@@ -100,70 +103,80 @@ impl UiMouseSystemResource {
     }
 }
 
-/// The system that generates events for `Interactable` enabled entities.
-/// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
-pub fn build_ui_mouse_system(resources: &mut Resources) -> impl Runnable {
-    resources.insert(UiMouseSystemResource::new());
-    SystemBuilder::new("UiMouseSystem")
-        .write_resource::<UiMouseSystemResource>()
-        .write_resource::<EventChannel<UiEvent>>()
-        .read_resource::<InputHandler>()
-        .read_resource::<ScreenDimensions>()
-        // Interactable entities with an UiTransform, without Hidden or HiddenPropagate
-        .with_query(
-            <(Entity, &UiTransform, Option<&Interactable>)>::query()
-                .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
-        )
-        .build(
-            move |_commands,
-                  world,
-                  (resource, events, input, screen_dimensions),
-                  interactables_entities| {
-                let down = input.mouse_button_is_down(MouseButton::Left);
-                // FIXME: To replace on InputHandler generate OnMouseDown and OnMouseUp events See #2496
-                let click_started = down && !resource.was_down;
-                let click_stopped = !down && resource.was_down;
-                if let Some((pos_x, pos_y)) = input.mouse_position() {
-                    let x = pos_x as f32;
-                    let y = screen_dimensions.height() - pos_y as f32;
+impl System<'static> for UiMouseSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("UiMouseSystem")
+                .write_resource::<EventChannel<UiEvent>>()
+                .read_resource::<InputHandler>()
+                .read_resource::<ScreenDimensions>()
+                // Interactable entities with an UiTransform, without Hidden or HiddenPropagate
+                .with_query(
+                    <(Entity, &UiTransform, Option<&Interactable>)>::query()
+                        .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
+                )
+                .build(
+                    move |_commands,
+                          world,
+                          (events, input, screen_dimensions),
+                          interactables_entities| {
+                        let down = input.mouse_button_is_down(MouseButton::Left);
+                        // FIXME: To replace on InputHandler generate OnMouseDown and OnMouseUp events See #2496
+                        let click_started = down && !self.was_down;
+                        let click_stopped = !down && self.was_down;
+                        if let Some((pos_x, pos_y)) = input.mouse_position() {
+                            let x = pos_x as f32;
+                            let y = screen_dimensions.height() - pos_y as f32;
 
-                    let targets = targeted((x, y), interactables_entities.iter(world));
+                            let targets = targeted((x, y), interactables_entities.iter(world));
 
-                    for target in targets.difference(&resource.last_targets) {
-                        events.single_write(UiEvent::new(UiEventType::HoverStart, *target));
-                    }
+                            for target in targets.difference(&self.last_targets) {
+                                events.single_write(UiEvent::new(UiEventType::HoverStart, *target));
+                            }
 
-                    for last_target in resource.last_targets.difference(&targets) {
-                        events.single_write(UiEvent::new(UiEventType::HoverStop, *last_target));
-                    }
+                            for last_target in self.last_targets.difference(&targets) {
+                                events.single_write(UiEvent::new(
+                                    UiEventType::HoverStop,
+                                    *last_target,
+                                ));
+                            }
 
-                    if click_started {
-                        resource.click_started_on = targets.clone();
-                        for target in targets.iter() {
-                            events.single_write(UiEvent::new(UiEventType::ClickStart, *target));
+                            if click_started {
+                                self.click_started_on = targets.clone();
+                                for target in targets.iter() {
+                                    events.single_write(UiEvent::new(
+                                        UiEventType::ClickStart,
+                                        *target,
+                                    ));
+                                }
+                            } else if click_stopped {
+                                for click_start_target in
+                                    self.click_started_on.intersection(&targets)
+                                {
+                                    events.single_write(UiEvent::new(
+                                        UiEventType::Click,
+                                        *click_start_target,
+                                    ));
+                                }
+                            }
+
+                            self.last_targets = targets;
                         }
-                    } else if click_stopped {
-                        for click_start_target in resource.click_started_on.intersection(&targets) {
-                            events.single_write(UiEvent::new(
-                                UiEventType::Click,
-                                *click_start_target,
-                            ));
+
+                        // Could be used for drag and drop
+                        if click_stopped {
+                            for click_start_target in self.click_started_on.drain() {
+                                events.single_write(UiEvent::new(
+                                    UiEventType::ClickStop,
+                                    click_start_target,
+                                ));
+                            }
                         }
-                    }
-
-                    resource.last_targets = targets;
-                }
-
-                // Could be used for drag and drop
-                if click_stopped {
-                    for click_start_target in resource.click_started_on.drain() {
-                        events
-                            .single_write(UiEvent::new(UiEventType::ClickStop, click_start_target));
-                    }
-                }
-                resource.was_down = down;
-            },
+                        self.was_down = down;
+                    },
+                ),
         )
+    }
 }
 
 /// Finds all interactable entities at the position `pos` which don't have any opaque entities on
