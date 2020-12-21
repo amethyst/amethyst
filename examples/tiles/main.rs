@@ -55,9 +55,8 @@ fn draw_selection(
         lines.clear();
 
         if let Some(mouse_position) = input.mouse_position() {
-            
             // Find if the active camera exists
-            let mut camera_transform = active_camera
+            let camera_transform = active_camera
                 .entity
                 .as_ref()
                 .and_then(|active_camera| {
@@ -70,11 +69,11 @@ fn draw_selection(
                 .or_else(|| None);
 
             // Return active camera or fetch first available
-            let mut camera_transform = match camera_transform {
+            let camera_transform = match camera_transform {
                 Some(e) => Some(e),
                 None => <(&Camera, &Transform)>::query()
-                .iter_mut(&mut subworld)
-                .nth(0)
+                    .iter_mut(&mut subworld)
+                    .nth(0),
             };
 
             if let Some((camera, camera_transform)) = camera_transform {
@@ -153,22 +152,23 @@ fn camera_switch(
         state.pressed = false;
 
         // Lazily delete the old camera
-        let mut camera_query = <(&Entity,  &Parent)>::query().filter(component::<Camera>() & component::<Transform>());
+        let mut camera_query =
+            <(Entity, &Parent)>::query().filter(component::<Camera>() & component::<Transform>());
 
         let entity_and_parent = active_camera
             .entity
-            .and_then(|a| camera_query.get_mut(world, a).ok())
+            .and_then(|e| camera_query.get(world, e).ok())
             .or_else(|| None);
-
+        println!("Active Camera {:?}", active_camera);
+        println!("Active Camera Components {:?}", entity_and_parent);
         let entity_and_parent = match entity_and_parent {
             Some((old_camera_entity, old_parent)) => Some((old_camera_entity, old_parent)),
-            None => camera_query
-            .iter_mut(world)
-            .nth(0)
+            None => camera_query.iter(world).nth(0),
         };
+        println!("First Camera {:?}", entity_and_parent);
         if let Some((old_camera_entity, old_parent)) = entity_and_parent {
+            dbg!("Found old camera and old parent");
 
-            
             let old_camera_entity = old_camera_entity;
 
             let new_parent = old_parent.0;
@@ -185,14 +185,14 @@ fn camera_switch(
                     Vector3::new(0.0, 0.0, 1.1),
                 )
             };
-            // @todo lazy insert new camera
-            let mut command_buffer = CommandBuffer::new(world);
-            let new_camera = command_buffer.push(init_camera(new_parent, Transform::from(new_position), new_camera));
 
+            let new_camera = commands.push(init_camera(
+                new_parent,
+                Transform::from(new_position),
+                new_camera,
+            ));
             active_camera.entity = Some(new_camera);
-
-            command_buffer.remove(*old_camera_entity);
-            command_buffer.flush(world);
+            commands.remove(*old_camera_entity);
         }
     }
 }
@@ -230,11 +230,11 @@ fn camera_movement(
         let mut camera_transform = match camera_transform {
             Some(e) => Some(e),
             None => <(&mut Transform)>::query()
-            .filter(component::<Camera>())
-            .iter_mut(world)
-            .nth(0)
+                .filter(component::<Camera>())
+                .iter_mut(world)
+                .nth(0),
         };
-    
+
         if let Some(camera_transform) = camera_transform {
             camera_transform.prepend_translation_x(x_move * 5.0);
             camera_transform.prepend_translation_y(y_move * 5.0);
@@ -286,7 +286,6 @@ fn map_movement(
         }
     }
     if state.translate {
-        // let mut query = <(&TileMap<ExampleTile, MortonEncoder>, &mut Transform)>::query();
         for (_, transform) in query.iter_mut(world) {
             transform.prepend_translation(state.vector * time.delta_seconds());
             if transform.translation().x > 500.0 {
@@ -396,11 +395,14 @@ impl SimpleState for Example {
 
         let _reference = init_reference_sprite(world, &circle_sprite_sheet_handle);
         let player = init_player(world, &circle_sprite_sheet_handle);
-        let _camera = world.push(init_camera(
+        let camera = world.push(init_camera(
             player,
             Transform::from(Vector3::new(0.0, 0.0, 1.1)),
             Camera::standard_2d(width, height),
         ));
+        data.resources.insert(ActiveCamera {
+            entity: Some(camera),
+        });
 
         let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
 
