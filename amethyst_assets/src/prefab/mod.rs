@@ -7,3 +7,7 @@ pub use assets::{Prefab, RawPrefab};
 mod component_registry;
 pub use component_registry::{ComponentRegistry, ComponentRegistryBuilder};
 pub use legion_prefab::{register_component_type, ComponentRegistration};
+
+// register core components
+register_component_type!(amethyst_core::transform::Transform);
+register_component_type!(amethyst_core::transform::TransformValues);

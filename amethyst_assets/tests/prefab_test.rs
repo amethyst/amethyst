@@ -1,17 +1,16 @@
-use std::path::PathBuf;
-
 use amethyst_assets::{
     prefab::Prefab, start_asset_daemon, AssetHandle, AssetStorage, DefaultLoader, Handle,
     LoadStatus, Loader, LoaderBundle,
 };
 use amethyst_core::ecs::{Dispatcher, DispatcherBuilder, Resources, World};
+use std::{path::PathBuf, thread, time::Duration};
 
 mod common;
 
 fn setup() -> (Dispatcher, World, Resources) {
     common::setup_logger();
     start_asset_daemon(vec![PathBuf::from("tests/assets")]);
-    log::debug!("Started logger");
+    thread::sleep(Duration::from_secs(5));
     let mut dispatcher_builder = DispatcherBuilder::default();
     let mut world = World::default();
     let mut resources = Resources::default();
