@@ -3,7 +3,7 @@
 use amethyst_core::shrev::EventChannel;
 use smallvec::SmallVec;
 use winit::{
-    dpi::{LogicalPosition, PhysicalPosition},
+    dpi::PhysicalPosition,
     event::{
         DeviceEvent, Event, KeyboardInput, MouseButton, MouseScrollDelta, VirtualKeyCode,
         WindowEvent,

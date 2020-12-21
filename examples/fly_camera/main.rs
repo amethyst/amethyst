@@ -173,7 +173,8 @@ fn main() -> Result<(), Error> {
                 Some("move_y".into()),
                 Some("move_z".into()),
             )
-            .with_sensitivity(0.1, 0.1),
+            .with_sensitivity(0.1, 0.1)
+            .with_speed(5.),
         )
         .add_bundle(TransformBundle)
         .add_bundle(
@@ -186,7 +187,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         );
 
-    let mut game = Application::build(assets_dir, ExampleState)?
+    let game = Application::build(assets_dir, ExampleState)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 60)
         .build(builder)?;
 

@@ -6,7 +6,6 @@ use amethyst_core::{
     transform::Transform,
 };
 use glsl_layout::*;
-use rendy::descriptor::DescriptorType;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

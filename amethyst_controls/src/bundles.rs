@@ -103,7 +103,7 @@ impl SystemBundle for FlyControlBundle {
         builder.add_system(Box::new(MouseFocusUpdateSystem { reader }));
 
         resources.insert(HideCursor::default());
-        builder.add_system(Box::new(CursorHideSystem));
+        builder.add_thread_local(Box::new(CursorHideSystem));
 
         Ok(())
     }
@@ -175,7 +175,7 @@ impl SystemBundle for ArcBallControlBundle {
         builder.add_system(Box::new(MouseFocusUpdateSystem { reader }));
 
         resources.insert(HideCursor::default());
-        builder.add_system(Box::new(CursorHideSystem));
+        builder.add_thread_local(Box::new(CursorHideSystem));
 
         Ok(())
     }

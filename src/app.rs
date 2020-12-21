@@ -9,11 +9,7 @@ use rayon::ThreadPoolBuilder;
 use sentry::integrations::panic::register_panic_handler;
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
-use winit::{
-    event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
-    platform::run_return::EventLoopExtRunReturn,
-};
+use winit::event::{Event, WindowEvent};
 
 #[cfg(feature = "ui")]
 use crate::ui::UiEvent;
@@ -281,7 +277,7 @@ where
         } else {
             let reader_id = &mut self.event_reader_id;
             self.resources
-                .get_mut::<EventChannel<Event<()>>>()
+                .get_mut::<EventChannel<Event<'_, ()>>>()
                 .unwrap()
                 .read(reader_id)
                 .any(|e| {
@@ -555,7 +551,7 @@ where
         }
         resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         resources.insert(pool);
-        resources.insert(EventChannel::<Event<()>>::with_capacity(2000));
+        resources.insert(EventChannel::<Event<'static, ()>>::with_capacity(2000));
         //resources.insert(EventChannel::<UiEvent>::with_capacity(40));
         resources.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         resources.insert(FrameLimiter::default());

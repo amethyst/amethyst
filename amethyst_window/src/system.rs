@@ -34,17 +34,15 @@ impl System<'_> for WindowSystem {
                         screen_dimensions.dirty = false;
                     }
 
-                    if let size = window.inner_size() {
-                        let (window_width, window_height): (f64, f64) = size.into();
+                    let (window_width, window_height): (f64, f64) = window.inner_size().into();
 
-                        // Send window size changes to the resource
-                        if (window_width, window_height) != (width, height) {
-                            screen_dimensions.update(window_width, window_height);
+                    // Send window size changes to the resource
+                    if (window_width, window_height) != (width, height) {
+                        screen_dimensions.update(window_width, window_height);
 
-                            // We don't need to send the updated size of the window back to the window itself,
-                            // so set dirty to false.
-                            screen_dimensions.dirty = false;
-                        }
+                        // We don't need to send the updated size of the window back to the window itself,
+                        // so set dirty to false.
+                        screen_dimensions.dirty = false;
                     }
                 }),
         )
@@ -54,6 +52,7 @@ impl System<'_> for WindowSystem {
 ///
 /// This system must be active for any `GameState` to receive
 /// any `StateEvent::Window` event into it's `handle_event` method.
+#[derive(Debug)]
 pub struct EventLoopSystem {
     pub(crate) event_loop: EventLoop<()>,
 }

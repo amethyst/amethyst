@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use amethyst_core::{
+    dispatcher::ThreadLocalSystem,
     ecs::*,
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
@@ -177,6 +178,7 @@ impl System<'static> for MouseFocusUpdateSystem {
                     for event in events.read(&mut self.reader) {
                         if let Event::WindowEvent { ref event, .. } = *event {
                             if let WindowEvent::Focused(focused) = *event {
+                                log::debug!("Window was focused.");
                                 focus.is_focused = focused;
                             }
                         }
@@ -191,8 +193,8 @@ impl System<'static> for MouseFocusUpdateSystem {
 #[derive(Debug)]
 pub struct CursorHideSystem;
 
-impl System<'_> for CursorHideSystem {
-    fn build(&mut self) -> Box<dyn systems::ParallelRunnable> {
+impl ThreadLocalSystem<'_> for CursorHideSystem {
+    fn build(&mut self) -> Box<dyn systems::Runnable> {
         let mut is_hidden = false;
 
         Box::new(
@@ -204,14 +206,14 @@ impl System<'_> for CursorHideSystem {
                     #[cfg(feature = "profiler")]
                     profile_scope!("cursor_hide_system");
 
-                    let should_be_hidden = !focus.is_focused && hide.hide;
+                    let should_be_hidden = focus.is_focused && hide.hide;
 
                     if should_be_hidden != is_hidden {
-                        println!("Grabbing Cursor");
-                        window.set_cursor_grab(should_be_hidden);
-                        println!("Hiding Cursor");
-                        window.set_cursor_visible(should_be_hidden);
-                        is_hidden = !is_hidden;
+                        window
+                            .set_cursor_grab(should_be_hidden)
+                            .expect("Failed to set cursor grab state.");
+                        window.set_cursor_visible(!should_be_hidden);
+                        is_hidden = should_be_hidden;
                     }
                 }),
         )

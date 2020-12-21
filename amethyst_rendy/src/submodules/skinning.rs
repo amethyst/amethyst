@@ -15,7 +15,7 @@ use crate::{
     },
     skinning::JointTransforms,
     types::Backend,
-    util::{self, sub_range},
+    util::{self},
 };
 
 /// Provides per-image abstraction for submitting skinned mesh skeletal information.

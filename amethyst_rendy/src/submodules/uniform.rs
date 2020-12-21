@@ -15,7 +15,7 @@ use crate::{
         },
     },
     types::Backend,
-    util::{self, sub_range},
+    util::{self},
 };
 
 /// Provides per-image abstraction for an arbitrary `DescriptorSet`.
