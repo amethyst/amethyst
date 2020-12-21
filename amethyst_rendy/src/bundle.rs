@@ -970,7 +970,7 @@ mod tests {
             format!("{:?}", manual_graph)
         );
     }
-    /*
+
     #[test]
     #[ignore] // CI can't run tests requiring actual backend
     #[cfg(feature = "window")]
@@ -1058,5 +1058,5 @@ mod tests {
             format!("{:?}", planned_graph),
             format!("{:?}", manual_graph)
         );
-    }*/
+    }
 }
