@@ -3,14 +3,13 @@ use amethyst_assets::{
     LoadStatus, Loader, LoaderBundle,
 };
 use amethyst_core::ecs::{Dispatcher, DispatcherBuilder, Resources, World};
-use std::{path::PathBuf, thread, time::Duration};
+use std::path::PathBuf;
 
 mod common;
 
 fn setup() -> (Dispatcher, World, Resources) {
     common::setup_logger();
     start_asset_daemon(vec![PathBuf::from("tests/assets")]);
-    thread::sleep(Duration::from_secs(5));
     let mut dispatcher_builder = DispatcherBuilder::default();
     let mut world = World::default();
     let mut resources = Resources::default();
@@ -40,13 +39,13 @@ fn a_prefab_can_be_loaded() {
                 .expect("Missing loader");
 
             match loader.get_load_status_handle(prefab_handle.load_handle()) {
+                LoadStatus::Unresolved => (),
                 LoadStatus::Loading => (),
                 LoadStatus::Loaded => break,
                 LoadStatus::DoesNotExist => assert!(false, "Prefab does not exist"),
                 LoadStatus::Error(_) => assert!(false, "Error"),
                 LoadStatus::NotRequested => assert!(false, "NotRequested"),
                 LoadStatus::Unloading => assert!(false, "Unloading"),
-                LoadStatus::Unresolved => assert!(false, "Unresolved"),
             }
         }
         dispatcher.execute(&mut world, &mut resources);
