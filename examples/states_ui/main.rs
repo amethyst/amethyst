@@ -40,7 +40,7 @@ pub fn main() -> amethyst::Result<()> {
     // other assets ('*.ron' files, '*.png' textures, '*.ogg' audio files, ui prefab files, ...) are here
     let assets_dir = app_root.join("examples/states_ui/assets");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         // a lot of other bundles/systems depend on this (without it being explicitly clear), so it
         // makes sense to add it early on
         .add_bundle(TransformBundle::new())?
@@ -86,7 +86,7 @@ pub fn main() -> amethyst::Result<()> {
 
     // creating the Application with the assets_dir, the first Screen, and the game_data with it's
     // systems.
-    let mut game = Application::build(
+    let game = Application::build(
         assets_dir,
         crate::welcome::WelcomeScreen::default(),
         game_data,

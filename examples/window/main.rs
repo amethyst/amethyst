@@ -32,7 +32,7 @@ fn main() -> amethyst::Result<()> {
 
     builder.add_bundle(WindowBundle::from_config_path(display_config_path)?);
 
-    let mut game = Application::build(assets_dir, ExampleState)?.build(builder)?;
+    let game = Application::build(assets_dir, ExampleState)?.build(builder)?;
     game.run();
 
     Ok(())

@@ -195,7 +195,7 @@ fn main() -> amethyst::Result<()> {
     let assets_directory = app_root.join("examples/sprite_camera_follow/assets");
     let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .add_bundle(TransformBundle::new())?
         .add_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(
@@ -213,7 +213,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::build(assets_directory, Example)?.build(game_data)?;
+    let game = Application::build(assets_directory, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }

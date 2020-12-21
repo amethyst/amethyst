@@ -91,7 +91,7 @@ impl SystemBundle for InputBundle {
         }
 
         let reader = resources
-            .get_mut::<EventChannel<Event<()>>>()
+            .get_mut::<EventChannel<Event<'_, ()>>>()
             .expect("Window event channel not found in resources")
             .register_reader();
 

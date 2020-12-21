@@ -27,7 +27,7 @@
 //! # fn main() -> amethyst::Result<()> {
 //! let assets_dir = "./";
 //! let mut builder = DispatcherBuilder::default();
-//! let mut game = Application::build(assets_dir, GameState)?
+//! let game = Application::build(assets_dir, GameState)?
 //!     .with_frame_limit(FrameRateLimitStrategy::Sleep, 60)
 //!     .build(builder)?;
 //! # Ok(())

@@ -1,7 +1,7 @@
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
-use winit::{event::Event, event_loop::EventLoop};
+use winit::event_loop::EventLoop;
 
 use crate::{DisplayConfig, EventLoopSystem, ScreenDimensions, WindowSystem};
 

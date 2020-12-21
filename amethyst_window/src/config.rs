@@ -2,9 +2,10 @@ use std::path::PathBuf;
 
 use log::error;
 use serde::{Deserialize, Serialize};
+#[cfg(target_os = "windows")]
+use winit::platform::windows::IconExtWindows;
 use winit::{
     dpi::Size,
-    platform::windows::IconExtWindows,
     window::{Fullscreen, Icon, WindowAttributes, WindowBuilder},
 };
 
@@ -148,6 +149,7 @@ impl DisplayConfig {
         builder.window = attrs;
         builder = builder.with_window_icon(self.loaded_icon);
 
+        #[cfg(target_os = "windows")]
         if let Some(icon) = self.icon {
             let icon = match Icon::from_path(&icon, None) {
                 Ok(x) => Some(x),

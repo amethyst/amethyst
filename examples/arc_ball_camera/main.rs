@@ -177,7 +177,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         );
 
-    let mut game = Application::build(assets_dir, ExampleState)?
+    let game = Application::build(assets_dir, ExampleState)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 60)
         .build(builder)?;
 

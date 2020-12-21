@@ -53,7 +53,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         );
 
-    let mut game = Application::new(assets_dir, Pong::default(), dispatcher)?;
+    let game = Application::new(assets_dir, Pong::default(), dispatcher)?;
     game.run();
     Ok(())
 }

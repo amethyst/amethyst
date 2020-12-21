@@ -117,7 +117,7 @@ fn main() -> amethyst::Result<()> {
             )
             .with_plugin(RenderShaded3D::default()),
     );
-    let mut game = Application::build(assets_dir, SphereExample)?.build(game_data)?;
+    let game = Application::build(assets_dir, SphereExample)?.build(game_data)?;
     game.run();
     Ok(())
 }

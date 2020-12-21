@@ -141,7 +141,7 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/ui/config/display.ron");
     let assets_dir = app_root.join("examples/ui/assets");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .add_bundle(TransformBundle::new())?
         .add_bundle(InputBundle::<StringBindings>::new())?
@@ -159,7 +159,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Example::default())?
+    let game = Application::build(assets_dir, Example::default())?
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;

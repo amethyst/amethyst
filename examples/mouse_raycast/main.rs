@@ -259,7 +259,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/mouse_raycast/assets/");
     let display_config_path = app_root.join("examples/mouse_raycast/config/display.ron");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .add_bundle(TransformBundle::new())?
         .add_bundle(InputBundle::<StringBindings>::new())?
         .add_bundle(UiBundle::<StringBindings>::new())?
@@ -275,7 +275,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with(MouseRaycastSystem, "MouseRaycastSystem", &["input_system"]);
 
-    let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
+    let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
 
     Ok(())

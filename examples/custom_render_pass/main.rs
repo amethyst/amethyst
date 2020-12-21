@@ -88,7 +88,7 @@ fn main() -> amethyst::Result<()> {
             .with_plugin(RenderCustom::default()),
     );
 
-    let mut game = Application::build(assets_dir, CustomShaderState)?.build(game_data)?;
+    let game = Application::build(assets_dir, CustomShaderState)?.build(game_data)?;
 
     game.run();
     Ok(())

@@ -92,7 +92,7 @@ where
 ///
 ///     // Build the application instance to initialize the default logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
+///     let game = Application::build(assets_dir, NullState)?
 ///         .build(())?;
 ///
 ///     // Now logging can be performed as normal.
@@ -121,7 +121,7 @@ where
 ///     // The default logger will be automatically disabled and any logging amethyst does
 ///     // will go through your custom logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
+///     let game = Application::build(assets_dir, NullState)?
 ///         .build(())?;
 ///
 ///     Ok(())
@@ -185,7 +185,7 @@ where
     /// # fn main() -> amethyst::Result<()> {
     /// #
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?.build(())?;
+    /// let game = Application::build(assets_dir, NullState)?.build(())?;
     /// game.run();
     ///
     /// #  Ok(())
@@ -484,7 +484,7 @@ where
     /// // in the rust ecosystem. Each function modifies the object
     /// // returning a new object with the modified configuration.
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?
+    /// let game = Application::build(assets_dir, NullState)?
     /// // lastly we can build the Application object
     /// // the `build` function takes the user defined game data initializer as input
     ///     .build(())?;
@@ -608,7 +608,7 @@ where
     /// # fn main() -> amethyst::Result<()> {
     /// let score_board = HighScores(Vec::new());
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?
+    /// let game = Application::build(assets_dir, NullState)?
     ///     .with_resource(score_board);
     /// #     Ok(())
     /// # }
@@ -649,7 +649,7 @@ where
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, LoadingState)?
+    /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" under the name "resources".
     ///     .with_source("custom_store", Directory::new("custom_directory"))
     ///     .build(DispatcherBuilder::default())?
@@ -704,7 +704,7 @@ where
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, LoadingState)?
+    /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" as default source for the loader.
     ///     .with_default_source(Directory::new("custom_directory"))
     ///     .build(DispatcherBuilder::default())?

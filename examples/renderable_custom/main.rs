@@ -201,7 +201,7 @@ fn main() -> Result<(), Error> {
         .join("config")
         .join("display.ron");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
         .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
@@ -244,7 +244,7 @@ fn main() -> Result<(), Error> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
+    let game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
     game.run();
     Ok(())
 }

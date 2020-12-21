@@ -147,7 +147,7 @@ fn main() -> amethyst::Result<()> {
             .with_plugin(RenderPbr3D::default()),
     );
 
-    let mut game = Application::build(assets_dir, Example)?.build(builder)?;
+    let game = Application::build(assets_dir, Example)?.build(builder)?;
     game.run();
     Ok(())
 }

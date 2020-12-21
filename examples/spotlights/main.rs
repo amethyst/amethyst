@@ -35,7 +35,7 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/spotlights/config/display.ron");
     let assets_dir = app_root.join("examples/spotlights/assets/");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .add_bundle(TransformBundle::new())?
         .add_bundle(
@@ -47,7 +47,7 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderPbr3D::default()),
         )?;
-    let mut game = Application::build(assets_dir, Example)?.build(game_data)?;
+    let game = Application::build(assets_dir, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }

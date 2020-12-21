@@ -136,7 +136,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/sprite_animation/assets/");
     let display_config_path = app_root.join("examples/sprite_animation/config/display.ron");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with_system_desc(
             PrefabLoaderSystemDesc::<MyPrefabData>::default(),
             "scene_loader",
@@ -160,7 +160,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
+    let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
 
     Ok(())

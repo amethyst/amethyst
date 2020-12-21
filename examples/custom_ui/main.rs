@@ -8,8 +8,10 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::RenderToWindow,
-        rendy::hal::command::ClearColor,
-        rendy::mesh::{Normal, Position, TexCoord},
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, TexCoord},
+        },
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -97,7 +99,7 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/custom_ui/config/display.ron");
     let assets_dir = app_root.join("examples/custom_ui/assets");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .add_bundle(TransformBundle::new())?
         .add_bundle(InputBundle::<StringBindings>::new())?
@@ -112,7 +114,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Example)?.build(game_data)?;
+    let game = Application::build(assets_dir, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }

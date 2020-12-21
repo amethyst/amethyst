@@ -51,7 +51,11 @@ impl InputHandler {
     ///
     /// The Amethyst game engine will automatically call this if the InputHandler is attached to
     /// the world as a resource.
-    pub fn send_event(&mut self, event: &Event<()>, event_handler: &mut EventChannel<InputEvent>) {
+    pub fn send_event(
+        &mut self,
+        event: &Event<'_, ()>,
+        event_handler: &mut EventChannel<InputEvent>,
+    ) {
         match *event {
             Event::WindowEvent { ref event, .. } => match *event {
                 WindowEvent::ReceivedCharacter(c) => {
@@ -774,8 +778,6 @@ mod tests {
     };
 
     use super::*;
-
-    const HIDPI: f32 = 1.0;
 
     #[test]
     fn key_action_response() {

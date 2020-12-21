@@ -32,7 +32,7 @@ fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
     let assets_dir = app_root.join("examples/optional_graphics/assets/");
     let mut game_data = DispatcherBuilder::default();
-    let mut game: CoreApplication<GameData>;
+    let game: CoreApplication<GameData>;
 
     if _render_graphics {
         let display_config_path = app_root.join("examples/optional_graphics/config/display.ron");

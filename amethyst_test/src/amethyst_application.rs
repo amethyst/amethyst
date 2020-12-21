@@ -167,7 +167,7 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let game_data = bundle_add_fns.into_iter().fold(
+        let mut game_data = bundle_add_fns.into_iter().fold(
             Ok(DispatcherBuilder::default()),
             |game_data: Result<GameDataBuilder<'_, '_>, Error>, function: BundleAddFn| {
                 game_data.and_then(function)

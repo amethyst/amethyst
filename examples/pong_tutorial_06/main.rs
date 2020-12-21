@@ -61,7 +61,7 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = app_root.join("examples/pong_tutorial_06/assets/");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         // Add the transform bundle which handles tracking entity positions
         .add_bundle(TransformBundle::new())?
         .add_bundle(
@@ -88,7 +88,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Pong::default())?
+    let game = Application::build(assets_dir, Pong::default())?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,

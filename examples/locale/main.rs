@@ -87,7 +87,7 @@ fn main() -> Result<(), Error> {
 
     builder.add_bundle(AssetProcessorSystemBundle::<Locale>::default());
 
-    let mut game = Application::new(assets_dir, Example::new(), builder)?;
+    let game = Application::new(assets_dir, Example::new(), builder)?;
     game.run();
     Ok(())
 }
