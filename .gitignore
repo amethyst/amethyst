@@ -5,6 +5,7 @@ amethyst_renderer/target
 book/book
 target
 *.log
+Cargo.lock
 
 # Backup files
 .DS_Store
