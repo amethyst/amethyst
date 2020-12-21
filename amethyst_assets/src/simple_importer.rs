@@ -1,7 +1,5 @@
 use std::io::Read;
 
-// FIXME
-// pub use atelier_importer::SourceFileImporter;
 use atelier_importer::{
     self as importer, BoxedImporter, ImportedAsset, Importer, ImporterValue, SerdeObj,
 };

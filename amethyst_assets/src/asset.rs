@@ -4,7 +4,7 @@ use amethyst_error::{Error, ResultExt};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{processor::ProcessingState, FormatRegisteredData, Reload, SingleFile, Source};
+use crate::{processor::ProcessingState, FormatRegisteredData, Source};
 
 /// One of the three core traits of this crate.
 ///
@@ -68,34 +68,13 @@ pub trait Format<D: 'static>: objekt::Clone + Debug + Send + Sync + 'static {
     ///
     /// You can implement `import_simple` instead of simpler formats.
     ///
-    /// ## Reload
-    ///
-    /// The reload structure has metadata which allows the asset management
-    /// to reload assets if necessary (for hot reloading).
-    /// You should only create `Reload` when `create_reload` is `Some`.
-    /// Also, the parameter is just a request, which means it's optional either way.
-    fn import(
-        &self,
-        name: String,
-        source: Arc<dyn Source>,
-        create_reload: Option<Box<dyn Format<D>>>,
-    ) -> Result<FormatValue<D>, Error> {
+    fn import(&self, name: String, source: Arc<dyn Source>) -> Result<FormatValue<D>, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("import_asset");
-        if let Some(boxed_format) = create_reload {
-            let (b, m) = source
-                .load_with_metadata(&name)
-                .with_context(|_| crate::error::Error::Source)?;
-            Ok(FormatValue {
-                data: self.import_simple(b)?,
-                reload: Some(Box::new(SingleFile::new(boxed_format, m, name, source))),
-            })
-        } else {
-            let b = source
-                .load(&name)
-                .with_context(|_| crate::error::Error::Source)?;
-            Ok(FormatValue::data(self.import_simple(b)?))
-        }
+        let b = source
+            .load(&name)
+            .with_context(|_| crate::error::Error::Source)?;
+        Ok(FormatValue::data(self.import_simple(b)?))
     }
 }
 
@@ -124,13 +103,8 @@ impl<D: 'static> Format<D> for Box<dyn Format<D>> {
         self.deref().import_simple(bytes)
     }
 
-    fn import(
-        &self,
-        name: String,
-        source: Arc<dyn Source>,
-        create_reload: Option<Box<dyn Format<D>>>,
-    ) -> Result<FormatValue<D>, Error> {
-        self.deref().import(name, source, create_reload)
+    fn import(&self, name: String, source: Arc<dyn Source>) -> Result<FormatValue<D>, Error> {
+        self.deref().import(name, source)
     }
 }
 
@@ -142,13 +116,8 @@ impl<D: 'static> Format<D> for Box<dyn SerializableFormat<D>> {
         self.deref().import_simple(bytes)
     }
 
-    fn import(
-        &self,
-        name: String,
-        source: Arc<dyn Source>,
-        create_reload: Option<Box<dyn Format<D>>>,
-    ) -> Result<FormatValue<D>, Error> {
-        self.deref().import(name, source, create_reload)
+    fn import(&self, name: String, source: Arc<dyn Source>) -> Result<FormatValue<D>, Error> {
+        self.deref().import(name, source)
     }
 }
 
@@ -158,13 +127,11 @@ impl<D: FormatRegisteredData + 'static> SerializableFormat<D> for Box<dyn Serial
 pub struct FormatValue<D> {
     /// The format data.
     pub data: D,
-    /// An optional reload structure
-    pub reload: Option<Box<dyn Reload<D>>>,
 }
 
 impl<D> FormatValue<D> {
-    /// Creates a `FormatValue` from only the data (setting `reload` to `None`).
+    /// Creates a `FormatValue` from only the data.
     pub fn data(data: D) -> Self {
-        FormatValue { data, reload: None }
+        FormatValue { data }
     }
 }

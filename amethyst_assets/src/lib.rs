@@ -25,7 +25,6 @@ mod loader;
 pub mod prefab;
 mod processor;
 mod progress;
-mod reload;
 mod simple_importer;
 mod source;
 mod storage;
@@ -51,7 +50,6 @@ pub use crate::{
     loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
     processor::{AddToDispatcher, DefaultProcessor, ProcessingQueue, ProcessingState},
     progress::{Completion, Progress, ProgressCounter, Tracker},
-    reload::{build_hot_reload_system, HotReloadBundle, HotReloadStrategy, Reload, SingleFile},
     simple_importer::{SimpleImporter, SourceFileImporter},
     source::{Directory, Source},
     storage::AssetStorage,
