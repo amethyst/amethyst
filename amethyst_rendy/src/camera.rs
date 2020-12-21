@@ -7,6 +7,7 @@ use amethyst_core::{
     math::{Matrix4, Point2, Point3, Vector2},
     transform::Transform,
 };
+use type_uuid::TypeUuid;
 // use amethyst_error::Error;
 
 /// Camera struct.
@@ -32,7 +33,8 @@ use amethyst_core::{
 ///
 /// If you change `matrix` you must also change `inverse` so that they stay in sync.
 /// You should probably use from_matrix instead.
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, TypeUuid)]
+#[uuid = "56946ce2-356e-4038-82ad-e55a69ddfde9"]
 pub struct Camera {
     /// The projection matrix
     pub matrix: Matrix4<f32>,
