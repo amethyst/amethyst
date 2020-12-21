@@ -3349,7 +3349,7 @@ dependencies = [
 [[package]]
 name = "rendy"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "rendy-command",
  "rendy-core",
@@ -3370,7 +3370,7 @@ dependencies = [
 [[package]]
 name = "rendy-chain"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "log",
  "rendy-core",
@@ -3380,7 +3380,7 @@ dependencies = [
 [[package]]
 name = "rendy-command"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "relevant",
  "rendy-core",
@@ -3391,7 +3391,7 @@ dependencies = [
 [[package]]
 name = "rendy-core"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "gfx-backend-empty",
  "gfx-backend-metal",
@@ -3408,7 +3408,7 @@ dependencies = [
 [[package]]
 name = "rendy-descriptor"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "gfx-hal",
  "log",
@@ -3419,7 +3419,7 @@ dependencies = [
 [[package]]
 name = "rendy-factory"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "either",
  "log",
@@ -3439,7 +3439,7 @@ dependencies = [
 [[package]]
 name = "rendy-frame"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "either",
  "log",
@@ -3456,7 +3456,7 @@ dependencies = [
 [[package]]
 name = "rendy-graph"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "bitflags",
  "either",
@@ -3479,7 +3479,7 @@ dependencies = [
 [[package]]
 name = "rendy-init"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "log",
  "rendy-command",
@@ -3492,7 +3492,7 @@ dependencies = [
 [[package]]
 name = "rendy-memory"
 version = "0.5.3"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "colorful",
  "gfx-hal",
@@ -3507,7 +3507,7 @@ dependencies = [
 [[package]]
 name = "rendy-mesh"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "log",
  "rendy-command",
@@ -3524,7 +3524,7 @@ dependencies = [
 [[package]]
 name = "rendy-resource"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "crossbeam-channel 0.5.0",
  "log",
@@ -3538,7 +3538,7 @@ dependencies = [
 [[package]]
 name = "rendy-shader"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "log",
  "rendy-core",
@@ -3552,7 +3552,7 @@ dependencies = [
 [[package]]
 name = "rendy-texture"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "image 0.22.5",
  "log",
@@ -3568,7 +3568,7 @@ dependencies = [
 [[package]]
 name = "rendy-wsi"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#c7f94e78e142547de81f5746effc359a13b673b4"
 dependencies = [
  "log",
  "relevant",
