@@ -111,6 +111,7 @@ dependencies = [
  "derive-new",
  "erased-serde",
  "err-derive",
+ "fern",
  "fnv",
  "futures-executor",
  "inventory",
