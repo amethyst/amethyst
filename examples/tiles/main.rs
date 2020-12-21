@@ -5,9 +5,7 @@ use amethyst::{
         transform::{Parent, Transform, TransformBundle},
         Named,
     },
-    ecs::{
-        Entity, Resources
-    },
+    ecs::{Entity, Resources},
     input::{is_close_requested, is_key_down, InputBundle},
     prelude::*,
     renderer::{

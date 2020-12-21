@@ -68,7 +68,7 @@ pub struct Named {
 }
 
 impl Named {
-    /// Creates a new instance of `Named` 
+    /// Creates a new instance of `Named`
     pub fn new<T: Into<Cow<'static, str>>>(name: T) -> Self {
         Named { name: name.into() }
     }

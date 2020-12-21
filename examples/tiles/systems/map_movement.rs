@@ -1,9 +1,12 @@
-use amethyst::{core::{Time, math::Vector3, transform::Transform}, ecs::{ParallelRunnable, System,IntoQuery}, input::InputHandler};
+use amethyst::{
+    core::{math::Vector3, transform::Transform, Time},
+    ecs::{IntoQuery, ParallelRunnable, System},
+    input::InputHandler,
+};
 use amethyst_tiles::{MortonEncoder, TileMap};
 use legion::SystemBuilder;
 
 use crate::ExampleTile;
-
 
 pub(crate) struct MapMovementSystem {
     rotate: bool,
@@ -26,7 +29,7 @@ impl System<'static> for MapMovementSystem {
                 .read_resource::<Time>()
                 .read_resource::<InputHandler>()
                 .with_query(<(&TileMap<ExampleTile, MortonEncoder>, &mut Transform)>::query())
-                .build( move |_commands, world, (time, input), query| {
+                .build(move |_commands, world, (time, input), query| {
                     if input.action_is_down("toggle_rotation").unwrap() {
                         self.rotate ^= true;
                     }
@@ -48,7 +51,7 @@ impl System<'static> for MapMovementSystem {
                             }
                         }
                     }
-                })
+                }),
         )
     }
 }

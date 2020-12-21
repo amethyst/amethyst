@@ -40,7 +40,7 @@ impl System<'_> for TransformSystem {
                         }
 
                         // Update parent transforms for entities in the hierarchy
-                        // Ideally we would check if the linked parent entity exists before 
+                        // Ideally we would check if the linked parent entity exists before
                         // accessing it's Transform component, but as the parent_update_system panics
                         // in both cases it is ok to just unwrap/expect here.
                         let (left, mut right) = world.split_for_query(query_parent);
