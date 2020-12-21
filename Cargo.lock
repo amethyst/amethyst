@@ -129,7 +129,7 @@ dependencies = [
  "log",
  "rodio",
  "serde",
- "smallvec 1.5.1",
+ "smallvec",
  "thread_profiler",
 ]
 
@@ -178,7 +178,7 @@ dependencies = [
  "shrev",
  "shrinkwraprs",
  "simba",
- "smallvec 1.5.1",
+ "smallvec",
  "thread_profiler",
 ]
 
@@ -193,8 +193,8 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.24",
  "proc_macro_roids",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -218,7 +218,7 @@ dependencies = [
  "fnv",
  "sdl2",
  "serde",
- "smallvec 1.5.1",
+ "smallvec",
  "thread_profiler",
  "winit",
 ]
@@ -275,7 +275,7 @@ dependencies = [
  "rendy",
  "ron",
  "serde",
- "smallvec 1.5.1",
+ "smallvec",
  "static_assertions 1.1.0",
  "thread_profiler",
  "winit",
@@ -456,7 +456,7 @@ dependencies = [
  "lazycell",
  "peeking_take_while",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
+ "quote 1.0.8",
  "regex",
  "rustc-hash",
  "shlex",
@@ -1053,8 +1053,8 @@ version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fbaabec2c953050352311293be5c6aba8e141ba19d6811862b232d6fd020484"
 dependencies = [
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -1076,9 +1076,9 @@ dependencies = [
  "fnv",
  "ident_case",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
+ "quote 1.0.8",
  "strsim",
- "syn 1.0.54",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -1088,8 +1088,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9b5a2f4ac4969822c62224815d069952656cadc7084fdca9751e6d959189b72"
 dependencies = [
  "darling_core",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -1129,8 +1129,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb582b60359da160a9477ee80f15c8d784c477e69c217ef2cdd4169c24ea380f"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -1140,8 +1140,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71f31892cd5c62e414316f2963c5689242c43d8e7bbcaaeca97e5e28c95d91d9"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -1237,9 +1237,9 @@ checksum = "22deed3a8124cff5fa835713fa105621e43bbdc46690c3a6b68328a012d350d4"
 dependencies = [
  "proc-macro-error",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
+ "quote 1.0.8",
  "rustversion",
- "syn 1.0.54",
+ "syn 1.0.55",
  "synstructure",
 ]
 
@@ -1260,8 +1260,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa4da3c766cd7a0db8242e326e9e4e081edd567072893ed320008189715366a4"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
  "synstructure",
 ]
 
@@ -1296,7 +1296,7 @@ dependencies = [
  "intl-memoizer",
  "intl_pluralrules",
  "rental",
- "smallvec 1.5.1",
+ "smallvec",
  "unic-langid",
 ]
 
@@ -1467,8 +1467,8 @@ checksum = "24b328c01a4d71d2d8173daa93562a73ab0fe85616876f02500f53d82948c504"
 dependencies = [
  "proc-macro-error",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -1514,7 +1514,7 @@ dependencies = [
  "parking_lot 0.11.1",
  "range-alloc",
  "raw-window-handle",
- "smallvec 1.5.1",
+ "smallvec",
  "spirv_cross",
  "storage-map",
 ]
@@ -1534,7 +1534,7 @@ dependencies = [
  "log",
  "objc",
  "raw-window-handle",
- "smallvec 1.5.1",
+ "smallvec",
  "winapi 0.3.9",
  "x11",
 ]
@@ -1557,8 +1557,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a5bcf1bbeab73aa4cf2fde60a846858dc036163c7c33bec309f8d17de785479"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -1599,8 +1599,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "def9469f08de9930cae4c4e7d88b059cce0765a0ffdf6108ecc96568e801516d"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -1624,8 +1624,8 @@ checksum = "f6636de7bf52227363554f1ca2d9cd180fc666129ddd0933097e1f227dfa7293"
 dependencies = [
  "inflections",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -1684,9 +1684,9 @@ checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 
 [[package]]
 name = "heck"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20564e78d53d2bb135c343b3f47714a56af2061f1c928fdb541dc7b9fdd94205"
+checksum = "87cbf45460356b7deeb5e3415b5563308c0a9b057c85e12b06ad551f98d0a6ac"
 dependencies = [
  "unicode-segmentation",
 ]
@@ -1943,8 +1943,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75c094e94816723ab936484666968f5b58060492e880f3c8d00489a1e244fa51"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -2065,7 +2065,7 @@ dependencies = [
  "paste",
  "rayon",
  "serde",
- "smallvec 1.5.1",
+ "smallvec",
  "thiserror",
  "uuid",
 ]
@@ -2077,8 +2077,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c24e58060e656eae6b87f83f14f41080656a930fba7ef299122e40eb8ccd307f"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
  "thiserror",
 ]
 
@@ -2443,8 +2443,8 @@ dependencies = [
  "darling",
  "proc-macro-crate",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -2613,8 +2613,8 @@ checksum = "ffa5a33ddddfee04c0283a7653987d634e880347e96b5b2ed64de07efb59db9d"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -2738,17 +2738,6 @@ dependencies = [
 
 [[package]]
 name = "parking_lot"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f842b1982eb6c2fe34036a4fbfb06dd185a3f5c8edfaacdf7d1ea10b07de6252"
-dependencies = [
- "lock_api 0.3.4",
- "parking_lot_core 0.6.2",
- "rustc_version",
-]
-
-[[package]]
-name = "parking_lot"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3a704eb390aafdc107b0e392f56a82b668e3a71366993b5340f5833fd62505e"
@@ -2770,21 +2759,6 @@ dependencies = [
 
 [[package]]
 name = "parking_lot_core"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b876b1b9e7ac6e1a74a6da34d25c42e17e8862aa409cbbbdcfc8d86c6f3bc62b"
-dependencies = [
- "cfg-if 0.1.10",
- "cloudabi",
- "libc",
- "redox_syscall",
- "rustc_version",
- "smallvec 0.6.13",
- "winapi 0.3.9",
-]
-
-[[package]]
-name = "parking_lot_core"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d58c7c768d4ba344e3e8d72518ac13e259d7c7ade24167003b8488e10b6740a3"
@@ -2793,7 +2767,7 @@ dependencies = [
  "cloudabi",
  "libc",
  "redox_syscall",
- "smallvec 1.5.1",
+ "smallvec",
  "winapi 0.3.9",
 ]
 
@@ -2807,7 +2781,7 @@ dependencies = [
  "instant",
  "libc",
  "redox_syscall",
- "smallvec 1.5.1",
+ "smallvec",
  "winapi 0.3.9",
 ]
 
@@ -2892,8 +2866,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65ad2ae56b6abe3a1ee25f15ee605bacadb9a764edaba9c2bf4103800d4a1895"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -2903,8 +2877,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8e8d2bf0b23038a4424865103a4df472855692821aab4e4f5c3312d461d9e5f"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -2990,8 +2964,8 @@ checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
 dependencies = [
  "proc-macro-error-attr",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
  "version_check",
 ]
 
@@ -3002,7 +2976,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
+ "quote 1.0.8",
  "version_check",
 ]
 
@@ -3037,8 +3011,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06675fa2c577f52bcf77fbb511123927547d154faa08097cc012c66ec3c9611a"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -3058,9 +3032,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.7"
+version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa563d17ecb180e500da1cfd2b028310ac758de548efdd203e18f283af693f37"
+checksum = "991431c3519a3f36861882da93630ce66b52918dcf1b8e2fd66b397fc96f28df"
 dependencies = [
  "proc-macro2 1.0.24",
 ]
@@ -3375,7 +3349,7 @@ dependencies = [
 [[package]]
 name = "rendy"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "rendy-command",
  "rendy-core",
@@ -3396,7 +3370,7 @@ dependencies = [
 [[package]]
 name = "rendy-chain"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "log",
  "rendy-core",
@@ -3406,18 +3380,18 @@ dependencies = [
 [[package]]
 name = "rendy-command"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "relevant",
  "rendy-core",
- "smallvec 1.5.1",
+ "smallvec",
  "thread_profiler",
 ]
 
 [[package]]
 name = "rendy-core"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "gfx-backend-empty",
  "gfx-backend-metal",
@@ -3425,7 +3399,7 @@ dependencies = [
  "gfx-hal",
  "lazy_static",
  "log",
- "parking_lot 0.9.0",
+ "parking_lot 0.11.1",
  "raw-window-handle",
  "serde",
  "thread_profiler",
@@ -3434,22 +3408,22 @@ dependencies = [
 [[package]]
 name = "rendy-descriptor"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "gfx-hal",
  "log",
  "relevant",
- "smallvec 1.5.1",
+ "smallvec",
 ]
 
 [[package]]
 name = "rendy-factory"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "either",
  "log",
- "parking_lot 0.9.0",
+ "parking_lot 0.11.1",
  "relevant",
  "rendy-command",
  "rendy-core",
@@ -3458,14 +3432,14 @@ dependencies = [
  "rendy-resource",
  "rendy-wsi",
  "serde",
- "smallvec 1.5.1",
+ "smallvec",
  "thread_profiler",
 ]
 
 [[package]]
 name = "rendy-frame"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "either",
  "log",
@@ -3475,14 +3449,14 @@ dependencies = [
  "rendy-factory",
  "rendy-memory",
  "rendy-resource",
- "smallvec 1.5.1",
+ "smallvec",
  "thread_profiler",
 ]
 
 [[package]]
 name = "rendy-graph"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "bitflags",
  "either",
@@ -3498,27 +3472,27 @@ dependencies = [
  "rendy-resource",
  "rendy-shader",
  "rendy-wsi",
- "smallvec 1.5.1",
+ "smallvec",
  "thread_profiler",
 ]
 
 [[package]]
 name = "rendy-init"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "log",
  "rendy-command",
  "rendy-core",
  "rendy-factory",
  "rendy-wsi",
- "smallvec 1.5.1",
+ "smallvec",
 ]
 
 [[package]]
 name = "rendy-memory"
 version = "0.5.3"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "colorful",
  "gfx-hal",
@@ -3527,13 +3501,13 @@ dependencies = [
  "relevant",
  "serde",
  "slab",
- "smallvec 1.5.1",
+ "smallvec",
 ]
 
 [[package]]
 name = "rendy-mesh"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "log",
  "rendy-command",
@@ -3543,42 +3517,42 @@ dependencies = [
  "rendy-resource",
  "serde",
  "serde_bytes",
- "smallvec 1.5.1",
+ "smallvec",
  "wavefront_obj",
 ]
 
 [[package]]
 name = "rendy-resource"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
- "crossbeam-channel 0.3.9",
+ "crossbeam-channel 0.5.0",
  "log",
  "relevant",
  "rendy-core",
  "rendy-descriptor",
  "rendy-memory",
- "smallvec 1.5.1",
+ "smallvec",
 ]
 
 [[package]]
 name = "rendy-shader"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "log",
  "rendy-core",
  "rendy-factory",
  "serde",
  "shaderc",
- "smallvec 1.5.1",
+ "smallvec",
  "spirv-reflect",
 ]
 
 [[package]]
 name = "rendy-texture"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "image 0.22.5",
  "log",
@@ -3594,14 +3568,14 @@ dependencies = [
 [[package]]
 name = "rendy-wsi"
 version = "0.5.1"
-source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#0f7becf360d79222b1c19b39bbbbade532a66214"
+source = "git+https://github.com/radium-io/rendy?branch=upgrade-gfx#d3bf84e508e6606d8dad9db0f728f44bfdb5be8e"
 dependencies = [
  "log",
  "relevant",
  "rendy-core",
  "rendy-memory",
  "rendy-resource",
- "smallvec 1.5.1",
+ "smallvec",
 ]
 
 [[package]]
@@ -3621,8 +3595,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "475e68978dc5b743f2f40d8e0a8fdc83f1c5e78cbf4b8fa5e74e73beebc340de"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -3920,8 +3894,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c84d3526699cd55261af4b941e4e725444df67aa4f9e6a3564f18030d12672df"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -3949,9 +3923,9 @@ dependencies = [
 
 [[package]]
 name = "shaderc"
-version = "0.6.3"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50b8aeaae10b9bda5cba66736a7e265f67698e912e1cc6a4678acba286e22be9"
+checksum = "03f0cb8d1f8667fc9c50d5054be830a117af5f9a15f87c66b72bbca0c2fca484"
 dependencies = [
  "libc",
  "shaderc-sys",
@@ -3959,9 +3933,9 @@ dependencies = [
 
 [[package]]
 name = "shaderc-sys"
-version = "0.6.3"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b12d7c62d6732884c9dfab587503fa3a795b108df152415a89da23812d4737e"
+checksum = "c89175f80244b82f882033a81bd188f87307c4c39b2fe8d0f194314f270bdea9"
 dependencies = [
  "cmake",
  "libc",
@@ -3984,19 +3958,19 @@ dependencies = [
  "mopa",
  "rayon",
  "shred-derive",
- "smallvec 1.5.1",
+ "smallvec",
  "tynm",
 ]
 
 [[package]]
 name = "shred-derive"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1f37080f2751fbf091dbdebaa95bd6cf9dbf74ad1d50396b1908518a1747fdf"
+checksum = "d5404c36bd155e41a54276ab6aafedad2fb627e5e5849d36ec439c9ddc044a2f"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -4014,8 +3988,8 @@ dependencies = [
  "bitflags",
  "itertools 0.8.2",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -4065,15 +4039,6 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "0.6.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7b0758c52e15a8b5e3691eae6cc559f08eee9406e548a4477ba4e67770a82b6"
-dependencies = [
- "maybe-uninit",
-]
-
-[[package]]
-name = "smallvec"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae524f056d7d770e174287294f562e95044c68e88dec909a00d2094805db9d75"
@@ -4103,9 +4068,9 @@ dependencies = [
 
 [[package]]
 name = "socket2"
-version = "0.3.18"
+version = "0.3.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97e0e9fd577458a4f61fb91fcb559ea2afecc54c934119421f9f5d3d5b1a1057"
+checksum = "122e570113d28d773067fab24266b66753f6ea915758651696b6e35e49f88d6e"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
@@ -4135,8 +4100,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e23e09360f3d2190fec4222cd9e19d3158d5da948c0d1ea362df617dd103511"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -4248,12 +4213,12 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.54"
+version = "1.0.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a2af957a63d6bd42255c359c93d9bfdb97076bd3b820897ce55ffbfbf107f44"
+checksum = "a571a711dddd09019ccc628e1b17fe87c59b09d513c06c026877aa708334f37a"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
+ "quote 1.0.8",
  "unicode-xid 0.2.1",
 ]
 
@@ -4264,8 +4229,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b834f2d66f734cb897113e34aaff2f1ab4719ca946f9a7358dba8f8064148701"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
  "unicode-xid 0.2.1",
 ]
 
@@ -4317,8 +4282,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ba20f23e85b10754cd195504aebf6a27e2e6cbe28c17778a0c930724628dd56"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
 ]
 
 [[package]]
@@ -4578,8 +4543,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0098f77bd754f8fb7850cdf4ab143aa821898c4ac6dc16bcb2aa3e62ce858d1"
 dependencies = [
  "proc-macro-hack",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
  "unic-langid-impl",
 ]
 
@@ -4734,8 +4699,8 @@ dependencies = [
  "lazy_static",
  "log",
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
  "wasm-bindgen-shared",
 ]
 
@@ -4757,7 +4722,7 @@ version = "0.2.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a6ac8995ead1f084a8dea1e65f194d0973800c7f571f6edd70adf06ecf77084"
 dependencies = [
- "quote 1.0.7",
+ "quote 1.0.8",
  "wasm-bindgen-macro-support",
 ]
 
@@ -4768,8 +4733,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5a48c72f299d80557c7c62e37e7225369ecc0c963964059509fbafe917c7549"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.54",
+ "quote 1.0.8",
+ "syn 1.0.55",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -4782,9 +4747,9 @@ checksum = "7e7811dd7f9398f14cc76efd356f98f03aa30419dea46aa810d71e819fc97158"
 
 [[package]]
 name = "wavefront_obj"
-version = "6.0.0"
+version = "9.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2486d70e5d40dec6d541a69c88b730a41315d3fa82529f7180a07778a47a343"
+checksum = "47b6b28318a2e9f85cda1a3a6af8f71e7c0b622eab884ca13e3d08e8861fe08f"
 dependencies = [
  "lexical",
 ]
@@ -4813,7 +4778,7 @@ checksum = "230b3ffeda101f877ff8ecb8573f5d26e7beb345b197807c4df34ec06879a3e6"
 dependencies = [
  "nix",
  "once_cell",
- "smallvec 1.5.1",
+ "smallvec",
  "wayland-sys",
 ]
 
@@ -4847,7 +4812,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ee5bd43a1d746efc486515fec561e47205f328b74802b959f10f5500f7e56cc"
 dependencies = [
  "proc-macro2 1.0.24",
- "quote 1.0.7",
+ "quote 1.0.8",
  "xml-rs",
 ]
 
