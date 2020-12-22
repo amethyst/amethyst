@@ -12,7 +12,7 @@ license = "MIT/Apache-2.0"
 features = ["shader-compiler", "test-support", "winit", "vulkan"]
 
 [dependencies]
-rendy = { git = "https://github.com/radium-io/rendy", branch = "upgrade-gfx", default-features = false, features = [
+rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = [
     "base",
     "mesh-obj",
     "texture-image",
