@@ -1,4 +1,4 @@
-use winit::Event;
+use winit::event::Event;
 
 #[cfg(feature = "ui")]
 use crate::ui::UiEvent;
@@ -18,7 +18,7 @@ use crate::{
 #[reader(StateEventReader)]
 pub enum StateEvent {
     /// Events sent by the winit window.
-    Window(Event),
+    Window(Event<'static, ()>),
     /// Events sent by the ui system.
     #[cfg(feature = "ui")]
     Ui(UiEvent),

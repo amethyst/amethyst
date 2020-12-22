@@ -54,7 +54,7 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawDebugLinesDesc {
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -193,7 +193,7 @@ fn build_lines_pipeline<B: Backend>(
     framebuffer_width: u32,
     framebuffer_height: u32,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()
@@ -207,7 +207,7 @@ fn build_lines_pipeline<B: Backend>(
         .with_pipeline(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(DebugLine::vertex(), pso::VertexInputRate::Instance(1))])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
+                .with_input_assembler(pso::InputAssemblerDesc::new(pso::Primitive::TriangleStrip))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),

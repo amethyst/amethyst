@@ -16,7 +16,10 @@ use amethyst::{
         formats::GraphicsPrefab,
         light::LightPrefab,
         plugins::{RenderShaded3D, RenderToWindow},
-        rendy::mesh::{Normal, Position, Tangent, TexCoord},
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, Tangent, TexCoord},
+        },
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -32,7 +35,9 @@ use amethyst::{
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 
-const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+const CLEAR_COLOR: ClearColor = ClearColor {
+    float32: [0.0, 0.0, 0.0, 1.0],
+};
 
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
@@ -41,7 +46,7 @@ fn main() -> Result<(), Error> {
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
     let assets_dir = app_dir.join("auto_fov/assets");
 
-    let game_data = DispatcherBuilder::new()
+    let mut game_data = DispatcherBuilder::new()
         .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefab>::default(),
             "prefab",
@@ -63,7 +68,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Loading::new())?.build(game_data)?;
+    let game = Application::build(assets_dir, Loading::new())?.build(game_data)?;
     game.run();
 
     Ok(())

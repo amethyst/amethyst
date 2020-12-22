@@ -4,7 +4,10 @@ use amethyst::{
     core::transform::TransformBundle,
     input::{InputBundle, StringBindings},
     prelude::*,
-    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
+    renderer::{
+        plugins::RenderToWindow, rendy::hal::command::ClearColor, types::DefaultBackend,
+        RenderingBundle,
+    },
     ui::{RenderUi, UiBundle},
     utils::{application_root_dir, fps_counter::FpsCounterBundle},
 };
@@ -37,7 +40,7 @@ pub fn main() -> amethyst::Result<()> {
     // other assets ('*.ron' files, '*.png' textures, '*.ogg' audio files, ui prefab files, ...) are here
     let assets_dir = app_root.join("examples/states_ui/assets");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         // a lot of other bundles/systems depend on this (without it being explicitly clear), so it
         // makes sense to add it early on
         .add_bundle(TransformBundle::new())?
@@ -70,8 +73,9 @@ pub fn main() -> amethyst::Result<()> {
                 // This creates the window and draws a background, if we don't specify a
                 // background in the loaded ui prefab file.
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.005, 0.005, 0.005, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.005, 0.005, 0.005, 1.0],
+                    }),
                 )
                 // Without this, all of our beautiful UI would not get drawn.
                 // It will work, but we won't see a thing.
@@ -82,7 +86,7 @@ pub fn main() -> amethyst::Result<()> {
 
     // creating the Application with the assets_dir, the first Screen, and the game_data with it's
     // systems.
-    let mut game = Application::build(
+    let game = Application::build(
         assets_dir,
         crate::welcome::WelcomeScreen::default(),
         game_data,

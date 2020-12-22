@@ -24,7 +24,7 @@ fn main() -> Result<()> {
         .add_bundle(TcpNetworkBundle::new(None, 2048))
         .add_bundle(SpamBundle);
 
-    let mut game = Application::build(assets_dir, GameState)?
+    let game = Application::build(assets_dir, GameState)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,

@@ -328,11 +328,7 @@ impl SimpleState for Example {
         world.insert(DebugLines::new());
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         #[cfg(feature = "profiler")]
         profile_scope!("example handle_event");
         let StateData { world, .. } = data;
@@ -603,7 +599,7 @@ fn main() -> amethyst::Result<()> {
         },
     )?;
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .add_bundle(FpsCounterBundle::default())?
@@ -663,7 +659,7 @@ fn main() -> amethyst::Result<()> {
                 )),
         )?;
 
-    let mut game = Application::build(assets_dir, Example::new())?.build(game_data)?;
+    let game = Application::build(assets_dir, Example::new())?.build(game_data)?;
     game.run();
     Ok(())
 }
