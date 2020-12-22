@@ -125,6 +125,7 @@ dependencies = [
  "rayon",
  "ron",
  "serde",
+ "serde-diff",
  "serde_json",
  "thread_profiler",
  "type-uuid",

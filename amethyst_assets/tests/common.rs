@@ -1,3 +1,7 @@
+use amethyst_assets::start_asset_daemon;
+
+use std::{path::PathBuf, sync::Once};
+
 pub fn setup_logger() {
     fern::Dispatch::new()
         .format(|out, message, record| {
@@ -12,4 +16,13 @@ pub fn setup_logger() {
         .chain(std::io::stdout())
         .apply()
         .expect("Could not start logger");
+}
+
+static INIT: Once = Once::new();
+
+pub fn setup() {
+    INIT.call_once(|| {
+        setup_logger();
+        start_asset_daemon(vec![PathBuf::from("tests/assets")]);
+    });
 }
