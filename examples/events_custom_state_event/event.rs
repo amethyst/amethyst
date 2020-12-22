@@ -13,7 +13,7 @@ use amethyst_input::InputEvent;
 #[reader(MyExtendedStateEventReader)]
 pub enum MyExtendedStateEvent {
     /// Events sent by the winit window.
-    Window(winit::Event),
+    Window(winit::event::Event<'static, ()>),
     /// Events sent by the input system.
     Input(InputEvent),
     /// Our own events for our own game logic

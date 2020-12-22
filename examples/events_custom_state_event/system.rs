@@ -19,16 +19,22 @@ impl<'a, 'b> SystemBundle for MyBundle {
         let chan = EventChannel::<GameEvent>::default();
         resources.insert(chan);
 
-        builder.add_system(build_difficulty_system());
+        builder.add_system(Box::new(DifficultySystem));
         Ok(())
     }
 }
 
 /// Signals the state when it's time to increase the game difficulty
-pub(crate) fn build_difficulty_system() -> impl ParallelRunnable {
-    SystemBuilder::new("DifficultySystem")
-        .write_resource::<EventChannel<GameEvent>>()
-        .build(|_, _, my_event_channel, _| {
-            my_event_channel.single_write(GameEvent::IncreaseDifficulty);
-        })
+struct DifficultySystem;
+
+impl System<'_> for DifficultySystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("DifficultySystem")
+                .write_resource::<EventChannel<GameEvent>>()
+                .build(|_, _, my_event_channel, _| {
+                    my_event_channel.single_write(GameEvent::IncreaseDifficulty);
+                }),
+        )
+    }
 }
