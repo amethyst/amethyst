@@ -23,6 +23,10 @@ autoexamples = false
 
 [patch.crates-io]
 rendy = { git = "https://github.com/kabergstrom/rendy.git", branch = "attribute-serde-fix" }
+legion-transaction = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
+legion-prefab = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
+prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
+serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0" }
 
 [features]
 default = ["audio", "locale", "network", "parallel", "renderer"]
@@ -133,9 +137,9 @@ genmesh = "0.6.2"
 ron = "0.5.1"
 specs-derive = "0.4.1"
 type-uuid = "0.1"
-serde-diff = "0.3"
-legion-prefab = { git = "https://github.com/kabergstrom/prefab" }
-prefab-format = { git = "https://github.com/kabergstrom/prefab" }
+serde-diff = "0.4"
+legion-prefab = "0.1"
+prefab-format = "0.1"
 
 [build-dependencies]
 dirs = "2.0.2"

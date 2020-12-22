@@ -2411,7 +2411,7 @@ dependencies = [
 [[package]]
 name = "legion-prefab"
 version = "0.1.0"
-source = "git+https://github.com/kabergstrom/prefab#1bb70a15bede8c4bc2b2a329cf33b5bf4bd0e5c9"
+source = "git+https://github.com/jlowry/prefab?branch=serde-diff-0.4#1492068e1947d316ef59c0fb3d459537fa83916b"
 dependencies = [
  "erased-serde",
  "fnv",
@@ -2429,7 +2429,7 @@ dependencies = [
 [[package]]
 name = "legion-transaction"
 version = "0.1.0"
-source = "git+https://github.com/kabergstrom/prefab#1bb70a15bede8c4bc2b2a329cf33b5bf4bd0e5c9"
+source = "git+https://github.com/jlowry/prefab?branch=serde-diff-0.4#1492068e1947d316ef59c0fb3d459537fa83916b"
 dependencies = [
  "bincode",
  "erased-serde",
@@ -3353,7 +3353,7 @@ checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 [[package]]
 name = "prefab-format"
 version = "0.1.0"
-source = "git+https://github.com/kabergstrom/prefab#1bb70a15bede8c4bc2b2a329cf33b5bf4bd0e5c9"
+source = "git+https://github.com/jlowry/prefab?branch=serde-diff-0.4#1492068e1947d316ef59c0fb3d459537fa83916b"
 dependencies = [
  "serde",
  "serde-diff",
@@ -4322,9 +4322,8 @@ dependencies = [
 
 [[package]]
 name = "serde-diff"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70f01769bdef621a7683a5c711b3689a251d9d7fa945a79c014de18db030612b"
+version = "0.4.0"
+source = "git+https://github.com/amethyst/serde-diff?branch=v0.4.0#fd20829ce060040ab1b429770e72da0681b4d719"
 dependencies = [
  "serde",
  "serde-diff-derive",
@@ -4333,9 +4332,8 @@ dependencies = [
 
 [[package]]
 name = "serde-diff-derive"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c12ef3f174488ab7167f0d00eee61e90b248db8d6f4cd45750e1f49508fc47d8"
+version = "0.4.0"
+source = "git+https://github.com/amethyst/serde-diff?branch=v0.4.0#fd20829ce060040ab1b429770e72da0681b4d719"
 dependencies = [
  "darling",
  "proc-macro2 1.0.24",
