@@ -81,7 +81,7 @@ fn main() -> amethyst::Result<()> {
     let mut game_data = DispatcherBuilder::default();
     game_data.add_bundle(MyBundle);
 
-    let mut game = Application::build(assets_dir, GameplayState)?
+    let game = Application::build(assets_dir, GameplayState)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 1)
         .build(game_data)?;
 

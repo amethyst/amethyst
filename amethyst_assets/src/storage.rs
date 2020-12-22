@@ -512,7 +512,9 @@ impl<A: Asset + ProcessableAsset> SystemBundle for AssetProcessorSystemBundle<A>
     ) -> Result<(), Error> {
         resources.insert(AssetStorage::<A>::default());
 
-        builder.add_system(build_asset_processor_system::<A>());
+        builder.add_system(Box::new(AssetProcessorSystem::<A> {
+            _marker: PhantomData,
+        }));
 
         Ok(())
     }
@@ -524,26 +526,37 @@ impl<A: Asset + ProcessableAsset> SystemBundle for AssetProcessorSystemBundle<A>
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
-pub fn build_asset_processor_system<A>() -> impl Runnable
+pub struct AssetProcessorSystem<A>
 where
     A: Asset + ProcessableAsset,
 {
-    SystemBuilder::new("AssetProcessorSystem")
-        .write_resource::<AssetStorage<A>>()
-        .read_resource::<ArcThreadPool>()
-        .read_resource::<Time>()
-        //.read_resource::<HotReloadStrategy>() TODO: optional resources
-        .build(move |_commands, _world, (storage, pool, time), _query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("processor_system");
+    _marker: PhantomData<A>,
+}
 
-            storage.process(
-                ProcessableAsset::process,
-                time.frame_number(),
-                &**pool,
-                None, //strategy.as_deref()
-            );
-        })
+impl<A> System<'_> for AssetProcessorSystem<A>
+where
+    A: Asset + ProcessableAsset,
+{
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("AssetProcessorSystem")
+                .write_resource::<AssetStorage<A>>()
+                .read_resource::<ArcThreadPool>()
+                .read_resource::<Time>()
+                //.read_resource::<HotReloadStrategy>() TODO: optional resources
+                .build(move |_commands, _world, (storage, pool, time), _query| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("processor_system");
+
+                    storage.process(
+                        ProcessableAsset::process,
+                        time.frame_number(),
+                        &**pool,
+                        None, //strategy.as_deref()
+                    );
+                }),
+        )
+    }
 }
 
 /// A handle to an asset. This is usually what the

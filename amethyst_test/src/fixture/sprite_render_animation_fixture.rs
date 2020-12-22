@@ -32,7 +32,7 @@ impl SpriteRenderAnimationFixture {
                 &world.read_resource::<AssetStorage<Texture>>(),
             );
 
-            let loader = world.read_resource::<Loader>();
+            let loader = data.resources.get::<Loader>().unwrap();
             let sprite_sheet_handle =
                 loader.load_from_data(Self::sprite_sheet(tex_handle), (), &world.read_resource());
             let sprite_sheet_sampler = Sampler {

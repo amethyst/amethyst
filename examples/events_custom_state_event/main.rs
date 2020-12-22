@@ -21,7 +21,7 @@ fn main() -> amethyst::Result<()> {
     let mut game_data = DispatcherBuilder::default();
     game_data.add_bundle(system::MyBundle);
 
-    let mut game = CoreApplication::<_, MyExtendedStateEvent, MyExtendedStateEventReader>::build(
+    let game = CoreApplication::<_, MyExtendedStateEvent, MyExtendedStateEventReader>::build(
         assets_dir,
         GameplayState::default(),
     )?

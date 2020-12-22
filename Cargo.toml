@@ -22,9 +22,10 @@ license = "MIT/Apache-2.0"
 autoexamples = false
 
 [features]
-default = ["audio", "locale", "network", "parallel", "renderer"]
+default = ["parallel", "renderer"]
+optional = ["audio", "network", "locale"]
 
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
@@ -57,37 +58,21 @@ profiler = [
 ]
 sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
-saveload = []
 server = ["locale", "network"]
 no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
 shader-compiler = ["amethyst_rendy/shader-compiler"]
-test-support = [
-    "amethyst_rendy/test-support",
-    "amethyst_window/test-support",
-]
+test-support = ["amethyst_rendy/test-support", "amethyst_window/test-support"]
 experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 parallel = ["amethyst_core/parallel"]
 
 [workspace]
-members = [
-    #"amethyst_animation",
-    "amethyst_assets",
-    "amethyst_audio",
-    "amethyst_config",
-    "amethyst_core",
-    "amethyst_error",
-    "amethyst_controls",
-    "amethyst_derive",
-    #"amethyst_gltf",
-    "amethyst_network",
-    "amethyst_locale",
-    "amethyst_rendy",
-    "amethyst_input",
-    #"amethyst_ui",
-    "amethyst_utils",
-    #"amethyst_test",
-    #"amethyst_tiles",
-    "amethyst_window",
+members = ["amethyst_*"]
+exclude = [
+    "amethyst_gltf",
+    "amethyst_animation",
+    "amethyst_ui",
+    "amethyst_tiles",
+    "amethyst_test",
 ]
 
 [dependencies]
@@ -108,6 +93,7 @@ amethyst_input = { path = "amethyst_input", version = "0.15.3" }
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3" }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
 #amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
+winit = { git = "https://git@github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 crossbeam-channel = "0.4.2"
 derivative = "2.1.1"
 fern = { version = "0.6.0", features = ["colored"] }
@@ -115,10 +101,8 @@ log = { version = "0.4.8", features = ["serde"] }
 rayon = "1.4.0"
 rustc_version_runtime = "0.2.0"
 sentry = { version = "0.18.0", optional = true }
-winit = { version = "0.19", features = ["serde", "icon_loading"] }
 serde = { version = "1.0.104", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
-failure = "0.1.7"
 thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"
 glsl-layout = "0.3.2"
@@ -208,7 +192,6 @@ name = "pong_tutorial_04"
 
 # [[example]]
 # name = "pong_tutorial_05"
-# required-features = ["audio"]
 
 # [[example]]
 # name = "pong_tutorial_06"

@@ -114,7 +114,7 @@ mod tests {
             .with_effect(|world| {
                 let mut progress_counter = ProgressCounter::new();
                 let test_asset_handle = {
-                    let loader = world.read_resource::<Loader>();
+                    let loader = data.resources.get::<Loader>().unwrap();
                     loader.load_from(
                         "file.ron",
                         RonFormat,
@@ -154,7 +154,7 @@ mod tests {
             .with_effect(|world| {
                 let mut progress_counter = ProgressCounter::new();
                 let test_asset_handle = {
-                    let loader = world.read_resource::<Loader>();
+                    let loader = data.resources.get::<Loader>().unwrap();
                     loader.load_from(
                         "file.ron",
                         RonFormat,

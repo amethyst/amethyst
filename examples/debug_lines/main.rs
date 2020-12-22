@@ -187,7 +187,7 @@ fn main() -> amethyst::Result<()> {
     )
     .with_sensitivity(0.1, 0.1);
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .add_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
@@ -201,7 +201,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderSkybox::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
+    let game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

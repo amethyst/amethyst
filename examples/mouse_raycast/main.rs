@@ -17,6 +17,7 @@ use amethyst::{
     renderer::{
         camera::{ActiveCamera, Camera},
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
         types::DefaultBackend,
         ImageFormat, RenderingBundle, Texture,
@@ -258,22 +259,23 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/mouse_raycast/assets/");
     let display_config_path = app_root.join("examples/mouse_raycast/config/display.ron");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .add_bundle(TransformBundle::new())?
         .add_bundle(InputBundle::<StringBindings>::new())?
         .add_bundle(UiBundle::<StringBindings>::new())?
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderUi::default())
                 .with_plugin(RenderFlat2D::default()),
         )?
         .with(MouseRaycastSystem, "MouseRaycastSystem", &["input_system"]);
 
-    let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
+    let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
 
     Ok(())

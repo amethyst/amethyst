@@ -1,6 +1,10 @@
 //! Renderer system
 use amethyst_assets::{AssetStorage, ProcessingState};
-use amethyst_core::{ecs::*, timing::Time, ArcThreadPool};
+use amethyst_core::{
+    ecs::{systems::ParallelRunnable, SystemBuilder, *},
+    timing::Time,
+    ArcThreadPool,
+};
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
@@ -132,80 +136,98 @@ where
 }
 
 /// Asset processing system for `Mesh` asset type.
-pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
-    SystemBuilder::new("MeshProcessorSystem")
-        .write_resource::<AssetStorage<Mesh>>()
-        .read_resource::<QueueId>()
-        .read_resource::<Time>()
-        .read_resource::<ArcThreadPool>()
-        // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
-        .read_resource::<Factory<B>>()
-        .build(
-            move |commands, world, (mesh_storage, queue_id, time, pool, factory), _| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("mesh_processor");
-
-                mesh_storage.process(
-                    |b| {
-                        log::trace!("Processing Mesh: {:?}", b);
-
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("process_mesh");
-
-                        b.0.build(**queue_id, &factory)
-                            .map(B::wrap_mesh)
-                            .map(ProcessingState::Loaded)
-                            .map_err(|e| e.compat().into())
-                    },
-                    time.frame_number(),
-                    &**pool,
-                    None, // TODO: Fix strategy optional
-                )
-            },
-        )
+#[derive(Default, Debug)]
+pub struct MeshProcessorSystem<B: Backend> {
+    pub(crate) _marker: std::marker::PhantomData<B>,
 }
 
-/// Asset processing system for `Mesh` asset type.
-pub fn build_texture_processor<B: Backend>() -> impl Runnable {
-    SystemBuilder::new("TextureProcessorSystem")
-        .write_resource::<AssetStorage<Texture>>()
-        .read_resource::<QueueId>()
-        .read_resource::<Time>()
-        .read_resource::<amethyst_core::ArcThreadPool>()
-        // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
-        .write_resource::<Factory<B>>()
-        .build(
-            move |commands, world, (texture_storage, queue_id, time, pool, factory), _| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("texture_processor");
-
-                texture_storage.process(
-                    |b| {
-                        log::trace!("Processing Texture: {:?}", b);
-
+impl<B: Backend> System<'_> for MeshProcessorSystem<B> {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MeshProcessorSystem")
+                .write_resource::<AssetStorage<Mesh>>()
+                .read_resource::<QueueId>()
+                .read_resource::<Time>()
+                .read_resource::<ArcThreadPool>()
+                // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
+                .read_resource::<Factory<B>>()
+                .build(
+                    move |commands, world, (mesh_storage, queue_id, time, pool, factory), _| {
                         #[cfg(feature = "profiler")]
-                        profile_scope!("process_texture");
+                        profile_scope!("mesh_processor");
 
-                        b.0.build(
-                            ImageState {
-                                queue: **queue_id,
-                                stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
-                                    | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
-                                access: rendy::hal::image::Access::SHADER_READ,
-                                layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
+                        mesh_storage.process(
+                            |b| {
+                                log::trace!("Processing Mesh: {:?}", b);
+
+                                #[cfg(feature = "profiler")]
+                                profile_scope!("process_mesh");
+
+                                b.0.build(**queue_id, &factory)
+                                    .map(B::wrap_mesh)
+                                    .map(ProcessingState::Loaded)
+                                    .map_err(|e| e.into())
                             },
-                            &mut *factory,
+                            time.frame_number(),
+                            &**pool,
+                            None, // TODO: Fix strategy optional
                         )
-                        .map(B::wrap_texture)
-                        .map(ProcessingState::Loaded)
-                        .map_err(|e| e.compat().into())
                     },
-                    time.frame_number(),
-                    &**pool,
-                    None, // TODO: Fix strategy optional
-                );
-            },
+                ),
         )
+    }
+}
+
+/// Asset processing system for `Texture` asset type.
+#[derive(Default, Debug)]
+pub struct TextureProcessorSystem<B> {
+    pub(crate) _marker: std::marker::PhantomData<B>,
+}
+
+impl<B: Backend> System<'_> for TextureProcessorSystem<B> {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("TextureProcessorSystem")
+                .write_resource::<AssetStorage<Texture>>()
+                .read_resource::<QueueId>()
+                .read_resource::<Time>()
+                .read_resource::<amethyst_core::ArcThreadPool>()
+                // .read_resource::<HotReloadStrategy>() // TODO: Optional resources should be OPTIONS instead.
+                .write_resource::<Factory<B>>()
+                .build(
+                    move |commands, world, (texture_storage, queue_id, time, pool, factory), _| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("texture_processor");
+
+                        texture_storage.process(
+                            |b| {
+                                log::trace!("Processing Texture: {:?}", b);
+
+                                #[cfg(feature = "profiler")]
+                                profile_scope!("process_texture");
+
+                                b.0.build(
+                                    ImageState {
+                                        queue: **queue_id,
+                                        stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
+                                            | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
+                                        access: rendy::hal::image::Access::SHADER_READ,
+                                        layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
+                                    },
+                                    &mut *factory,
+                                )
+                                .map(B::wrap_texture)
+                                .map(ProcessingState::Loaded)
+                                .map_err(|e| amethyst_error::err_msg(format!("{:?}", e)))
+                            },
+                            time.frame_number(),
+                            &**pool,
+                            None, // TODO: Fix strategy optional
+                        );
+                    },
+                ),
+        )
+    }
 }
 
 pub(crate) fn create_default_mat<B: Backend>(resources: &Resources) -> Material {

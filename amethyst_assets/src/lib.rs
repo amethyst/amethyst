@@ -24,7 +24,7 @@ pub use crate::{
     formats::RonFormat,
     loader::Loader,
     progress::{Completion, Progress, ProgressCounter, Tracker},
-    reload::{build_hot_reload_system, HotReloadBundle, HotReloadStrategy, Reload, SingleFile},
+    reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
     source::{Directory, Source},
     storage::{AssetProcessorSystemBundle, AssetStorage, Handle, ProcessingState, WeakHandle},
 };

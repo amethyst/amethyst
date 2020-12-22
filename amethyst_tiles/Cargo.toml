@@ -28,7 +28,6 @@ fnv = "1"
 derivative = "2.1.1"
 hibitset = { version = "0.6.2", features = ["parallel"] }
 smallvec = "1.2.0"
-failure = "0.1"
 lazy_static = "1.4"
 rayon = "1.4.0"
 bitintr = "0.3"
@@ -41,7 +40,7 @@ more-asserts = "0.2"
 approx = "0.3"
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 

@@ -363,7 +363,8 @@ impl Bindings {
 
 #[cfg(test)]
 mod tests {
-    use winit::{MouseButton, VirtualKeyCode};
+
+    use winit::event::{MouseButton, VirtualKeyCode};
 
     use super::*;
     use crate::{button::*, controller::ControllerAxis};

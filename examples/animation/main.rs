@@ -9,7 +9,10 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderPbr3D, RenderToWindow},
-        rendy::mesh::{Normal, Position, Tangent, TexCoord},
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, Tangent, TexCoord},
+        },
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -23,7 +26,9 @@ type MyPrefabData = (
     Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
 
-const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+const CLEAR_COLOR: ClearColor = ClearColor {
+    float32: [0.0, 0.0, 0.0, 1.0],
+};
 
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
 enum AnimationId {
@@ -219,7 +224,7 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/animation/config/display.ron");
     let assets_dir = app_root.join("examples/animation/assets/");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         //.with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .add_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
@@ -234,7 +239,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderPbr3D::default()),
         )?;
     let state: Example = Default::default();
-    let mut game = Application::build(assets_dir, state)?.build(game_data)?;
+    let game = Application::build(assets_dir, state)?.build(game_data)?;
     game.run();
 
     Ok(())

@@ -1,60 +1,63 @@
-use amethyst::{
-    core::transform::Transform,
-    ecs::{Runnable, SystemBuilder},
-    prelude::*,
-};
+use amethyst::{core::transform::Transform, ecs::SystemBuilder, prelude::*};
 
 use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
-pub fn build() -> impl Runnable {
-    SystemBuilder::new("BounceSystem")
-        .with_query(<(&mut Ball, &Transform)>::query())
-        .with_query(<&Paddle>::query())
-        .read_component::<Paddle>()
-        .read_component::<Transform>()
-        .write_component::<Ball>()
-        .build(
-            move |_commands, world, _resources, (query_balls, query_paddles)| {
-                let (mut ball_world, remaining) = world.split_for_query(query_balls);
+pub struct BounceSystem;
 
-                // Check whether a ball collided, and bounce off accordingly.
-                //
-                // We also check for the velocity of the ball every time, to prevent multiple collisions
-                // from occurring.
-                for (ball, transform) in query_balls.iter_mut(&mut ball_world) {
-                    let ball_x = transform.translation().x;
-                    let ball_y = transform.translation().y;
+impl System<'_> for BounceSystem {
+    fn build(&'_ mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("BounceSystem")
+                .with_query(<(&mut Ball, &Transform)>::query())
+                .with_query(<&Paddle>::query())
+                .read_component::<Paddle>()
+                .read_component::<Transform>()
+                .write_component::<Ball>()
+                .build(
+                    move |_commands, world, _resources, (query_balls, query_paddles)| {
+                        let (mut ball_world, remaining) = world.split_for_query(query_balls);
 
-                    // Bounce at the top or the bottom of the arena.
-                    if (ball_y <= ball.radius && ball.velocity[1] < 0.0)
-                        || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
-                    {
-                        ball.velocity[1] = -ball.velocity[1];
-                    }
+                        // Check whether a ball collided, and bounce off accordingly.
+                        //
+                        // We also check for the velocity of the ball every time, to prevent multiple collisions
+                        // from occurring.
+                        for (ball, transform) in query_balls.iter_mut(&mut ball_world) {
+                            let ball_x = transform.translation().x;
+                            let ball_y = transform.translation().y;
 
-                    // Bounce at the paddles.
-                    for paddle in query_paddles.iter(&remaining) {
-                        // To determine whether the ball has collided with a paddle, we create a larger
-                        // rectangle around the current one, by subtracting the ball radius from the
-                        // lowest coordinates, and adding the ball radius to the highest ones. The ball
-                        // is then within the paddle if its centre is within the larger wrapper
-                        // rectangle.
-                        if point_in_rect(
-                            ball_x,
-                            ball_y,
-                            paddle.x - paddle.width / 2. - ball.radius,
-                            paddle.y - paddle.height / 2. - ball.radius,
-                            paddle.x + paddle.width / 2. + ball.radius,
-                            paddle.y + paddle.height / 2. + ball.radius,
-                        ) && ((paddle.side == Side::Left && ball.velocity[0] < 0.0)
-                            || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
-                        {
-                            ball.velocity[0] = -ball.velocity[0];
+                            // Bounce at the top or the bottom of the arena.
+                            if (ball_y <= ball.radius && ball.velocity[1] < 0.0)
+                                || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
+                            {
+                                ball.velocity[1] = -ball.velocity[1];
+                            }
+
+                            // Bounce at the paddles.
+                            for paddle in query_paddles.iter(&remaining) {
+                                // To determine whether the ball has collided with a paddle, we create a larger
+                                // rectangle around the current one, by subtracting the ball radius from the
+                                // lowest coordinates, and adding the ball radius to the highest ones. The ball
+                                // is then within the paddle if its centre is within the larger wrapper
+                                // rectangle.
+                                if point_in_rect(
+                                    ball_x,
+                                    ball_y,
+                                    paddle.x - paddle.width / 2. - ball.radius,
+                                    paddle.y - paddle.height / 2. - ball.radius,
+                                    paddle.x + paddle.width / 2. + ball.radius,
+                                    paddle.y + paddle.height / 2. + ball.radius,
+                                ) && ((paddle.side == Side::Left && ball.velocity[0] < 0.0)
+                                    || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
+                                {
+                                    println!("Bounce!");
+                                    ball.velocity[0] = -ball.velocity[0];
+                                }
+                            }
                         }
-                    }
-                }
-            },
+                    },
+                ),
         )
+    }
 }
 
 // A point is in a box when its coordinates are smaller or equal than the top

@@ -177,7 +177,7 @@ fn main() -> Result<(), amethyst::Error> {
     let display_config_path = app_root.join("examples/gltf/config/display.ron");
     let assets_dir = app_root.join("examples/gltf/assets/");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
@@ -220,7 +220,7 @@ fn main() -> Result<(), amethyst::Error> {
                 .with_plugin(RenderSkybox::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
+    let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
     Ok(())
 }
