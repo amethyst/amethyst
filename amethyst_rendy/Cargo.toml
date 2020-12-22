@@ -42,7 +42,7 @@ thread_profiler = { version = "0.3", optional = true }
 approx = "0.4.0"
 
 [dev-dependencies]
-winit = { git = "https://git@github.com/rust-windowing/winit", branch = "master", features = ["serde"] }
+winit = { git = "https://git@github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 rayon = "1.4.0"
 more-asserts = "0.2.1"
 criterion = "0.3.0"
