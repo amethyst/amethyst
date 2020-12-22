@@ -242,7 +242,7 @@ where
             {
                 #[cfg(feature = "profiler")]
                 profile_scope!("frame_limiter wait");
-                //self.resources.get_mut::<FrameLimiter>().unwrap().wait();
+                self.resources.get_mut::<FrameLimiter>().unwrap().wait();
             }
             {
                 let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
