@@ -44,9 +44,21 @@ pub struct TextureSub<B: Backend> {
 
 impl<B: Backend> TextureSub<B> {
     /// Create a new Texture for submission, allocated using the provided `Factory`
-    pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+    pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
+        use rendy::hal::pso::*;
+
+        let layout = factory
+            .create_descriptor_set_layout(util::set_layout_bindings(vec![(
+                1,
+                DescriptorType::Image {
+                    ty: ImageDescriptorType::Sampled { with_sampler: true },
+                },
+                ShaderStageFlags::FRAGMENT,
+            )]))?
+            .into();
+
         Ok(Self {
-            layout: set_layout! {factory, [1] CombinedImageSampler hal::pso::ShaderStageFlags::FRAGMENT},
+            layout,
             lookup: util::LookupBuilder::new(),
             textures: Vec::with_capacity(1024),
             generation: 0,

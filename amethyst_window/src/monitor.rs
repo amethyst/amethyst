@@ -1,30 +1,32 @@
+use std::collections::VecDeque;
+
 use serde::{Deserialize, Serialize};
-use winit::{AvailableMonitorsIter, EventsLoop, MonitorId, Window};
+use winit::{event_loop::EventLoop, monitor::MonitorHandle, window::Window};
 
 /// A struct that can resolve monitors.
-/// Usually either a Window or an EventsLoop.
+/// Usually either a Window or an EventLoop.
 pub trait MonitorsAccess {
     /// Returns an iterator over the available monitors
-    fn iter(&self) -> AvailableMonitorsIter;
-    /// Returns the `MonitorId` of the primary display
-    fn primary(&self) -> MonitorId;
+    fn iter(&self) -> VecDeque<MonitorHandle>;
+    /// Returns the `MonitorHandle` of the primary display
+    fn primary(&self) -> Option<MonitorHandle>;
 }
 
-impl MonitorsAccess for EventsLoop {
-    fn iter(&self) -> AvailableMonitorsIter {
-        self.get_available_monitors()
+impl MonitorsAccess for EventLoop<()> {
+    fn iter(&self) -> VecDeque<MonitorHandle> {
+        self.available_monitors().collect()
     }
-    fn primary(&self) -> MonitorId {
-        self.get_primary_monitor()
+    fn primary(&self) -> Option<MonitorHandle> {
+        self.primary_monitor()
     }
 }
 
 impl MonitorsAccess for Window {
-    fn iter(&self) -> AvailableMonitorsIter {
-        self.get_available_monitors()
+    fn iter(&self) -> VecDeque<MonitorHandle> {
+        self.available_monitors().collect()
     }
-    fn primary(&self) -> MonitorId {
-        self.get_primary_monitor()
+    fn primary(&self) -> Option<MonitorHandle> {
+        self.primary_monitor()
     }
 }
 
@@ -40,16 +42,20 @@ pub struct MonitorIdent(u16, String);
 impl MonitorIdent {
     /// Get the identifier for current primary monitor.
     pub fn from_primary(monitors: &impl MonitorsAccess) -> Self {
-        Self::from_monitor_id(monitors, monitors.primary())
+        let primary = monitors.primary().expect("Primary monitor not found!");
+        Self::from_monitor_id(monitors, primary)
             .expect("Primary monitor not found in the list of all monitors")
     }
 
     /// Get the identifier for specific monitor id.
-    pub fn from_monitor_id(monitors: &impl MonitorsAccess, monitor_id: MonitorId) -> Option<Self> {
+    pub fn from_monitor_id(
+        monitors: &impl MonitorsAccess,
+        monitor_id: MonitorHandle,
+    ) -> Option<Self> {
         #[cfg(target_os = "ios")]
-        use winit::ios::windows::MonitorIdExt;
+        use winit::platform::ios::MonitorHandleExtIOS;
         #[cfg(target_os = "macos")]
-        use winit::os::macos::MonitorIdExt;
+        use winit::platform::macos::MonitorHandleExtMacOS;
         #[cfg(any(
             target_os = "linux",
             target_os = "dragonfly",
@@ -57,26 +63,28 @@ impl MonitorIdent {
             target_os = "netbsd",
             target_os = "openbsd"
         ))]
-        use winit::os::unix::MonitorIdExt;
+        use winit::platform::unix::MonitorHandleExtUnix;
         #[cfg(target_os = "windows")]
-        use winit::os::windows::MonitorIdExt;
+        use winit::platform::windows::MonitorHandleExtWindows;
 
         let native_id = monitor_id.native_id();
         monitors
             .iter()
+            .iter()
             .enumerate()
             .find(|(_, m)| m.native_id() == native_id)
-            .and_then(|(i, m)| m.get_name().map(|name| Self(i as u16, name)))
+            .and_then(|(i, m)| m.name().map(|name| Self(i as u16, name)))
     }
 
     /// Select a monitor that matches this identifier most closely.
-    pub fn monitor_id(&self, monitors: &impl MonitorsAccess) -> MonitorId {
+    pub fn monitor_id(&self, monitors: &impl MonitorsAccess) -> MonitorHandle {
         monitors
             .iter()
+            .into_iter()
             .enumerate()
-            .filter(|(_, m)| m.get_name().map(|n| n == self.1).unwrap_or(false))
+            .filter(|(_, m)| m.name().map(|n| n == self.1).unwrap_or(false))
             .max_by_key(|(i, _)| (*i as i32 - i32::from(self.0)).abs() as u16)
             .map(|(_, m)| m)
-            .unwrap_or_else(|| monitors.primary())
+            .unwrap_or_else(|| monitors.primary().expect("No Primary Monitor Found!"))
     }
 }

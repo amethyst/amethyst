@@ -49,9 +49,6 @@
 #![allow(clippy::new_without_default)]
 #![allow(unused_variables, dead_code)]
 
-#[macro_use]
-mod macros;
-
 #[doc(inline)]
 pub use palette;
 #[doc(inline)]
@@ -106,7 +103,7 @@ pub use crate::{
     mtl::{Material, MaterialDefaults},
     plugins::*,
     sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
-    system::{build_mesh_processor, build_texture_processor, GraphCreator},
+    system::{GraphCreator, MeshProcessorSystem, TextureProcessorSystem},
     transparent::Transparent,
     types::{Backend, Mesh, Texture},
     util::{simple_shader_set, ChangeDetection},

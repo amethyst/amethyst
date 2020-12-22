@@ -18,6 +18,8 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource.
 pub type ArcThreadPool = std::sync::Arc<rayon::ThreadPool>;
 
+pub use core::fmt; //FIXME https://github.com/amethyst/amethyst/issues/2478
+
 pub use approx;
 pub use nalgebra as math;
 pub use num_traits as num;
@@ -36,12 +38,12 @@ pub use self::{
 /// legion ECS reexported with some convenience types.
 pub mod ecs {
     pub use legion::{
-        systems::{CommandBuffer, Resource, Runnable},
+        systems::{CommandBuffer, ParallelRunnable, Resource, Runnable},
         world::SubWorld,
         *,
     };
 
-    pub use crate::dispatcher::{Dispatcher, DispatcherBuilder, SystemBundle};
+    pub use crate::dispatcher::{Dispatcher, DispatcherBuilder, System, SystemBundle};
 }
 
 /// Dispatcher module.

@@ -14,7 +14,7 @@ use rendy::{
     hal::{self, buffer::Usage, format, pso},
     memory::MemoryUsage,
     mesh::VertexFormat,
-    resource::{BufferInfo, Escape},
+    resource::{BufferCreationError, BufferInfo, Escape, SubRange},
 };
 use smallvec::SmallVec;
 #[cfg(feature = "profiler")]
@@ -28,10 +28,13 @@ pub fn next_range<T: Add<Output = T> + Clone>(prev: &Range<T>, length: T) -> Ran
     prev.end.clone()..prev.end.clone() + length
 }
 
-/// Helper function to convert `Range` to an `Option` range.
+/// Helper function to convert `Range` to a `SubRange`
 #[inline]
-pub fn opt_range<T>(range: Range<T>) -> Range<Option<T>> {
-    Some(range.start)..Some(range.end)
+pub fn sub_range(range: Range<u64>) -> SubRange {
+    SubRange {
+        offset: range.start,
+        size: Some(range.end - range.start),
+    }
 }
 
 /// Helper function to convert `Range` types.
@@ -50,7 +53,7 @@ pub fn ensure_buffer<B: Backend>(
     usage: Usage,
     memory_usage: impl MemoryUsage,
     min_size: u64,
-) -> Result<bool, failure::Error> {
+) -> Result<bool, BufferCreationError> {
     #[cfg(feature = "profiler")]
     profile_scope!("ensure_buffer");
 

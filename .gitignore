@@ -4,8 +4,8 @@ amethyst_config/target
 amethyst_renderer/target
 book/book
 target
-Cargo.lock
 *.log
+Cargo.lock
 
 # Backup files
 .DS_Store

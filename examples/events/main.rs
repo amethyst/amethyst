@@ -95,9 +95,9 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = application_root_dir()?.join("examples/events/assets");
 
-    let game_data = DispatcherBuilder::default().add_bundle(MyBundle)?;
+    let mut game_data = DispatcherBuilder::default().add_bundle(MyBundle)?;
 
-    let mut game = Application::build(assets_dir, GameplayState)?
+    let game = Application::build(assets_dir, GameplayState)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 1)
         .build(game_data)?;
 

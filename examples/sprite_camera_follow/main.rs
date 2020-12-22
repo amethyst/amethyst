@@ -10,6 +10,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         Camera, ImageFormat, RenderingBundle, SpriteRender, SpriteSheet, SpriteSheetFormat,
         Texture, Transparent,
@@ -194,7 +195,7 @@ fn main() -> amethyst::Result<()> {
     let assets_directory = app_root.join("examples/sprite_camera_follow/assets");
     let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
 
-    let game_data = DispatcherBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .add_bundle(TransformBundle::new())?
         .add_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(
@@ -205,13 +206,14 @@ fn main() -> amethyst::Result<()> {
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::build(assets_directory, Example)?.build(game_data)?;
+    let game = Application::build(assets_directory, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }

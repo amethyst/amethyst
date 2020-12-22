@@ -16,6 +16,7 @@ use amethyst::{
         palette::{LinSrgba, Srgb},
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::{
+            hal::command::ClearColor,
             mesh::{Normal, Position, Tangent, TexCoord},
             texture::palette::load_from_linear_rgba,
         },
@@ -25,7 +26,7 @@ use amethyst::{
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    winit::{MouseButton, VirtualKeyCode},
+    winit::event::{MouseButton, VirtualKeyCode},
     Error,
 };
 
@@ -142,11 +143,11 @@ impl SimpleState for ExampleState {
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { resources, .. } = data;
         if let StateEvent::Window(event) = &event {
+            let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
+
             if is_key_down(&event, VirtualKeyCode::Escape) {
-                let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
                 hide_cursor.hide = false;
             } else if is_mouse_button_down(&event, MouseButton::Left) {
-                let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
                 hide_cursor.hide = true;
             }
         }
@@ -172,19 +173,21 @@ fn main() -> Result<(), Error> {
                 Some("move_y".into()),
                 Some("move_z".into()),
             )
-            .with_sensitivity(0.1, 0.1),
+            .with_sensitivity(0.1, 0.1)
+            .with_speed(5.),
         )
         .add_bundle(TransformBundle)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderShaded3D::default()),
         );
 
-    let mut game = Application::build(assets_dir, ExampleState)?
+    let game = Application::build(assets_dir, ExampleState)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 60)
         .build(builder)?;
 

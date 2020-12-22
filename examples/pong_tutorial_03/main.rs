@@ -9,11 +9,13 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
     utils::application_root_dir,
 };
+use systems::paddle::PaddleSystem;
 
 use crate::pong::Pong;
 
@@ -34,20 +36,21 @@ fn main() -> amethyst::Result<()> {
             app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
         )?)
         // We have now added our own system, the PaddleSystem, defined in systems/paddle.rs
-        .add_system(systems::paddle::build())
+        .add_system(Box::new(PaddleSystem))
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.0, 0.0, 0.0, 1.0],
+                    }),
                 )
                 // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
                 .with_plugin(RenderFlat2D::default()),
         );
 
-    let mut game = Application::new(assets_dir, Pong, dispatcher)?;
+    let game = Application::new(assets_dir, Pong, dispatcher)?;
     game.run();
     Ok(())
 }
