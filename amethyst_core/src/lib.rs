@@ -33,6 +33,7 @@ pub use self::{
     named::Named,
     shrev::EventChannel,
     timing::*,
+    transform::*,
 };
 
 /// legion ECS reexported with some convenience types.

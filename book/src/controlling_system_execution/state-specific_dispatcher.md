@@ -51,7 +51,7 @@ Alternatively we can add `Bundle`s of `System`s to our `DispatcherBuilder` direc
 #     }
 # }
 #
-# let mut world = World::new();
+# let mut world = World::default();
 let mut dispatcher_builder = DispatcherBuilder::new();
 
 PongSystemsBundle::default()

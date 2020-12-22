@@ -16,8 +16,8 @@ fn main() -> amethyst::Result<()> {
     // StringBindings is the default BindingTypes
     let input_bundle = InputBundle::<StringBindings>::new();
 
-    let mut world = World::new();
-    let game_data = GameDataBuilder::default()
+    let mut world = World::default();
+    let game_data = DispatcherBuilder::default()
     //..
     .with_bundle(input_bundle)?
     //..
@@ -78,7 +78,7 @@ Now you have to add the `System` to the game data, just like you would do with a
 # struct ExampleSystem; 
 # impl<'a> System<'a> for ExampleSystem { type SystemData = (); fn run(&mut self, _: ()) {}}
 #
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
     //..
     .with(ExampleSystem, "example_system", &["input_system"])
     //..

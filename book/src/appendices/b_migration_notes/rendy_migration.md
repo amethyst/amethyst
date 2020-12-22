@@ -101,7 +101,7 @@
     ```rust,ignore
     use amethyst::renderer::{types::DefaultBackend, RenderingSystem};
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

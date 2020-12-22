@@ -79,7 +79,7 @@ pub struct DisplayConfig {
     /// // It will now be used as the window icon
     /// config.loaded_icon = Some(Icon::from_rgba(icon, 128, 128).unwrap());
     ///
-    /// // Now, feed this into the `GameDataBuilder` using
+    /// // Now, feed this into the `DispatcherBuilder` using
     /// // `.with_bundle(WindowBundle::from_config(config))`
     /// ```
     #[serde(skip)]

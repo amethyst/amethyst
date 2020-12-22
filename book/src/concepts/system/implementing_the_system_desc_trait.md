@@ -39,7 +39,7 @@ impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
 }
 
 // in `main.rs`:
-// let game_data = GameDataBuilder::default()
+// let game_data = DispatcherBuilder::default()
 //     .with_system_desc(AudioSystemDesc::default(), "", &[]);
 ```
 

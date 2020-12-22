@@ -344,7 +344,7 @@ this by adding the following line before `initialise_paddles(world)` in the
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # fn register() {
-#   let mut world = World::new();
+#   let mut world = World::default();
 world.register::<Paddle>();
 # }
 ```
@@ -390,7 +390,7 @@ fn main() -> amethyst::Result<()> {
 #       app_root.join("config/display.ron");
 #
     // ...
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         // ...
 
         // Add the transform bundle which handles tracking entity positions

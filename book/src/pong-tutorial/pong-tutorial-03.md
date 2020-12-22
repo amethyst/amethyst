@@ -71,7 +71,7 @@ let input_bundle = InputBundle::<StringBindings>::new()
 # let assets_dir = "assets";
 # struct Pong;
 # impl SimpleState for Pong { }
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?
     // ..
@@ -199,7 +199,7 @@ immutable for the `Paddle` and mutable for the `Transform`.
 > by using `par_join` instead of `join`, but here the overhead introduced is not
 > worth the gain offered by parallelism.
 
-Let's add this system to our `GameDataBuilder` in `main.rs`:
+Let's add this system to our `DispatcherBuilder` in `main.rs`:
 
 ```rust,ignore
 mod systems; // Import the module
@@ -231,7 +231,7 @@ fn main() -> amethyst::Result<()> {
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
     // ...
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?

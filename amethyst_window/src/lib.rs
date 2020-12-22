@@ -20,7 +20,7 @@ mod monitor;
 mod resources;
 mod system;
 
-pub use winit::window::Window;
+pub use winit::window::{Icon, Window};
 
 #[cfg(feature = "test-support")]
 pub use crate::bundle::{SCREEN_HEIGHT, SCREEN_WIDTH};

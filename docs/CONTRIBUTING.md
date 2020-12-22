@@ -248,7 +248,7 @@ struct MyResource;
 
 fn main() {
     // We create a new `World` instance.
-    let mut world = World::new();
+    let mut world = World::default();
     
     // We create our resource.
     let my = MyResource;

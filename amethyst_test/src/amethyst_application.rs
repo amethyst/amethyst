@@ -23,8 +23,8 @@ use crate::{
 
 type BundleAddFn = Box<
     dyn FnOnce(
-        GameDataBuilder<'static, 'static>,
-    ) -> Result<GameDataBuilder<'static, 'static>, Error>,
+        DispatcherBuilder<'static, 'static>,
+    ) -> Result<DispatcherBuilder<'static, 'static>, Error>,
 >;
 // Hack: Ideally we want a `SendBoxFnOnce`. However implementing it got too crazy:
 //
@@ -73,14 +73,14 @@ where
 {
     /// Functions to add bundles to the game data.
     ///
-    /// This is necessary because `System`s are not `Send`, and so we cannot send `GameDataBuilder`
+    /// This is necessary because `System`s are not `Send`, and so we cannot send `DispatcherBuilder`
     /// across a thread boundary, necessary to run the `Application` in a sub thread to avoid a
     /// segfault caused by mesa and the software GL renderer.
     #[derivative(Debug = "ignore")]
     bundle_add_fns: Vec<BundleAddFn>,
     /// Functions to add bundles to the game data.
     ///
-    /// This is necessary because `System`s are not `Send`, and so we cannot send `GameDataBuilder`
+    /// This is necessary because `System`s are not `Send`, and so we cannot send `DispatcherBuilder`
     /// across a thread boundary, necessary to run the `Application` in a sub thread to avoid a
     /// segfault caused by mesa and the software GL renderer.
     #[derivative(Debug = "ignore")]
@@ -169,7 +169,7 @@ where
     {
         let mut game_data = bundle_add_fns.into_iter().fold(
             Ok(DispatcherBuilder::default()),
-            |game_data: Result<GameDataBuilder<'_, '_>, Error>, function: BundleAddFn| {
+            |game_data: Result<DispatcherBuilder<'_, '_>, Error>, function: BundleAddFn| {
                 game_data.and_then(function)
             },
         )?;
@@ -189,7 +189,7 @@ where
 
     fn build_application<S>(
         first_state: S,
-        game_data: GameDataBuilder<'static, 'static>,
+        game_data: DispatcherBuilder<'static, 'static>,
         resource_add_fns: Vec<FnResourceAdd>,
         setup_fns: Vec<FnSetup>,
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
@@ -340,10 +340,9 @@ where
         // `SendBoxFnOnce` is an implementation of this.
         //
         // See <https://users.rust-lang.org/t/move-a-boxed-function-inside-a-closure/18199>
-        self.bundle_add_fns
-            .push(Box::new(|game_data: GameDataBuilder<'static, 'static>| {
-                game_data.with_bundle(bundle)
-            }));
+        self.bundle_add_fns.push(Box::new(
+            |game_data: DispatcherBuilder<'static, 'static>| game_data.with_bundle(bundle),
+        ));
         self
     }
 
@@ -361,7 +360,7 @@ where
         B: SystemBundle<'static, 'static> + 'static,
     {
         self.bundle_add_fns.push(Box::new(
-            move |game_data: GameDataBuilder<'static, 'static>| {
+            move |game_data: DispatcherBuilder<'static, 'static>| {
                 game_data.with_bundle(bundle_function())
             },
         ));

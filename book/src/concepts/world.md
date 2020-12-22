@@ -16,7 +16,7 @@ struct MyResource;
 
 fn main() {
     // We create a new `World` instance.
-    let mut world = World::new();
+    let mut world = World::default();
     
     // We create our resource.
     let my = MyResource;
@@ -34,7 +34,7 @@ Here's how to fetch a read-only resource. Be aware that this method panics if th
 # use amethyst::ecs::{World, WorldExt};
 # struct MyResource;
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     let my = world.read_resource::<MyResource>();
 # }
 ```
@@ -45,7 +45,7 @@ If you are not sure that the resource will be present, use the methods available
 # use amethyst::ecs::{World, WorldExt};
 # struct MyResource;
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     let my = world.entry::<MyResource>().or_insert_with(|| MyResource);
 # }
 ```
@@ -57,7 +57,7 @@ If you are not sure that the resource will be present, use the methods available
 # use amethyst::ecs::{World, WorldExt};
 # struct MyResource;
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     let mut my = world.write_resource::<MyResource>();
 # }
 ```
@@ -77,7 +77,7 @@ Please note that **in order to use this syntax, you need to import the ``amethys
 #   type Storage = amethyst::ecs::VecStorage<MyComponent>;
 # }
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     world.register::<MyComponent>();
     use amethyst::prelude::Builder;
 
@@ -96,7 +96,7 @@ Shorter version:
 #   type Storage = amethyst::ecs::VecStorage<MyComponent>;
 # }
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     use amethyst::prelude::Builder;
 
     let my_entity = world
@@ -118,7 +118,7 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 #   type Storage = amethyst::ecs::VecStorage<MyComponent>;
 # }
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     // Create an `Entity` with `MyComponent`.
     // `World` will implicitly write to the component's storage in `Resources`.
     let my_entity = world.create_entity().with(MyComponent).build();
@@ -143,7 +143,7 @@ This is almost the same as accessing a component:
 #   type Storage = amethyst::ecs::VecStorage<MyComponent>;
 # }
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     let my_entity = world.create_entity().with(MyComponent).build();
     let mut storage = world.write_storage::<MyComponent>();
     let mut my = storage.get_mut(my_entity).expect("Failed to get component for entity");
@@ -158,7 +158,7 @@ It is pretty rare to use this, but can be useful in some occasions.
 # extern crate amethyst;
 # use amethyst::ecs::{World, WorldExt};
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     // Returns `EntitiesRes`
     let entities = world.entities();
 # }
@@ -171,7 +171,7 @@ Single:
 # extern crate amethyst;
 # use amethyst::ecs::{Builder, World, WorldExt};
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
 #   let my_entity = world.create_entity().build();
     world.delete_entity(my_entity).expect("Failed to delete entity. Was it already removed?");
 # }
@@ -182,7 +182,7 @@ Multiple:
 # extern crate amethyst;
 # use amethyst::ecs::{Builder, World, WorldExt};
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
 #   let entity_vec: Vec<amethyst::ecs::Entity> = vec![world.create_entity().build()];
     world.delete_entities(entity_vec.as_slice()).expect("Failed to delete entities from specified list.");
 # }
@@ -193,7 +193,7 @@ All:
 # extern crate amethyst;
 # use amethyst::ecs::{World, WorldExt};
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     world.delete_all();
 # }
 ```
@@ -206,7 +206,7 @@ __Note: Entities are lazily deleted, which means that deletion only happens at t
 # extern crate amethyst;
 # use amethyst::ecs::{Builder, World, WorldExt};
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
 #   let my_entity = world.create_entity().build();
     // Returns true if the entity was **not** deleted.
     let is_alive = world.is_alive(my_entity);
@@ -232,7 +232,7 @@ There is a function that acts as a shorthand for this:
 #   fn do_something(&mut self) { }
 # }
 # fn main() {
-#   let mut world = World::new();
+#   let mut world = World::default();
     world.exec(|mut data: SomeSystemData| {
         data.do_something();
     });

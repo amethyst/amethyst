@@ -17,7 +17,7 @@ use amethyst::{
 };
 # fn main() -> Result<(), amethyst::Error> {
 #
-# let game_data = GameDataBuilder::default()
+# let game_data = DispatcherBuilder::default()
 #     .with_bundle(
 #
 // inside your rendering bundle setup

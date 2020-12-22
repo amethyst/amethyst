@@ -76,13 +76,13 @@ Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
-# use amethyst::GameDataBuilder;
+# use amethyst::DispatcherBuilder;
 use amethyst::audio::AudioBundle;
 
 fn main() -> amethyst::Result<()> {
     // --snip--
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         // ... other bundles
         .with_bundle(AudioBundle::default())?
         // ... systems
@@ -367,7 +367,7 @@ use crate::audio::Music;
 fn main() -> amethyst::Result<()> {
     // --snip--
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         // ... bundles
         .with_system_desc(
             DjSystemDesc::new(|music: &mut Music| music.music.next()),

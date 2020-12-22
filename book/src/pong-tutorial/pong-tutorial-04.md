@@ -348,7 +348,7 @@ as well as adding our new systems to the game data:
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
@@ -437,9 +437,9 @@ default empty state. Now let's use that inside our `Application` creation code i
 # #[derive(Default)] struct Pong;
 # impl SimpleState for Pong { }
 # fn main() -> amethyst::Result<()> {
-#   let game_data = GameDataBuilder::default();
+#   let game_data = DispatcherBuilder::default();
 #   let assets_dir = "/";
-#   let world = World::new();
+#   let world = World::default();
 let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
 #   Ok(())
 # }
