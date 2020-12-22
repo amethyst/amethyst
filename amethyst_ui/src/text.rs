@@ -9,7 +9,7 @@ use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
-use winit::{ElementState, Event, MouseButton, WindowEvent};
+use winit::event::{ElementState, Event, MouseButton, WindowEvent};
 
 use super::*;
 use crate::Anchor;
@@ -136,7 +136,7 @@ impl TextEditing {
 #[derive(Debug)]
 pub struct TextEditingMouseSystem {
     /// A reader for winit events.
-    event_reader: ReaderId<Event>,
+    event_reader: ReaderId<Event<'static, ()>>,
     /// This is set to true while the left mouse button is pressed.
     left_mouse_button_pressed: bool,
     /// The screen coordinates of the mouse
@@ -145,7 +145,7 @@ pub struct TextEditingMouseSystem {
 
 impl TextEditingMouseSystem {
     /// Creates a new instance of this system
-    pub fn new(event_reader: ReaderId<Event>) -> Self {
+    pub fn new(event_reader: ReaderId<Event<'static, ()>>) -> Self {
         Self {
             event_reader,
             left_mouse_button_pressed: false,
@@ -159,7 +159,7 @@ impl System<'static> for TextEditingMouseSystem {
         Box::new(
             SystemBuilder::new("TextEditingMouseSystem")
                 .read_resource::<Time>()
-                .read_resource::<EventChannel<Event>>()
+                .read_resource::<EventChannel<Event<'static, ()>>>()
                 .read_resource::<ScreenDimensions>()
                 .with_query(<&mut UiText>::query())
                 .with_query(<(&mut TextEditing, &Selected)>::query())
@@ -199,10 +199,10 @@ impl System<'static> for TextEditingMouseSystem {
                                     event: WindowEvent::CursorMoved { position, .. },
                                     ..
                                 } => {
-                                    let hidpi = screen_dimensions.hidpi_factor() as f32;
+                                    // TODO : Check why the hidpi has been deleted ? let hidpi = screen_dimensions.hidpi_factor() as f32;
                                     self.mouse_position = (
-                                        position.x as f32 * hidpi,
-                                        (screen_dimensions.height() - position.y as f32) * hidpi,
+                                        position.x as f32,
+                                        (screen_dimensions.height() - position.y as f32),
                                     );
                                     if self.left_mouse_button_pressed {
                                         moved_while_pressed = true;

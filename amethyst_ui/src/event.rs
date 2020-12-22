@@ -4,7 +4,7 @@ use amethyst_core::{ecs::*, math::Vector2, shrev::EventChannel, Hidden, HiddenPr
 use amethyst_input::InputHandler;
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
-use winit::MouseButton;
+use winit::event::MouseButton;
 
 use crate::transform::UiTransform;
 

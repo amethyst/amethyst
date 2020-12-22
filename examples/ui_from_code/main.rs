@@ -9,6 +9,7 @@ use amethyst_core::{dispatcher::DispatcherBuilder, transform::TransformBundle};
 use amethyst_input::InputBundle;
 use amethyst_ui::{RenderUi, UiBundle};
 use amethyst_utils::application_root_dir;
+use amethyst::renderer::rendy::core::hal::command::ClearColor;
 
 #[derive(Default)]
 struct Example;
@@ -50,12 +51,14 @@ fn main() -> amethyst::Result<()> {
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                        .with_clear(ClearColor {
+                            float32: [0.34, 0.36, 0.52, 1.0]
+                        }),
                 )
                 .with_plugin(RenderUi::default()),
         );
 
-    let mut game = Application::new(assets_dir, Example::default(), dispatcher)?;
+    let game = Application::new(assets_dir, Example::default(), dispatcher)?;
     game.run();
     Ok(())
 }

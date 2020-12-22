@@ -14,7 +14,7 @@ use amethyst_rendy::{
     resources::Tint,
     Backend, Texture,
 };
-use failure::_core::ops::Deref;
+
 use glyph_brush::{
     rusttype::Scale, BrushAction, BrushError, BuiltInLineBreaker, FontId, GlyphBrush,
     GlyphBrushBuilder, GlyphCruncher, Layout, LineBreak, LineBreaker, SectionText, VariedSection,
@@ -25,6 +25,7 @@ use crate::{
     pass::UiArgs, text::CachedGlyph, FontAsset, LineMode, Selected, TextEditing, UiText,
     UiTransform,
 };
+use std::ops::Deref;
 
 #[derive(Debug, Default)]
 pub struct UiGlyphsResource {

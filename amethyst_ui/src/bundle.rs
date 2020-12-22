@@ -7,7 +7,7 @@ use amethyst_audio::Source;
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
 use derive_new::new;
-use winit::Event;
+use winit::event::Event;
 
 use crate::{
     button::{ui_button_action_retrigger_event_system, UiButtonSystem},
@@ -63,7 +63,7 @@ where
             .register_reader();
 
         let text_editing_mouse_reader = resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'static, ()>>>()
             .unwrap()
             .register_reader();
 
@@ -73,11 +73,11 @@ where
             .register_reader();
 
         let selection_keyboard_reader = resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'static, ()>>>()
             .unwrap()
             .register_reader();
         let text_editing_input_reader = resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'static, ()>>>()
             .unwrap()
             .register_reader();
         let drag_widget_reader = resources

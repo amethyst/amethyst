@@ -7,7 +7,7 @@ use amethyst_core::{
 use amethyst_input::InputHandler;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event::{Event, WindowEvent, VirtualKeyCode};
 
 use crate::{CachedSelectionOrderResource, UiEvent, UiEventType};
 
@@ -49,7 +49,7 @@ pub struct SelectionKeyboardSystem<G>
 where
     G: Send + Sync + 'static + PartialEq,
 {
-    window_reader_id: ReaderId<Event>,
+    window_reader_id: ReaderId<Event<'static, ()>>,
     phantom: PhantomData<G>,
 }
 
@@ -58,7 +58,7 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     /// Creates a new `SelectionKeyboardSystem`.
-    pub fn new(window_reader_id: ReaderId<Event>) -> Self {
+    pub fn new(window_reader_id: ReaderId<Event<'static, ()>>) -> Self {
         Self {
             window_reader_id,
             phantom: PhantomData,
@@ -72,7 +72,7 @@ where
 {
     fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
         Box::new(SystemBuilder::new("SelectionKeyboardSystem")
-            .read_resource::<EventChannel<Event>>()
+            .read_resource::<EventChannel<Event<'static, ()>>>()
             .read_resource::<CachedSelectionOrderResource>()
             .write_resource::<EventChannel<UiEvent>>()
             .with_query(<(Entity, &mut Selected)>::query())
@@ -103,16 +103,8 @@ where
                 for event in window_events.read(&mut self.window_reader_id) {
                     if let Event::WindowEvent {
                         event:
-                        WindowEvent::KeyboardInput {
-                            input:
-                            KeyboardInput {
-                                state: ElementState::Pressed,
-                                virtual_keycode: Some(VirtualKeyCode::Tab),
-                                modifiers,
-                                ..
-                            },
-                            ..
-                        },
+                        WindowEvent::ModifiersChanged(modifiers)
+                        ,
                         ..
                     } = *event
                     {
@@ -128,7 +120,7 @@ where
                             });
 
 
-                            let target = if !modifiers.shift {
+                            let target = if !modifiers.shift() {
                                 // Up
                                 if highest > 0 {
                                     cached.cache.get(highest - 1).unwrap_or_else(|| cached.cache.last()
