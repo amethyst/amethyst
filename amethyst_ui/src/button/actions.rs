@@ -1,4 +1,4 @@
-use amethyst_core::ecs::prelude::Entity;
+use amethyst_core::ecs::Entity;
 
 use crate::UiImage;
 
