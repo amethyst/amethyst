@@ -17,6 +17,37 @@ use super::{
     *,
 };
 
+/// This structs holds state information about keyboard modifiers
+#[derive(Debug, Default)]
+pub struct KeyboardModifiersState {
+    shift: bool,
+    ctrl: bool,
+    logo: bool,
+    alt: bool,
+}
+
+impl KeyboardModifiersState {
+    /// Return the current state of the shift modifier (either left or right)
+    pub fn shift(&self) -> bool {
+        self.shift
+    }
+
+    /// Return the current state of the ctrl modifier (either left or right)
+    pub fn ctrl(&self) -> bool {
+        self.ctrl
+    }
+
+    /// Return the current state of the logo modifier (either left or right)
+    pub fn logo(&self) -> bool {
+        self.logo
+    }
+
+    /// Return the current state of the alt modifier (either left or right, no difference made for GR)
+    pub fn alt(&self) -> bool {
+        self.alt
+    }
+}
+
 /// This struct holds state information about input devices.
 ///
 /// For example, if a key is pressed on the keyboard, this struct will record
@@ -25,6 +56,8 @@ use super::{
 pub struct InputHandler {
     /// Maps inputs to actions and axes.
     pub bindings: Bindings,
+    /// Keeps the current state of keyboard modifiers
+    modifiers: KeyboardModifiersState,
     /// Encodes the VirtualKeyCode and corresponding scancode.
     pressed_keys: SmallVec<[(VirtualKeyCode, u32); 12]>,
     pressed_mouse_buttons: SmallVec<[MouseButton; 12]>,
@@ -58,6 +91,12 @@ impl InputHandler {
     ) {
         match *event {
             Event::WindowEvent { ref event, .. } => match *event {
+                WindowEvent::ModifiersChanged(modifier) => {
+                    self.modifiers.logo = modifier.logo();
+                    self.modifiers.ctrl = modifier.ctrl();
+                    self.modifiers.alt = modifier.alt();
+                    self.modifiers.shift = modifier.shift();
+                }
                 WindowEvent::ReceivedCharacter(c) => {
                     event_handler.single_write(KeyTyped(c));
                 }
