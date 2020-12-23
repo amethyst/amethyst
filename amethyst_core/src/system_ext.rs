@@ -39,7 +39,7 @@ use crate::legion::{
 ///
 /// let mut schedule = Schedule::builder()
 ///     .add_system(add_number_system(1))
-///     .add_system(pauseable(add_number_system(2), CurrentState::Enabled))
+///     .add_system(pausable(add_number_system(2), CurrentState::Enabled))
 ///     .build();
 ///
 /// let mut world = World::default();
@@ -57,7 +57,7 @@ use crate::legion::{
 /// schedule.execute(&mut world, &mut resources);
 /// assert_eq!(1 + 2, resources.get::<u32>().unwrap());
 /// ```
-pub fn pauseable<V>(runnable: impl Runnable, value: V) -> Pauseable<impl Runnable, V>
+pub fn pausable<V>(runnable: impl Runnable, value: V) -> Pausable<impl Runnable, V>
 where
     V: Resource + PartialEq,
 {
@@ -67,7 +67,7 @@ where
         .copied()
         .chain(std::iter::once(ResourceTypeId::of::<V>()))
         .collect::<Vec<_>>();
-    Pauseable {
+    Pausable {
         system: runnable,
         value,
         resource_reads,
@@ -76,17 +76,17 @@ where
 
 /// A system that is enabled when `V` has a specific value.
 ///
-/// This is created using the [`pauseable`] method.
+/// This is created using the [`pausable`] method.
 ///
-/// [`pauseable`]: fn.pauseable.html
+/// [`pausable`]: fn.pausable.html
 #[derive(Debug)]
-pub struct Pauseable<S, V> {
+pub struct Pausable<S, V> {
     system: S,
     value: V,
     resource_reads: Vec<ResourceTypeId>,
 }
 
-impl<S, V> Runnable for Pauseable<S, V>
+impl<S, V> Runnable for Pausable<S, V>
 where
     S: Runnable,
     V: Resource + PartialEq,
