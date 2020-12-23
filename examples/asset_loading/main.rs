@@ -2,7 +2,7 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
-    assets::{Format as AssetFormat, Handle, Loader},
+    assets::{DefaultLoader, Format as AssetFormat, Handle, Loader},
     core::{
         math::Vector3,
         transform::{Transform, TransformBundle},
@@ -26,7 +26,7 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::{AssetHandle, DefaultLoader, LoaderBundle};
+use amethyst_assets::{AssetHandle, LoaderBundle};
 use log::info;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;

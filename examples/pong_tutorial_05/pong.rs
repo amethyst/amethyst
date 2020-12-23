@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
     core::{timing::Time, transform::Transform},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
@@ -112,7 +112,7 @@ fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
     // `texture_handle` is a cloneable reference to the texture
 
     let texture_handle = {
-        let loader = resources.get::<Loader>().unwrap();
+        let loader = resources.get::<DefaultLoader>().unwrap();
         let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
         loader.load(
             "texture/pong_spritesheet.png",
@@ -122,7 +122,7 @@ fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
         )
     };
 
-    let loader = resources.get::<Loader>().unwrap();
+    let loader = resources.get::<DefaultLoader>().unwrap();
     let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
     loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file
@@ -194,7 +194,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
 
 /// Initialises a ui scoreboard
 fn initialise_scoreboard(world: &mut World) {
-    let loader = resources.get::<Loader>().unwrap();
+    let loader = resources.get::<DefaultLoader>().unwrap();
     let font_store = resources.get::<AssetStorage<Font>>().unwrap();
 
     let font = loader.load("font/square.ttf", TtfFormat, (), &font_store);

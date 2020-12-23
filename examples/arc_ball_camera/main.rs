@@ -28,7 +28,7 @@ use amethyst::{
     winit::event::{MouseButton, VirtualKeyCode},
     Error,
 };
-use amethyst_assets::{DefaultLoader, LoaderBundle, ProcessingQueue};
+use amethyst_assets::{DefaultLoader, Handle, LoaderBundle, ProcessingQueue};
 use amethyst_rendy::{
     rendy::hal::command::ClearColor,
     types::{MeshData, TextureData},

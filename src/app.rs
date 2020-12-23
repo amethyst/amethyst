@@ -638,7 +638,7 @@ where
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader, Handle};
+    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
     ///
     /// # fn main() -> amethyst::Result<()> {
@@ -654,7 +654,7 @@ where
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
-    ///         let loader = data.resources.get::<Loader>().unwrap();
+    ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
     ///         let storage = data.resources.get().unwrap();
     ///
     ///         // Load a teapot mesh from the directory that registered above.
@@ -694,7 +694,7 @@ where
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader, Handle};
+    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
     ///
     /// # fn main() -> amethyst::Result<()> {
@@ -710,7 +710,7 @@ where
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
-    ///         let loader = data.resources.get::<Loader>().unwrap();
+    ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
     ///         let storage = data.resources.get().unwrap();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh: Handle<Mesh> = loader.load("teapot", ObjFormat, (), &storage);

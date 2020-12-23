@@ -7,7 +7,7 @@ mod sprite;
 mod sprite_sheet_loader;
 
 use amethyst::{
-    assets::{Handle, Loader},
+    assets::{DefaultLoader, Handle, Loader},
     core::{
         transform::{Transform, TransformBundle},
         Hidden,
@@ -25,7 +25,7 @@ use amethyst::{
     window::ScreenDimensions,
     winit::event::VirtualKeyCode,
 };
-use amethyst_assets::{DefaultLoader, LoaderBundle, ProcessingQueue};
+use amethyst_assets::{LoaderBundle, ProcessingQueue};
 use log::info;
 
 use crate::sprite::SpriteSheetDefinition;

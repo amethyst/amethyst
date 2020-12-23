@@ -22,7 +22,7 @@ use crate::types::TextureData;
 /// # Example Usage
 /// ```ignore
 ///
-///    let loader = res.fetch_mut::<Loader>();
+///    let loader = res.fetch_mut::<DefaultLoader>();
 ///    let texture_storage = res.fetch_mut::<AssetStorage<Texture>>();
 ///
 ///    let texture_builder = TextureBuilder::new()

@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
     core::transform::Transform,
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
@@ -50,24 +50,14 @@ impl Paddle {
 }
 
 fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
-    let texture_handle = {
-        let loader = resources.get::<Loader>().unwrap();
+    let texture_handle: Handle<Texture> = {
+        let loader = resources.get::<DefaultLoader>().unwrap();
         let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        loader.load(
-            "texture/pong_spritesheet.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
+        loader.load("texture/pong_spritesheet.png")
     };
-    let loader = resources.get::<Loader>().unwrap();
+    let loader = resources.get::<DefaultLoader>().unwrap();
     let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
-    loader.load(
-        "texture/pong_spritesheet.ron",
-        SpriteSheetFormat(texture_handle),
-        (),
-        &sprite_sheet_store,
-    )
+    loader.load("texture/pong_spritesheet.ron")
 }
 
 /// Initialise the camera.

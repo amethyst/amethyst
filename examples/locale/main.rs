@@ -1,7 +1,9 @@
 //! Example showing how to load a Locale file as an Asset using the Loader.
 
 use amethyst::{
-    assets::{AssetProcessorSystemBundle, AssetStorage, Handle, Loader, ProgressCounter},
+    assets::{
+        AssetProcessorSystemBundle, AssetStorage, DefaultLoader, Handle, Loader, ProgressCounter,
+    },
     ecs::*,
     locale::*,
     prelude::*,
@@ -29,7 +31,7 @@ impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let mut progress_counter = ProgressCounter::default();
 
-        let loader = data.resources.get::<Loader>().unwrap();
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
 
         self.handle_en = Some(loader.load(
             "locale/locale_en.ftl",

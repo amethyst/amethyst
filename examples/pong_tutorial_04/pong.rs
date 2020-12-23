@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
     core::{timing::Time, transform::Transform},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
@@ -96,24 +96,14 @@ fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
     // `sprite_sheet` is the layout of the sprites on the image
     // `texture_handle` is a cloneable reference to the texture
 
-    let texture_handle = {
-        let loader = resources.get::<Loader>().unwrap();
-        let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        loader.load(
-            "texture/pong_spritesheet.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
+    let texture_handle: Handle<Texture> = {
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        loader.load("texture/pong_spritesheet.png")
     };
 
-    let loader = resources.get::<Loader>().unwrap();
-    let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
+    let loader = resources.get::<DefaultLoader>().unwrap();
     loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file
-        SpriteSheetFormat(texture_handle), // We pass it the texture we want it to use
-        (),
-        &sprite_sheet_store,
     )
 }
 

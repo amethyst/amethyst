@@ -108,13 +108,13 @@ mod tests {
                 let mut in_memory_source = InMemorySource::new();
                 in_memory_source.insert(String::from("file.ron"), b"(val: 123)".to_vec());
 
-                let mut loader = world.write_resource::<Loader>();
+                let mut loader = world.write_resource::<DefaultLoader>();
                 loader.add_source(IN_MEMORY_SOURCE_ID, in_memory_source);
             })
             .with_effect(|world| {
                 let mut progress_counter = ProgressCounter::new();
                 let test_asset_handle = {
-                    let loader = data.resources.get::<Loader>().unwrap();
+                    let loader = data.resources.get::<DefaultLoader>().unwrap();
                     loader.load_from(
                         "file.ron",
                         RonFormat,
@@ -148,13 +148,13 @@ mod tests {
                 let mut in_memory_source = InMemorySource::new();
                 in_memory_source.insert(String::from("file.ron"), b"(val: 123)".to_vec());
 
-                let mut loader = world.write_resource::<Loader>();
+                let mut loader = world.write_resource::<DefaultLoader>();
                 loader.add_source(IN_MEMORY_SOURCE_ID, in_memory_source);
             })
             .with_effect(|world| {
                 let mut progress_counter = ProgressCounter::new();
                 let test_asset_handle = {
-                    let loader = data.resources.get::<Loader>().unwrap();
+                    let loader = data.resources.get::<DefaultLoader>().unwrap();
                     loader.load_from(
                         "file.ron",
                         RonFormat,

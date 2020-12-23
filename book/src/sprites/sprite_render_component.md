@@ -18,7 +18,7 @@ In the previous section you wrote a function that returns a `SpriteSheet`. This 
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::assets::{AssetStorage, Loader, Handle};
+use amethyst::assets::{AssetStorage,  DefaultLoader, Loader, Handle};
 # use amethyst::prelude::*;
 use amethyst::renderer::{SpriteSheet, Texture};
 
@@ -42,7 +42,7 @@ impl SimpleState for ExampleState {
 
         let sprite_sheet = load_sprite_sheet(texture_handle);
         let sprite_sheet_handle = {
-            let loader = data.world.read_resource::<Loader>();
+            let loader = data.world.read_resource::<DefaultLoader>();
             loader.load_from_data(
                 sprite_sheet,
                 (),
@@ -59,7 +59,7 @@ Cool, finally we have all the parts, let's build a `SpriteRender` and attach it 
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::assets::{AssetStorage, Loader, Handle};
+# use amethyst::assets::{AssetStorage,  DefaultLoader, Loader, Handle};
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
@@ -87,7 +87,7 @@ impl SimpleState for ExampleState {
 #
 #         let sprite_sheet = load_sprite_sheet(texture_handle);
 #         let sprite_sheet_handle = {
-#             let loader = data.world.read_resource::<Loader>();
+#             let loader = data.world.read_resource::<DefaultLoader>();
 #             loader.load_from_data(
 #                 sprite_sheet,
 #                 (),

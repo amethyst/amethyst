@@ -41,7 +41,7 @@ fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle 
 /// we'll just work on sound effects.
 pub fn initialise_audio(world: &mut World) {
     let sound_effects = {
-        let loader = world.read_resource::<Loader>();
+        let loader = world.read_resource::<DefaultLoader>();
 
         let sound = Sounds {
             bounce_sfx: load_audio_track(&loader, &world, BOUNCE_SOUND),
@@ -330,7 +330,7 @@ use amethyst::{
 
 pub fn initialise_audio(world: &mut World) {
     let (sound_effects, music) = {
-        let loader = world.read_resource::<Loader>();
+        let loader = world.read_resource::<DefaultLoader>();
 
         let mut sink = world.write_resource::<AudioSink>();
         sink.set_volume(0.25); // Music is a bit loud, reduce the volume.

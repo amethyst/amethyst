@@ -173,7 +173,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #
     # use amethyst::{
     #     error::Error,
-    #     assets::{AssetStorage, Loader, ProcessableAsset, ProcessingState, ProgressCounter, RonFormat},
+    #     assets::{AssetStorage,  DefaultLoader, Loader, ProcessableAsset, ProcessingState, ProgressCounter, RonFormat},
     #     ecs::{World, WorldExt},
     #     prelude::*,
     #     utils::application_root_dir,
@@ -244,7 +244,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #
     impl SimpleState for LoadingState {
         fn on_start(&mut self, data: StateData<'_, GameData>) {
-            let loader = &data.world.read_resource::<Loader>();
+            let loader = &data.world.read_resource::<DefaultLoader>();
             let energy_blast_handle = loader.load(
                 "energy_blast.ron",
                 RonFormat,

@@ -25,7 +25,7 @@ previous chapters, but here we will save the entity in our struct:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{
-#  assets::{AssetStorage, Loader},
+#  assets::{AssetStorage,  DefaultLoader, Loader},
 # 	ecs::{Entity, World, WorldExt},
 # 	ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiText, UiTransform},
 # 	prelude::{Builder, GameData, SimpleState, StateData},
@@ -54,7 +54,7 @@ impl SimpleState for MenuState {
         );
 
         /* Create the text */
-#       let font_handle = world.read_resource::<Loader>().load(
+#       let font_handle = world.read_resource::<DefaultLoader>().load(
 #       "font/square.ttf",
 #       TtfFormat,
 #       (),
@@ -90,7 +90,7 @@ method of our state:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{
-#   assets::{AssetStorage, Loader},
+#   assets::{AssetStorage,  DefaultLoader, Loader},
 #   ecs::{Entity, World, WorldExt},
 #   ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
@@ -120,7 +120,7 @@ impl SimpleState for MenuState {
 #       );
 #
 #       /* Create the text */
-#       let font_handle = world.read_resource::<Loader>().load(
+#       let font_handle = world.read_resource::<DefaultLoader>().load(
 #          "font/square.ttf",
 #          TtfFormat,
 #          (),
@@ -192,7 +192,7 @@ component to our button:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{
-#   assets::{AssetStorage, Loader},
+#   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
 #   ecs::{Entity, World, WorldExt},
 #   ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
@@ -223,7 +223,7 @@ impl SimpleState for MenuState {
 #       );
 #
 #       /* Create the text */
-#       let font_handle = world.read_resource::<Loader>().load(
+#       let font_handle = world.read_resource::<DefaultLoader>().load(
 #           "font/square.ttf",
 #           TtfFormat,
 #           (),
@@ -286,7 +286,7 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{
-#   assets::{AssetStorage, Loader},
+#   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
 #   ecs::{Entity, World, WorldExt},
 #   ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
@@ -317,7 +317,7 @@ impl SimpleState for MenuState {
 #       );
 #
 #       /* Create the text */
-#       let font_handle = world.read_resource::<Loader>().load(
+#       let font_handle = world.read_resource::<DefaultLoader>().load(
 #           "font/square.ttf",
 #           TtfFormat,
 #           (),
