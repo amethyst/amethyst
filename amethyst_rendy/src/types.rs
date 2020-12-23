@@ -3,7 +3,7 @@ use amethyst_assets::Asset;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
-use crate::system::{MeshProcessor, TextureProcessor};
+use crate::system::{MeshProcessorSystem, TextureProcessorSystem};
 
 /// Extension of the rendy Backend trait.
 pub trait Backend: rendy::hal::Backend {
@@ -121,11 +121,8 @@ impl_backends!(
     Empty, "empty", rendy::empty::Backend;
 );
 
-// FIXME Elsewhere there is specific processor for Meshes
-amethyst_assets::register_asset_type!(MeshData => Mesh; MeshProcessor<DefaultBackend>);
-
-// FIXME Elsewhere there is a specific processor for Textures
-amethyst_assets::register_asset_type!(TextureData => Texture; TextureProcessor<DefaultBackend>);
+amethyst_assets::register_asset_type!(MeshData => Mesh; MeshProcessorSystem<DefaultBackend>);
+amethyst_assets::register_asset_type!(TextureData => Texture; TextureProcessorSystem<DefaultBackend>);
 
 impl Asset for Mesh {
     fn name() -> &'static str {

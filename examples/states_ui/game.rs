@@ -58,11 +58,7 @@ impl SimpleState for Game {
         self.random_text = None;
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) {

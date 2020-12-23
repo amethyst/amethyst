@@ -158,11 +158,7 @@ impl SimpleState for ExampleState {
             .build();
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         if let StateEvent::Window(event) = event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 Trans::Quit
@@ -191,21 +187,21 @@ fn main() -> amethyst::Result<()> {
     )
     .with_sensitivity(0.1, 0.1);
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(
+    let mut game_data = DispatcherBuilder::default()
+        .add_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with(ExampleLinesSystem, "example_lines_system", &[])
-        .with_bundle(fly_control_bundle)?
-        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
-        .with_bundle(
+        .add_bundle(fly_control_bundle)?
+        .add_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, ExampleState, game_data)?;
+    let game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

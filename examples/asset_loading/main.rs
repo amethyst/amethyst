@@ -24,6 +24,7 @@ use amethyst::{
         types::{DefaultBackend, Mesh, MeshData},
         RenderingBundle,
     },
+    utils::application_root_dir,
 };
 use amethyst_assets::{AssetHandle, DefaultLoader, LoaderBundle};
 use log::info;
@@ -141,11 +142,11 @@ fn main() -> Result<(), Error> {
         amethyst::start_logger(config);
     }
 
-    let app_root = std::path::PathBuf::new();
+    let app_root = application_root_dir()?;
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("assets");
+    let assets_dir = app_root.join("examples/asset_loading/assets/");
 
-    let display_config_path = app_root.join("config/display.ron");
+    let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
     let mut dispatcher_builder = DispatcherBuilder::default();
     dispatcher_builder
@@ -161,7 +162,7 @@ fn main() -> Result<(), Error> {
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
         );
-    let mut game = Application::new(assets_dir, AssetsExample, dispatcher_builder)?;
+    let game = Application::new(assets_dir, AssetsExample, dispatcher_builder)?;
     game.run();
     Ok(())
 }

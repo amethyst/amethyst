@@ -15,6 +15,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -60,33 +61,34 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = app_root.join("examples/pong_tutorial_06/assets/");
 
-    let game_data = GameDataBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
         )?
-        .with_bundle(PongBundle)?
-        .with_bundle(AudioBundle::default())?
+        .add_bundle(PongBundle)?
+        .add_bundle(AudioBundle::default())?
         .with_system_desc(
             DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(
+        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Pong::default())?
+    let game = Application::build(assets_dir, Pong::default())?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,

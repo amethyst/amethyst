@@ -22,16 +22,16 @@ license = "MIT/Apache-2.0"
 autoexamples = false
 
 [patch.crates-io]
-rendy = { git = "https://github.com/kabergstrom/rendy.git", branch = "attribute-serde-fix" }
 legion-transaction = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
 legion-prefab = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
 prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
 serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0" }
 
 [features]
-default = ["audio", "locale", "network", "parallel", "renderer"]
+default = ["parallel", "renderer"]
+optional = ["audio", "network", "locale", "ui"]
 
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
@@ -44,7 +44,7 @@ network = ["amethyst_network"]
 
 renderer = ["amethyst_rendy"]
 
-#ui = ["amethyst_ui", "amethyst_animation/ui"]
+ui = ["amethyst_ui"] #, "amethyst_animation/ui"]
 
 profiler = [
     "thread_profiler",
@@ -64,37 +64,20 @@ profiler = [
 ]
 sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
-saveload = []
 server = ["locale", "network"]
 no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
 shader-compiler = ["amethyst_rendy/shader-compiler"]
-test-support = [
-    "amethyst_rendy/test-support",
-    "amethyst_window/test-support",
-]
+test-support = ["amethyst_rendy/test-support", "amethyst_window/test-support"]
 experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 parallel = ["amethyst_core/parallel"]
 
 [workspace]
-members = [
-    #"amethyst_animation",
-    "amethyst_assets",
-    "amethyst_audio",
-    "amethyst_config",
-    "amethyst_core",
-    "amethyst_error",
-    "amethyst_controls",
-    "amethyst_derive",
-    #"amethyst_gltf",
-    "amethyst_network",
-    "amethyst_locale",
-    "amethyst_rendy",
-    "amethyst_input",
-    #"amethyst_ui",
-    "amethyst_utils",
-    #"amethyst_test",
-    #"amethyst_tiles",
-    "amethyst_window",
+members = ["amethyst_*"]
+exclude = [
+    "amethyst_gltf",
+    "amethyst_animation",
+    "amethyst_tiles",
+    "amethyst_test",
 ]
 
 [dependencies]
@@ -111,10 +94,11 @@ amethyst_network = { path = "amethyst_network", version = "0.15.3", optional = t
 amethyst_locale = { path = "amethyst_locale", version = "0.15.3", optional = true }
 amethyst_rendy = { path = "amethyst_rendy", version = "0.15.3", features = ["window"], optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.15.3" }
-#amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
+amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3" }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
 #amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
+winit = { git = "https://git@github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 crossbeam-channel = "0.4.2"
 derivative = "2.1.1"
 fern = { version = "0.6.0", features = ["colored"] }
@@ -122,10 +106,8 @@ log = { version = "0.4.8", features = ["serde"] }
 rayon = "1.4.0"
 rustc_version_runtime = "0.2.0"
 sentry = { version = "0.18.0", optional = true }
-winit = { version = "0.19", features = ["serde", "icon_loading"] }
 serde = { version = "1.0.104", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
-failure = "0.1.7"
 thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"
 glsl-layout = "0.3.2"
@@ -151,8 +133,8 @@ name = "hello_world"
 [[example]]
 name = "window"
 
-# [[example]]
-# name = "sphere"
+[[example]]
+name = "sphere"
 
 # [[example]]
 # name = "renderable"
@@ -180,12 +162,16 @@ name = "material"
 # name = "ui"
 # required-features = ["audio"]
 
+[[example]]
+name = "ui_from_code"
+required-features = ["ui", "audio"]
+
 # [[example]]
 # name = "states_ui"
 # required-features = ["audio"]
 
-# [[example]]
-# name = "custom_render_pass"
+[[example]]
+name = "custom_render_pass"
 
 # [[example]]
 # name = "custom_ui"
@@ -205,41 +191,36 @@ name = "fly_camera"
 [[example]]
 name = "sprites_ordered"
 
-# [[example]]
-# name = "pong_tutorial_01"
-# required-features = ["audio"]
+[[example]]
+name = "pong_tutorial_01"
 
-# [[example]]
-# name = "pong_tutorial_02"
-# required-features = ["audio"]
+[[example]]
+name = "pong_tutorial_02"
 
-# [[example]]
-# name = "pong_tutorial_03"
-# required-features = ["audio"]
+[[example]]
+name = "pong_tutorial_03"
 
-# [[example]]
-# name = "pong_tutorial_04"
-# required-features = ["audio"]
+[[example]]
+name = "pong_tutorial_04"
 
 # [[example]]
 # name = "pong_tutorial_05"
-# required-features = ["audio"]
 
 # [[example]]
 # name = "pong_tutorial_06"
 # required-features = ["audio"]
 
-# [[example]]
-# name = "net_client"
-# required-features = ["network"]
+[[example]]
+name = "net_client"
+required-features = ["network"]
 
-# [[example]]
-# name = "net_server"
-# required-features = ["network"]
+[[example]]
+name = "net_server"
+required-features = ["network"]
 
-# [[example]]
-# name = "locale"
-# required-features = ["locale"]
+[[example]]
+name = "locale"
+required-features = ["locale"]
 
 # [[example]]
 # name = "custom_game_data"
@@ -283,11 +264,14 @@ name = "prefab"
 # [[example]]
 # name = "auto_fov"
 
-# [[example]]
-# name = "events"
+[[example]]
+name = "events"
+
+[[example]]
+name = "events_custom_state_event"
 
 # [[example]]
-# name = "events_custom_state_event"
+# name = "state_dispatcher"
 
 # [[example]]
 # name = "mouse_raycast"

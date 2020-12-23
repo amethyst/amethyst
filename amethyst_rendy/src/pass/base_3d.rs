@@ -107,7 +107,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData> for DrawBase
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         profile_scope_impl!("build");
 
         let env = EnvironmentSub::new(
@@ -455,7 +455,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData>
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         let env = EnvironmentSub::new(
             factory,
             [
@@ -774,7 +774,7 @@ fn build_pipelines<B: Backend, T: Base3DPassDef>(
     skinning: bool,
     transparent: bool,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(Vec<B::GraphicsPipeline>, B::PipelineLayout), failure::Error> {
+) -> Result<(Vec<B::GraphicsPipeline>, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()

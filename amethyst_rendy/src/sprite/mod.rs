@@ -462,7 +462,7 @@ impl SpriteGrid {
 /// #
 /// # fn load_sprite_sheet() {
 /// #   let world = World::new(); // Normally, you would use Amethyst's world
-/// #   let loader = world.read_resource::<Loader>();
+/// #   let loader = data.resources.get::<Loader>().unwrap();
 /// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
 /// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();
 /// let texture_handle = loader.load(

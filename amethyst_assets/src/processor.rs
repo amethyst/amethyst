@@ -4,10 +4,14 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use amethyst_core::ecs::{systems::ParallelRunnable, DispatcherBuilder, SystemBuilder};
+use amethyst_core::{
+    dispatcher::System,
+    ecs::{systems::ParallelRunnable, DispatcherBuilder, SystemBuilder},
+};
 use amethyst_error::Error;
 use atelier_loader::storage::AssetLoadOp;
 use crossbeam_queue::SegQueue;
+use derivative::Derivative;
 use log::debug;
 
 use crate::{
@@ -23,70 +27,27 @@ use crate::{
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
-// pub struct Processor<A> {
-//     marker: PhantomData<A>,
-// }
-
-// impl<A> Default for Processor<A> {
-//     fn default() -> Self {
-//         Self::new()
-//     }
-// }
-
-// impl<A> Processor<A> {
-//     /// Creates a new asset processor for assets of type `A`.
-//     pub fn new() -> Self {
-//         Processor {
-//             marker: PhantomData,
-//         }
-//     }
-// }
-
-// impl<'a, A> System<'a> for Processor<A>
-// where
-//     A: crate::asset::Asset,
-//     A::Data: Into<Result<ProcessingState<A::Data, A>, Error>>,
-// {
-//     type SystemData = (
-//         Write<'a, ProcessingQueue<A::Data>>,
-//         Write<'a, AssetStorage<A>>,
-//     );
-
-//     fn run(&mut self, (mut queue, mut storage): Self::SystemData) {
-//     }
-// }
-
-pub struct DefaultProcessor<A> {
-    marker: PhantomData<A>,
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct AssetProcessorSystem<A> {
+    _marker: PhantomData<A>,
 }
 
-impl<A> AddToDispatcher for DefaultProcessor<A>
+impl<A> System<'_> for AssetProcessorSystem<A>
 where
     A: Asset + ProcessableAsset,
 {
-    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder) {
-        dispatcher_builder.add_system(build_default_asset_processer_system::<A>());
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new(format!("Asset Processor: {}", A::name()))
+                .write_resource::<ProcessingQueue<A::Data>>()
+                .write_resource::<AssetStorage<A>>()
+                .build(|_, _, (queue, storage), _| {
+                    queue.process(storage, ProcessableAsset::process);
+                    storage.process_custom_drop(|_| {});
+                }),
+        )
     }
-}
-
-/// attaches Asset processing systems to the dispatcher schedule
-/// required for create_asset_type
-pub trait AddToDispatcher {
-    /// add asset processing systems to the dispatcher
-    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder);
-}
-
-pub fn build_default_asset_processer_system<A>() -> impl ParallelRunnable
-where
-    A: Asset + ProcessableAsset,
-{
-    SystemBuilder::new(format!("Asset Processor {}", A::name()))
-        .write_resource::<ProcessingQueue<A::Data>>()
-        .write_resource::<AssetStorage<A>>()
-        .build(|_, _, (queue, storage), _| {
-            queue.process(storage, ProcessableAsset::process);
-            storage.process_custom_drop(|_| {});
-        })
 }
 
 /// Represents asset data processed by `atelier-assets` that needs to be loaded by Amethyst.

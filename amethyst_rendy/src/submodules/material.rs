@@ -11,14 +11,19 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor},
+        hal::{
+            self,
+            adapter::PhysicalDevice,
+            device::Device,
+            pso::{CreationError, Descriptor},
+        },
         memory::Write as _,
         resource::{
             Buffer, BufferInfo, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle,
         },
     },
     types::{Backend, Texture},
-    util,
+    util::{self, sub_range},
 };
 
 #[derive(Debug)]
@@ -84,15 +89,24 @@ impl<B: Backend> SlottedBuffer<B> {
         elem_size: u64,
         capacity: usize,
         usage: hal::buffer::Usage,
-    ) -> Result<Self, failure::Error> {
+    ) -> Result<Self, CreationError> {
         Ok(Self {
-            buffer: factory.create_buffer(
-                BufferInfo {
-                    size: elem_size * (capacity as u64),
-                    usage,
-                },
-                rendy::memory::Dynamic,
-            )?,
+            buffer: factory
+                .create_buffer(
+                    BufferInfo {
+                        size: elem_size * (capacity as u64),
+                        usage,
+                    },
+                    rendy::memory::Dynamic,
+                )
+                .map_err(|e| match e {
+                    rendy::resource::CreationError::Allocate(
+                        rendy::memory::HeapsError::AllocationError(
+                            hal::device::AllocationError::OutOfMemory(oom),
+                        ),
+                    ) => oom.into(),
+                    _ => CreationError::Other,
+                })?,
             elem_size,
         })
     }
@@ -101,7 +115,7 @@ impl<B: Backend> SlottedBuffer<B> {
         let offset = (id as u64) * self.elem_size;
         Descriptor::Buffer(
             self.buffer.raw(),
-            Some(offset)..Some(offset + self.elem_size),
+            sub_range((offset)..(offset + self.elem_size)),
         )
     }
 
@@ -151,13 +165,33 @@ pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
 
 impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Create a new `MaterialSub` using the provided rendy `Factory`
-    pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+    pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
+        use rendy::hal::pso::*;
+
+        let layout = factory
+            .create_descriptor_set_layout(util::set_layout_bindings(vec![
+                (
+                    1,
+                    DescriptorType::Buffer {
+                        ty: BufferDescriptorType::Uniform,
+                        format: BufferDescriptorFormat::Structured {
+                            dynamic_offset: false,
+                        },
+                    },
+                    ShaderStageFlags::FRAGMENT,
+                ),
+                (
+                    T::len() as u32,
+                    DescriptorType::Image {
+                        ty: ImageDescriptorType::Sampled { with_sampler: true },
+                    },
+                    ShaderStageFlags::FRAGMENT,
+                ),
+            ]))?
+            .into();
+
         Ok(Self {
-            layout: set_layout! {
-                factory,
-                [1] UniformBuffer hal::pso::ShaderStageFlags::FRAGMENT,
-                [T::len()] CombinedImageSampler hal::pso::ShaderStageFlags::FRAGMENT
-            },
+            layout,
             lookup: util::LookupBuilder::new(),
             allocator: SlotAllocator::new(1024),
             buffers: vec![Self::create_buffer(factory)?],
@@ -167,7 +201,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         })
     }
 
-    fn create_buffer(factory: &Factory<B>) -> Result<SlottedBuffer<B>, failure::Error> {
+    fn create_buffer(factory: &Factory<B>) -> Result<SlottedBuffer<B>, hal::pso::CreationError> {
         let align = factory
             .physical()
             .limits()

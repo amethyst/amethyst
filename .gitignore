@@ -1,7 +1,8 @@
 # Unwanted files
 book/book
-target/
+target
 *.log
+Cargo.lock
 
 # Backup files
 .DS_Store

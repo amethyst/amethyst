@@ -2,11 +2,10 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::{
-    AddToDispatcher, AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState,
-};
+use amethyst_assets::{AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState};
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
+use derivative::Derivative;
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
@@ -137,99 +136,105 @@ where
     run_graph(&mut state, world, resources);
 }
 
-/// Processes MeshData in to Mesh usable by B
-#[allow(missing_debug_implementations)]
-pub struct MeshProcessor<B: Backend> {
-    marker: PhantomData<B>,
+/// Asset processing system for `Mesh` asset type.
+#[derive(Debug, Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct MeshProcessorSystem<B: Backend> {
+    pub(crate) _marker: std::marker::PhantomData<B>,
 }
 
-impl<B: Backend> AddToDispatcher for MeshProcessor<B> {
-    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder) {
-        dispatcher_builder.add_system(build_mesh_processor::<B>());
+impl<B: Backend> System<'_> for MeshProcessorSystem<B> {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MeshProcessorSystem")
+                .write_resource::<ProcessingQueue<MeshData>>()
+                .write_resource::<AssetStorage<Mesh>>()
+                .read_resource::<QueueId>()
+                .read_resource::<Factory<B>>()
+                .build(
+                    move |commands,
+                          world,
+                          (
+                        processing_queue,
+                        mesh_storage,
+                        queue_id,
+                        /* time, pool, */ factory,
+                    ),
+                          _| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("mesh_processor");
+
+                        processing_queue.process(mesh_storage, |b| {
+                            log::trace!("Processing Mesh: {:?}", b);
+
+                            #[cfg(feature = "profiler")]
+                            profile_scope!("process_mesh");
+
+                            b.0.build(**queue_id, &factory)
+                                .map(B::wrap_mesh)
+                                .map(ProcessingState::Loaded)
+                                .map_err(|e| e.into())
+                        });
+                        mesh_storage.process_custom_drop(|_| {});
+                    },
+                ),
+        )
     }
 }
 
-/// Asset processing system for `Mesh` asset type.
-pub fn build_mesh_processor<B: Backend>() -> impl Runnable {
-    SystemBuilder::new("MeshProcessorSystem")
-        .write_resource::<ProcessingQueue<MeshData>>()
-        .write_resource::<AssetStorage<Mesh>>()
-        .read_resource::<QueueId>()
-        .read_resource::<Factory<B>>()
-        .build(
-            move |commands,
-                  world,
-                  (processing_queue, mesh_storage, queue_id, /* time, pool, */ factory),
-                  _| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("mesh_processor");
+/// Asset processing system for `Texture` asset type.
+#[derive(Debug, Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct TextureProcessorSystem<B> {
+    pub(crate) _marker: std::marker::PhantomData<B>,
+}
 
-                processing_queue.process(mesh_storage, |b| {
-                    log::trace!("Processing Mesh: {:?}", b);
+impl<B: Backend> System<'_> for TextureProcessorSystem<B> {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("TextureProcessorSystem")
+                .write_resource::<ProcessingQueue<TextureData>>()
+                .write_resource::<AssetStorage<Texture>>()
+                .read_resource::<QueueId>()
+                .write_resource::<Factory<B>>()
+                .build(
+                    move |commands,
+                          world,
+                          (
+                        processing_queue,
+                        texture_storage,
+                        queue_id,
+                        /* time, pool, */ factory,
+                    ),
+                          _| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("texture_processor");
 
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("process_mesh");
+                        processing_queue.process(texture_storage, |b| {
+                            log::trace!("Processing Texture: {:?}", b);
 
-                    b.0.build(**queue_id, &factory)
-                        .map(B::wrap_mesh)
-                        .map(ProcessingState::Loaded)
-                        .map_err(|e| Error::from_string("Error processing mesh"))
-                });
-                mesh_storage.process_custom_drop(|_| {});
-            },
+                            #[cfg(feature = "profiler")]
+                            profile_scope!("process_texture");
+
+                            b.0.build(
+                                ImageState {
+                                    queue: **queue_id,
+                                    stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
+                                        | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
+                                    access: rendy::hal::image::Access::SHADER_READ,
+                                    layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
+                                },
+                                &mut *factory,
+                            )
+                            .map(B::wrap_texture)
+                            .map(ProcessingState::Loaded)
+                            .map_err(|e| e.into())
+                        });
+                        texture_storage.process_custom_drop(|_| {});
+                    },
+                ),
         )
-}
-
-/// Converts TextureData in to Texture
-#[derive(Debug)]
-pub struct TextureProcessor<B: Backend> {
-    marker: PhantomData<B>,
-}
-
-impl<B: Backend> AddToDispatcher for TextureProcessor<B> {
-    fn add_to_dipatcher(dispatcher_builder: &mut DispatcherBuilder) {
-        dispatcher_builder.add_system(build_texture_processor::<B>());
     }
-}
-
-/// Asset processing system for `Mesh` asset type.
-pub fn build_texture_processor<B: Backend>() -> impl Runnable {
-    SystemBuilder::new("TextureProcessorSystem")
-        .write_resource::<ProcessingQueue<TextureData>>()
-        .write_resource::<AssetStorage<Texture>>()
-        .read_resource::<QueueId>()
-        .write_resource::<Factory<B>>()
-        .build(
-            move |commands,
-                  world,
-                  (processing_queue, texture_storage, queue_id, /* time, pool, */ factory),
-                  _| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("texture_processor");
-
-                processing_queue.process(texture_storage, |b| {
-                    log::trace!("Processing Texture: {:?}", b);
-
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("process_texture");
-
-                    b.0.build(
-                        ImageState {
-                            queue: **queue_id,
-                            stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
-                                | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
-                            access: rendy::hal::image::Access::SHADER_READ,
-                            layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
-                        },
-                        &mut *factory,
-                    )
-                    .map(B::wrap_texture)
-                    .map(ProcessingState::Loaded)
-                    .map_err(|e| Error::from_string("Error processing texture"))
-                });
-                texture_storage.process_custom_drop(|_| {});
-            },
-        )
 }
 
 pub(crate) fn create_default_mat<B: Backend>(resources: &Resources) -> Material {

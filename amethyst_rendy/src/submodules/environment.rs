@@ -15,7 +15,12 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor},
+        hal::{
+            self,
+            adapter::PhysicalDevice,
+            device::Device,
+            pso::{CreationError, Descriptor},
+        },
         memory::Write as _,
         resource::{Buffer, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     },
@@ -52,9 +57,36 @@ impl<B: Backend> EnvironmentSub<B> {
     pub fn new(
         factory: &Factory<B>,
         flags: [hal::pso::ShaderStageFlags; 2],
-    ) -> Result<Self, failure::Error> {
+    ) -> Result<Self, CreationError> {
+        use rendy::hal::pso::*;
+
+        let layout = factory
+            .create_descriptor_set_layout(util::set_layout_bindings(vec![
+                (
+                    1,
+                    DescriptorType::Buffer {
+                        ty: BufferDescriptorType::Uniform,
+                        format: BufferDescriptorFormat::Structured {
+                            dynamic_offset: false,
+                        },
+                    },
+                    flags[0],
+                ),
+                (
+                    4,
+                    DescriptorType::Buffer {
+                        ty: BufferDescriptorType::Uniform,
+                        format: BufferDescriptorFormat::Structured {
+                            dynamic_offset: false,
+                        },
+                    },
+                    flags[1],
+                ),
+            ]))?
+            .into();
+
         Ok(Self {
-            layout: set_layout! {factory, [1] UniformBuffer flags[0], [4] UniformBuffer flags[1]},
+            layout,
             per_image: Vec::new(),
         })
     }
@@ -153,15 +185,15 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         .unwrap();
         if let Some(buffer) = self.buffer.as_mut() {
             if new_buffer {
-                use util::{desc_write, opt_range};
+                use util::{desc_write, sub_range};
                 let buffer = buffer.raw();
                 let env_set = self.set.raw();
 
-                let desc_projview = Descriptor::Buffer(buffer, opt_range(projview_range.clone()));
-                let desc_env = Descriptor::Buffer(buffer, opt_range(env_range.clone()));
-                let desc_plight = Descriptor::Buffer(buffer, opt_range(plight_range.clone()));
-                let desc_dlight = Descriptor::Buffer(buffer, opt_range(dlight_range.clone()));
-                let desc_slight = Descriptor::Buffer(buffer, opt_range(slight_range.clone()));
+                let desc_projview = Descriptor::Buffer(buffer, sub_range(projview_range.clone()));
+                let desc_env = Descriptor::Buffer(buffer, sub_range(env_range.clone()));
+                let desc_plight = Descriptor::Buffer(buffer, sub_range(plight_range.clone()));
+                let desc_dlight = Descriptor::Buffer(buffer, sub_range(dlight_range.clone()));
+                let desc_slight = Descriptor::Buffer(buffer, sub_range(slight_range.clone()));
 
                 unsafe {
                     factory.write_descriptor_sets(vec![

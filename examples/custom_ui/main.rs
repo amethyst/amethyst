@@ -8,7 +8,10 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::RenderToWindow,
-        rendy::mesh::{Normal, Position, TexCoord},
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, TexCoord},
+        },
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -96,21 +99,22 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/custom_ui/config/display.ron");
     let assets_dir = app_root.join("examples/custom_ui/assets");
 
-    let game_data = GameDataBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings, CustomUi>::new())?
-        .with_bundle(
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(UiBundle::<StringBindings, CustomUi>::new())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::new(assets_dir, Example, game_data)?;
+    let game = Application::build(assets_dir, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }
