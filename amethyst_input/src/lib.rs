@@ -26,7 +26,7 @@ pub use self::{
     button::Button,
     controller::{ControllerAxis, ControllerButton, ControllerEvent},
     event::InputEvent,
-    input_handler::InputHandler,
+    input_handler::{InputHandler, KeyboardModifiersState},
     mouse::MouseAxis,
     scroll_direction::ScrollDirection,
     system::InputSystem,
