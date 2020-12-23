@@ -1,6 +1,6 @@
-use amethyst_assets::start_asset_daemon;
-
 use std::{path::PathBuf, sync::Once};
+
+use amethyst_assets::start_asset_daemon;
 
 pub fn setup_logger() {
     fern::Dispatch::new()
