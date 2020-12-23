@@ -6,7 +6,7 @@ use amethyst_config::{Config, ConfigError};
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
 use derivative::Derivative;
-use winit::Event;
+use winit::event::Event;
 
 #[cfg(feature = "sdl_controller")]
 use crate::sdl_events_system::ControllerMappings;
@@ -91,7 +91,7 @@ impl SystemBundle for InputBundle {
         }
 
         let reader = resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'_, ()>>>()
             .expect("Window event channel not found in resources")
             .register_reader();
 

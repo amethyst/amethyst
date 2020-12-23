@@ -15,7 +15,7 @@
 
 use std::iter::Iterator;
 
-pub use winit::{ElementState, VirtualKeyCode};
+pub use winit::event::{ElementState, VirtualKeyCode};
 
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
@@ -26,7 +26,7 @@ pub use self::{
     button::Button,
     controller::{ControllerAxis, ControllerButton, ControllerEvent},
     event::InputEvent,
-    input_handler::InputHandler,
+    input_handler::{InputHandler, KeyboardModifiersState},
     mouse::MouseAxis,
     scroll_direction::ScrollDirection,
     system::InputSystem,

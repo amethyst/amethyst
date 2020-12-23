@@ -125,7 +125,7 @@ fn main() -> amethyst::Result<()> {
     let mut builder = DispatcherBuilder::default();
     builder.add_bundle(AssetProcessorSystemBundle::<EnergyBlast>::default());
 
-    let mut game = Application::build(
+    let game = Application::build(
         assets_dir,
         LoadingState {
             progress_counter: ProgressCounter::new(),

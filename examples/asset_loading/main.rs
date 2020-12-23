@@ -135,7 +135,7 @@ fn main() -> Result<(), Error> {
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
         );
-    let mut game = Application::build(assets_dir, AssetsExample)?.build(game_data)?;
+    let game = Application::build(assets_dir, AssetsExample)?.build(game_data)?;
     game.run();
     Ok(())
 }

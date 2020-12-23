@@ -55,7 +55,7 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawFlat2DDesc {
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -238,7 +238,7 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawFlat2DTransparentDesc 
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build_trans");
 
@@ -410,7 +410,7 @@ fn build_sprite_pipeline<B: Backend>(
     framebuffer_height: u32,
     transparent: bool,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()
@@ -424,7 +424,7 @@ fn build_sprite_pipeline<B: Backend>(
         .with_pipeline(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(SpriteArgs::vertex(), pso::VertexInputRate::Instance(1))])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
+                .with_input_assembler(pso::InputAssemblerDesc::new(pso::Primitive::TriangleStrip))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),

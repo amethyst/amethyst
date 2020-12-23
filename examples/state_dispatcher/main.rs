@@ -56,7 +56,7 @@ fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
     let app_root = application_root_dir()?;
     let assets_dir = app_root.join("examples/state_dispatcher/assets");
-    let mut game = Application::build(assets_dir, StateA)?.build(DispatcherBuilder::default())?;
+    let game = Application::build(assets_dir, StateA)?.build(DispatcherBuilder::default())?;
     game.run();
     Ok(())
 }

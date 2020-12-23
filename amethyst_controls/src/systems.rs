@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use amethyst_core::{
+    dispatcher::ThreadLocalSystem,
     ecs::*,
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
@@ -10,7 +11,10 @@ use amethyst_core::{
 use amethyst_input::{get_input_axis_simple, InputHandler};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-use winit::{DeviceEvent, Event, Window, WindowEvent};
+use winit::{
+    event::{DeviceEvent, Event, WindowEvent},
+    window::Window,
+};
 
 use crate::{
     components::{ArcBallControl, FlyControl},
@@ -114,14 +118,14 @@ impl System<'_> for ArcBallRotationSystem {
 pub struct FreeRotationSystem {
     pub(crate) sensitivity_x: f32,
     pub(crate) sensitivity_y: f32,
-    pub(crate) reader: ReaderId<Event>,
+    pub(crate) reader: ReaderId<Event<'static, ()>>,
 }
 
 impl System<'static> for FreeRotationSystem {
     fn build(&'static mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("FreeRotationSystem")
-                .read_resource::<EventChannel<Event>>()
+                .read_resource::<EventChannel<Event<'static, ()>>>()
                 .read_resource::<WindowFocus>()
                 .read_resource::<HideCursor>()
                 .with_query(
@@ -158,14 +162,14 @@ impl System<'static> for FreeRotationSystem {
 #[derive(Debug)]
 pub struct MouseFocusUpdateSystem {
     // reads WindowEvent from winit
-    pub(crate) reader: ReaderId<Event>,
+    pub(crate) reader: ReaderId<Event<'static, ()>>,
 }
 
 impl System<'static> for MouseFocusUpdateSystem {
     fn build(&'static mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MouseFocusUpdateSystem")
-                .read_resource::<EventChannel<Event>>()
+                .read_resource::<EventChannel<Event<'static, ()>>>()
                 .write_resource::<WindowFocus>()
                 .build(move |_commands, _world, (events, focus), ()| {
                     #[cfg(feature = "profiler")]
@@ -174,6 +178,7 @@ impl System<'static> for MouseFocusUpdateSystem {
                     for event in events.read(&mut self.reader) {
                         if let Event::WindowEvent { ref event, .. } = *event {
                             if let WindowEvent::Focused(focused) = *event {
+                                log::debug!("Window was focused.");
                                 focus.is_focused = focused;
                             }
                         }
@@ -188,9 +193,9 @@ impl System<'static> for MouseFocusUpdateSystem {
 #[derive(Debug)]
 pub struct CursorHideSystem;
 
-impl System<'_> for CursorHideSystem {
-    fn build(&mut self) -> Box<dyn systems::ParallelRunnable> {
-        let mut is_hidden = true;
+impl ThreadLocalSystem<'_> for CursorHideSystem {
+    fn build(&mut self) -> Box<dyn systems::Runnable> {
+        let mut is_hidden = false;
 
         Box::new(
             SystemBuilder::new("CursorHideSystem")
@@ -202,18 +207,13 @@ impl System<'_> for CursorHideSystem {
                     profile_scope!("cursor_hide_system");
 
                     let should_be_hidden = focus.is_focused && hide.hide;
-                    if !is_hidden && should_be_hidden {
-                        if let Err(err) = window.grab_cursor(true) {
-                            log::error!("Unable to grab the cursor. Error: {:?}", err);
-                        }
-                        window.hide_cursor(true);
-                        is_hidden = true;
-                    } else if is_hidden && !should_be_hidden {
-                        if let Err(err) = window.grab_cursor(false) {
-                            log::error!("Unable to release the cursor. Error: {:?}", err);
-                        }
-                        window.hide_cursor(false);
-                        is_hidden = false;
+
+                    if should_be_hidden != is_hidden {
+                        window
+                            .set_cursor_grab(should_be_hidden)
+                            .expect("Failed to set cursor grab state.");
+                        window.set_cursor_visible(!should_be_hidden);
+                        is_hidden = should_be_hidden;
                     }
                 }),
         )

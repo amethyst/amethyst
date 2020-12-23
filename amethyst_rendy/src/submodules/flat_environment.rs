@@ -21,7 +21,7 @@ pub struct FlatEnvironmentSub<B: Backend> {
 
 impl<B: Backend> FlatEnvironmentSub<B> {
     /// Create and allocate a new `EnvironmentSub` with the provided rendy `Factory`
-    pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+    pub fn new(factory: &Factory<B>) -> Result<Self, rendy::hal::pso::CreationError> {
         Ok(Self {
             uniform: DynamicUniform::new(factory, rendy::hal::pso::ShaderStageFlags::VERTEX)?,
         })

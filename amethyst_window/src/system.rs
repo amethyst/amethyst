@@ -3,7 +3,13 @@ use amethyst_core::{
     ecs::{systems::ParallelRunnable, Runnable, SystemBuilder},
     EventChannel,
 };
-use winit::{Event, EventsLoop, Window};
+use winit::{
+    dpi::Size,
+    event::Event,
+    event_loop::{ControlFlow, EventLoop},
+    platform::run_return::EventLoopExtRunReturn,
+    window::Window,
+};
 
 use crate::resources::ScreenDimensions;
 
@@ -24,52 +30,52 @@ impl System<'_> for WindowSystem {
 
                     // Send resource size changes to the window
                     if screen_dimensions.dirty {
-                        window.set_inner_size((width, height).into());
+                        window.set_inner_size(Size::Logical((width, height).into()));
                         screen_dimensions.dirty = false;
                     }
 
-                    let hidpi = window.get_hidpi_factor();
+                    let (window_width, window_height): (f64, f64) = window.inner_size().into();
 
-                    if let Some(size) = window.get_inner_size() {
-                        let (window_width, window_height): (f64, f64) =
-                            size.to_physical(hidpi).into();
+                    // Send window size changes to the resource
+                    if (window_width, window_height) != (width, height) {
+                        screen_dimensions.update(window_width, window_height);
 
-                        // Send window size changes to the resource
-                        if (window_width, window_height) != (width, height) {
-                            screen_dimensions.update(window_width, window_height);
-
-                            // We don't need to send the updated size of the window back to the window itself,
-                            // so set dirty to false.
-                            screen_dimensions.dirty = false;
-                        }
+                        // We don't need to send the updated size of the window back to the window itself,
+                        // so set dirty to false.
+                        screen_dimensions.dirty = false;
                     }
-                    screen_dimensions.update_hidpi_factor(hidpi);
                 }),
         )
     }
 }
-
-/// reports new window events from winit to the EventChannel
-#[derive(Debug)]
-pub struct WindowEventsSystem {
-    /// winit EventsLoop for window events
-    pub events_loop: EventsLoop,
-}
-
 /// System that polls the window events and pushes them to appropriate event channels.
 ///
 /// This system must be active for any `GameState` to receive
 /// any `StateEvent::Window` event into it's `handle_event` method.
-impl ThreadLocalSystem<'static> for WindowEventsSystem {
+#[derive(Debug)]
+pub struct EventLoopSystem {
+    pub(crate) event_loop: EventLoop<()>,
+}
+
+impl ThreadLocalSystem<'static> for EventLoopSystem {
     fn build(&'static mut self) -> Box<dyn Runnable> {
         let mut events = Vec::with_capacity(128);
 
         Box::new(
             SystemBuilder::new("EventsLoopSystem")
-                .write_resource::<EventChannel<Event>>()
+                .write_resource::<EventChannel<Event<'static, ()>>>()
                 .build(move |_commands, _world, event_channel, _query| {
-                    self.events_loop.poll_events(|event| {
-                        events.push(event);
+                    self.event_loop.run_return(|event, _, flow| {
+                        match event {
+                            Event::WindowEvent { .. } => {
+                                events.push(event.to_static().unwrap());
+                            }
+                            Event::DeviceEvent { .. } => {
+                                events.push(event.to_static().unwrap());
+                            }
+                            _ => {}
+                        }
+                        *flow = ControlFlow::Exit;
                     });
                     event_channel.drain_vec_write(&mut events);
                 }),

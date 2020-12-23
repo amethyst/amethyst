@@ -61,7 +61,7 @@ impl Default for AutoFov {
 /// the camera as a dependency of this system. It enables the system to adjust the camera right
 /// after it is created -- simply put, in the same frame.
 pub fn build_auto_fov_system() -> impl Runnable {
-    let mut last_dimensions = ScreenDimensions::new(0, 0, 0.0);
+    let mut last_dimensions = ScreenDimensions::new(0, 0);
 
     SystemBuilder::new("auto_fov_system")
         .read_resource::<ScreenDimensions>()

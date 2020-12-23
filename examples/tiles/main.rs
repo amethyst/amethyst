@@ -12,6 +12,8 @@ use amethyst::{
         camera::{ActiveCamera, Camera},
         debug_drawing::DebugLinesComponent,
         formats::texture::ImageFormat,
+        palette::Srgba,
+        rendy::hal::command::ClearColor,
         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
         transparent::Transparent,
         types::DefaultBackend,
@@ -185,14 +187,16 @@ fn main() -> amethyst::Result<()> {
         RenderingBundle::<DefaultBackend>::new()
             .with_plugin(
                 RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    .with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
             )
             .with_plugin(RenderDebugLines::default())
             .with_plugin(RenderFlat2D::default())
             .with_plugin(RenderTiles2D::<ExampleTile, MortonEncoder>::default()),
     );
 
-    let mut game = Application::build(assets_directory, Example)?.build(dispatcher)?;
+    let game = Application::build(assets_directory, Example)?.build(dispatcher)?;
     game.run();
     Ok(())
 }

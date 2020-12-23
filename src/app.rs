@@ -9,10 +9,8 @@ use rayon::ThreadPoolBuilder;
 use sentry::integrations::panic::register_panic_handler;
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
-use winit::Event;
+use winit::event::{Event, WindowEvent};
 
-#[cfg(feature = "ui")]
-use crate::ui::UiEvent;
 use crate::{
     assets::{Loader, Source},
     core::{
@@ -55,7 +53,8 @@ where
     reader: R,
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
-    event_reader_id: ReaderId<Event>,
+    #[derivative(Debug = "ignore")]
+    event_reader_id: ReaderId<Event<'static, ()>>,
     #[derivative(Debug = "ignore")]
     trans_reader_id: ReaderId<TransEvent<T, E>>,
     states: StateMachine<'a, T, E>,
@@ -91,7 +90,7 @@ where
 ///
 ///     // Build the application instance to initialize the default logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
+///     let game = Application::build(assets_dir, NullState)?
 ///         .build(())?;
 ///
 ///     // Now logging can be performed as normal.
@@ -120,7 +119,7 @@ where
 ///     // The default logger will be automatically disabled and any logging amethyst does
 ///     // will go through your custom logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
+///     let game = Application::build(assets_dir, NullState)?
 ///         .build(())?;
 ///
 ///     Ok(())
@@ -130,11 +129,11 @@ where
 /// [log]: https://crates.io/crates/log
 pub type Application<'a, T> = CoreApplication<'a, T, StateEvent, StateEventReader>;
 
-impl<'a, T, E, R> CoreApplication<'a, T, E, R>
+impl<'a, T, E, R> CoreApplication<'static, T, E, R>
 where
     T: DataDispose + 'static,
     E: Clone + Send + Sync + 'static,
-    R: EventReader<Event = E>,
+    R: EventReader<Event = E> + 'static,
 {
     /// Creates a new CoreApplication with the given initial game state.
     /// This will create and allocate all the needed resources for
@@ -184,7 +183,7 @@ where
     /// # fn main() -> amethyst::Result<()> {
     /// #
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?.build(())?;
+    /// let game = Application::build(assets_dir, NullState)?.build(())?;
     /// game.run();
     ///
     /// #  Ok(())
@@ -193,7 +192,7 @@ where
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self, Error>
     where
         P: AsRef<Path>,
-        S: State<T, E> + 'a,
+        S: State<T, E> + 'static,
         I: DataInit<T>,
         R: EventReader<Event = E> + Default,
     {
@@ -222,7 +221,7 @@ where
     ///
     /// See the example supplied in the
     /// [`new`](struct.Application.html#examples) method.
-    pub fn run(&mut self) {
+    pub fn run(mut self) {
         #[cfg(feature = "sentry")]
         let _sentry_guard = if let Some(dsn) = option_env!("SENTRY_DSN") {
             let guard = sentry::init(dsn);
@@ -233,7 +232,9 @@ where
         };
 
         self.initialize();
+
         self.resources.get_mut::<Stopwatch>().unwrap().start();
+
         while self.states.is_running() {
             self.advance_frame();
             {
@@ -242,16 +243,15 @@ where
                 self.resources.get_mut::<FrameLimiter>().unwrap().wait();
             }
             {
-                let elapsed = self.resources.get::<Stopwatch>().unwrap().elapsed();
+                let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
+                let elapsed = stopwatch.elapsed();
                 let mut time = self.resources.get_mut::<Time>().unwrap();
                 time.increment_frame_number();
                 time.set_delta_time(elapsed);
+                stopwatch.stop();
+                stopwatch.restart();
             }
-            let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
-            stopwatch.stop();
-            stopwatch.restart();
         }
-
         self.shutdown();
     }
 
@@ -273,10 +273,9 @@ where
         if self.ignore_window_close {
             false
         } else {
-            use crate::winit::WindowEvent;
             let reader_id = &mut self.event_reader_id;
             self.resources
-                .get_mut::<EventChannel<Event>>()
+                .get_mut::<EventChannel<Event<'_, ()>>>()
                 .unwrap()
                 .read(reader_id)
                 .any(|e| {
@@ -314,41 +313,33 @@ where
         }
 
         // Read the Trans queue and apply changes.
-        {
-            let world = &mut self.world;
-            let resources = &mut self.resources;
-            let states = &mut self.states;
-            let reader = &mut self.trans_reader_id;
 
-            let trans = resources
-                .get_mut::<EventChannel<TransEvent<T, E>>>()
-                .unwrap()
-                .read(reader)
-                .map(|e| e())
-                .collect::<Vec<_>>();
-            for tr in trans {
-                states.transition(tr, StateData::new(world, resources, &mut self.data));
-            }
+        let world = &mut self.world;
+        let resources = &mut self.resources;
+        let states = &mut self.states;
+        let reader = &mut self.trans_reader_id;
+
+        let trans = resources
+            .get_mut::<EventChannel<TransEvent<T, E>>>()
+            .unwrap()
+            .read(reader)
+            .map(|e| e())
+            .collect::<Vec<_>>();
+        for tr in trans {
+            states.transition(tr, StateData::new(world, resources, &mut self.data));
         }
 
         {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            {
-                let events = &mut self.events;
-                self.reader.read(&mut self.resources, events);
-            }
+            self.reader.read(resources, &mut self.events);
 
-            {
-                let world = &mut self.world;
-                let resources = &mut self.resources;
-                let states = &mut self.states;
-                for e in self.events.drain(..) {
-                    states.handle_event(StateData::new(world, resources, &mut self.data), e);
-                }
+            for e in self.events.drain(..) {
+                states.handle_event(StateData::new(world, resources, &mut self.data), e);
             }
         }
+
         {
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
@@ -435,6 +426,7 @@ pub struct ApplicationBuilder<S, T, E, R> {
 impl<S, T, E, X> ApplicationBuilder<S, T, E, X>
 where
     T: DataDispose + 'static,
+    E: 'static,
 {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
@@ -483,7 +475,7 @@ where
     /// // in the rust ecosystem. Each function modifies the object
     /// // returning a new object with the modified configuration.
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?
+    /// let game = Application::build(assets_dir, NullState)?
     /// // lastly we can build the Application object
     /// // the `build` function takes the user defined game data initializer as input
     ///     .build(())?;
@@ -550,9 +542,8 @@ where
         }
         resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         resources.insert(pool);
-        resources.insert(EventChannel::<Event>::with_capacity(2000));
+        resources.insert(EventChannel::<Event<'static, ()>>::with_capacity(2000));
         //resources.insert(EventChannel::<UiEvent>::with_capacity(40));
-        resources.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         resources.insert(FrameLimiter::default());
         resources.insert(Stopwatch::default());
         resources.insert(Time::default());
@@ -607,7 +598,7 @@ where
     /// # fn main() -> amethyst::Result<()> {
     /// let score_board = HighScores(Vec::new());
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?
+    /// let game = Application::build(assets_dir, NullState)?
     ///     .with_resource(score_board);
     /// #     Ok(())
     /// # }
@@ -648,7 +639,7 @@ where
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, LoadingState)?
+    /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" under the name "resources".
     ///     .with_source("custom_store", Directory::new("custom_directory"))
     ///     .build(DispatcherBuilder::default())?
@@ -703,7 +694,7 @@ where
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, LoadingState)?
+    /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" as default source for the loader.
     ///     .with_default_source(Directory::new("custom_directory"))
     ///     .build(DispatcherBuilder::default())?
@@ -828,21 +819,20 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let mut reader = X::default();
-        reader.setup(&mut self.resources);
         let data = init.build(&mut self.world, &mut self.resources)?;
 
         let event_reader_id = self
             .resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'static, ()>>>()
             .unwrap()
             .register_reader();
 
-        let trans_reader_id = self
-            .resources
-            .get_mut::<EventChannel<TransEvent<T, E>>>()
-            .unwrap()
-            .register_reader();
+        let mut trans_event_channel = EventChannel::<TransEvent<T, E>>::with_capacity(2);
+        let trans_reader_id = trans_event_channel.register_reader();
+        self.resources.insert(trans_event_channel);
+
+        let mut reader = X::default();
+        reader.setup(&mut self.resources);
 
         Ok(CoreApplication {
             world: self.world,

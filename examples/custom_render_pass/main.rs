@@ -5,10 +5,13 @@ mod custom_pass;
 use amethyst::{
     input::{is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection},
     prelude::*,
-    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
+    renderer::{
+        plugins::RenderToWindow, rendy::hal::command::ClearColor, types::DefaultBackend,
+        RenderingBundle,
+    },
     utils::application_root_dir,
-    winit::VirtualKeyCode,
 };
+use amethyst_input::VirtualKeyCode;
 
 use crate::custom_pass::{CustomUniformArgs, RenderCustom, Triangle};
 
@@ -62,6 +65,7 @@ impl SimpleState for CustomShaderState {
                 }
                 Trans::None
             }
+            _ => Trans::None,
         }
     }
 }
@@ -77,14 +81,15 @@ fn main() -> amethyst::Result<()> {
     game_data.add_bundle(InputBundle::new()).add_bundle(
         RenderingBundle::<DefaultBackend>::new()
             .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([1.0, 1.0, 1.0, 1.0]),
+                RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                    float32: [1.0, 1.0, 1.0, 1.0],
+                }),
             )
             // Add our custom render plugin to the rendering bundle.
             .with_plugin(RenderCustom::default()),
     );
 
-    let mut game = Application::build(assets_dir, CustomShaderState)?.build(game_data)?;
+    let game = Application::build(assets_dir, CustomShaderState)?.build(game_data)?;
 
     game.run();
     Ok(())
