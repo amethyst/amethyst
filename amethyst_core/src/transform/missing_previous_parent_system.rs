@@ -4,6 +4,7 @@ use super::components::*;
 use crate::ecs::*;
 
 /// System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
+#[derive(Debug)]
 pub struct MissingPreviousParentSystem;
 
 impl System<'_> for MissingPreviousParentSystem {

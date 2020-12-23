@@ -2,13 +2,13 @@
 //!
 //! This module contains useful functions to extend and transform existing systems.
 
-use crate::legion::{
+use legion::{
     storage::ComponentTypeId,
     systems::{
         CommandBuffer, Resource, ResourceSet, ResourceTypeId, Runnable, SystemId, UnsafeResources,
     },
-    world::{ArchetypeAccess, World, WorldId},
-    Read,
+    world::{ArchetypeAccess, WorldId},
+    Read, World,
 };
 
 /// Make a system pausable by tying it to a specific value of a resource.
@@ -24,7 +24,9 @@ use crate::legion::{
 ///
 /// # Examples
 /// ```rust
-/// use legion::{system, Schedule, World, Resources};
+/// use legion::{system, Schedule, World, Resources, SystemBuilder};
+/// use amethyst_core::system_ext::pausable;
+/// use legion::systems::Runnable;
 ///
 /// #[derive(PartialEq)]
 /// enum CurrentState {
@@ -32,14 +34,16 @@ use crate::legion::{
 ///     Enabled,
 /// }
 ///
-/// #[system]
-/// fn add_number(#[state] n: &u32, #[resource] sum: &mut u32) {
-///     *sum += n;
-/// }
+///
+/// fn add_number_system() -> impl Runnable {
+///    SystemBuilder::new("TestSystem")
+///         .write_resource::<u32>()
+///         .build(move |_commands, _world, resources, _| {
+///             *resources += 1;
+///         }) }
 ///
 /// let mut schedule = Schedule::builder()
-///     .add_system(add_number_system(1))
-///     .add_system(pausable(add_number_system(2), CurrentState::Enabled))
+///     .add_system(pausable(add_number_system(), CurrentState::Enabled))
 ///     .build();
 ///
 /// let mut world = World::default();
@@ -91,10 +95,27 @@ where
     S: Runnable,
     V: Resource + PartialEq,
 {
+    // Default passthrough impls
+    fn name(&self) -> Option<&SystemId> {
+        self.system.name()
+    }
+
     fn reads(&self) -> (&[ResourceTypeId], &[ComponentTypeId]) {
         let (_, components) = self.system.reads();
         // Return our local copy of systems resources that's been appended with permission for Read<V>
         (&self.resource_reads[..], components)
+    }
+
+    fn writes(&self) -> (&[ResourceTypeId], &[ComponentTypeId]) {
+        self.system.writes()
+    }
+
+    fn prepare(&mut self, world: &World) {
+        self.system.prepare(world)
+    }
+
+    fn accesses_archetypes(&self) -> &ArchetypeAccess {
+        self.system.accesses_archetypes()
     }
 
     unsafe fn run_unsafe(&mut self, world: &World, resources: &UnsafeResources) {
@@ -108,24 +129,67 @@ where
         self.system.run_unsafe(world, resources);
     }
 
-    // Default passthrough impls
-    fn name(&self) -> Option<&SystemId> {
-        self.system.name()
-    }
-
-    fn prepare(&mut self, world: &World) {
-        self.system.prepare(world)
-    }
-
-    fn accesses_archetypes(&self) -> &ArchetypeAccess {
-        self.system.accesses_archetypes()
-    }
-
-    fn writes(&self) -> (&[ResourceTypeId], &[ComponentTypeId]) {
-        self.system.writes()
-    }
-
     fn command_buffer_mut(&mut self, world: WorldId) -> Option<&mut CommandBuffer> {
         self.system.command_buffer_mut(world)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use legion::{Resources, Schedule, SystemBuilder};
+
+    use super::*;
+
+    #[derive(PartialEq)]
+    enum CurrentState {
+        Disabled,
+        Enabled,
+    }
+
+    fn add_number_system() -> impl Runnable {
+        SystemBuilder::new("TestSystem")
+            .write_resource::<u32>()
+            .build(move |_commands, _world, resources, _| {
+                **resources += 1;
+            })
+    }
+
+    #[test]
+    fn should_not_pause_if_resource_match_value() {
+        let mut resources = Resources::default();
+        let mut world = World::default();
+        resources.insert(0u32);
+        resources.insert(CurrentState::Enabled);
+
+        let mut schedule = Schedule::builder()
+            .add_system(pausable(add_number_system(), CurrentState::Enabled))
+            .build();
+
+        assert_eq!(0, *resources.get::<u32>().unwrap());
+        schedule.execute(&mut world, &mut resources);
+        assert_eq!(1, *resources.get::<u32>().unwrap());
+        schedule.execute(&mut world, &mut resources);
+        assert_eq!(2, *resources.get::<u32>().unwrap());
+    }
+
+    #[test]
+    fn should_pause_if_resource_does_not_match_value() {
+        let mut resources = Resources::default();
+        let mut world = World::default();
+        resources.insert(0u32);
+        resources.insert(CurrentState::Enabled);
+
+        let mut schedule = Schedule::builder()
+            .add_system(pausable(add_number_system(), CurrentState::Enabled))
+            .build();
+
+        assert_eq!(0, *resources.get::<u32>().unwrap());
+        schedule.execute(&mut world, &mut resources);
+        assert_eq!(1, *resources.get::<u32>().unwrap());
+
+        resources.insert(CurrentState::Disabled);
+
+        schedule.execute(&mut world, &mut resources);
+        assert_eq!(1, *resources.get::<u32>().unwrap());
     }
 }
