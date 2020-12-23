@@ -154,7 +154,7 @@ impl SimpleState for Example {
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { .. } = data;
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
+            if is_close_requested(&event) || is_key_down(&event, winit::event::VirtualKeyCode::Escape) {
                 Trans::Quit
             } else {
                 Trans::None
