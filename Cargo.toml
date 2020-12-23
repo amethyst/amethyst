@@ -251,11 +251,14 @@ name = "arc_ball_camera"
 # [[example]]
 # name = "auto_fov"
 
-# [[example]]
-# name = "events"
+[[example]]
+name = "events"
+
+[[example]]
+name = "events_custom_state_event"
 
 # [[example]]
-# name = "events_custom_state_event"
+# name = "state_dispatcher"
 
 # [[example]]
 # name = "mouse_raycast"
