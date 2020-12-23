@@ -47,13 +47,7 @@ impl System<'static> for CameraSwitchSystem {
                             let entity_and_parent = active_camera
                                 .entity
                                 .and_then(|e| camera_query.get(world, e).ok())
-                                .or_else(|| None);
-                            let entity_and_parent = match entity_and_parent {
-                                Some((old_camera_entity, old_parent)) => {
-                                    Some((old_camera_entity, old_parent))
-                                }
-                                None => camera_query.iter(world).nth(0),
-                            };
+                                .or_else(|| camera_query.iter(world).next());
 
                             if let Some((old_camera_entity, old_parent)) = entity_and_parent {
                                 let old_camera_entity = old_camera_entity;
