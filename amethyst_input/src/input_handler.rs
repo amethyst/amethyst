@@ -57,7 +57,7 @@ pub struct InputHandler {
     /// Maps inputs to actions and axes.
     pub bindings: Bindings,
     /// Keeps the current state of keyboard modifiers
-    modifiers: KeyboardModifiersState,
+    pub modifiers: KeyboardModifiersState,
     /// Encodes the VirtualKeyCode and corresponding scancode.
     pressed_keys: SmallVec<[(VirtualKeyCode, u32); 12]>,
     pressed_mouse_buttons: SmallVec<[MouseButton; 12]>,

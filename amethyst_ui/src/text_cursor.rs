@@ -1,4 +1,4 @@
-//! Module containing the system managing the text editing cursor create, deletion and position.
+    //! Module containing the system managing the text editing cursor create, deletion and position.
 
 // TODO: Complete this and remove the logic from the UI Pass. Scheduled for completion after Transform2D.
 // File currently ignored because it is not added to lib.rs
