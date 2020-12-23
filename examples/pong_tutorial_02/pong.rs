@@ -50,13 +50,13 @@ impl Paddle {
 }
 
 fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
-    let texture_handle: Handle<Texture> = {
+    let _texture_handle: Handle<Texture> = {
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
+        let _texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
         loader.load("texture/pong_spritesheet.png")
     };
     let loader = resources.get::<DefaultLoader>().unwrap();
-    let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
+    let _sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
     loader.load("texture/pong_spritesheet.ron")
 }
 

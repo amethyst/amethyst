@@ -14,7 +14,6 @@ use amethyst::{
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::{
             hal::command::ClearColor,
-            mesh::{Normal, Position, TexCoord},
         },
         types::DefaultBackend,
         RenderingBundle,
@@ -25,6 +24,7 @@ use amethyst::{
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use type_uuid::TypeUuid;
+
 #[derive(TypeUuid, Serialize, Deserialize, SerdeDiff, Clone, Default)]
 #[uuid = "f5780013-bae4-49f0-ac0e-a108ff52fec0"]
 struct Position2D {

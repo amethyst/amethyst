@@ -96,7 +96,7 @@ fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
     // `sprite_sheet` is the layout of the sprites on the image
     // `texture_handle` is a cloneable reference to the texture
 
-    let texture_handle: Handle<Texture> = {
+    let _texture_handle: Handle<Texture> = {
         let loader = resources.get::<DefaultLoader>().unwrap();
         loader.load("texture/pong_spritesheet.png")
     };

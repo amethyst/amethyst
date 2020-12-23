@@ -142,7 +142,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         );
 
-    let mut game = Application::new(
+    let game = Application::new(
         assets_dir,
         AssetsExample {
             prefab_handle: None,

@@ -14,7 +14,7 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::{AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue};
+use amethyst_assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue};
 use amethyst_core::transform::Transform;
 use amethyst_rendy::{
     light::{Light, PointLight},
@@ -22,7 +22,7 @@ use amethyst_rendy::{
     rendy::mesh::Tangent,
     shape::Shape,
     types::{MeshData, TextureData},
-    Camera, Material, MaterialDefaults, Mesh, Texture,
+    Camera, Material, MaterialDefaults, Mesh,
 };
 use amethyst_window::ScreenDimensions;
 use palette::{LinSrgba, Srgb};
