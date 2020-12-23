@@ -6,7 +6,7 @@ use std::{
 
 use amethyst_core::{
     dispatcher::System,
-    ecs::{systems::ParallelRunnable, DispatcherBuilder, SystemBuilder},
+    ecs::{systems::ParallelRunnable, SystemBuilder},
 };
 use amethyst_error::Error;
 use atelier_loader::storage::AssetLoadOp;

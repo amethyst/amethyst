@@ -2,7 +2,7 @@ use amethyst::{
     assets::{AssetStorage, DefaultLoader, Handle, Loader},
     core::transform::Transform,
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, SpriteRender, SpriteSheet, Texture},
 };
 
 const ARENA_HEIGHT: f32 = 100.0;

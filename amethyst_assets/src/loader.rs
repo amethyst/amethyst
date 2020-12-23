@@ -8,7 +8,7 @@ use std::{
 
 use amethyst_core::{
     dispatcher::System,
-    ecs::{DispatcherBuilder, ParallelRunnable, Resources},
+    ecs::{DispatcherBuilder, Resources},
 };
 use amethyst_error::Error as AmethystError;
 pub(crate) use atelier_loader::LoadHandle;
