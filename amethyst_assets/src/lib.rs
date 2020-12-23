@@ -48,7 +48,7 @@ pub use crate::{
     dyn_format::FormatRegisteredData,
     formats::RonFormat,
     loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
-    processor::{AddToDispatcher, DefaultProcessor, ProcessingQueue, ProcessingState},
+    processor::{AssetProcessorSystem, ProcessingQueue, ProcessingState},
     progress::{Completion, Progress, ProgressCounter, Tracker},
     simple_importer::{SimpleImporter, SourceFileImporter},
     source::{Directory, Source},

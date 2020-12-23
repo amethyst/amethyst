@@ -3,8 +3,11 @@
 use amethyst_core::shrev::EventChannel;
 use smallvec::SmallVec;
 use winit::{
-    dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
-    MouseScrollDelta, VirtualKeyCode, WindowEvent,
+    dpi::PhysicalPosition,
+    event::{
+        DeviceEvent, Event, KeyboardInput, MouseButton, MouseScrollDelta, VirtualKeyCode,
+        WindowEvent,
+    },
 };
 
 use super::{
@@ -14,6 +17,37 @@ use super::{
     *,
 };
 
+/// This structs holds state information about keyboard modifiers
+#[derive(Debug, Default)]
+pub struct KeyboardModifiersState {
+    shift: bool,
+    ctrl: bool,
+    logo: bool,
+    alt: bool,
+}
+
+impl KeyboardModifiersState {
+    /// Return the current state of the shift modifier (either left or right)
+    pub fn shift(&self) -> bool {
+        self.shift
+    }
+
+    /// Return the current state of the ctrl modifier (either left or right)
+    pub fn ctrl(&self) -> bool {
+        self.ctrl
+    }
+
+    /// Return the current state of the logo modifier (either left or right)
+    pub fn logo(&self) -> bool {
+        self.logo
+    }
+
+    /// Return the current state of the alt modifier (either left or right, no difference made for GR)
+    pub fn alt(&self) -> bool {
+        self.alt
+    }
+}
+
 /// This struct holds state information about input devices.
 ///
 /// For example, if a key is pressed on the keyboard, this struct will record
@@ -22,6 +56,8 @@ use super::{
 pub struct InputHandler {
     /// Maps inputs to actions and axes.
     pub bindings: Bindings,
+    /// Keeps the current state of keyboard modifiers
+    pub modifiers: KeyboardModifiersState,
     /// Encodes the VirtualKeyCode and corresponding scancode.
     pressed_keys: SmallVec<[(VirtualKeyCode, u32); 12]>,
     pressed_mouse_buttons: SmallVec<[MouseButton; 12]>,
@@ -50,12 +86,17 @@ impl InputHandler {
     /// the world as a resource.
     pub fn send_event(
         &mut self,
-        event: &Event,
+        event: &Event<'_, ()>,
         event_handler: &mut EventChannel<InputEvent>,
-        hidpi: f32,
     ) {
         match *event {
             Event::WindowEvent { ref event, .. } => match *event {
+                WindowEvent::ModifiersChanged(modifier) => {
+                    self.modifiers.logo = modifier.logo();
+                    self.modifiers.ctrl = modifier.ctrl();
+                    self.modifiers.alt = modifier.alt();
+                    self.modifiers.shift = modifier.shift();
+                }
                 WindowEvent::ReceivedCharacter(c) => {
                     event_handler.single_write(KeyTyped(c));
                 }
@@ -213,16 +254,16 @@ impl InputHandler {
                     }
                 }
                 WindowEvent::CursorMoved {
-                    position: LogicalPosition { x, y },
+                    position: PhysicalPosition { x, y },
                     ..
                 } => {
                     if let Some((old_x, old_y)) = self.mouse_position {
                         event_handler.single_write(CursorMoved {
-                            delta_x: (x as f32) * hidpi - old_x,
-                            delta_y: (y as f32) * hidpi - old_y,
+                            delta_x: (x as f32) - old_x,
+                            delta_y: (y as f32) - old_y,
                         });
                     }
-                    self.mouse_position = Some(((x as f32) * hidpi, (y as f32) * hidpi));
+                    self.mouse_position = Some(((x as f32), (y as f32)));
                 }
                 WindowEvent::Focused(false) => {
                     self.pressed_keys.clear();
@@ -252,7 +293,7 @@ impl InputHandler {
                     self.invoke_wheel_moved(delta_x, delta_y, event_handler);
                 }
                 DeviceEvent::MouseWheel {
-                    delta: MouseScrollDelta::PixelDelta(LogicalPosition { x, y }),
+                    delta: MouseScrollDelta::PixelDelta(PhysicalPosition { x, y }),
                 } => {
                     if x != 0.0 {
                         self.mouse_wheel_horizontal = x.signum() as f32;
@@ -771,13 +812,11 @@ mod tests {
     use std::{borrow::Cow, fmt::Debug};
 
     use winit::{
-        DeviceId, ElementState, Event, KeyboardInput, ModifiersState, ScanCode, WindowEvent,
-        WindowId,
+        event::{DeviceId, ModifiersState, ScanCode},
+        window::WindowId,
     };
 
     use super::*;
-
-    const HIDPI: f32 = 1.0;
 
     #[test]
     fn key_action_response() {
@@ -799,7 +838,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(handler.action_is_down(&TEST_KEY_ACTION), Some(false));
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
         assert_eq!(handler.action_is_down(&TEST_KEY_ACTION), Some(true));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -814,7 +853,7 @@ mod tests {
                 InputEvent::ButtonPressed(Button::ScanCode(104)),
             ],
         );
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
         assert_eq!(handler.action_is_down(&TEST_KEY_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -851,7 +890,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(handler.action_is_down(&TEST_MOUSE_ACTION), Some(false));
-        handler.send_event(&mouse_press(MouseButton::Left), &mut events, HIDPI);
+        handler.send_event(&mouse_press(MouseButton::Left), &mut events);
         assert_eq!(handler.action_is_down(&TEST_MOUSE_ACTION), Some(true));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -862,7 +901,7 @@ mod tests {
                 InputEvent::ButtonPressed(Button::Mouse(MouseButton::Left)),
             ],
         );
-        handler.send_event(&mouse_release(MouseButton::Left), &mut events, HIDPI);
+        handler.send_event(&mouse_release(MouseButton::Left), &mut events);
         assert_eq!(handler.action_is_down(&TEST_MOUSE_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -902,7 +941,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(false));
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
         assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -916,7 +955,7 @@ mod tests {
                 InputEvent::ButtonPressed(Button::ScanCode(104)),
             ],
         );
-        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events, HIDPI);
+        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events);
         assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(true));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -931,7 +970,7 @@ mod tests {
                 InputEvent::ButtonPressed(Button::ScanCode(112)),
             ],
         );
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
         assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -947,7 +986,7 @@ mod tests {
             ],
         );
 
-        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events, HIDPI);
+        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events);
         assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -990,7 +1029,7 @@ mod tests {
             .unwrap();
         assert_eq!(handler.axis_value(&TEST_AXIS), Some(0.0));
 
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
 
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -1010,7 +1049,7 @@ mod tests {
         );
         assert_eq!(handler.axis_value(&TEST_AXIS), Some(1.0));
 
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
 
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -1030,7 +1069,7 @@ mod tests {
         );
         assert_eq!(handler.axis_value(&TEST_AXIS), Some(0.0));
 
-        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events, HIDPI);
+        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events);
 
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -1050,7 +1089,7 @@ mod tests {
         );
         assert_eq!(handler.axis_value(&TEST_AXIS), Some(-1.0));
 
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
 
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
@@ -1070,8 +1109,8 @@ mod tests {
         );
         assert_eq!(handler.axis_value(&TEST_AXIS), Some(0.0));
 
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
-        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events, HIDPI);
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
+        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events);
         assert_eq!(handler.axis_value(&TEST_AXIS), Some(0.0));
     }
 
@@ -1086,12 +1125,12 @@ mod tests {
         assert_eq!(handler.scan_codes_that_are_down().next(), None);
         assert_eq!(handler.mouse_buttons_that_are_down().next(), None);
         assert_eq!(handler.buttons_that_are_down().next(), None);
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
-        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events, HIDPI);
-        handler.send_event(&key_press(75, VirtualKeyCode::Left), &mut events, HIDPI);
-        handler.send_event(&key_press(109, VirtualKeyCode::Right), &mut events, HIDPI);
-        handler.send_event(&mouse_press(MouseButton::Left), &mut events, HIDPI);
-        handler.send_event(&mouse_press(MouseButton::Right), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
+        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events);
+        handler.send_event(&key_press(75, VirtualKeyCode::Left), &mut events);
+        handler.send_event(&key_press(109, VirtualKeyCode::Right), &mut events);
+        handler.send_event(&mouse_press(MouseButton::Left), &mut events);
+        handler.send_event(&mouse_press(MouseButton::Right), &mut events);
         sets_are_equal(
             &handler.keys_that_are_down().collect::<Vec<_>>(),
             &[
@@ -1124,7 +1163,7 @@ mod tests {
                 Button::Mouse(MouseButton::Right),
             ],
         );
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
         sets_are_equal(
             &handler.keys_that_are_down().collect::<Vec<_>>(),
             &[
@@ -1137,7 +1176,7 @@ mod tests {
             &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
             &[112, 75, 109],
         );
-        handler.send_event(&key_release(109, VirtualKeyCode::Right), &mut events, HIDPI);
+        handler.send_event(&key_release(109, VirtualKeyCode::Right), &mut events);
         sets_are_equal(
             &handler.keys_that_are_down().collect::<Vec<_>>(),
             &[VirtualKeyCode::Down, VirtualKeyCode::Left],
@@ -1146,7 +1185,7 @@ mod tests {
             &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
             &[112, 75],
         );
-        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events, HIDPI);
+        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events);
         sets_are_equal(
             &handler.keys_that_are_down().collect::<Vec<_>>(),
             &[VirtualKeyCode::Left],
@@ -1155,7 +1194,7 @@ mod tests {
             &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
             &[75],
         );
-        handler.send_event(&key_release(75, VirtualKeyCode::Left), &mut events, HIDPI);
+        handler.send_event(&key_release(75, VirtualKeyCode::Left), &mut events);
         assert_eq!(handler.keys_that_are_down().next(), None);
         assert_eq!(handler.scan_codes_that_are_down().next(), None);
         sets_are_equal(
@@ -1165,12 +1204,12 @@ mod tests {
                 Button::Mouse(MouseButton::Right),
             ],
         );
-        handler.send_event(&mouse_release(MouseButton::Left), &mut events, HIDPI);
+        handler.send_event(&mouse_release(MouseButton::Left), &mut events);
         sets_are_equal(
             &handler.buttons_that_are_down().collect::<Vec<_>>(),
             &[Button::Mouse(MouseButton::Right)],
         );
-        handler.send_event(&mouse_release(MouseButton::Right), &mut events, HIDPI);
+        handler.send_event(&mouse_release(MouseButton::Right), &mut events);
         assert_eq!(handler.buttons_that_are_down().next(), None);
     }
 
@@ -1182,12 +1221,12 @@ mod tests {
         assert!(!handler.scan_code_is_down(104));
         assert!(!handler.button_is_down(Button::Key(VirtualKeyCode::Up)));
         assert!(!handler.button_is_down(Button::ScanCode(104)));
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
         assert!(handler.key_is_down(VirtualKeyCode::Up));
         assert!(handler.scan_code_is_down(104));
         assert!(handler.button_is_down(Button::Key(VirtualKeyCode::Up)));
         assert!(handler.button_is_down(Button::ScanCode(104)));
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
         assert!(!handler.key_is_down(VirtualKeyCode::Up));
         assert!(!handler.scan_code_is_down(104));
         assert!(!handler.button_is_down(Button::Key(VirtualKeyCode::Up)));
@@ -1200,10 +1239,10 @@ mod tests {
         let mut events = EventChannel::<InputEvent>::new();
         assert!(!handler.mouse_button_is_down(MouseButton::Left));
         assert!(!handler.button_is_down(Button::Mouse(MouseButton::Left)));
-        handler.send_event(&mouse_press(MouseButton::Left), &mut events, HIDPI);
+        handler.send_event(&mouse_press(MouseButton::Left), &mut events);
         assert!(handler.mouse_button_is_down(MouseButton::Left));
         assert!(handler.button_is_down(Button::Mouse(MouseButton::Left)));
-        handler.send_event(&mouse_release(MouseButton::Left), &mut events, HIDPI);
+        handler.send_event(&mouse_release(MouseButton::Left), &mut events);
         assert!(!handler.mouse_button_is_down(MouseButton::Left));
         assert!(!handler.button_is_down(Button::Mouse(MouseButton::Left)));
     }
@@ -1215,25 +1254,25 @@ mod tests {
         let mut events = EventChannel::<InputEvent>::new();
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
-        handler.send_event(&mouse_wheel(0.0, 5.0), &mut events, HIDPI);
+        handler.send_event(&mouse_wheel(0.0, 5.0), &mut events);
         assert_ulps_eq!(handler.mouse_wheel_value(false), 1.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_frame_begin();
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
-        handler.send_event(&mouse_wheel(5.0, 0.0), &mut events, HIDPI);
+        handler.send_event(&mouse_wheel(5.0, 0.0), &mut events);
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 1.0);
         handler.send_frame_begin();
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
-        handler.send_event(&mouse_wheel(0.0, -5.0), &mut events, HIDPI);
+        handler.send_event(&mouse_wheel(0.0, -5.0), &mut events);
         assert_ulps_eq!(handler.mouse_wheel_value(false), -1.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_frame_begin();
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
-        handler.send_event(&mouse_wheel(-5.0, 0.0), &mut events, HIDPI);
+        handler.send_event(&mouse_wheel(-5.0, 0.0), &mut events);
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), -1.0);
     }
@@ -1266,11 +1305,11 @@ right: `{:?}`",
         }
     }
 
-    fn key_press(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event {
+    fn key_press(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event<'static, ()> {
         key_event(scancode, virtual_keycode, ElementState::Pressed)
     }
 
-    fn key_release(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event {
+    fn key_release(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event<'static, ()> {
         key_event(scancode, virtual_keycode, ElementState::Released)
     }
 
@@ -1278,7 +1317,7 @@ right: `{:?}`",
         scancode: ScanCode,
         virtual_keycode: VirtualKeyCode,
         state: ElementState,
-    ) -> Event {
+    ) -> Event<'static, ()> {
         Event::WindowEvent {
             window_id: unsafe { WindowId::dummy() },
             event: WindowEvent::KeyboardInput {
@@ -1287,43 +1326,34 @@ right: `{:?}`",
                     scancode,
                     state,
                     virtual_keycode: Some(virtual_keycode),
-                    modifiers: ModifiersState {
-                        shift: false,
-                        ctrl: false,
-                        alt: false,
-                        logo: false,
-                    },
+                    modifiers: ModifiersState::default(),
                 },
+                is_synthetic: false,
             },
         }
     }
 
-    fn mouse_press(button: MouseButton) -> Event {
+    fn mouse_press(button: MouseButton) -> Event<'static, ()> {
         mouse_event(button, ElementState::Pressed)
     }
 
-    fn mouse_release(button: MouseButton) -> Event {
+    fn mouse_release(button: MouseButton) -> Event<'static, ()> {
         mouse_event(button, ElementState::Released)
     }
 
-    fn mouse_event(button: MouseButton, state: ElementState) -> Event {
+    fn mouse_event(button: MouseButton, state: ElementState) -> Event<'static, ()> {
         Event::WindowEvent {
             window_id: unsafe { WindowId::dummy() },
             event: WindowEvent::MouseInput {
                 device_id: unsafe { DeviceId::dummy() },
                 state,
                 button,
-                modifiers: ModifiersState {
-                    shift: false,
-                    ctrl: false,
-                    alt: false,
-                    logo: false,
-                },
+                modifiers: ModifiersState::default(),
             },
         }
     }
 
-    fn mouse_wheel(x: f32, y: f32) -> Event {
+    fn mouse_wheel(x: f32, y: f32) -> Event<'static, ()> {
         Event::DeviceEvent {
             device_id: unsafe { DeviceId::dummy() },
             event: DeviceEvent::MouseWheel {

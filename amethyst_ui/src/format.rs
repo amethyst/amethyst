@@ -1,5 +1,4 @@
 use amethyst_assets::{Asset, Format, Handle, ProcessableAsset, ProcessingState};
-use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::{format_err, Error, ResultExt};
 use glyph_brush::rusttype::Font;
 use serde::{Deserialize, Serialize};
@@ -25,7 +24,6 @@ impl Asset for FontAsset {
         "ui::Font"
     }
     type Data = FontData;
-    type HandleStorage = VecStorage<Handle<Self>>;
 }
 
 impl ProcessableAsset for FontAsset {

@@ -12,6 +12,10 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, TexCoord},
+        },
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -104,19 +108,19 @@ fn main() -> Result<(), Error> {
 
     let mut dispatcher_builder = DispatcherBuilder::default();
     dispatcher_builder
-        // with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderShaded3D::default()),
         );
 
-    let mut game = Application::new(
+    let game = Application::new(
         assets_dir,
         AssetsExample {
             prefab_handle: None,

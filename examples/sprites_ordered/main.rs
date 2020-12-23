@@ -17,12 +17,13 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         Camera, RenderingBundle, SpriteRender, SpriteSheet, Transparent,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    winit::VirtualKeyCode,
+    winit::event::VirtualKeyCode,
 };
 use amethyst_assets::{DefaultLoader, LoaderBundle, ProcessingQueue};
 use log::info;
@@ -362,14 +363,15 @@ fn main() -> amethyst::Result<()> {
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
                 .with_plugin(RenderFlat2D::default()),
         );
 
-    let mut game = Application::new(assets_dir, Example::new(), dispatcher)?;
+    let game = Application::new(assets_dir, Example::new(), dispatcher)?;
     game.run();
 
     Ok(())

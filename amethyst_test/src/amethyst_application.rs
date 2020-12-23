@@ -117,7 +117,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
         AmethystApplication::blank()
             .with_bundle(TransformBundle::new())
             .with_ui_bundles::<B>()
-            .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT, HIDPI))
+            .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT))
     }
 
     /// Returns a `PathBuf` to `<crate_dir>/assets`.
@@ -167,8 +167,8 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let game_data = bundle_add_fns.into_iter().fold(
-            Ok(GameDataBuilder::default()),
+        let mut game_data = bundle_add_fns.into_iter().fold(
+            Ok(DispatcherBuilder::default()),
             |game_data: Result<GameDataBuilder<'_, '_>, Error>, function: BundleAddFn| {
                 game_data.and_then(function)
             },
@@ -1186,7 +1186,7 @@ mod test {
             world: &World,
             asset_translation_zero: AssetZero,
         ) -> Result<AssetZeroHandle, Error> {
-            let loader = world.read_resource::<Loader>();
+            let loader = data.resources.get::<Loader>().unwrap();
             Ok(loader.load_from_data(
                 asset_translation_zero,
                 (),

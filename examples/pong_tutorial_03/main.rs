@@ -4,16 +4,18 @@ mod pong;
 mod systems;
 
 use amethyst::{
-    core::TransformBundle,
-    input::{InputBundle, StringBindings},
+    core::transform::TransformBundle,
+    input::InputBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
     utils::application_root_dir,
 };
+use systems::paddle::PaddleSystem;
 
 use crate::pong::Pong;
 
@@ -27,29 +29,28 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("examples/pong_tutorial_03/assets/");
 
-    let game_data = GameDataBuilder::default()
-        // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(
-                app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
-            )?,
-        )?
+    let mut dispatcher = DispatcherBuilder::default();
+    dispatcher
+        .add_bundle(TransformBundle)
+        .add_bundle(InputBundle::new().with_bindings_from_file(
+            app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
+        )?)
         // We have now added our own system, the PaddleSystem, defined in systems/paddle.rs
-        .with(systems::PaddleSystem, "paddle_system", &["input_system"])
-        .with_bundle(
+        .add_system(Box::new(PaddleSystem))
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.0, 0.0, 0.0, 1.0],
+                    }),
                 )
                 // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
                 .with_plugin(RenderFlat2D::default()),
-        )?;
+        );
 
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
+    let game = Application::new(assets_dir, Pong, dispatcher)?;
     game.run();
     Ok(())
 }

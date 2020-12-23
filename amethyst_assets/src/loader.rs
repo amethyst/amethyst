@@ -6,7 +6,10 @@ use std::{
     sync::Arc,
 };
 
-use amethyst_core::ecs::{DispatcherBuilder, Resources};
+use amethyst_core::{
+    dispatcher::System,
+    ecs::{DispatcherBuilder, ParallelRunnable, Resources},
+};
 use amethyst_error::Error as AmethystError;
 pub(crate) use atelier_loader::LoadHandle;
 use atelier_loader::{
@@ -24,12 +27,7 @@ use log::{debug, info};
 use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
 
-use crate::{
-    processor::{AddToDispatcher, ProcessingQueue},
-    progress::Progress,
-    storage::AssetStorage,
-    Asset,
-};
+use crate::{processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset};
 
 /// Manages asset loading and storage for an application.
 pub trait Loader: Send + Sync {
@@ -505,11 +503,11 @@ crate::inventory::collect!(AssetType);
 ///
 /// This function is not intended to be called be directly. Use the `register_asset_type!` macro
 /// macro instead.
-pub fn create_asset_type<Intermediate, Asset, Processor>() -> AssetType
+pub fn create_asset_type<Intermediate, Asset, ProcessorSystem>() -> AssetType
 where
     Asset: 'static + TypeUuid + Send + Sync,
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
-    Processor: AddToDispatcher,
+    ProcessorSystem: System<'static> + Default + 'static,
 {
     AssetType {
         data_uuid: AssetTypeId(Intermediate::UUID),
@@ -518,7 +516,9 @@ where
             res.get_or_insert_with(|| AssetStorage::<Asset>::new(indirection_table.clone()));
             res.get_or_insert_with(|| ProcessingQueue::<Intermediate>::default());
         },
-        register_system: Processor::add_to_dipatcher,
+        register_system: |builder| {
+            builder.add_system(Box::new(ProcessorSystem::default()));
+        },
         with_storage: |res, func| {
             func(&mut (
                 res.get::<ProcessingQueue<Intermediate>>()

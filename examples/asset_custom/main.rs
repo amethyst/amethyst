@@ -127,7 +127,7 @@ fn main() -> amethyst::Result<()> {
 
     let mut builder = DispatcherBuilder::default();
 
-    let mut game = Application::build(
+    let game = Application::build(
         assets_dir,
         LoadingState {
             progress_counter: ProgressCounter::new(),

@@ -12,26 +12,25 @@ license = "MIT/Apache-2.0"
 features = ["shader-compiler", "test-support", "winit", "vulkan"]
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
-amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
-amethyst_window = { path = "../amethyst_window", version = "0.15.3", optional = true }
-amethyst_config = { path = "../amethyst_config", version = "0.15.3" }
-derive-new = "0.5.6"
-failure = "0.1"
-genmesh = "0.6"
-glsl-layout = "0.3"
-gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
-lazy_static = "1.4"
-log = "0.4"
-palette = { version = "0.4", features = ["serde"] }
-rendy = { version = "0.4.1", default-features = false, features = [
+rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = [
     "base",
     "mesh-obj",
     "texture-image",
     "texture-palette",
     "serde-1",
 ] }
+amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
+amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
+amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_window = { path = "../amethyst_window", version = "0.15.3", optional = true }
+amethyst_config = { path = "../amethyst_config", version = "0.15.3" }
+derive-new = "0.5.6"
+genmesh = "0.6"
+glsl-layout = "0.3"
+gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
+lazy_static = "1.4"
+log = "0.4"
+palette = { version = "0.4", features = ["serde"] }
 ron = "0.5"
 serde = { version = "1", features = ["serde_derive"] }
 fnv = "1"
@@ -45,22 +44,21 @@ thread_profiler = { version = "0.3", optional = true }
 approx = "0.4.0"
 
 [dev-dependencies]
+winit = { git = "https://git@github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 rayon = "1.4.0"
 more-asserts = "0.2.1"
 criterion = "0.3.0"
-winit = "0.19"
 
 [features]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
-vulkan-x11 = ["rendy/vulkan-x11"]
 empty = ["rendy/empty"]
 profiler = ["thread_profiler/thread_profiler", "rendy/profiler"]
 no-slow-safety-checks = ["rendy/no-slow-safety-checks"]
 shader-compiler = ["rendy/shader-compiler"]
 test-support = []
 experimental-spirv-reflection = ["rendy/spirv-reflection"]
-window = ["rendy/wsi-winit", "amethyst_window"]
+window = ["amethyst_window"]
 
 [[bench]]
 name = "camera"

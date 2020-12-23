@@ -1,11 +1,13 @@
+use std::time::{Duration, Instant};
+
 use amethyst_assets::{
     prefab::Prefab, AssetHandle, AssetStorage, DefaultLoader, Handle, LoadStatus, Loader,
     LoaderBundle,
 };
 use amethyst_core::ecs::{Dispatcher, DispatcherBuilder, Resources, World};
+use legion_prefab::register_component_type;
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
-use std::time::{Duration, Instant};
 use type_uuid::TypeUuid;
 mod common;
 
@@ -57,6 +59,8 @@ struct Position2D {
     position: Vec<f32>,
 }
 
+register_component_type!(Position2D);
+
 #[test]
 fn a_prefab_is_applied_to_an_entity() {
     let (mut dispatcher, mut world, mut resources) = setup();
@@ -91,7 +95,7 @@ fn execute_dispatcher_until_loaded(
     resources: &mut Resources,
     prefab_handle: Handle<Prefab>,
 ) {
-    let timeout = Instant::now() + Duration::from_secs(5);
+    let timeout = Instant::now() + Duration::from_secs(10);
     loop {
         assert!(
             Instant::now() < timeout,
