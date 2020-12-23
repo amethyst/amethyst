@@ -63,7 +63,6 @@ prefab-format = "0.1"
 
 [dev-dependencies]
 serde_json = "1"
-amethyst_rendy = { path = "../amethyst_rendy", version = "0.15.3", features = ["empty"] }
 fern = { version = "0.6.0", features = ["colored"] }
 serde-diff = "0.4"
 

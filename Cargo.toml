@@ -117,11 +117,6 @@ derive-new = "0.5.8"
 env_logger = "0.7.1"
 genmesh = "0.6.2"
 ron = "0.5.1"
-specs-derive = "0.4.1"
-type-uuid = "0.1"
-serde-diff = "0.4"
-legion-prefab = "0.1"
-prefab-format = "0.1"
 
 [build-dependencies]
 dirs = "2.0.2"
