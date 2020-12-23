@@ -12,13 +12,10 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
-<<<<<<< HEAD
-=======
         rendy::{
             hal::command::ClearColor,
             mesh::{Normal, Position, TexCoord},
         },
->>>>>>> origin/legion_v2
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -109,17 +106,10 @@ fn main() -> Result<(), Error> {
 
     let display_config_path = app_root.join("examples/prefab/config/display.ron");
 
-<<<<<<< HEAD
     let mut dispatcher_builder = DispatcherBuilder::default();
     dispatcher_builder
-        // with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
-=======
-    let mut game_data = DispatcherBuilder::default()
-        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .add_bundle(TransformBundle::new())?
->>>>>>> origin/legion_v2
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -130,17 +120,13 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         );
 
-<<<<<<< HEAD
-    let mut game = Application::new(
+    let game = Application::new(
         assets_dir,
         AssetsExample {
             prefab_handle: None,
         },
         dispatcher_builder,
     )?;
-=======
-    let game = Application::build(assets_dir, AssetsExample)?.build(game_data)?;
->>>>>>> origin/legion_v2
     game.run();
     Ok(())
 }
