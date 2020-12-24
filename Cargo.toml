@@ -193,8 +193,9 @@ name = "pong_tutorial_03"
 [[example]]
 name = "pong_tutorial_04"
 
-# [[example]]
-# name = "pong_tutorial_05"
+[[example]]
+name = "pong_tutorial_05"
+required-features = ["ui"]
 
 # [[example]]
 # name = "pong_tutorial_06"
