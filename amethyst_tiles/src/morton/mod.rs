@@ -206,7 +206,7 @@ pub fn max(morton1: u32, morton2: u32) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use more_asserts::*;
+    use more_asserts::assert_lt;
     use rayon::prelude::*;
 
     pub fn test_encoder<E: CoordinateEncoder>(dimensions: Vector3<u32>) {
