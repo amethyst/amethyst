@@ -5,7 +5,8 @@
 use legion::{
     storage::ComponentTypeId,
     systems::{
-        CommandBuffer, Resource, ResourceSet, ResourceTypeId, Runnable, SystemId, UnsafeResources,
+        CommandBuffer, ParallelRunnable, Resource, ResourceSet, ResourceTypeId, Runnable, SystemId,
+        UnsafeResources,
     },
     world::{ArchetypeAccess, WorldId},
     Read, World,
@@ -26,7 +27,8 @@ use legion::{
 /// ```rust
 /// use legion::{system, Schedule, World, Resources, SystemBuilder};
 /// use amethyst_core::system_ext::pausable;
-/// use legion::systems::Runnable;
+/// use amethyst_core::ecs::{System, ParallelRunnable};
+/// use amethyst_core::dispatcher::DispatcherBuilder;
 ///
 /// #[derive(PartialEq)]
 /// enum CurrentState {
@@ -35,16 +37,24 @@ use legion::{
 /// }
 ///
 ///
-/// fn add_number_system() -> impl Runnable {
-///    SystemBuilder::new("TestSystem")
-///         .write_resource::<u32>()
-///         .build(move |_commands, _world, resources, _| {
-///             *resources += 1;
-///         }) }
+/// struct TestSystem;
 ///
-/// let mut schedule = Schedule::builder()
-///     .add_system(pausable(add_number_system(), CurrentState::Enabled))
-///     .build();
+/// impl System<'_> for TestSystem{
+///     fn build(&mut self) -> Box<dyn ParallelRunnable> {
+///         Box::new(
+///             pausable(SystemBuilder::new("TestSystem")
+///                          .write_resource::<u32>()
+///                          .build(move |_commands, _world, resources, _| {
+///                              **resources += 1;
+///                          }),
+///                         CurrentState::Enabled
+///             ))
+/// }}
+///
+/// let mut dispatcher = DispatcherBuilder::default()
+///     .add_system(Box::new(TestSystem))
+///     .build(&mut world, &mut resources)
+///     .unwrap();
 ///
 /// let mut world = World::default();
 /// let mut resources = Resources::default();
@@ -53,15 +63,15 @@ use legion::{
 /// // the system should only be enabled on CurrentState::Enabled.
 /// resources.insert(0u32);
 /// resources.insert(CurrentState::Disabled);
-/// schedule.execute(&mut world, &mut resources);
+/// dispatcher.execute(&mut world, &mut resources);
 /// assert_eq!(1, resources.get::<u32>().unwrap());
 ///
 /// resources.insert(0u32);
 /// resources.insert(CurrentState::Enabled);
-/// schedule.execute(&mut world, &mut resources);
+/// dispatcher.execute(&mut world, &mut resources);
 /// assert_eq!(1 + 2, resources.get::<u32>().unwrap());
 /// ```
-pub fn pausable<V>(runnable: impl Runnable, value: V) -> Pausable<impl Runnable, V>
+pub fn pausable<V>(runnable: impl ParallelRunnable, value: V) -> Pausable<impl ParallelRunnable, V>
 where
     V: Resource + PartialEq,
 {
@@ -136,9 +146,13 @@ where
 
 #[cfg(test)]
 mod test {
-    use legion::{Resources, Schedule, SystemBuilder};
+    use legion::{Resources, SystemBuilder};
 
     use super::*;
+    use crate::{
+        dispatcher::{DispatcherBuilder, System},
+        ecs::ParallelRunnable,
+    };
 
     #[derive(PartialEq)]
     enum CurrentState {
@@ -146,12 +160,19 @@ mod test {
         Enabled,
     }
 
-    fn add_number_system() -> impl Runnable {
-        SystemBuilder::new("TestSystem")
-            .write_resource::<u32>()
-            .build(move |_commands, _world, resources, _| {
-                **resources += 1;
-            })
+    struct TestSystem;
+
+    impl System<'_> for TestSystem {
+        fn build(&mut self) -> Box<dyn ParallelRunnable> {
+            Box::new(pausable(
+                SystemBuilder::new("TestSystem")
+                    .write_resource::<u32>()
+                    .build(move |_commands, _world, resources, _| {
+                        **resources += 1;
+                    }),
+                CurrentState::Enabled,
+            ))
+        }
     }
 
     #[test]
@@ -161,14 +182,15 @@ mod test {
         resources.insert(0u32);
         resources.insert(CurrentState::Enabled);
 
-        let mut schedule = Schedule::builder()
-            .add_system(pausable(add_number_system(), CurrentState::Enabled))
-            .build();
+        let mut dispatcher = DispatcherBuilder::default()
+            .add_system(Box::new(TestSystem))
+            .build(&mut world, &mut resources)
+            .unwrap();
 
         assert_eq!(0, *resources.get::<u32>().unwrap());
-        schedule.execute(&mut world, &mut resources);
+        dispatcher.execute(&mut world, &mut resources);
         assert_eq!(1, *resources.get::<u32>().unwrap());
-        schedule.execute(&mut world, &mut resources);
+        dispatcher.execute(&mut world, &mut resources);
         assert_eq!(2, *resources.get::<u32>().unwrap());
     }
 
@@ -179,17 +201,18 @@ mod test {
         resources.insert(0u32);
         resources.insert(CurrentState::Enabled);
 
-        let mut schedule = Schedule::builder()
-            .add_system(pausable(add_number_system(), CurrentState::Enabled))
-            .build();
+        let mut dispatcher = DispatcherBuilder::default()
+            .add_system(Box::new(TestSystem))
+            .build(&mut world, &mut resources)
+            .unwrap();
 
         assert_eq!(0, *resources.get::<u32>().unwrap());
-        schedule.execute(&mut world, &mut resources);
+        dispatcher.execute(&mut world, &mut resources);
         assert_eq!(1, *resources.get::<u32>().unwrap());
 
         resources.insert(CurrentState::Disabled);
 
-        schedule.execute(&mut world, &mut resources);
+        dispatcher.execute(&mut world, &mut resources);
         assert_eq!(1, *resources.get::<u32>().unwrap());
     }
 }
