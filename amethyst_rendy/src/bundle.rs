@@ -1,6 +1,6 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use amethyst_assets::{register_asset_type, AssetProcessorSystem, AssetStorage};
 use amethyst_core::ecs::*;

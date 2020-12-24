@@ -1,10 +1,7 @@
 //! Renderer system
 
-
-
 use amethyst_assets::{AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState};
 use amethyst_core::ecs::*;
-
 use derivative::Derivative;
 use palette::{LinSrgba, Srgba};
 use rendy::{

@@ -12,9 +12,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
-        rendy::{
-            hal::command::ClearColor,
-        },
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
