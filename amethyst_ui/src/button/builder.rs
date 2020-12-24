@@ -1,18 +1,21 @@
 use std::marker::PhantomData;
 
-use amethyst_assets::{AssetStorage, Loader};
+use amethyst_assets::{DefaultLoader, Handle, Loader, ProcessingQueue};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
     ecs::*,
     transform::{Children, Parent, Transform},
 };
-use amethyst_rendy::{palette::Srgba, rendy::texture::palette::load_from_srgba, Texture};
+use amethyst_rendy::{
+    palette::Srgba, rendy::texture::palette::load_from_srgba, types::TextureData,
+};
 use smallvec::{smallvec, SmallVec};
 
 use crate::{
     font::default::get_default_font,
-    Anchor, FontAsset, FontHandle, Interactable, LineMode, Selectable, Stretch, UiButton,
-    UiButtonAction, UiButtonActionRetrigger,
+    format::FontData,
+    Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, UiButton, UiButtonAction,
+    UiButtonActionRetrigger,
     UiButtonActionType::{self, *},
     UiImage, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
@@ -41,7 +44,7 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     stretch: Stretch,
     text: String,
     text_color: [f32; 4],
-    font: Option<FontHandle>,
+    font: Option<Handle<FontAsset>>,
     font_size: f32,
     line_mode: LineMode,
     align: Anchor,
@@ -149,7 +152,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Use a different font for the button text.
-    pub fn with_font(mut self, font: FontHandle) -> Self {
+    pub fn with_font(mut self, font: Handle<FontAsset>) -> Self {
         self.font = Some(font);
         self
     }
@@ -352,9 +355,9 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
             .expect("Unreachable: Inserting newly created entity")
             .add_component(Selectable::<G>::new(self.tab_order));
 
-        let asset_storage = resources.get::<AssetStorage<Texture>>().unwrap();
+        let asset_storage = resources.get::<ProcessingQueue<TextureData>>().unwrap();
         let loader = resources
-            .get::<Loader>()
+            .get::<DefaultLoader>()
             .expect("Could not get Loader resource");
         let image = self.image.unwrap_or_else(|| {
             UiImage::Texture(
@@ -409,7 +412,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                     keep_aspect_ratio: false,
                 }),
             );
-        let font_storage = resources.get::<AssetStorage<FontAsset>>().unwrap();
+        let font_storage = resources.get::<ProcessingQueue<FontData>>().unwrap();
         let font_handle = self
             .font
             .unwrap_or_else(|| get_default_font(&loader, &font_storage));

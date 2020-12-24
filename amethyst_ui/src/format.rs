@@ -2,22 +2,18 @@ use amethyst_assets::{Asset, Format, Handle, ProcessableAsset, ProcessingState};
 use amethyst_error::{format_err, Error, ResultExt};
 use glyph_brush::rusttype::Font;
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
 /// A loaded set of fonts from a file.
-#[derive(Clone)]
-#[allow(missing_debug_implementations)]
+#[derive(Clone, Debug, TypeUuid)]
+#[uuid = "67bce379-48f7-4a35-bf54-243429a1816b"]
 pub struct FontAsset(pub Font<'static>);
-
-/// A handle to font data stored with `amethyst_assets`.
-pub type FontHandle = Handle<FontAsset>;
 
 #[derive(Clone, Debug, TypeUuid)]
 #[uuid = "85bac271-fe10-48da-85d2-151e93ce98d1"]
 pub struct FontData(Font<'static>);
 
 amethyst_assets::register_format_type!(FontData);
-// FontData/FontAsset does not implement Serialize/Deserialize, so we cannot register asset type :(
-// amethyst_assets::register_asset_type!(FontData => FontAsset; Processor<FontAsset>);
 
 impl Asset for FontAsset {
     fn name() -> &'static str {
@@ -27,7 +23,7 @@ impl Asset for FontAsset {
 }
 
 impl ProcessableAsset for FontAsset {
-    fn process(data: FontData) -> Result<ProcessingState<FontAsset>, Error> {
+    fn process(data: FontData) -> Result<ProcessingState<FontData, FontAsset>, Error> {
         Ok(ProcessingState::Loaded(FontAsset(data.0)))
     }
 }

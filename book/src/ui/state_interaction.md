@@ -27,7 +27,7 @@ previous chapters, but here we will save the entity in our struct:
 # use amethyst::{
 #  assets::{AssetStorage,  DefaultLoader, Loader},
 # 	ecs::{Entity, World, WorldExt},
-# 	ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiText, UiTransform},
+# 	ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiText, UiTransform},
 # 	prelude::{Builder, GameData, SimpleState, StateData},
 # };
 #
@@ -92,7 +92,7 @@ method of our state:
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   ecs::{Entity, World, WorldExt},
-#   ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
+#   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
 #   StateEvent,
 # };
@@ -195,7 +195,7 @@ component to our button:
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
 #   ecs::{Entity, World, WorldExt},
-#   ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
+#   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
 #   StateEvent
 # };
@@ -289,7 +289,7 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
 #   ecs::{Entity, World, WorldExt},
-#   ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
+#   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
 #   StateEvent
 # };

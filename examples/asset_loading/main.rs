@@ -26,7 +26,8 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::{AssetHandle, LoaderBundle};
+use amethyst_assets::{AssetHandle, LoaderBundle, ProcessingQueue};
+use amethyst_rendy::{types::TextureData, Texture};
 use log::info;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -90,11 +91,11 @@ impl SimpleState for AssetsExample {
             let mat_defaults = resources.get::<MaterialDefaults>().unwrap();
             let loader = resources.get::<DefaultLoader>().unwrap();
 
-            let textures = &resources.get().unwrap();
+            let textures = &resources.get::<ProcessingQueue<TextureData>>().unwrap();
             let materials = &resources.get().unwrap();
 
             let mesh: Handle<Mesh> = loader.load("mesh/cuboid.custom");
-            let albedo = loader.load_from_data(
+            let albedo: Handle<Texture> = loader.load_from_data(
                 load_from_srgba(Srgba::new(0.1, 0.5, 0.3, 1.0)).into(),
                 (),
                 textures,

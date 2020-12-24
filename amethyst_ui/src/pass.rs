@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, collections::HashSet};
 
-use amethyst_assets::{AssetStorage, Handle, Loader};
+use amethyst_assets::{AssetStorage, DefaultLoader, Handle, Loader, ProcessingQueue};
 use amethyst_core::{ecs::*, Hidden, HiddenPropagate};
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -29,7 +29,7 @@ use amethyst_rendy::{
     simple_shader_set,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
     system::GraphAuxData,
-    types::{Backend, Texture},
+    types::{Backend, Texture, TextureData},
     ChangeDetection, SpriteSheet,
 };
 use amethyst_window::ScreenDimensions;
@@ -165,8 +165,10 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawUiDesc {
         )?;
 
         let (loader, tex_storage) = (
-            data.resources.get::<Loader>().unwrap(),
-            data.resources.get::<AssetStorage<Texture>>().unwrap(),
+            data.resources.get::<DefaultLoader>().unwrap(),
+            data.resources
+                .get::<ProcessingQueue<TextureData>>()
+                .unwrap(),
         );
         let white_tex = loader.load_from_data(
             load_from_srgba(palette::Srgba::new(1., 1., 1., 1.)).into(),
@@ -237,8 +239,12 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
                     hal::image::Layout::ShaderReadOnlyOptimal,
                 ),
                 glyphs_res.glyph_tex().and_then(|tex| {
-                    self.textures
-                        .insert(factory, resources, tex, hal::image::Layout::General)
+                    self.textures.insert(
+                        factory,
+                        resources,
+                        tex.into(),
+                        hal::image::Layout::General,
+                    )
                 }),
             ) {
                 changed = changed || white_changed || glyph_changed;

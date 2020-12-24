@@ -1,8 +1,14 @@
 //! Module containing the system managing glyphbrush state for visible UI Text components.
 
-use std::{collections::HashMap, marker::PhantomData, ops::Deref};
+use std::{
+    collections::{HashMap, HashSet},
+    marker::PhantomData,
+    ops::Deref,
+};
 
-use amethyst_assets::{AssetStorage, Handle};
+use amethyst_assets::{
+    AssetStorage, DefaultLoader, Handle, LoadHandle, ProcessingQueue, ProcessingState,
+};
 use amethyst_core::{ecs::*, Hidden, HiddenPropagate};
 use amethyst_rendy::{
     rendy::{
@@ -81,7 +87,7 @@ impl LineBreaker for CustomLineBreaker {
 pub struct UiGlyphsSystem<B: Backend> {
     glyph_brush: GlyphBrush<'static, (u32, UiArgs)>,
     glyph_entity_cache: HashMap<u32, Entity>,
-    fonts_map: HashMap<u32, FontState>,
+    fonts_map: HashMap<LoadHandle, FontState>,
     marker: PhantomData<B>,
 }
 
@@ -91,12 +97,13 @@ impl<B: Backend> Default for UiGlyphsSystem<B> {
             glyph_brush: GlyphBrushBuilder::using_fonts(vec![])
                 .initial_cache_size((512, 512))
                 .build(),
-            glyph_entity_cache: HashMap::new(),
-            fonts_map: Default::default(),
-            marker: PhantomData,
+            ..Default::default()
         }
     }
 }
+
+use amethyst_assets::{AssetHandle, Loader};
+use amethyst_rendy::types::DefaultBackend;
 
 impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
     fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
@@ -105,8 +112,10 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                 .write_resource::<Factory<B>>()
                 .read_resource::<QueueId>()
                 .write_resource::<AssetStorage<Texture>>()
+                .write_resource::<ProcessingQueue<GlyphTextureData>>()
                 .read_resource::<AssetStorage<FontAsset>>()
                 .write_resource::<UiGlyphsResource>()
+                .read_resource::<DefaultLoader>()
                 .with_query(
                     <(
                         Entity,
@@ -132,20 +141,59 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                 .build(
                     move |commands,
                           world,
-                          (factory, fetch_queue, tex_storage, font_storage, glyphs_res),
+                          (
+                        factory,
+                        fetch_queue,
+                        tex_storage,
+                        tex_queue,
+                        font_storage,
+                        glyphs_res,
+                        loader,
+                    ),
                           (
                         texts_not_hidden_query_with_optional_editing,
                         not_hidden_glyphs_query_with_editing,
                         glyphs_query,
                         selected_query,
                     )| {
-                        // TODO : Post legion split this method because it's too huge ...
-                        let queue = fetch_queue.deref();
+                        let queue = **fetch_queue.deref();
 
-                        let glyph_tex = glyphs_res.glyph_tex.get_or_insert_with(|| {
-                            let (w, h) = self.glyph_brush.texture_dimensions();
-                            tex_storage.insert(create_glyph_texture(factory, **queue, w, h))
+                        let glyph_tex = {
+                            glyphs_res.glyph_tex.get_or_insert_with(|| {
+                                let (w, h) = self.glyph_brush.texture_dimensions();
+                                loader.load_from_data(GlyphTextureData { w, h }, (), &tex_queue)
+                            })
+                        };
+
+                        use hal::format::{Component as C, Swizzle};
+
+                        tex_queue.process(tex_storage, |b| {
+                            log::trace!("Creating new glyph texture with size ({}, {})", b.w, b.h);
+
+                            TextureBuilder::new()
+                                .with_kind(hal::image::Kind::D2(b.w, b.h, 1, 1))
+                                .with_view_kind(hal::image::ViewKind::D2)
+                                .with_data_width(b.w)
+                                .with_data_height(b.h)
+                                .with_data(vec![R8Unorm { repr: [0] }; (b.w * b.h) as _])
+                                // This swizzle is required when working with `R8Unorm` on metal.
+                                // Glyph texture is biased towards 1.0 using "color_bias" attribute instead.
+                                .with_swizzle(Swizzle(C::Zero, C::Zero, C::Zero, C::R))
+                                .build(
+                                    ImageState {
+                                        queue,
+                                        stage: hal::pso::PipelineStage::FRAGMENT_SHADER,
+                                        access: hal::image::Access::SHADER_READ,
+                                        layout: hal::image::Layout::General,
+                                    },
+                                    factory,
+                                )
+                                .map(B::wrap_texture)
+                                .map(ProcessingState::Loaded)
+                                .map_err(|e| e.into())
                         });
+
+                        tex_storage.process_custom_drop(|_| {});
 
                         let mut tex = tex_storage
                             .get(glyph_tex)
@@ -163,18 +211,19 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                     font_storage.get(&ui_text.font).map(|font| font.0.clone());
                                 if let FontState::NotFound = self
                                     .fonts_map
-                                    .entry(ui_text.font.id())
+                                    .entry(ui_text.font.load_handle())
                                     .or_insert(FontState::NotFound)
                                 {
                                     if let Some(font) = font_storage.get(&ui_text.font) {
                                         let new_font = FontState::Ready(
                                             self.glyph_brush.add_font(font.0.clone()),
                                         );
-                                        self.fonts_map.insert(ui_text.font.id(), new_font);
+                                        self.fonts_map.insert(ui_text.font.load_handle(), new_font);
                                     }
                                 }
 
-                                let font_lookup = self.fonts_map.get(&ui_text.font.id()).unwrap();
+                                let font_lookup =
+                                    self.fonts_map.get(&ui_text.font.load_handle()).unwrap();
 
                                 if let (Some(font_id), Some(font_asset)) =
                                     (font_lookup.id(), font_asset)
@@ -411,13 +460,13 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                             },
                                             data,
                                             ImageState {
-                                                queue: **queue,
+                                                queue,
                                                 stage: hal::pso::PipelineStage::FRAGMENT_SHADER,
                                                 access: hal::image::Access::SHADER_READ,
                                                 layout: hal::image::Layout::General,
                                             },
                                             ImageState {
-                                                queue: **queue,
+                                                queue,
                                                 stage: hal::pso::PipelineStage::FRAGMENT_SHADER,
                                                 access: hal::image::Access::SHADER_READ,
                                                 layout: hal::image::Layout::General,
@@ -634,12 +683,14 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                 }
                                 Err(BrushError::TextureTooSmall { suggested: (w, h) }) => {
                                     // Replace texture in asset storage. No handles have to be updated.
-                                    tex_storage.replace(
-                                        glyph_tex,
-                                        create_glyph_texture(factory, **queue, w, h),
+                                    let glyph_tex: Handle<Texture> = loader.load_from_data(
+                                        GlyphTextureData { w, h },
+                                        (),
+                                        &tex_queue,
                                     );
+
                                     tex = tex_storage
-                                        .get(glyph_tex)
+                                        .get(&glyph_tex)
                                         .and_then(B::unwrap_texture)
                                         .unwrap();
                                     self.glyph_brush.resize_texture(w, h);
@@ -671,35 +722,43 @@ fn update_cursor_position(
     };
 }
 
-fn create_glyph_texture<B: Backend>(
-    factory: &mut Factory<B>,
-    queue: QueueId,
+use serde::Deserialize;
+use type_uuid::TypeUuid;
+
+#[derive(Debug, Clone, TypeUuid, Deserialize)]
+#[uuid = "36e442d3-b957-4155-8f3b-01f580931226"]
+struct GlyphTextureData {
     w: u32,
     h: u32,
-) -> Texture {
-    use hal::format::{Component as C, Swizzle};
-    log::trace!("Creating new glyph texture with size ({}, {})", w, h);
+}
 
-    TextureBuilder::new()
-        .with_kind(hal::image::Kind::D2(w, h, 1, 1))
-        .with_view_kind(hal::image::ViewKind::D2)
-        .with_data_width(w)
-        .with_data_height(h)
-        .with_data(vec![R8Unorm { repr: [0] }; (w * h) as _])
-        // This swizzle is required when working with `R8Unorm` on metal.
-        // Glyph texture is biased towards 1.0 using "color_bias" attribute instead.
-        .with_swizzle(Swizzle(C::Zero, C::Zero, C::Zero, C::R))
-        .build(
-            ImageState {
-                queue,
-                stage: hal::pso::PipelineStage::FRAGMENT_SHADER,
-                access: hal::image::Access::SHADER_READ,
-                layout: hal::image::Layout::General,
-            },
-            factory,
+amethyst_assets::register_asset_type!(GlyphTextureData => Texture; GlyphTextureProcessorSystem<DefaultBackend>);
+
+use derivative::Derivative;
+
+/// Asset processing system for `Texture` asset type.
+#[derive(Debug, Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct GlyphTextureProcessorSystem<B> {
+    pub(crate) _marker: std::marker::PhantomData<B>,
+}
+
+impl<B: Backend> System<'static> for GlyphTextureProcessorSystem<B> {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("GlyphTextureProcessor")
+                .write_resource::<ProcessingQueue<GlyphTextureData>>()
+                .write_resource::<AssetStorage<Texture>>()
+                .read_resource::<QueueId>()
+                .write_resource::<Factory<B>>()
+                .build(
+                    move |commands,
+                          world,
+                          (processing_queue, texture_storage, queue_id, factory),
+                          _| {},
+                ),
         )
-        .map(B::wrap_texture)
-        .expect("Failed to create glyph texture")
+    }
 }
 
 fn selection_span(editing: &TextEditing, string: &str) -> Option<(usize, usize)> {

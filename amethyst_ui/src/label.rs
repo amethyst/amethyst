@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
-use amethyst_assets::{AssetStorage, Loader};
+use amethyst_assets::{AssetStorage, DefaultLoader, Handle, Loader, ProcessingQueue};
 use amethyst_core::ecs::*;
 
 use crate::{
-    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode,
+    define_widget, font::default::get_default_font, format::FontData, Anchor, FontAsset, LineMode,
     Selectable, Stretch, UiText, UiTransform, WidgetId, Widgets,
 };
 
@@ -34,7 +34,7 @@ pub struct UiLabelBuilder<G, I: WidgetId> {
     stretch: Stretch,
     text: String,
     text_color: [f32; 4],
-    font: Option<FontHandle>,
+    font: Option<Handle<FontAsset>>,
     font_size: f32,
     line_mode: LineMode,
     align: Anchor,
@@ -140,7 +140,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
     }
 
     /// Use a different font for the button text.
-    pub fn with_font(mut self, font: FontHandle) -> Self {
+    pub fn with_font(mut self, font: Handle<FontAsset>) -> Self {
         self.font = Some(font);
         self
     }
@@ -214,10 +214,10 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
             .with_stretch(self.stretch),
         );
 
-        let font_asset_storage = resources.get::<AssetStorage<FontAsset>>().unwrap();
+        let font_asset_storage = resources.get::<ProcessingQueue<FontData>>().unwrap();
 
         let loader = resources
-            .get::<Loader>()
+            .get::<DefaultLoader>()
             .expect("Could not get Loader resource");
 
         let font_handle = self

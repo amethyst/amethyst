@@ -6,7 +6,6 @@ use amethyst::{
     ui::AudioUiBundle,
     Application, GameData, LoggerConfig, SimpleState, StateData,
 };
-use amethyst_assets::AssetProcessorSystemBundle;
 use amethyst_audio::{output::init_output, Source};
 use amethyst_core::{dispatcher::DispatcherBuilder, transform::TransformBundle};
 use amethyst_input::InputBundle;
@@ -46,7 +45,6 @@ fn main() -> amethyst::Result<()> {
     dispatcher
         .add_bundle(TransformBundle::default())
         .add_bundle(InputBundle::default())
-        .add_bundle(AssetProcessorSystemBundle::<Source>::default())
         .add_bundle(UiBundle::<u32>::default())
         .add_bundle(AudioUiBundle::default())
         .add_bundle(
@@ -68,9 +66,9 @@ pub struct TestCpnt;
 
 mod example_utils {
     use amethyst::ecs::{Resources, World};
-    use amethyst_assets::{AssetStorage, DefaultLoader, Format, Loader};
+    use amethyst_assets::{AssetStorage, DefaultLoader, Format, Loader, ProcessingQueue};
     use amethyst_audio::{OggFormat, Source};
-    use amethyst_rendy::{ImageFormat, Texture};
+    use amethyst_rendy::{types::TextureData, ImageFormat, Texture};
     use amethyst_ui::{
         Anchor, Draggable, FontAsset, Interactable, LineMode, TextEditing, TtfFormat,
         UiButtonBuilder, UiImage, UiLabelBuilder, UiTransform,
@@ -92,12 +90,10 @@ mod example_utils {
     pub fn build_multi_line_label(world: &mut World, resources: &mut Resources) {
         let font = {
             let font_storage = resources.get_mut::<AssetStorage<FontAsset>>().unwrap();
-            resources.get::<DefaultLoader>().unwrap().load(
-                "font/square.ttf",
-                TtfFormat,
-                (),
-                &font_storage,
-            )
+            resources
+                .get::<DefaultLoader>()
+                .unwrap()
+                .load("font/square.ttf")
         };
         UiLabelBuilder::<(), u32>::new("Multiline\nText!")
             .with_line_mode(LineMode::Wrap)
@@ -114,12 +110,10 @@ mod example_utils {
     pub fn build_editable_text(world: &mut World, resources: &mut Resources) {
         let font = {
             let font_storage = resources.get_mut::<AssetStorage<FontAsset>>().unwrap();
-            resources.get::<DefaultLoader>().unwrap().load(
-                "font/square.ttf",
-                TtfFormat,
-                (),
-                &font_storage,
-            )
+            resources
+                .get::<DefaultLoader>()
+                .unwrap()
+                .load("font/square.ttf")
         };
 
         let text = UiLabelBuilder::<(), u32>::new("Editable")
@@ -150,32 +144,26 @@ mod example_utils {
     pub fn build_complex_button_with_font_and_sound(world: &mut World, resources: &mut Resources) {
         let font = {
             let font_storage = resources.get_mut::<AssetStorage<FontAsset>>().unwrap();
-            resources.get::<DefaultLoader>().unwrap().load(
-                "font/square.ttf",
-                TtfFormat,
-                (),
-                &font_storage,
-            )
+            resources
+                .get::<DefaultLoader>()
+                .unwrap()
+                .load("font/square.ttf")
         };
 
         let hover_sound = {
             let sound_storage = resources.get_mut::<AssetStorage<Source>>().unwrap();
-            resources.get::<DefaultLoader>().unwrap().load(
-                "audio/boop.ogg",
-                OggFormat,
-                (),
-                &sound_storage,
-            )
+            resources
+                .get::<DefaultLoader>()
+                .unwrap()
+                .load("audio/boop.ogg")
         };
 
         let confirm_sound = {
             let sound_storage = resources.get_mut::<AssetStorage<Source>>().unwrap();
-            resources.get::<DefaultLoader>().unwrap().load(
-                "audio/confirm.ogg",
-                OggFormat,
-                (),
-                &sound_storage,
-            )
+            resources
+                .get::<DefaultLoader>()
+                .unwrap()
+                .load("audio/confirm.ogg")
         };
 
         UiButtonBuilder::<(), u32>::new("ComplexBtn".to_string())
@@ -199,7 +187,7 @@ mod example_utils {
 
     pub fn build_ui_image_texture(world: &mut World, resources: &mut Resources) {
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let texture_storage = resources.get_mut::<AssetStorage<Texture>>().unwrap();
+        let texture_storage = resources.get_mut::<ProcessingQueue<TextureData>>().unwrap();
         let texture_data = loader.load_from_data(
             ImageFormat::default()
                 .import_simple(include_bytes!("assets/texture/logo_transparent.png").to_vec())
@@ -225,12 +213,10 @@ mod example_utils {
     pub fn build_draggable(world: &mut World, resources: &mut Resources) {
         let font = {
             let font_storage = resources.get_mut::<AssetStorage<FontAsset>>().unwrap();
-            resources.get::<DefaultLoader>().unwrap().load(
-                "font/square.ttf",
-                TtfFormat,
-                (),
-                &font_storage,
-            )
+            resources
+                .get::<DefaultLoader>()
+                .unwrap()
+                .load("font/square.ttf")
         };
         let (_, btn) = UiButtonBuilder::<(), u32>::new("Draggable".to_string())
             .with_font_size(20.0)

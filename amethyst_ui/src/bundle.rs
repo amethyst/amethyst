@@ -2,8 +2,6 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::AssetProcessorSystemBundle;
-use amethyst_audio::Source;
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
 use derive_new::new;
@@ -20,8 +18,8 @@ use crate::{
     sound::{ui_sound_event_retrigger_system, UiSoundSystem},
     text::TextEditingMouseSystem,
     text_editing::TextEditingInputSystem,
-    BlinkSystem, CachedSelectionOrderResource, FontAsset, UiButtonAction, UiEvent, UiLabel,
-    UiPlaySoundAction, WidgetId, Widgets,
+    BlinkSystem, CachedSelectionOrderResource, UiButtonAction, UiEvent, UiLabel, UiPlaySoundAction,
+    WidgetId, Widgets,
 };
 
 /// UI bundle
@@ -87,7 +85,6 @@ where
         builder
             .add_system(Box::new(UiTransformSystem::new()))
             .add_system(Box::new(UiMouseSystem::new()))
-            .add_bundle(AssetProcessorSystemBundle::<FontAsset>::default())
             .add_system(Box::new(UiButtonSystem::new(ui_btn_reader)))
             .add_system(Box::new(ui_button_action_retrigger_event_system(
                 ui_btn_action_retrigger_reader,
@@ -107,7 +104,6 @@ where
             )))
             .add_system(Box::new(ResizeSystem::new()))
             .add_system(Box::new(DragWidgetSystem::new(drag_widget_reader)))
-            .add_bundle(AssetProcessorSystemBundle::<Source>::default())
             .add_system(Box::new(BlinkSystem));
 
         /*

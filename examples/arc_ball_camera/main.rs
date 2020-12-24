@@ -78,14 +78,14 @@ impl SimpleState for ExampleState {
             let mut pos = Transform::default();
             pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
-            let mtl = {
+            let mtl: Handle<Material> = {
                 let metallic_roughness = loader.load_from_data(
                     load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0)).into(),
                     (),
                     &tex_storage,
                 );
 
-                loader.load_from_data::<Material, ()>(
+                loader.load_from_data(
                     Material {
                         albedo: albedo.clone(),
                         metallic_roughness,

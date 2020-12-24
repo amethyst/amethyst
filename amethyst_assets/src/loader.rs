@@ -125,11 +125,11 @@ pub trait Loader: Send + Sync {
     }
 
     /// Load an asset from data and return a handle.
-    fn load_from_data<A, P>(
+    fn load_from_data<A, P, D>(
         &self,
-        data: A::Data,
+        data: D,
         progress: P,
-        storage: &ProcessingQueue<A::Data>,
+        storage: &ProcessingQueue<D>,
     ) -> Handle<A>
     where
         A: Asset,
@@ -211,11 +211,11 @@ impl Loader for LoaderWithStorage {
     }
 
     /// Load an asset from data and return a handle.
-    fn load_from_data<A, P>(
+    fn load_from_data<A, P, D>(
         &self,
-        data: A::Data,
+        data: D,
         mut progress: P,
-        processing_queue: &ProcessingQueue<A::Data>,
+        processing_queue: &ProcessingQueue<D>,
     ) -> Handle<A>
     where
         A: Asset,
