@@ -47,6 +47,7 @@ where
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(EventChannel::<UiButtonAction>::new());
+        resources.insert(EventChannel::<UiEvent>::new());
         resources.insert(Widgets::<UiLabel, W>::new());
         resources.insert(CachedSelectionOrderResource::default());
 
