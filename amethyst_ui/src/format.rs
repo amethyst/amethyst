@@ -24,6 +24,7 @@ impl Asset for FontAsset {
 
 impl ProcessableAsset for FontAsset {
     fn process(data: FontData) -> Result<ProcessingState<FontData, FontAsset>, Error> {
+        log::debug!("Loading Font");
         Ok(ProcessingState::Loaded(FontAsset(data.0)))
     }
 }
