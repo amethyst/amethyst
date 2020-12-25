@@ -167,8 +167,10 @@ pub struct LoaderWithStorage {
     ref_sender: Sender<RefOp>,
     ref_receiver: Receiver<RefOp>,
     handle_allocator: Arc<AtomicHandleAllocator>,
-    indirection_table: IndirectionTable,
+    pub indirection_table: IndirectionTable,
 }
+
+impl LoaderWithStorage {}
 
 impl Default for LoaderWithStorage {
     fn default() -> Self {
@@ -509,6 +511,7 @@ where
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
     ProcessorSystem: System<'static> + Default + 'static,
 {
+    log::debug!("Creating asset type: {:x?}", Asset::UUID);
     AssetType {
         data_uuid: AssetTypeId(Intermediate::UUID),
         asset_uuid: AssetTypeId(Asset::UUID),

@@ -6,7 +6,7 @@ use amethyst::{
     ui::AudioUiBundle,
     Application, GameData, LoggerConfig, SimpleState, StateData,
 };
-use amethyst_audio::{output::init_output, Source};
+use amethyst_assets::LoaderBundle;
 use amethyst_core::{dispatcher::DispatcherBuilder, transform::TransformBundle};
 use amethyst_input::InputBundle;
 use amethyst_ui::{RenderUi, UiBundle};
@@ -21,12 +21,13 @@ impl SimpleState for Example {
             world, resources, ..
         } = data;
 
+        log::debug!("Adding button");
         example_utils::build_example_button(world, resources);
         example_utils::build_ui_image_texture(world, resources);
 
         // We init the output because complex button has sounds
-        init_output(resources);
-        example_utils::build_complex_button_with_font_and_sound(world, resources);
+        // init_output(resources);
+        // example_utils::build_complex_button_with_font_and_sound(world, resources);
 
         example_utils::build_draggable(world, resources);
         example_utils::build_multi_line_label(world, resources);
@@ -35,7 +36,14 @@ impl SimpleState for Example {
 }
 
 fn main() -> amethyst::Result<()> {
-    amethyst::start_logger(LoggerConfig::default());
+    {
+        let mut config = amethyst::LoggerConfig::default();
+        config.level_filter = amethyst::LogLevelFilter::Info;
+        config
+            .module_levels
+            .push(("amethyst_ui".to_string(), amethyst::LogLevelFilter::Trace));
+        amethyst::start_logger(config);
+    }
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/ui/config/display.ron");
     let assets_dir = app_root.join("examples/ui/assets");
@@ -43,18 +51,19 @@ fn main() -> amethyst::Result<()> {
     let mut dispatcher = DispatcherBuilder::default();
 
     dispatcher
-        .add_bundle(TransformBundle::default())
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
         .add_bundle(InputBundle::default())
         .add_bundle(UiBundle::<u32>::default())
-        .add_bundle(AudioUiBundle::default())
+        // .add_bundle(AudioUiBundle)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(RenderUi::default())
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
                         float32: [0.34, 0.36, 0.52, 1.0],
                     }),
-                )
-                .with_plugin(RenderUi::default()),
+                ),
         );
 
     let game = Application::new(assets_dir, Example::default(), dispatcher)?;
@@ -66,12 +75,11 @@ pub struct TestCpnt;
 
 mod example_utils {
     use amethyst::ecs::{Resources, World};
-    use amethyst_assets::{AssetStorage, DefaultLoader, Format, Loader, ProcessingQueue};
-    use amethyst_audio::{OggFormat, Source};
-    use amethyst_rendy::{types::TextureData, ImageFormat, Texture};
+    use amethyst_assets::{DefaultLoader, Format, Loader, ProcessingQueue};
+    use amethyst_rendy::{types::TextureData, ImageFormat};
     use amethyst_ui::{
-        Anchor, Draggable, FontAsset, Interactable, LineMode, TextEditing, TtfFormat,
-        UiButtonBuilder, UiImage, UiLabelBuilder, UiTransform,
+        Anchor, Draggable, Interactable, LineMode, TextEditing, UiButtonBuilder, UiImage,
+        UiLabelBuilder, UiTransform,
     };
 
     pub fn build_example_button(world: &mut World, resources: &mut Resources) {
@@ -89,7 +97,6 @@ mod example_utils {
 
     pub fn build_multi_line_label(world: &mut World, resources: &mut Resources) {
         let font = {
-            let font_storage = resources.get_mut::<AssetStorage<FontAsset>>().unwrap();
             resources
                 .get::<DefaultLoader>()
                 .unwrap()
@@ -109,7 +116,6 @@ mod example_utils {
 
     pub fn build_editable_text(world: &mut World, resources: &mut Resources) {
         let font = {
-            let font_storage = resources.get_mut::<AssetStorage<FontAsset>>().unwrap();
             resources
                 .get::<DefaultLoader>()
                 .unwrap()
@@ -143,7 +149,6 @@ mod example_utils {
 
     pub fn build_complex_button_with_font_and_sound(world: &mut World, resources: &mut Resources) {
         let font = {
-            let font_storage = resources.get_mut::<AssetStorage<FontAsset>>().unwrap();
             resources
                 .get::<DefaultLoader>()
                 .unwrap()
@@ -151,7 +156,6 @@ mod example_utils {
         };
 
         let hover_sound = {
-            let sound_storage = resources.get_mut::<AssetStorage<Source>>().unwrap();
             resources
                 .get::<DefaultLoader>()
                 .unwrap()
@@ -159,7 +163,6 @@ mod example_utils {
         };
 
         let confirm_sound = {
-            let sound_storage = resources.get_mut::<AssetStorage<Source>>().unwrap();
             resources
                 .get::<DefaultLoader>()
                 .unwrap()
@@ -212,7 +215,6 @@ mod example_utils {
 
     pub fn build_draggable(world: &mut World, resources: &mut Resources) {
         let font = {
-            let font_storage = resources.get_mut::<AssetStorage<FontAsset>>().unwrap();
             resources
                 .get::<DefaultLoader>()
                 .unwrap()

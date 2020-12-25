@@ -82,9 +82,6 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
     ) -> Result<(), Error> {
         resources.insert(ActiveCamera::default());
 
-        // TODO: make sure that all renderer-specific systems run after game code
-        //builder.flush(); TODO: flush legion here?
-
         for plugin in &mut self.plugins {
             plugin.on_build(world, resources, builder)?;
         }

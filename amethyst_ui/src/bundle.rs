@@ -2,8 +2,10 @@
 
 use std::marker::PhantomData;
 
+use amethyst_assets::{AssetProcessorSystem, AssetStorage, DefaultLoader, ProcessingQueue};
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
+use amethyst_rendy::types::DefaultBackend;
 use derive_new::new;
 use winit::event::Event;
 
@@ -11,6 +13,8 @@ use crate::{
     button::{ui_button_action_retrigger_event_system, UiButtonSystem},
     drag::DragWidgetSystem,
     event::UiMouseSystem,
+    format::FontData,
+    glyphs::{GlyphTextureData, GlyphTextureProcessorSystem},
     layout::UiTransformSystem,
     resize::ResizeSystem,
     selection::{SelectionKeyboardSystem, SelectionMouseSystem},
@@ -18,8 +22,8 @@ use crate::{
     sound::{ui_sound_event_retrigger_system, UiSoundSystem},
     text::TextEditingMouseSystem,
     text_editing::TextEditingInputSystem,
-    BlinkSystem, CachedSelectionOrderResource, UiButtonAction, UiEvent, UiLabel, UiPlaySoundAction,
-    WidgetId, Widgets,
+    BlinkSystem, CachedSelectionOrderResource, FontAsset, UiButtonAction, UiEvent, UiLabel,
+    UiPlaySoundAction, WidgetId, Widgets,
 };
 
 /// UI bundle
@@ -46,11 +50,28 @@ where
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
+        log::debug!("Adding UI Resources");
         resources.insert(EventChannel::<UiButtonAction>::new());
         resources.insert(EventChannel::<UiEvent>::new());
         resources.insert(Widgets::<UiLabel, W>::new());
         resources.insert(CachedSelectionOrderResource::default());
 
+        resources.insert(ProcessingQueue::<FontData>::default());
+        let storage = {
+            let loader = resources.get::<DefaultLoader>().unwrap();
+
+            AssetStorage::<FontAsset>::new(loader.indirection_table.clone())
+        };
+        builder.add_system(Box::new(AssetProcessorSystem::<FontAsset>::default()));
+
+        resources.insert(ProcessingQueue::<GlyphTextureData>::default());
+        builder.add_system(Box::new(
+            GlyphTextureProcessorSystem::<DefaultBackend>::default(),
+        ));
+
+        resources.insert(storage);
+
+        log::debug!("Creating UI EventChannel Readers");
         let ui_btn_reader = resources
             .get_mut::<EventChannel<UiButtonAction>>()
             .unwrap()
@@ -83,6 +104,8 @@ where
             .get_mut::<EventChannel<UiEvent>>()
             .unwrap()
             .register_reader();
+
+        log::debug!("Adding UI Systems to Dispatcher");
         builder
             .add_system(Box::new(UiTransformSystem::new()))
             .add_system(Box::new(UiMouseSystem::new()))

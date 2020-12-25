@@ -54,7 +54,7 @@ axes we defined. Let's make the following changes to `main.rs`.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
-# use amethyst::utils::application_root_dir;
+# use amethyst_utils::application_root_dir;
 # use amethyst::window::DisplayConfig;
 # macro_rules! env { ($x:expr) => ("") }
 # fn main() -> amethyst::Result<()> {

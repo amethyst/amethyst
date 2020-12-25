@@ -71,6 +71,7 @@ impl<'a> DispatcherBuilder {
     /// Adds a system to the schedule.
     pub fn add_system<S: System<'a> + 'a>(&mut self, system: Box<S>) -> &mut Self {
         let s: &'a mut S = Box::leak(system);
+        log::debug!("Building system");
         self.items.push(DispatcherItem::System(s.build()));
         self
     }

@@ -1,4 +1,4 @@
-use amethyst_assets::{Asset, Format, Handle, ProcessableAsset, ProcessingState};
+use amethyst_assets::{Asset, Format, ProcessableAsset, ProcessingState};
 use amethyst_error::{format_err, Error, ResultExt};
 use glyph_brush::rusttype::Font;
 use serde::{Deserialize, Serialize};
