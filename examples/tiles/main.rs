@@ -154,7 +154,9 @@ impl SimpleState for Example {
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { .. } = data;
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, winit::event::VirtualKeyCode::Escape) {
+            if is_close_requested(&event)
+                || is_key_down(&event, winit::event::VirtualKeyCode::Escape)
+            {
                 Trans::Quit
             } else {
                 Trans::None
@@ -186,10 +188,9 @@ fn main() -> amethyst::Result<()> {
     dispatcher.add_bundle(
         RenderingBundle::<DefaultBackend>::new()
             .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear(ClearColor {
-                        float32: [0.34, 0.36, 0.52, 1.0],
-                    }),
+                RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                    float32: [0.34, 0.36, 0.52, 1.0],
+                }),
             )
             .with_plugin(RenderDebugLines::default())
             .with_plugin(RenderFlat2D::default())
