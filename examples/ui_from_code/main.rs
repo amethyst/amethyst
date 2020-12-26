@@ -7,6 +7,7 @@ use amethyst::{
     Application, GameData, LoggerConfig, SimpleState, StateData,
 };
 use amethyst_assets::LoaderBundle;
+use amethyst_audio::{output::init_output, Source};
 use amethyst_core::{dispatcher::DispatcherBuilder, transform::TransformBundle};
 use amethyst_input::InputBundle;
 use amethyst_ui::{RenderUi, UiBundle};
@@ -25,9 +26,8 @@ impl SimpleState for Example {
         example_utils::build_example_button(world, resources);
         example_utils::build_ui_image_texture(world, resources);
 
-        // We init the output because complex button has sounds
-        // init_output(resources);
-        // example_utils::build_complex_button_with_font_and_sound(world, resources);
+        init_output(resources);
+        example_utils::build_complex_button_with_font_and_sound(world, resources);
 
         example_utils::build_draggable(world, resources);
         example_utils::build_multi_line_label(world, resources);
@@ -55,7 +55,7 @@ fn main() -> amethyst::Result<()> {
         .add_bundle(TransformBundle)
         .add_bundle(InputBundle::default())
         .add_bundle(UiBundle::<u32>::default())
-        // .add_bundle(AudioUiBundle)
+        .add_bundle(AudioUiBundle)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderUi::default())

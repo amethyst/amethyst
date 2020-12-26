@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use log::error;
 use serde::{Deserialize, Serialize};
 #[cfg(target_os = "windows")]
-use winit::platform::windows::IconExtWindows;
+use winit::platform::windows::{IconExtWindows, WindowBuilderExtWindows};
 use winit::{
     dpi::Size,
     window::{Fullscreen, Icon, WindowAttributes, WindowBuilder},
@@ -146,6 +146,10 @@ impl DisplayConfig {
         };
 
         let mut builder = WindowBuilder::new();
+
+        if cfg!(windows) {
+            builder = builder.with_drag_and_drop(false);
+        }
         builder.window = attrs;
         builder = builder.with_window_icon(self.loaded_icon);
 
