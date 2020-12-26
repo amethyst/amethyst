@@ -45,8 +45,8 @@ fn main() -> amethyst::Result<()> {
         amethyst::start_logger(config);
     }
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/ui/config/display.ron");
-    let assets_dir = app_root.join("examples/ui/assets");
+    let display_config_path = app_root.join("examples/ui_from_code/config/display.ron");
+    let assets_dir = app_root.join("examples/ui_from_code/assets");
 
     let mut dispatcher = DispatcherBuilder::default();
 

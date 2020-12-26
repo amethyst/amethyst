@@ -419,30 +419,31 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
         // can't move into closure, so we work around it with a RefCell + Option
         let moved_op = RefCell::new(Some(load_op));
         let moved_data = RefCell::new(Some(data));
-        let mut result = None;
         info!("WorldStorages update_asset");
-        (self
-            .storage_map
-            .storages_by_data_uuid
-            .get(asset_type)
-            .expect("could not find asset type")
-            .with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
-            info!("storage closure update_asset");
-            // FIXME Does this block the main thread?
-            result = futures_executor::block_on(SerdeContext::with(
-                loader_info,
-                self.ref_sender.clone(),
-                async {
-                    info!("SerdeContext");
-                    Some(storage.update_asset(
-                        load_handle,
-                        moved_data.replace(None).unwrap(),
-                        moved_op.replace(None).unwrap(),
-                        version,
-                    ))
-                },
-            ));
-        });
+        let mut result = None;
+        if let Some(asset_type) = self.storage_map.storages_by_data_uuid.get(asset_type) {
+            (asset_type.with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
+                result = futures_executor::block_on(SerdeContext::with(
+                    loader_info,
+                    self.ref_sender.clone(),
+                    async {
+                        info!("SerdeContext");
+                        Some(storage.update_asset(
+                            load_handle,
+                            moved_data.replace(None).unwrap(),
+                            moved_op.replace(None).unwrap(),
+                            version,
+                        ))
+                    },
+                ));
+            });
+        } else {
+            log::warn!("Could not find AssetTypeID {}", asset_type);
+            result = Some(Err(amethyst_error::Error::from_string(
+                "Could not update asset.",
+            )
+            .into_error()))
+        }
         result.unwrap()
     }
     fn commit_asset_version(

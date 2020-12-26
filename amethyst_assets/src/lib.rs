@@ -18,7 +18,6 @@ pub use rayon::ThreadPool;
 mod asset;
 mod bundle;
 mod cache;
-mod dyn_format;
 pub mod error;
 mod formats;
 mod loader;
@@ -38,14 +37,12 @@ pub use atelier_loader::{
 pub use {erased_serde, inventory, lazy_static};
 
 #[doc(hidden)]
-pub use crate::dyn_format::{DeserializeFn, Registry};
 #[cfg(feature = "json")]
 pub use crate::formats::JsonFormat;
 pub use crate::{
     asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
     bundle::{start_asset_daemon, LoaderBundle},
     cache::Cache,
-    dyn_format::FormatRegisteredData,
     formats::RonFormat,
     loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
     processor::{AssetProcessorSystem, ProcessingQueue, ProcessingState},

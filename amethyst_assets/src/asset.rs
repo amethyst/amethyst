@@ -4,7 +4,7 @@ use amethyst_error::{Error, ResultExt};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{processor::ProcessingState, FormatRegisteredData, Source};
+use crate::{processor::ProcessingState, Source};
 
 /// One of the three core traits of this crate.
 ///
@@ -63,19 +63,6 @@ pub trait Format<D: 'static>: objekt::Clone + Debug + Send + Sync + 'static {
     fn import_simple(&self, _bytes: Vec<u8>) -> Result<D, Error> {
         unimplemented!("You must implement either `import_simple` or `import`.")
     }
-
-    /// Reads the given bytes and produces asset data.
-    ///
-    /// You can implement `import_simple` instead of simpler formats.
-    ///
-    fn import(&self, name: String, source: Arc<dyn Source>) -> Result<FormatValue<D>, Error> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("import_asset");
-        let b = source
-            .load(&name)
-            .with_context(|_| crate::error::Error::Source)?;
-        Ok(FormatValue::data(self.import_simple(b)?))
-    }
 }
 
 objekt::clone_trait_object!(<D> Format<D>);
@@ -86,13 +73,9 @@ objekt::clone_trait_object!(<D> Format<D>);
 /// **Note:** This trait should never be implemented manually.
 /// Use the `register_format` macro to register it correctly.
 /// See [FormatRegisteredData](trait.FormatRegisteredData.html) for the full example.
-pub trait SerializableFormat<D: FormatRegisteredData + 'static>:
-    Format<D> + erased_serde::Serialize + 'static
-{
+pub trait SerializableFormat<D: 'static>: Format<D> + erased_serde::Serialize + 'static {
     // Empty.
 }
-
-objekt::clone_trait_object!(<D> SerializableFormat<D>);
 
 // Allow using dynamic types on sites that accept format as generic.
 impl<D: 'static> Format<D> for Box<dyn Format<D>> {
@@ -102,26 +85,7 @@ impl<D: 'static> Format<D> for Box<dyn Format<D>> {
     fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
         self.deref().import_simple(bytes)
     }
-
-    fn import(&self, name: String, source: Arc<dyn Source>) -> Result<FormatValue<D>, Error> {
-        self.deref().import(name, source)
-    }
 }
-
-impl<D: 'static> Format<D> for Box<dyn SerializableFormat<D>> {
-    fn name(&self) -> &'static str {
-        self.deref().name()
-    }
-    fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
-        self.deref().import_simple(bytes)
-    }
-
-    fn import(&self, name: String, source: Arc<dyn Source>) -> Result<FormatValue<D>, Error> {
-        self.deref().import(name, source)
-    }
-}
-
-impl<D: FormatRegisteredData + 'static> SerializableFormat<D> for Box<dyn SerializableFormat<D>> {}
 
 /// The `Ok` return value of `Format::import` for a given asset type `A`.
 pub struct FormatValue<D> {

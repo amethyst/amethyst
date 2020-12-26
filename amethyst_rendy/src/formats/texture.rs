@@ -85,9 +85,6 @@ impl Default for ImageFormat {
     }
 }
 
-amethyst_assets::register_format_type!(TextureData);
-
-amethyst_assets::register_format!("IMAGE", ImageFormat as TextureData);
 amethyst_assets::register_importer!(".jpg", ImageFormat);
 amethyst_assets::register_importer!(".png", ImageFormat);
 amethyst_assets::register_importer!(".tga", ImageFormat);

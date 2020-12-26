@@ -35,7 +35,6 @@ use type_uuid::TypeUuid;
 #[uuid = "f245dc2b-88a9-413e-bd51-f6c341c32017"]
 struct Custom;
 
-amethyst_assets::register_format!("CUSTOM", Custom as MeshData);
 amethyst_assets::register_importer!(".custom", Custom);
 impl AssetFormat<MeshData> for Custom {
     fn name(&self) -> &'static str {

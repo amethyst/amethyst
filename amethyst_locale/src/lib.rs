@@ -26,9 +26,6 @@ use unic_langid::langid;
 #[uuid = "fe7720ec-ecb5-4f59-8a09-656805eb4eff"]
 pub struct LocaleFormat;
 
-amethyst_assets::register_format_type!(Locale);
-
-amethyst_assets::register_format!("FTL", LocaleFormat as Locale);
 // Locale doesn't impl Serialize/Deserialize, so can't register importer :(
 // amethyst_assets::register_importer!(".ftl", LocaleFormat);
 impl Format<Locale> for LocaleFormat {

@@ -11,9 +11,7 @@ pub struct FontAsset(pub Font<'static>);
 
 #[derive(Clone, Debug, TypeUuid)]
 #[uuid = "85bac271-fe10-48da-85d2-151e93ce98d1"]
-pub struct FontData(Font<'static>);
-
-amethyst_assets::register_format_type!(FontData);
+pub struct FontData(Option<Font<'static>>);
 
 impl Asset for FontAsset {
     fn name() -> &'static str {
@@ -25,7 +23,7 @@ impl Asset for FontAsset {
 impl ProcessableAsset for FontAsset {
     fn process(data: FontData) -> Result<ProcessingState<FontData, FontAsset>, Error> {
         log::debug!("Loading Font");
-        Ok(ProcessingState::Loaded(FontAsset(data.0)))
+        Ok(ProcessingState::Loaded(FontAsset(data.0.unwrap())))
     }
 }
 
@@ -38,9 +36,7 @@ impl ProcessableAsset for FontAsset {
 #[uuid = "2e974cc5-c0ad-4db5-8d43-40e7c69373d7"]
 pub struct TtfFormat;
 
-amethyst_assets::register_format!("TTF", TtfFormat as FontData);
-// FontData does not implement Serialize/Deserialize, so we cannot register importer :(
-//amethyst_assets::register_importer!(".ttf", TtfFormat);
+// amethyst_assets::register_importer!(".ttf", TtfFormat);
 impl Format<FontData> for TtfFormat {
     fn name(&self) -> &'static str {
         "TTF"
@@ -48,6 +44,7 @@ impl Format<FontData> for TtfFormat {
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<FontData, Error> {
         Font::from_bytes(bytes)
+            .map(Some)
             .map(FontData)
             .with_context(|_| format_err!("Font parsing error"))
     }
