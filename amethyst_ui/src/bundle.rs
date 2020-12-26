@@ -56,20 +56,10 @@ where
         resources.insert(Widgets::<UiLabel, W>::new());
         resources.insert(CachedSelectionOrderResource::default());
 
-        resources.insert(ProcessingQueue::<FontData>::default());
-        let storage = {
-            let loader = resources.get::<DefaultLoader>().unwrap();
-
-            AssetStorage::<FontAsset>::new(loader.indirection_table.clone())
-        };
-        builder.add_system(Box::new(AssetProcessorSystem::<FontAsset>::default()));
-
         resources.insert(ProcessingQueue::<GlyphTextureData>::default());
         builder.add_system(Box::new(
             GlyphTextureProcessorSystem::<DefaultBackend>::default(),
         ));
-
-        resources.insert(storage);
 
         log::debug!("Creating UI EventChannel Readers");
         let ui_btn_reader = resources

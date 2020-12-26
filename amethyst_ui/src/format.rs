@@ -1,7 +1,9 @@
-use amethyst_assets::{Asset, Format, ProcessableAsset, ProcessingState};
+use amethyst_assets::{
+    register_asset_type, Asset, AssetProcessorSystem, Format, ProcessableAsset, ProcessingState,
+};
 use amethyst_error::{format_err, Error, ResultExt};
 use glyph_brush::rusttype::Font;
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
 /// A loaded set of fonts from a file.
@@ -11,7 +13,29 @@ pub struct FontAsset(pub Font<'static>);
 
 #[derive(Clone, Debug, TypeUuid)]
 #[uuid = "85bac271-fe10-48da-85d2-151e93ce98d1"]
-pub struct FontData(Option<Font<'static>>);
+pub struct FontData(Font<'static>);
+
+impl Serialize for FontData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_newtype_struct("Font", "UNIMPLEMENTED")
+    }
+}
+
+impl<'de> Deserialize<'de> for FontData {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Font::from_bytes(include_bytes!("./font/square.ttf").to_vec())
+            .map(FontData)
+            .map_err(|e| de::Error::custom("impossible"))
+    }
+}
+
+register_asset_type!(FontData => FontAsset; AssetProcessorSystem<FontAsset>);
 
 impl Asset for FontAsset {
     fn name() -> &'static str {
@@ -23,7 +47,7 @@ impl Asset for FontAsset {
 impl ProcessableAsset for FontAsset {
     fn process(data: FontData) -> Result<ProcessingState<FontData, FontAsset>, Error> {
         log::debug!("Loading Font");
-        Ok(ProcessingState::Loaded(FontAsset(data.0.unwrap())))
+        Ok(ProcessingState::Loaded(FontAsset(data.0)))
     }
 }
 
@@ -36,7 +60,7 @@ impl ProcessableAsset for FontAsset {
 #[uuid = "2e974cc5-c0ad-4db5-8d43-40e7c69373d7"]
 pub struct TtfFormat;
 
-// amethyst_assets::register_importer!(".ttf", TtfFormat);
+amethyst_assets::register_importer!(".ttf", TtfFormat);
 impl Format<FontData> for TtfFormat {
     fn name(&self) -> &'static str {
         "TTF"
@@ -44,7 +68,6 @@ impl Format<FontData> for TtfFormat {
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<FontData, Error> {
         Font::from_bytes(bytes)
-            .map(Some)
             .map(FontData)
             .with_context(|_| format_err!("Font parsing error"))
     }
