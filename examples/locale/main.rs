@@ -75,7 +75,7 @@ fn main() -> Result<(), Error> {
 
     let mut builder = DispatcherBuilder::default();
 
-    builder.add_bundle(AssetProcessorSystemBundle::<Locale>::default());
+    builder.add_bundle(AssetProcessorSystem::<Locale>::default());
 
     let game = Application::new(assets_dir, Example::new(), builder)?;
     game.run();
