@@ -8,6 +8,7 @@ use amethyst::{
     utils::application_root_dir,
     Error,
 };
+use amethyst_assets::AssetProcessorSystem;
 
 struct Example {
     progress_counter: Option<ProgressCounter>,
@@ -75,7 +76,7 @@ fn main() -> Result<(), Error> {
 
     let mut builder = DispatcherBuilder::default();
 
-    builder.add_bundle(AssetProcessorSystem::<Locale>::default());
+    builder.add_system(Box::new(AssetProcessorSystem::<Locale>::default()));
 
     let game = Application::new(assets_dir, Example::new(), builder)?;
     game.run();
