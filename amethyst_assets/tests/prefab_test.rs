@@ -94,7 +94,7 @@ fn execute_dispatcher_until_loaded(
     resources: &mut Resources,
     prefab_handle: Handle<Prefab>,
 ) {
-    let timeout = Instant::now() + Duration::from_secs(15);
+    let timeout = Instant::now() + Duration::from_secs(20);
     loop {
         assert!(
             Instant::now() < timeout,
