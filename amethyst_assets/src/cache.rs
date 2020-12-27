@@ -40,7 +40,9 @@ where
         K: ?Sized + Hash + Eq,
         String: Borrow<K>,
     {
-        self.map.get(key).map(|weak_handle: &WeakHandle| Handle::<A>::new(self.tx.clone(), weak_handle.load_handle()))
+        self.map.get(key).map(|weak_handle: &WeakHandle| {
+            Handle::<A>::new(self.tx.clone(), weak_handle.load_handle())
+        })
     }
 
     /// Clears all values.

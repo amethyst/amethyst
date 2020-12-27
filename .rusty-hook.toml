@@ -1,11 +1,11 @@
 [hooks]
-pre-commit = "cargo check"
-pre-push = [
-    "cargo test",
-    "cargo fix",
-    "cargo +nightly fmt",
-    "cargo +nightly clippy -Z unstable-options --workspace --fix",
+pre-commit = [
+    "cargo check --workspace --features empty,optional",
+    "cargo fix --workspace --features empty,optional",
+    "cargo +nightly clippy -Z unstable-options --workspace --features empty,optional --fix",
+    "cargo +nightly fmt --all",
 ]
+pre-push = ["cargo test --all-targets --workspace --features empty,optional"]
 
 [logging]
 verbose = true

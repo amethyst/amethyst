@@ -1,10 +1,10 @@
 use std::{fmt::Debug, ops::Deref};
 
-use amethyst_error::{Error};
+use amethyst_error::Error;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{processor::ProcessingState};
+use crate::processor::ProcessingState;
 
 /// One of the three core traits of this crate.
 ///

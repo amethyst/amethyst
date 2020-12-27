@@ -114,7 +114,7 @@ lazy_static = "1.4.0"
 glsl-layout = "0.3.2"
 
 [dev-dependencies]
-rusty-hook = "0.11.2"
+rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
 derive-new = "0.5.8"
 env_logger = "0.7.1"
 genmesh = "0.6.2"

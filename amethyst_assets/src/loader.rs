@@ -22,8 +22,7 @@ use atelier_loader::{
     AssetTypeId, Loader as AtelierLoader, RpcIO,
 };
 pub use atelier_loader::{storage::LoadStatus, AssetUuid};
-
-use log::{debug};
+use log::debug;
 use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
 
