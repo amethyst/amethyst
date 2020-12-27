@@ -27,6 +27,7 @@ pub fn start_asset_daemon(asset_dirs: Vec<PathBuf>) {
     std::thread::spawn(move || {
         let db_path = ".assets_db";
         let address = "127.0.0.1:9999";
+
         info!("Starting AssetDaemon...");
         info!("db_path: {}", db_path);
         info!("address: {}", address);
