@@ -1,0 +1,11 @@
+[hooks]
+pre-commit = "cargo check"
+pre-push = [
+    "cargo test",
+    "cargo fix",
+    "cargo +nightly fmt",
+    "cargo +nightly clippy -Z unstable-options --workspace --fix",
+]
+
+[logging]
+verbose = true
