@@ -64,7 +64,7 @@ struct AssetsExample {
 
 impl SimpleState for AssetsExample {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let component_registry = ComponentRegistryBuilder::new()
+        let component_registry = ComponentRegistryBuilder::default()
             .auto_register_components()
             //.add_spawn_mapping::<TransformValues, Transform>()
             .build();

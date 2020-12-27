@@ -65,9 +65,10 @@ impl Importer for PrefabImporter {
         let registered_components = {
             let comp_registrations = legion_prefab::iter_component_registrations();
             log::info!("Getting registered components");
-            use std::iter::FromIterator;
             let component_types: HashMap<ComponentTypeUuid, ComponentRegistration> =
-                HashMap::from_iter(comp_registrations.map(|reg| (*reg.uuid(), reg.clone())));
+                comp_registrations
+                    .map(|reg| (*reg.uuid(), reg.clone()))
+                    .collect();
 
             component_types
         };

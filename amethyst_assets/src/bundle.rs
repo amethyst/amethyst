@@ -62,7 +62,7 @@ impl SystemBundle for LoaderBundle {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        let component_registry = ComponentRegistryBuilder::new()
+        let component_registry = ComponentRegistryBuilder::default()
             .auto_register_components()
             .build();
         resources.insert(component_registry);

@@ -11,6 +11,7 @@ use legion_prefab::{
 };
 use prefab_format::ComponentTypeUuid;
 
+#[derive(Default)]
 pub struct ComponentRegistryBuilder {
     components: FnvHashMap<ComponentTypeId, ComponentRegistration>,
     components_by_uuid: FnvHashMap<ComponentTypeUuid, ComponentRegistration>,
@@ -18,14 +19,6 @@ pub struct ComponentRegistryBuilder {
 }
 
 impl ComponentRegistryBuilder {
-    pub fn new() -> Self {
-        ComponentRegistryBuilder {
-            components: Default::default(),
-            components_by_uuid: Default::default(),
-            spawn_handler_set: SpawnCloneImplHandlerSet::new(),
-        }
-    }
-
     pub fn auto_register_components(mut self) -> Self {
         let comp_registrations = legion_prefab::iter_component_registrations();
 
