@@ -8,6 +8,7 @@ use super::components::*;
 use crate::ecs::*;
 
 /// System that generates [Children] components for entities that are targeted by [Parent] component.
+#[derive(Debug)]
 pub struct ParentUpdateSystem;
 
 impl System<'_> for ParentUpdateSystem {

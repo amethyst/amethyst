@@ -4,6 +4,7 @@ use super::components::*;
 use crate::ecs::*;
 
 /// System that updates global transform matrices based on hierarchy relations.
+#[derive(Debug)]
 pub struct TransformSystem;
 
 impl System<'_> for TransformSystem {
