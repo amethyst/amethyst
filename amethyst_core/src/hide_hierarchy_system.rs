@@ -6,6 +6,7 @@ use crate::{
     HiddenPropagate,
 };
 
+#[derive(Debug)]
 pub struct HideHierarchySystem;
 
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children

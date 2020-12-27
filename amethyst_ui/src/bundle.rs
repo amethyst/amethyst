@@ -13,7 +13,6 @@ use crate::{
     button::{ui_button_action_retrigger_event_system, UiButtonSystem},
     drag::DragWidgetSystem,
     event::UiMouseSystem,
-    format::FontData,
     glyphs::{GlyphTextureData, GlyphTextureProcessorSystem},
     layout::UiTransformSystem,
     resize::ResizeSystem,
@@ -22,8 +21,8 @@ use crate::{
     sound::{ui_sound_event_retrigger_system, UiSoundSystem},
     text::TextEditingMouseSystem,
     text_editing::TextEditingInputSystem,
-    BlinkSystem, CachedSelectionOrderResource, FontAsset, UiButtonAction, UiEvent, UiLabel,
-    UiPlaySoundAction, WidgetId, Widgets,
+    BlinkSystem, CachedSelectionOrderResource, UiButtonAction, UiEvent, UiLabel, UiPlaySoundAction,
+    WidgetId, Widgets,
 };
 
 /// UI bundle

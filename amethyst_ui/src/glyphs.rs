@@ -6,7 +6,7 @@ use amethyst_assets::{
     AssetHandle, AssetStorage, DefaultLoader, Handle, LoadHandle, Loader, ProcessingQueue,
     ProcessingState,
 };
-use amethyst_core::{dispatcher::ThreadLocalSystem, ecs::*, Hidden, HiddenPropagate};
+use amethyst_core::{ecs::*, Hidden, HiddenPropagate};
 use amethyst_rendy::{
     rendy::{
         command::QueueId,
@@ -83,6 +83,7 @@ impl LineBreaker for CustomLineBreaker {
 }
 
 /// Manages the text editing cursor create, deletion and position.
+#[derive(Debug)]
 pub struct UiGlyphsSystem<B: Backend> {
     glyph_brush: GlyphBrush<'static, (u32, UiArgs)>,
     glyph_entity_cache: HashMap<u32, Entity>,
