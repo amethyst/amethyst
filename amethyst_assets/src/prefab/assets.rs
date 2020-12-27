@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use amethyst_core::ecs::*;
+use atelier_assets::importer as atelier_importer;
 use atelier_importer::{typetag, SerdeImportable};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;

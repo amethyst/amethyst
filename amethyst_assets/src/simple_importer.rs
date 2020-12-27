@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use atelier_importer::{
+use atelier_assets::importer::{
     self as importer, BoxedImporter, ImportedAsset, Importer, ImporterValue, SerdeObj,
 };
 use serde::{Deserialize, Serialize};

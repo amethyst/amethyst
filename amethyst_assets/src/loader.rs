@@ -11,6 +11,7 @@ use amethyst_core::{
     ecs::{DispatcherBuilder, Resources},
 };
 use amethyst_error::Error as AmethystError;
+use atelier_assets::loader as atelier_loader;
 pub(crate) use atelier_loader::LoadHandle;
 use atelier_loader::{
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},

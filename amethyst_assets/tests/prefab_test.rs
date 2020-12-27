@@ -52,7 +52,6 @@ fn a_prefab_can_be_loaded() {
     assert!(prefab.is_some());
 }
 
-// Components require TypeUuid + Serialize + Deserialize + SerdeDiff + Send + Sync
 #[derive(TypeUuid, Serialize, Deserialize, SerdeDiff, Clone, Default)]
 #[uuid = "f5780013-bae4-49f0-ac0e-a108ff52fec0"]
 struct Position2D {
@@ -95,7 +94,7 @@ fn execute_dispatcher_until_loaded(
     resources: &mut Resources,
     prefab_handle: Handle<Prefab>,
 ) {
-    let timeout = Instant::now() + Duration::from_secs(10);
+    let timeout = Instant::now() + Duration::from_secs(15);
     loop {
         assert!(
             Instant::now() < timeout,
@@ -110,10 +109,10 @@ fn execute_dispatcher_until_loaded(
                 LoadStatus::Unresolved => (),
                 LoadStatus::Loading => (),
                 LoadStatus::Loaded => break,
-                LoadStatus::DoesNotExist => assert!(false, "Prefab does not exist"),
-                LoadStatus::Error(_) => assert!(false, "Error"),
-                LoadStatus::NotRequested => assert!(false, "NotRequested"),
-                LoadStatus::Unloading => assert!(false, "Unloading"),
+                LoadStatus::DoesNotExist => unreachable!("Prefab does not exist"),
+                LoadStatus::Error(_) => unreachable!("Error"),
+                LoadStatus::NotRequested => unreachable!("NotRequested"),
+                LoadStatus::Unloading => unreachable!("Unloading"),
             }
         }
         dispatcher.execute(world, resources);

@@ -2,6 +2,9 @@ use std::path::PathBuf;
 
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
+use atelier_assets::daemon::{
+    default_importer_contexts, default_importers, AssetDaemon, ImporterMap,
+};
 use log::info;
 
 use crate::{
@@ -28,8 +31,8 @@ pub fn start_asset_daemon(asset_dirs: Vec<PathBuf>) {
         info!("db_path: {}", db_path);
         info!("address: {}", address);
         info!("asset_dirs: {:?}", asset_dirs);
-        let mut importer_map = atelier_daemon::ImporterMap::default();
-        let mut importers = atelier_daemon::default_importers();
+        let mut importer_map = ImporterMap::default();
+        let mut importers = default_importers();
         importers.push(("prefab", Box::new(PrefabImporter::default())));
         importers.extend(get_source_importers());
 
@@ -38,11 +41,11 @@ pub fn start_asset_daemon(asset_dirs: Vec<PathBuf>) {
             importer_map.insert(ext, importer);
         }
 
-        let daemon = atelier_daemon::AssetDaemon {
+        let daemon = AssetDaemon {
             db_dir: PathBuf::from(db_path),
             address: address.parse().unwrap(),
             importers: importer_map,
-            importer_contexts: atelier_daemon::default_importer_contexts(),
+            importer_contexts: default_importer_contexts(),
             asset_dirs,
         };
         daemon.run();

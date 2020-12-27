@@ -9,7 +9,7 @@ use amethyst_core::{
     ecs::{systems::ParallelRunnable, SystemBuilder},
 };
 use amethyst_error::Error;
-use atelier_loader::storage::AssetLoadOp;
+use atelier_assets::loader::storage::AssetLoadOp;
 use crossbeam_queue::SegQueue;
 use derivative::Derivative;
 use log::debug;

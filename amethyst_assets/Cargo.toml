@@ -21,7 +21,6 @@ repository = "https://github.com/amethyst/amethyst"
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-#amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 crossbeam-queue = "0.1.2"
 derivative = "2.1.1"
@@ -40,14 +39,15 @@ objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
-# atelier-core = "0.1"
-# atelier-loader = "0.1"
-# atelier-importer = "0.1"
-# atelier-daemon = { version = "0.1", default-features = false }
-atelier-core = { git = "https://github.com/jlowry/atelier-assets.git", branch = "make_daemon_constructable", features = ["serde-1", "type_uuid"] }
-atelier-loader = { git = "https://github.com/jlowry/atelier-assets.git", branch = "make_daemon_constructable", features = ["default", "asset_uuid_macro"] }
-atelier-importer = { git = "https://github.com/jlowry/atelier-assets.git", branch = "make_daemon_constructable", features = ["serde_importers"] }
-atelier-daemon = { git = "https://github.com/jlowry/atelier-assets.git", branch = "make_daemon_constructable" }
+atelier-assets = { git = "https://github.com/jlowry/atelier-assets.git", branch = "make_daemon_constructable", features = [
+    "serde-1",
+    "type_uuid",
+    "asset_uuid_macro",
+    "serde_importers",
+    "parallel_hash",
+    "rpc_io",
+    "handle",
+] }
 uuid = { version = "0.8", features = ["v4"] }
 bincode = "1.1"
 type-uuid = "0.1"
@@ -56,18 +56,10 @@ legion-transaction = "0.1"
 legion-prefab = "0.1"
 prefab-format = "0.1"
 
-# [patch.crates-io]
-# legion-transaction = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
-# legion-prefab = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
-# prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
-
 [dev-dependencies]
 serde_json = "1"
 fern = { version = "0.6.0", features = ["colored"] }
 serde-diff = "0.4"
-
-# I want this to be an optional dev-dependency, but it's not possible :(
-# atelier-daemon = { git = "https://github.com/jlowry/atelier-assets.git", branch = "make_daemon_constructable", default-features = false }
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

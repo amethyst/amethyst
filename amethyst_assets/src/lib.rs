@@ -28,7 +28,7 @@ mod simple_importer;
 mod source;
 mod storage;
 
-pub use atelier_loader::{
+pub use atelier_assets::loader::{
     handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
     storage::LoadHandle,
 };

@@ -1,7 +1,9 @@
 use std::{collections::HashMap, io::Read};
 
-use atelier_core::AssetUuid;
-use atelier_importer::{self as atelier_importer, ImportedAsset, Importer, ImporterValue};
+use atelier_assets::{
+    core::AssetUuid,
+    importer::{self as atelier_importer, ImportedAsset, Importer, ImporterValue},
+};
 use legion_prefab::ComponentRegistration;
 use prefab_format::ComponentTypeUuid;
 use serde::{Deserialize, Serialize};
