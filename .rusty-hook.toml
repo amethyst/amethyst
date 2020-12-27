@@ -1,8 +1,8 @@
 [hooks]
 pre-commit = [
     "cargo check --workspace --features empty,optional",
-    "cargo fix --workspace --features empty,optional",
-    "cargo +nightly clippy -Z unstable-options --workspace --features empty,optional --fix",
+    "cargo fix --workspace --features empty,optional --allow-dirty --allow-staged",
+    "cargo +nightly clippy -Z unstable-options --workspace --features empty,optional --fix --allow-dirty --allow-staged",
     "cargo +nightly fmt --all",
 ]
 pre-push = ["cargo test --all-targets --workspace --features empty,optional"]
