@@ -170,8 +170,6 @@ pub struct LoaderWithStorage {
     pub indirection_table: IndirectionTable,
 }
 
-impl LoaderWithStorage {}
-
 impl Default for LoaderWithStorage {
     fn default() -> Self {
         let (tx, rx) = unbounded();
@@ -419,7 +417,6 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
         // can't move into closure, so we work around it with a RefCell + Option
         let moved_op = RefCell::new(Some(load_op));
         let moved_data = RefCell::new(Some(data));
-        info!("WorldStorages update_asset");
         let mut result = None;
         if let Some(asset_type) = self.storage_map.storages_by_data_uuid.get(asset_type) {
             (asset_type.with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
@@ -427,7 +424,6 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
                     loader_info,
                     self.ref_sender.clone(),
                     async {
-                        info!("SerdeContext");
                         Some(storage.update_asset(
                             load_handle,
                             moved_data.replace(None).unwrap(),
@@ -541,7 +537,7 @@ where
 /// # Examples
 ///
 /// ```rust,ignore
-/// #[derive(Debug, TypeUuid)]
+/// #[derive(TypeUuid)]
 /// #[uuid = "28d51c52-be81-4d99-8cdc-20b26eb12448"]
 /// pub struct MeshAsset {
 ///     buffer: (),

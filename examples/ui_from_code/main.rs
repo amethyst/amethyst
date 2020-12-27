@@ -4,10 +4,10 @@ use amethyst::{
         RenderingBundle,
     },
     ui::AudioUiBundle,
-    Application, GameData, LoggerConfig, SimpleState, StateData,
+    Application, GameData, SimpleState, StateData,
 };
 use amethyst_assets::LoaderBundle;
-use amethyst_audio::{output::init_output, Source};
+use amethyst_audio::{output::init_output};
 use amethyst_core::{dispatcher::DispatcherBuilder, transform::TransformBundle};
 use amethyst_input::InputBundle;
 use amethyst_ui::{RenderUi, UiBundle};
@@ -115,20 +115,12 @@ mod example_utils {
     }
 
     pub fn build_editable_text(world: &mut World, resources: &mut Resources) {
-        // let font = {
-        //     resources
-        //         .get::<DefaultLoader>()
-        //         .unwrap()
-        //         .load("font/square.ttf")
-        // };
-
         let text = UiLabelBuilder::<(), u32>::new("Editable")
             .with_line_mode(LineMode::Single)
             .with_position(270., 50.)
             .with_size(500., 75.)
             .with_layer(10.0)
             .with_anchor(Anchor::BottomLeft)
-            //.with_font(font)
             .with_font_size(75.)
             .with_text_color([0.2, 0.2, 1.0, 1.0])
             .with_align(Anchor::BottomLeft)

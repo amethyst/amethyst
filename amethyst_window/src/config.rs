@@ -147,7 +147,7 @@ impl DisplayConfig {
 
         let mut builder = WindowBuilder::new();
 
-        if cfg!(windows) {
+        if cfg!(target_os = "windows") {
             builder = builder.with_drag_and_drop(false);
         }
         builder.window = attrs;
