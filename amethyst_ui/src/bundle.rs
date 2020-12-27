@@ -2,7 +2,7 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::{AssetProcessorSystem, AssetStorage, DefaultLoader, ProcessingQueue};
+use amethyst_assets::{ProcessingQueue};
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
 use amethyst_rendy::types::DefaultBackend;

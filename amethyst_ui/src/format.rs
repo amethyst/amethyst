@@ -25,13 +25,13 @@ impl Serialize for FontData {
 }
 
 impl<'de> Deserialize<'de> for FontData {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
         Font::from_bytes(include_bytes!("./font/square.ttf").to_vec())
             .map(FontData)
-            .map_err(|e| de::Error::custom("impossible"))
+            .map_err(|_e| de::Error::custom("impossible"))
     }
 }
 

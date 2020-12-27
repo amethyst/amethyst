@@ -15,7 +15,6 @@ use amethyst_rendy::{
         texture::{pixel::R8Unorm, TextureBuilder},
     },
     resources::Tint,
-    types::DefaultBackend,
     Backend, Texture,
 };
 use glyph_brush::{
@@ -105,7 +104,7 @@ impl<B: Backend> Default for UiGlyphsSystem<B> {
     }
 }
 
-use amethyst_assets::register_asset_type;
+
 use derivative::Derivative;
 
 #[derive(Debug, Clone, TypeUuid, Deserialize)]
@@ -132,7 +131,7 @@ impl<B: Backend> System<'static> for GlyphTextureProcessorSystem<B> {
                 .read_resource::<QueueId>()
                 .write_resource::<Factory<B>>()
                 .build(
-                    move |commands, world, (processing_queue, tex_storage, queue, factory), _| {
+                    move |_commands, _world, (processing_queue, tex_storage, queue, factory), _| {
                         processing_queue.process(tex_storage, |b| {
                             log::debug!("Creating new glyph texture with size ({}, {})", b.w, b.h);
 
