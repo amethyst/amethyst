@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use amethyst_assets::{ DefaultLoader, Handle, ProcessingQueue};
+use amethyst_assets::{DefaultLoader, Handle, ProcessingQueue};
 use amethyst_core::ecs::*;
 
 use crate::{
