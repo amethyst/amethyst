@@ -35,7 +35,7 @@ impl SimpleState for Example {
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let loader = data.resources.get::<DefaultLoader>().unwrap();
+        let _loader = data.resources.get::<DefaultLoader>().unwrap();
 
         // Check if the locale has been loaded.
         let store = data.resources.get::<AssetStorage<Locale>>().unwrap();

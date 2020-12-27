@@ -91,7 +91,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
 
     // Create right plank entity.
     world.push((
-        sprite_render.clone(),
+        sprite_render,
         Paddle::new(Side::Right),
         right_transform,
     ));

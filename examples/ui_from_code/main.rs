@@ -7,7 +7,7 @@ use amethyst::{
     Application, GameData, SimpleState, StateData,
 };
 use amethyst_assets::LoaderBundle;
-use amethyst_audio::{output::init_output};
+use amethyst_audio::output::init_output;
 use amethyst_core::{dispatcher::DispatcherBuilder, transform::TransformBundle};
 use amethyst_input::InputBundle;
 use amethyst_ui::{RenderUi, UiBundle};

@@ -92,7 +92,7 @@ pub fn get_source_importers(
 ) -> impl Iterator<Item = (&'static str, Box<dyn BoxedImporter + 'static>)> {
     inventory::iter::<SourceFileImporter>
         .into_iter()
-        .map(|s| (s.extension.trim_start_matches("."), (s.instantiator)()))
+        .map(|s| (s.extension.trim_start_matches('.'), (s.instantiator)()))
 }
 
 // Associates the given file extension with a `Format` implementation

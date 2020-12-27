@@ -99,7 +99,7 @@ impl SimpleState for ExampleState {
             (pos, mesh.clone(), mtl)
         });
 
-        let target = world.extend(spheres).into_iter().nth(0).unwrap().clone();
+        let target = *world.extend(spheres).iter().next().unwrap();
 
         println!("Create lights");
         let light1: Light = PointLight {

@@ -22,8 +22,8 @@ use atelier_loader::{
     AssetTypeId, Loader as AtelierLoader, RpcIO,
 };
 pub use atelier_loader::{storage::LoadStatus, AssetUuid};
-use bincode;
-use log::{debug, info};
+
+use log::{debug};
 use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
 
@@ -204,7 +204,7 @@ impl Loader for LoaderWithStorage {
         )
     }
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {
-        self.loader.get_load(id).map(|h| WeakHandle::new(h))
+        self.loader.get_load(id).map(WeakHandle::new)
     }
     fn get_load_status_handle(&self, handle: LoadHandle) -> LoadStatus {
         self.loader.get_load_status(handle)
@@ -514,7 +514,7 @@ where
         asset_uuid: AssetTypeId(Asset::UUID),
         create_storage: |res, indirection_table| {
             res.get_or_insert_with(|| AssetStorage::<Asset>::new(indirection_table.clone()));
-            res.get_or_insert_with(|| ProcessingQueue::<Intermediate>::default());
+            res.get_or_insert_with(ProcessingQueue::<Intermediate>::default);
         },
         register_system: |builder| {
             builder.add_system(Box::new(ProcessorSystem::default()));

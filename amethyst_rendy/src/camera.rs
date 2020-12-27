@@ -366,12 +366,12 @@ mod tests {
 
         assert_ulps_eq!(
             camera.screen_to_world_point(top_left, diagonal, &transform),
-            Point3::new(-0.09622504486493762, 0.07216878364870322, -0.125)
+            Point3::new(-0.096_225_046, 0.072_168_78, -0.125)
         );
 
         assert_ulps_eq!(
             camera.screen_to_world_point(bottom_right, diagonal, &transform),
-            Point3::new(0.09622504486493762, -0.07216878364870322, -0.125)
+            Point3::new(0.096_225_046, -0.072_168_78, -0.125)
         );
 
         transform.set_translation_x(100.0);

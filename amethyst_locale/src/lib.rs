@@ -15,7 +15,7 @@
 #![warn(clippy::all)]
 
 use amethyst_assets::{
-    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format, Handle,
+    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format,
     ProcessableAsset, ProcessingState,
 };
 use amethyst_error::Error;
