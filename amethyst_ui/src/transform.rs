@@ -181,10 +181,8 @@ where
 {
     if let Some(parent) = maybe_parent {
         let maybe_transform = maybe_transforms.find(|(e, _)| *e == &parent.0);
-        if let Some((_, ui_transform)) = maybe_transform {
-            if let Some(t) = ui_transform {
-                return (t.pixel_width(), t.pixel_height());
-            }
+        if let Some((_, Some(t))) = maybe_transform {
+            return (t.pixel_width(), t.pixel_height());
         }
     }
     (screen_dimensions.width(), screen_dimensions.height())

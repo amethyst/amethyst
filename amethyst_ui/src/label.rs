@@ -76,9 +76,10 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
     /// easily be retrieved and updated through the appropriate resource,
     /// see [`Widgets`](../struct.Widgets.html).
     pub fn new<S: ToString>(text: S) -> UiLabelBuilder<G, I> {
-        let mut builder = UiLabelBuilder::default();
-        builder.text = text.to_string();
-        builder
+        UiLabelBuilder {
+            text: text.to_string(),
+            ..Default::default()
+        }
     }
 
     /// Sets an ID for this widget. The type of this ID will determine which `Widgets`

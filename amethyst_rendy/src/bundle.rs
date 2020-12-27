@@ -335,11 +335,7 @@ impl<B: Backend> PlanContext<B> {
         Ok(())
     }
 
-    fn submit_pass(
-        &mut self,
-        target: Target,
-        pass: RenderPassNodeBuilder<B, GraphAuxData>,
-    ) -> Result<(), Error> {
+    fn submit_pass(&mut self, target: Target, pass: RenderPassNodeBuilder<B, GraphAuxData>) {
         match self.passes.get(&target) {
             None => {}
             Some(EvaluationState::Evaluating) => {}
@@ -351,7 +347,6 @@ impl<B: Backend> PlanContext<B> {
         };
         let node = self.graph_builder.add_node(pass);
         self.passes.insert(target, EvaluationState::Built(node));
-        Ok(())
     }
 
     fn get_pass_node_raw(&self, target: Target) -> Option<NodeId> {
@@ -727,7 +722,7 @@ impl<B: Backend> TargetPlan<B> {
         }
 
         pass.add_subpass(subpass);
-        ctx.submit_pass(self.key, pass)?;
+        ctx.submit_pass(self.key, pass);
         Ok(())
     }
 }

@@ -237,7 +237,7 @@ pub fn build_camera_normalize_system() -> impl Runnable {
             let aspect = dimensions.aspect_ratio();
 
             for (camera, ortho_camera) in query.iter_mut(subworld) {
-                if aspect != ortho_camera.aspect_ratio_cache {
+                if (aspect - ortho_camera.aspect_ratio_cache).abs() > f32::EPSILON {
                     ortho_camera.aspect_ratio_cache = aspect;
                     let offsets = ortho_camera.camera_offsets(aspect);
 

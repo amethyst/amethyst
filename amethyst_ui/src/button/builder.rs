@@ -103,9 +103,10 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     /// to easily set other UI-related options. It also allows easy retrieval and updating through
     /// the appropriate widgets resouce, see [`Widgets`](../../struct.Widgets.html).
     pub fn new<S: ToString>(text: S) -> UiButtonBuilder<G, I> {
-        let mut builder = UiButtonBuilder::default();
-        builder.text = text.to_string();
-        builder
+        UiButtonBuilder {
+            text: text.to_string(),
+            ..Default::default()
+        }
     }
 
     /// Sets an ID for this widget. The type of this ID will determine which `Widgets`
