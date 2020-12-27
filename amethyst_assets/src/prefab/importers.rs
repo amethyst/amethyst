@@ -23,6 +23,7 @@ pub struct PrefabImporterState {
     pub id: Option<AssetUuid>,
 }
 
+/// The importer for '.prefab' files.
 #[derive(Default, TypeUuid)]
 #[uuid = "5bdf4d06-a1cb-437b-b182-d6d8cb23512c"]
 pub struct PrefabImporter {}

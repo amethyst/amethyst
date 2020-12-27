@@ -6,12 +6,12 @@ use crate::{
     HiddenPropagate,
 };
 
-#[derive(Debug)]
-pub struct HideHierarchySystem;
-
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children
 /// of an entity with a [HiddenPropagate](struct.HiddenPropagate.html) and removes it when it is removed
 /// from the parent.
+#[derive(Debug)]
+pub struct HideHierarchySystem;
+
 impl System<'_> for HideHierarchySystem {
     fn build(&mut self) -> Box<dyn ParallelRunnable> {
         Box::new(

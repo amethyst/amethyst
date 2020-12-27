@@ -95,21 +95,21 @@ pub fn get_source_importers(
         .map(|s| (s.extension.trim_start_matches('.'), (s.instantiator)()))
 }
 
-// Associates the given file extension with a `Format` implementation
-//
-// The `AssetDaemon` will automatically re-import the asset when a file of that format is created
-// or modified.
-//
-// # Parameters
-//
-// * `ext`: File extension including the leading `.`, such as `".ron"`.
-// * `format`: Type that implements the `Format` trait.
-//
-// # Examples
-//
-// ```rust,ignore
-// amethyst_assets::register_importer!(".ron", Ron);
-// ```
+/// Associates the given file extension with a `Format` implementation
+///
+/// The `AssetDaemon` will automatically re-import the asset when a file of that format is created
+/// or modified.
+///
+/// # Parameters
+///
+/// * `ext`: File extension including the leading `.`, such as `".ron"`.
+/// * `format`: Type that implements the `Format` trait.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// amethyst_assets::register_importer!(".ron", Ron);
+/// ```
 #[macro_export]
 macro_rules! register_importer {
     ($ext:literal, $format:ty) => {

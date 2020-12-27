@@ -18,9 +18,11 @@ pub use rayon::ThreadPool;
 mod asset;
 mod bundle;
 mod cache;
+/// asset loading specific errors
 pub mod error;
 mod formats;
 mod loader;
+/// helpers for registering prefab components
 pub mod prefab;
 mod processor;
 mod progress;

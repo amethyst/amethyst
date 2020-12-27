@@ -24,6 +24,7 @@ use serde::{Deserialize, Serialize};
 use type_uuid::*;
 use unic_langid::langid;
 
+/// Internal representation of a Locale
 #[derive(Clone, Debug, Serialize, Deserialize, TypeUuid)]
 #[uuid = "442ea0e0-48d8-4a3c-ab36-faba55f2c0db"]
 pub struct LocaleData(pub Vec<u8>);
