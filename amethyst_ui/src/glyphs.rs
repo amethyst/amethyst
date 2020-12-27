@@ -104,7 +104,6 @@ impl<B: Backend> Default for UiGlyphsSystem<B> {
     }
 }
 
-
 use derivative::Derivative;
 
 #[derive(Debug, Clone, TypeUuid, Deserialize)]

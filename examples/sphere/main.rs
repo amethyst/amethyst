@@ -58,7 +58,7 @@ impl SimpleState for SphereExample {
 
             loader.load_from_data(
                 Material {
-                    albedo: albedo,
+                    albedo,
                     ..mat_defaults
                 },
                 (),
