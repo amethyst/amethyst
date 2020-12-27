@@ -173,17 +173,16 @@ impl UiTransform {
 /// Get the (width, height) in pixels of the parent of this `UiTransform`.
 pub fn get_parent_pixel_size<'a, I>(
     maybe_parent: Option<&Parent>,
-    maybe_transforms: I,
+    mut maybe_transforms: I,
     screen_dimensions: &ScreenDimensions,
 ) -> (f32, f32)
 where
     I: Iterator<Item = (&'a Entity, Option<&'a UiTransform>)>,
 {
     if let Some(parent) = maybe_parent {
-        let maybe_transform = maybe_transforms.filter(|(e, _)| *e == &parent.0).next();
+        let maybe_transform = maybe_transforms.find(|(e, _)| *e == &parent.0);
         if let Some((_, ui_transform)) = maybe_transform {
-            if ui_transform.is_some() {
-                let t = ui_transform.unwrap();
+            if let Some(t) = ui_transform {
                 return (t.pixel_width(), t.pixel_height());
             }
         }

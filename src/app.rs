@@ -280,23 +280,21 @@ where
                 .read(reader_id)
                 .any(|e| {
                     if cfg!(target_os = "ios") {
-                        if let Event::WindowEvent {
-                            event: WindowEvent::Destroyed,
-                            ..
-                        } = e
-                        {
-                            true
-                        } else {
-                            false
-                        }
-                    } else if let Event::WindowEvent {
-                        event: WindowEvent::CloseRequested,
-                        ..
-                    } = e
-                    {
-                        true
+                        matches!(
+                            e,
+                            Event::WindowEvent {
+                                event: WindowEvent::Destroyed,
+                                ..
+                            }
+                        )
                     } else {
-                        false
+                        matches!(
+                            e,
+                            Event::WindowEvent {
+                                event: WindowEvent::CloseRequested,
+                                ..
+                            }
+                        )
                     }
                 })
         }

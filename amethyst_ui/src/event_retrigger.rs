@@ -80,8 +80,8 @@ impl<T: EventRetrigger + 'static> System<'static> for EventRetriggerSystem<T> {
                         profile_scope!("event_retrigger_system");
                         let event_reader = &mut self.event_reader;
                         for event in in_channel.read(event_reader) {
-                            if let Some((_, entity_retrigger)) =
-                                retrigger.get_mut(world, event.get_target()).ok()
+                            if let Ok((_, entity_retrigger)) =
+                                retrigger.get_mut(world, event.get_target())
                             {
                                 entity_retrigger.apply(&event, out_channel.deref_mut());
                             }

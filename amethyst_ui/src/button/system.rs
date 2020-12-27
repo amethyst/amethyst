@@ -105,31 +105,25 @@ impl System<'static> for UiButtonSystem {
                                     children_with_text.for_each_mut(
                                         world,
                                         |(_, parent, mut text)| {
-                                            if parent.0 == event.target {
-                                                if self.set_text_colors.contains_key(&event.target)
-                                                {
-                                                    self.set_text_colors
-                                                        .get_mut(&event.target)
-                                                        .and_then(|it| it.remove(color));
+                                            if parent.0 == event.target
+                                                && self.set_text_colors.contains_key(&event.target)
+                                            {
+                                                self.set_text_colors
+                                                    .get_mut(&event.target)
+                                                    .and_then(|it| it.remove(color));
 
-                                                    text.color = self.set_text_colors
-                                                        [&event.target]
-                                                        .current();
+                                                text.color =
+                                                    self.set_text_colors[&event.target].current();
 
-                                                    if self.set_text_colors[&event.target]
-                                                        .is_empty()
-                                                    {
-                                                        self.set_text_colors.remove(&event.target);
-                                                    }
+                                                if self.set_text_colors[&event.target].is_empty() {
+                                                    self.set_text_colors.remove(&event.target);
                                                 }
                                             }
                                         },
                                     );
                                 }
                                 SetImage(ref set_image) => {
-                                    if let Some((_, image)) =
-                                        images.get_mut(world, event.target).ok()
-                                    {
+                                    if let Ok((_, image)) = images.get_mut(world, event.target) {
                                         self.set_images
                                             .entry(event.target)
                                             .or_insert_with(|| {

@@ -616,9 +616,8 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                                     .map(|v| v.1);
                                                 glyph_ctr += len;
 
-                                                if let Some((_, glyph_data)) = glyphs_query
-                                                    .get_mut(&mut glyph_world, *entity)
-                                                    .ok()
+                                                if let Ok((_, glyph_data)) =
+                                                    glyphs_query.get_mut(&mut glyph_world, *entity)
                                                 {
                                                     glyph_data.vertices.extend(entity_verts);
                                                 } else {

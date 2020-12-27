@@ -240,12 +240,8 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
                     hal::image::Layout::ShaderReadOnlyOptimal,
                 ),
                 glyphs_res.glyph_tex().and_then(|tex| {
-                    self.textures.insert(
-                        factory,
-                        resources,
-                        tex.into(),
-                        hal::image::Layout::General,
-                    )
+                    self.textures
+                        .insert(factory, resources, tex, hal::image::Layout::General)
                 }),
             ) {
                 changed = changed || white_changed || glyph_changed;
