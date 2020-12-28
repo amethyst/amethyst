@@ -12,7 +12,8 @@ Prefab(
                      // Component AssetTypeId
                      type: "f5780013-bae4-49f0-ac0e-a108ff52fec0",
                      data: (
-                         position: [100.0, 100.0]
+                         x: 100,
+                         y: 100,
                      ),
                  ),
              ]
@@ -26,7 +27,8 @@ Prefab(
                      // Component AssetTypeId
                      type: "f5780013-bae4-49f0-ac0e-a108ff52fec0",
                      data: (
-                         position: [200.0, 200.0]
+                         x: 100,
+                         y: 100,
                      ),
                  ),
              ]

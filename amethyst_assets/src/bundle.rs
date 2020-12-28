@@ -8,7 +8,7 @@ use atelier_assets::daemon::{
 use log::info;
 
 use crate::{
-    prefab::{ComponentRegistryBuilder, PrefabImporter},
+    prefab::{prefab_spawning_tick, ComponentRegistryBuilder, PrefabImporter},
     simple_importer::get_source_importers,
     DefaultLoader, Loader,
 };
@@ -72,6 +72,7 @@ impl SystemBundle for LoaderBundle {
         loader.init_dispatcher(builder);
         resources.insert(loader);
         builder.add_thread_local_fn(asset_loading_tick);
+        builder.add_thread_local_fn(prefab_spawning_tick);
         Ok(())
     }
 }
