@@ -66,3 +66,10 @@ pub struct Named {
     /// The name of the entity this component is attached to.
     pub name: Cow<'static, str>,
 }
+
+impl Named {
+    /// Creates a new instance of `Named`
+    pub fn new<T: Into<Cow<'static, str>>>(name: T) -> Self {
+        Named { name: name.into() }
+    }
+}
