@@ -5,8 +5,8 @@ use std::marker::PhantomData;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    dispatcher::*,
-    ecs::prelude::*,
+    dispatcher::{System, ThreadLocalSystem},
+    ecs::{component, world::World, IntoQuery, Resources, TryRead},
     geometry::{Plane, Ray},
     math::{self, clamp, convert, Matrix4, Point2, Point3, Vector2, Vector3, Vector4},
     transform::Transform,
@@ -40,6 +40,7 @@ use amethyst_rendy::{
         gather::CameraGatherer, DynamicUniform, DynamicVertexBuffer, FlatEnvironmentSub, TextureId,
         TextureSub,
     },
+    system::GraphAuxData,
     types::{Backend, Texture},
     util,
 };
@@ -105,21 +106,21 @@ pub struct DrawTiles2DDesc<
     _marker: PhantomData<(T, E, Z)>,
 }
 
-impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGroupDesc<B, World>
-    for DrawTiles2DDesc<T, E, Z>
+impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds>
+    RenderGroupDesc<B, GraphAuxData> for DrawTiles2DDesc<T, E, Z>
 {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _aux: &GraphAuxData,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, pso::CreationError> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -177,7 +178,7 @@ pub struct DrawTiles2D<
     _marker: PhantomData<(T, E, Z)>,
 }
 
-impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGroup<B, World>
+impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGroup<B, GraphAuxData>
     for DrawTiles2D<B, T, E, Z>
 {
     #[allow(clippy::cast_precision_loss)]
@@ -187,31 +188,34 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        aux: &GraphAuxData,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
         let mut changed = false;
-        let (sprite_sheet_storage, tex_storage, hiddens, tile_maps, transforms) =
-            <(
-                Read<'_, AssetStorage<SpriteSheet>>,
-                Read<'_, AssetStorage<Texture>>,
-                ReadStorage<'_, Hidden>,
-                ReadStorage<'_, TileMap<T, E>>,
-                ReadStorage<'_, Transform>,
-            )>::fetch(world);
+        let sprite_sheet_storage = aux
+            .resources
+            .get::<AssetStorage<SpriteSheet>>()
+            .expect("getting SpriteSheet AssetStorage");
+        let tex_storage = aux
+            .resources
+            .get::<AssetStorage<Texture>>()
+            .expect("getting Texture asset storage");
+
+        let mut query =
+            <(&TileMap<T, E>, TryRead<Transform>)>::query().filter(!component::<Hidden>());
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
 
         sprites_ref.swap_clear();
 
-        let CameraGatherer { projview, .. } = CameraGatherer::gather(world);
+        let CameraGatherer { projview, .. } = CameraGatherer::gather(aux.world, aux.resources);
 
         let mut tilemap_args = vec![];
 
-        for (tile_map, _, transform) in (&tile_maps, !&hiddens, transforms.maybe()).join() {
+        for (tile_map, transform) in query.iter(aux.world) {
             let maybe_sheet = tile_map
                 .sprite_sheet
                 .as_ref()
@@ -242,22 +246,22 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 .into(),
             });
 
-            compute_region::<T, E, Z>(&tile_map, &world)
+            compute_region::<T, E, Z>(&tile_map, aux.world)
                 .iter()
                 .filter_map(|coord| {
                     let tile = tile_map.get(&coord).unwrap();
-                    if let Some(sprite_number) = tile.sprite(coord, world) {
+                    if let Some(sprite_number) = tile.sprite(coord, aux.world) {
                         let (batch_data, texture) = TileArgs::from_data(
                             &tex_storage,
                             &sprite_sheet,
                             sprite_number,
-                            Some(&TintComponent(tile.tint(coord, world))),
+                            Some(&TintComponent(tile.tint(coord, aux.world))),
                             &coord,
                         )?;
 
                         let (tex_id, this_changed) = textures_ref.insert(
                             factory,
-                            world,
+                            aux.resources,
                             texture,
                             hal::image::Layout::ShaderReadOnlyOptimal,
                         )?;
@@ -272,7 +276,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 });
         }
 
-        self.textures.maintain(factory, world);
+        self.textures.maintain(factory, aux.resources);
         changed = changed || self.sprites.changed();
 
         {
@@ -305,7 +309,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _world: &World,
+        _aux: &GraphAuxData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -330,7 +334,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &GraphAuxData) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -457,7 +461,8 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderPlug
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
-        _res: &World,
+        _world: &World,
+        _resources: &Resources,
     ) -> Result<(), amethyst_error::Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(
