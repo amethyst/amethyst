@@ -18,7 +18,6 @@ license = "MIT/Apache-2.0"
 [dependencies]
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 type-uuid = "0.1"
-fnv = "1.0.6"
 log = "0.4.8"
 num-traits = "0.2.11"
 serde = { version = "1", features = ["derive"] }
@@ -40,7 +39,6 @@ thread_profiler = { version = "0.3", optional = true }
 serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0" }
 
 [dev-dependencies]
-amethyst = { path = "..", version = "0.15.3" }
 ron = "0.5.1"
 
 [features]

@@ -64,7 +64,7 @@ struct AssetsExample {
 
 impl SimpleState for AssetsExample {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let component_registry = ComponentRegistryBuilder::new()
+        let component_registry = ComponentRegistryBuilder::default()
             .auto_register_components()
             //.add_spawn_mapping::<TransformValues, Transform>()
             .build();
@@ -89,9 +89,9 @@ impl SimpleState for AssetsExample {
         let component_registry = resources.get_mut::<ComponentRegistry>().unwrap();
         let prefab_storage = resources.get_mut::<AssetStorage<Prefab>>().unwrap();
         if let Some(opened_prefab) = prefab_storage.get(self.prefab_handle.as_ref().unwrap()) {
-            let mut clone_impl_result = HashMap::default();
+            let clone_impl_result = HashMap::default();
             let mut spawn_impl =
-                component_registry.spawn_clone_impl(&resources, &mut clone_impl_result);
+                component_registry.spawn_clone_impl(&resources, &clone_impl_result);
             let mappings =
                 world.clone_from(&opened_prefab.prefab.world, &query::any(), &mut spawn_impl);
             log::info!("{:?}", mappings);
@@ -142,7 +142,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         );
 
-    let mut game = Application::new(
+    let game = Application::new(
         assets_dir,
         AssetsExample {
             prefab_handle: None,

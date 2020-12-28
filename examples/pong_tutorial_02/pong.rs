@@ -1,8 +1,8 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
     core::transform::Transform,
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, SpriteRender, SpriteSheet, Texture},
 };
 
 const ARENA_HEIGHT: f32 = 100.0;
@@ -50,24 +50,14 @@ impl Paddle {
 }
 
 fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
-    let texture_handle = {
-        let loader = resources.get::<Loader>().unwrap();
-        let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        loader.load(
-            "texture/pong_spritesheet.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
+    let _texture_handle: Handle<Texture> = {
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        let _texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
+        loader.load("texture/pong_spritesheet.png")
     };
-    let loader = resources.get::<Loader>().unwrap();
-    let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
-    loader.load(
-        "texture/pong_spritesheet.ron",
-        SpriteSheetFormat(texture_handle),
-        (),
-        &sprite_sheet_store,
-    )
+    let loader = resources.get::<DefaultLoader>().unwrap();
+    let _sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
+    loader.load("texture/pong_spritesheet.ron")
 }
 
 /// Initialise the camera.
@@ -100,9 +90,5 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
     ));
 
     // Create right plank entity.
-    world.push((
-        sprite_render.clone(),
-        Paddle::new(Side::Right),
-        right_transform,
-    ));
+    world.push((sprite_render, Paddle::new(Side::Right), right_transform));
 }

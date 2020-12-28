@@ -1,6 +1,6 @@
-use amethyst_assets::start_asset_daemon;
-
 use std::{path::PathBuf, sync::Once};
+
+use amethyst_assets::start_asset_daemon;
 
 pub fn setup_logger() {
     fern::Dispatch::new()
@@ -12,7 +12,8 @@ pub fn setup_logger() {
                 message
             ))
         })
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Trace)
+        .level_for("mio", log::LevelFilter::Error)
         .chain(std::io::stdout())
         .apply()
         .expect("Could not start logger");

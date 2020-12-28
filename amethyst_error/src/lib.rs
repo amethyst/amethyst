@@ -328,10 +328,7 @@ where
 
 /// Test if backtracing is enabled.
 fn is_backtrace_enabled() -> bool {
-    match env::var_os(RUST_BACKTRACE) {
-        Some(ref val) if val != "0" => true,
-        _ => false,
-    }
+    matches!(env::var_os(RUST_BACKTRACE), Some(ref val) if val != "0")
 }
 
 // 0: unchecked

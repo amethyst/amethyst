@@ -376,10 +376,10 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Returns `true` if the supplied `MaterialId` is already loaded.
     #[inline]
     pub fn loaded(&self, material_id: MaterialId) -> bool {
-        match &self.materials[material_id.0 as usize] {
-            MaterialState::Loaded { .. } => true,
-            _ => false,
-        }
+        matches!(
+            &self.materials[material_id.0 as usize],
+            MaterialState::Loaded { .. }
+        )
     }
 
     /// Binds all material descriptor sets and textures contained in this collection.

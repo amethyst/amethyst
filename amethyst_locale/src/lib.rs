@@ -14,50 +14,26 @@
 )]
 #![warn(clippy::all)]
 
-use amethyst_assets::{Asset, Format, Handle};
+use amethyst_assets::{
+    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format, ProcessableAsset,
+    ProcessingState,
+};
 use amethyst_error::Error;
 pub use fluent::{concurrent::FluentBundle, FluentResource};
 use serde::{Deserialize, Serialize};
 use type_uuid::*;
 use unic_langid::langid;
 
-/// Loads the strings from localisation files.
-#[derive(Clone, Copy, Debug, Default, TypeUuid, Serialize, Deserialize)]
-#[uuid = "fe7720ec-ecb5-4f59-8a09-656805eb4eff"]
-pub struct LocaleFormat;
-
-amethyst_assets::register_format_type!(Locale);
-
-amethyst_assets::register_format!("FTL", LocaleFormat as Locale);
-// Locale doesn't impl Serialize/Deserialize, so can't register importer :(
-// amethyst_assets::register_importer!(".ftl", LocaleFormat);
-impl Format<Locale> for LocaleFormat {
-    fn name(&self) -> &'static str {
-        "FTL"
-    }
-
-    fn import_simple(&self, bytes: Vec<u8>) -> Result<Locale, Error> {
-        let s = String::from_utf8(bytes)?;
-
-        let resource = FluentResource::try_new(s).expect("Failed to parse locale data");
-        let lang_en = langid!("en");
-        let mut bundle = FluentBundle::new(&[lang_en]);
-
-        bundle
-            .add_resource(resource)
-            .expect("Failed to add resource");
-
-        Ok(Locale { bundle })
-    }
-}
-
-/// A handle to a locale.
-pub type LocaleHandle = Handle<Locale>;
+/// Internal representation of a Locale
+#[derive(Clone, Debug, Serialize, Deserialize, TypeUuid)]
+#[uuid = "442ea0e0-48d8-4a3c-ab36-faba55f2c0db"]
+pub struct LocaleData(pub Vec<u8>);
+register_asset_type!(LocaleData => Locale; AssetProcessorSystem<Locale>);
 
 /// A loaded locale.
 #[allow(missing_debug_implementations)]
 #[derive(TypeUuid)]
-#[uuid = "d9e1870c-9744-40b0-969d-15ec45ea7372"]
+#[uuid = "bf7713bb-6e1f-4873-bf0b-9d7c2253f46a"]
 pub struct Locale {
     /// The bundle stores its resources for now.
     pub bundle: FluentBundle<FluentResource>,
@@ -67,5 +43,39 @@ impl Asset for Locale {
     fn name() -> &'static str {
         "locale::Locale"
     }
-    type Data = Locale;
+    type Data = LocaleData;
+}
+
+impl ProcessableAsset for Locale {
+    fn process(
+        data: LocaleData,
+    ) -> Result<amethyst_assets::ProcessingState<LocaleData, Locale>, Error> {
+        let s = String::from_utf8(data.0)?;
+
+        let resource = FluentResource::try_new(s).expect("Failed to parse locale data");
+        let lang_en = langid!("en");
+        let mut bundle = FluentBundle::new(&[lang_en]);
+
+        bundle
+            .add_resource(resource)
+            .expect("Failed to add resource");
+
+        Ok(ProcessingState::Loaded(Locale { bundle }))
+    }
+}
+
+/// Loads the strings from localisation files.
+#[derive(Clone, Debug, Default, TypeUuid, Serialize, Deserialize)]
+#[uuid = "fe7720ec-ecb5-4f59-8a09-656805eb4eff"]
+pub struct FTLFormat;
+
+register_importer!(".ftl", FTLFormat);
+impl Format<LocaleData> for FTLFormat {
+    fn name(&self) -> &'static str {
+        "FTL"
+    }
+
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<LocaleData, Error> {
+        Ok(LocaleData(bytes))
+    }
 }

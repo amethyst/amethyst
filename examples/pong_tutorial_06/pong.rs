@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
     core::{timing::Time, transform::Transform},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
@@ -58,7 +58,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // `texture_handle` is a cloneable reference to the texture
 
     let texture_handle = {
-        let loader = data.resources.get::<Loader>().unwrap();
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
 
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
@@ -69,7 +69,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
         )
     };
 
-    let loader = data.resources.get::<Loader>().unwrap();
+    let loader = data.resources.get::<DefaultLoader>().unwrap();
 
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
@@ -158,7 +158,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
 }
 
 fn initialise_score(world: &mut World) {
-    let font = world.read_resource::<Loader>().load(
+    let font = world.read_resource::<DefaultLoader>().load(
         "font/square.ttf",
         TtfFormat,
         (),

@@ -112,7 +112,7 @@ load extra `Asset`s as part of a `Prefab`:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter};
+# use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter};
 # use amethyst::assets::PrefabData;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
 # use amethyst::Error;
@@ -244,7 +244,7 @@ Lets look at an example of an aggregate struct:
 ```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
+# use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
 # use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
@@ -264,7 +264,7 @@ One last example that also adds a custom pure data `Component` into the aggregat
 ```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
+# use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
 # use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};

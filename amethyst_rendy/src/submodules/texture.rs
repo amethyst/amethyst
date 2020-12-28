@@ -196,11 +196,10 @@ impl<B: Backend> TextureSub<B> {
     /// Returns true of the supplied `TextureId` is already loaded.
     #[inline]
     pub fn loaded(&self, texture_id: TextureId) -> bool {
-        match &self.textures[texture_id.0 as usize] {
-            // FIXME figure out if we still need the is_dead() guard 
-            TextureState::Loaded { handle, .. } /* if !handle.is_dead() */ => true,
-            _ => false,
-        }
+        matches!(
+            &self.textures[texture_id.0 as usize],
+            TextureState::Loaded { handle, .. }
+        )
     }
 
     /// Bind all textures

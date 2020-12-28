@@ -24,9 +24,6 @@ use crate::types::MeshData;
 #[uuid = "7994868a-3ca1-4498-a6e5-4849598a6b22"]
 pub struct ObjFormat;
 
-amethyst_assets::register_format_type!(MeshData);
-
-amethyst_assets::register_format!("OBJ", ObjFormat as MeshData);
 amethyst_assets::register_importer!(".obj", ObjFormat);
 impl Format<MeshData> for ObjFormat {
     fn name(&self) -> &'static str {

@@ -2,10 +2,10 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::AssetProcessorSystemBundle;
-use amethyst_audio::Source;
+use amethyst_assets::ProcessingQueue;
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
+use amethyst_rendy::types::DefaultBackend;
 use derive_new::new;
 use winit::event::Event;
 
@@ -13,6 +13,7 @@ use crate::{
     button::{ui_button_action_retrigger_event_system, UiButtonSystem},
     drag::DragWidgetSystem,
     event::UiMouseSystem,
+    glyphs::{GlyphTextureData, GlyphTextureProcessorSystem},
     layout::UiTransformSystem,
     resize::ResizeSystem,
     selection::{SelectionKeyboardSystem, SelectionMouseSystem},
@@ -20,8 +21,8 @@ use crate::{
     sound::{ui_sound_event_retrigger_system, UiSoundSystem},
     text::TextEditingMouseSystem,
     text_editing::TextEditingInputSystem,
-    BlinkSystem, CachedSelectionOrderResource, FontAsset, UiButtonAction, UiEvent, UiLabel,
-    UiPlaySoundAction, WidgetId, Widgets,
+    BlinkSystem, CachedSelectionOrderResource, UiButtonAction, UiEvent, UiLabel, UiPlaySoundAction,
+    WidgetId, Widgets,
 };
 
 /// UI bundle
@@ -48,10 +49,18 @@ where
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
+        log::debug!("Adding UI Resources");
         resources.insert(EventChannel::<UiButtonAction>::new());
+        resources.insert(EventChannel::<UiEvent>::new());
         resources.insert(Widgets::<UiLabel, W>::new());
         resources.insert(CachedSelectionOrderResource::default());
 
+        resources.insert(ProcessingQueue::<GlyphTextureData>::default());
+        builder.add_system(Box::new(
+            GlyphTextureProcessorSystem::<DefaultBackend>::default(),
+        ));
+
+        log::debug!("Creating UI EventChannel Readers");
         let ui_btn_reader = resources
             .get_mut::<EventChannel<UiButtonAction>>()
             .unwrap()
@@ -84,10 +93,11 @@ where
             .get_mut::<EventChannel<UiEvent>>()
             .unwrap()
             .register_reader();
+
+        log::debug!("Adding UI Systems to Dispatcher");
         builder
             .add_system(Box::new(UiTransformSystem::new()))
             .add_system(Box::new(UiMouseSystem::new()))
-            .add_bundle(AssetProcessorSystemBundle::<FontAsset>::default())
             .add_system(Box::new(UiButtonSystem::new(ui_btn_reader)))
             .add_system(Box::new(ui_button_action_retrigger_event_system(
                 ui_btn_action_retrigger_reader,
@@ -107,7 +117,6 @@ where
             )))
             .add_system(Box::new(ResizeSystem::new()))
             .add_system(Box::new(DragWidgetSystem::new(drag_widget_reader)))
-            .add_bundle(AssetProcessorSystemBundle::<Source>::default())
             .add_system(Box::new(BlinkSystem));
 
         /*

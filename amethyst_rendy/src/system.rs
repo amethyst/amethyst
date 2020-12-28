@@ -1,10 +1,7 @@
 //! Renderer system
 
-use std::marker::PhantomData;
-
 use amethyst_assets::{AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState};
 use amethyst_core::ecs::*;
-use amethyst_error::Error;
 use derivative::Derivative;
 use palette::{LinSrgba, Srgba};
 use rendy::{

@@ -89,6 +89,7 @@ pub use amethyst_rendy as renderer;
 pub use amethyst_tiles as tiles;
 #[cfg(feature = "ui")]
 pub use amethyst_ui as ui;
+#[cfg(feature = "utils")]
 pub use amethyst_utils as utils;
 pub use amethyst_window as window;
 pub use winit;

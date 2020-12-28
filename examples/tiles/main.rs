@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Loader},
+    assets::{AssetStorage, DefaultLoader, Loader},
     core::{
         math::{Point3, Vector2, Vector3},
         Named, Parent, Time, Transform, TransformBundle,
@@ -263,12 +263,12 @@ impl<'s> System<'s> for MapMovementSystem {
 
 fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> SpriteSheetHandle {
     let texture_handle = {
-        let loader = data.resources.get::<Loader>().unwrap();
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
 
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(png_path, ImageFormat::default(), (), &texture_storage)
     };
-    let loader = data.resources.get::<Loader>().unwrap();
+    let loader = data.resources.get::<DefaultLoader>().unwrap();
 
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(

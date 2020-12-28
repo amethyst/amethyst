@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use amethyst_core::ecs::*;
+use atelier_assets::importer as atelier_importer;
 use atelier_importer::{typetag, SerdeImportable};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -10,15 +11,19 @@ use crate::{
     ProcessingState,
 };
 
+/// Cooked Prefab, containing a World with Entities
 #[derive(TypeUuid, Serialize, Deserialize, SerdeImportable)]
 #[uuid = "5e751ea4-e63b-4192-a008-f5bf8674e45b"]
 pub struct Prefab {
+    /// contains Legion World and Entity Mappings
     pub prefab: legion_prefab::CookedPrefab,
 }
 
+/// Raw prefab type, used to generate the cooked prefab
 #[derive(TypeUuid, Serialize, Deserialize, SerdeImportable)]
 #[uuid = "c77ccda8-f2f0-4a7f-91ef-f38fabc0e6ce"]
 pub struct RawPrefab {
+    /// Contains World to cook and references to other prefabs
     pub raw_prefab: legion_prefab::Prefab,
 }
 
@@ -29,8 +34,6 @@ impl Asset for Prefab {
     type Data = RawPrefab;
 }
 
-// register_format_type!(RawPrefab);
-// register_format!(crate; "PREFAB", Ron as RawPrefab);
 register_asset_type!(crate; RawPrefab => Prefab; PrefabAssetProcessor);
 
 #[derive(Default)]

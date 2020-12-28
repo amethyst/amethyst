@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
     core::{Named, Parent, Transform, TransformBundle},
     derive::SystemDesc,
     ecs::{
@@ -51,12 +51,12 @@ impl<'s> System<'s> for MovementSystem {
 
 fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Handle<SpriteSheet> {
     let texture_handle = {
-        let loader = data.resources.get::<Loader>().unwrap();
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
 
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(png_path, ImageFormat::default(), (), &texture_storage)
     };
-    let loader = data.resources.get::<Loader>().unwrap();
+    let loader = data.resources.get::<DefaultLoader>().unwrap();
 
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(

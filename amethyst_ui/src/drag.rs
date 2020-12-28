@@ -106,13 +106,13 @@ impl System<'static> for DragWidgetSystem {
                         for (entity, (first, prev)) in self.record.iter_mut() {
                             ui_events.single_write(UiEvent::new(
                                 UiEventType::Dragging {
-                                    offset_from_mouse: mouse_pos - first.clone(),
+                                    offset_from_mouse: mouse_pos - *first,
                                     new_position: mouse_pos,
                                 },
                                 *entity,
                             ));
 
-                            let change = mouse_pos - prev.clone();
+                            let change = mouse_pos - *prev;
 
                             let (parent_width, parent_height) = {
                                 let maybe_parent_current =

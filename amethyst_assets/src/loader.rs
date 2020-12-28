@@ -8,9 +8,10 @@ use std::{
 
 use amethyst_core::{
     dispatcher::System,
-    ecs::{DispatcherBuilder, ParallelRunnable, Resources},
+    ecs::{DispatcherBuilder, Resources},
 };
 use amethyst_error::Error as AmethystError;
+use atelier_assets::loader as atelier_loader;
 pub(crate) use atelier_loader::LoadHandle;
 use atelier_loader::{
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
@@ -22,8 +23,7 @@ use atelier_loader::{
     AssetTypeId, Loader as AtelierLoader, RpcIO,
 };
 pub use atelier_loader::{storage::LoadStatus, AssetUuid};
-use bincode;
-use log::{debug, info};
+use log::debug;
 use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
 
@@ -125,11 +125,11 @@ pub trait Loader: Send + Sync {
     }
 
     /// Load an asset from data and return a handle.
-    fn load_from_data<A, P>(
+    fn load_from_data<A, P, D>(
         &self,
-        data: A::Data,
+        data: D,
         progress: P,
-        storage: &ProcessingQueue<A::Data>,
+        storage: &ProcessingQueue<D>,
     ) -> Handle<A>
     where
         A: Asset,
@@ -167,7 +167,7 @@ pub struct LoaderWithStorage {
     ref_sender: Sender<RefOp>,
     ref_receiver: Receiver<RefOp>,
     handle_allocator: Arc<AtomicHandleAllocator>,
-    indirection_table: IndirectionTable,
+    pub indirection_table: IndirectionTable,
 }
 
 impl Default for LoaderWithStorage {
@@ -204,18 +204,18 @@ impl Loader for LoaderWithStorage {
         )
     }
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {
-        self.loader.get_load(id).map(|h| WeakHandle::new(h))
+        self.loader.get_load(id).map(WeakHandle::new)
     }
     fn get_load_status_handle(&self, handle: LoadHandle) -> LoadStatus {
         self.loader.get_load_status(handle)
     }
 
     /// Load an asset from data and return a handle.
-    fn load_from_data<A, P>(
+    fn load_from_data<A, P, D>(
         &self,
-        data: A::Data,
+        data: D,
         mut progress: P,
-        processing_queue: &ProcessingQueue<A::Data>,
+        processing_queue: &ProcessingQueue<D>,
     ) -> Handle<A>
     where
         A: Asset,
@@ -418,29 +418,28 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
         let moved_op = RefCell::new(Some(load_op));
         let moved_data = RefCell::new(Some(data));
         let mut result = None;
-        info!("WorldStorages update_asset");
-        (self
-            .storage_map
-            .storages_by_data_uuid
-            .get(asset_type)
-            .expect("could not find asset type")
-            .with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
-            info!("storage closure update_asset");
-            // FIXME Does this block the main thread?
-            result = futures_executor::block_on(SerdeContext::with(
-                loader_info,
-                self.ref_sender.clone(),
-                async {
-                    info!("SerdeContext");
-                    Some(storage.update_asset(
-                        load_handle,
-                        moved_data.replace(None).unwrap(),
-                        moved_op.replace(None).unwrap(),
-                        version,
-                    ))
-                },
-            ));
-        });
+        if let Some(asset_type) = self.storage_map.storages_by_data_uuid.get(asset_type) {
+            (asset_type.with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
+                result = futures_executor::block_on(SerdeContext::with(
+                    loader_info,
+                    self.ref_sender.clone(),
+                    async {
+                        Some(storage.update_asset(
+                            load_handle,
+                            moved_data.replace(None).unwrap(),
+                            moved_op.replace(None).unwrap(),
+                            version,
+                        ))
+                    },
+                ));
+            });
+        } else {
+            log::warn!("Could not find AssetTypeID {}", asset_type);
+            result = Some(Err(amethyst_error::Error::from_string(
+                "Could not update asset.",
+            )
+            .into_error()))
+        }
         result.unwrap()
     }
     fn commit_asset_version(
@@ -509,12 +508,13 @@ where
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
     ProcessorSystem: System<'static> + Default + 'static,
 {
+    log::debug!("Creating asset type: {:x?}", Asset::UUID);
     AssetType {
         data_uuid: AssetTypeId(Intermediate::UUID),
         asset_uuid: AssetTypeId(Asset::UUID),
         create_storage: |res, indirection_table| {
             res.get_or_insert_with(|| AssetStorage::<Asset>::new(indirection_table.clone()));
-            res.get_or_insert_with(|| ProcessingQueue::<Intermediate>::default());
+            res.get_or_insert_with(ProcessingQueue::<Intermediate>::default);
         },
         register_system: |builder| {
             builder.add_system(Box::new(ProcessorSystem::default()));
@@ -537,7 +537,7 @@ where
 /// # Examples
 ///
 /// ```rust,ignore
-/// #[derive(Debug, TypeUuid)]
+/// #[derive(TypeUuid)]
 /// #[uuid = "28d51c52-be81-4d99-8cdc-20b26eb12448"]
 /// pub struct MeshAsset {
 ///     buffer: (),

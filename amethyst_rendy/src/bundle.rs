@@ -1,6 +1,6 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
-use std::{collections::HashMap, marker::PhantomData};
+use std::collections::HashMap;
 
 use amethyst_assets::{register_asset_type, AssetProcessorSystem, AssetStorage};
 use amethyst_core::ecs::*;
@@ -81,9 +81,6 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(ActiveCamera::default());
-
-        // TODO: make sure that all renderer-specific systems run after game code
-        //builder.flush(); TODO: flush legion here?
 
         for plugin in &mut self.plugins {
             plugin.on_build(world, resources, builder)?;
@@ -338,11 +335,7 @@ impl<B: Backend> PlanContext<B> {
         Ok(())
     }
 
-    fn submit_pass(
-        &mut self,
-        target: Target,
-        pass: RenderPassNodeBuilder<B, GraphAuxData>,
-    ) -> Result<(), Error> {
+    fn submit_pass(&mut self, target: Target, pass: RenderPassNodeBuilder<B, GraphAuxData>) {
         match self.passes.get(&target) {
             None => {}
             Some(EvaluationState::Evaluating) => {}
@@ -354,7 +347,6 @@ impl<B: Backend> PlanContext<B> {
         };
         let node = self.graph_builder.add_node(pass);
         self.passes.insert(target, EvaluationState::Built(node));
-        Ok(())
     }
 
     fn get_pass_node_raw(&self, target: Target) -> Option<NodeId> {
@@ -730,7 +722,7 @@ impl<B: Backend> TargetPlan<B> {
         }
 
         pass.add_subpass(subpass);
-        ctx.submit_pass(self.key, pass)?;
+        ctx.submit_pass(self.key, pass);
         Ok(())
     }
 }

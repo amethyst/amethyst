@@ -99,7 +99,7 @@ pub enum EnumPrefab {
 
 #[cfg(test)]
 mod tests {
-    use amethyst_assets::{AssetStorage, Loader, Prefab, PrefabLoaderSystemDesc};
+    use amethyst_assets::{AssetStorage, DefaultLoader, Loader, Prefab, PrefabLoaderSystemDesc};
     use amethyst_core::ecs::{world::EntitiesRes, Builder, Join, WorldExt};
     use amethyst_test::prelude::*;
 
@@ -115,7 +115,7 @@ mod tests {
                 )
                 .with_effect(|world| {
                     let handle = {
-                        let loader = data.resources.get::<Loader>().unwrap();
+                        let loader = data.resources.get::<DefaultLoader>().unwrap();
                         let storage = world.read_resource::<AssetStorage<Prefab<$prefab_type>>>();
                         let mut prefab = Prefab::new();
                         prefab.main(Some($prefab));

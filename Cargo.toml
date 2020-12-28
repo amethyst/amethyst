@@ -29,7 +29,7 @@ serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0"
 
 [features]
 default = ["parallel", "renderer"]
-optional = ["audio", "network", "locale", "ui"]
+optional = ["audio", "network", "locale", "ui", "utils"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
@@ -41,6 +41,7 @@ audio = ["amethyst_audio"]
 #gltf = ["amethyst_gltf", "amethyst_animation"]
 locale = ["amethyst_locale"]
 network = ["amethyst_network"]
+utils = ["amethyst_utils"]
 
 renderer = ["amethyst_rendy"]
 
@@ -95,7 +96,7 @@ amethyst_locale = { path = "amethyst_locale", version = "0.15.3", optional = tru
 amethyst_rendy = { path = "amethyst_rendy", version = "0.15.3", features = ["window"], optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.15.3" }
 amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
-amethyst_utils = { path = "amethyst_utils", version = "0.15.3" }
+amethyst_utils = { path = "amethyst_utils", version = "0.15.3", optional = true }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
 #amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
 winit = { git = "https://git@github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
@@ -113,11 +114,11 @@ lazy_static = "1.4.0"
 glsl-layout = "0.3.2"
 
 [dev-dependencies]
+rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
 derive-new = "0.5.8"
 env_logger = "0.7.1"
 genmesh = "0.6.2"
 ron = "0.5.1"
-specs-derive = "0.4.1"
 type-uuid = "0.1"
 serde-diff = "0.4"
 legion-prefab = "0.1"

@@ -12,10 +12,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
-        rendy::{
-            hal::command::ClearColor,
-            mesh::{Normal, Position, TexCoord},
-        },
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -25,6 +22,7 @@ use amethyst::{
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use type_uuid::TypeUuid;
+
 #[derive(TypeUuid, Serialize, Deserialize, SerdeDiff, Clone, Default)]
 #[uuid = "f5780013-bae4-49f0-ac0e-a108ff52fec0"]
 struct Position2D {
@@ -62,9 +60,9 @@ impl SimpleState for AssetsExample {
         let component_registry = resources.get_mut::<ComponentRegistry>().unwrap();
         let prefab_storage = resources.get_mut::<AssetStorage<Prefab>>().unwrap();
         if let Some(opened_prefab) = prefab_storage.get(self.prefab_handle.as_ref().unwrap()) {
-            let mut clone_impl_result = HashMap::default();
+            let clone_impl_result = HashMap::default();
             let mut spawn_impl =
-                component_registry.spawn_clone_impl(&resources, &mut clone_impl_result);
+                component_registry.spawn_clone_impl(&resources, &clone_impl_result);
             let mappings = world.clone_from(
                 &opened_prefab.prefab.world,
                 &query::any(),

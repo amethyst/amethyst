@@ -2,7 +2,7 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
-    assets::{Format as AssetFormat, Handle, Loader},
+    assets::{DefaultLoader, Format as AssetFormat, Handle, Loader},
     core::{
         math::Vector3,
         transform::{Transform, TransformBundle},
@@ -26,7 +26,8 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::{AssetHandle, DefaultLoader, LoaderBundle};
+use amethyst_assets::{AssetHandle, LoaderBundle, ProcessingQueue};
+use amethyst_rendy::{types::TextureData, Texture};
 use log::info;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -34,7 +35,6 @@ use type_uuid::TypeUuid;
 #[uuid = "f245dc2b-88a9-413e-bd51-f6c341c32017"]
 struct Custom;
 
-amethyst_assets::register_format!("CUSTOM", Custom as MeshData);
 amethyst_assets::register_importer!(".custom", Custom);
 impl AssetFormat<MeshData> for Custom {
     fn name(&self) -> &'static str {
@@ -90,11 +90,11 @@ impl SimpleState for AssetsExample {
             let mat_defaults = resources.get::<MaterialDefaults>().unwrap();
             let loader = resources.get::<DefaultLoader>().unwrap();
 
-            let textures = &resources.get().unwrap();
+            let textures = &resources.get::<ProcessingQueue<TextureData>>().unwrap();
             let materials = &resources.get().unwrap();
 
             let mesh: Handle<Mesh> = loader.load("mesh/cuboid.custom");
-            let albedo = loader.load_from_data(
+            let albedo: Handle<Texture> = loader.load_from_data(
                 load_from_srgba(Srgba::new(0.1, 0.5, 0.3, 1.0)).into(),
                 (),
                 textures,

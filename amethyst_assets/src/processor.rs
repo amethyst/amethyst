@@ -6,10 +6,10 @@ use std::{
 
 use amethyst_core::{
     dispatcher::System,
-    ecs::{systems::ParallelRunnable, DispatcherBuilder, SystemBuilder},
+    ecs::{systems::ParallelRunnable, SystemBuilder},
 };
 use amethyst_error::Error;
-use atelier_loader::storage::AssetLoadOp;
+use atelier_assets::loader::storage::AssetLoadOp;
 use crossbeam_queue::SegQueue;
 use derivative::Derivative;
 use log::debug;
@@ -134,57 +134,55 @@ impl<T> ProcessingQueue<T> {
                 .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
             while let Ok(processed) = self.processed.pop() {
                 let f = &mut f;
-                match processed {
-                    Processed {
-                        data,
-                        handle,
-                        tracker,
-                        load_op,
-                        version,
-                        commit,
-                    } => {
-                        let asset = match data.and_then(|d| f(d)) {
-                            Ok(ProcessingState::Loaded(x)) => {
-                                debug!(
-                                    "Asset (handle id: {:?}) has been loaded successfully",
-                                    handle,
-                                );
+                let Processed {
+                    data,
+                    handle,
+                    tracker,
+                    load_op,
+                    version,
+                    commit,
+                } = processed;
 
-                                if let Some(tracker) = tracker {
-                                    tracker.success();
-                                }
-                                if let Some(op) = load_op {
-                                    op.complete();
-                                }
-                                x
-                            }
-                            Ok(ProcessingState::Loading(x)) => {
-                                requeue.push(Processed {
-                                    data: Ok(x),
-                                    handle,
-                                    tracker,
-                                    load_op,
-                                    version,
-                                    commit,
-                                });
-                                continue;
-                            }
-                            Err(e) => {
-                                if let Some(tracker) = tracker {
-                                    tracker.fail(handle.0, &"", "".to_string(), e);
-                                }
-                                if let Some(op) = load_op {
-                                    op.error(ProcessingError("ProcessingError".into()));
-                                }
-                                continue;
-                            }
-                        };
-                        storage.update_asset(handle, asset, version);
-                        if commit {
-                            storage.commit_asset(handle, version);
+                let asset = match data.and_then(|d| f(d)) {
+                    Ok(ProcessingState::Loaded(x)) => {
+                        debug!(
+                            "Asset (handle id: {:?}) has been loaded successfully",
+                            handle,
+                        );
+
+                        if let Some(tracker) = tracker {
+                            tracker.success();
                         }
+                        if let Some(op) = load_op {
+                            op.complete();
+                        }
+                        x
+                    }
+                    Ok(ProcessingState::Loading(x)) => {
+                        requeue.push(Processed {
+                            data: Ok(x),
+                            handle,
+                            tracker,
+                            load_op,
+                            version,
+                            commit,
+                        });
+                        continue;
+                    }
+                    Err(e) => {
+                        if let Some(tracker) = tracker {
+                            tracker.fail(handle.0, &"", "".to_string(), e);
+                        }
+                        if let Some(op) = load_op {
+                            op.error(ProcessingError("ProcessingError".into()));
+                        }
+                        continue;
                     }
                 };
+                storage.update_asset(handle, asset, version);
+                if commit {
+                    storage.commit_asset(handle, version);
+                }
             }
 
             for p in requeue.drain(..) {

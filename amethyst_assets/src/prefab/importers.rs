@@ -1,7 +1,9 @@
 use std::{collections::HashMap, io::Read};
 
-use atelier_core::AssetUuid;
-use atelier_importer::{self as atelier_importer, ImportedAsset, Importer, ImporterValue};
+use atelier_assets::{
+    core::AssetUuid,
+    importer::{self as atelier_importer, ImportedAsset, Importer, ImporterValue},
+};
 use legion_prefab::ComponentRegistration;
 use prefab_format::ComponentTypeUuid;
 use serde::{Deserialize, Serialize};
@@ -21,6 +23,7 @@ pub struct PrefabImporterState {
     pub id: Option<AssetUuid>,
 }
 
+/// The importer for '.prefab' files.
 #[derive(Default, TypeUuid)]
 #[uuid = "5bdf4d06-a1cb-437b-b182-d6d8cb23512c"]
 pub struct PrefabImporter {}
@@ -63,9 +66,10 @@ impl Importer for PrefabImporter {
         let registered_components = {
             let comp_registrations = legion_prefab::iter_component_registrations();
             log::info!("Getting registered components");
-            use std::iter::FromIterator;
             let component_types: HashMap<ComponentTypeUuid, ComponentRegistration> =
-                HashMap::from_iter(comp_registrations.map(|reg| (*reg.uuid(), reg.clone())));
+                comp_registrations
+                    .map(|reg| (*reg.uuid(), reg.clone()))
+                    .collect();
 
             component_types
         };

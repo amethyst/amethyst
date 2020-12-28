@@ -3,7 +3,7 @@
 //!
 
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader, Progress, ProgressCounter},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader, Progress, ProgressCounter},
     core::{
         geometry::Plane,
         math::{Point2, Vector2, Vector3},
@@ -236,12 +236,12 @@ where
     P: Progress,
 {
     let texture_handle = {
-        let loader = data.resources.get::<Loader>().unwrap();
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
 
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(png_path, ImageFormat::default(), (), &texture_storage)
     };
-    let loader = data.resources.get::<Loader>().unwrap();
+    let loader = data.resources.get::<DefaultLoader>().unwrap();
 
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(

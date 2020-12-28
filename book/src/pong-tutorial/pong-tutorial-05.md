@@ -271,7 +271,7 @@ rendered to the screen. We'll create those next:
 # extern crate amethyst;
 #
 use amethyst::{
-#     assets::{AssetStorage, Loader},
+#     assets::{AssetStorage,  DefaultLoader, Loader},
 #     ecs::Entity,
 #     prelude::*,
     // ...
@@ -292,7 +292,7 @@ impl SimpleState for Pong {
 
 /// Initialises a ui scoreboard
 fn initialise_scoreboard(world: &mut World) {
-    let font = world.read_resource::<Loader>().load(
+    let font = world.read_resource::<DefaultLoader>().load(
         "font/square.ttf",
         TtfFormat,
         (),

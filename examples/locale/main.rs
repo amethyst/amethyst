@@ -1,16 +1,19 @@
 //! Example showing how to load a Locale file as an Asset using the Loader.
 
 use amethyst::{
-    assets::{AssetProcessorSystemBundle, AssetStorage, Handle, Loader, ProgressCounter},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
     ecs::*,
     locale::*,
     prelude::*,
     utils::application_root_dir,
     Error,
 };
+use amethyst_assets::LoaderBundle;
+use amethyst_rendy::{
+    rendy::hal::command::ClearColor, types::DefaultBackend, RenderToWindow, RenderingBundle,
+};
 
 struct Example {
-    progress_counter: Option<ProgressCounter>,
     handle_en: Option<Handle<Locale>>,
     handle_fr: Option<Handle<Locale>>,
 }
@@ -18,7 +21,6 @@ struct Example {
 impl Example {
     pub fn new() -> Self {
         Example {
-            progress_counter: None,
             handle_en: None,
             handle_fr: None,
         }
@@ -27,65 +29,56 @@ impl Example {
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let mut progress_counter = ProgressCounter::default();
-
-        let loader = data.resources.get::<Loader>().unwrap();
-
-        self.handle_en = Some(loader.load(
-            "locale/locale_en.ftl",
-            LocaleFormat,
-            &mut progress_counter,
-            &data.resources.get::<AssetStorage<Locale>>().unwrap(),
-        ));
-
-        self.handle_fr = Some(loader.load(
-            "locale/locale_fr.ftl",
-            LocaleFormat,
-            &mut progress_counter,
-            &data.resources.get::<AssetStorage<Locale>>().unwrap(),
-        ));
-
-        self.progress_counter = Some(progress_counter);
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
+        self.handle_en = Some(loader.load("locale/locale_en.ftl"));
+        self.handle_fr = Some(loader.load("locale/locale_fr.ftl"));
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+        let _loader = data.resources.get::<DefaultLoader>().unwrap();
+
         // Check if the locale has been loaded.
-        if self.progress_counter.as_ref().unwrap().is_complete() {
-            let store = data.resources.get::<AssetStorage<Locale>>().unwrap();
+        let store = data.resources.get::<AssetStorage<Locale>>().unwrap();
 
-            for h in [&self.handle_en, &self.handle_fr].iter() {
-                if let Some(locale) = h.as_ref().and_then(|h| store.get(h)) {
-                    let bundle = &locale.bundle;
-                    let msg_hello = bundle
-                        .get_message("hello")
-                        .expect("Failed to load message for hello");
-                    let msg_bye = bundle
-                        .get_message("bye")
-                        .expect("Failed to load message for bye");
-                    let hello_value = msg_hello.value.expect("Hello message has no value");
-                    let bye_value = msg_bye.value.expect("Bye message has no value");
+        for h in [self.handle_en.as_ref(), self.handle_fr.as_ref()].iter() {
+            if let Some(locale) = h.and_then(|h| store.get(h)) {
+                let bundle = &locale.bundle;
+                let msg_hello = bundle
+                    .get_message("hello")
+                    .expect("Failed to load message for hello");
+                let msg_bye = bundle
+                    .get_message("bye")
+                    .expect("Failed to load message for bye");
+                let hello_value = msg_hello.value.expect("Hello message has no value");
+                let bye_value = msg_bye.value.expect("Bye message has no value");
 
-                    let mut errors = vec![];
-                    println!("{}", bundle.format_pattern(hello_value, None, &mut errors));
-                    println!("{}", bundle.format_pattern(bye_value, None, &mut errors));
-                    assert_eq!(errors.len(), 0);
-                }
+                let mut errors = vec![];
+                println!("{}", bundle.format_pattern(hello_value, None, &mut errors));
+                println!("{}", bundle.format_pattern(bye_value, None, &mut errors));
+                assert_eq!(errors.len(), 0);
             }
-            Trans::Quit
-        } else {
-            Trans::None
         }
+
+        Trans::None
     }
 }
 
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let assets_dir = application_root_dir()?.join("examples/locale/assets");
+    let app_root = application_root_dir()?;
+    let assets_dir = app_root.join("examples/locale/assets");
+    let display_config_path = app_root.join("examples/ui_from_code/config/display.ron");
 
     let mut builder = DispatcherBuilder::default();
 
-    builder.add_bundle(AssetProcessorSystemBundle::<Locale>::default());
+    builder.add_bundle(LoaderBundle).add_bundle(
+        RenderingBundle::<DefaultBackend>::new().with_plugin(
+            RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                float32: [0.34, 0.36, 0.52, 1.0],
+            }),
+        ),
+    );
 
     let game = Application::new(assets_dir, Example::new(), builder)?;
     game.run();

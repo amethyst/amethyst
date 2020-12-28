@@ -28,7 +28,6 @@ impl Asset for Source {
         "audio::Source"
     }
     type Data = AudioData;
-    //type HandleStorage = VecStorage<SourceHandle>;
 }
 
 impl ProcessableAsset for Source {
