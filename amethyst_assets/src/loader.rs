@@ -227,15 +227,6 @@ impl Loader for LoaderWithStorage {
         let handle = self.handle_allocator.alloc();
         let version = 0;
         processing_queue.enqueue_from_data(handle, data, tracker, version);
-        // let FormatValue { data, .. } = FormatValue::data(data);
-        // let asset = match ProcessingState::<A::Data, A>::Loaded(data) {
-        //     ProcessingState::Loaded(asset) => Some(asset),
-        //     _ => None,
-        // };
-        // let asset = asset.expect("data asset failed");
-        // tracker.success();
-        // storage.update_asset(handle, asset, version);
-        // storage.commit_asset(handle, version);
         Handle::<A>::new(self.ref_sender.clone(), handle)
     }
 
