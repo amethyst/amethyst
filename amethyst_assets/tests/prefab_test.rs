@@ -80,7 +80,7 @@ fn a_prefab_is_applied_to_an_entity() {
         prefab_handle.clone(),
     );
 
-    let entity = world.push((prefab_handle.clone(),));
+    let entity = world.push((prefab_handle,));
 
     execute_dispatcher_until_prefab_is_applied(&mut dispatcher, &mut world, &mut resources, entity);
 

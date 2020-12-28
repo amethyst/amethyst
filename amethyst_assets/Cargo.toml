@@ -39,7 +39,7 @@ objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
-atelier-assets = { git = "https://github.com/jlowry/atelier-assets.git", branch = "make_daemon_constructable", features = [
+atelier-assets = { git = "https://github.com/radium-io/atelier-assets.git", branch = "resolve-fix", features = [
     "serde-1",
     "type_uuid",
     "asset_uuid_macro",
