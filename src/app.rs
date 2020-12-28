@@ -11,8 +11,6 @@ use sentry::integrations::panic::register_panic_handler;
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 use winit::event::{Event, WindowEvent};
 
-#[cfg(feature = "ui")]
-use crate::ui::UiEvent;
 use crate::{
     assets::{Loader, Source},
     core::{
@@ -242,7 +240,7 @@ where
             {
                 #[cfg(feature = "profiler")]
                 profile_scope!("frame_limiter wait");
-                //self.resources.get_mut::<FrameLimiter>().unwrap().wait();
+                self.resources.get_mut::<FrameLimiter>().unwrap().wait();
             }
             {
                 let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
@@ -315,41 +313,33 @@ where
         }
 
         // Read the Trans queue and apply changes.
-        {
-            let world = &mut self.world;
-            let resources = &mut self.resources;
-            let states = &mut self.states;
-            let reader = &mut self.trans_reader_id;
 
-            let trans = resources
-                .get_mut::<EventChannel<TransEvent<T, E>>>()
-                .unwrap()
-                .read(reader)
-                .map(|e| e())
-                .collect::<Vec<_>>();
-            for tr in trans {
-                states.transition(tr, StateData::new(world, resources, &mut self.data));
-            }
+        let world = &mut self.world;
+        let resources = &mut self.resources;
+        let states = &mut self.states;
+        let reader = &mut self.trans_reader_id;
+
+        let trans = resources
+            .get_mut::<EventChannel<TransEvent<T, E>>>()
+            .unwrap()
+            .read(reader)
+            .map(|e| e())
+            .collect::<Vec<_>>();
+        for tr in trans {
+            states.transition(tr, StateData::new(world, resources, &mut self.data));
         }
 
         {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            {
-                let events = &mut self.events;
-                self.reader.read(&mut self.resources, events);
-            }
+            self.reader.read(resources, &mut self.events);
 
-            {
-                let world = &mut self.world;
-                let resources = &mut self.resources;
-                let states = &mut self.states;
-                for e in self.events.drain(..) {
-                    states.handle_event(StateData::new(world, resources, &mut self.data), e);
-                }
+            for e in self.events.drain(..) {
+                states.handle_event(StateData::new(world, resources, &mut self.data), e);
             }
         }
+
         {
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
@@ -436,6 +426,7 @@ pub struct ApplicationBuilder<S, T, E, R> {
 impl<S, T, E, X> ApplicationBuilder<S, T, E, X>
 where
     T: DataDispose + 'static,
+    E: 'static,
 {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
@@ -553,7 +544,6 @@ where
         resources.insert(pool);
         resources.insert(EventChannel::<Event<'static, ()>>::with_capacity(2000));
         //resources.insert(EventChannel::<UiEvent>::with_capacity(40));
-        resources.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         resources.insert(FrameLimiter::default());
         resources.insert(Stopwatch::default());
         resources.insert(Time::default());
@@ -829,8 +819,6 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let mut reader = X::default();
-        reader.setup(&mut self.resources);
         let data = init.build(&mut self.world, &mut self.resources)?;
 
         let event_reader_id = self
@@ -839,11 +827,12 @@ where
             .unwrap()
             .register_reader();
 
-        let trans_reader_id = self
-            .resources
-            .get_mut::<EventChannel<TransEvent<T, E>>>()
-            .unwrap()
-            .register_reader();
+        let mut trans_event_channel = EventChannel::<TransEvent<T, E>>::with_capacity(2);
+        let trans_reader_id = trans_event_channel.register_reader();
+        self.resources.insert(trans_event_channel);
+
+        let mut reader = X::default();
+        reader.setup(&mut self.resources);
 
         Ok(CoreApplication {
             world: self.world,

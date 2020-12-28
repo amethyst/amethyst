@@ -4,6 +4,7 @@ use super::components::*;
 use crate::ecs::*;
 
 /// System that updates global transform matrices based on hierarchy relations.
+#[derive(Debug)]
 pub struct TransformSystem;
 
 impl System<'_> for TransformSystem {
@@ -40,18 +41,21 @@ impl System<'_> for TransformSystem {
                         }
 
                         // Update parent transforms for entities in the hierarchy
+                        // Ideally we would check if the linked parent entity exists before
+                        // accessing it's Transform component, but as the parent_update_system panics
+                        // in both cases it is ok to just unwrap/expect here.
                         let (left, mut right) = world.split_for_query(query_parent);
                         for (entity, parent) in query_parent.iter(&left) {
                             let parent_has_transform = right
                                 .entry_ref(parent.0)
-                                .unwrap()
+                                .expect("Invalid entity in Parent component")
                                 .into_component::<Transform>()
                                 .is_ok();
 
                             if parent_has_transform {
                                 let parent_matrix = right
                                     .entry_ref(**parent)
-                                    .unwrap()
+                                    .expect("Invalid entity in Parent component")
                                     .into_component::<Transform>()
                                     .unwrap()
                                     .global_matrix;
