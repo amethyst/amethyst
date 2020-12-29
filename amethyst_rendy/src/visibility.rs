@@ -151,11 +151,12 @@ impl<'a> System<'a> for VisibilitySortingSystem {
             )
                 .join()
                 .map(|(entity, transform, sphere, _, _)| {
-                    let pos = sphere.map_or(&origin, |s| &s.center);
                     let matrix = transform.global_matrix();
+                    let pos = sphere.map_or(matrix.transform_point(&origin), |s| s.center);
+
                     (
                         entity,
-                        matrix.transform_point(&pos),
+                        pos,
                         sphere.map_or(1.0, |s| s.radius)
                             * matrix[(0, 0)].max(matrix[(1, 1)]).max(matrix[(2, 2)]),
                     )
