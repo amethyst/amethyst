@@ -150,7 +150,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds>
     }
 }
 
-/// `RenderGroup` providing culling, drawing and transparency functionality for 3D `TileMap` components.
+/// `RenderGroup` providing culling, drawing and transparency functionality for 2D `TileMap` components.
 ///
 /// Notes on use:
 /// - Due to the use of transparency and Z-order, the `TileMap` entity must be viewed from a Z-up perspective
@@ -207,9 +207,6 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
             .get::<AssetStorage<Sprites>>()
             .expect("Could not get Sprites storage.");
 
-        let mut query =
-            <(&TileMap<T, E>, TryRead<Transform>)>::query().filter(!component::<Hidden>());
-
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
 
@@ -219,63 +216,65 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
 
         let mut tilemap_args = vec![];
 
+        let mut query =
+            <(&TileMap<T, E>, TryRead<Transform>)>::query().filter(!component::<Hidden>());
+
         for (tile_map, transform) in query.iter(aux.world) {
             if let Some(sheet) = tile_map
                 .sprite_sheet
                 .as_ref()
                 .and_then(|handle| sprite_sheet_storage.get(handle))
-                .filter(|sheet| tex_storage.contains(sheet.texture.load_handle()))
             {
-                let sprites = sprites_storage.get(&sheet.sprites).unwrap().build_sprites();
+                if let Some(sprites) = sprites_storage.get(&sheet.sprites) {
+                    let sprites = sprites.build_sprites();
 
-                let tilemap_args_index = tilemap_args.len();
-                let map_coordinate_transform: [[f32; 4]; 4] = (*tile_map.transform()).into();
-                let map_transform: [[f32; 4]; 4] = transform.map_or_else(
-                    || Matrix4::identity().into(),
-                    |transform| (*transform.global_matrix()).into(),
-                );
+                    let tilemap_args_index = tilemap_args.len();
+                    let map_coordinate_transform: [[f32; 4]; 4] = (*tile_map.transform()).into();
+                    let map_transform: [[f32; 4]; 4] = transform.map_or_else(
+                        || Matrix4::identity().into(),
+                        |transform| (*transform.global_matrix()).into(),
+                    );
 
-                tilemap_args.push(TileMapArgs {
-                    proj: projview.proj,
-                    view: projview.view,
-                    map_coordinate_transform: map_coordinate_transform.into(),
-                    map_transform: map_transform.into(),
-                    sprite_dimensions: [
-                        tile_map.tile_dimensions().x as f32,
-                        tile_map.tile_dimensions().y as f32,
-                    ]
-                    .into(),
-                });
-
-                compute_region::<T, E, Z>(&tile_map, aux.world)
-                    .iter()
-                    .filter_map(|coord| {
-                        let tile = tile_map.get(&coord).unwrap();
-                        if let Some(sprite_number) = tile.sprite(coord, aux.world) {
-                            let (batch_data, texture) = TileArgs::from_data(
-                                &tex_storage,
-                                &sprites,
-                                &sheet,
-                                sprite_number,
-                                Some(&TintComponent(tile.tint(coord, aux.world))),
-                                &coord,
-                            )?;
-
-                            let (tex_id, this_changed) = textures_ref.insert(
-                                factory,
-                                aux.resources,
-                                texture,
-                                hal::image::Layout::ShaderReadOnlyOptimal,
-                            )?;
-                            changed = changed || this_changed;
-
-                            return Some((tex_id, batch_data));
-                        }
-                        None
-                    })
-                    .for_each_group(|tex_id, batch_data| {
-                        sprites_ref.insert(tex_id, tilemap_args_index, batch_data.drain(..))
+                    tilemap_args.push(TileMapArgs {
+                        proj: projview.proj,
+                        view: projview.view,
+                        map_coordinate_transform: map_coordinate_transform.into(),
+                        map_transform: map_transform.into(),
+                        sprite_dimensions: [
+                            tile_map.tile_dimensions().x as f32,
+                            tile_map.tile_dimensions().y as f32,
+                        ]
+                        .into(),
                     });
+
+                    compute_region::<T, E, Z>(&tile_map, aux.world)
+                        .iter()
+                        .filter_map(|coord| {
+                            let tile = tile_map.get(&coord).unwrap();
+                            if let Some(sprite_number) = tile.sprite(coord, aux.world) {
+                                let batch_data = TileArgs::from_data(
+                                    &sprites,
+                                    sprite_number,
+                                    Some(&TintComponent(tile.tint(coord, aux.world))),
+                                    &coord,
+                                );
+
+                                let (tex_id, this_changed) = textures_ref.insert(
+                                    factory,
+                                    aux.resources,
+                                    &sheet.texture,
+                                    hal::image::Layout::ShaderReadOnlyOptimal,
+                                )?;
+                                changed = changed || this_changed;
+
+                                return Some((tex_id, batch_data));
+                            }
+                            None
+                        })
+                        .for_each_group(|tex_id, batch_data| {
+                            sprites_ref.insert(tex_id, tilemap_args_index, batch_data.drain(..))
+                        });
+                }
             }
         }
 

@@ -15,6 +15,7 @@ use crate::{
     resources::Tint as TintComponent,
     sprite::{SpriteRender, SpriteSheet, Sprites},
     types::Texture,
+    Sprite,
 };
 
 /// TextureOffset
@@ -343,42 +344,28 @@ impl SpriteArgs {
     /// * `sprite_render` - `SpriteRender` component reference
     /// * `transform` - 'Transform' component reference
     pub fn from_data<'a>(
-        tex_storage: &AssetStorage<Texture>,
-        sprite_storage: &'a AssetStorage<SpriteSheet>,
-        sprites_storage: &'a AssetStorage<Sprites>,
-        sprite_render: &SpriteRender,
+        sprite: &'a Sprite,
         transform: &Transform,
         tint: Option<&TintComponent>,
-    ) -> Option<(Self, &'a Handle<Texture>)> {
-        let sprite_sheet = sprite_storage.get(&sprite_render.sprite_sheet)?;
-        if !tex_storage.contains(sprite_sheet.texture.load_handle()) {
-            return None;
-        }
-
-        let sprites = sprites_storage.get(&sprite_sheet.sprites)?;
-        let sprite = &sprites.build_sprites()[sprite_render.sprite_number];
-
+    ) -> Self {
         let transform = convert::<_, Matrix4<f32>>(*transform.global_matrix());
         let dir_x = transform.column(0) * sprite.width;
         let dir_y = transform.column(1) * -sprite.height;
         let pos = transform * Vector4::new(-sprite.offsets[0], -sprite.offsets[1], 0.0, 1.0);
 
-        Some((
-            SpriteArgs {
-                dir_x: dir_x.xy().into_pod(),
-                dir_y: dir_y.xy().into_pod(),
-                pos: pos.xy().into_pod(),
-                u_offset: [sprite.tex_coords.left, sprite.tex_coords.right].into(),
-                v_offset: [sprite.tex_coords.top, sprite.tex_coords.bottom].into(),
-                depth: pos.z,
-                tint: tint.map_or([1.0; 4].into(), |t| {
-                    // Shaders expect linear RGBA; convert sRGBA to linear RGBA
-                    let (r, g, b, a) = t.0.into_linear().into_components();
-                    [r, g, b, a].into()
-                }),
-            },
-            &sprite_sheet.texture,
-        ))
+        SpriteArgs {
+            dir_x: dir_x.xy().into_pod(),
+            dir_y: dir_y.xy().into_pod(),
+            pos: pos.xy().into_pod(),
+            u_offset: [sprite.tex_coords.left, sprite.tex_coords.right].into(),
+            v_offset: [sprite.tex_coords.top, sprite.tex_coords.bottom].into(),
+            depth: pos.z,
+            tint: tint.map_or([1.0; 4].into(), |t| {
+                // Shaders expect linear RGBA; convert sRGBA to linear RGBA
+                let (r, g, b, a) = t.0.into_linear().into_components();
+                [r, g, b, a].into()
+            }),
+        }
     }
 }
 

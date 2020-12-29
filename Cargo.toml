@@ -28,7 +28,7 @@ prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff
 serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0" }
 
 [features]
-default = ["parallel", "renderer", "utils"]
+default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
 optional = ["audio", "network", "locale", "ui", "tiles"]
 
 vulkan = ["amethyst_rendy/vulkan"]
@@ -147,8 +147,8 @@ name = "sphere"
 [[example]]
 name = "optional_graphics"
 
-# [[example]]
-# name = "asset_custom"
+[[example]]
+name = "asset_custom"
 
 [[example]]
 name = "asset_loading"

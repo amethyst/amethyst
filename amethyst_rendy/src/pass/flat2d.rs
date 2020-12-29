@@ -134,30 +134,17 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
                 .iter()
                 .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .filter_map(|(entity, (sprite_render, global, tint))| {
-                    let (batch_data, texture) = if let Some(tint) = tint {
-                        SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprites_storage,
-                            &sprite_render,
-                            &global,
-                            Some(&tint),
-                        )?
-                    } else {
-                        SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprites_storage,
-                            &sprite_render,
-                            &global,
-                            None,
-                        )?
-                    };
+                    let sprite_sheet = sprite_sheet_storage.get(&sprite_render.sprite_sheet)?;
+                    let sprites = sprites_storage.get(&sprite_sheet.sprites)?.build_sprites();
+
+                    let sprite = &sprites[sprite_render.sprite_number];
+
+                    let batch_data = SpriteArgs::from_data(&sprite, &global, tint);
 
                     let (tex_id, _) = textures_ref.insert(
                         factory,
                         resources,
-                        texture,
+                        &sprite_sheet.texture,
                         hal::image::Layout::ShaderReadOnlyOptimal,
                     )?;
                     Some((tex_id, batch_data))
@@ -324,30 +311,17 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
                 .iter()
                 .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .filter_map(|(entity, (sprite_render, global, tint))| {
-                    let (batch_data, texture) = if let Some(tint) = tint {
-                        SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprites_storage,
-                            &sprite_render,
-                            &global,
-                            Some(&tint),
-                        )?
-                    } else {
-                        SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprites_storage,
-                            &sprite_render,
-                            &global,
-                            None,
-                        )?
-                    };
+                    let sprite_sheet = sprite_sheet_storage.get(&sprite_render.sprite_sheet)?;
+                    let sprites = sprites_storage.get(&sprite_sheet.sprites)?.build_sprites();
+
+                    let sprite = &sprites[sprite_render.sprite_number];
+
+                    let batch_data = SpriteArgs::from_data(&sprite, &global, tint);
 
                     let (tex_id, this_changed) = textures_ref.insert(
                         factory,
                         resources,
-                        texture,
+                        &sprite_sheet.texture,
                         hal::image::Layout::ShaderReadOnlyOptimal,
                     )?;
 

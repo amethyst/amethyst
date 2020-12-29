@@ -23,6 +23,8 @@ pub struct SpriteSheet {
     pub sprites: Handle<Sprites>,
 }
 
+register_asset_type!(SpriteSheet => SpriteSheet; AssetProcessorSystem<SpriteSheet>);
+
 impl Asset for SpriteSheet {
     fn name() -> &'static str {
         "renderer::SpriteSheet"
@@ -484,12 +486,12 @@ impl SpriteGrid {
 /// ```
 #[derive(Clone, Default, Debug, TypeUuid, Serialize, Deserialize)]
 #[uuid = "a0ec25ac-ed95-47d2-a093-696652bbec30"]
-pub struct SpriteSheetFormat;
+pub struct SpritesFormat;
 
-register_importer!(".ron", SpriteSheetFormat);
+register_importer!(".ron", SpritesFormat);
 register_asset_type!(Sprites => Sprites; AssetProcessorSystem<Sprites>);
 
-impl Format<Sprites> for SpriteSheetFormat {
+impl Format<Sprites> for SpritesFormat {
     fn name(&self) -> &'static str {
         "SPRITE_SHEET"
     }
@@ -506,7 +508,7 @@ impl Format<Sprites> for SpriteSheetFormat {
 mod test {
     use amethyst_assets::Handle;
 
-    use super::{Sprite, SpriteSheetFormat, TextureCoordinates};
+    use super::{Sprite, SpritesFormat, TextureCoordinates};
     use crate::types::Texture;
 
     #[test]
@@ -658,7 +660,7 @@ List((
             },
         ];
 
-        let format = SpriteSheetFormat;
+        let format = SpritesFormat;
         let sprite_list_loaded = format.import_simple(sprite_sheet_ron.into_bytes());
         let sprite_list = sprite_list_loaded.unwrap().build_sprites();
         assert_eq!(sprite_list_reference, sprite_list);
@@ -723,7 +725,7 @@ Grid((
             },
         ];
         let texture = create_texture();
-        let format = SpriteSheetFormat;
+        let format = SpritesFormat;
         {
             let sprite_list_loaded = format.import_simple(sprite_sheet_ron_rows.into_bytes());
             let sprite_list = sprite_list_loaded

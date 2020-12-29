@@ -41,24 +41,13 @@ impl<'s> System<'s> for MovementSystem {
 }
 
 fn load_sprite_sheet(resources: &Resources, png_path: &str, ron_path: &str) -> Handle<SpriteSheet> {
-    let texture_handle = {
-        let loader = resources.get::<DefaultLoader>().unwrap();
-        loader.load(png_path)
-    };
-
     let loader = resources.get::<DefaultLoader>().unwrap();
 
+    let texture = loader.load(png_path);
     let sprites = loader.load(ron_path);
 
     let sprite_sheet_store = resources.get::<ProcessingQueue<SpriteSheet>>().unwrap();
-    loader.load_from_data(
-        SpriteSheet {
-            texture: texture_handle,
-            sprites,
-        },
-        (),
-        &sprite_sheet_store,
-    )
+    loader.load_from_data(SpriteSheet { texture, sprites }, (), &sprite_sheet_store)
 }
 
 // Initialize a background
@@ -137,11 +126,11 @@ impl SimpleState for Example {
             "texture/Background.ron",
         );
 
-        let _background = init_background_sprite(world, &background_sprite_sheet_handle);
-        let _reference = init_reference_sprite(world, &circle_sprite_sheet_handle);
+        init_background_sprite(world, &background_sprite_sheet_handle);
+        init_reference_sprite(world, &circle_sprite_sheet_handle);
         let player = init_player(world, &circle_sprite_sheet_handle);
-        let _camera = initialise_camera(world, data.resources, player);
-        let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
+        initialise_camera(world, data.resources, player);
+        init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
     }
 
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {

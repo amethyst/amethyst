@@ -71,7 +71,6 @@ impl<B: Backend> RenderingBundle<B> {
 }
 
 register_asset_type!(Material => Material; AssetProcessorSystem<Material>);
-register_asset_type!(SpriteSheet => SpriteSheet; AssetProcessorSystem<SpriteSheet>);
 
 impl<B: Backend> SystemBundle for RenderingBundle<B> {
     fn load(

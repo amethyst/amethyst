@@ -34,11 +34,8 @@ fn load_sprite_sheet(
     png_path: &str,
     ron_path: &str,
 ) -> Handle<SpriteSheet> {
-    let texture = {
-        let loader = resources.get::<DefaultLoader>().expect("Get Loader");
-        loader.load(png_path)
-    };
     let loader = resources.get::<DefaultLoader>().expect("Get Loader");
+    let texture = loader.load(png_path);
     let sprites = loader.load(ron_path);
     let sprite_sheet_store = resources.get::<ProcessingQueue<SpriteSheet>>().unwrap();
     loader.load_from_data(SpriteSheet { texture, sprites }, (), &sprite_sheet_store)
@@ -72,14 +69,6 @@ fn init_player(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity 
     world.push((transform, Player, sprite, Transparent, Named::new("player")))
 }
 
-fn init_camera(
-    parent: Entity,
-    transform: Transform,
-    camera: Camera,
-) -> (Transform, Parent, Camera, Named) {
-    (transform, Parent(parent), camera, Named::new("camera"))
-}
-
 #[derive(Default, Clone)]
 struct ExampleTile;
 impl Tile for ExampleTile {
@@ -93,18 +82,6 @@ impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
-        let circle_sprite_sheet_handle = load_sprite_sheet(
-            data.resources,
-            "texture/Circle_Spritesheet.png",
-            "texture/Circle_Spritesheet.ron",
-        );
-
-        let map_sprite_sheet_handle = load_sprite_sheet(
-            data.resources,
-            "texture/cp437_20x20.png",
-            "texture/cp437_20x20.ron",
-        );
-
         let (width, height) = {
             let dim = data
                 .resources
@@ -113,10 +90,19 @@ impl SimpleState for Example {
             (dim.width(), dim.height())
         };
 
-        let _reference = init_reference_sprite(world, &circle_sprite_sheet_handle);
+        let circle_sprite_sheet_handle = load_sprite_sheet(
+            data.resources,
+            "texture/Circle_Spritesheet.png",
+            "texture/Circle_Spritesheet.ron",
+        );
+
+        init_reference_sprite(world, &circle_sprite_sheet_handle);
+        init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
+
         let player = init_player(world, &circle_sprite_sheet_handle);
-        let camera = world.push(init_camera(
-            player,
+        let camera = world.push((
+            Named("camera".into()),
+            Parent(player),
             Transform::from(Vector3::new(0.0, 0.0, 1.1)),
             Camera::standard_2d(width, height),
         ));
@@ -124,7 +110,11 @@ impl SimpleState for Example {
             entity: Some(camera),
         });
 
-        let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
+        let map_sprite_sheet_handle = load_sprite_sheet(
+            data.resources,
+            "texture/cp437_20x20.png",
+            "texture/cp437_20x20.ron",
+        );
 
         let map = TileMap::<ExampleTile, MortonEncoder>::new(
             Vector3::new(48, 48, 1),
@@ -156,7 +146,7 @@ impl SimpleState for Example {
 
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(Default::default())
-        .level_for("amethyst_tiles", log::LevelFilter::Warn)
+        .level_for("amethyst_tiles", log::LevelFilter::Debug)
         .start();
 
     let app_root = application_root_dir()?;

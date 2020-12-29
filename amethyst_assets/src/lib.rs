@@ -34,6 +34,7 @@ pub use atelier_assets::loader::{
     handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
     storage::LoadHandle,
 };
+pub use type_uuid::TypeUuid;
 // used in macros. Private API otherwise.
 #[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};

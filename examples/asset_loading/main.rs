@@ -2,7 +2,7 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
-    assets::{DefaultLoader, Format as AssetFormat, Handle, Loader},
+    assets::{DefaultLoader, Format, Handle, Loader},
     core::{
         math::Vector3,
         transform::{Transform, TransformBundle},
@@ -31,12 +31,13 @@ use amethyst_rendy::{types::TextureData, Texture};
 use log::info;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
+
 #[derive(Default, Debug, Clone, Serialize, Deserialize, TypeUuid)]
 #[uuid = "f245dc2b-88a9-413e-bd51-f6c341c32017"]
 struct Custom;
 
 amethyst_assets::register_importer!(".custom", Custom);
-impl AssetFormat<MeshData> for Custom {
+impl Format<MeshData> for Custom {
     fn name(&self) -> &'static str {
         "CUSTOM"
     }
@@ -123,28 +124,26 @@ impl SimpleState for AssetsExample {
 }
 
 fn main() -> Result<(), Error> {
-    {
-        let config = amethyst::LoggerConfig {
-            log_file: Some(std::path::PathBuf::from("asset_loading.log")),
-            level_filter: amethyst::LogLevelFilter::Info,
-            module_levels: vec![
-                (
-                    "amethyst_assets".to_string(),
-                    amethyst::LogLevelFilter::Debug,
-                ),
-                (
-                    "atelier_daemon".to_string(),
-                    amethyst::LogLevelFilter::Debug,
-                ),
-                (
-                    "atelier_loader".to_string(),
-                    amethyst::LogLevelFilter::Trace,
-                ),
-            ],
-            ..Default::default()
-        };
-        amethyst::start_logger(config);
-    }
+    let config = amethyst::LoggerConfig {
+        log_file: Some(std::path::PathBuf::from("asset_loading.log")),
+        level_filter: amethyst::LogLevelFilter::Info,
+        module_levels: vec![
+            (
+                "amethyst_assets".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_daemon".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_loader".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+        ],
+        ..Default::default()
+    };
+    amethyst::start_logger(config);
 
     let app_root = application_root_dir()?;
     // Add our meshes directory to the asset loader.

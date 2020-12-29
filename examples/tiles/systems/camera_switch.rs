@@ -8,9 +8,8 @@ use amethyst::{
     renderer::{ActiveCamera, Camera},
     window::ScreenDimensions,
 };
+use amethyst_core::Named;
 use legion::{component, Entity, SystemBuilder};
-
-use crate::init_camera;
 
 pub struct CameraSwitchSystem {
     pressed: bool,
@@ -73,8 +72,9 @@ impl System<'static> for CameraSwitchSystem {
                                     )
                                 };
 
-                                let new_camera = commands.push(init_camera(
-                                    new_parent,
+                                let new_camera = commands.push((
+                                    Named("camera".into()),
+                                    Parent(new_parent),
                                     Transform::from(new_position),
                                     new_camera,
                                 ));
