@@ -4,6 +4,7 @@ use amethyst::{
     prelude::*,
     renderer::{Camera, SpriteRender, SpriteSheet, Texture},
 };
+use amethyst_assets::ProcessingQueue;
 
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
@@ -91,19 +92,17 @@ pub struct Ball {
 }
 
 fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
-    // Load the sprite sheet necessary to render the graphics.
-    // The texture is the pixel data
-    // `sprite_sheet` is the layout of the sprites on the image
-    // `texture_handle` is a cloneable reference to the texture
-
-    let _texture_handle: Handle<Texture> = {
+    let texture: Handle<Texture> = {
         let loader = resources.get::<DefaultLoader>().unwrap();
         loader.load("texture/pong_spritesheet.png")
     };
-
     let loader = resources.get::<DefaultLoader>().unwrap();
-    loader.load(
-        "texture/pong_spritesheet.ron", // Here we load the associated ron file
+    let sprites = loader.load("texture/pong_spritesheet.ron");
+
+    loader.load_from_data(
+        SpriteSheet { texture, sprites },
+        (),
+        &resources.get::<ProcessingQueue<SpriteSheet>>().unwrap(),
     )
 }
 

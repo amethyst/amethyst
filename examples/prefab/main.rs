@@ -77,25 +77,26 @@ impl SimpleState for AssetsExample {
 
 /// Wrapper around the main, so we can return errors easily.
 fn main() -> Result<(), Error> {
-    {
-        let mut config = amethyst::LoggerConfig::default();
-        // config.log_file = Some(std::path::PathBuf::from("asset_loading.log"));
-        config.level_filter = amethyst::LogLevelFilter::Info;
-        config.module_levels.push((
-            "amethyst_assets".to_string(),
-            amethyst::LogLevelFilter::Debug,
-        ));
-        config.module_levels.push((
-            "atelier_daemon".to_string(),
-            amethyst::LogLevelFilter::Debug,
-        ));
-        config.module_levels.push((
-            "atelier_loader".to_string(),
-            amethyst::LogLevelFilter::Trace,
-        ));
-        amethyst::start_logger(config);
-    }
-    // amethyst::start_logger(Default::default());
+    let config = amethyst::LoggerConfig {
+        level_filter: amethyst::LogLevelFilter::Info,
+        module_levels: vec![
+            (
+                "amethyst_assets".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_daemon".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_loader".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+        ],
+        ..Default::default()
+    };
+
+    amethyst::start_logger(config);
 
     let app_root = application_root_dir()?;
 

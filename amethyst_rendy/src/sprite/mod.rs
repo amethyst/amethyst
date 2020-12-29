@@ -1,6 +1,6 @@
 //! 2D Sprite Rendering implementation details.
 use amethyst_assets::{
-    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format, Handle, RonFormat,
+    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format, Handle,
 };
 use amethyst_error::Error;
 use ron::de::from_bytes as from_ron_bytes;
@@ -658,9 +658,9 @@ List((
             },
         ];
 
-        let format = SpriteSheetFormat(create_texture());
+        let format = SpriteSheetFormat;
         let sprite_list_loaded = format.import_simple(sprite_sheet_ron.into_bytes());
-        let sprite_list = sprite_list_loaded.unwrap().sprites;
+        let sprite_list = sprite_list_loaded.unwrap().build_sprites();
         assert_eq!(sprite_list_reference, sprite_list);
     }
 
@@ -723,12 +723,12 @@ Grid((
             },
         ];
         let texture = create_texture();
-        let format = SpriteSheetFormat(texture);
+        let format = SpriteSheetFormat;
         {
             let sprite_list_loaded = format.import_simple(sprite_sheet_ron_rows.into_bytes());
             let sprite_list = sprite_list_loaded
                 .expect("failed to parse sprite_sheet_ron_rows")
-                .sprites;
+                .build_sprites();
             assert_eq!(
                 sprite_list_reference, sprite_list,
                 "we are testing row based grids"
@@ -738,7 +738,7 @@ Grid((
             let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cells.into_bytes());
             let sprite_list = sprite_list_loaded
                 .expect("failed to parse sprite_sheet_ron_cells")
-                .sprites;
+                .build_sprites();
             assert_eq!(
                 sprite_list_reference, sprite_list,
                 "we are testing number of cell based grids"
@@ -748,7 +748,7 @@ Grid((
             let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cell_size.into_bytes());
             let sprite_list = sprite_list_loaded
                 .expect("failed to parse sprite_sheet_ron_cell_size")
-                .sprites;
+                .build_sprites();
             assert_eq!(
                 sprite_list_reference, sprite_list,
                 "we are testing cell size based grids"

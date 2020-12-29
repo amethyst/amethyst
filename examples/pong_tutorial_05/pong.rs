@@ -1,12 +1,12 @@
 use amethyst::{
-    assets::{AssetStorage, DefaultLoader, Handle, Loader},
+    assets::{DefaultLoader, Handle, Loader},
     core::{timing::Time, transform::Transform},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, SpriteRender, SpriteSheet, Texture},
 };
 use amethyst_assets::ProcessingQueue;
 use amethyst_rendy::sprite::Sprites;
-use amethyst_ui::{Anchor, FontAsset, LineMode, TtfFormat, UiText, UiTransform};
+use amethyst_ui::{Anchor, LineMode, UiText, UiTransform};
 
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
@@ -166,11 +166,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
     ));
 
     // Create right plank entity.
-    world.push((
-        sprite_render.clone(),
-        Paddle::new(Side::Right),
-        right_transform,
-    ));
+    world.push((sprite_render, Paddle::new(Side::Right), right_transform));
 }
 
 /// Initialises one ball in the middle of the arena.
@@ -241,7 +237,7 @@ fn initialise_scoreboard(world: &mut World, resources: &mut Resources) {
     let p2_score = world.push((
         p2_transform,
         UiText::new(
-            font.clone(),
+            font,
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,

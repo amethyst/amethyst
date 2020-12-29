@@ -36,14 +36,14 @@ impl SimpleState for Example {
 }
 
 fn main() -> amethyst::Result<()> {
-    {
-        let mut config = amethyst::LoggerConfig::default();
-        config.level_filter = amethyst::LogLevelFilter::Info;
-        config
-            .module_levels
-            .push(("amethyst_ui".to_string(), amethyst::LogLevelFilter::Trace));
-        amethyst::start_logger(config);
-    }
+    let config = amethyst::LoggerConfig {
+        level_filter: amethyst::LogLevelFilter::Info,
+        module_levels: vec![("amethyst_ui".to_string(), amethyst::LogLevelFilter::Trace)],
+        ..Default::default()
+    };
+
+    amethyst::start_logger(config);
+
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/ui_from_code/config/display.ron");
     let assets_dir = app_root.join("examples/ui_from_code/assets");

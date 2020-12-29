@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, DefaultLoader, Handle, Loader},
+    assets::{DefaultLoader, Handle, Loader},
     core::Named,
     input::{is_close_requested, is_key_down, InputBundle, InputHandler},
     prelude::*,
@@ -7,12 +7,10 @@ use amethyst::{
         plugins::{RenderFlat2D, RenderToWindow},
         rendy::hal::command::ClearColor,
         types::DefaultBackend,
-        Camera, ImageFormat, RenderingBundle, SpriteRender, SpriteSheet, SpriteSheetFormat,
-        Texture, Transparent,
+        Camera, RenderingBundle, SpriteRender, SpriteSheet, Transparent,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    winit,
 };
 use amethyst_assets::{LoaderBundle, ProcessingQueue};
 use amethyst_core::transform::{Parent, Transform, TransformBundle};
@@ -33,7 +31,7 @@ impl<'s> System<'s> for MovementSystem {
                     let x_move = input.axis_value("entity_x").unwrap();
                     let y_move = input.axis_value("entity_y").unwrap();
 
-                    for (player, transform) in query.iter_mut(world) {
+                    for (_, transform) in query.iter_mut(world) {
                         transform.prepend_translation_x(x_move as f32 * 5.0);
                         transform.prepend_translation_y(y_move as f32 * 5.0);
                     }
@@ -42,12 +40,7 @@ impl<'s> System<'s> for MovementSystem {
     }
 }
 
-fn load_sprite_sheet(
-    world: &mut World,
-    resources: &Resources,
-    png_path: &str,
-    ron_path: &str,
-) -> Handle<SpriteSheet> {
+fn load_sprite_sheet(resources: &Resources, png_path: &str, ron_path: &str) -> Handle<SpriteSheet> {
     let texture_handle = {
         let loader = resources.get::<DefaultLoader>().unwrap();
         loader.load(png_path)
@@ -134,13 +127,11 @@ impl SimpleState for Example {
         let world = data.world;
 
         let circle_sprite_sheet_handle = load_sprite_sheet(
-            world,
-            &data.resources,
+            data.resources,
             "texture/Circle_Spritesheet.png",
             "texture/Circle_Spritesheet.ron",
         );
         let background_sprite_sheet_handle = load_sprite_sheet(
-            world,
             data.resources,
             "texture/Background.png",
             "texture/Background.ron",

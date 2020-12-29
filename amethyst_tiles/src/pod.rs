@@ -9,8 +9,8 @@ use amethyst_rendy::{
         mesh::{AsVertex, VertexFormat},
     },
     resources::Tint as TintComponent,
-    sprite::SpriteSheet,
-    Texture,
+    sprite::{SpriteSheet, Sprites},
+    Sprite, Texture,
 };
 use glsl_layout::{mat4, uvec3, vec2, vec4, AsStd140};
 
@@ -85,6 +85,7 @@ impl TileArgs {
     /// * `tile_coordinate` - The  Point3<u32> position of this tile (in Tile Coordinate Space)
     pub fn from_data<'a>(
         tex_storage: &AssetStorage<Texture>,
+        sprites: &'a Vec<Sprite>,
         sprite_sheet: &'a SpriteSheet,
         sprite_number: usize,
         tint: Option<&TintComponent>,
@@ -94,7 +95,7 @@ impl TileArgs {
             return None;
         }
 
-        let sprite = &sprite_sheet.sprites[sprite_number];
+        let sprite = &sprites[sprite_number];
 
         Some((
             Self {

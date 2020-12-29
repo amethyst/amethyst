@@ -15,6 +15,7 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+use amethyst_assets::LoaderBundle;
 use systems::paddle::PaddleSystem;
 
 use crate::pong::Pong;
@@ -31,6 +32,7 @@ fn main() -> amethyst::Result<()> {
 
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher
+        .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
         .add_bundle(InputBundle::new().with_bindings_from_file(
             app_root.join("examples/pong_tutorial_03/config/bindings.ron"),

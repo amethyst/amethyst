@@ -29,7 +29,7 @@ serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0"
 
 [features]
 default = ["parallel", "renderer", "utils"]
-optional = ["audio", "network", "locale", "ui"]
+optional = ["audio", "network", "locale", "ui", "tiles"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
