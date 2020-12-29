@@ -13,33 +13,39 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    ui::{RenderUi, UiBundle},
     utils::application_root_dir,
 };
+use amethyst_ui::{RenderUi, UiBundle};
+use systems::{bounce::BounceSystem, move_balls::BallSystem};
 
-use crate::pong::Pong;
+use crate::{
+    pong::Pong,
+    systems::{paddle::PaddleSystem, winner::WinnerSystem},
+};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/pong_tutorial_04/config/display.ron");
+    let display_config_path = app_root.join("examples/pong_tutorial_05/config/display.ron");
 
     // This line is not mentioned in the pong tutorial as it is specific to the context
     // of the git repository. It only is a different location to load the assets from.
-    let assets_dir = app_root.join("examples/pong_tutorial_04/assets/");
+    let assets_dir = app_root.join("examples/pong_tutorial_05/assets/");
 
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher
         // Add the transform bundle which handles tracking entity positions
         .add_bundle(TransformBundle)
         .add_bundle(InputBundle::new().with_bindings_from_file(
-            app_root.join("examples/pong_tutorial_04/config/bindings.ron"),
+            app_root.join("examples/pong_tutorial_05/config/bindings.ron"),
         )?)
         // We have now added our own systems, defined in the systems module
-        .add_system(Box::new(systems::paddle::build()))
-        .add_system(Box::new(systems::move_balls::build()))
-        .add_system(Box::new(systems::bounce::build()))
+        .add_system(Box::new(PaddleSystem))
+        .add_system(Box::new(BallSystem))
+        .add_system(Box::new(BounceSystem))
+        .add_system(Box::new(WinnerSystem))
+        .add_bundle(UiBundle::<u32>::default())
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and

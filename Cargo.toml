@@ -35,7 +35,7 @@ vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
-#tiles = ["amethyst_tiles"]
+tiles = ["amethyst_tiles"]
 #animation = ["amethyst_animation"]
 audio = ["amethyst_audio"]
 #gltf = ["amethyst_gltf", "amethyst_animation"]
@@ -55,13 +55,13 @@ profiler = [
     "amethyst_audio/profiler",
     "amethyst_config/profiler",
     "amethyst_core/profiler",
-    "amethyst_controls/profiler",
+    #"amethyst_controls/profiler",
     "amethyst_input/profiler",
     "amethyst_locale/profiler",
     "amethyst_rendy/profiler",
     #"amethyst_ui/profiler",
     "amethyst_utils/profiler",
-    #"amethyst_tiles/profiler",
+    "amethyst_tiles/profiler",
 ]
 sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
@@ -77,7 +77,6 @@ members = ["amethyst_*"]
 exclude = [
     "amethyst_gltf",
     "amethyst_animation",
-    "amethyst_tiles",
     "amethyst_test",
 ]
 
@@ -98,7 +97,7 @@ amethyst_input = { path = "amethyst_input", version = "0.15.3" }
 amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3", optional = true }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
-#amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
+amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
 winit = { git = "https://git@github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 crossbeam-channel = "0.4.2"
 derivative = "2.1.1"
@@ -112,6 +111,8 @@ palette = { version = "0.4", features = ["serde"] }
 thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"
 glsl-layout = "0.3.2"
+# until https://github.com/amethyst/legion/pull/186 passed
+legion = { version = "0.3", default-features = false, features = ["serialize", "crossbeam-events", "codegen"] }
 
 [dev-dependencies]
 rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
@@ -204,8 +205,9 @@ name = "pong_tutorial_03"
 [[example]]
 name = "pong_tutorial_04"
 
-# [[example]]
-# name = "pong_tutorial_05"
+[[example]]
+name = "pong_tutorial_05"
+required-features = ["ui"]
 
 # [[example]]
 # name = "pong_tutorial_06"
@@ -281,9 +283,9 @@ name = "events_custom_state_event"
 # name = "rendy"
 # required-features = ["animation", "gltf"]
 
-# [[example]]
-# name = "tiles"
-# required-features = ["tiles"]
+[[example]]
+name = "tiles"
+required-features = ["tiles"]
 
 [package.metadata.docs.rs]
 features = [

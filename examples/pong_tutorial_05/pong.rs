@@ -3,8 +3,10 @@ use amethyst::{
     core::{timing::Time, transform::Transform},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
-    ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform},
 };
+use amethyst_assets::ProcessingQueue;
+use amethyst_rendy::sprite::Sprites;
+use amethyst_ui::{Anchor, FontAsset, LineMode, TtfFormat, UiText, UiTransform};
 
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
@@ -24,7 +26,9 @@ pub struct Pong {
 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let world = data.world;
+        let StateData {
+            world, resources, ..
+        } = data;
 
         // Wait one second before spawning the ball.
         self.ball_spawn_timer.replace(1.0);
@@ -33,22 +37,26 @@ impl SimpleState for Pong {
         // `spritesheet` is the layout of the sprites on the image;
         // `texture` is the pixel data.
         self.sprite_sheet_handle
-            .replace(load_sprite_sheet(data.resources));
+            .replace(load_sprite_sheet(resources));
         initialise_paddles(world, self.sprite_sheet_handle.clone().unwrap());
         initialise_camera(world);
-        initialise_scoreboard(world);
+        initialise_scoreboard(world, resources);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+        let StateData {
+            world, resources, ..
+        } = data;
+
         if let Some(mut timer) = self.ball_spawn_timer.take() {
             // If the timer isn't expired yet, substract the time that passed since last update.
             {
-                let time = data.resources.get::<Time>().unwrap();
+                let time = resources.get::<Time>().unwrap();
                 timer -= time.delta_seconds();
             }
             if timer <= 0.0 {
                 // When timer expire, spawn the ball
-                initialise_ball(data.world, self.sprite_sheet_handle.clone().unwrap());
+                initialise_ball(world, self.sprite_sheet_handle.clone().unwrap());
             } else {
                 // If timer is not expired yet, put it back onto the state.
                 self.ball_spawn_timer.replace(timer);
@@ -111,25 +119,21 @@ fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
     // `sprite_sheet` is the layout of the sprites on the image
     // `texture_handle` is a cloneable reference to the texture
 
-    let texture_handle = {
+    let texture_handle: Handle<Texture> = {
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        loader.load(
-            "texture/pong_spritesheet.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
+        loader.load("texture/pong_spritesheet.png")
     };
 
     let loader = resources.get::<DefaultLoader>().unwrap();
-    let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
-    loader.load(
+    let sprites: Handle<Sprites> = loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file
-        SpriteSheetFormat(texture_handle), // We pass it the texture we want it to use
-        (),
-        &sprite_sheet_store,
-    )
+    );
+    let sheet = SpriteSheet {
+        texture: texture_handle,
+        sprites,
+    };
+    let q = resources.get::<ProcessingQueue<SpriteSheet>>().unwrap();
+    loader.load_from_data(sheet, (), &q)
 }
 
 /// Initialise the camera.
@@ -193,11 +197,13 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
 }
 
 /// Initialises a ui scoreboard
-fn initialise_scoreboard(world: &mut World) {
-    let loader = resources.get::<DefaultLoader>().unwrap();
-    let font_store = resources.get::<AssetStorage<Font>>().unwrap();
+fn initialise_scoreboard(world: &mut World, resources: &mut Resources) {
+    resources.insert(ScoreBoard::default());
 
-    let font = loader.load("font/square.ttf", TtfFormat, (), &font_store);
+    let font = {
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        loader.load("font/square.ttf")
+    };
 
     let p1_transform = UiTransform::new(
         "P1".to_string(),
@@ -244,6 +250,5 @@ fn initialise_scoreboard(world: &mut World) {
         ),
     ));
 
-    let resources = Resources::default();
     resources.insert(ScoreText { p1_score, p2_score });
 }
