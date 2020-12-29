@@ -72,13 +72,9 @@ fn main() -> Result<(), Error> {
 
     let mut builder = DispatcherBuilder::default();
 
-    builder.add_bundle(LoaderBundle).add_bundle(
-        RenderingBundle::<DefaultBackend>::new().with_plugin(
-            RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
-                float32: [0.34, 0.36, 0.52, 1.0],
-            }),
-        ),
-    );
+    builder
+        .add_bundle(LoaderBundle)
+        .add_bundle(RenderingBundle::<DefaultBackend>::new());
 
     let game = Application::new(assets_dir, Example::new(), builder)?;
     game.run();

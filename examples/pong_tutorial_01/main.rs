@@ -10,6 +10,7 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+use amethyst_assets::LoaderBundle;
 
 pub struct Pong;
 
@@ -26,7 +27,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/pong_tutorial_01/assets/");
 
     let mut dispatcher = DispatcherBuilder::default();
-    dispatcher.add_bundle(
+    dispatcher.add_bundle(LoaderBundle).add_bundle(
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and
             // drawing on it
