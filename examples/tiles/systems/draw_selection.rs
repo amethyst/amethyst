@@ -46,13 +46,15 @@ impl System<'static> for DrawSelectionSystem {
                                             .get_mut(&mut subworld, *active_camera)
                                             .ok()
                                             .map(|(_, c, t)| (c, t))
-                                    }).or(None);
+                                    })
+                                    .or(None);
 
                                 // Return active camera or fetch first available
                                 let camera_transform = match camera_transform {
                                     Some(e) => Some(e),
                                     None => camera_query
-                                        .iter_mut(&mut subworld).next()
+                                        .iter_mut(&mut subworld)
+                                        .next()
                                         .map(|(_, c, t)| (c, t)),
                                 };
 

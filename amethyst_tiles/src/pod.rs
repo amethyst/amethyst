@@ -80,7 +80,8 @@ impl TileArgs {
     /// * `sprite_number` - The number index of the sprite in the sprite sheet.
     /// * `tint` - An optional `TintComponent` reference for tinting this tile, if applicable.
     /// * `tile_coordinate` - The  Point3<u32> position of this tile (in Tile Coordinate Space)
-    #[must_use] pub fn from_data<'a>(
+    #[must_use]
+    pub fn from_data<'a>(
         sprites: &'a [Sprite],
         sprite_number: usize,
         tint: Option<&TintComponent>,

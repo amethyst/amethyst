@@ -10,11 +10,7 @@ use rendy::{
     mesh::{AsAttribute, AsVertex, Model, VertexFormat},
 };
 
-use crate::{
-    mtl,
-    resources::Tint as TintComponent,
-    Sprite,
-};
+use crate::{mtl, resources::Tint as TintComponent, Sprite};
 
 /// TextureOffset
 /// ```glsl,ignore

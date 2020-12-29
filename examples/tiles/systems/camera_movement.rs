@@ -27,7 +27,8 @@ impl System<'static> for CameraMovementSystem {
                             .as_ref()
                             .and_then(|active_camera| {
                                 query.get_mut(world, *active_camera).ok().map(|(_, c)| c)
-                            }).or(None);
+                            })
+                            .or(None);
 
                         // Return active camera or fetch first available
                         let camera_transform = match camera_transform {
