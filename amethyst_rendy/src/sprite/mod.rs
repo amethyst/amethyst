@@ -5,7 +5,7 @@ use amethyst_assets::{
 use amethyst_error::Error;
 use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
-use type_uuid::{external_type_uuid, TypeUuid};
+use type_uuid::TypeUuid;
 
 use crate::{error, types::Texture};
 
@@ -304,6 +304,7 @@ impl Asset for Sprites {
 }
 
 impl Sprites {
+    /// returns sprites in this sheet as an indexable Vec
     pub fn build_sprites(&self) -> Vec<Sprite> {
         match self {
             Sprites::List(list) => list.build_sprites(),
@@ -360,7 +361,8 @@ impl SpriteGrid {
         })
     }
 
-    fn sprite_count(&self) -> u32 {
+    /// number of sprites in this sheet
+    pub fn sprite_count(&self) -> u32 {
         self.sprite_count
             .unwrap_or_else(|| self.columns * self.rows())
     }
@@ -468,27 +470,21 @@ impl SpriteGrid {
 /// # use amethyst_rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
 /// #
 /// # fn load_sprite_sheet() {
-/// #   let world = World::new(); // Normally, you would use Amethyst's world
+/// #   let world = World::default(); // Normally, you would use Amethyst's world
 /// #   let loader = data.resources.get::<DefaultLoader>().unwrap();
 /// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
-/// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();
-/// let texture_handle = loader.load(
+/// let texture = loader.load(
 ///     "my_texture.png",
-///     ImageFormat(Default::default()),
-///     (),
-///     &texture_storage,
 /// );
-/// let spritesheet_handle = loader.load(
+/// let sprites = loader.load(
 ///     "my_spritesheet.ron",
-///     SpriteSheetFormat(texture_handle),
-///     (),
-///     &spritesheet_storage,
 /// );
+/// let spritesheet_handle = loader.load_from_data(SpriteSheet { texture, sprites }, (), &spritesheet_storage)
 /// # }
 /// ```
 #[derive(Clone, Default, Debug, TypeUuid, Serialize, Deserialize)]
 #[uuid = "a0ec25ac-ed95-47d2-a093-696652bbec30"]
-pub struct SpriteSheetFormat(pub RonFormat<SpriteSheet>);
+pub struct SpriteSheetFormat;
 
 register_importer!(".ron", SpriteSheetFormat);
 register_asset_type!(Sprites => Sprites; AssetProcessorSystem<Sprites>);

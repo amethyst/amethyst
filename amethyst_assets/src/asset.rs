@@ -1,4 +1,4 @@
-use std::{fmt::Debug, ops::Deref};
+use std::ops::Deref;
 
 use amethyst_error::Error;
 #[cfg(feature = "profiler")]

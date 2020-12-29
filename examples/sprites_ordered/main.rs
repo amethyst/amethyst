@@ -1,11 +1,4 @@
-//! Demonstrates sprite z ordering
-//!
-//! Sprites are originally from <https://opengameart.org/content/bat-32x32>, edited to show
-//! layering and blending.
-
-mod sprite;
-mod sprite_sheet_loader;
-
+//! Demonstrates sprite loading and z ordering
 use amethyst::{
     assets::{DefaultLoader, Handle, Loader},
     core::{
@@ -26,9 +19,8 @@ use amethyst::{
     winit::event::VirtualKeyCode,
 };
 use amethyst_assets::{LoaderBundle, ProcessingQueue};
+use amethyst_rendy::sprite::{SpriteGrid, Sprites};
 use log::info;
-
-use crate::sprite::SpriteSheetDefinition;
 
 const SPRITE_SPACING_RATIO: f32 = 0.7;
 
@@ -323,15 +315,30 @@ fn load_sprite_sheet(resources: &Resources) -> LoadedSpriteSheet {
     let texture_handle = { loader.load("texture/arrow_semi_transparent.png") };
     let sprite_w = 32;
     let sprite_h = 32;
-    let sprite_sheet_definition = SpriteSheetDefinition::new(sprite_w, sprite_h, 2, 6, false);
 
-    let sprite_sheet = sprite_sheet_loader::load(texture_handle, &sprite_sheet_definition);
-    let sprite_count = sprite_sheet.sprites.len() as u32;
+    let grid = SpriteGrid {
+        texture_width: sprite_w * 6,
+        texture_height: sprite_h * 2,
+        columns: 6,
+        rows: None,
+        sprite_count: None,
+        cell_size: None,
+        position: None,
+    };
+    let sprite_count = grid.sprite_count();
 
     let sprite_sheet_handle = {
         let loader = resources.get::<DefaultLoader>().unwrap();
+        let sprites = loader.load_from_data(
+            Sprites::Grid(grid),
+            (),
+            &resources.get::<ProcessingQueue<Sprites>>().unwrap(),
+        );
         loader.load_from_data(
-            sprite_sheet,
+            SpriteSheet {
+                sprites,
+                texture: texture_handle,
+            },
             (),
             &resources.get::<ProcessingQueue<SpriteSheet>>().unwrap(),
         )

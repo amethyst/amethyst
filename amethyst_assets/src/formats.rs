@@ -2,7 +2,6 @@ use std::marker::PhantomData;
 
 use amethyst_error::{format_err, Error, ResultExt};
 use serde::{Deserialize, Serialize};
-use type_uuid::TypeUuid;
 
 use crate::Format;
 

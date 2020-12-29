@@ -261,8 +261,8 @@ name = "prefab"
 # [[example]]
 # name = "spotlights"
 
-# [[example]]
-# name = "sprite_camera_follow"
+[[example]]
+name = "sprite_camera_follow"
 
 # [[example]]
 # name = "auto_fov"
