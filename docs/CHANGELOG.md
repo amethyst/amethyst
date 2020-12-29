@@ -18,9 +18,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Make `TextEditingPrefab` public ([#2492])
 - Replace `clipboard` crate with `copypasta` (see #2438)
 - Make ui a default but optional feature ([#2490])
+- Fixed frustum culling when using user-defined BoundingSpheres ([#2565])
 
 ### Fixed
 
+[#2565]: https://github.com/amethyst/amethyst/pull/2565
 [#2489]: https://github.com/amethyst/amethyst/pull/2489
 [#2492]: https://github.com/amethyst/amethyst/pull/2492
 
