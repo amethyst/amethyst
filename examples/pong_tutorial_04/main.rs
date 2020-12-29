@@ -4,6 +4,7 @@ mod pong;
 mod systems;
 
 use amethyst::{
+    assets::LoaderBundle,
     core::transform::TransformBundle,
     input::InputBundle,
     prelude::*,
@@ -31,6 +32,7 @@ fn main() -> amethyst::Result<()> {
 
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher
+        .add_bundle(LoaderBundle)
         // Add the transform bundle which handles tracking entity positions
         .add_bundle(TransformBundle)
         .add_bundle(InputBundle::new().with_bindings_from_file(

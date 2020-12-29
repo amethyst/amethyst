@@ -1,6 +1,6 @@
 #![allow(clippy::default_trait_access)]
 //! GPU POD data types.
-use amethyst_assets::{AssetStorage, Handle};
+use amethyst_assets::{AssetHandle, AssetStorage, Handle};
 use amethyst_core::math::Point3;
 use amethyst_rendy::{
     pod::IntoPod,
@@ -90,7 +90,7 @@ impl TileArgs {
         tint: Option<&TintComponent>,
         tile_coordinate: &Point3<u32>,
     ) -> Option<(Self, &'a Handle<Texture>)> {
-        if !tex_storage.contains(&sprite_sheet.texture) {
+        if !tex_storage.contains(sprite_sheet.texture.load_handle()) {
             return None;
         }
 

@@ -28,8 +28,8 @@ prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff
 serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0" }
 
 [features]
-default = ["parallel", "renderer"]
-optional = ["audio", "network", "locale", "ui", "utils"]
+default = ["parallel", "renderer", "utils"]
+optional = ["audio", "network", "locale", "ui"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
@@ -74,11 +74,7 @@ parallel = ["amethyst_core/parallel"]
 
 [workspace]
 members = ["amethyst_*"]
-exclude = [
-    "amethyst_gltf",
-    "amethyst_animation",
-    "amethyst_test",
-]
+exclude = ["amethyst_gltf", "amethyst_animation", "amethyst_test"]
 
 [dependencies]
 #amethyst_animation = { path = "amethyst_animation", version = "0.15.3", optional = true }
@@ -112,7 +108,11 @@ thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"
 glsl-layout = "0.3.2"
 # until https://github.com/amethyst/legion/pull/186 passed
-legion = { version = "0.3", default-features = false, features = ["serialize", "crossbeam-events", "codegen"] }
+legion = { version = "0.3", default-features = false, features = [
+    "serialize",
+    "crossbeam-events",
+    "codegen",
+] }
 
 [dev-dependencies]
 rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }

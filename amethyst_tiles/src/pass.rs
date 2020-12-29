@@ -3,7 +3,7 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::{AssetStorage, Handle};
+use amethyst_assets::{AssetHandle, AssetStorage, Handle};
 use amethyst_core::{
     dispatcher::{System, ThreadLocalSystem},
     ecs::{component, world::World, IntoQuery, Resources, TryRead},
@@ -220,7 +220,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 .sprite_sheet
                 .as_ref()
                 .and_then(|handle| sprite_sheet_storage.get(handle))
-                .filter(|sheet| tex_storage.contains(&sheet.texture));
+                .filter(|sheet| tex_storage.contains(sheet.texture.load_handle()));
 
             let sprite_sheet = match maybe_sheet {
                 Some(sheet) => sheet,

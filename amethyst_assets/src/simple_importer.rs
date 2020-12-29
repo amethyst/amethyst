@@ -108,7 +108,7 @@ pub fn get_source_importers(
 /// # Examples
 ///
 /// ```rust,ignore
-/// amethyst_assets::register_importer!(".ron", Ron);
+/// amethyst_assets::register_importer!(".ron", RonFormat<SpriteSheet>);
 /// ```
 #[macro_export]
 macro_rules! register_importer {

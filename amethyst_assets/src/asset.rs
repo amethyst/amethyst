@@ -48,7 +48,7 @@ impl<T: Asset<Data = T>> ProcessableAsset for T {
 /// The format type itself represents loading options, which are passed to `import`.
 /// E.g. for textures this would be stuff like mipmap levels and
 /// sampler info.
-pub trait Format<D: 'static>: objekt::Clone + Debug + Send + Sync + 'static {
+pub trait Format<D: 'static>: objekt::Clone + Send + Sync + 'static {
     /// A unique identifier for this format.
     fn name(&self) -> &'static str;
 

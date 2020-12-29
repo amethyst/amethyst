@@ -4,6 +4,7 @@ mod pong;
 mod systems;
 
 use amethyst::{
+    assets::LoaderBundle,
     core::transform::TransformBundle,
     input::InputBundle,
     prelude::*,
@@ -13,14 +14,15 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
+    ui::{RenderUi, UiBundle},
     utils::application_root_dir,
 };
-use amethyst_ui::{RenderUi, UiBundle};
-use systems::{bounce::BounceSystem, move_balls::BallSystem};
 
 use crate::{
     pong::Pong,
-    systems::{paddle::PaddleSystem, winner::WinnerSystem},
+    systems::{
+        bounce::BounceSystem, move_balls::BallSystem, paddle::PaddleSystem, winner::WinnerSystem,
+    },
 };
 
 fn main() -> amethyst::Result<()> {
@@ -35,6 +37,7 @@ fn main() -> amethyst::Result<()> {
 
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher
+        .add_bundle(LoaderBundle)
         // Add the transform bundle which handles tracking entity positions
         .add_bundle(TransformBundle)
         .add_bundle(InputBundle::new().with_bindings_from_file(

@@ -23,7 +23,7 @@ use crate::{
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::SpriteArgs,
     resources::Tint,
-    sprite::{SpriteRender, SpriteSheet},
+    sprite::{SpriteRender, SpriteSheet, Sprites},
     sprite_visibility::SpriteVisibility,
     submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
     system::GraphAuxData,
@@ -108,11 +108,13 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
 
         let GraphAuxData { world, resources } = aux;
 
-        let (sprite_sheet_storage, tex_storage, visibility) = <(
-            Read<AssetStorage<SpriteSheet>>,
-            Read<AssetStorage<Texture>>,
-            Read<SpriteVisibility>,
-        )>::fetch(resources);
+        let (sprite_sheet_storage, sprites_storage, tex_storage, visibility) =
+            <(
+                Read<AssetStorage<SpriteSheet>>,
+                Read<AssetStorage<Sprites>>,
+                Read<AssetStorage<Texture>>,
+                Read<SpriteVisibility>,
+            )>::fetch(resources);
 
         self.env.process(factory, index, world, resources);
 
@@ -136,6 +138,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
                         SpriteArgs::from_data(
                             &tex_storage,
                             &sprite_sheet_storage,
+                            &sprites_storage,
                             &sprite_render,
                             &global,
                             Some(&tint),
@@ -144,6 +147,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
                         SpriteArgs::from_data(
                             &tex_storage,
                             &sprite_sheet_storage,
+                            &sprites_storage,
                             &sprite_render,
                             &global,
                             None,
@@ -293,11 +297,13 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
 
         let GraphAuxData { world, resources } = aux;
 
-        let (sprite_sheet_storage, tex_storage, visibility) = <(
-            Read<AssetStorage<SpriteSheet>>,
-            Read<AssetStorage<Texture>>,
-            Read<SpriteVisibility>,
-        )>::fetch(resources);
+        let (sprite_sheet_storage, sprites_storage, tex_storage, visibility) =
+            <(
+                Read<AssetStorage<SpriteSheet>>,
+                Read<AssetStorage<Sprites>>,
+                Read<AssetStorage<Texture>>,
+                Read<SpriteVisibility>,
+            )>::fetch(resources);
 
         self.env.process(factory, index, world, resources);
 
@@ -322,6 +328,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
                         SpriteArgs::from_data(
                             &tex_storage,
                             &sprite_sheet_storage,
+                            &sprites_storage,
                             &sprite_render,
                             &global,
                             Some(&tint),
@@ -330,6 +337,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
                         SpriteArgs::from_data(
                             &tex_storage,
                             &sprite_sheet_storage,
+                            &sprites_storage,
                             &sprite_render,
                             &global,
                             None,

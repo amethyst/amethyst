@@ -1,16 +1,15 @@
 //! 2D Sprite Rendering implementation details.
-use amethyst_assets::{Asset, Format, Handle};
+use amethyst_assets::{
+    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format, Handle, RonFormat,
+};
 use amethyst_error::Error;
 use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
-use type_uuid::TypeUuid;
+use type_uuid::{external_type_uuid, TypeUuid};
 
 use crate::{error, types::Texture};
 
 // pub mod prefab;
-
-/// An asset handle to sprite sheet metadata.
-pub type SpriteSheetHandle = Handle<SpriteSheet>;
 
 /// Meta data for a sprite sheet texture.
 ///
@@ -21,7 +20,7 @@ pub struct SpriteSheet {
     /// `Texture` handle of the spritesheet texture
     pub texture: Handle<Texture>,
     /// A list of sprites in this sprite sheet.
-    pub sprites: Vec<Sprite>,
+    pub sprites: Handle<Sprites>,
 }
 
 impl Asset for SpriteSheet {
@@ -288,7 +287,8 @@ pub struct SpriteGrid {
 }
 
 /// Defined the sprites that are part of a `SpriteSheetPrefab`.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
+#[uuid = "04c60333-c790-4586-aa76-086b19167a04"]
 pub enum Sprites {
     /// A list of sprites
     List(SpriteList),
@@ -296,8 +296,15 @@ pub enum Sprites {
     Grid(SpriteGrid),
 }
 
+impl Asset for Sprites {
+    fn name() -> &'static str {
+        "renderer::Sprites"
+    }
+    type Data = Self;
+}
+
 impl Sprites {
-    fn build_sprites(&self) -> Vec<Sprite> {
+    pub fn build_sprites(&self) -> Vec<Sprite> {
         match self {
             Sprites::List(list) => list.build_sprites(),
             Sprites::Grid(grid) => grid.build_sprites(),
@@ -479,22 +486,23 @@ impl SpriteGrid {
 /// );
 /// # }
 /// ```
-#[derive(Clone, Debug)]
-pub struct SpriteSheetFormat(pub Handle<Texture>);
+#[derive(Clone, Default, Debug, TypeUuid, Serialize, Deserialize)]
+#[uuid = "a0ec25ac-ed95-47d2-a093-696652bbec30"]
+pub struct SpriteSheetFormat(pub RonFormat<SpriteSheet>);
 
-impl Format<SpriteSheet> for SpriteSheetFormat {
+register_importer!(".ron", SpriteSheetFormat);
+register_asset_type!(Sprites => Sprites; AssetProcessorSystem<Sprites>);
+
+impl Format<Sprites> for SpriteSheetFormat {
     fn name(&self) -> &'static str {
         "SPRITE_SHEET"
     }
 
-    fn import_simple(&self, bytes: Vec<u8>) -> Result<SpriteSheet, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<Sprites, Error> {
         let sprites: Sprites =
             from_ron_bytes(&bytes).map_err(error::Error::LoadSpritesheetError)?;
 
-        Ok(SpriteSheet {
-            texture: self.0.clone(),
-            sprites: sprites.build_sprites(),
-        })
+        Ok(sprites)
     }
 }
 

@@ -27,6 +27,7 @@ use amethyst_rendy::{
     },
     resources::Tint,
     simple_shader_set,
+    sprite::Sprites,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
     system::GraphAuxData,
     types::{Backend, Texture, TextureData},
@@ -552,7 +553,9 @@ fn render_image<B: Backend>(
         UiImage::Sprite(sprite_renderer) => {
             let sprite_sheets = aux.resources.get::<AssetStorage<SpriteSheet>>().unwrap();
             if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
-                let tex_coord = &sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords;
+                let sprites_storage = aux.resources.get::<AssetStorage<Sprites>>().unwrap();
+                let sprites = sprites_storage.get(&sprite_sheet.sprites).unwrap();
+                let tex_coord = &sprites.build_sprites()[sprite_renderer.sprite_number].tex_coords;
                 [
                     tex_coord.left,
                     tex_coord.top,

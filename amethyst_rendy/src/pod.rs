@@ -13,7 +13,7 @@ use rendy::{
 use crate::{
     mtl,
     resources::Tint as TintComponent,
-    sprite::{SpriteRender, SpriteSheet},
+    sprite::{SpriteRender, SpriteSheet, Sprites},
     types::Texture,
 };
 
@@ -345,6 +345,7 @@ impl SpriteArgs {
     pub fn from_data<'a>(
         tex_storage: &AssetStorage<Texture>,
         sprite_storage: &'a AssetStorage<SpriteSheet>,
+        sprites_storage: &'a AssetStorage<Sprites>,
         sprite_render: &SpriteRender,
         transform: &Transform,
         tint: Option<&TintComponent>,
@@ -354,7 +355,8 @@ impl SpriteArgs {
             return None;
         }
 
-        let sprite = &sprite_sheet.sprites[sprite_render.sprite_number];
+        let sprites = sprites_storage.get(&sprite_sheet.sprites)?;
+        let sprite = &sprites.build_sprites()[sprite_render.sprite_number];
 
         let transform = convert::<_, Matrix4<f32>>(*transform.global_matrix());
         let dir_x = transform.column(0) * sprite.width;
