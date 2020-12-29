@@ -1,5 +1,8 @@
 use std::collections::HashSet;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     ecs::*,
     transform::{Children, Parent},

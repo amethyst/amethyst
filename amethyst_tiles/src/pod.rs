@@ -1,6 +1,6 @@
 #![allow(clippy::default_trait_access)]
 //! GPU POD data types.
-use amethyst_assets::{AssetHandle, AssetStorage, Handle};
+
 use amethyst_core::math::Point3;
 use amethyst_rendy::{
     pod::IntoPod,
@@ -9,8 +9,7 @@ use amethyst_rendy::{
         mesh::{AsVertex, VertexFormat},
     },
     resources::Tint as TintComponent,
-    sprite::SpriteSheet,
-    Sprite, Texture,
+    Sprite,
 };
 use glsl_layout::{mat4, uvec3, vec2, vec4, AsStd140};
 
@@ -81,7 +80,7 @@ impl TileArgs {
     /// * `sprite_number` - The number index of the sprite in the sprite sheet.
     /// * `tint` - An optional `TintComponent` reference for tinting this tile, if applicable.
     /// * `tile_coordinate` - The  Point3<u32> position of this tile (in Tile Coordinate Space)
-    pub fn from_data<'a>(
+    #[must_use] pub fn from_data<'a>(
         sprites: &'a [Sprite],
         sprite_number: usize,
         tint: Option<&TintComponent>,

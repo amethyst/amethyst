@@ -27,13 +27,12 @@ impl System<'static> for CameraMovementSystem {
                             .as_ref()
                             .and_then(|active_camera| {
                                 query.get_mut(world, *active_camera).ok().map(|(_, c)| c)
-                            })
-                            .or_else(|| None);
+                            }).or(None);
 
                         // Return active camera or fetch first available
                         let camera_transform = match camera_transform {
                             Some(e) => Some(e),
-                            None => query.iter_mut(world).nth(0).map(|(_, t)| t),
+                            None => query.iter_mut(world).next().map(|(_, t)| t),
                         };
 
                         if let Some(camera_transform) = camera_transform {

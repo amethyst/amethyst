@@ -1,13 +1,9 @@
 //! 2D Sprite Rendering implementation details.
-use amethyst_assets::{
-    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format, Handle, RonFormat,
-};
-use amethyst_error::Error;
-use ron::de::from_bytes as from_ron_bytes;
+use amethyst_assets::{register_asset_type, Asset, AssetProcessorSystem, Handle};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
-use crate::{error, types::Texture};
+use crate::types::Texture;
 
 // pub mod prefab;
 
@@ -497,8 +493,8 @@ register_asset_type!(Sprites => Sprites; AssetProcessorSystem<Sprites>);
 mod test {
     use amethyst_assets::Handle;
 
-    use super::{Sprite, SpritesFormat, TextureCoordinates};
-    use crate::types::Texture;
+    use super::{Sprite, TextureCoordinates};
+    use crate::{sprite::Sprites, types::Texture};
 
     #[test]
     fn texture_coordinates_from_tuple_maps_fields_correctly() {
@@ -600,9 +596,7 @@ mod test {
     }
     #[test]
     fn sprite_sheet_loader_list() {
-        use amethyst_assets::Format;
-
-        let sprite_sheet_ron: String = "
+        let sprite_sheet_ron = "
 #![enable(implicit_some)]
 List((
     texture_width: 48,
@@ -622,7 +616,7 @@ List((
         ),
     ],
 ))"
-        .to_string();
+        .as_bytes();
 
         let sprite_list_reference: Vec<Sprite> = vec![
             Sprite {
@@ -649,17 +643,15 @@ List((
             },
         ];
 
-        let format = SpritesFormat;
-        let sprite_list_loaded = format.import_simple(sprite_sheet_ron.into_bytes());
+        use ron::de::from_bytes as from_ron_bytes;
+        let sprite_list_loaded: Result<Sprites, _> = from_ron_bytes(sprite_sheet_ron);
         let sprite_list = sprite_list_loaded.unwrap().build_sprites();
         assert_eq!(sprite_list_reference, sprite_list);
     }
 
     #[test]
     fn sprite_sheet_loader_grid() {
-        use amethyst_assets::Format;
-
-        let sprite_sheet_ron_rows: String = "
+        let sprite_sheet_ron_rows = "
 #![enable(implicit_some)]
 Grid((
     texture_width: 48,
@@ -669,7 +661,7 @@ Grid((
 ))"
         .to_string();
 
-        let sprite_sheet_ron_cells: String = "
+        let sprite_sheet_ron_cells = "
 #![enable(implicit_some)]
 Grid((
     texture_width: 48,
@@ -679,7 +671,7 @@ Grid((
 ))"
         .to_string();
 
-        let sprite_sheet_ron_cell_size: String = "
+        let sprite_sheet_ron_cell_size = "
 #![enable(implicit_some)]
 Grid((
     texture_width: 48,
@@ -714,9 +706,11 @@ Grid((
             },
         ];
         let texture = create_texture();
-        let format = SpritesFormat;
         {
-            let sprite_list_loaded = format.import_simple(sprite_sheet_ron_rows.into_bytes());
+            use ron::de::from_bytes as from_ron_bytes;
+            let sprite_list_loaded: Result<Sprites, _> =
+                from_ron_bytes(sprite_sheet_ron_rows.as_bytes());
+
             let sprite_list = sprite_list_loaded
                 .expect("failed to parse sprite_sheet_ron_rows")
                 .build_sprites();
@@ -726,7 +720,10 @@ Grid((
             );
         }
         {
-            let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cells.into_bytes());
+            use ron::de::from_bytes as from_ron_bytes;
+            let sprite_list_loaded: Result<Sprites, _> =
+                from_ron_bytes(sprite_sheet_ron_cells.as_bytes());
+
             let sprite_list = sprite_list_loaded
                 .expect("failed to parse sprite_sheet_ron_cells")
                 .build_sprites();
@@ -736,7 +733,10 @@ Grid((
             );
         }
         {
-            let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cell_size.into_bytes());
+            use ron::de::from_bytes as from_ron_bytes;
+            let sprite_list_loaded: Result<Sprites, _> =
+                from_ron_bytes(sprite_sheet_ron_cell_size.as_bytes());
+
             let sprite_list = sprite_list_loaded
                 .expect("failed to parse sprite_sheet_ron_cell_size")
                 .build_sprites();

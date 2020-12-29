@@ -1,21 +1,13 @@
-use std::{thread::sleep, time::Duration};
-
 use amethyst::{
-    assets::{
-        Asset, AssetStorage, Format, Handle, Loader, ProcessingState, ProgressCounter, Source,
-        TypeUuid,
-    },
-    error::{format_err, Error, ResultExt},
+    assets::{Asset, AssetStorage, Format, Handle, Loader, TypeUuid},
+    error::Error,
     prelude::*,
     utils::application_root_dir,
 };
 use amethyst_assets::{
-    register_asset_type, register_importer, AssetProcessorSystem, DefaultLoader, LoaderBundle,
-    RonFormat,
+    register_asset_type, AssetProcessorSystem, DefaultLoader, LoaderBundle, RonFormat,
 };
 use amethyst_rendy::{types::DefaultBackend, RenderingBundle};
-use log::info;
-use ron::de::Deserializer;
 use serde::{Deserialize, Serialize};
 
 /// Custom asset representing an energy blast.

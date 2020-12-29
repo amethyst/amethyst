@@ -24,7 +24,6 @@ use crate::{
         create_default_mat, make_graph_aux_data, render, GraphAuxData, GraphCreator, RenderState,
     },
     types::{Backend, DefaultBackend, Mesh, Texture},
-    SpriteSheet,
 };
 
 /// A bundle of systems used for rendering using `Rendy` render graph.

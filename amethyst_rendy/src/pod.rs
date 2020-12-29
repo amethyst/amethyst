@@ -1,5 +1,5 @@
 //! GPU POD data types.
-use amethyst_assets::{AssetHandle, AssetStorage, Handle};
+
 use amethyst_core::{
     math::{convert, Matrix4, Vector4},
     transform::Transform,
@@ -13,8 +13,6 @@ use rendy::{
 use crate::{
     mtl,
     resources::Tint as TintComponent,
-    sprite::{SpriteRender, SpriteSheet, Sprites},
-    types::Texture,
     Sprite,
 };
 
