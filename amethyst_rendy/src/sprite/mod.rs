@@ -1,6 +1,6 @@
 //! 2D Sprite Rendering implementation details.
 use amethyst_assets::{
-    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format, Handle,
+    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format, Handle, RonFormat,
 };
 use amethyst_error::Error;
 use ron::de::from_bytes as from_ron_bytes;
@@ -288,8 +288,71 @@ pub struct SpriteGrid {
     pub position: Option<(u32, u32)>,
 }
 
-/// Defined the sprites that are part of a `SpriteSheetPrefab`.
-#[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
+use amethyst_assets::{
+    atelier_importer,
+    atelier_importer::{typetag, SerdeImportable},
+};
+
+/// Allows loading of sprite sheets in RON format.
+///
+/// This format allows to conveniently load a sprite sheet from a RON file.
+///
+/// Example:
+/// ```text,ignore
+/// #![enable(implicit_some)]
+/// {
+/// "04c60333-c790-4586-aa76-086b19167a04":
+/// List((
+///     // Width of the texture
+///     texture_width: 48,
+///     // Height of the texture
+///     texture_height: 16,
+///     // List of sprites the sheet holds
+///     sprites: [
+///         (
+///             // Horizontal position of the sprite in the sprite sheet
+///             x: 0,
+///             // Vertical position of the sprite in the sprite sheet
+///             y: 0,
+///             // Width of the sprite
+///             width: 16,
+///             // Height of the sprite
+///             height: 16,
+///             // Number of pixels to shift the sprite to the left and down relative to the
+///             // entity holding it when rendering
+///             offsets: (0.0, 0.0), // This is optional and defaults to (0.0, 0.0)
+///         ),
+///         (
+///             x: 16,
+///             y: 0,
+///             width: 32,
+///             height: 16,
+///         ),
+///     ],
+/// ))
+///}
+/// ```
+///
+/// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
+/// ```rust,no_run
+/// # use amethyst_core::ecs::{World, WorldExt};
+/// # use amethyst_assets::{Loader, AssetStorage};
+/// # use amethyst_rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
+/// #
+/// # fn load_sprite_sheet() {
+/// #   let world = World::default(); // Normally, you would use Amethyst's world
+/// #   let loader = data.resources.get::<DefaultLoader>().unwrap();
+/// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
+/// let texture = loader.load(
+///     "my_texture.png",
+/// );
+/// let sprites = loader.load(
+///     "my_spritesheet.ron",
+/// );
+/// let spritesheet_handle = loader.load_from_data(SpriteSheet { texture, sprites }, (), &spritesheet_storage)
+/// # }
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize, TypeUuid, SerdeImportable)]
 #[uuid = "04c60333-c790-4586-aa76-086b19167a04"]
 pub enum Sprites {
     /// A list of sprites
@@ -428,81 +491,7 @@ impl SpriteGrid {
     }
 }
 
-/// Allows loading of sprite sheets in RON format.
-///
-/// This format allows to conveniently load a sprite sheet from a RON file.
-///
-/// Example:
-/// ```text,ignore
-/// #![enable(implicit_some)]
-/// List((
-///     // Width of the texture
-///     texture_width: 48,
-///     // Height of the texture
-///     texture_height: 16,
-///     // List of sprites the sheet holds
-///     sprites: [
-///         (
-///             // Horizontal position of the sprite in the sprite sheet
-///             x: 0,
-///             // Vertical position of the sprite in the sprite sheet
-///             y: 0,
-///             // Width of the sprite
-///             width: 16,
-///             // Height of the sprite
-///             height: 16,
-///             // Number of pixels to shift the sprite to the left and down relative to the
-///             // entity holding it when rendering
-///             offsets: (0.0, 0.0), // This is optional and defaults to (0.0, 0.0)
-///         ),
-///         (
-///             x: 16,
-///             y: 0,
-///             width: 32,
-///             height: 16,
-///         ),
-///     ],
-/// ))
-/// ```
-///
-/// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
-/// ```rust,no_run
-/// # use amethyst_core::ecs::{World, WorldExt};
-/// # use amethyst_assets::{Loader, AssetStorage};
-/// # use amethyst_rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
-/// #
-/// # fn load_sprite_sheet() {
-/// #   let world = World::default(); // Normally, you would use Amethyst's world
-/// #   let loader = data.resources.get::<DefaultLoader>().unwrap();
-/// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
-/// let texture = loader.load(
-///     "my_texture.png",
-/// );
-/// let sprites = loader.load(
-///     "my_spritesheet.ron",
-/// );
-/// let spritesheet_handle = loader.load_from_data(SpriteSheet { texture, sprites }, (), &spritesheet_storage)
-/// # }
-/// ```
-#[derive(Clone, Default, Debug, TypeUuid, Serialize, Deserialize)]
-#[uuid = "a0ec25ac-ed95-47d2-a093-696652bbec30"]
-pub struct SpritesFormat;
-
-register_importer!(".ron", SpritesFormat);
 register_asset_type!(Sprites => Sprites; AssetProcessorSystem<Sprites>);
-
-impl Format<Sprites> for SpritesFormat {
-    fn name(&self) -> &'static str {
-        "SPRITE_SHEET"
-    }
-
-    fn import_simple(&self, bytes: Vec<u8>) -> Result<Sprites, Error> {
-        let sprites: Sprites =
-            from_ron_bytes(&bytes).map_err(error::Error::LoadSpritesheetError)?;
-
-        Ok(sprites)
-    }
-}
 
 #[cfg(test)]
 mod test {

@@ -102,7 +102,7 @@ pub use crate::{
     formats::texture::ImageFormat,
     mtl::{Material, MaterialDefaults},
     plugins::*,
-    sprite::{Sprite, SpriteRender, SpriteSheet, SpritesFormat},
+    sprite::{Sprite, SpriteRender, SpriteSheet},
     system::{GraphCreator, MeshProcessorSystem, TextureProcessorSystem},
     transparent::Transparent,
     types::{Backend, Mesh, Texture},
