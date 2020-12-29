@@ -5,13 +5,15 @@ use amethyst::{
     utils::application_root_dir,
 };
 use amethyst_assets::{
+    atelier_importer,
+    atelier_importer::{typetag, SerdeImportable},
     register_asset_type, AssetProcessorSystem, DefaultLoader, LoaderBundle, RonFormat,
 };
 use amethyst_rendy::{types::DefaultBackend, RenderingBundle};
 use serde::{Deserialize, Serialize};
 
 /// Custom asset representing an energy blast.
-#[derive(Clone, Debug, Default, Deserialize, Serialize, TypeUuid)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, TypeUuid, SerdeImportable)]
 #[uuid = "a016abff-623d-48cf-a6e4-e76e069fe843"]
 pub struct EnergyBlast {
     /// How much HP to subtract.
@@ -54,7 +56,7 @@ register_asset_type!(EnergyBlast => EnergyBlast; AssetProcessorSystem<EnergyBlas
 impl SimpleState for LoadingState {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let loader = data.resources.get::<DefaultLoader>().unwrap();
-        self.energy_blast_handle = Some(loader.load("energy_blast.mylang"));
+        self.energy_blast_handle = Some(loader.load("energy_blast.ron"));
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {

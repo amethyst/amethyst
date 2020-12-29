@@ -364,6 +364,8 @@ impl Asset for Sprites {
     type Data = Self;
 }
 
+register_asset_type!(Sprites => Sprites; AssetProcessorSystem<Sprites>);
+
 impl Sprites {
     /// returns sprites in this sheet as an indexable Vec
     pub fn build_sprites(&self) -> Vec<Sprite> {
@@ -486,8 +488,6 @@ impl SpriteGrid {
             .collect()
     }
 }
-
-register_asset_type!(Sprites => Sprites; AssetProcessorSystem<Sprites>);
 
 #[cfg(test)]
 mod test {
