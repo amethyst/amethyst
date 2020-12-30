@@ -1,7 +1,7 @@
 //! Basic shape prefabs.
 use std::marker::PhantomData;
 
-use amethyst_assets::{AssetStorage, Handle, Loader, Progress};
+use amethyst_assets::{DefaultLoader, Handle, Loader, ProcessingQueue, Progress};
 use amethyst_core::math::Vector3;
 use genmesh::{
     generators::{
@@ -14,8 +14,7 @@ use rendy::mesh::{
     MeshBuilder, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Tangent, TexCoord,
 };
 
-use crate::types::Mesh;
-
+use crate::types::{Mesh, MeshData};
 fn option_none<T>() -> Option<T> {
     None
 }
@@ -110,8 +109,8 @@ pub enum Shape {
 /// Required resource access to upload shape
 #[allow(missing_debug_implementations)]
 pub struct ShapeUpload<'a> {
-    loader: &'a Loader,
-    storage: &'a mut AssetStorage<Mesh>,
+    loader: &'a DefaultLoader,
+    storage: &'a mut ProcessingQueue<MeshData>,
 }
 
 /// Vertex data for a basic shape.

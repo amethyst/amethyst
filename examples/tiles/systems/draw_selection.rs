@@ -47,14 +47,14 @@ impl System<'static> for DrawSelectionSystem {
                                             .ok()
                                             .map(|(_, c, t)| (c, t))
                                     })
-                                    .or_else(|| None);
+                                    .or(None);
 
                                 // Return active camera or fetch first available
                                 let camera_transform = match camera_transform {
                                     Some(e) => Some(e),
                                     None => camera_query
                                         .iter_mut(&mut subworld)
-                                        .nth(0)
+                                        .next()
                                         .map(|(_, c, t)| (c, t)),
                                 };
 

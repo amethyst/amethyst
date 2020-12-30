@@ -15,36 +15,45 @@
 
 pub use rayon::ThreadPool;
 
-#[cfg(feature = "json")]
-pub use crate::formats::JsonFormat;
-pub use crate::{
-    asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
-    cache::Cache,
-    dyn_format::FormatRegisteredData,
-    formats::RonFormat,
-    loader::Loader,
-    progress::{Completion, Progress, ProgressCounter, Tracker},
-    reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
-    source::{Directory, Source},
-    storage::{AssetProcessorSystemBundle, AssetStorage, Handle, ProcessingState, WeakHandle},
-};
-
 mod asset;
+mod bundle;
 mod cache;
-mod dyn_format;
-mod error;
+/// asset loading specific errors
+pub mod error;
 mod formats;
 mod loader;
-// FIXME: new prefab system
-// mod prefab;
+/// helpers for registering prefab components
+pub mod prefab;
+mod processor;
 mod progress;
-mod reload;
+mod simple_importer;
 mod source;
 mod storage;
 
+pub use atelier_assets::{
+    importer as atelier_importer,
+    loader::{
+        handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
+        storage::LoadHandle,
+    },
+};
+pub use type_uuid::TypeUuid;
 // used in macros. Private API otherwise.
 #[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};
 
 #[doc(hidden)]
-pub use crate::dyn_format::{DeserializeFn, Registry};
+#[cfg(feature = "json")]
+pub use crate::formats::JsonFormat;
+pub use crate::{
+    asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
+    bundle::{start_asset_daemon, LoaderBundle},
+    cache::Cache,
+    formats::RonFormat,
+    loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
+    processor::{AssetProcessorSystem, ProcessingQueue, ProcessingState},
+    progress::{Completion, Progress, ProgressCounter, Tracker},
+    simple_importer::{SimpleImporter, SourceFileImporter},
+    source::{Directory, Source},
+    storage::AssetStorage,
+};

@@ -1,29 +1,30 @@
 //! 2D Sprite Rendering implementation details.
-use amethyst_assets::{Asset, Format, Handle};
-use amethyst_error::Error;
-use ron::de::from_bytes as from_ron_bytes;
+use amethyst_assets::{register_asset_type, Asset, AssetProcessorSystem, Handle};
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
-use crate::{error, types::Texture};
+use crate::types::Texture;
 
 // pub mod prefab;
-
-/// An asset handle to sprite sheet metadata.
-pub type SpriteSheetHandle = Handle<SpriteSheet>;
 
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TypeUuid)]
+#[uuid = "93827d40-01bf-4aaa-b6c6-e9b1eb7e252b"]
 pub struct SpriteSheet {
     /// `Texture` handle of the spritesheet texture
     pub texture: Handle<Texture>,
     /// A list of sprites in this sprite sheet.
-    pub sprites: Vec<Sprite>,
+    pub sprites: Handle<Sprites>,
 }
 
+register_asset_type!(SpriteSheet => SpriteSheet; AssetProcessorSystem<SpriteSheet>);
+
 impl Asset for SpriteSheet {
-    const NAME: &'static str = "renderer::SpriteSheet";
+    fn name() -> &'static str {
+        "renderer::SpriteSheet"
+    }
     type Data = Self;
 }
 
@@ -283,8 +284,72 @@ pub struct SpriteGrid {
     pub position: Option<(u32, u32)>,
 }
 
-/// Defined the sprites that are part of a `SpriteSheetPrefab`.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+use amethyst_assets::{
+    atelier_importer,
+    atelier_importer::{typetag, SerdeImportable},
+};
+
+/// Allows loading of sprite sheets in RON format.
+///
+/// This format allows to conveniently load a sprite sheet from a RON file.
+///
+/// Example:
+/// ```text,ignore
+/// #![enable(implicit_some)]
+/// {
+/// "04c60333-c790-4586-aa76-086b19167a04":
+/// List((
+///     // Width of the texture
+///     texture_width: 48,
+///     // Height of the texture
+///     texture_height: 16,
+///     // List of sprites the sheet holds
+///     sprites: [
+///         (
+///             // Horizontal position of the sprite in the sprite sheet
+///             x: 0,
+///             // Vertical position of the sprite in the sprite sheet
+///             y: 0,
+///             // Width of the sprite
+///             width: 16,
+///             // Height of the sprite
+///             height: 16,
+///             // Number of pixels to shift the sprite to the left and down relative to the
+///             // entity holding it when rendering
+///             offsets: (0.0, 0.0), // This is optional and defaults to (0.0, 0.0)
+///         ),
+///         (
+///             x: 16,
+///             y: 0,
+///             width: 32,
+///             height: 16,
+///         ),
+///     ],
+/// ))
+///}
+/// ```
+///
+/// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
+/// ```rust,no_run
+/// # use amethyst_core::ecs::{World, WorldExt};
+/// # use amethyst_assets::{Loader, AssetStorage};
+/// # use amethyst_rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
+/// #
+/// # fn load_sprite_sheet() {
+/// #   let world = World::default(); // Normally, you would use Amethyst's world
+/// #   let loader = data.resources.get::<DefaultLoader>().unwrap();
+/// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
+/// let texture = loader.load(
+///     "my_texture.png",
+/// );
+/// let sprites = loader.load(
+///     "my_spritesheet.ron",
+/// );
+/// let spritesheet_handle = loader.load_from_data(SpriteSheet { texture, sprites }, (), &spritesheet_storage)
+/// # }
+/// ```
+#[derive(Debug, Clone, Serialize, Deserialize, TypeUuid, SerdeImportable)]
+#[uuid = "04c60333-c790-4586-aa76-086b19167a04"]
 pub enum Sprites {
     /// A list of sprites
     List(SpriteList),
@@ -292,8 +357,18 @@ pub enum Sprites {
     Grid(SpriteGrid),
 }
 
+impl Asset for Sprites {
+    fn name() -> &'static str {
+        "renderer::Sprites"
+    }
+    type Data = Self;
+}
+
+register_asset_type!(Sprites => Sprites; AssetProcessorSystem<Sprites>);
+
 impl Sprites {
-    fn build_sprites(&self) -> Vec<Sprite> {
+    /// returns sprites in this sheet as an indexable Vec
+    pub fn build_sprites(&self) -> Vec<Sprite> {
         match self {
             Sprites::List(list) => list.build_sprites(),
             Sprites::Grid(grid) => grid.build_sprites(),
@@ -349,7 +424,8 @@ impl SpriteGrid {
         })
     }
 
-    fn sprite_count(&self) -> u32 {
+    /// number of sprites in this sheet
+    pub fn sprite_count(&self) -> u32 {
         self.sprite_count
             .unwrap_or_else(|| self.columns * self.rows())
     }
@@ -413,93 +489,12 @@ impl SpriteGrid {
     }
 }
 
-/// Allows loading of sprite sheets in RON format.
-///
-/// This format allows to conveniently load a sprite sheet from a RON file.
-///
-/// Example:
-/// ```text,ignore
-/// #![enable(implicit_some)]
-/// List((
-///     // Width of the texture
-///     texture_width: 48,
-///     // Height of the texture
-///     texture_height: 16,
-///     // List of sprites the sheet holds
-///     sprites: [
-///         (
-///             // Horizontal position of the sprite in the sprite sheet
-///             x: 0,
-///             // Vertical position of the sprite in the sprite sheet
-///             y: 0,
-///             // Width of the sprite
-///             width: 16,
-///             // Height of the sprite
-///             height: 16,
-///             // Number of pixels to shift the sprite to the left and down relative to the
-///             // entity holding it when rendering
-///             offsets: (0.0, 0.0), // This is optional and defaults to (0.0, 0.0)
-///         ),
-///         (
-///             x: 16,
-///             y: 0,
-///             width: 32,
-///             height: 16,
-///         ),
-///     ],
-/// ))
-/// ```
-///
-/// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
-/// ```rust,no_run
-/// # use amethyst_core::ecs::{World, WorldExt};
-/// # use amethyst_assets::{Loader, AssetStorage};
-/// # use amethyst_rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
-/// #
-/// # fn load_sprite_sheet() {
-/// #   let world = World::new(); // Normally, you would use Amethyst's world
-/// #   let loader = data.resources.get::<Loader>().unwrap();
-/// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
-/// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();
-/// let texture_handle = loader.load(
-///     "my_texture.png",
-///     ImageFormat(Default::default()),
-///     (),
-///     &texture_storage,
-/// );
-/// let spritesheet_handle = loader.load(
-///     "my_spritesheet.ron",
-///     SpriteSheetFormat(texture_handle),
-///     (),
-///     &spritesheet_storage,
-/// );
-/// # }
-/// ```
-#[derive(Clone, Debug)]
-pub struct SpriteSheetFormat(pub Handle<Texture>);
-
-impl Format<SpriteSheet> for SpriteSheetFormat {
-    fn name(&self) -> &'static str {
-        "SPRITE_SHEET"
-    }
-
-    fn import_simple(&self, bytes: Vec<u8>) -> Result<SpriteSheet, Error> {
-        let sprites: Sprites =
-            from_ron_bytes(&bytes).map_err(error::Error::LoadSpritesheetError)?;
-
-        Ok(SpriteSheet {
-            texture: self.0.clone(),
-            sprites: sprites.build_sprites(),
-        })
-    }
-}
-
 #[cfg(test)]
 mod test {
     use amethyst_assets::Handle;
 
-    use super::{Sprite, SpriteSheetFormat, TextureCoordinates};
-    use crate::types::Texture;
+    use super::{Sprite, TextureCoordinates};
+    use crate::{sprite::Sprites, types::Texture};
 
     #[test]
     fn texture_coordinates_from_tuple_maps_fields_correctly() {
@@ -587,24 +582,21 @@ mod test {
     fn create_texture() -> Handle<Texture> {
         use std::sync::Arc;
 
-        use amethyst_assets::{AssetStorage, Loader};
+        use amethyst_assets::{DefaultLoader, Loader, ProcessingQueue};
         use rayon::ThreadPoolBuilder;
 
         use crate::formats::texture::TextureGenerator;
 
         let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
-        let loader = Loader::new("/examples/assets", pool);
+        let loader = DefaultLoader::default();
         let generator = TextureGenerator::Srgba(1.0, 1., 1., 1.);
 
-        let storage: AssetStorage<Texture> = AssetStorage::default();
-
+        let storage = ProcessingQueue::default();
         loader.load_from_data(generator.data(), (), &storage)
     }
     #[test]
     fn sprite_sheet_loader_list() {
-        use amethyst_assets::Format;
-
-        let sprite_sheet_ron: String = "
+        let sprite_sheet_ron = "
 #![enable(implicit_some)]
 List((
     texture_width: 48,
@@ -624,7 +616,7 @@ List((
         ),
     ],
 ))"
-        .to_string();
+        .as_bytes();
 
         let sprite_list_reference: Vec<Sprite> = vec![
             Sprite {
@@ -651,17 +643,15 @@ List((
             },
         ];
 
-        let format = SpriteSheetFormat(create_texture());
-        let sprite_list_loaded = format.import_simple(sprite_sheet_ron.into_bytes());
-        let sprite_list = sprite_list_loaded.unwrap().sprites;
+        use ron::de::from_bytes as from_ron_bytes;
+        let sprite_list_loaded: Result<Sprites, _> = from_ron_bytes(sprite_sheet_ron);
+        let sprite_list = sprite_list_loaded.unwrap().build_sprites();
         assert_eq!(sprite_list_reference, sprite_list);
     }
 
     #[test]
     fn sprite_sheet_loader_grid() {
-        use amethyst_assets::Format;
-
-        let sprite_sheet_ron_rows: String = "
+        let sprite_sheet_ron_rows = "
 #![enable(implicit_some)]
 Grid((
     texture_width: 48,
@@ -671,7 +661,7 @@ Grid((
 ))"
         .to_string();
 
-        let sprite_sheet_ron_cells: String = "
+        let sprite_sheet_ron_cells = "
 #![enable(implicit_some)]
 Grid((
     texture_width: 48,
@@ -681,7 +671,7 @@ Grid((
 ))"
         .to_string();
 
-        let sprite_sheet_ron_cell_size: String = "
+        let sprite_sheet_ron_cell_size = "
 #![enable(implicit_some)]
 Grid((
     texture_width: 48,
@@ -716,32 +706,40 @@ Grid((
             },
         ];
         let texture = create_texture();
-        let format = SpriteSheetFormat(texture);
         {
-            let sprite_list_loaded = format.import_simple(sprite_sheet_ron_rows.into_bytes());
+            use ron::de::from_bytes as from_ron_bytes;
+            let sprite_list_loaded: Result<Sprites, _> =
+                from_ron_bytes(sprite_sheet_ron_rows.as_bytes());
+
             let sprite_list = sprite_list_loaded
                 .expect("failed to parse sprite_sheet_ron_rows")
-                .sprites;
+                .build_sprites();
             assert_eq!(
                 sprite_list_reference, sprite_list,
                 "we are testing row based grids"
             );
         }
         {
-            let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cells.into_bytes());
+            use ron::de::from_bytes as from_ron_bytes;
+            let sprite_list_loaded: Result<Sprites, _> =
+                from_ron_bytes(sprite_sheet_ron_cells.as_bytes());
+
             let sprite_list = sprite_list_loaded
                 .expect("failed to parse sprite_sheet_ron_cells")
-                .sprites;
+                .build_sprites();
             assert_eq!(
                 sprite_list_reference, sprite_list,
                 "we are testing number of cell based grids"
             );
         }
         {
-            let sprite_list_loaded = format.import_simple(sprite_sheet_ron_cell_size.into_bytes());
+            use ron::de::from_bytes as from_ron_bytes;
+            let sprite_list_loaded: Result<Sprites, _> =
+                from_ron_bytes(sprite_sheet_ron_cell_size.as_bytes());
+
             let sprite_list = sprite_list_loaded
                 .expect("failed to parse sprite_sheet_ron_cell_size")
-                .sprites;
+                .build_sprites();
             assert_eq!(
                 sprite_list_reference, sprite_list,
                 "we are testing cell size based grids"

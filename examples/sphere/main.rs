@@ -14,14 +14,15 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::{AssetStorage, Loader};
+use amethyst_assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue};
 use amethyst_core::transform::Transform;
 use amethyst_rendy::{
     light::{Light, PointLight},
     loaders::load_from_linear_rgba,
     rendy::mesh::Tangent,
     shape::Shape,
-    Camera, Material, MaterialDefaults, Mesh, Texture,
+    types::{MeshData, TextureData},
+    Camera, Material, MaterialDefaults, Mesh,
 };
 use amethyst_window::ScreenDimensions;
 use palette::{LinSrgba, Srgb};
@@ -30,12 +31,15 @@ struct SphereExample;
 
 impl SimpleState for SphereExample {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let loader = data.resources.get::<Loader>().unwrap();
-        let mesh_storage = data.resources.get::<AssetStorage<Mesh>>().unwrap();
-        let tex_storage = data.resources.get::<AssetStorage<Texture>>().unwrap();
-        let mtl_storage = data.resources.get::<AssetStorage<Material>>().unwrap();
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
+        let mesh_storage = data.resources.get::<ProcessingQueue<MeshData>>().unwrap();
+        let tex_storage = data
+            .resources
+            .get::<ProcessingQueue<TextureData>>()
+            .unwrap();
+        let mtl_storage = data.resources.get::<ProcessingQueue<Material>>().unwrap();
 
-        let mesh = loader.load_from_data(
+        let mesh: Handle<Mesh> = loader.load_from_data(
             Shape::Sphere(64, 64)
                 .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(None)
                 .into(),
@@ -49,13 +53,13 @@ impl SimpleState for SphereExample {
             &tex_storage,
         );
 
-        let mtl = {
+        let mtl: Handle<Material> = {
             let mat_defaults = data.resources.get::<MaterialDefaults>().unwrap().0.clone();
 
             loader.load_from_data(
                 Material {
-                    albedo: albedo.clone(),
-                    ..mat_defaults.clone()
+                    albedo,
+                    ..mat_defaults
                 },
                 (),
                 &mtl_storage,
@@ -102,21 +106,30 @@ impl SimpleState for SphereExample {
 }
 
 fn main() -> amethyst::Result<()> {
+    amethyst::Logger::from_config(amethyst::LoggerConfig {
+        level_filter: log::LevelFilter::Debug,
+        ..Default::default()
+    })
+    .start();
+
     let app_root = application_root_dir()?;
 
     let display_config_path = app_root.join("examples/sphere/config/display.ron");
     let assets_dir = app_root.join("examples/sphere/assets");
 
     let mut game_data = DispatcherBuilder::default();
-    game_data.add_bundle(TransformBundle).add_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
-                    float32: [0.34, 0.36, 0.52, 1.0],
-                }),
-            )
-            .with_plugin(RenderShaded3D::default()),
-    );
+    game_data
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
+                )
+                .with_plugin(RenderShaded3D::default()),
+        );
     let game = Application::build(assets_dir, SphereExample)?.build(game_data)?;
     game.run();
     Ok(())

@@ -1,10 +1,12 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{DefaultLoader, Handle, Loader},
     core::{timing::Time, transform::Transform},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, SpriteRender, SpriteSheet, Texture},
 };
-use amethyst_ui::{Anchor, FontAsset, LineMode, TtfFormat, UiText, UiTransform};
+use amethyst_assets::ProcessingQueue;
+use amethyst_rendy::sprite::Sprites;
+use amethyst_ui::{Anchor, LineMode, UiText, UiTransform};
 
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
@@ -117,25 +119,21 @@ fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
     // `sprite_sheet` is the layout of the sprites on the image
     // `texture_handle` is a cloneable reference to the texture
 
-    let texture_handle = {
-        let loader = resources.get::<Loader>().unwrap();
-        let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        loader.load(
-            "texture/pong_spritesheet.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
+    let texture_handle: Handle<Texture> = {
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        loader.load("texture/pong_spritesheet.png")
     };
 
-    let loader = resources.get::<Loader>().unwrap();
-    let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
-    loader.load(
+    let loader = resources.get::<DefaultLoader>().unwrap();
+    let sprites: Handle<Sprites> = loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file
-        SpriteSheetFormat(texture_handle), // We pass it the texture we want it to use
-        (),
-        &sprite_sheet_store,
-    )
+    );
+    let sheet = SpriteSheet {
+        texture: texture_handle,
+        sprites,
+    };
+    let q = resources.get::<ProcessingQueue<SpriteSheet>>().unwrap();
+    loader.load_from_data(sheet, (), &q)
 }
 
 /// Initialise the camera.
@@ -168,11 +166,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
     ));
 
     // Create right plank entity.
-    world.push((
-        sprite_render.clone(),
-        Paddle::new(Side::Right),
-        right_transform,
-    ));
+    world.push((sprite_render, Paddle::new(Side::Right), right_transform));
 }
 
 /// Initialises one ball in the middle of the arena.
@@ -203,9 +197,8 @@ fn initialise_scoreboard(world: &mut World, resources: &mut Resources) {
     resources.insert(ScoreBoard::default());
 
     let font = {
-        let loader = resources.get::<Loader>().unwrap();
-        let font_store = resources.get::<AssetStorage<FontAsset>>().unwrap();
-        loader.load("font/square.ttf", TtfFormat, (), &font_store)
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        loader.load("font/square.ttf")
     };
 
     let p1_transform = UiTransform::new(
@@ -244,7 +237,7 @@ fn initialise_scoreboard(world: &mut World, resources: &mut Resources) {
     let p2_score = world.push((
         p2_transform,
         UiText::new(
-            font.clone(),
+            font,
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,

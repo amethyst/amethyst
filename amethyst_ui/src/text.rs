@@ -1,5 +1,6 @@
 //! Module holding the components related to text and text editing.
 
+use amethyst_assets::Handle;
 use amethyst_core::{
     ecs::*,
     shrev::{EventChannel, ReaderId},
@@ -35,7 +36,7 @@ pub struct UiText {
     pub color: [f32; 4],
     /// The font used for rendering.
     #[serde(skip)]
-    pub font: FontHandle,
+    pub font: Handle<FontAsset>,
     /// If true this will be rendered as dots instead of the text.
     pub password: bool,
     /// How the text should handle new lines.
@@ -66,7 +67,7 @@ impl UiText {
     /// * `line_mode`: Text mode allowing single line or multiple lines
     /// * `align`: Text alignment within its `UiTransform`
     pub fn new(
-        font: FontHandle,
+        font: Handle<FontAsset>,
         text: String,
         color: [f32; 4],
         font_size: f32,

@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Display};
 
 use serde::{Deserialize, Serialize};
 use shrinkwraprs::Shrinkwrap;
@@ -62,14 +62,20 @@ use shrinkwraprs::Shrinkwrap;
 /// ```
 #[derive(Shrinkwrap, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[shrinkwrap(mutable)]
-pub struct Named {
+pub struct Named(
     /// The name of the entity this component is attached to.
-    pub name: Cow<'static, str>,
+    pub Cow<'static, str>,
+);
+
+impl Display for Named {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }
 
 impl Named {
     /// Creates a new instance of `Named`
     pub fn new<T: Into<Cow<'static, str>>>(name: T) -> Self {
-        Named { name: name.into() }
+        Named(name.into())
     }
 }

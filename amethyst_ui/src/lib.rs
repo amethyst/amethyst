@@ -26,7 +26,7 @@ pub use self::{
         default::get_default_font,
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
     },
-    format::{FontAsset, FontHandle, TtfFormat},
+    format::{FontAsset, TtfFormat},
     glyphs::UiGlyphsSystem,
     image::UiImage,
     label::{UiLabel, UiLabelBuilder},

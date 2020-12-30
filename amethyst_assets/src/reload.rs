@@ -31,7 +31,10 @@ impl SystemBundle for HotReloadBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(self.strategy.clone());
-        resources.get_mut::<Loader>().unwrap().set_hot_reload(true);
+        resources
+            .get_mut::<DefaultLoader>()
+            .unwrap()
+            .set_hot_reload(true);
 
         builder.add_system(Box::new(HotReloadSystem));
 

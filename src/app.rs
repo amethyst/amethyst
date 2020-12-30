@@ -12,7 +12,7 @@ use thread_profiler::{profile_scope, register_thread_with_profiler, write_profil
 use winit::event::{Event, WindowEvent};
 
 use crate::{
-    assets::{Loader, Source},
+    assets::{start_asset_daemon, DefaultLoader, Source},
     core::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
@@ -280,23 +280,21 @@ where
                 .read(reader_id)
                 .any(|e| {
                     if cfg!(target_os = "ios") {
-                        if let Event::WindowEvent {
-                            event: WindowEvent::Destroyed,
-                            ..
-                        } = e
-                        {
-                            true
-                        } else {
-                            false
-                        }
-                    } else if let Event::WindowEvent {
-                        event: WindowEvent::CloseRequested,
-                        ..
-                    } = e
-                    {
-                        true
+                        matches!(
+                            e,
+                            Event::WindowEvent {
+                                event: WindowEvent::Destroyed,
+                                ..
+                            }
+                        )
                     } else {
-                        false
+                        matches!(
+                            e,
+                            Event::WindowEvent {
+                                event: WindowEvent::CloseRequested,
+                                ..
+                            }
+                        )
                     }
                 })
         }
@@ -513,6 +511,9 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
+        let asset_dirs = vec![path.as_ref().to_path_buf()];
+        start_asset_daemon(asset_dirs);
+
         let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
             .as_ref()
             .map(|s| {
@@ -540,7 +541,8 @@ where
         } else {
             pool = thread_pool_builder.build().map(Arc::new)?;
         }
-        resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
+        // FIXME check that the loader is added to the resources
+        // resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         resources.insert(pool);
         resources.insert(EventChannel::<Event<'static, ()>>::with_capacity(2000));
         //resources.insert(EventChannel::<UiEvent>::with_capacity(40));
@@ -634,7 +636,7 @@ where
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader, Handle};
+    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
     ///
     /// # fn main() -> amethyst::Result<()> {
@@ -650,7 +652,7 @@ where
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
-    ///         let loader = data.resources.get::<Loader>().unwrap();
+    ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
     ///         let storage = data.resources.get().unwrap();
     ///
     ///         // Load a teapot mesh from the directory that registered above.
@@ -659,14 +661,15 @@ where
     ///     }
     /// }
     /// ~~~
-    pub fn with_source<I, O>(self, name: I, store: O) -> Self
+    pub fn with_source<I, O>(self, _name: I, _store: O) -> Self
     where
         I: Into<String>,
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<Loader>().unwrap();
-            loader.add_source(name, store);
+            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            // FIXME Update the source on the loader
+            // loader.add_source(name, store);
         }
         self
     }
@@ -689,7 +692,7 @@ where
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader, Handle};
+    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
     ///
     /// # fn main() -> amethyst::Result<()> {
@@ -705,20 +708,21 @@ where
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
-    ///         let loader = data.resources.get::<Loader>().unwrap();
+    ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
     ///         let storage = data.resources.get().unwrap();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh: Handle<Mesh> = loader.load("teapot", ObjFormat, (), &storage);
     ///     }
     /// }
     /// ~~~
-    pub fn with_default_source<O>(self, store: O) -> Self
+    pub fn with_default_source<O>(self, _store: O) -> Self
     where
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<Loader>().unwrap();
-            loader.set_default_source(store);
+            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            // FIXME Update the location on the loader
+            // loader.set_default_source(store);
         }
         self
     }

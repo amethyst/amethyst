@@ -25,16 +25,13 @@ impl SimpleState for EmptyState {}
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
-    let _render_graphics = true;
-    #[cfg(feature = "empty")]
-    let _render_graphics = false;
 
     let app_root = application_root_dir()?;
     let assets_dir = app_root.join("examples/optional_graphics/assets/");
     let mut game_data = DispatcherBuilder::default();
     let game: CoreApplication<GameData>;
 
-    if _render_graphics {
+    if !cfg!(feature = "empty") {
         let display_config_path = app_root.join("examples/optional_graphics/config/display.ron");
         game_data.add_bundle(WindowBundle::from_config_path(display_config_path)?);
         game = Application::build(assets_dir, ExampleState)?.build(game_data)?;

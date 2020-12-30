@@ -6,7 +6,7 @@ The following snippet shows how to load a PNG / JPEG / GIF / ICO image:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::assets::{AssetStorage, Handle, Loader};
+use amethyst::assets::{AssetStorage, Handle,  DefaultLoader, Loader};
 use amethyst::prelude::*;
 use amethyst::renderer::{formats::texture::ImageFormat, Texture};
 
@@ -14,7 +14,7 @@ pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
 where
     N: Into<String>,
 {
-    let loader = world.read_resource::<Loader>();
+    let loader = world.read_resource::<DefaultLoader>();
     loader.load(
         name,
         ImageFormat::default(),

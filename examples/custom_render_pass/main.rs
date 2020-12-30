@@ -11,6 +11,7 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+use amethyst_assets::LoaderBundle;
 use amethyst_input::VirtualKeyCode;
 
 use crate::custom_pass::{CustomUniformArgs, RenderCustom, Triangle};
@@ -78,16 +79,19 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/custom_render_pass/assets/");
 
     let mut game_data = DispatcherBuilder::default();
-    game_data.add_bundle(InputBundle::new()).add_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
-                    float32: [1.0, 1.0, 1.0, 1.0],
-                }),
-            )
-            // Add our custom render plugin to the rendering bundle.
-            .with_plugin(RenderCustom::default()),
-    );
+    game_data
+        .add_bundle(LoaderBundle)
+        .add_bundle(InputBundle::new())
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [1.0, 1.0, 1.0, 1.0],
+                    }),
+                )
+                // Add our custom render plugin to the rendering bundle.
+                .with_plugin(RenderCustom::default()),
+        );
 
     let game = Application::build(assets_dir, CustomShaderState)?.build(game_data)?;
 

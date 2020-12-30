@@ -1,13 +1,6 @@
-//! Demonstrates sprite z ordering
-//!
-//! Sprites are originally from <https://opengameart.org/content/bat-32x32>, edited to show
-//! layering and blending.
-
-mod sprite;
-mod sprite_sheet_loader;
-
+//! Demonstrates sprite loading and z ordering
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{DefaultLoader, Handle, Loader},
     core::{
         transform::{Transform, TransformBundle},
         Hidden,
@@ -19,15 +12,15 @@ use amethyst::{
         plugins::{RenderFlat2D, RenderToWindow},
         rendy::hal::command::ClearColor,
         types::DefaultBackend,
-        Camera, ImageFormat, RenderingBundle, SpriteRender, SpriteSheet, Texture, Transparent,
+        Camera, RenderingBundle, SpriteRender, SpriteSheet, Transparent,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
     winit::event::VirtualKeyCode,
 };
+use amethyst_assets::{LoaderBundle, ProcessingQueue};
+use amethyst_rendy::sprite::{SpriteGrid, Sprites};
 use log::info;
-
-use crate::sprite::SpriteSheetDefinition;
 
 const SPRITE_SPACING_RATIO: f32 = 0.7;
 
@@ -318,29 +311,36 @@ impl Example {
 /// * texture: the pixel data
 /// * `SpriteSheet`: the layout information of the sprites on the image
 fn load_sprite_sheet(resources: &Resources) -> LoadedSpriteSheet {
-    let loader = resources.get::<Loader>().unwrap();
-    let texture_handle = {
-        let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        loader.load(
-            "texture/arrow_semi_transparent.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
-    };
+    let loader = resources.get::<DefaultLoader>().unwrap();
+    let texture_handle = { loader.load("texture/arrow_semi_transparent.png") };
     let sprite_w = 32;
     let sprite_h = 32;
-    let sprite_sheet_definition = SpriteSheetDefinition::new(sprite_w, sprite_h, 2, 6, false);
 
-    let sprite_sheet = sprite_sheet_loader::load(texture_handle, &sprite_sheet_definition);
-    let sprite_count = sprite_sheet.sprites.len() as u32;
+    let grid = SpriteGrid {
+        texture_width: sprite_w * 6,
+        texture_height: sprite_h * 2,
+        columns: 6,
+        rows: None,
+        sprite_count: None,
+        cell_size: None,
+        position: None,
+    };
+    let sprite_count = grid.sprite_count();
 
     let sprite_sheet_handle = {
-        let loader = resources.get::<Loader>().unwrap();
-        loader.load_from_data(
-            sprite_sheet,
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        let sprites = loader.load_from_data(
+            Sprites::Grid(grid),
             (),
-            &resources.get::<AssetStorage<SpriteSheet>>().unwrap(),
+            &resources.get::<ProcessingQueue<Sprites>>().unwrap(),
+        );
+        loader.load_from_data(
+            SpriteSheet {
+                sprites,
+                texture: texture_handle,
+            },
+            (),
+            &resources.get::<ProcessingQueue<SpriteSheet>>().unwrap(),
         )
     };
 
@@ -362,18 +362,21 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/sprites_ordered/assets/");
 
     let mut dispatcher = DispatcherBuilder::default();
-    dispatcher.add_bundle(TransformBundle).add_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            // The RenderToWindow plugin provides all the scaffolding for opening a window and
-            // drawing on it
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
-                    float32: [0.34, 0.36, 0.52, 1.0],
-                }),
-            )
-            // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
-            .with_plugin(RenderFlat2D::default()),
-    );
+    dispatcher
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                // The RenderToWindow plugin provides all the scaffolding for opening a window and
+                // drawing on it
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
+                )
+                // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
+                .with_plugin(RenderFlat2D::default()),
+        );
 
     let game = Application::new(assets_dir, Example::new(), dispatcher)?;
     game.run();

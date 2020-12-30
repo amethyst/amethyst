@@ -64,7 +64,7 @@ impl SimpleState for Example {
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
 
         let (animation_set, animation) = {
-            let loader = data.resources.get::<Loader>().unwrap();
+            let loader = data.resources.get::<DefaultLoader>().unwrap();
 
             let sampler = loader.load_from_data(
                 Sampler {

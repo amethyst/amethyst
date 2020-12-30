@@ -3,7 +3,7 @@
 pub use self::{
     children::Children,
     parent::{Parent, PreviousParent},
-    transform::Transform,
+    transform::{Transform, TransformValues},
 };
 
 mod children;

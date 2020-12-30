@@ -96,7 +96,9 @@ impl<T> Asset for Sampler<T>
 where
     T: InterpolationPrimitive + Send + Sync + 'static,
 {
-    const NAME: &'static str = "animation::Sampler";
+    fn name() -> &'static str {
+        "animation::Sampler"
+    }
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }
@@ -273,7 +275,9 @@ impl<T> Asset for Animation<T>
 where
     T: AnimationSampling,
 {
-    const NAME: &'static str = "animation::Animation";
+    fn name() -> &'static str {
+        "animation::Animation"
+    }
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }

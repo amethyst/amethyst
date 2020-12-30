@@ -56,13 +56,13 @@ to set the area big enough for the text to fit in!
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::assets::{AssetStorage, Loader};
+# use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
 # use amethyst::ui::{Anchor, FontAsset, get_default_font, LineMode, UiText};
 # use amethyst::prelude::{World, WorldExt};
 #
 # fn some_function(world: &mut World) {
 #    let font_handle = {
-#        let loader = world.read_resource::<Loader>();
+#        let loader = world.read_resource::<DefaultLoader>();
 #        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
 #        get_default_font(&loader, &font_storage)
 #    };
@@ -85,7 +85,7 @@ If you had some state implemented you can create the button on its `on_start` me
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::assets::{AssetStorage, Loader};
+# use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
 # use amethyst::ui::{
 #     Anchor, FontAsset, get_default_font, LineMode, UiText, UiTransform,
 # };
@@ -112,7 +112,7 @@ fn on_start(&mut self, data: StateData<'_, GameData>) {
     );
 #
 #    let font_handle = {
-#        let loader = world.read_resource::<Loader>();
+#        let loader = world.read_resource::<DefaultLoader>();
 #        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
 #        get_default_font(&loader, &font_storage)
 #    };
@@ -159,7 +159,7 @@ The code snippet would look like this now:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::assets::{AssetStorage, Loader};
+# use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
 # use amethyst::ui::{
 #     Anchor, FontAsset, get_default_font, LineMode, UiText, UiTransform, Interactable,
 # };
@@ -179,7 +179,7 @@ The code snippet would look like this now:
 #    );
 #
 #    let font_handle = {
-#        let loader = world.read_resource::<Loader>();
+#        let loader = world.read_resource::<DefaultLoader>();
 #        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
 #        get_default_font(&loader, &font_storage)
 #    };

@@ -440,7 +440,7 @@ impl SimpleState for Example {
 
 fn load_crate_spritesheet(world: &mut World) -> Handle<SpriteSheet> {
     let crate_texture_handle = {
-        let loader = data.resources.get::<Loader>().unwrap();
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
 
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
@@ -451,7 +451,7 @@ fn load_crate_spritesheet(world: &mut World) -> Handle<SpriteSheet> {
         )
     };
 
-    let loader = data.resources.get::<Loader>().unwrap();
+    let loader = data.resources.get::<DefaultLoader>().unwrap();
 
     let crate_spritesheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
 

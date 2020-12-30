@@ -1,0 +1,18 @@
+Prefab(
+    id: "ce3094f2-9bc6-4e5b-b854-72596cd4c79c",
+    objects: [
+        Entity(PrefabEntity(
+            id: "f15c3f9f-35b3-435f-b7da-ce3ce20ca684",
+            components: [
+                EntityComponent(
+                    type: "e20afc7a-6de0-4ea4-95b7-1a6583425208",
+                    data: Transform(
+                        translation: (0, 0, 0),
+                        rotation: (0, 0, 0, 1),
+                        scale: (1, 1, 1),
+                    ),
+                ),
+            ],
+        )),
+    ],
+)

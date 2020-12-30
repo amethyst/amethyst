@@ -26,12 +26,11 @@ use crate::circular_buffer::CircularBuffer;
 /// # Example
 /// ```rust
 /// # use amethyst_utils::fps_counter::FpsCounter;
-/// # use amethyst_core::ecs::{World, WorldExt};
-/// # let mut world = World::new();
-/// # let counter = FpsCounter::new(2);
-/// # world.insert(counter);
-/// let mut counter = world.write_resource::<FpsCounter>();
-///
+/// # use amethyst_core::ecs::{World, Resources};
+/// # let mut world = World::default();
+/// let resources = Resources::default();
+/// let counter = FpsCounter::new(2);
+/// resources.insert(counter);
 /// ```
 #[derive(Debug)]
 pub struct FpsCounter {
@@ -81,24 +80,28 @@ impl FpsCounter {
 
 /// Add this system to your game to automatically push FPS values
 /// to the [FpsCounter](../resources/struct.FpsCounter.html) resource with id 0
-pub fn build_fps_counter_system() -> impl Runnable {
-    SystemBuilder::new("fps_counter_system")
-        .read_resource::<Time>()
-        .with_query(<Write<FpsCounter>>::query())
-        .build(move |_, subworld, time, query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("fps_counter_system");
+struct FpsCounterSystem;
 
-            if let Some(counter) = query.iter_mut(subworld).next() {
-                counter.push(duration_to_nanos(time.delta_real_time()));
-                //Enable this to debug performance engine wide.
-                log::debug!(
-                    "Cur FPS: {}, Sampled: {}",
-                    counter.frame_fps(),
-                    counter.sampled_fps()
-                );
-            }
-        })
+impl System<'_> for FpsCounterSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("fps_counter_system")
+                .read_resource::<Time>()
+                .write_resource::<FpsCounter>()
+                .build(move |_, _, (time, counter), _| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("fps_counter_system");
+
+                    counter.push(duration_to_nanos(time.delta_real_time()));
+                    //Enable this to debug performance engine wide.
+                    log::debug!(
+                        "Cur FPS: {}, Sampled: {}",
+                        counter.frame_fps(),
+                        counter.sampled_fps()
+                    );
+                }),
+        )
+    }
 }
 
 ///Automatically adds a FpsCounterSystem and a FpsCounter resource with the specified sample size.
@@ -112,8 +115,7 @@ impl SystemBundle for FpsCounterBundle {
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(build_fps_counter_system());
-
+        builder.add_system(Box::new(FpsCounterSystem));
         Ok(())
     }
 }

@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, collections::HashSet};
 
-use amethyst_assets::{AssetStorage, Handle, Loader};
+use amethyst_assets::{AssetStorage, DefaultLoader, Handle, Loader, ProcessingQueue};
 use amethyst_core::{ecs::*, Hidden, HiddenPropagate};
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -27,9 +27,10 @@ use amethyst_rendy::{
     },
     resources::Tint,
     simple_shader_set,
+    sprite::Sprites,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
     system::GraphAuxData,
-    types::{Backend, Texture},
+    types::{Backend, Texture, TextureData},
     ChangeDetection, SpriteSheet,
 };
 use amethyst_window::ScreenDimensions;
@@ -39,7 +40,7 @@ use glsl_layout::{vec2, vec4, AsStd140};
 use thread_profiler::profile_scope;
 
 use crate::{
-    glyphs::{UiGlyphs, UiGlyphsResource, UiGlyphsSystem},
+    glyphs::{UiGlyphs, UiGlyphsResource},
     Selected, TextEditing, UiImage, UiTransform,
 };
 
@@ -65,7 +66,8 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(UiGlyphsResource::default());
-        builder.add_system(Box::new(UiGlyphsSystem::<B>::default()));
+
+        builder.add_system(Box::new(crate::glyphs::UiGlyphsSystem::<B>::default()));
         Ok(())
     }
 
@@ -165,8 +167,10 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawUiDesc {
         )?;
 
         let (loader, tex_storage) = (
-            data.resources.get::<Loader>().unwrap(),
-            data.resources.get::<AssetStorage<Texture>>().unwrap(),
+            data.resources.get::<DefaultLoader>().unwrap(),
+            data.resources
+                .get::<ProcessingQueue<TextureData>>()
+                .unwrap(),
         );
         let white_tex = loader.load_from_data(
             load_from_srgba(palette::Srgba::new(1., 1., 1., 1.)).into(),
@@ -549,7 +553,9 @@ fn render_image<B: Backend>(
         UiImage::Sprite(sprite_renderer) => {
             let sprite_sheets = aux.resources.get::<AssetStorage<SpriteSheet>>().unwrap();
             if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
-                let tex_coord = &sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords;
+                let sprites_storage = aux.resources.get::<AssetStorage<Sprites>>().unwrap();
+                let sprites = sprites_storage.get(&sprite_sheet.sprites).unwrap();
+                let tex_coord = &sprites.build_sprites()[sprite_renderer.sprite_number].tex_coords;
                 [
                     tex_coord.left,
                     tex_coord.top,

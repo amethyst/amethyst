@@ -1,5 +1,5 @@
 //! Material abstraction submodule.
-use amethyst_assets::{AssetStorage, Handle, WeakHandle};
+use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle, WeakHandle};
 use amethyst_core::ecs::*;
 use glsl_layout::*;
 #[cfg(feature = "profiler")]
@@ -143,7 +143,7 @@ enum MaterialState<B: Backend> {
         set: Escape<DescriptorSet<B>>,
         slot: usize,
         generation: u32,
-        handle: WeakHandle<Material>,
+        handle: WeakHandle,
     },
 }
 
@@ -156,7 +156,7 @@ pub struct MaterialId(u32);
 pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
     generation: u32,
     layout: RendyHandle<DescriptorSetLayout<B>>,
-    lookup: util::LookupBuilder<u32>,
+    lookup: util::LookupBuilder<LoadHandle>,
     allocator: SlotAllocator,
     buffers: Vec<SlottedBuffer<B>>,
     materials: Vec<MaterialState<B>>,
@@ -252,7 +252,9 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         let mat_storage = resources.get::<AssetStorage<Material>>().unwrap();
         let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
 
+        // log::debug!("attempting to get material_id: {:?}", handle);
         let mat = mat_storage.get(handle)?;
+        // log::debug!("try_insert got material_id: {:?}", handle);
 
         let has_tex = T::textures(mat).any(|t| {
             !tex_storage
@@ -260,6 +262,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                 .map_or(false, |tex| B::unwrap_texture(tex).is_some())
         });
         if has_tex {
+            // log::debug!("has_tex: {:?}", has_tex);
             return None;
         }
 
@@ -316,7 +319,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         #[cfg(feature = "profiler")]
         profile_scope!("insert");
 
-        let id = self.lookup.forward(handle.id());
+        let id = self.lookup.forward(handle.load_handle());
         match self.materials.get_mut(id) {
             Some(MaterialState::Loaded {
                 slot,
@@ -324,17 +327,20 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                 handle,
                 ..
             }) => {
+                // log::debug!("MaterialState::Loaded");
                 // If handle is dead, new material was loaded (handle id reused)
-                if handle.is_dead() {
-                    self.allocator.release(*slot);
-                } else {
-                    // Material loaded and ready
-                    *generation = self.generation;
-                    return Some((MaterialId(id as u32), false));
-                }
+                // FIXME is this check needed?
+                // if handle.is_dead() {
+                //     self.allocator.release(*slot);
+                // } else {
+                // Material loaded and ready
+                *generation = self.generation;
+                return Some((MaterialId(id as u32), false));
+                // }
             }
             Some(MaterialState::Unloaded { generation }) if *generation == self.generation => {
-                return None
+                // log::debug!("materialstate::Unloaded");
+                return None;
             }
             _ => {}
         };
@@ -359,8 +365,10 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         }
 
         if loaded {
+            // log::debug!("new_state loaded");
             Some((MaterialId(id as u32), true))
         } else {
+            // log::debug!("new_state not loaded");
             None
         }
     }
@@ -368,10 +376,10 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Returns `true` if the supplied `MaterialId` is already loaded.
     #[inline]
     pub fn loaded(&self, material_id: MaterialId) -> bool {
-        match &self.materials[material_id.0 as usize] {
-            MaterialState::Loaded { .. } => true,
-            _ => false,
-        }
+        matches!(
+            &self.materials[material_id.0 as usize],
+            MaterialState::Loaded { .. }
+        )
     }
 
     /// Binds all material descriptor sets and textures contained in this collection.

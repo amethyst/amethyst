@@ -55,7 +55,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # use amethyst::{
-    #     assets::{AssetStorage, Handle, Loader, ProgressCounter},
+    #     assets::{AssetStorage, Handle,  DefaultLoader, Loader, ProgressCounter},
     #     ecs::{World, WorldExt},
     #     prelude::*,
     #     renderer::{formats::texture::ImageFormat, Texture},
@@ -71,7 +71,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
     impl SimpleState for LoadingState {
         fn on_start(&mut self, data: StateData<'_, GameData>) {
-            let loader = &data.world.read_resource::<Loader>();
+            let loader = &data.world.read_resource::<DefaultLoader>();
             let texture_handle = loader.load(
                 "player.png",
                 ImageFormat::default(),
