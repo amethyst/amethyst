@@ -63,6 +63,14 @@ struct Position2D {
 }
 register_component_type!(Position2D);
 
+#[derive(TypeUuid, Serialize, Debug, Deserialize, PartialEq, SerdeDiff, Clone, Default)]
+#[uuid = "9652ae70-84d6-48f9-94ab-9d3fef661350"]
+struct SpotLight2D {
+    color: [u8; 3],
+    y: u8,
+}
+register_component_type!(SpotLight2D);
+
 #[test]
 #[cfg(not(target_os = "macos"))] // FIXME: macos CI has race condition
 fn a_prefab_is_applied_to_an_entity() {
@@ -100,6 +108,49 @@ fn a_prefab_is_applied_to_an_entity() {
         .expect("Could not retrive compont from entry");
 
     let expected = Position2D { x: 100, y: 100 };
+
+    assert_eq!(
+        *component, expected,
+        "Position2D component value does not match",
+    );
+}
+
+#[test]
+fn a_prefab_with_dependencies_is_applied_to_an_entity() {
+    let (mut dispatcher, mut world, mut resources) = setup();
+
+    let prefab_handle: Handle<Prefab> = {
+        let loader = resources
+            .get_mut::<DefaultLoader>()
+            .expect("Missing loader");
+        loader.load("entity_with_dependencies.prefab")
+    };
+
+    execute_dispatcher_until_loaded(
+        &mut dispatcher,
+        &mut world,
+        &mut resources,
+        prefab_handle.clone(),
+    );
+
+    let entity = world.push((prefab_handle.clone(),));
+
+    execute_dispatcher_until_prefab_is_applied(&mut dispatcher, &mut world, &mut resources, entity);
+
+    let mut query = <(Entity, &Position2D)>::query();
+    query.for_each(&world, |(entity, position)| {
+        println!("Entity: {:?}, Position: {:?}", entity, position);
+    });
+
+    let entry = world
+        .entry(entity)
+        .expect("Could not retrieve entity from world");
+
+    let component = entry
+        .get_component::<Position2D>()
+        .expect("Could not retrive compont from entry");
+
+    let expected = Position2D { x: 100, y: 0 };
 
     assert_eq!(
         *component, expected,
