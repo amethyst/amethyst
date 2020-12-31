@@ -137,12 +137,14 @@ impl System<'static> for VisibilitySortingSystem {
                             entity_query
                                 .iter(world)
                                 .map(|(entity, transform, transparent, sphere)| {
-                                    let pos = sphere.clone().map_or(origin, |s| s.center);
                                     let matrix = transform.global_matrix();
+                                    let pos = sphere
+                                        .clone()
+                                        .map_or(matrix.transform_point(&origin), |s| s.center);
                                     (
                                         *entity,
                                         transparent.is_some(),
-                                        matrix.transform_point(&pos),
+                                        pos,
                                         sphere.map_or(1.0, |s| s.radius)
                                             * matrix[(0, 0)]
                                                 .max(matrix[(1, 1)])
