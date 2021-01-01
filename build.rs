@@ -1,8 +1,9 @@
-use dirs::config_dir;
 use std::{
     fs::{create_dir_all, read_to_string, remove_file},
     path::Path,
 };
+
+use dirs::config_dir;
 use vergen::{self, ConstantsFlags};
 
 fn main() {

@@ -1,13 +1,14 @@
 //! Camera type with support for perspective and orthographic projections.
 
-use amethyst_assets::PrefabData;
+// use amethyst_assets::PrefabData;
 use amethyst_core::{
-    ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
+    ecs::*,
     geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
-    transform::components::Transform,
+    transform::Transform,
 };
-use amethyst_error::Error;
+use type_uuid::TypeUuid;
+// use amethyst_error::Error;
 
 /// Camera struct.
 ///
@@ -32,7 +33,8 @@ use amethyst_error::Error;
 ///
 /// If you change `matrix` you must also change `inverse` so that they stay in sync.
 /// You should probably use from_matrix instead.
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, TypeUuid)]
+#[uuid = "56946ce2-356e-4038-82ad-e55a69ddfde9"]
 pub struct Camera {
     /// The projection matrix
     pub matrix: Matrix4<f32>,
@@ -178,7 +180,7 @@ impl Camera {
         let screen_x = 2.0 * screen_position.x / screen_diagonal.x - 1.0;
         let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
 
-        let matrix = *camera_transform.global_matrix() * self.inverse;
+        let matrix = camera_transform.global_matrix() * self.inverse;
 
         let near = Point3::new(screen_x, screen_y, 1.0);
         // The constraint on far is: 0.0 < far < 1.0. We arbitrarily chose 0.5 - maybe there is a better value?
@@ -232,10 +234,6 @@ impl PartialEq for Camera {
     }
 }
 
-impl Component for Camera {
-    type Storage = HashMapStorage<Self>;
-}
-
 /// Active camera resource, used by the renderer to choose which camera to get the view matrix from.
 /// If no active camera is found, the first camera will be used as a fallback.
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -244,90 +242,90 @@ pub struct ActiveCamera {
     pub entity: Option<Entity>,
 }
 
-/// Projection prefab
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub enum CameraPrefab {
-    /// Orthographic prefab
-    Orthographic {
-        /// The x-coordinate of the cuboid leftmost face parallel to the yz-plane.
-        left: f32,
-        /// The x-coordinate of the cuboid rightmost face parallel to the yz-plane.
-        right: f32,
-        /// The lower y-coordinate of the cuboid leftmost face parallel to the xz-plane.
-        bottom: f32,
-        /// The upper y-coordinate of the cuboid leftmost face parallel to the xz-plane.
-        top: f32,
-        /// The distance between the viewer (the origin) and the closest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the closest clipping plane.
-        znear: f32,
-        /// The distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
-        zfar: f32,
-    },
-    /// Perspective prefab
-    Perspective {
-        /// Aspect Ratio represented as a `f32` ratio.
-        aspect: f32,
-        /// Field of View represented in degrees
-        fovy: f32,
-        /// Near clip plane distance
-        znear: f32,
-    },
-}
+// /// Projection prefab
+// #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+// pub enum CameraPrefab {
+//     /// Orthographic prefab
+//     Orthographic {
+//         /// The x-coordinate of the cuboid leftmost face parallel to the yz-plane.
+//         left: f32,
+//         /// The x-coordinate of the cuboid rightmost face parallel to the yz-plane.
+//         right: f32,
+//         /// The lower y-coordinate of the cuboid leftmost face parallel to the xz-plane.
+//         bottom: f32,
+//         /// The upper y-coordinate of the cuboid leftmost face parallel to the xz-plane.
+//         top: f32,
+//         /// The distance between the viewer (the origin) and the closest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the closest clipping plane.
+//         znear: f32,
+//         /// The distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
+//         zfar: f32,
+//     },
+//     /// Perspective prefab
+//     Perspective {
+//         /// Aspect Ratio represented as a `f32` ratio.
+//         aspect: f32,
+//         /// Field of View represented in degrees
+//         fovy: f32,
+//         /// Near clip plane distance
+//         znear: f32,
+//     },
+// }
 
-impl<'a> PrefabData<'a> for CameraPrefab {
-    type SystemData = WriteStorage<'a, Camera>;
-    type Result = ();
+// impl<'a> PrefabData<'a> for CameraPrefab {
+//     type SystemData = WriteStorage<'a, Camera>;
+//     type Result = ();
 
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        storage: &mut Self::SystemData,
-        _: &[Entity],
-        _: &[Entity],
-    ) -> Result<(), Error> {
-        storage.insert(
-            entity,
-            match *self {
-                CameraPrefab::Orthographic {
-                    left,
-                    right,
-                    bottom,
-                    top,
-                    znear,
-                    zfar,
-                } => Camera::orthographic(left, right, bottom, top, znear, zfar),
-                CameraPrefab::Perspective {
-                    aspect,
-                    fovy,
-                    znear,
-                } => Camera::perspective(aspect, fovy, znear),
-            },
-        )?;
-        Ok(())
-    }
-}
+//     fn add_to_entity(
+//         &self,
+//         entity: Entity,
+//         storage: &mut Self::SystemData,
+//         _: &[Entity],
+//         _: &[Entity],
+//     ) -> Result<(), Error> {
+//         storage.insert(
+//             entity,
+//             match *self {
+//                 CameraPrefab::Orthographic {
+//                     left,
+//                     right,
+//                     bottom,
+//                     top,
+//                     znear,
+//                     zfar,
+//                 } => Camera::orthographic(left, right, bottom, top, znear, zfar),
+//                 CameraPrefab::Perspective {
+//                     aspect,
+//                     fovy,
+//                     znear,
+//                 } => Camera::perspective(aspect, fovy, znear),
+//             },
+//         )?;
+//         Ok(())
+//     }
+// }
 
-/// Active camera prefab
-#[derive(Debug, serde::Deserialize, Clone)]
-pub struct ActiveCameraPrefab(Option<usize>);
+// /// Active camera prefab
+// #[derive(Debug, serde::Deserialize, Clone)]
+// pub struct ActiveCameraPrefab(Option<usize>);
 
-impl<'a> PrefabData<'a> for ActiveCameraPrefab {
-    type SystemData = (Write<'a, ActiveCamera>,);
-    type Result = ();
+// impl<'a> PrefabData<'a> for ActiveCameraPrefab {
+//     type SystemData = (Write<'a, ActiveCamera>,);
+//     type Result = ();
 
-    fn add_to_entity(
-        &self,
-        _: Entity,
-        system_data: &mut Self::SystemData,
-        entities: &[Entity],
-        _: &[Entity],
-    ) -> Result<(), Error> {
-        if let Some(ref ent) = self.0 {
-            system_data.0.entity = Some(entities[*ent]);
-        }
-        // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
-        Ok(())
-    }
-}
+//     fn add_to_entity(
+//         &self,
+//         _: Entity,
+//         system_data: &mut Self::SystemData,
+//         entities: &[Entity],
+//         _: &[Entity],
+//     ) -> Result<(), Error> {
+//         if let Some(ref ent) = self.0 {
+//             system_data.0.entity = Some(entities[*ent]);
+//         }
+//         // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
+//         Ok(())
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -338,15 +336,15 @@ mod tests {
     //! Our view space is +Y Down, +X Right, +Z Away
     //! Current render target is +Y Down, +X Right, +Z Away
 
-    use super::*;
     use amethyst_core::{
         math::{convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3},
-        Transform,
+        transform::Transform,
     };
-    use ron::{de::from_str, ser::to_string_pretty};
-
     use approx::{assert_abs_diff_eq, assert_ulps_eq};
     use more_asserts::{assert_ge, assert_gt, assert_le, assert_lt};
+    use ron::{de::from_str, ser::to_string_pretty};
+
+    use super::*;
 
     #[test]
     fn screen_to_world_3d() {
@@ -368,12 +366,12 @@ mod tests {
 
         assert_ulps_eq!(
             camera.screen_to_world_point(top_left, diagonal, &transform),
-            Point3::new(-0.09622504486493762, 0.07216878364870322, -0.125)
+            Point3::new(-0.096_225_046, 0.072_168_78, -0.125)
         );
 
         assert_ulps_eq!(
             camera.screen_to_world_point(bottom_right, diagonal, &transform),
-            Point3::new(0.09622504486493762, -0.07216878364870322, -0.125)
+            Point3::new(0.096_225_046, -0.072_168_78, -0.125)
         );
 
         transform.set_translation_x(100.0);
@@ -484,7 +482,7 @@ mod tests {
         // A camera without rotation is pointing in the (0,0,-1) direction.
         //
         // Sets up basic points.
-        let camera_transform: Transform = Transform::new(
+        let camera_transform = Transform::new(
             Translation3::new(0.0, 0.0, 3.0),
             // Apply _no_ rotation
             UnitQuaternion::identity(),

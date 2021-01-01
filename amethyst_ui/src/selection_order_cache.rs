@@ -1,37 +1,33 @@
-use amethyst_core::ecs::{
-    hibitset::BitSet, storage::GenericReadStorage, Entities, Entity, Join, ReadStorage, System,
-    Write,
-};
-use derive_new::new;
-use std::{cmp::Ordering, marker::PhantomData};
+use std::{collections::HashSet, marker::PhantomData};
 
-use crate::{Selectable, Selected};
-
+use amethyst_core::ecs::*;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-// TODO: Optimize by using a tree. Should we enforce tab order = unique? Sort on insert.
-/// A cache sorted by tab order and then by Entity.
-/// Used to quickly find the next or previous selectable entities.
+use crate::{Selectable, Selected};
+
+/// Resource dedicated to the CacheSelectionOrderSystem behaviour
 #[derive(Debug, Clone, Default)]
-pub struct CachedSelectionOrder {
-    /// The cached bitset.
-    pub cached: BitSet,
+pub struct CachedSelectionOrderResource {
+    /// A track of current cached entities
+    pub cached: HashSet<Entity>,
     /// The cache holding the selection order and the corresponding entity.
     pub cache: Vec<(u32, Entity)>,
 }
 
-impl CachedSelectionOrder {
+impl CachedSelectionOrderResource {
     /// Returns the index of the highest cached element (index in the cache!) that is currently selected.
-    pub fn highest_order_selected_index<T: GenericReadStorage<Component = Selected>>(
-        &self,
-        selected_storage: &T,
-    ) -> Option<usize> {
+    pub fn highest_order_selected_index<'a, T>(&self, selected_storage: T) -> Option<usize>
+    where
+        T: Iterator<Item = (&'a Entity, &'a mut Selected)>,
+    {
+        let everything: Vec<&'a Entity> = selected_storage.into_iter().map(|(e, _)| e).collect();
+
         self.cache
             .iter()
             .enumerate()
             .rev()
-            .find(|(_, (_, e))| selected_storage.get(*e).is_some())
+            .find(|(_, (_, e1))| everything.contains(&e1))
             .map(|t| t.0)
     }
 
@@ -45,79 +41,97 @@ impl CachedSelectionOrder {
     }
 }
 
-/// System in charge of updating the CachedSelectionOrder resource on each frame.
-#[derive(Debug, Default, new)]
-pub struct CacheSelectionOrderSystem<G> {
-    phantom: PhantomData<G>,
+// TODO: Optimize by using a tree. Should we enforce tab order = unique? Sort on insert.
+/// A cache sorted by tab order and then by Entity.
+/// Used to quickly find the next or previous selectable entities.
+#[derive(Debug)]
+pub struct CacheSelectionSystem<G> {
+    _m: PhantomData<G>,
 }
 
-impl<'a, G> System<'a> for CacheSelectionOrderSystem<G>
+impl<G> CacheSelectionSystem<G> {
+    /// Constructs a new `CacheSelectionSystem<G>`.
+    pub fn new() -> CacheSelectionSystem<G> {
+        CacheSelectionSystem { _m: PhantomData }
+    }
+}
+
+impl<G> System<'_> for CacheSelectionSystem<G>
 where
-    G: PartialEq + Send + Sync + 'static,
+    G: Send + Sync + 'static + PartialEq,
 {
-    type SystemData = (
-        Entities<'a>,
-        Write<'a, CachedSelectionOrder>,
-        ReadStorage<'a, Selectable<G>>,
-    );
-    fn run(&mut self, (entities, mut cache, selectables): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("cache_selection_order_system");
+    fn build(&'_ mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("CacheSelectionOrderSystem")
+                .write_resource::<CachedSelectionOrderResource>()
+                .with_query(<(Entity, &Selectable<G>)>::query())
+                .build(move |_commands, world, cache, selectables| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("cache_selection_order_system");
 
-        {
-            let mut rm = vec![];
-            cache.cache.retain(|&(_t, entity)| {
-                let keep = selectables.contains(entity);
-                if !keep {
-                    rm.push(entity.id());
-                }
-                keep
-            });
-            rm.iter().for_each(|e| {
-                cache.cached.remove(*e);
-            });
-        }
-
-        for &mut (ref mut t, entity) in &mut cache.cache {
-            *t = selectables.get(entity).unwrap().order;
-        }
-
-        // Attempt to insert the new entities in sorted position.  Should reduce work during
-        // the sorting step.
-        let transform_set = selectables.mask().clone();
-        {
-            let mut inserts = vec![];
-            let mut pushes = vec![];
-            {
-                // Create a bitset containing only the new indices.
-                let new = (&transform_set ^ &cache.cached) & &transform_set;
-                for (entity, selectable, _new) in (&*entities, &selectables, &new).join() {
-                    let pos = cache
-                        .cache
-                        .iter()
-                        .position(|&(cached_t, _)| selectable.order < cached_t);
-                    match pos {
-                        Some(pos) => inserts.push((pos, (selectable.order, entity))),
-                        None => pushes.push((selectable.order, entity)),
+                    {
+                        let mut rm = vec![];
+                        cache.cache.retain(|&(_t, entity)| {
+                            let keep = selectables.get(world, entity).is_ok();
+                            if !keep {
+                                rm.push(entity);
+                            }
+                            keep
+                        });
+                        rm.iter().for_each(|e| {
+                            cache.cached.remove(e);
+                        });
                     }
-                }
-            }
-            inserts.iter().for_each(|e| cache.cache.insert(e.0, e.1));
-            pushes.iter().for_each(|e| cache.cache.push(*e));
-        }
-        cache.cached = transform_set;
 
-        // Sort from smallest tab order to largest tab order, then by entity creation time.
-        // Most of the time this shouldn't do anything but you still need it for if the tab orders
-        // change.
-        cache
-            .cache
-            .sort_unstable_by(|&(t1, ref e1), &(t2, ref e2)| {
-                let ret = t1.cmp(&t2);
-                if ret == Ordering::Equal {
-                    return e1.cmp(e2);
-                }
-                ret
-            });
+                    for &mut (ref mut t, entity) in &mut cache.cache {
+                        *t = selectables.get(world, entity).unwrap().1.order;
+                    }
+
+                    // ---------
+
+                    // Attempt to insert the new entities in sorted position.  Should reduce work during
+                    // the sorting step.
+                    {
+                        let mut inserts = vec![];
+                        let mut pushes = vec![];
+                        {
+                            selectables.for_each(world, |(entity, selectable)| {
+                                // We only want the new ones.
+                                // The old way (pre legion) to do it was with bitset :
+                                // let new = (&transform_set ^ &cache.cached) & &transform_set;
+                                if !cache.cached.contains(entity) {
+                                    let pos = cache
+                                        .cache
+                                        .iter()
+                                        .position(|&(cached_t, _)| selectable.order < cached_t);
+
+                                    match pos {
+                                        Some(pos) => {
+                                            inserts.push((pos, (selectable.order, entity)))
+                                        }
+                                        None => pushes.push((selectable.order, entity)),
+                                    }
+                                }
+                            });
+                        }
+                        inserts
+                            .iter()
+                            .for_each(|(pos, t)| cache.cache.insert(*pos, (t.0, *t.1)));
+                        pushes
+                            .iter()
+                            .for_each(|(order, t)| cache.cache.push((*order, **t)));
+                    }
+                    // Update the cached with all entities
+
+                    cache.cached.clear();
+                    selectables.for_each(world, |(entity, _)| {
+                        cache.cached.insert(*entity);
+                    });
+
+                    cache
+                        .cache
+                        .sort_unstable_by(|&(t1, _), &(t2, _)| t1.cmp(&t2));
+                }),
+        )
     }
 }

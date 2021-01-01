@@ -8,9 +8,9 @@ mod pbr;
 mod shaded;
 mod skybox;
 
-pub use self::{base_3d::*, debug_lines::*, flat::*, flat2d::*, pbr::*, shaded::*, skybox::*};
-
 use rendy::{hal::pso::ShaderStageFlags, shader::SpirvShader};
+
+pub use self::{base_3d::*, debug_lines::*, flat::*, flat2d::*, pbr::*, shaded::*, skybox::*};
 
 lazy_static::lazy_static! {
     static ref POS_TEX_VERTEX: SpirvShader = SpirvShader::from_bytes(

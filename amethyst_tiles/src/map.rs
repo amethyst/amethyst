@@ -1,13 +1,14 @@
 #![allow(unused_variables)]
 
-use crate::{CoordinateEncoder, TileOutOfBoundsError};
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
-    ecs::{Component, HashMapStorage, World},
+    ecs::world::World,
     math::{Matrix4, Point3, Vector3},
-    Transform,
+    transform::Transform,
 };
 use amethyst_rendy::{palette::Srgba, SpriteSheet};
+
+use crate::{CoordinateEncoder, TileOutOfBoundsError};
 
 /// Trait providing generic rendering functionality to all tiles. Using a tilemap requires you to provide a `Tile` type,
 /// which must implement this trait to provide the `RenderPass` with the appropriate sprite and tint values.
@@ -123,12 +124,10 @@ pub struct TileMap<T: Tile, E: CoordinateEncoder = crate::MortonEncoder2D> {
     pub(crate) encoder: E,
 }
 impl<T: Tile, E: CoordinateEncoder> Asset for TileMap<T, E> {
-    const NAME: &'static str = "tiles::map";
+    fn name() -> &'static str {
+        "tiles::map"
+    }
     type Data = Self;
-    type HandleStorage = HashMapStorage<Handle<Self>>;
-}
-impl<T: Tile, E: CoordinateEncoder> Component for TileMap<T, E> {
-    type Storage = HashMapStorage<Self>;
 }
 
 #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
@@ -345,13 +344,14 @@ fn to_tile(
 
 #[cfg(test)]
 mod tests {
+    use amethyst_core::math::Point3;
+    use rayon::prelude::*;
+
     use super::*;
     use crate::{
         morton::{MortonEncoder, MortonEncoder2D},
         FlatEncoder,
     };
-    use amethyst_core::math::Point3;
-    use rayon::prelude::*;
 
     #[derive(Clone, Debug)]
     struct TestTile {

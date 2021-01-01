@@ -2,12 +2,17 @@ use std::path::PathBuf;
 
 use log::error;
 use serde::{Deserialize, Serialize};
-use winit::{Icon, WindowAttributes, WindowBuilder};
+#[cfg(target_os = "windows")]
+use winit::platform::windows::{IconExtWindows, WindowBuilderExtWindows};
+use winit::{
+    dpi::Size,
+    window::{Fullscreen, Icon, WindowAttributes, WindowBuilder},
+};
 
 use crate::monitor::{MonitorIdent, MonitorsAccess};
 
 /// Configuration for a window display.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DisplayConfig {
     /// Name of the application window.
     #[serde(default = "default_title")]
@@ -124,9 +129,6 @@ impl DisplayConfig {
     /// The `MonitorsAccess` is needed to configure a fullscreen window.
     pub fn into_window_builder(self, monitors: &impl MonitorsAccess) -> WindowBuilder {
         let attrs = WindowAttributes {
-            dimensions: self.dimensions.map(Into::into),
-            max_dimensions: self.max_dimensions.map(Into::into),
-            min_dimensions: self.min_dimensions.map(Into::into),
             title: self.title,
             maximized: self.maximized,
             visible: self.visibility,
@@ -134,18 +136,27 @@ impl DisplayConfig {
             decorations: self.decorations,
             always_on_top: self.always_on_top,
             window_icon: None,
-            fullscreen: self.fullscreen.map(|ident| ident.monitor_id(monitors)),
+            fullscreen: self
+                .fullscreen
+                .map(|ident| Fullscreen::Borderless(Some(ident.monitor_id(monitors)))),
             resizable: self.resizable,
-            multitouch: self.multitouch,
+            inner_size: self.dimensions.map(|d| d.into()).map(Size::Logical),
+            min_inner_size: self.min_dimensions.map(|d| d.into()).map(Size::Logical),
+            max_inner_size: self.max_dimensions.map(|d| d.into()).map(Size::Logical),
         };
 
         let mut builder = WindowBuilder::new();
-        builder.window = attrs;
 
-        if self.loaded_icon.is_some() {
-            builder = builder.with_window_icon(self.loaded_icon);
-        } else if let Some(icon) = self.icon {
-            let icon = match Icon::from_path(&icon) {
+        #[cfg(target_os = "windows")]
+        {
+            builder = builder.with_drag_and_drop(false);
+        }
+        builder.window = attrs;
+        builder = builder.with_window_icon(self.loaded_icon);
+
+        #[cfg(target_os = "windows")]
+        if let Some(icon) = self.icon {
+            let icon = match Icon::from_path(&icon, None) {
                 Ok(x) => Some(x),
                 Err(e) => {
                     error!(

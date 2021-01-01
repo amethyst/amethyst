@@ -2,14 +2,8 @@
 
 use std::{sync::Arc, time::Instant};
 
-use derive_new::new;
-
-use amethyst_core::{
-    ecs::prelude::{DispatcherBuilder, Read, System, SystemData, World, Write},
-    SystemBundle, SystemDesc, Time,
-};
+use amethyst_core::{ecs::*, Time};
 use amethyst_error::Error;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -29,17 +23,21 @@ impl HotReloadBundle {
     }
 }
 
-impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
-    fn build(
-        self,
-        world: &mut World,
-        dispatcher: &mut DispatcherBuilder<'a, 'b>,
+impl SystemBundle for HotReloadBundle {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        dispatcher.add(
-            HotReloadSystemDesc::new(self.strategy).build(world),
-            "hot_reload",
-            &[],
-        );
+        resources.insert(self.strategy.clone());
+        resources
+            .get_mut::<DefaultLoader>()
+            .unwrap()
+            .set_hot_reload(true);
+
+        builder.add_system(Box::new(HotReloadSystem));
+
         Ok(())
     }
 }
@@ -137,57 +135,43 @@ enum HotReloadStrategyInner {
     Never,
 }
 
-/// Builds a `HotReloadSystem`.
-#[derive(Debug, new)]
-pub struct HotReloadSystemDesc {
-    /// The `HotReloadStrategy`.
-    pub strategy: HotReloadStrategy,
-}
-
-impl<'a, 'b> SystemDesc<'a, 'b, HotReloadSystem> for HotReloadSystemDesc {
-    fn build(self, world: &mut World) -> HotReloadSystem {
-        <HotReloadSystem as System<'_>>::SystemData::setup(world);
-
-        world.insert(self.strategy);
-        world.fetch_mut::<Loader>().set_hot_reload(true);
-
-        HotReloadSystem::new()
-    }
-}
-
-/// System for updating `HotReloadStrategy`.
-#[derive(Debug, new)]
+/// Hot reload system that manages asset reload polling
 pub struct HotReloadSystem;
 
-impl<'a> System<'a> for HotReloadSystem {
-    type SystemData = (Read<'a, Time>, Write<'a, HotReloadStrategy>);
+impl System<'_> for HotReloadSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("HotReloadSystem")
+                .write_resource::<HotReloadStrategy>()
+                .read_resource::<Time>()
+                .build(move |_commands, _world, (strategy, time), _query| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("hot_reload_system");
 
-    fn run(&mut self, (time, mut strategy): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("hot_reload_system");
-
-        match strategy.inner {
-            HotReloadStrategyInner::Trigger {
-                ref mut triggered,
-                ref mut frame_number,
-            } => {
-                if *triggered {
-                    *frame_number = time.frame_number() + 1;
-                }
-                *triggered = false;
-            }
-            HotReloadStrategyInner::Every {
-                interval,
-                ref mut last,
-                ref mut frame_number,
-            } => {
-                if last.elapsed().as_secs() > u64::from(interval) {
-                    *frame_number = time.frame_number() + 1;
-                    *last = Instant::now();
-                }
-            }
-            HotReloadStrategyInner::Never => {}
-        }
+                    match strategy.inner {
+                        HotReloadStrategyInner::Trigger {
+                            ref mut triggered,
+                            ref mut frame_number,
+                        } => {
+                            if *triggered {
+                                *frame_number = time.frame_number() + 1;
+                            }
+                            *triggered = false;
+                        }
+                        HotReloadStrategyInner::Every {
+                            interval,
+                            ref mut last,
+                            ref mut frame_number,
+                        } => {
+                            if last.elapsed().as_secs() > u64::from(interval) {
+                                *frame_number = time.frame_number() + 1;
+                                *last = Instant::now();
+                            }
+                        }
+                        HotReloadStrategyInner::Never => {}
+                    }
+                }),
+        )
     }
 }
 

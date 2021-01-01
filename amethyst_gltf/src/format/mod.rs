@@ -2,10 +2,6 @@
 
 use std::{cmp::Ordering, collections::HashMap, sync::Arc};
 
-use gltf::{self, Gltf};
-use log::debug;
-use serde::{Deserialize, Serialize};
-
 use amethyst_animation::AnimationHierarchyPrefab;
 use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
@@ -14,8 +10,9 @@ use amethyst_core::{
 };
 use amethyst_error::{format_err, Error, ResultExt};
 use amethyst_rendy::{camera::CameraPrefab, light::LightPrefab};
-
-use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, Named};
+use gltf::{self, Gltf};
+use log::debug;
+use serde::{Deserialize, Serialize};
 
 use self::{
     animation::load_animations,
@@ -24,6 +21,7 @@ use self::{
     mesh::load_mesh,
     skin::load_skin,
 };
+use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, Named};
 
 mod animation;
 mod importer;

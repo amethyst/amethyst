@@ -6,8 +6,6 @@ use std::{
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
 
-use amethyst_core::ecs::{prelude::Component, storage::BTreeStorage};
-
 use crate::{source::Source, DecoderError};
 
 /// An audio source, add this component to anything that emits sound.
@@ -50,10 +48,6 @@ impl AudioEmitter {
     pub fn clear_picker(&mut self) {
         self.picker = None;
     }
-}
-
-impl Component for AudioEmitter {
-    type Storage = BTreeStorage<Self>;
 }
 
 #[cfg(test)]

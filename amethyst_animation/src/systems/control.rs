@@ -4,11 +4,6 @@ use std::{
     time::Duration,
 };
 
-use derivative::Derivative;
-use fnv::FnvHashMap;
-use log::error;
-use minterpolate::InterpolationPrimitive;
-
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::prelude::{
@@ -18,15 +13,18 @@ use amethyst_core::{
     timing::secs_to_duration,
     SystemDesc,
 };
+use derivative::Derivative;
+use fnv::FnvHashMap;
+use log::error;
+use minterpolate::InterpolationPrimitive;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use crate::resources::{
     Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
     AnimationSampling, AnimationSet, ApplyData, ControlState, DeferStartRelation, RestState,
     Sampler, SamplerControl, SamplerControlSet, StepDirection,
 };
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// Builds an `AnimationControlSystem`.
 #[derive(Derivative, Debug)]

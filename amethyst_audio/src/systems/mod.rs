@@ -1,8 +1,8 @@
 //! `amethyst` audio ecs systems
 
 pub use self::{
-    audio::{AudioSystem, AudioSystemDesc},
-    dj::{DjSystem, DjSystemDesc},
+    audio::AudioSystem,
+    dj::{DjSystem, DjSystemBundle},
 };
 
 mod audio;

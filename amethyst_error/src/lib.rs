@@ -22,12 +22,13 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
-pub use backtrace::Backtrace;
 use std::{
     borrow::Cow,
     env, error, fmt, result,
     sync::atomic::{self, AtomicUsize},
 };
+
+pub use backtrace::Backtrace;
 
 const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
 
@@ -36,7 +37,7 @@ const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
 struct Inner<T: ?Sized> {
     source: Option<Box<Error>>,
     backtrace: Option<Backtrace>,
-    error: T,
+    error: Box<T>,
 }
 
 /// The error type used by Amethyst.
@@ -162,7 +163,17 @@ impl Error {
     /// **Warning:** This erases most diagnostics in favor of returning only the top error.
     /// `std::error::Error` is expanded further.
     pub fn as_error(&self) -> &(dyn error::Error + 'static) {
-        &self.inner.error
+        self.inner.error.as_ref()
+    }
+
+    /// Convert to `std::error::Error`.
+    ///
+    /// This can be useful for integrating with systems that operate on `std::error::Error`.
+    ///
+    /// **Warning:** This erases most diagnostics in favor of returning only the top error.
+    /// `std::error::Error` is expanded further.
+    pub fn into_error(self) -> Box<dyn error::Error + 'static + Send + Sync> {
+        self.inner.error
     }
 }
 
@@ -317,10 +328,7 @@ where
 
 /// Test if backtracing is enabled.
 fn is_backtrace_enabled() -> bool {
-    match env::var_os(RUST_BACKTRACE) {
-        Some(ref val) if val != "0" => true,
-        _ => false,
-    }
+    matches!(env::var_os(RUST_BACKTRACE), Some(ref val) if val != "0")
 }
 
 // 0: unchecked
@@ -424,8 +432,9 @@ mod tests {
     // depend on the state of the global `BACKTRACE_STATUS`.
     #[test]
     fn test_backtrace() {
-        use super::BACKTRACE_STATUS;
         use std::sync::atomic;
+
+        use super::BACKTRACE_STATUS;
 
         BACKTRACE_STATUS.store(2, atomic::Ordering::Relaxed);
 

@@ -1,5 +1,7 @@
 //! Displays spheres with physically based materials.
 
+use std::path::Path;
+
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
@@ -49,10 +51,7 @@ use amethyst::{
         tag::TagFinder,
     },
 };
-use std::path::Path;
-
 use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -127,7 +126,7 @@ impl Default for RenderMode {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         #[cfg(feature = "profiler")]
         profile_scope!("example on_start");
         let StateData { world, .. } = data;
@@ -312,9 +311,7 @@ impl SimpleState for Example {
         let mut transform = Transform::default();
         transform.set_translation_xyz(0.0, 4.0, 8.0);
 
-        let mut auto_fov = AutoFov::default();
-        auto_fov.set_base_fovx(std::f32::consts::FRAC_PI_3);
-        auto_fov.set_base_aspect_ratio(1, 1);
+        let auto_fov = AutoFov::default();
 
         let camera = world
             .create_entity()
@@ -331,11 +328,7 @@ impl SimpleState for Example {
         world.insert(DebugLines::new());
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         #[cfg(feature = "profiler")]
         profile_scope!("example handle_event");
         let StateData { world, .. } = data;
@@ -372,7 +365,7 @@ impl SimpleState for Example {
         }
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         #[cfg(feature = "profiler")]
         profile_scope!("example update");
 
@@ -447,7 +440,8 @@ impl SimpleState for Example {
 
 fn load_crate_spritesheet(world: &mut World) -> Handle<SpriteSheet> {
     let crate_texture_handle = {
-        let loader = world.read_resource::<Loader>();
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
+
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
             Path::new("texture").join("crate.png").to_string_lossy(),
@@ -457,7 +451,8 @@ fn load_crate_spritesheet(world: &mut World) -> Handle<SpriteSheet> {
         )
     };
 
-    let resource_loader = world.read_resource::<Loader>();
+    let loader = data.resources.get::<DefaultLoader>().unwrap();
+
     let crate_spritesheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
 
     resource_loader.load(
@@ -604,10 +599,10 @@ fn main() -> amethyst::Result<()> {
         },
     )?;
 
-    let game_data = GameDataBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
-        .with_bundle(FpsCounterBundle::default())?
+        .add_bundle(FpsCounterBundle::default())?
         .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
             "scene_loader",
@@ -618,19 +613,19 @@ fn main() -> amethyst::Result<()> {
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
-        .with_bundle(
+        .add_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
         )?
-        .with_bundle(
+        .add_bundle(
             AnimationBundle::<SpriteAnimationId, SpriteRender>::new(
                 "sprite_animation_control",
                 "sprite_sampler_interpolation",
             )
             .with_dep(&["gltf_loader"]),
         )?
-        .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))?
-        .with_bundle(
+        .add_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))?
+        .add_bundle(
             FlyControlBundle::<StringBindings>::new(
                 Some("horizontal".into()),
                 None,
@@ -639,7 +634,7 @@ fn main() -> amethyst::Result<()> {
             .with_sensitivity(0.1, 0.1)
             .with_speed(5.),
         )?
-        .with_bundle(TransformBundle::new().with_dep(&[
+        .add_bundle(TransformBundle::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "sprite_animation_control",
@@ -647,12 +642,12 @@ fn main() -> amethyst::Result<()> {
             "fly_movement",
             "orbit",
         ]))?
-        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+        .add_bundle(VertexSkinningBundle::new().with_dep(&[
             "transform_system",
             "animation_control",
             "sampler_interpolation",
         ]))?
-        .with_bundle(
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
                 .with_plugin(RenderSwitchable3D::default())
@@ -664,7 +659,7 @@ fn main() -> amethyst::Result<()> {
                 )),
         )?;
 
-    let mut game = Application::new(assets_dir, Example::new(), game_data)?;
+    let game = Application::build(assets_dir, Example::new())?.build(game_data)?;
     game.run();
     Ok(())
 }

@@ -2,17 +2,16 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use crate::resources::AmbientColor;
-use amethyst_assets::{PrefabData, ProgressCounter};
-use amethyst_core::{
-    ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
-    math::Vector3,
-};
-use amethyst_error::Error;
+//use crate::resources::AmbientColor;
+//use amethyst_assets::{PrefabData, ProgressCounter};
+use amethyst_core::math::Vector3;
+use type_uuid::TypeUuid;
+//use amethyst_error::Error;
 
 /// A light source.
-#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, PrefabData)]
-#[prefab(Component)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, TypeUuid)]
+// #[prefab(Component)]
+#[uuid = "32cf5344-28c1-41c4-a1f9-ea87de4b1a4f"]
 pub enum Light {
     /// An area light.
     /// FIXME: Missing implementation!
@@ -183,59 +182,55 @@ impl From<SunLight> for Light {
     }
 }
 
-impl Component for Light {
-    type Storage = DenseVecStorage<Self>;
-}
+// /// Prefab for lighting
+// #[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize, PrefabData)]
+// #[serde(default)]
+// pub struct LightPrefab {
+//     light: Option<Light>,
+//     ambient_color: Option<AmbientColor>,
+// }
 
-/// Prefab for lighting
-#[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize, PrefabData)]
-#[serde(default)]
-pub struct LightPrefab {
-    light: Option<Light>,
-    ambient_color: Option<AmbientColor>,
-}
+// use gltf::khr_lights_punctual;
+// use gltf::khr_lights_punctual::Kind;
 
-use gltf::khr_lights_punctual;
-use gltf::khr_lights_punctual::Kind;
-
-/// Import a gltf light into a LightPrefab
-impl From<khr_lights_punctual::Light<'_>> for LightPrefab {
-    fn from(light: khr_lights_punctual::Light<'_>) -> Self {
-        let color = {
-            let parts = light.color();
-            palette::Srgb::new(parts[0], parts[1], parts[2])
-        };
-        let intensity = light.intensity();
-        let range = light.range();
-        LightPrefab {
-            light: Some(match light.kind() {
-                Kind::Directional => {
-                    let mut directional = DirectionalLight::default();
-                    directional.color = color;
-                    directional.intensity = intensity;
-                    Light::Directional(directional)
-                }
-                Kind::Point => {
-                    let mut point = PointLight::default();
-                    point.color = color;
-                    point.intensity = intensity;
-                    if let Some(r) = range {
-                        point.radius = r;
-                    }
-                    Light::Point(point)
-                }
-                Kind::Spot {
-                    inner_cone_angle,
-                    outer_cone_angle,
-                } => {
-                    let mut spot = SpotLight::default();
-                    spot.angle = outer_cone_angle;
-                    spot.color = color;
-                    spot.intensity = intensity;
-                    Light::Spot(spot)
-                }
-            }),
-            ambient_color: None,
-        }
-    }
-}
+// /// Import a gltf light into a LightPrefab
+// impl From<khr_lights_punctual::Light<'_>> for LightPrefab {
+//     fn from(light: khr_lights_punctual::Light<'_>) -> Self {
+//         let color = {
+//             let parts = light.color();
+//             palette::Srgb::new(parts[0], parts[1], parts[2])
+//         };
+//         let intensity = light.intensity();
+//         let range = light.range();
+//         LightPrefab {
+//             light: Some(match light.kind() {
+//                 Kind::Directional => {
+//                     let mut directional = DirectionalLight::default();
+//                     directional.color = color;
+//                     directional.intensity = intensity;
+//                     Light::Directional(directional)
+//                 }
+//                 Kind::Point => {
+//                     let mut point = PointLight::default();
+//                     point.color = color;
+//                     point.intensity = intensity;
+//                     if let Some(r) = range {
+//                         point.radius = r;
+//                     }
+//                     Light::Point(point)
+//                 }
+//                 Kind::Spot {
+//                     inner_cone_angle,
+//                     outer_cone_angle,
+//                 } => {
+//                     let mut spot = SpotLight::default();
+//                     spot.angle = outer_cone_angle;
+//                     spot.color = color;
+//                     spot.intensity = intensity;
+//                     Light::Spot(spot)
+//                 }
+//             }),
+//             ambient_color: None,
+//         }
+//     }
+// }

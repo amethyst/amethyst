@@ -1,9 +1,9 @@
-use derivative::Derivative;
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
-use winit::{MouseButton, VirtualKeyCode};
+use winit::event::{MouseButton, VirtualKeyCode};
 
 use super::{
-    bindings::BindingTypes,
     button::Button,
     controller::{ControllerAxis, ControllerButton},
     scroll_direction::ScrollDirection,
@@ -13,12 +13,8 @@ use super::{
 ///
 /// Type parameter T is the type assigned to your Actions for your
 /// InputBundle or InputHandler.
-#[derive(PartialEq, Serialize, Deserialize, Debug, Derivative)]
-#[derivative(Clone(bound = ""))]
-pub enum InputEvent<T>
-where
-    T: BindingTypes,
-{
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
+pub enum InputEvent {
     /// A key was pressed down, sent exactly once per key press.
     KeyPressed {
         /// `VirtualKeyCode`, used for semantic info. i.e. "W" was pressed
@@ -65,7 +61,7 @@ where
     /// Note that this variant is used for `BindingTypes::Axis`, not a `ControllerAxis`.
     AxisMoved {
         /// The axis that moved on the controller.
-        axis: T::Axis,
+        axis: Cow<'static, str>,
         /// The amount that the axis moved.
         value: f32,
     },
@@ -108,12 +104,12 @@ where
     ///
     /// If a combination is bound to an action, it will be pressed
     /// if all buttons within are pressed.
-    ActionPressed(T::Action),
+    ActionPressed(Cow<'static, str>),
     /// The associated action had any related button or combination released.
     ///
     /// If a combination is bound to an action, it will be released
     /// if any of the buttons within is released while all others are pressed.
-    ActionReleased(T::Action),
+    ActionReleased(Cow<'static, str>),
     /// The associated action has its mouse wheel moved.
-    ActionWheelMoved(T::Action),
+    ActionWheelMoved(Cow<'static, str>),
 }

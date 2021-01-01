@@ -1,11 +1,9 @@
 //! Debug Drawing library
-use crate::pod::IntoPod;
-use amethyst_core::{
-    ecs::{Component, DenseVecStorage},
-    math::{Point2, Point3, UnitQuaternion, Vector2, Vector3},
-};
+use amethyst_core::math::{Point2, Point3, UnitQuaternion, Vector2, Vector3};
 use palette::Srgba;
 use rendy::mesh::{AsVertex, Color, PosColor, VertexFormat};
+
+use crate::pod::IntoPod;
 
 /// Debug lines are stored as a pair of position and color.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -46,10 +44,6 @@ impl Default for DebugLinesParams {
 pub struct DebugLinesComponent {
     /// Lines to be rendered
     lines: Vec<DebugLine>,
-}
-
-impl Component for DebugLinesComponent {
-    type Storage = DenseVecStorage<Self>;
 }
 
 impl DebugLinesComponent {
@@ -516,7 +510,7 @@ impl DebugLines {
             .add_rotated_cylinder(center, radius, height, points, rotation, color);
     }
 
-    pub(crate) fn drain<'a>(&'a mut self) -> impl Iterator<Item = DebugLine> + 'a {
+    pub(crate) fn drain(&mut self) -> impl Iterator<Item = DebugLine> + '_ {
         self.inner.lines.drain(..)
     }
 }

@@ -14,7 +14,7 @@ effect on the sprite.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::assets::{AssetStorage, Loader, Handle};
+# use amethyst::assets::{AssetStorage,  DefaultLoader, Loader, Handle};
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
@@ -39,12 +39,12 @@ use amethyst::window::ScreenDimensions;
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, mut data: StateData<'_, GameData>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
 #
 #         let sprite_sheet = load_sprite_sheet(texture_handle);
 #         let sprite_sheet_handle = {
-#             let loader = data.world.read_resource::<Loader>();
+#             let loader = data.world.read_resource::<DefaultLoader>();
 #             loader.load_from_data(
 #                 sprite_sheet,
 #                 (),

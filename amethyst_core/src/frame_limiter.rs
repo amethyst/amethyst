@@ -20,19 +20,16 @@
 //! ```
 //! use std::time::Duration;
 //!
-//! use amethyst::prelude::*;
-//! use amethyst::core::frame_limiter::FrameRateLimitStrategy;
+//! use amethyst::{core::frame_limiter::FrameRateLimitStrategy, prelude::*};
 //!
 //! # struct GameState;
 //! # impl SimpleState for GameState {}
 //! # fn main() -> amethyst::Result<()> {
 //! let assets_dir = "./";
-//! let mut game = Application::build(assets_dir, GameState)?
-//!     .with_frame_limit(
-//!         FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
-//!         144,
-//!     )
-//!     .build(GameDataBuilder::new())?;
+//! let mut builder = DispatcherBuilder::default();
+//! let game = Application::build(assets_dir, GameState)?
+//!     .with_frame_limit(FrameRateLimitStrategy::Sleep, 60)
+//!     .build(builder)?;
 //! # Ok(())
 //! # }
 //! ```
@@ -115,8 +112,7 @@ impl Default for FrameRateLimitStrategy {
 /// # Examples
 ///
 /// ```no_run
-/// use amethyst::prelude::*;
-/// use amethyst::core::frame_limiter::FrameRateLimitConfig;
+/// use amethyst::{core::frame_limiter::FrameRateLimitConfig, prelude::*};
 ///
 /// let config = FrameRateLimitConfig::load("./config/frame_limiter.ron");
 /// ```

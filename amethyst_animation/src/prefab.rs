@@ -5,13 +5,12 @@ use std::{
     marker::PhantomData,
 };
 
-use derivative::Derivative;
-use serde::{Deserialize, Serialize};
-
-use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
+use amethyst_assets::{AssetStorage, DefaultLoader, Handle, Loader, PrefabData, ProgressCounter};
 use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
+use derivative::Derivative;
+use serde::{Deserialize, Serialize};
 
 use crate::{Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
 

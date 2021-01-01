@@ -1,6 +1,5 @@
 use amethyst_core::math::zero;
 use amethyst_ui::UiTransform;
-
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -24,9 +23,8 @@ impl AnimationSampling for UiTransform {
     type Channel = UiTransformChannel;
 
     fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
-        use crate::util::SamplerPrimitive::*;
-
         use self::UiTransformChannel::*;
+        use crate::util::SamplerPrimitive::*;
 
         match (channel, *data) {
             (&Translation, Vec2(ref d)) => {

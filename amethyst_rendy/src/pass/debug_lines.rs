@@ -1,12 +1,4 @@
-use crate::{
-    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent, DebugLinesParams},
-    pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::ViewArgs,
-    submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertexBuffer},
-    types::Backend,
-    util,
-};
-use amethyst_core::ecs::{Join, Read, SystemData, World, Write, WriteStorage};
+use amethyst_core::ecs::*;
 use derivative::Derivative;
 use glsl_layout::*;
 use rendy::{
@@ -20,9 +12,18 @@ use rendy::{
     mesh::AsVertex,
     shader::Shader,
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent, DebugLinesParams},
+    pipeline::{PipelineDescBuilder, PipelinesBuilder},
+    pod::ViewArgs,
+    submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertexBuffer},
+    system::GraphAuxData,
+    types::Backend,
+    util,
+};
 
 #[derive(Debug, Clone, AsStd140)]
 struct DebugLinesArgs {
@@ -41,19 +42,19 @@ impl DrawDebugLinesDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawDebugLinesDesc {
+impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawDebugLinesDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _aux: &GraphAuxData,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -97,36 +98,33 @@ pub struct DrawDebugLines<B: Backend> {
     change: util::ChangeDetection,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawDebugLines<B> {
+impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawDebugLines<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        aux: &GraphAuxData,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
-        let (lines_comps, lines_res, line_params) = <(
-            WriteStorage<'_, DebugLinesComponent>,
-            Option<Write<'_, DebugLines>>,
-            Option<Read<'_, DebugLinesParams>>,
-        )>::fetch(resources);
+        let GraphAuxData { world, resources } = aux;
 
         let old_len = self.lines.len();
         self.lines.clear();
-        for lines_component in (&lines_comps).join() {
+        for lines_component in <Read<DebugLinesComponent>>::query().iter(*world) {
             self.lines.extend_from_slice(lines_component.lines());
         }
 
-        if let Some(mut lines_res) = lines_res {
+        if let Some(mut lines_res) = resources.get_mut::<DebugLines>() {
             self.lines.extend(lines_res.drain());
         };
 
-        let cam = CameraGatherer::gather(resources);
-        let line_width = line_params
+        let cam = CameraGatherer::gather(world, resources);
+        let line_width = resources
+            .get::<DebugLinesParams>()
             .map(|p| p.line_width)
             .unwrap_or(DebugLinesParams::default().line_width);
 
@@ -160,7 +158,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawDebugLines<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &World,
+        _aux: &GraphAuxData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -179,7 +177,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawDebugLines<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &GraphAuxData) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -195,7 +193,7 @@ fn build_lines_pipeline<B: Backend>(
     framebuffer_width: u32,
     framebuffer_height: u32,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()
@@ -209,7 +207,7 @@ fn build_lines_pipeline<B: Backend>(
         .with_pipeline(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(DebugLine::vertex(), pso::VertexInputRate::Instance(1))])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
+                .with_input_assembler(pso::InputAssemblerDesc::new(pso::Primitive::TriangleStrip))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),

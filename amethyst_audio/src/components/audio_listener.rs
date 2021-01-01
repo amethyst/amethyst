@@ -1,10 +1,7 @@
-use amethyst_core::{
-    ecs::{prelude::Component, storage::HashMapStorage},
-    math::Point3,
-};
+use amethyst_core::math::Point3;
 
 /// An audio listener, add this component to the local player character.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct AudioListener {
     /// Position of the left ear relative to the global transform on this entity.
     pub left_ear: Point3<f32>,
@@ -19,8 +16,4 @@ impl Default for AudioListener {
             right_ear: Point3::new(1.0, 0.0, 0.0),
         }
     }
-}
-
-impl Component for AudioListener {
-    type Storage = HashMapStorage<Self>;
 }

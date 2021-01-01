@@ -13,42 +13,47 @@
 )]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
+pub use rayon::ThreadPool;
+
+mod asset;
+mod bundle;
+mod cache;
+/// asset loading specific errors
+pub mod error;
+mod formats;
+mod loader;
+/// helpers for registering prefab components
+pub mod prefab;
+mod processor;
+mod progress;
+mod simple_importer;
+mod source;
+mod storage;
+
+pub use atelier_assets::{
+    importer as atelier_importer,
+    loader::{
+        handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
+        storage::LoadHandle,
+    },
+};
+pub use type_uuid::TypeUuid;
+// used in macros. Private API otherwise.
+#[doc(hidden)]
+pub use {erased_serde, inventory, lazy_static};
+
+#[doc(hidden)]
 #[cfg(feature = "json")]
 pub use crate::formats::JsonFormat;
 pub use crate::{
     asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
+    bundle::{start_asset_daemon, LoaderBundle},
     cache::Cache,
-    dyn_format::FormatRegisteredData,
     formats::RonFormat,
-    helper::AssetLoaderSystemData,
-    loader::Loader,
-    prefab::{
-        AssetPrefab, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, PrefabLoaderSystemDesc,
-    },
+    loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
+    processor::{AssetProcessorSystem, ProcessingQueue, ProcessingState},
     progress::{Completion, Progress, ProgressCounter, Tracker},
-    reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
+    simple_importer::{SimpleImporter, SourceFileImporter},
     source::{Directory, Source},
-    storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
+    storage::AssetStorage,
 };
-
-pub use rayon::ThreadPool;
-
-mod asset;
-mod cache;
-mod dyn_format;
-mod error;
-mod formats;
-mod helper;
-mod loader;
-mod prefab;
-mod progress;
-mod reload;
-mod source;
-mod storage;
-
-// used in macros. Private API otherwise.
-#[doc(hidden)]
-pub use crate::dyn_format::{DeserializeFn, Registry};
-// used in macros. Private API otherwise.
-#[doc(hidden)]
-pub use {erased_serde, inventory, lazy_static};

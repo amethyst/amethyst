@@ -2,22 +2,24 @@
     @import /amethyst_rendy/src/sprite/mod.rs#Sprites
     Sprites
 */
-
-List((
-    texture_width: 8,
-    texture_height: 16,
-    sprites: [
-        (
-            x: 0,
-            y: 0,
-            width: 4,
-            height: 16,
-        ),
-        (
-            x: 4,
-            y: 0,
-            width: 4,
-            height: 4,
-        ),
-    ],
-))
+{
+    "04c60333-c790-4586-aa76-086b19167a04":
+    List((
+        texture_width: 8,
+        texture_height: 16,
+        sprites: [
+            (
+                x: 0,
+                y: 0,
+                width: 4,
+                height: 16,
+            ),
+            (
+                x: 4,
+                y: 0,
+                width: 4,
+                height: 4,
+            ),
+        ],
+    ))
+}
