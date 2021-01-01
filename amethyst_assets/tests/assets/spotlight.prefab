@@ -5,7 +5,7 @@ Prefab(
         // Inline definition of an entity and its components
         Entity((
              // Entity AssetUuid
-             id: "26b3770a-50be-46eb-9d3a-53b72b7a0005",
+             id: "b6cc74e0-1c11-4876-8949-1408736a9613",
              // Component data and types
              components: [
                  (
@@ -16,15 +16,7 @@ Prefab(
                          y: 0,
                      ),
                  ),
-                 (
-                     // Component AssetTypeId
-                     type: "9652ae70-84d6-48f9-94ab-9d3fef661350",
-                     data: (
-                         color: [255, 255, 255],
-                         radius: 10,
-                     ),
-                 ),
              ]
         )),
     ]
-);
+)
