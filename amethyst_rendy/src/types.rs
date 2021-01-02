@@ -1,6 +1,9 @@
 //! 'Global' rendering type declarations
 use amethyst_assets::Asset;
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
+
+use crate::system::{MeshProcessorSystem, TextureProcessorSystem};
 
 /// Extension of the rendy Backend trait.
 pub trait Backend: rendy::hal::Backend {
@@ -16,7 +19,6 @@ pub trait Backend: rendy::hal::Backend {
 
 macro_rules! impl_backends {
     ($($variant:ident, $feature:literal, $backend:ty;)*) => {
-
 
         impl_single_default!($([$feature, $backend]),*);
 
@@ -36,7 +38,8 @@ macro_rules! impl_backends {
         }
 
         /// Mesh wrapper.
-        #[derive(Debug)]
+        #[derive(Debug, TypeUuid)]
+        #[uuid = "3017f6f7-b9fa-4d55-8cc5-27f803592569"]
         pub enum Mesh {
             $(
                 #[cfg(feature = $feature)]
@@ -46,7 +49,8 @@ macro_rules! impl_backends {
         }
 
         /// Texture wrapper.
-        #[derive(Debug)]
+        #[derive(Debug, TypeUuid)]
+        #[uuid = "af14628f-c707-4921-9ac1-f6ae42b8ee8e"]
         pub enum Texture {
             $(
                 #[cfg(feature = $feature)]
@@ -117,24 +121,33 @@ impl_backends!(
     Empty, "empty", rendy::empty::Backend;
 );
 
+amethyst_assets::register_asset_type!(MeshData => Mesh; MeshProcessorSystem<DefaultBackend>);
+amethyst_assets::register_asset_type!(TextureData => Texture; TextureProcessorSystem<DefaultBackend>);
+
 impl Asset for Mesh {
-    const NAME: &'static str = "Mesh";
+    fn name() -> &'static str {
+        "Mesh"
+    }
     type Data = MeshData;
 }
 
 impl Asset for Texture {
-    const NAME: &'static str = "Texture";
+    fn name() -> &'static str {
+        "Texture"
+    }
     type Data = TextureData;
 }
 
 /// Newtype for MeshBuilder prefab usage.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
+#[uuid = "c5870fe0-1733-4fb4-827c-4353f8c6002d"]
 pub struct MeshData(
     #[serde(deserialize_with = "deserialize_data")] pub rendy::mesh::MeshBuilder<'static>,
 );
 
 /// Newtype for TextureBuilder prefab usage.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
+#[uuid = "25063afd-6cc0-487e-982f-a63fed7d7393"]
 pub struct TextureData(pub rendy::texture::TextureBuilder<'static>);
 
 impl From<rendy::mesh::MeshBuilder<'static>> for MeshData {
@@ -153,5 +166,6 @@ fn deserialize_data<'de, D>(deserializer: D) -> Result<rendy::mesh::MeshBuilder<
 where
     D: serde::de::Deserializer<'de>,
 {
+    log::debug!("deserialize_data");
     Ok(rendy::mesh::MeshBuilder::deserialize(deserializer)?.into_owned())
 }

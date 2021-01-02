@@ -1,7 +1,7 @@
 //! Demonstrates how to use the fly camera
 
 use amethyst::{
-    assets::{AssetStorage, Loader},
+    assets::Loader,
     controls::{FlyControl, FlyControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,
@@ -29,6 +29,8 @@ use amethyst::{
     winit::event::{MouseButton, VirtualKeyCode},
     Error,
 };
+use amethyst_assets::{DefaultLoader, Handle, LoaderBundle, ProcessingQueue};
+use amethyst_rendy::types::{MeshData, TextureData};
 
 //type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
@@ -41,13 +43,13 @@ impl SimpleState for ExampleState {
         } = data;
 
         let mat_defaults = resources.get::<MaterialDefaults>().unwrap().0.clone();
-        let loader = resources.get::<Loader>().unwrap();
-        let mesh_storage = resources.get::<AssetStorage<Mesh>>().unwrap();
-        let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        let mtl_storage = resources.get::<AssetStorage<Material>>().unwrap();
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        let mesh_storage = resources.get::<ProcessingQueue<MeshData>>().unwrap();
+        let tex_storage = resources.get::<ProcessingQueue<TextureData>>().unwrap();
+        let mtl_storage = resources.get::<ProcessingQueue<Material>>().unwrap();
 
         println!("Load mesh");
-        let (mesh, albedo) = {
+        let (mesh, albedo): (Handle<Mesh>, Handle<Texture>) = {
             let mesh = loader.load_from_data(
                 Shape::Sphere(32, 32)
                     .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(None)
@@ -76,7 +78,7 @@ impl SimpleState for ExampleState {
             let mut pos = Transform::default();
             pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
-            let mtl = {
+            let mtl: Handle<Material> = {
                 let metallic_roughness = loader.load_from_data(
                     load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0)).into(),
                     (),
@@ -166,6 +168,7 @@ fn main() -> Result<(), Error> {
 
     let mut builder = DispatcherBuilder::default();
     builder
+        .add_bundle(LoaderBundle)
         .add_bundle(InputBundle::new().with_bindings_from_file(&key_bindings_path)?)
         .add_bundle(
             FlyControlBundle::new(

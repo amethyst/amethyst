@@ -124,7 +124,9 @@ pub struct TileMap<T: Tile, E: CoordinateEncoder = crate::MortonEncoder2D> {
     pub(crate) encoder: E,
 }
 impl<T: Tile, E: CoordinateEncoder> Asset for TileMap<T, E> {
-    const NAME: &'static str = "tiles::map";
+    fn name() -> &'static str {
+        "tiles::map"
+    }
     type Data = Self;
 }
 

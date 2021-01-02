@@ -219,14 +219,13 @@ impl System<'static> for UiTransformSystem {
                             );
                         }
 
-                        let (mut parent_world, mut else_world) =
-                            world.split_for_query(parents_query);
+                        let (parent_world, mut else_world) = world.split_for_query(parents_query);
 
                         let modified_children: Vec<(Entity, Entity)> = transform_with_parent_query
                             .iter_mut(&mut else_world)
                             .filter(|(entity, _, parent)| {
                                 let self_dirty = modified_entities.contains(&entity);
-                                match parents_query.get(&mut parent_world, parent.0).ok() {
+                                match parents_query.get(&parent_world, parent.0).ok() {
                                     Some((e, _)) => {
                                         let parent_dirty = modified_entities.contains(&e);
                                         parent_dirty || self_dirty || screen_resized
@@ -239,8 +238,8 @@ impl System<'static> for UiTransformSystem {
 
                         for (entity, parent_entity) in modified_children.iter() {
                             let parent_transform_copy = {
-                                if let Some(transform) =
-                                    all_transforms_query.get_mut(world, *parent_entity).ok()
+                                if let Ok(transform) =
+                                    all_transforms_query.get_mut(world, *parent_entity)
                                 {
                                     Some(transform.clone())
                                 } else {

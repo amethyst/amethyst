@@ -1,7 +1,9 @@
 //! Local transform component.
 use getset::*;
 use serde::{Deserialize, Serialize};
+use serde_diff::SerdeDiff;
 use simba::scalar::SubsetOf;
+use type_uuid::TypeUuid;
 
 use crate::math::{
     self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
@@ -13,23 +15,40 @@ use crate::math::{
 /// Used for rendering position and orientation.
 ///
 /// The transforms are preformed in this order: scale, then rotation, then translation.
-#[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq, Deserialize, Serialize, Copy)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Deserialize,
+    Getters,
+    MutGetters,
+    PartialEq,
+    Serialize,
+    Setters,
+    TypeUuid,
+    SerdeDiff,
+)]
+#[uuid = "e20afc7a-6de0-4ea4-95b7-1a6583425208"]
 #[serde(from = "TransformValues", into = "TransformValues")]
 pub struct Transform {
     /// Translation + rotation value
     #[get = "pub"]
     #[set = "pub"]
     #[get_mut = "pub"]
+    #[serde_diff(opaque)]
     isometry: Isometry3<f32>,
     /// Scale vector
     #[get = "pub"]
     #[get_mut = "pub"]
+    #[serde_diff(opaque)]
     scale: Vector3<f32>,
     /// The global transformation matrix.
     #[get = "pub"]
+    #[serde_diff(opaque)]
     pub(crate) global_matrix: Matrix4<f32>,
     /// The parent transformation matrix.
     #[get = "pub"]
+    #[serde_diff(opaque)]
     pub(crate) parent_matrix: Matrix4<f32>,
 }
 
@@ -609,9 +628,11 @@ impl From<Vector3<f64>> for Transform {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+/// Format for prefab Transform serialization
+#[derive(Clone, Debug, Serialize, Deserialize, TypeUuid, SerdeDiff)]
+#[uuid = "f062a20b-250f-44b3-a58a-4a00f7692c22"]
 #[serde(rename = "Transform", default)]
-struct TransformValues {
+pub struct TransformValues {
     translation: [f32; 3],
     rotation: [f32; 4],
     scale: [f32; 3],

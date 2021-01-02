@@ -75,7 +75,7 @@ impl System<'static> for SpamSystem {
                 .read_resource::<EventChannel<NetworkSimulationEvent>>()
                 .write_resource::<TransportResource>()
                 .build(
-                    move |_commands, world, (sim_time, time, event, net), query| {
+                    move |_commands, _world, (sim_time, time, event, net), _query| {
                         let server_addr = "127.0.0.1:3457".parse().unwrap();
                         for frame in sim_time.sim_frames_to_run() {
                             info!("Sending message for sim frame {}.", frame);

@@ -21,9 +21,15 @@ license = "MIT/Apache-2.0"
 # FIXME: remove after all existing examples working
 autoexamples = false
 
+[patch.crates-io]
+legion-transaction = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
+legion-prefab = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
+prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
+serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0" }
+
 [features]
-default = ["parallel", "renderer"]
-optional = ["audio", "network", "locale", "ui"]
+default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
+optional = ["audio", "network", "locale", "ui", "tiles", "animation"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
@@ -35,10 +41,11 @@ audio = ["amethyst_audio"]
 #gltf = ["amethyst_gltf", "amethyst_animation"]
 locale = ["amethyst_locale"]
 network = ["amethyst_network"]
+utils = ["amethyst_utils"]
 
 renderer = ["amethyst_rendy"]
 
-ui = ["amethyst_ui"] #, "amethyst_animation/ui"]
+ui = ["amethyst_ui", "amethyst_animation/ui"]
 
 profiler = [
     "thread_profiler",
@@ -84,7 +91,7 @@ amethyst_locale = { path = "amethyst_locale", version = "0.15.3", optional = tru
 amethyst_rendy = { path = "amethyst_rendy", version = "0.15.3", features = ["window"], optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.15.3" }
 amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
-amethyst_utils = { path = "amethyst_utils", version = "0.15.3" }
+amethyst_utils = { path = "amethyst_utils", version = "0.15.3", optional = true }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
 amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
 winit = { git = "https://git@github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
@@ -108,11 +115,15 @@ legion = { version = "0.3", default-features = false, features = [
 ] }
 
 [dev-dependencies]
+rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
 derive-new = "0.5.8"
 env_logger = "0.7.1"
 genmesh = "0.6.2"
 ron = "0.5.1"
-specs-derive = "0.4.1"
+type-uuid = "0.1"
+serde-diff = "0.4"
+legion-prefab = "0.1"
+prefab-format = "0.1"
 
 [build-dependencies]
 dirs = "2.0.2"
@@ -194,8 +205,9 @@ name = "pong_tutorial_03"
 [[example]]
 name = "pong_tutorial_04"
 
-# [[example]]
-# name = "pong_tutorial_05"
+[[example]]
+name = "pong_tutorial_05"
+required-features = ["ui"]
 
 # [[example]]
 # name = "pong_tutorial_06"
@@ -219,8 +231,11 @@ required-features = ["locale"]
 [[example]]
 name = "arc_ball_camera"
 
-# [[example]]
-# name = "prefab"
+[[example]]
+name = "prefab_atelier"
+
+[[example]]
+name = "prefab"
 
 # [[example]]
 # name = "prefab_adapter"
@@ -246,8 +261,8 @@ name = "arc_ball_camera"
 # [[example]]
 # name = "spotlights"
 
-# [[example]]
-# name = "sprite_camera_follow"
+[[example]]
+name = "sprite_camera_follow"
 
 # [[example]]
 # name = "auto_fov"

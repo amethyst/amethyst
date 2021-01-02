@@ -76,7 +76,7 @@ impl System<'static> for SpamReceiveSystem {
             SystemBuilder::new("SpamReceiveSystem")
                 .read_resource::<EventChannel<NetworkSimulationEvent>>()
                 .write_resource::<TransportResource>()
-                .build(move |_commands, world, (channel, net), query| {
+                .build(move |_commands, _world, (channel, net), _query| {
                     for event in channel.read(&mut self.reader) {
                         match event {
                             NetworkSimulationEvent::Message(addr, payload) => {

@@ -12,7 +12,7 @@ pub(crate) struct MyBundle;
 impl<'a, 'b> SystemBundle for MyBundle {
     fn load(
         &mut self,
-        world: &mut World,
+        _world: &mut World,
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {

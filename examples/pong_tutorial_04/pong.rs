@@ -1,9 +1,10 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader},
+    assets::{DefaultLoader, Handle, Loader},
     core::{timing::Time, transform::Transform},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, SpriteRender, SpriteSheet, Texture},
 };
+use amethyst_assets::ProcessingQueue;
 
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
@@ -91,29 +92,17 @@ pub struct Ball {
 }
 
 fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
-    // Load the sprite sheet necessary to render the graphics.
-    // The texture is the pixel data
-    // `sprite_sheet` is the layout of the sprites on the image
-    // `texture_handle` is a cloneable reference to the texture
-
-    let texture_handle = {
-        let loader = resources.get::<Loader>().unwrap();
-        let texture_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        loader.load(
-            "texture/pong_spritesheet.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
+    let texture: Handle<Texture> = {
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        loader.load("texture/pong_spritesheet.png")
     };
+    let loader = resources.get::<DefaultLoader>().unwrap();
+    let sprites = loader.load("texture/pong_spritesheet.ron");
 
-    let loader = resources.get::<Loader>().unwrap();
-    let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>().unwrap();
-    loader.load(
-        "texture/pong_spritesheet.ron", // Here we load the associated ron file
-        SpriteSheetFormat(texture_handle), // We pass it the texture we want it to use
+    loader.load_from_data(
+        SpriteSheet { texture, sprites },
         (),
-        &sprite_sheet_store,
+        &resources.get::<ProcessingQueue<SpriteSheet>>().unwrap(),
     )
 }
 
@@ -147,11 +136,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
     ));
 
     // Create right plank entity.
-    world.push((
-        sprite_render.clone(),
-        Paddle::new(Side::Right),
-        right_transform,
-    ));
+    world.push((sprite_render, Paddle::new(Side::Right), right_transform));
 }
 
 /// Initialises one ball in the middle of the arena.

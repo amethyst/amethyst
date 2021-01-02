@@ -2,7 +2,7 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
-    assets::{Format as AssetFormat, Handle, Loader},
+    assets::{DefaultLoader, Format, Handle, Loader},
     core::{
         math::Vector3,
         transform::{Transform, TransformBundle},
@@ -26,11 +26,18 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+use amethyst_assets::{AssetHandle, LoaderBundle, ProcessingQueue};
+use amethyst_rendy::{types::TextureData, Texture};
+use log::info;
+use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
-#[derive(Clone, Debug)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, TypeUuid)]
+#[uuid = "f245dc2b-88a9-413e-bd51-f6c341c32017"]
 struct Custom;
 
-impl AssetFormat<MeshData> for Custom {
+amethyst_assets::register_importer!(".custom", Custom);
+impl Format<MeshData> for Custom {
     fn name(&self) -> &'static str {
         "CUSTOM"
     }
@@ -58,6 +65,7 @@ impl AssetFormat<MeshData> for Custom {
             ]));
             tex.push(TexCoord([0.0, 0.0]))
         }
+        info!("Creating mesh");
         Ok(MeshBuilder::new()
             .with_vertices(pos)
             .with_vertices(norm)
@@ -81,14 +89,13 @@ impl SimpleState for AssetsExample {
         // Add custom cube object to scene
         let (mesh, mtl) = {
             let mat_defaults = resources.get::<MaterialDefaults>().unwrap();
-            let loader = resources.get::<Loader>().unwrap();
+            let loader = resources.get::<DefaultLoader>().unwrap();
 
-            let meshes = &resources.get().unwrap();
-            let textures = &resources.get().unwrap();
+            let textures = &resources.get::<ProcessingQueue<TextureData>>().unwrap();
             let materials = &resources.get().unwrap();
 
-            let mesh: Handle<Mesh> = loader.load("mesh/cuboid.custom", Custom, (), meshes);
-            let albedo = loader.load_from_data(
+            let mesh: Handle<Mesh> = loader.load("mesh/cuboid.custom");
+            let albedo: Handle<Texture> = loader.load_from_data(
                 load_from_srgba(Srgba::new(0.1, 0.5, 0.3, 1.0)).into(),
                 (),
                 textures,
@@ -104,7 +111,11 @@ impl SimpleState for AssetsExample {
 
             (mesh, mat)
         };
-
+        log::debug!(
+            "Handle<Mesh>: {:#?}, LoadHandle: {:?}",
+            mesh,
+            mesh.load_handle()
+        );
         let mut trans = Transform::default();
         trans.set_translation_xyz(-5.0, 0.0, 0.0);
         trans.set_scale(Vector3::new(2.0, 2.0, 2.0));
@@ -113,19 +124,38 @@ impl SimpleState for AssetsExample {
 }
 
 fn main() -> Result<(), Error> {
-    amethyst::start_logger(Default::default());
+    let config = amethyst::LoggerConfig {
+        log_file: Some(std::path::PathBuf::from("asset_loading.log")),
+        level_filter: amethyst::LogLevelFilter::Info,
+        module_levels: vec![
+            (
+                "amethyst_assets".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_daemon".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_loader".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+        ],
+        ..Default::default()
+    };
+    amethyst::start_logger(config);
 
     let app_root = application_root_dir()?;
-
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/asset_loading/assets");
+    let assets_dir = app_root.join("examples/asset_loading/assets/");
 
     let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
-    let mut game_data = DispatcherBuilder::default();
-    game_data
-        .add_bundle(InputBundle::new())
+    let mut dispatcher_builder = DispatcherBuilder::default();
+    dispatcher_builder
+        .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
+        .add_bundle(InputBundle::new())
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
@@ -135,7 +165,7 @@ fn main() -> Result<(), Error> {
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
         );
-    let game = Application::build(assets_dir, AssetsExample)?.build(game_data)?;
+    let game = Application::new(assets_dir, AssetsExample, dispatcher_builder)?;
     game.run();
     Ok(())
 }

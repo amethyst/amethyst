@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Loader},
+    assets::{DefaultLoader, Loader},
     core::{
         math::{Point3, Vector3},
         transform::{Parent, Transform, TransformBundle},
@@ -11,19 +11,18 @@ use amethyst::{
     renderer::{
         camera::{ActiveCamera, Camera},
         debug_drawing::DebugLinesComponent,
-        formats::texture::ImageFormat,
-        palette::Srgba,
         rendy::hal::command::ClearColor,
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+        sprite::{SpriteRender, SpriteSheet},
         transparent::Transparent,
         types::DefaultBackend,
-        RenderDebugLines, RenderFlat2D, RenderToWindow, RenderingBundle, Texture,
+        RenderDebugLines, RenderFlat2D, RenderToWindow, RenderingBundle,
     },
     tiles::{MortonEncoder, RenderTiles2D, Tile, TileMap},
     utils::application_root_dir,
     window::ScreenDimensions,
     winit,
 };
+use amethyst_assets::{Handle, LoaderBundle, ProcessingQueue};
 
 mod systems;
 
@@ -31,32 +30,19 @@ mod systems;
 struct Player;
 
 fn load_sprite_sheet(
-    _world: &mut World,
     resources: &mut Resources,
     png_path: &str,
     ron_path: &str,
-) -> SpriteSheetHandle {
-    let texture_handle = {
-        let loader = resources.get::<Loader>().expect("Get Loader");
-        let texture_storage = resources
-            .get::<AssetStorage<Texture>>()
-            .expect("Get Texture AssetStorage");
-        loader.load(png_path, ImageFormat::default(), (), &texture_storage)
-    };
-    let loader = resources.get::<Loader>().expect("Get Loader");
-    let sprite_sheet_store = resources
-        .get::<AssetStorage<SpriteSheet>>()
-        .expect("Get SpriteSheet AssetStorage");
-    loader.load(
-        ron_path,
-        SpriteSheetFormat(texture_handle),
-        (),
-        &sprite_sheet_store,
-    )
+) -> Handle<SpriteSheet> {
+    let loader = resources.get::<DefaultLoader>().expect("Get Loader");
+    let texture = loader.load(png_path);
+    let sprites = loader.load(ron_path);
+    let sprite_sheet_store = resources.get::<ProcessingQueue<SpriteSheet>>().unwrap();
+    loader.load_from_data(SpriteSheet { texture, sprites }, (), &sprite_sheet_store)
 }
 
 // Initialize a sprite as a reference point at a fixed location
-fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
+fn init_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, 0.1);
     let sprite = SpriteRender::new(sprite_sheet.clone(), 0);
@@ -64,7 +50,7 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) ->
 }
 
 // Initialize a sprite as a reference point
-fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
+fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(-250.0, -245.0, 0.1);
     let sprite = SpriteRender::new(sprite_sheet.clone(), 0);
@@ -76,19 +62,11 @@ fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHan
     ))
 }
 
-fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
+fn init_player(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, 0.1);
     let sprite = SpriteRender::new(sprite_sheet.clone(), 1);
     world.push((transform, Player, sprite, Transparent, Named::new("player")))
-}
-
-fn init_camera(
-    parent: Entity,
-    transform: Transform,
-    camera: Camera,
-) -> (Transform, Parent, Camera, Named) {
-    (transform, Parent(parent), camera, Named::new("camera"))
 }
 
 #[derive(Default, Clone)]
@@ -104,20 +82,6 @@ impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
-        let circle_sprite_sheet_handle = load_sprite_sheet(
-            world,
-            data.resources,
-            "texture/Circle_Spritesheet.png",
-            "texture/Circle_Spritesheet.ron",
-        );
-
-        let map_sprite_sheet_handle = load_sprite_sheet(
-            world,
-            data.resources,
-            "texture/cp437_20x20.png",
-            "texture/cp437_20x20.ron",
-        );
-
         let (width, height) = {
             let dim = data
                 .resources
@@ -126,10 +90,19 @@ impl SimpleState for Example {
             (dim.width(), dim.height())
         };
 
-        let _reference = init_reference_sprite(world, &circle_sprite_sheet_handle);
+        let circle_sprite_sheet_handle = load_sprite_sheet(
+            data.resources,
+            "texture/Circle_Spritesheet.png",
+            "texture/Circle_Spritesheet.ron",
+        );
+
+        init_reference_sprite(world, &circle_sprite_sheet_handle);
+        init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
+
         let player = init_player(world, &circle_sprite_sheet_handle);
-        let camera = world.push(init_camera(
-            player,
+        let camera = world.push((
+            Named("camera".into()),
+            Parent(player),
             Transform::from(Vector3::new(0.0, 0.0, 1.1)),
             Camera::standard_2d(width, height),
         ));
@@ -137,7 +110,11 @@ impl SimpleState for Example {
             entity: Some(camera),
         });
 
-        let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
+        let map_sprite_sheet_handle = load_sprite_sheet(
+            data.resources,
+            "texture/cp437_20x20.png",
+            "texture/cp437_20x20.ron",
+        );
 
         let map = TileMap::<ExampleTile, MortonEncoder>::new(
             Vector3::new(48, 48, 1),
@@ -169,7 +146,7 @@ impl SimpleState for Example {
 
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(Default::default())
-        .level_for("amethyst_tiles", log::LevelFilter::Warn)
+        .level_for("amethyst_tiles", log::LevelFilter::Debug)
         .start();
 
     let app_root = application_root_dir()?;
@@ -177,6 +154,7 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/tiles/config/display.ron");
 
     let mut dispatcher = DispatcherBuilder::default();
+    dispatcher.add_bundle(LoaderBundle);
     dispatcher.add_bundle(TransformBundle);
     dispatcher
         .add_bundle(InputBundle::new().with_bindings_from_file("examples/tiles/config/input.ron")?);

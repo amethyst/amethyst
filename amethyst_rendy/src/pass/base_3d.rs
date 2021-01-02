@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use amethyst_assets::{AssetStorage, Handle};
+use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle};
 use amethyst_core::{ecs::*, transform::Transform};
 use derivative::Derivative;
 use rendy::{
@@ -168,8 +168,8 @@ pub struct DrawBase3D<B: Backend, T: Base3DPassDef> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
-    static_batches: TwoLevelBatch<MaterialId, u32, SmallVec<[VertexArgs; 4]>>,
-    skinned_batches: TwoLevelBatch<MaterialId, u32, SmallVec<[SkinnedVertexArgs; 4]>>,
+    static_batches: TwoLevelBatch<MaterialId, LoadHandle, SmallVec<[VertexArgs; 4]>>,
+    skinned_batches: TwoLevelBatch<MaterialId, LoadHandle, SmallVec<[SkinnedVertexArgs; 4]>>,
     vertex_format_base: Vec<VertexFormat>,
     vertex_format_skinned: Vec<VertexFormat>,
     env: EnvironmentSub<B>,
@@ -210,7 +210,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
 
         {
             profile_scope_impl!("prepare");
-
             let mut query =
                 <(&Handle<Material>, &Handle<Mesh>, &Transform, Option<&Tint>)>::query();
 
@@ -219,18 +218,25 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                 .iter()
                 .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .map(|(entity, (mat, mesh, tform, tint))| {
+                    // log::debug!("(entity, (mat, mesh, tform, tint))");
                     if let Some(tint) = tint {
                         (
-                            (mat, mesh.id()),
+                            (mat, mesh.load_handle()),
                             VertexArgs::from_object_data(tform, Some(&tint)),
                         )
                     } else {
-                        ((mat, mesh.id()), VertexArgs::from_object_data(tform, None))
+                        (
+                            (mat, mesh.load_handle()),
+                            VertexArgs::from_object_data(tform, None),
+                        )
                     }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
-                    if mesh_storage.contains_id(mesh_id) {
+                    // log::debug!("mesh_id: {:?}, mat_id: {:?}", mesh_id, mat);
+                    if mesh_storage.contains(mesh_id) {
+                        // log::debug!("if mesh_storage.contains(mesh_id)");
                         if let Some((mat, _)) = materials_ref.insert(factory, resources, &mat) {
+                            // log::debug!("statics_ref.insert(mat, mesh_id, data.drain(..))");
                             statics_ref.insert(mat, mesh_id, data.drain(..));
                         }
                     }
@@ -255,7 +261,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                 .map(|(_, (mat, mesh, tform, tint, joints))| {
                     if let Some(tint) = tint {
                         (
-                            (mat, mesh.id()),
+                            (mat, mesh.load_handle()),
                             SkinnedVertexArgs::from_object_data(
                                 &tform,
                                 Some(&tint),
@@ -264,7 +270,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                         )
                     } else {
                         (
-                            (mat, mesh.id()),
+                            (mat, mesh.load_handle()),
                             SkinnedVertexArgs::from_object_data(
                                 &tform,
                                 None,
@@ -274,7 +280,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                     }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
-                    if mesh_storage.contains_id(mesh_id) {
+                    if mesh_storage.contains(mesh_id) {
                         if let Some((mat, _)) = materials_ref.insert(factory, resources, &mat) {
                             skinned_ref.insert(mat, mesh_id, data.drain(..));
                         }
@@ -329,10 +335,12 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                     self.materials
                         .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                     for (mesh_id, batch_data) in batches {
-                        debug_assert!(mesh_storage.contains_id(*mesh_id));
-                        if let Some(mesh) =
-                            B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh_id) })
-                        {
+                        debug_assert!(mesh_storage.contains(*mesh_id));
+                        if let Some(mesh) = B::unwrap_mesh({
+                            mesh_storage
+                                .get_for_load_handle(*mesh_id)
+                                .expect("Could not get mesh.")
+                        }) {
                             mesh.bind_and_draw(
                                 0,
                                 &self.vertex_format_base,
@@ -363,9 +371,11 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                         self.materials
                             .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                         for (mesh_id, batch_data) in batches {
-                            debug_assert!(mesh_storage.contains_id(*mesh_id));
-                            if let Some(mesh) = B::unwrap_mesh(unsafe {
-                                mesh_storage.get_by_id_unchecked(*mesh_id)
+                            debug_assert!(mesh_storage.contains(*mesh_id));
+                            if let Some(mesh) = B::unwrap_mesh({
+                                mesh_storage
+                                    .get_for_load_handle(*mesh_id)
+                                    .expect("Could not get mesh.")
                             }) {
                                 mesh.bind_and_draw(
                                     0,
@@ -505,8 +515,8 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
-    static_batches: OrderedTwoLevelBatch<MaterialId, u32, VertexArgs>,
-    skinned_batches: OrderedTwoLevelBatch<MaterialId, u32, SkinnedVertexArgs>,
+    static_batches: OrderedTwoLevelBatch<MaterialId, LoadHandle, VertexArgs>,
+    skinned_batches: OrderedTwoLevelBatch<MaterialId, LoadHandle, SkinnedVertexArgs>,
     vertex_format_base: Vec<VertexFormat>,
     vertex_format_skinned: Vec<VertexFormat>,
     env: EnvironmentSub<B>,
@@ -560,15 +570,18 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                 .map(|(entity, (mat, mesh, tform, tint))| {
                     if let Some(tint) = tint {
                         (
-                            (mat, mesh.id()),
+                            (mat, mesh.load_handle()),
                             VertexArgs::from_object_data(&tform, Some(&tint)),
                         )
                     } else {
-                        ((mat, mesh.id()), VertexArgs::from_object_data(&tform, None))
+                        (
+                            (mat, mesh.load_handle()),
+                            VertexArgs::from_object_data(&tform, None),
+                        )
                     }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
-                    if mesh_storage.contains_id(mesh_id) {
+                    if mesh_storage.contains(mesh_id) {
                         if let Some((mat, this_changed)) =
                             materials_ref.insert(factory, resources, &mat)
                         {
@@ -599,7 +612,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                 .map(|(_, (mat, mesh, tform, tint, joints))| {
                     if let Some(tint) = tint {
                         (
-                            (mat, mesh.id()),
+                            (mat, mesh.load_handle()),
                             SkinnedVertexArgs::from_object_data(
                                 &tform,
                                 Some(&tint),
@@ -608,7 +621,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                         )
                     } else {
                         (
-                            (mat, mesh.id()),
+                            (mat, mesh.load_handle()),
                             SkinnedVertexArgs::from_object_data(
                                 &tform,
                                 None,
@@ -618,7 +631,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                     }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
-                    if mesh_storage.contains_id(mesh_id) {
+                    if mesh_storage.contains(mesh_id) {
                         if let Some((mat, this_changed)) =
                             materials_ref.insert(factory, resources, &mat)
                         {
@@ -675,10 +688,12 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                 if self.materials.loaded(mat) {
                     self.materials.bind(layout, 1, mat, encoder);
                     for (mesh, range) in batches {
-                        debug_assert!(mesh_storage.contains_id(*mesh));
-                        if let Some(mesh) =
-                            B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh) })
-                        {
+                        debug_assert!(mesh_storage.contains(*mesh));
+                        if let Some(mesh) = B::unwrap_mesh({
+                            mesh_storage
+                                .get_for_load_handle(*mesh)
+                                .expect("Could not get mesh.")
+                        }) {
                             if let Err(error) = mesh.bind_and_draw(
                                 0,
                                 &self.vertex_format_base,
@@ -707,10 +722,12 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                     if self.materials.loaded(mat) {
                         self.materials.bind(layout, 1, mat, encoder);
                         for (mesh, range) in batches {
-                            debug_assert!(mesh_storage.contains_id(*mesh));
-                            if let Some(mesh) =
-                                B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh) })
-                            {
+                            debug_assert!(mesh_storage.contains(*mesh));
+                            if let Some(mesh) = B::unwrap_mesh({
+                                mesh_storage
+                                    .get_for_load_handle(*mesh)
+                                    .expect("Could not get mesh.")
+                            }) {
                                 if let Err(error) = mesh.bind_and_draw(
                                     0,
                                     &self.vertex_format_skinned,

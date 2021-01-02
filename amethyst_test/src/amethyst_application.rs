@@ -591,7 +591,7 @@ mod test {
     use std::marker::PhantomData;
 
     use amethyst::{
-        assets::{Asset, AssetStorage, Handle, Loader, ProcessingState, Processor},
+        assets::{Asset, AssetStorage, DefaultLoader, Handle, Loader, ProcessingState, Processor},
         core::{bundle::SystemBundle, SystemDesc},
         derive::SystemDesc,
         ecs::prelude::*,
@@ -1163,7 +1163,9 @@ mod test {
     #[derive(Debug, PartialEq)]
     struct AssetZero(u32);
     impl Asset for AssetZero {
-        const NAME: &'static str = "amethyst_test::AssetZero";
+        fn name() -> &'static str {
+            "amethyst_test::AssetZero"
+        }
         type Data = Self;
         type HandleStorage = VecStorage<Handle<Self>>;
     }
@@ -1184,7 +1186,7 @@ mod test {
             world: &World,
             asset_translation_zero: AssetZero,
         ) -> Result<AssetZeroHandle, Error> {
-            let loader = data.resources.get::<Loader>().unwrap();
+            let loader = data.resources.get::<DefaultLoader>().unwrap();
             Ok(loader.load_from_data(
                 asset_translation_zero,
                 (),

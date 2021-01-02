@@ -1,8 +1,8 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
-use std::{collections::HashMap, marker::PhantomData};
+use std::collections::HashMap;
 
-use amethyst_assets::{AssetProcessorSystemBundle, AssetStorage};
+use amethyst_assets::{register_asset_type, AssetProcessorSystem, AssetStorage};
 use amethyst_core::ecs::*;
 use amethyst_error::{format_err, Error};
 use rendy::init::Rendy;
@@ -21,11 +21,9 @@ use crate::{
         wsi::Surface,
     },
     system::{
-        create_default_mat, make_graph_aux_data, render, GraphAuxData, GraphCreator,
-        MeshProcessorSystem, RenderState, TextureProcessorSystem,
+        create_default_mat, make_graph_aux_data, render, GraphAuxData, GraphCreator, RenderState,
     },
     types::{Backend, DefaultBackend, Mesh, Texture},
-    SpriteSheet,
 };
 
 /// A bundle of systems used for rendering using `Rendy` render graph.
@@ -71,6 +69,8 @@ impl<B: Backend> RenderingBundle<B> {
     }
 }
 
+register_asset_type!(Material => Material; AssetProcessorSystem<Material>);
+
 impl<B: Backend> SystemBundle for RenderingBundle<B> {
     fn load(
         &mut self,
@@ -78,23 +78,7 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        resources.insert(AssetStorage::<Mesh>::default());
-        builder.add_system(Box::new(MeshProcessorSystem::<B> {
-            _marker: PhantomData,
-        }));
-
-        resources.insert(AssetStorage::<Texture>::default());
-        builder.add_system(Box::new(TextureProcessorSystem::<B> {
-            _marker: PhantomData,
-        }));
-
-        builder.add_bundle(AssetProcessorSystemBundle::<Material>::default());
-        builder.add_bundle(AssetProcessorSystemBundle::<SpriteSheet>::default());
-
         resources.insert(ActiveCamera::default());
-
-        // make sure that all renderer-specific systems run after game code
-        //builder.flush(); TODO: flush legion here?
 
         for plugin in &mut self.plugins {
             plugin.on_build(world, resources, builder)?;
@@ -349,11 +333,7 @@ impl<B: Backend> PlanContext<B> {
         Ok(())
     }
 
-    fn submit_pass(
-        &mut self,
-        target: Target,
-        pass: RenderPassNodeBuilder<B, GraphAuxData>,
-    ) -> Result<(), Error> {
+    fn submit_pass(&mut self, target: Target, pass: RenderPassNodeBuilder<B, GraphAuxData>) {
         match self.passes.get(&target) {
             None => {}
             Some(EvaluationState::Evaluating) => {}
@@ -365,7 +345,6 @@ impl<B: Backend> PlanContext<B> {
         };
         let node = self.graph_builder.add_node(pass);
         self.passes.insert(target, EvaluationState::Built(node));
-        Ok(())
     }
 
     fn get_pass_node_raw(&self, target: Target) -> Option<NodeId> {
@@ -741,7 +720,7 @@ impl<B: Backend> TargetPlan<B> {
         }
 
         pass.add_subpass(subpass);
-        ctx.submit_pass(self.key, pass)?;
+        ctx.submit_pass(self.key, pass);
         Ok(())
     }
 }

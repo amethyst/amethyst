@@ -2,6 +2,7 @@
 //!
 use amethyst_assets::{Asset, Handle, ProcessableAsset, ProcessingState};
 use amethyst_error::Error;
+use type_uuid::TypeUuid;
 
 use crate::formats::AudioData;
 
@@ -9,7 +10,8 @@ use crate::formats::AudioData;
 pub type SourceHandle = Handle<Source>;
 
 /// A loaded audio file
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, TypeUuid)]
+#[uuid = "5ba63907-3883-453e-a559-9b778288f5d2"]
 pub struct Source {
     /// The bytes of this audio source.
     pub bytes: Vec<u8>,
@@ -22,13 +24,14 @@ impl AsRef<[u8]> for Source {
 }
 
 impl Asset for Source {
-    const NAME: &'static str = "audio::Source";
+    fn name() -> &'static str {
+        "audio::Source"
+    }
     type Data = AudioData;
-    //type HandleStorage = VecStorage<SourceHandle>;
 }
 
 impl ProcessableAsset for Source {
-    fn process(data: AudioData) -> Result<ProcessingState<Source>, Error> {
+    fn process(data: AudioData) -> Result<ProcessingState<AudioData, Source>, Error> {
         Ok(ProcessingState::Loaded(Source { bytes: data.0 }))
     }
 }

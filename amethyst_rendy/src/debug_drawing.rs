@@ -510,7 +510,7 @@ impl DebugLines {
             .add_rotated_cylinder(center, radius, height, points, rotation, color);
     }
 
-    pub(crate) fn drain<'a>(&'a mut self) -> impl Iterator<Item = DebugLine> + 'a {
+    pub(crate) fn drain(&mut self) -> impl Iterator<Item = DebugLine> + '_ {
         self.inner.lines.drain(..)
     }
 }
