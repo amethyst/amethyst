@@ -1,9 +1,4 @@
-use std::marker::PhantomData;
-
-use amethyst_error::{format_err, Error, ResultExt};
 use serde::{Deserialize, Serialize};
-
-use crate::Format;
 
 /// Format for loading from JSON files. Mostly useful for prefabs.
 /// This type can only be used as manually specified to the loader.

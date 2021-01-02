@@ -25,7 +25,6 @@ use amethyst::{
     Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
 };
 use amethyst_animation::{Animation, Sampler, SpriteRenderPrimitive};
-use amethyst_assets::AssetStorage;
 use serde::{Deserialize, Serialize};
 
 /// Animation ids used in a AnimationSet

@@ -31,7 +31,7 @@ impl AnimationSampling for UiTransform {
         &mut self,
         channel: &Self::Channel,
         data: &SamplerPrimitive<f32>,
-        buffer: &mut CommandBuffer,
+        _buffer: &mut CommandBuffer,
     ) {
         use self::UiTransformChannel::*;
         use crate::util::SamplerPrimitive::*;

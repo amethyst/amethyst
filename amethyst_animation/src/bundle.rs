@@ -5,7 +5,7 @@ use amethyst_error::Error;
 use derivative::Derivative;
 use marker::PhantomData;
 
-use crate::{resources::AnimationSampling, Animation};
+use crate::resources::AnimationSampling;
 
 /// Bundle for vertex skinning
 ///
@@ -26,7 +26,7 @@ impl SystemBundle for VertexSkinningBundle {
         &mut self,
         _world: &mut World,
         _resources: &mut Resources,
-        builder: &mut DispatcherBuilder,
+        _builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         // FIXME: builder.add_system(VertexSkinningSystem);
         Ok(())

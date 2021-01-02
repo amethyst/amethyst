@@ -1,10 +1,6 @@
 use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
 
-use amethyst_assets::{
-    atelier_importer,
-    atelier_importer::{typetag, SerdeImportable},
-    register_asset_type, Asset, AssetStorage, Handle,
-};
+use amethyst_assets::{Asset, AssetStorage, Handle};
 use amethyst_core::{
     ecs::*,
     timing::{duration_to_secs, secs_to_duration},

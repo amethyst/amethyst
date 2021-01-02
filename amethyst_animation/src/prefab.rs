@@ -5,7 +5,7 @@ use std::{
     marker::PhantomData,
 };
 
-use amethyst_assets::{Handle, Loader, ProgressCounter};
+use amethyst_assets::Handle;
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
