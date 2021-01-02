@@ -18,7 +18,7 @@ use crate::resources::{AnimationControlSet, AnimationSampling};
 ///        with the same id
 /// - `T`: the component type that the animation applies to
 pub fn get_animation_set<'a, I, T>(
-    world: &'a mut SubWorld<'a>,
+    world: &'a mut SubWorld<'_>,
     buffer: &mut CommandBuffer,
     entity: Entity,
 ) -> Option<&'a mut AnimationControlSet<I, T>>

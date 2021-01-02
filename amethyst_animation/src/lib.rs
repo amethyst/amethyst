@@ -68,14 +68,13 @@ pub use self::{
         RestState, Sampler, SamplerControl, SamplerControlSet, StepDirection,
     },
     sprite::{SpriteRenderChannel, SpriteRenderPrimitive},
-    systems::*,
     transform::TransformChannel,
     util::{get_animation_set, SamplerPrimitive},
 };
 
 mod bundle;
 mod material;
-// mod prefab;
+mod prefab;
 mod resources;
 // mod skinning;
 mod sprite;

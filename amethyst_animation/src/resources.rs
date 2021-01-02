@@ -1,12 +1,17 @@
 use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
 
-use amethyst_assets::{Asset, AssetStorage, Handle};
+use amethyst_assets::{
+    atelier_importer,
+    atelier_importer::{typetag, SerdeImportable},
+    register_asset_type, Asset, AssetStorage, Handle,
+};
 use amethyst_core::{
     ecs::*,
     timing::{duration_to_secs, secs_to_duration},
 };
 use derivative::Derivative;
 use fnv::FnvHashMap;
+use log::debug;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 use serde::{Deserialize, Serialize};
 
@@ -33,15 +38,10 @@ pub trait AnimationSampling: Send + Sync + 'static {
         channel: &Self::Channel,
         data: &Self::Primitive,
         buffer: &mut CommandBuffer,
-        // extra: &<Self as ApplyData<'a>>::ApplyData,
     );
 
     /// Get the current sample for a channel
-    fn current_sample<'a>(
-        &self,
-        channel: &Self::Channel,
-        // extra: &<Self as ApplyData<'a>>::ApplyData,
-    ) -> Self::Primitive;
+    fn current_sample<'a>(&self, channel: &Self::Channel) -> Self::Primitive;
 
     /// Get default primitive
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive;
@@ -192,7 +192,11 @@ where
 /// - `T`: the component type that the animation should be applied to
 ///
 /// [sampler]: struct.Sampler.html
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(bound(
+    serialize = "T::Channel: Serialize, T::Primitive: Serialize",
+    deserialize = "T::Channel: Deserialize<'de>, T::Primitive: Deserialize<'de>",
+))]
 pub struct Animation<T>
 where
     T: AnimationSampling,
@@ -667,7 +671,7 @@ where
 
 impl<I, T> AnimationControlSet<I, T>
 where
-    I: PartialEq,
+    I: PartialEq + Debug,
     T: AnimationSampling,
 {
     /// Is the animation set empty?
@@ -769,6 +773,7 @@ where
         command: AnimationCommand<T>,
     ) -> &mut Self {
         if !self.animations.iter().any(|a| a.0 == id) {
+            debug!("Adding animation {:?}", id);
             self.animations.push((
                 id,
                 AnimationControl::new(

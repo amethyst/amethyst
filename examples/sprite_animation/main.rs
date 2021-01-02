@@ -5,26 +5,27 @@
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
-        AnimationSetPrefab, EndControl,
+        EndControl, InterpolationFunction,
     },
-    assets::{PrefabData, PrefabLoader, PrefabLoaderSystemDesc, ProgressCounter, RonFormat},
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue, ProgressCounter},
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{prelude::Entity, Entities, Join, ReadStorage, WriteStorage},
+    ecs::*,
     error::Error,
-    prelude::{Builder, World, WorldExt},
     renderer::{
         camera::Camera,
         plugins::{RenderFlat2D, RenderToWindow},
         rendy::hal::command::ClearColor,
-        sprite::{prefab::SpriteScenePrefab, SpriteRender},
+        sprite::SpriteRender,
         types::DefaultBackend,
-        RenderingBundle,
+        RenderingBundle, SpriteSheet,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    Application, DispatcherBuilder, GameData, SimpleState, SimpleTrans, StateData, Trans,
+    Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
 };
+use amethyst_animation::{Animation, Sampler, SpriteRenderPrimitive};
+use amethyst_assets::AssetStorage;
 use serde::{Deserialize, Serialize};
 
 /// Animation ids used in a AnimationSet
@@ -34,66 +35,99 @@ enum AnimationId {
 }
 
 /// Loading data for one entity
-#[derive(Debug, Clone, Deserialize, PrefabData)]
-struct MyPrefabData {
-    /// Information for rendering a scene with sprites
-    sprite_scene: SpriteScenePrefab,
-    /// Аll animations that can be run on the entity
-    animation_set: AnimationSetPrefab<AnimationId, SpriteRender>,
-}
+// #[derive(Debug, Clone, Deserialize)]
+// struct MyPrefabData {
+//     /// Information for rendering a scene with sprites
+//     sprite_scene: SpriteScenePrefab,
+//     /// Аll animations that can be run on the entity
+//     animation_set: AnimationSetPrefab<AnimationId, SpriteRender>,
+// }
 
 /// The main state
 #[derive(Default)]
 struct Example {
     /// A progress tracker to check that assets are loaded
     pub progress_counter: Option<ProgressCounter>,
+    pub animated: bool,
 }
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let StateData { world, .. } = data;
-        // Crates new progress counter
+        let StateData {
+            world, resources, ..
+        } = data;
+
         self.progress_counter = Some(Default::default());
-        // Starts asset loading
-        let bat_prefab = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-            loader.load(
-                "prefab/sprite_animation.ron",
-                RonFormat,
+
+        {
+            let loader = resources
+                .get_mut::<DefaultLoader>()
+                .expect("Missing loader");
+            // let bat_prefab = loader.load("prefab/sprite_animation.ron");
+            // let arrow_test_prefab = loader.load("prefab/sprite_animation_test.ron");
+
+            let texture = loader.load("texture/bat.32x32.png");
+            let sprites = loader.load("sprites/bat.ron");
+            let sprite_sheet_store = resources.get::<ProcessingQueue<SpriteSheet>>().unwrap();
+            let sheet: Handle<SpriteSheet> =
+                loader.load_from_data(SpriteSheet { texture, sprites }, (), &sprite_sheet_store);
+
+            //let anims: Handle<Sampler<SpriteRenderPrimitive>> = loader.load("anims/bat.ron");
+            let anims = loader.load_from_data(
+                Sampler::<SpriteRenderPrimitive> {
+                    input: vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                    output: vec![
+                        SpriteRenderPrimitive::SpriteIndex(4),
+                        SpriteRenderPrimitive::SpriteIndex(3),
+                        SpriteRenderPrimitive::SpriteIndex(2),
+                        SpriteRenderPrimitive::SpriteIndex(1),
+                        SpriteRenderPrimitive::SpriteIndex(0),
+                    ],
+                    function: InterpolationFunction::Step,
+                },
+                (),
+                &resources
+                    .get::<ProcessingQueue<Sampler<SpriteRenderPrimitive>>>()
+                    .unwrap(),
+            );
+            let mut anim_set = AnimationSet::new();
+            let anim_handle: Handle<Animation<SpriteRender>> = loader.load_from_data(
+                Animation::<SpriteRender>::new_single(
+                    0,
+                    amethyst_animation::SpriteRenderChannel::SpriteIndex,
+                    anims,
+                ),
                 self.progress_counter.as_mut().unwrap(),
-            )
-        });
-        let arrow_test_prefab = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-            loader.load(
-                "prefab/sprite_animation_test.ron",
-                RonFormat,
-                self.progress_counter.as_mut().unwrap(),
-            )
-        });
+                &resources
+                    .get::<ProcessingQueue<Animation<SpriteRender>>>()
+                    .unwrap(),
+            );
+            anim_set.insert(AnimationId::Fly, anim_handle);
+
+            world.push((SpriteRender::new(sheet, 0), Transform::default(), anim_set));
+        }
         // Creates new entities with components from MyPrefabData
-        world.create_entity().with(bat_prefab).build();
-        world.create_entity().with(arrow_test_prefab).build();
+        // world.create_entity().with(bat_prefab).build();
+        // world.create_entity().with(arrow_test_prefab).build();
+
         // Creates a new camera
-        initialise_camera(world);
+        initialise_camera(world, resources);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        // Checks if we are still loading data
+        let mut query = <(Entity, Read<AnimationSet<AnimationId, SpriteRender>>)>::query();
+        let mut buffer = CommandBuffer::new(data.world);
 
         if let Some(ref progress_counter) = self.progress_counter {
             // Checks progress
             if progress_counter.is_complete() {
-                let StateData { world, .. } = data;
-                // Execute a pass similar to a system
-                world.exec(
-                    |(entities, animation_sets, mut control_sets): (
-                        Entities,
-                        ReadStorage<AnimationSet<AnimationId, SpriteRender>>,
-                        WriteStorage<AnimationControlSet<AnimationId, SpriteRender>>,
-                    )| {
-                        // For each entity that has AnimationSet
-                        for (entity, animation_set) in (&entities, &animation_sets).join() {
-                            // Creates a new AnimationControlSet for the entity
-                            let control_set = get_animation_set(&mut control_sets, entity).unwrap();
+                let (query_world, mut subworld) = data.world.split_for_query(&query);
+                for (entity, animation_set) in query.iter(&query_world) {
+                    // Creates a new AnimationControlSet for the entity
+                    if let Some(control_set) =
+                        get_animation_set(&mut subworld, &mut buffer, *entity)
+                    {
+                        if control_set.is_empty() && !self.animated {
                             // Adds the `Fly` animation to AnimationControlSet and loops infinitely
                             control_set.add_animation(
                                 AnimationId::Fly,
@@ -102,31 +136,28 @@ impl SimpleState for Example {
                                 1.0,
                                 AnimationCommand::Start,
                             );
+                            self.animated = true;
                         }
-                    },
-                );
-                // All data loaded
-                self.progress_counter = None;
+                    }
+                }
             }
         }
+        buffer.flush(data.world);
+
         Trans::None
     }
 }
 
-fn initialise_camera(world: &mut World) {
+fn initialise_camera(world: &mut World, resources: &mut Resources) {
     let (width, height) = {
-        let dim = world.read_resource::<ScreenDimensions>();
+        let dim = resources.get::<ScreenDimensions>().unwrap();
         (dim.width(), dim.height())
     };
 
     let mut camera_transform = Transform::default();
     camera_transform.set_translation_z(1.0);
 
-    world
-        .create_entity()
-        .with(camera_transform)
-        .with(Camera::standard_2d(width, height))
-        .build();
+    world.push((camera_transform, Camera::standard_2d(width, height)));
 }
 
 fn main() -> amethyst::Result<()> {
@@ -136,20 +167,11 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/sprite_animation/assets/");
     let display_config_path = app_root.join("examples/sprite_animation/config/display.ron");
 
-    let mut game_data = DispatcherBuilder::default()
-        .with_system_desc(
-            PrefabLoaderSystemDesc::<MyPrefabData>::default(),
-            "scene_loader",
-            &[],
-        )
-        .add_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
-            "sprite_animation_control",
-            "sprite_sampler_interpolation",
-        ))?
-        .add_bundle(
-            TransformBundle::new()
-                .with_dep(&["sprite_animation_control", "sprite_sampler_interpolation"]),
-        )?
+    let mut game_data = DispatcherBuilder::default();
+    game_data
+        .add_bundle(LoaderBundle)
+        .add_bundle(AnimationBundle::<AnimationId, SpriteRender>::default())
+        .add_bundle(TransformBundle::default())
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -158,7 +180,7 @@ fn main() -> amethyst::Result<()> {
                     }),
                 )
                 .with_plugin(RenderFlat2D::default()),
-        )?;
+        );
 
     let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();

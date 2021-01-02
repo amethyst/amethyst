@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{marker::PhantomData, time::Duration};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
@@ -6,7 +6,9 @@ use amethyst_core::{
     ecs::{systems::ParallelRunnable, *},
     nanos_to_duration, secs_to_duration, Time,
 };
+use derivative::Derivative;
 use itertools::Itertools;
+use log::debug;
 use minterpolate::InterpolationPrimitive;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -27,53 +29,67 @@ use crate::resources::{
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
+#[derive(Derivative)]
+#[derivative(Default)]
+pub(crate) struct SamplerInterpolationSystem<T: AnimationSampling> {
+    _marker: PhantomData<T>,
+}
 
-pub fn build_sampler_interpolation_system<T: AnimationSampling>() -> impl ParallelRunnable {
-    let mut inner = Vec::default();
-    let mut channels = Vec::default();
+impl<T> System<'_> for SamplerInterpolationSystem<T>
+where
+    T: AnimationSampling + std::fmt::Debug,
+{
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        let mut inner = Vec::default();
+        let mut channels = Vec::default();
 
-    SystemBuilder::new("SamplerInterpolationSystem")
-        .read_resource::<Time>()
-        .read_resource::<AssetStorage<Sampler<T::Primitive>>>()
-        .with_query(<(Write<SamplerControlSet<T>>, Write<T>)>::query())
-        .build(move |commands, world, (time, samplers), query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("sampler_interpolation_system");
+        Box::new(
+            SystemBuilder::new("SamplerInterpolationSystem")
+                .read_resource::<Time>()
+                .read_resource::<AssetStorage<Sampler<T::Primitive>>>()
+                .with_query(<(Write<SamplerControlSet<T>>, Write<T>)>::query())
+                .build(move |commands, world, (time, samplers), query| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("sampler_interpolation_system");
 
-            for (control_set, comp) in query.iter_mut(world) {
-                inner.clear();
+                    for (control_set, comp) in query.iter_mut(world) {
+                        debug!("Processing SamplerControlSet: {:?}", control_set);
 
-                for control in control_set.samplers.iter_mut() {
-                    if let Some(ref sampler) = samplers.get(&control.sampler) {
-                        process_sampler(control, sampler, &time, &mut inner);
-                    }
-                }
-                if !inner.is_empty() {
-                    channels.clear();
-                    channels.extend(inner.iter().map(|o| &o.1).unique().cloned());
-                    for channel in &channels {
-                        match comp.blend_method(channel) {
-                            None => {
-                                if let Some(p) = inner
-                                    .iter()
-                                    .filter(|p| p.1 == *channel)
-                                    .map(|p| p.2.clone())
-                                    .last()
-                                {
-                                    comp.apply_sample(channel, &p, commands);
-                                }
+                        inner.clear();
+
+                        for control in control_set.samplers.iter_mut() {
+                            if let Some(ref sampler) = samplers.get(&control.sampler) {
+                                process_sampler(control, sampler, &time, &mut inner);
                             }
+                        }
+                        if !inner.is_empty() {
+                            channels.clear();
+                            channels.extend(inner.iter().map(|o| &o.1).unique().cloned());
+                            for channel in &channels {
+                                match comp.blend_method(channel) {
+                                    None => {
+                                        if let Some(p) = inner
+                                            .iter()
+                                            .filter(|p| p.1 == *channel)
+                                            .map(|p| p.2.clone())
+                                            .last()
+                                        {
+                                            comp.apply_sample(channel, &p, commands);
+                                        }
+                                    }
 
-                            Some(BlendMethod::Linear) => {
-                                if let Some(p) = linear_blend::<T>(channel, &inner) {
-                                    comp.apply_sample(channel, &p, commands);
+                                    Some(BlendMethod::Linear) => {
+                                        if let Some(p) = linear_blend::<T>(channel, &inner) {
+                                            comp.apply_sample(channel, &p, commands);
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }
-        })
+                }),
+        )
+    }
 }
 
 /// Process a single `SamplerControl` object.

@@ -25,7 +25,6 @@ autoexamples = false
 legion-transaction = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
 legion-prefab = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
 prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
-serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0" }
 
 [features]
 default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
@@ -186,9 +185,9 @@ name = "custom_render_pass"
 [[example]]
 name = "fly_camera"
 
-# [[example]]
-# name = "sprite_animation"
-# required-features = ["animation"]
+[[example]]
+name = "sprite_animation"
+required-features = ["animation"]
 
 [[example]]
 name = "sprites_ordered"

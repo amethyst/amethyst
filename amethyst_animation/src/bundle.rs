@@ -1,11 +1,11 @@
 use std::{hash::Hash, marker};
 
-use amethyst_assets::AssetProcessorSystemBundle;
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
+use derivative::Derivative;
 use marker::PhantomData;
 
-use crate::{resources::AnimationSampling, Animation, Sampler};
+use crate::{resources::AnimationSampling, Animation};
 
 /// Bundle for vertex skinning
 ///
@@ -48,7 +48,7 @@ pub struct SamplingBundle<T> {
 
 impl<'a, T> SystemBundle for SamplingBundle<T>
 where
-    T: AnimationSampling,
+    T: AnimationSampling + std::fmt::Debug,
 {
     fn load(
         &mut self,
@@ -56,8 +56,9 @@ where
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(crate::systems::build_sampler_interpolation_system::<T>());
-        builder.add_bundle(AssetProcessorSystemBundle::<Sampler<T::Primitive>>::default());
+        builder.add_system(Box::new(
+            crate::systems::sampling::SamplerInterpolationSystem::<T>::default(),
+        ));
 
         Ok(())
     }
@@ -75,41 +76,16 @@ where
 /// - `I`: identifier type for running animations, only one animation can be run at the same time
 ///        with the same id (per entity)
 /// - `T`: the component type that sampling should be applied to
-#[derive(Default, Debug)]
-pub struct AnimationBundle<'a, I, T> {
-    animation_name: &'a str,
-    sampling_name: &'a str,
-    dep: &'a [&'a str],
+#[derive(Derivative, Debug)]
+#[derivative(Default)]
+pub struct AnimationBundle<I, T> {
     m: marker::PhantomData<(I, T)>,
 }
 
-impl<'a, I, T> AnimationBundle<'a, I, T> {
-    /// Create a new animation bundle
-    ///
-    /// ### Parameters:
-    ///
-    /// - `animation_name`: name of the `AnimationControlSystem`
-    /// - `sampling_name`: name of the `SamplerInterpolationSystem`
-    pub fn new(animation_name: &'a str, sampling_name: &'a str) -> Self {
-        Self {
-            animation_name,
-            sampling_name,
-            dep: &[],
-            m: marker::PhantomData,
-        }
-    }
-
-    /// Set dependencies for the `AnimationControlSystem`
-    pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
-        self.dep = dep;
-        self
-    }
-}
-
-impl<'a, I, T> SystemBundle for AnimationBundle<'static, I, T>
+impl<I, T> SystemBundle for AnimationBundle<I, T>
 where
-    I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
-    T: AnimationSampling + Clone,
+    I: std::fmt::Debug + PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
+    T: AnimationSampling + Clone + std::fmt::Debug,
 {
     fn load(
         &mut self,
@@ -117,9 +93,11 @@ where
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_bundle(AssetProcessorSystemBundle::<Animation<T>>::default());
-        builder.add_system(crate::systems::build_animation_control_system::<I, T>());
         builder.add_bundle(SamplingBundle::<T> { m: PhantomData });
+        builder.add_system(Box::new(crate::systems::control::AnimationControlSystem::<
+            I,
+            T,
+        >::default()));
 
         Ok(())
     }

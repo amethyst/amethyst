@@ -1,13 +1,16 @@
+use amethyst_assets::{register_asset_type, AssetProcessorSystem, TypeUuid};
 use amethyst_core::{
     ecs::CommandBuffer,
     math::{zero, Quaternion, Unit, Vector3, Vector4},
     transform::Transform,
 };
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::{
     resources::{AnimationSampling, BlendMethod},
     util::SamplerPrimitive,
+    Animation,
 };
 
 /// Channels that can be animated on `Transform`
@@ -20,6 +23,12 @@ pub enum TransformChannel {
     /// The scale of an entity i.e. how big it is.
     Scale,
 }
+
+impl TypeUuid for Animation<Transform> {
+    const UUID: type_uuid::Bytes =
+        *Uuid::from_u128(338570003214035303785978659011038647737).as_bytes();
+}
+register_asset_type!(Animation<Transform> => Animation<Transform>; AssetProcessorSystem<Animation<Transform>>);
 
 impl AnimationSampling for Transform {
     type Primitive = SamplerPrimitive<f32>;
