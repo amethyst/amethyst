@@ -2,13 +2,13 @@ use amethyst::{
     core::{
         math::Vector3,
         transform::{Parent, Transform},
+        Named,
     },
     ecs::{IntoQuery, ParallelRunnable, System},
     input::InputHandler,
     renderer::{ActiveCamera, Camera},
     window::ScreenDimensions,
 };
-use amethyst_core::Named;
 use legion::{component, Entity, SystemBuilder};
 
 pub struct CameraSwitchSystem {

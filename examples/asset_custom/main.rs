@@ -1,16 +1,15 @@
 use amethyst::{
-    assets::{Asset, AssetStorage, Format, Handle, Loader, TypeUuid},
-    error::{Error, ResultExt},
+    assets::{
+        atelier_importer,
+        atelier_importer::{typetag, SerdeImportable},
+        register_asset_type, Asset, AssetProcessorSystem, AssetStorage, DefaultLoader, Format,
+        Handle, Loader, LoaderBundle, TypeUuid,
+    },
+    error::{format_err, Error, ResultExt},
     prelude::*,
+    renderer::{types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
 };
-use amethyst_assets::{
-    atelier_importer,
-    atelier_importer::{typetag, SerdeImportable},
-    register_asset_type, AssetProcessorSystem, DefaultLoader, LoaderBundle,
-};
-use amethyst_error::format_err;
-use amethyst_rendy::{types::DefaultBackend, RenderingBundle};
 use serde::{Deserialize, Serialize};
 
 /// Custom asset representing an energy blast.
@@ -87,7 +86,7 @@ fn main() -> amethyst::Result<()> {
         level_filter: amethyst::LogLevelFilter::Info,
         module_levels: vec![
             (
-                "amethyst_assets".to_string(),
+                "amethyst::assets".to_string(),
                 amethyst::LogLevelFilter::Debug,
             ),
             (

@@ -29,7 +29,7 @@ pub trait AnimationSampling: Send + Sync + 'static {
     type Channel: Debug + Clone + Hash + Eq + Send + Sync + 'static;
 
     /// Apply a sample to a channel
-    fn apply_sample<'a>(
+    fn apply_sample(
         &mut self,
         channel: &Self::Channel,
         data: &Self::Primitive,
@@ -37,7 +37,7 @@ pub trait AnimationSampling: Send + Sync + 'static {
     );
 
     /// Get the current sample for a channel
-    fn current_sample<'a>(&self, channel: &Self::Channel) -> Self::Primitive;
+    fn current_sample(&self, channel: &Self::Channel) -> Self::Primitive;
 
     /// Get default primitive
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive;
@@ -273,18 +273,12 @@ pub enum ControlState {
 impl ControlState {
     /// Is the state `Running`
     pub fn is_running(&self) -> bool {
-        match *self {
-            ControlState::Running(_) => true,
-            _ => false,
-        }
+        matches!(*self, ControlState::Running(_))
     }
 
     /// Is the state `Paused`
     pub fn is_paused(&self) -> bool {
-        match *self {
-            ControlState::Paused(_) => true,
-            _ => false,
-        }
+        matches!(*self, ControlState::Paused(_))
     }
 }
 

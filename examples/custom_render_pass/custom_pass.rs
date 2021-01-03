@@ -1,5 +1,6 @@
 use amethyst::{
     core::ecs::{DispatcherBuilder, World},
+    error::Error,
     prelude::*,
     renderer::{
         bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
@@ -16,12 +17,11 @@ use amethyst::{
             shader::{Shader, SpirvShader},
         },
         submodules::{DynamicUniform, DynamicVertexBuffer},
+        system::GraphAuxData,
         types::Backend,
         util, ChangeDetection,
     },
 };
-use amethyst_error::Error;
-use amethyst_rendy::system::GraphAuxData;
 use derivative::Derivative;
 use glsl_layout::*;
 

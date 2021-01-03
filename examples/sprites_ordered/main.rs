@@ -1,6 +1,6 @@
 //! Demonstrates sprite loading and z ordering
 use amethyst::{
-    assets::{DefaultLoader, Handle, Loader},
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
     core::{
         transform::{Transform, TransformBundle},
         Hidden,
@@ -11,6 +11,7 @@ use amethyst::{
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
         rendy::hal::command::ClearColor,
+        sprite::{SpriteGrid, Sprites},
         types::DefaultBackend,
         Camera, RenderingBundle, SpriteRender, SpriteSheet, Transparent,
     },
@@ -18,8 +19,6 @@ use amethyst::{
     window::ScreenDimensions,
     winit::event::VirtualKeyCode,
 };
-use amethyst_assets::{LoaderBundle, ProcessingQueue};
-use amethyst_rendy::sprite::{SpriteGrid, Sprites};
 use log::info;
 
 const SPRITE_SPACING_RATIO: f32 = 0.7;

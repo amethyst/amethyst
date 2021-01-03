@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{DefaultLoader, Loader},
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
     core::{
         math::{Point3, Vector3},
         transform::{Parent, Transform, TransformBundle},
@@ -22,7 +22,6 @@ use amethyst::{
     window::ScreenDimensions,
     winit,
 };
-use amethyst_assets::{Handle, LoaderBundle, ProcessingQueue};
 
 mod systems;
 

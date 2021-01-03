@@ -2,8 +2,8 @@ use amethyst::{
     core::{math::Vector3, transform::Transform, Time},
     ecs::{IntoQuery, ParallelRunnable, System},
     input::InputHandler,
+    tiles::{MortonEncoder, TileMap},
 };
-use amethyst_tiles::{MortonEncoder, TileMap};
 use legion::SystemBuilder;
 
 use crate::ExampleTile;

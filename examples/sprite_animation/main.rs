@@ -4,14 +4,12 @@
 
 use amethyst::{
     animation::{
-        get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
-        EndControl, InterpolationFunction,
+        get_animation_set, Animation, AnimationBundle, AnimationCommand, AnimationSet, EndControl,
+        InterpolationFunction, Sampler, SpriteRenderPrimitive,
     },
     assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue, ProgressCounter},
     core::transform::{Transform, TransformBundle},
-    derive::PrefabData,
     ecs::*,
-    error::Error,
     renderer::{
         camera::Camera,
         plugins::{RenderFlat2D, RenderToWindow},
@@ -24,7 +22,6 @@ use amethyst::{
     window::ScreenDimensions,
     Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
 };
-use amethyst_animation::{Animation, Sampler, SpriteRenderPrimitive};
 use serde::{Deserialize, Serialize};
 
 /// Animation ids used in a AnimationSet
@@ -93,7 +90,7 @@ impl SimpleState for Example {
             let anim_handle: Handle<Animation<SpriteRender>> = loader.load_from_data(
                 Animation::<SpriteRender>::new_single(
                     0,
-                    amethyst_animation::SpriteRenderChannel::SpriteIndex,
+                    amethyst::animation::SpriteRenderChannel::SpriteIndex,
                     anims,
                 ),
                 self.progress_counter.as_mut().unwrap(),
