@@ -4,10 +4,12 @@
 */
 
 #![enable(implicit_some)]
-
-Grid((
-    texture_width: 512,
-    texture_height: 512,
-    columns: 1,
-    rows: 1,
-))
+{
+    "04c60333-c790-4586-aa76-086b19167a04":
+    Grid((
+        texture_width: 512,
+        texture_height: 512,
+        columns: 1,
+        rows: 1,
+    ))
+}

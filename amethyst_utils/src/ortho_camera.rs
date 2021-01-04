@@ -1,18 +1,11 @@
 //! Provides a automatically resized orthographic camera.
 
-use amethyst_assets::PrefabData;
-use amethyst_core::{
-    ecs::{Component, DenseVecStorage, Entity, Join, ReadExpect, System, WriteStorage},
-    Axis2,
-};
-use amethyst_derive::PrefabData;
-use amethyst_error::Error;
+//use amethyst_assets::PrefabData;
+use amethyst_core::{ecs::*, Axis2};
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
 use derive_new::new;
-
 use serde::{Deserialize, Serialize};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -93,8 +86,8 @@ impl Default for CameraOrthoWorldCoordinates {
 ///     .with(CameraOrtho::normalized(CameraNormalizeMode::Contain))
 ///     .build();
 /// ```
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, PrefabData, new)]
-#[prefab(Component)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, new)]
+//#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, PrefabData, new)]
 pub struct CameraOrtho {
     /// How the camera's matrix is changed when the window's aspect ratio changes.
     /// See `CameraNormalizeMode` for more info.
@@ -120,10 +113,6 @@ impl CameraOrtho {
         self.mode
             .camera_offsets(window_aspect_ratio, &self.world_coordinates)
     }
-}
-
-impl Component for CameraOrtho {
-    type Storage = DenseVecStorage<Self>;
 }
 
 /// Settings that decide how to scale the camera's matrix when the aspect ratio changes.
@@ -237,46 +226,38 @@ impl Default for CameraNormalizeMode {
 
 /// System that automatically changes the camera matrix according to the settings in
 /// the `CameraOrtho` attached to the camera entity.
-#[derive(Default, Debug)]
-pub struct CameraOrthoSystem;
+pub fn build_camera_normalize_system() -> impl Runnable {
+    SystemBuilder::new("camera_ortho_system")
+        .read_resource::<ScreenDimensions>()
+        .with_query(<(Write<Camera>, Write<CameraOrtho>)>::query())
+        .build(move |_, subworld, dimensions, query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("camera_ortho_system");
 
-impl<'a> System<'a> for CameraOrthoSystem {
-    type SystemData = (
-        ReadExpect<'a, ScreenDimensions>,
-        WriteStorage<'a, Camera>,
-        WriteStorage<'a, CameraOrtho>,
-    );
+            let aspect = dimensions.aspect_ratio();
 
-    #[allow(clippy::float_cmp)] // cmp just used to recognize change
-    fn run(&mut self, (dimensions, mut cameras, mut ortho_cameras): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("camera_ortho_system");
+            for (camera, ortho_camera) in query.iter_mut(subworld) {
+                if (aspect - ortho_camera.aspect_ratio_cache).abs() > f32::EPSILON {
+                    ortho_camera.aspect_ratio_cache = aspect;
+                    let offsets = ortho_camera.camera_offsets(aspect);
 
-        let aspect = dimensions.aspect_ratio();
-
-        for (camera, mut ortho_camera) in (&mut cameras, &mut ortho_cameras).join() {
-            if aspect != ortho_camera.aspect_ratio_cache {
-                ortho_camera.aspect_ratio_cache = aspect;
-                let offsets = ortho_camera.camera_offsets(aspect);
-
-                *camera = Camera::orthographic(
-                    offsets.0,
-                    offsets.1,
-                    offsets.2,
-                    offsets.3,
-                    ortho_camera.world_coordinates.near,
-                    ortho_camera.world_coordinates.far,
-                );
+                    *camera = Camera::orthographic(
+                        offsets.0,
+                        offsets.1,
+                        offsets.2,
+                        offsets.3,
+                        ortho_camera.world_coordinates.near,
+                        ortho_camera.world_coordinates.far,
+                    );
+                }
             }
-        }
-    }
+        })
 }
 
 #[cfg(test)]
 mod test {
-    use crate::ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
-
     use super::Axis2;
+    use crate::ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
 
     // TODO: Disabled until someone fixes the formula (if possible).
     /*#[test]

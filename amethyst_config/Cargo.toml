@@ -1,7 +1,10 @@
 [package]
 name = "amethyst_config"
 version = "0.15.3"
-authors = ["Aceeri <conmcclusk@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Aceeri <conmcclusk@gmail.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "Loading from .ron files into Rust structures with defaults to prevent hard errors."
 exclude = ["examples/*"]
@@ -12,13 +15,9 @@ repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 ron = "0.5"
 serde = "1.0"
-log = "0.4.6"
 
 thread_profiler = { version = "0.3", optional = true }
 
@@ -26,4 +25,4 @@ thread_profiler = { version = "0.3", optional = true }
 serde_derive = "1"
 
 [features]
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = ["thread_profiler/thread_profiler"]

@@ -130,7 +130,7 @@ If you are compiling on Linux, make sure to install the dependencies below.
 ### Debian/Ubuntu
 
 ```
-# apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev
+# apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev libfontconfig1-dev
 ```
 
 ### Fedora
@@ -260,7 +260,7 @@ Amethyst is supported by:
 </p>
 <p>
   <a href="http://embark-studios.com">
-    <img src="https://cdn.discordapp.com/attachments/497710174543544330/543104348423454730/unknown.png" width="201px">
+    <img src="https://embark.dev/img/logo_black.png" width="201px">
   </a>
 </p>
 

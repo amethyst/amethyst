@@ -1,11 +1,10 @@
 use amethyst_assets::Processor;
 
-use crate::resources::{Animation, Sampler};
-
 pub use self::{
     control::{AnimationControlSystem, AnimationControlSystemDesc},
     sampling::SamplerInterpolationSystem,
 };
+use crate::resources::{Animation, Sampler};
 
 mod control;
 mod sampling;

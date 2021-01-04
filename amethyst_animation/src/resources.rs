@@ -1,11 +1,5 @@
 use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
 
-use derivative::Derivative;
-use fnv::FnvHashMap;
-use log::error;
-use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
-use serde::{Deserialize, Serialize};
-
 use amethyst_assets::{Asset, AssetStorage, Handle, PrefabData};
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
@@ -14,6 +8,11 @@ use amethyst_core::{
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
+use derivative::Derivative;
+use fnv::FnvHashMap;
+use log::error;
+use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
+use serde::{Deserialize, Serialize};
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
@@ -97,7 +96,9 @@ impl<T> Asset for Sampler<T>
 where
     T: InterpolationPrimitive + Send + Sync + 'static,
 {
-    const NAME: &'static str = "animation::Sampler";
+    fn name() -> &'static str {
+        "animation::Sampler"
+    }
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }
@@ -274,7 +275,9 @@ impl<T> Asset for Animation<T>
 where
     T: AnimationSampling,
 {
-    const NAME: &'static str = "animation::Animation";
+    fn name() -> &'static str {
+        "animation::Animation"
+    }
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }

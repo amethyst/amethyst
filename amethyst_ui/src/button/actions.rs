@@ -1,5 +1,6 @@
+use amethyst_core::ecs::Entity;
+
 use crate::UiImage;
-use amethyst_core::ecs::prelude::Entity;
 
 /// Describes an action targeted at a `UiButton`.
 #[derive(Debug, Clone)]

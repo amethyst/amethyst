@@ -1,0 +1,35 @@
+pub const PREFAB: &str = r#"Prefab(
+    // Prefab AssetUuid
+    id: "14dec17f-ae14-40a3-8e44-e487fc423287",
+    objects: [
+        // Inline definition of an entity and its components
+        Entity((
+             // Entity AssetUuid
+             id: "62b3dbd1-56a8-469e-a262-41a66321da8b",
+             // Component data and types
+             components: [
+                 (
+                     // Component AssetTypeId
+                     type: "f5780013-bae4-49f0-ac0e-a108ff52fec0",
+                     data: (
+                         position: [100.0, 100.0]
+                     ),
+                 ),
+             ]
+        )),
+        Entity((
+             // Entity AssetUuid
+             id: "df6df3fd-4a0c-4640-bd71-7969f1e568a1",
+             // Component data and types
+             components: [
+                 (
+                     // Component AssetTypeId
+                     type: "f5780013-bae4-49f0-ac0e-a108ff52fec0",
+                     data: (
+                         position: [200.0, 200.0]
+                     ),
+                 ),
+             ]
+        )),
+    ]
+)"#;

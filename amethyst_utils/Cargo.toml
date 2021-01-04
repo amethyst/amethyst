@@ -1,7 +1,11 @@
 [package]
 name = "amethyst_utils"
 version = "0.15.3"
-authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Simon Rönnberg <seamonr@gmail.com>",
+    "Joël Lupien <jojolepro@jojolepro.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "Amethyst utils"
 
@@ -11,29 +15,20 @@ repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
-amethyst_controls = { path = "../amethyst_controls", version = "0.15.3" }
+#amethyst_controls = { path = "../amethyst_controls", version = "0.15.3" }
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
-amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
+#amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
 amethyst_rendy = { path = "../amethyst_rendy", version = "0.15.3" }
 amethyst_window = { path = "../amethyst_window", version = "0.15.3" }
 derive-new = "0.5.8"
 log = "0.4.6"
 serde = { version = "1.0", features = ["derive"] }
-specs-derive = "0.4.1"
-specs-hierarchy = "0.6.0"
 dunce = "1"
 
 thread_profiler = { version = "0.3", optional = true }
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
-metal = ["amethyst_rendy/metal"]
-empty = ["amethyst_rendy/empty"]
-
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = ["thread_profiler/thread_profiler"]

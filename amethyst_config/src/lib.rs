@@ -1,5 +1,9 @@
 //! Loads RON files into a structure for easy / statically typed usage.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![crate_name = "amethyst_config"]
 #![warn(
     missing_debug_implementations,
@@ -146,8 +150,9 @@ where
     }
 
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
-        use ron::ser::to_string_pretty;
         use std::{fs::File, io::Write};
+
+        use ron::ser::to_string_pretty;
 
         let s = to_string_pretty(self, Default::default())?;
         File::create(path)?.write_all(s.as_bytes())?;

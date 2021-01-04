@@ -1,30 +1,26 @@
 use amethyst_assets::AssetStorage;
 use amethyst_audio::{output::Output, Source, SourceHandle};
 use amethyst_core::{
-    ecs::{
-        prelude::{Component, DenseVecStorage},
-        Read, System, SystemData, Write,
-    },
+    ecs::*,
     shrev::{EventChannel, ReaderId},
 };
-use amethyst_derive::SystemDesc;
-
-use crate::{
-    event::{UiEvent, UiEventType::*},
-    event_retrigger::{EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc},
-    EventReceiver,
-};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-/// Builds a `UiSoundRetriggerSystem`.
-pub type UiSoundRetriggerSystemDesc = EventRetriggerSystemDesc<UiSoundRetrigger>;
+use crate::{
+    event::{UiEvent, UiEventType::*},
+    event_retrigger::{EventRetrigger, EventRetriggerSystem},
+    EventReceiver,
+};
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvent`s
 /// and trigger `UiPlaySoundAction`s for entities with attached
 /// `UiSoundRetrigger` components.
-pub type UiSoundRetriggerSystem = EventRetriggerSystem<UiSoundRetrigger>;
+pub fn ui_sound_event_retrigger_system(
+    reader_id: ReaderId<UiEvent>,
+) -> EventRetriggerSystem<UiSoundRetrigger> {
+    EventRetriggerSystem::<UiSoundRetrigger>::new(reader_id)
+}
 
 /// Action that will trigger a sound to play in `UiSoundSystem`.
 #[derive(Debug, Clone)]
@@ -42,10 +38,6 @@ pub struct UiSoundRetrigger {
     pub on_hover_start: Option<UiPlaySoundAction>,
     /// The sound that is played when the user stops hovering over the entity
     pub on_hover_stop: Option<UiPlaySoundAction>,
-}
-
-impl Component for UiSoundRetrigger {
-    type Storage = DenseVecStorage<Self>;
 }
 
 impl EventRetrigger for UiSoundRetrigger {
@@ -72,10 +64,8 @@ impl EventRetrigger for UiSoundRetrigger {
 
 /// Handles any dispatches `UiPlaySoundAction`s and plays the received
 /// sounds through the set `Output`.
-#[derive(Debug, SystemDesc)]
-#[system_desc(name(UiSoundSystemDesc))]
+#[derive(Debug)]
 pub struct UiSoundSystem {
-    #[system_desc(event_channel_reader)]
     event_reader: ReaderId<UiPlaySoundAction>,
 }
 
@@ -88,25 +78,25 @@ impl UiSoundSystem {
     }
 }
 
-impl<'s> System<'s> for UiSoundSystem {
-    type SystemData = (
-        Write<'s, EventChannel<UiPlaySoundAction>>,
-        Read<'s, AssetStorage<Source>>,
-        Option<Read<'s, Output>>,
-    );
-
-    fn run(&mut self, (sound_events, audio_storage, audio_output): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("ui_sound_system");
-
-        let event_reader = &mut self.event_reader;
-
-        for event in sound_events.read(event_reader) {
-            if let Some(output) = audio_output.as_ref() {
-                if let Some(sound) = audio_storage.get(&event.0) {
-                    output.play_once(sound, 1.0);
-                }
-            }
-        }
+impl System<'static> for UiSoundSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("UiSoundSystem")
+                .write_resource::<EventChannel<UiPlaySoundAction>>()
+                .read_resource::<AssetStorage<Source>>()
+                .read_resource::<Output>()
+                .build(
+                    move |_commands, _world, (sound_events, audio_storage, audio_output), _| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("ui_sound_system");
+                        let event_reader = &mut self.event_reader;
+                        for event in sound_events.read(event_reader) {
+                            if let Some(sound) = audio_storage.get(&event.0) {
+                                audio_output.play_once(sound, 1.0);
+                            }
+                        }
+                    },
+                ),
+        )
     }
 }

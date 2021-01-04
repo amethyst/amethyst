@@ -1,7 +1,6 @@
 //! Renderer error types.
 
 use amethyst_core::math::{Point3, Vector3};
-
 use err_derive::Error;
 
 /// Tile is out of bounds.

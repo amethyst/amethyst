@@ -1,11 +1,10 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use amethyst_core::{
-    ecs::{Entity, ReadExpect, System, SystemData, Write, WriteStorage},
+    ecs::*,
     shrev::{EventChannel, ReaderId},
-    ParentHierarchy,
+    transform::Parent,
 };
-use amethyst_derive::SystemDesc;
 
 use crate::{UiButtonAction, UiButtonActionType::*, UiImage, UiText};
 
@@ -59,14 +58,10 @@ where
 /// when necessary.
 ///
 /// It's automatically registered with the `UiBundle`.
-#[derive(Debug, SystemDesc)]
-#[system_desc(name(UiButtonSystemDesc))]
+#[derive(Debug)]
 pub struct UiButtonSystem {
-    #[system_desc(event_channel_reader)]
     event_reader: ReaderId<UiButtonAction>,
-    #[system_desc(skip)]
     set_images: HashMap<Entity, ActionChangeStack<UiImage>>,
-    #[system_desc(skip)]
     set_text_colors: HashMap<Entity, ActionChangeStack<[f32; 4]>>,
 }
 
@@ -81,85 +76,85 @@ impl UiButtonSystem {
     }
 }
 
-impl<'s> System<'s> for UiButtonSystem {
-    type SystemData = (
-        WriteStorage<'s, UiImage>,
-        WriteStorage<'s, UiText>,
-        ReadExpect<'s, ParentHierarchy>,
-        Write<'s, EventChannel<UiButtonAction>>,
-    );
+impl System<'static> for UiButtonSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("UiButtonSystem")
+                .write_resource::<EventChannel<UiButtonAction>>()
+                .with_query(<(Entity, &Parent, &mut UiText)>::query())
+                .with_query(<(Entity, &mut UiImage)>::query())
+                .build(
+                    move |commands, world, button_events, (children_with_text, images)| {
+                        let event_reader = &mut self.event_reader;
+                        for event in button_events.read(event_reader) {
+                            match event.event_type {
+                                SetTextColor(ref color) => {
+                                    children_with_text.for_each_mut(world, |(_, parent, text)| {
+                                        if parent.0 == event.target {
+                                            self.set_text_colors
+                                                .entry(event.target)
+                                                .or_insert_with(|| {
+                                                    ActionChangeStack::new(text.color)
+                                                })
+                                                .add(*color);
+                                            text.color = *color;
+                                        }
+                                    });
+                                }
+                                UnsetTextColor(ref color) => {
+                                    children_with_text.for_each_mut(
+                                        world,
+                                        |(_, parent, mut text)| {
+                                            if parent.0 == event.target
+                                                && self.set_text_colors.contains_key(&event.target)
+                                            {
+                                                self.set_text_colors
+                                                    .get_mut(&event.target)
+                                                    .and_then(|it| it.remove(color));
 
-    fn run(
-        &mut self,
-        (mut image_storage, mut text_storage, hierarchy, button_events): Self::SystemData,
-    ) {
-        let event_reader = &mut self.event_reader;
+                                                text.color =
+                                                    self.set_text_colors[&event.target].current();
 
-        for event in button_events.read(event_reader) {
-            match event.event_type {
-                SetTextColor(ref color) => {
-                    for &child in hierarchy.children(event.target) {
-                        if let Some(text) = text_storage.get_mut(child) {
-                            // found the text. push its original color if
-                            // it's not there yet
-                            self.set_text_colors
-                                .entry(event.target)
-                                .or_insert_with(|| ActionChangeStack::new(text.color))
-                                .add(*color);
+                                                if self.set_text_colors[&event.target].is_empty() {
+                                                    self.set_text_colors.remove(&event.target);
+                                                }
+                                            }
+                                        },
+                                    );
+                                }
+                                SetImage(ref set_image) => {
+                                    if let Ok((_, image)) = images.get_mut(world, event.target) {
+                                        self.set_images
+                                            .entry(event.target)
+                                            .or_insert_with(|| {
+                                                ActionChangeStack::new(image.clone())
+                                            })
+                                            .add(set_image.clone());
 
-                            text.color = *color;
+                                        commands.remove_component::<UiImage>(event.target);
+                                        commands.add_component(event.target, set_image.clone());
+                                    }
+                                }
+                                UnsetTexture(ref unset_image) => {
+                                    if self.set_images.contains_key(&event.target) {
+                                        self.set_images
+                                            .get_mut(&event.target)
+                                            .and_then(|it| it.remove(unset_image));
+                                        commands.remove_component::<UiImage>(event.target);
+                                        commands.add_component(
+                                            event.target,
+                                            self.set_images[&event.target].current().clone(),
+                                        );
+
+                                        if self.set_images[&event.target].is_empty() {
+                                            self.set_images.remove(&event.target);
+                                        }
+                                    }
+                                }
+                            };
                         }
-                    }
-                }
-                UnsetTextColor(ref color) => {
-                    for &child in hierarchy.children(event.target) {
-                        if let Some(text) = text_storage.get_mut(child) {
-                            // first, remove the color we were told to unset
-                            if !self.set_text_colors.contains_key(&event.target) {
-                                // nothing to do!
-                                continue;
-                            }
-
-                            self.set_text_colors
-                                .get_mut(&event.target)
-                                .and_then(|it| it.remove(color));
-
-                            text.color = self.set_text_colors[&event.target].current();
-
-                            if self.set_text_colors[&event.target].is_empty() {
-                                self.set_text_colors.remove(&event.target);
-                            }
-                        }
-                    }
-                }
-                SetImage(ref set_image) => {
-                    if let Some(image) = image_storage.get_mut(event.target) {
-                        self.set_images
-                            .entry(event.target)
-                            .or_insert_with(|| ActionChangeStack::new(image.clone()))
-                            .add(set_image.clone());
-
-                        *image = set_image.clone();
-                    }
-                }
-                UnsetTexture(ref unset_image) => {
-                    if let Some(image) = image_storage.get_mut(event.target) {
-                        if !self.set_images.contains_key(&event.target) {
-                            continue;
-                        }
-
-                        self.set_images
-                            .get_mut(&event.target)
-                            .and_then(|it| it.remove(unset_image));
-
-                        *image = self.set_images[&event.target].current();
-
-                        if self.set_images[&event.target].is_empty() {
-                            self.set_images.remove(&event.target);
-                        }
-                    }
-                }
-            };
-        }
+                    },
+                ),
+        )
     }
 }

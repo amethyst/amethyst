@@ -11,5 +11,5 @@ mod transport;
 pub use events::NetworkSimulationEvent;
 pub use message::Message;
 pub use requirements::{DeliveryRequirement, UrgencyRequirement};
-pub use timing::{NetworkSimulationTime, NetworkSimulationTimeSystem};
+pub use timing::NetworkSimulationTime;
 pub use transport::{laminar, tcp, udp, TransportResource};

@@ -1,22 +1,20 @@
 use std::{marker, time::Duration};
 
-use itertools::Itertools;
-use minterpolate::InterpolationPrimitive;
-
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     duration_to_nanos, duration_to_secs,
     ecs::prelude::{Component, Join, Read, System, WriteStorage},
     nanos_to_duration, secs_to_duration, Time,
 };
+use itertools::Itertools;
+use minterpolate::InterpolationPrimitive;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use crate::resources::{
     AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
     SamplerControlSet,
 };
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// System for interpolating active samplers.
 ///

@@ -1,5 +1,9 @@
 //! A collection of abstractions for various input devices to be used with Amethyst.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -9,27 +13,28 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+use std::iter::Iterator;
+
+pub use winit::event::{ElementState, VirtualKeyCode};
+
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::{
     axis::Axis,
-    bindings::{BindingError, BindingTypes, Bindings, StringBindings},
+    bindings::{BindingError, Bindings},
     bundle::{BindingsFileError, InputBundle},
     button::Button,
     controller::{ControllerAxis, ControllerButton, ControllerEvent},
     event::InputEvent,
-    input_handler::InputHandler,
+    input_handler::{InputHandler, KeyboardModifiersState},
     mouse::MouseAxis,
     scroll_direction::ScrollDirection,
-    system::{InputSystem, InputSystemDesc},
+    system::InputSystem,
     util::{
-        get_input_axis_simple, get_key, get_mouse_button, is_close_requested, is_key_down,
-        is_key_up, is_mouse_button_down,
+        get_action_simple, get_input_axis_simple, get_key, get_mouse_button, is_close_requested,
+        is_key_down, is_key_up, is_mouse_button_down,
     },
 };
-pub use winit::{ElementState, VirtualKeyCode};
-
-use std::iter::Iterator;
 
 mod axis;
 mod bindings;
@@ -45,29 +50,3 @@ mod util;
 
 #[cfg(feature = "sdl_controller")]
 mod sdl_events_system;
-
-struct KeyThenCode {
-    value: (VirtualKeyCode, u32),
-    index: u8,
-}
-
-impl KeyThenCode {
-    pub fn new(value: (VirtualKeyCode, u32)) -> KeyThenCode {
-        KeyThenCode { value, index: 0 }
-    }
-}
-
-impl Iterator for KeyThenCode {
-    type Item = Button;
-    fn next(&mut self) -> Option<Button> {
-        let index = self.index;
-        if self.index < 2 {
-            self.index += 1;
-        }
-        match index {
-            0 => Some(Button::Key(self.value.0)),
-            1 => Some(Button::ScanCode(self.value.1)),
-            _ => None,
-        }
-    }
-}

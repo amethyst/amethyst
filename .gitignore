@@ -1,11 +1,8 @@
 # Unwanted files
-amethyst_assets/target
-amethyst_config/target
-amethyst_renderer/target
 book/book
 target
-Cargo.lock
 *.log
+Cargo.lock
 
 # Backup files
 .DS_Store
@@ -21,3 +18,8 @@ thumbs.db
 
 # Thread profiler output
 thread_profile.json
+
+# Atelier Assets
+.assets_db
+prefab.ron
+*.meta

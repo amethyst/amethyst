@@ -1,140 +1,218 @@
-//! Extension system utilities.
+//! Extension system utilities
 //!
-//! This modules contains an extension trait for the System trait which adds useful transformation
-//! functions.
+//! This module contains useful functions to extend and transform existing systems.
 
-use crate::{
-    ecs::prelude::{Read, System, World},
-    shred::{RunningTime, SystemData},
+use legion::{
+    storage::ComponentTypeId,
+    systems::{
+        CommandBuffer, ParallelRunnable, Resource, ResourceSet, ResourceTypeId, Runnable, SystemId,
+        UnsafeResources,
+    },
+    world::{ArchetypeAccess, WorldId},
+    Read, World,
 };
 
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
-/// Extension functionality associated systems.
-pub trait SystemExt {
-    /// Make a system pausable by tying it to a specific value of a resource.
-    ///
-    /// When the value of the resource differs from `value` the system is considered "paused",
-    /// and the `run` method of the pausable system will not be called.
-    ///
-    /// # Notes
-    ///
-    /// Special care must be taken not to read from an `EventChannel` with pausable systems.
-    /// Since `run` is never called, there is no way to consume the reader side of a channel, and
-    /// it may grow indefinitely leaking memory while the system is paused.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use amethyst::{
-    ///     ecs::{System, Write},
-    ///     shred::DispatcherBuilder,
-    ///     prelude::*,
-    /// };
-    ///
-    /// #[derive(PartialEq)]
-    /// enum CurrentState {
-    ///     Disabled,
-    ///     Enabled,
-    /// }
-    ///
-    /// impl Default for CurrentState {
-    ///     fn default() -> Self {
-    ///         CurrentState::Disabled
-    ///     }
-    /// }
-    ///
-    /// struct AddNumber(u32);
-    ///
-    /// impl<'s> System<'s> for AddNumber {
-    ///     type SystemData = Write<'s, u32>;
-    ///
-    ///     fn run(&mut self, mut number: Self::SystemData) {
-    ///         *number += self.0;
-    ///     }
-    /// }
-    ///
-    /// let mut world = World::new();
-    ///
-    /// let mut dispatcher = DispatcherBuilder::default()
-    ///     .with(AddNumber(1), "set_number", &[])
-    ///     .with(AddNumber(2).pausable(CurrentState::Enabled), "set_number_2", &[])
-    ///     .build();
-    ///
-    /// dispatcher.setup(&mut world);
-    ///
-    /// // we only expect the u32 resource to be modified _if_ the system is enabled,
-    /// // the system should only be enabled on CurrentState::Enabled.
-    ///
-    /// *world.write_resource() = 0u32;
-    /// dispatcher.dispatch(&mut world);
-    /// assert_eq!(1, *world.read_resource::<u32>());
-    ///
-    /// *world.write_resource() = 0u32;
-    /// *world.write_resource() = CurrentState::Enabled;
-    /// dispatcher.dispatch(&mut world);
-    /// assert_eq!(1 + 2, *world.read_resource::<u32>());
-    /// ```
-    fn pausable<V: 'static>(self, value: V) -> Pausable<Self, V>
-    where
-        Self: Sized,
-        V: Send + Sync + Default + PartialEq;
-}
-
-impl<'s, S> SystemExt for S
+/// Make a system pausable by tying it to a specific value of a resource.
+///
+/// When the value of the resource differs from `value` the system is considered "paused",
+/// and the `run` method of the pausable system will not be called.
+///
+/// # Notes
+///
+/// Special care must be taken not to read from an `EventChannel` with pausable systems.
+/// Since `run` is never called, there is no way to consume the reader side of a channel, and
+/// it may grow indefinitely leaking memory while the system is paused.
+///
+/// # Examples
+/// ```rust
+/// use legion::{system, Schedule, World, Resources, SystemBuilder};
+/// use amethyst_core::system_ext::pausable;
+/// use amethyst_core::ecs::{System, ParallelRunnable};
+/// use amethyst_core::dispatcher::DispatcherBuilder;
+///
+/// #[derive(PartialEq)]
+/// enum CurrentState {
+///     Disabled,
+///     Enabled,
+/// }
+///
+///
+/// struct TestSystem;
+///
+/// impl System<'_> for TestSystem{
+///     fn build(&mut self) -> Box<dyn ParallelRunnable> {
+///         Box::new(
+///             pausable(SystemBuilder::new("TestSystem")
+///                          .write_resource::<u32>()
+///                          .build(move |_commands, _world, resources, _| {
+///                              **resources += 1;
+///                          }),
+///                         CurrentState::Enabled
+///             ))
+/// }}
+///
+/// let mut dispatcher = DispatcherBuilder::default()
+///     .add_system(Box::new(TestSystem))
+///     .build(&mut world, &mut resources)
+///     .unwrap();
+///
+/// let mut world = World::default();
+/// let mut resources = Resources::default();
+///
+/// // we only expect the u32 resource to be modified _if_ the system is enabled,
+/// // the system should only be enabled on CurrentState::Enabled.
+/// resources.insert(0u32);
+/// resources.insert(CurrentState::Disabled);
+/// dispatcher.execute(&mut world, &mut resources);
+/// assert_eq!(1, resources.get::<u32>().unwrap());
+///
+/// resources.insert(0u32);
+/// resources.insert(CurrentState::Enabled);
+/// dispatcher.execute(&mut world, &mut resources);
+/// assert_eq!(1 + 2, resources.get::<u32>().unwrap());
+/// ```
+pub fn pausable<V>(runnable: impl ParallelRunnable, value: V) -> Pausable<impl ParallelRunnable, V>
 where
-    S: System<'s>,
+    V: Resource + PartialEq,
 {
-    fn pausable<V: 'static>(self, value: V) -> Pausable<Self, V>
-    where
-        Self: Sized,
-        V: Send + Sync + Default + PartialEq,
-    {
-        Pausable {
-            system: self,
-            value,
-        }
+    let (resource_reads, _) = runnable.reads();
+    let resource_reads = resource_reads
+        .iter()
+        .copied()
+        .chain(std::iter::once(ResourceTypeId::of::<V>()))
+        .collect::<Vec<_>>();
+    Pausable {
+        system: runnable,
+        value,
+        resource_reads,
     }
 }
 
 /// A system that is enabled when `V` has a specific value.
 ///
-/// This is created using the [`SystemExt::pausable`] method.
+/// This is created using the [`pausable`] method.
 ///
-/// [`SystemExt::pausable`]: trait.SystemExt.html#tymethod.pausable
+/// [`pausable`]: fn.pausable.html
 #[derive(Debug)]
 pub struct Pausable<S, V> {
     system: S,
     value: V,
+    resource_reads: Vec<ResourceTypeId>,
 }
 
-impl<'s, S, V: 'static> System<'s> for Pausable<S, V>
+impl<S, V> Runnable for Pausable<S, V>
 where
-    S::SystemData: SystemData<'s>,
-    S: System<'s>,
-    V: Send + Sync + Default + PartialEq,
+    S: Runnable,
+    V: Resource + PartialEq,
 {
-    type SystemData = (Read<'s, V>, S::SystemData);
+    // Default passthrough impls
+    fn name(&self) -> Option<&SystemId> {
+        self.system.name()
+    }
 
-    fn run(&mut self, data: Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("pauseable_system");
+    fn reads(&self) -> (&[ResourceTypeId], &[ComponentTypeId]) {
+        let (_, components) = self.system.reads();
+        // Return our local copy of systems resources that's been appended with permission for Read<V>
+        (&self.resource_reads[..], components)
+    }
 
-        if self.value != *data.0 {
+    fn writes(&self) -> (&[ResourceTypeId], &[ComponentTypeId]) {
+        self.system.writes()
+    }
+
+    fn prepare(&mut self, world: &World) {
+        self.system.prepare(world)
+    }
+
+    fn accesses_archetypes(&self) -> &ArchetypeAccess {
+        self.system.accesses_archetypes()
+    }
+
+    unsafe fn run_unsafe(&mut self, world: &World, resources: &UnsafeResources) {
+        let resources_static = &*(resources as *const UnsafeResources);
+        let resource_to_check = Read::<V>::fetch_unchecked(resources_static);
+
+        if self.value != *resource_to_check {
             return;
         }
 
-        self.system.run(data.1);
+        self.system.run_unsafe(world, resources);
     }
 
-    fn running_time(&self) -> RunningTime {
-        self.system.running_time()
+    fn command_buffer_mut(&mut self, world: WorldId) -> Option<&mut CommandBuffer> {
+        self.system.command_buffer_mut(world)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use legion::{Resources, SystemBuilder};
+
+    use super::*;
+    use crate::{
+        dispatcher::{DispatcherBuilder, System},
+        ecs::ParallelRunnable,
+    };
+
+    #[derive(PartialEq)]
+    enum CurrentState {
+        Disabled,
+        Enabled,
     }
 
-    fn setup(&mut self, world: &mut World) {
-        Self::SystemData::setup(world);
+    struct TestSystem;
 
-        self.system.setup(world);
+    impl System<'_> for TestSystem {
+        fn build(&mut self) -> Box<dyn ParallelRunnable> {
+            Box::new(pausable(
+                SystemBuilder::new("TestSystem")
+                    .write_resource::<u32>()
+                    .build(move |_commands, _world, resources, _| {
+                        **resources += 1;
+                    }),
+                CurrentState::Enabled,
+            ))
+        }
+    }
+
+    #[test]
+    fn should_not_pause_if_resource_match_value() {
+        let mut resources = Resources::default();
+        let mut world = World::default();
+        resources.insert(0u32);
+        resources.insert(CurrentState::Enabled);
+
+        let mut dispatcher = DispatcherBuilder::default()
+            .add_system(Box::new(TestSystem))
+            .build(&mut world, &mut resources)
+            .unwrap();
+
+        assert_eq!(0, *resources.get::<u32>().unwrap());
+        dispatcher.execute(&mut world, &mut resources);
+        assert_eq!(1, *resources.get::<u32>().unwrap());
+        dispatcher.execute(&mut world, &mut resources);
+        assert_eq!(2, *resources.get::<u32>().unwrap());
+    }
+
+    #[test]
+    fn should_pause_if_resource_does_not_match_value() {
+        let mut resources = Resources::default();
+        let mut world = World::default();
+        resources.insert(0u32);
+        resources.insert(CurrentState::Enabled);
+
+        let mut dispatcher = DispatcherBuilder::default()
+            .add_system(Box::new(TestSystem))
+            .build(&mut world, &mut resources)
+            .unwrap();
+
+        assert_eq!(0, *resources.get::<u32>().unwrap());
+        dispatcher.execute(&mut world, &mut resources);
+        assert_eq!(1, *resources.get::<u32>().unwrap());
+
+        resources.insert(CurrentState::Disabled);
+
+        dispatcher.execute(&mut world, &mut resources);
+        assert_eq!(1, *resources.get::<u32>().unwrap());
     }
 }

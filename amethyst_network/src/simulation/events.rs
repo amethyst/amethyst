@@ -1,6 +1,8 @@
-use crate::simulation::Message;
-use bytes::Bytes;
 use std::{io, net::SocketAddr};
+
+use bytes::Bytes;
+
+use crate::simulation::Message;
 
 /// Events which can be received from the network.
 #[derive(Debug)]

@@ -7,44 +7,53 @@
 //! * Asynchronous & Parallel using Rayon
 //! * Allow different sources
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
-
-#[cfg(feature = "json")]
-pub use crate::formats::JsonFormat;
-pub use crate::{
-    asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
-    cache::Cache,
-    dyn_format::FormatRegisteredData,
-    formats::RonFormat,
-    helper::AssetLoaderSystemData,
-    loader::Loader,
-    prefab::{
-        AssetPrefab, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, PrefabLoaderSystemDesc,
-    },
-    progress::{Completion, Progress, ProgressCounter, Tracker},
-    reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
-    source::{Directory, Source},
-    storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
-};
 
 pub use rayon::ThreadPool;
 
 mod asset;
+mod bundle;
 mod cache;
-mod dyn_format;
-mod error;
+/// asset loading specific errors
+pub mod error;
 mod formats;
-mod helper;
 mod loader;
-mod prefab;
+/// helpers for registering prefab components
+pub mod prefab;
+mod processor;
 mod progress;
-mod reload;
+mod simple_importer;
 mod source;
 mod storage;
 
-// used in macros. Private API otherwise.
-#[doc(hidden)]
-pub use crate::dyn_format::{DeserializeFn, Registry};
+pub use atelier_assets::{
+    importer as atelier_importer,
+    loader::{
+        handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
+        storage::LoadHandle,
+    },
+};
+pub use type_uuid::TypeUuid;
 // used in macros. Private API otherwise.
 #[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};
+
+#[doc(hidden)]
+#[cfg(feature = "json")]
+pub use crate::formats::JsonFormat;
+pub use crate::{
+    asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
+    bundle::{start_asset_daemon, LoaderBundle},
+    cache::Cache,
+    formats::RonFormat,
+    loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
+    processor::{AssetProcessorSystem, ProcessingQueue, ProcessingState},
+    progress::{Completion, Progress, ProgressCounter, Tracker},
+    simple_importer::{SimpleImporter, SourceFileImporter},
+    source::{Directory, Source},
+    storage::AssetStorage,
+};

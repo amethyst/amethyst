@@ -1,9 +1,10 @@
-use crate::systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 use amethyst::{
     core::bundle::SystemBundle,
     ecs::{DispatcherBuilder, World},
     error::Error,
 };
+
+use crate::systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
 /// A bundle is a convenient way to initialise related resources, components and systems in a
 /// world. This bundle prepares the world for a game of pong.
@@ -15,18 +16,13 @@ impl<'a, 'b> SystemBundle<'a, 'b> for PongBundle {
         _world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        builder.add(PaddleSystem, "paddle_system", &["input_system"]);
-        builder.add(MoveBallsSystem, "ball_system", &[]);
-        builder.add(
-            BounceSystem,
-            "collision_system",
-            &["paddle_system", "ball_system"],
-        );
-        builder.add(
-            WinnerSystem,
-            "winner_system",
-            &["paddle_system", "ball_system"],
-        );
+        builder
+            .add_system(Box::new(systems::paddle::build()))
+            .add_system(Box::new(systems::move_balls::build()))
+            .flush()
+            .add_system(Box::new(systems::bounce::build()))
+            .add_system(Box::new(systems::winner::build()));
+
         Ok(())
     }
 }

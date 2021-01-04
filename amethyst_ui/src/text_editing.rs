@@ -1,343 +1,335 @@
 use std::ops::Range;
 
-use clipboard::{ClipboardContext, ClipboardProvider};
+use amethyst_core::{
+    ecs::*,
+    shrev::{EventChannel, ReaderId},
+};
+use amethyst_input::{InputHandler, KeyboardModifiersState};
+use copypasta::{ClipboardContext, ClipboardProvider};
 use log::error;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
-use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
-
-use amethyst_core::{
-    ecs::prelude::{Entities, Join, Read, ReadStorage, System, SystemData, Write, WriteStorage},
-    shrev::{EventChannel, ReaderId},
-};
-use amethyst_derive::SystemDesc;
+use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
-
 /// System managing the keyboard inputs for the editable text fields.
 /// ## Features
 /// * Adds and removes text.
 /// * Moves selection cursor.
 /// * Grows and shrinks selected text zone.
-#[derive(Debug, SystemDesc)]
-#[system_desc(name(TextEditingInputSystemDesc))]
+#[derive(Debug)]
 pub struct TextEditingInputSystem {
     /// A reader for winit events.
-    #[system_desc(event_channel_reader)]
-    reader: ReaderId<Event>,
+    reader: ReaderId<Event<'static, ()>>,
 }
 
 impl TextEditingInputSystem {
     /// Creates a new instance of this system
-    pub fn new(reader: ReaderId<Event>) -> Self {
+    pub fn new(reader: ReaderId<Event<'static, ()>>) -> Self {
         Self { reader }
     }
 }
 
-impl<'a> System<'a> for TextEditingInputSystem {
-    type SystemData = (
-        Entities<'a>,
-        WriteStorage<'a, UiText>,
-        WriteStorage<'a, TextEditing>,
-        ReadStorage<'a, Selected>,
-        Read<'a, EventChannel<Event>>,
-        Write<'a, EventChannel<UiEvent>>,
-    );
+impl System<'static> for TextEditingInputSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("TextEditingInputSystem")
+                .read_resource::<EventChannel<Event<'static, ()>>>()
+                .write_resource::<EventChannel<UiEvent>>()
+                .read_resource::<InputHandler>()
+                .with_query(<&mut UiText>::query())
+                .with_query(<(Entity, &mut UiText, &mut TextEditing, &Selected)>::query())
+                .build(move |_commands, world, (events, ui_events, inputs),
+                             (ui_texts_query, selected_ui_texts_query)| {
 
-    fn run(
-        &mut self,
-        (entities, mut texts, mut editables, selecteds, events, mut edit_events): Self::SystemData,
-    ) {
-        for text in (&mut texts).join() {
-            if (*text.text).chars().any(is_combining_mark) {
-                let normalized = text.text.nfd().collect::<String>();
-                text.text = normalized;
-            }
-        }
-
-        for event in events.read(&mut self.reader) {
-            // Process events for the focused text element
-            if let Some((entity, ref mut focused_text, ref mut focused_edit, _)) =
-                (&*entities, &mut texts, &mut editables, &selecteds)
-                    .join()
-                    .next()
-            {
-                match *event {
-                    Event::WindowEvent {
-                        event: WindowEvent::ReceivedCharacter(input),
-                        ..
-                    } => {
-                        if should_skip_char(input) {
-                            continue;
+                    ui_texts_query.for_each_mut(world, |mut text| {
+                        if (*text.text).chars().any(is_combining_mark) {
+                            let normalized = text.text.nfd().collect::<String>();
+                            text.text = normalized;
                         }
-                        focused_edit.cursor_blink_timer = 0.0;
-                        delete_highlighted(focused_edit, focused_text);
-                        let start_byte = focused_text
-                            .text
-                            .grapheme_indices(true)
-                            .nth(focused_edit.cursor_position as usize)
-                            .map(|i| i.0)
-                            .unwrap_or_else(|| {
-                                // We are either in a 0 length string, or at the end of a string
-                                // This line returns the correct byte index for both.
-                                focused_text.text.len()
-                            });
-                        if focused_text.text.graphemes(true).count() < focused_edit.max_length {
-                            focused_text.text.insert(start_byte, input);
-                            focused_edit.cursor_position += 1;
+                    });
 
-                            edit_events
-                                .single_write(UiEvent::new(UiEventType::ValueChange, entity));
-                        }
-                    }
-                    Event::WindowEvent {
-                        event:
-                            WindowEvent::KeyboardInput {
-                                input:
-                                    KeyboardInput {
-                                        state: ElementState::Pressed,
-                                        virtual_keycode: Some(v_keycode),
-                                        modifiers,
+                    for event in events.read(&mut self.reader) {
+                        if let Some((entity, ref mut focused_text, ref mut focused_edit, _)) =
+                        selected_ui_texts_query.iter_mut(world).next() {
+                            match *event {
+                                Event::WindowEvent {
+                                    event: WindowEvent::ReceivedCharacter(input),
+                                    ..
+                                } => {
+                                    if should_skip_char(input) {
+                                        continue;
+                                    }
+                                    focused_edit.cursor_blink_timer = 0.0;
+                                    delete_highlighted(focused_edit, focused_text);
+                                    let start_byte = focused_text
+                                        .text
+                                        .grapheme_indices(true)
+                                        .nth(focused_edit.cursor_position as usize)
+                                        .map(|i| i.0)
+                                        .unwrap_or_else(|| {
+                                            // We are either in a 0 length string, or at the end of a string
+                                            // This line returns the correct byte index for both.
+                                            focused_text.text.len()
+                                        });
+                                    if focused_text.text.graphemes(true).count() < focused_edit.max_length {
+                                        focused_text.text.insert(start_byte, input);
+                                        focused_edit.cursor_position += 1;
+
+                                        ui_events
+                                            .single_write(UiEvent::new(UiEventType::ValueChange, *entity));
+                                    }
+                                }
+                                Event::WindowEvent {
+                                    event:
+                                    WindowEvent::KeyboardInput {
+                                        input:
+                                        KeyboardInput {
+                                            state: ElementState::Pressed,
+                                            virtual_keycode: Some(v_keycode),
+                                            ..
+                                        },
                                         ..
                                     },
-                                ..
-                            },
-                        ..
-                    } => match v_keycode {
-                        VirtualKeyCode::Home | VirtualKeyCode::Up => {
-                            focused_edit.highlight_vector = if modifiers.shift {
-                                focused_edit.cursor_position
-                            } else {
-                                0
-                            };
-                            focused_edit.cursor_position = 0;
-                            focused_edit.cursor_blink_timer = 0.0;
-                        }
-                        VirtualKeyCode::End | VirtualKeyCode::Down => {
-                            let glyph_len = focused_text.text.graphemes(true).count() as isize;
-                            focused_edit.highlight_vector = if modifiers.shift {
-                                focused_edit.cursor_position - glyph_len
-                            } else {
-                                0
-                            };
-                            focused_edit.cursor_position = glyph_len;
-                            focused_edit.cursor_blink_timer = 0.0;
-                        }
-                        VirtualKeyCode::Back => {
-                            if !delete_highlighted(focused_edit, focused_text)
-                                && focused_edit.cursor_position > 0
-                            {
-                                if let Some((byte, len)) = focused_text
-                                    .text
-                                    .grapheme_indices(true)
-                                    .nth(focused_edit.cursor_position as usize - 1)
-                                    .map(|i| (i.0, i.1.len()))
-                                {
-                                    focused_text.text.drain(byte..(byte + len));
-                                    focused_edit.cursor_position -= 1;
-                                }
-                            }
-                        }
-                        VirtualKeyCode::Delete => {
-                            if !delete_highlighted(focused_edit, focused_text) {
-                                if let Some((start_byte, start_glyph_len)) = focused_text
-                                    .text
-                                    .grapheme_indices(true)
-                                    .nth(focused_edit.cursor_position as usize)
-                                    .map(|i| (i.0, i.1.len()))
-                                {
-                                    focused_edit.cursor_blink_timer = 0.0;
-                                    focused_text
-                                        .text
-                                        .drain(start_byte..(start_byte + start_glyph_len));
-                                }
-                            }
-                        }
-                        VirtualKeyCode::Left => {
-                            if focused_edit.highlight_vector == 0 || modifiers.shift {
-                                if focused_edit.cursor_position > 0 {
-                                    let delta = if ctrl_or_cmd(modifiers) {
-                                        let mut graphemes = 0;
-                                        for word in focused_text.text.split_word_bounds() {
-                                            let word_graphemes =
-                                                word.graphemes(true).count() as isize;
-                                            if graphemes + word_graphemes
-                                                >= focused_edit.cursor_position
-                                            {
-                                                break;
-                                            }
-                                            graphemes += word_graphemes;
-                                        }
-                                        focused_edit.cursor_position - graphemes
-                                    } else {
-                                        1
-                                    };
-                                    focused_edit.cursor_position -= delta;
-                                    if modifiers.shift {
-                                        focused_edit.highlight_vector += delta;
+                                    ..
+                                } => match v_keycode {
+                                    VirtualKeyCode::Home | VirtualKeyCode::Up => {
+                                        focused_edit.highlight_vector = if inputs.modifiers.shift() {
+                                            focused_edit.cursor_position
+                                        } else {
+                                            0
+                                        };
+                                        focused_edit.cursor_position = 0;
+                                        focused_edit.cursor_blink_timer = 0.0;
                                     }
-                                    focused_edit.cursor_blink_timer = 0.0;
-                                }
-                            } else {
-                                focused_edit.cursor_position = focused_edit.cursor_position.min(
-                                    focused_edit.cursor_position + focused_edit.highlight_vector,
-                                );
-                                focused_edit.highlight_vector = 0;
-                            }
-                        }
-                        VirtualKeyCode::Right => {
-                            if focused_edit.highlight_vector == 0 || modifiers.shift {
-                                let glyph_len = focused_text.text.graphemes(true).count();
-                                if (focused_edit.cursor_position as usize) < glyph_len {
-                                    let delta = if ctrl_or_cmd(modifiers) {
-                                        let mut graphemes = 0;
-                                        for word in focused_text.text.split_word_bounds() {
-                                            graphemes += word.graphemes(true).count() as isize;
-                                            if graphemes > focused_edit.cursor_position {
-                                                break;
-                                            }
-                                        }
-                                        graphemes - focused_edit.cursor_position
-                                    } else {
-                                        1
-                                    };
-                                    focused_edit.cursor_position += delta;
-                                    if modifiers.shift {
-                                        focused_edit.highlight_vector -= delta;
+                                    VirtualKeyCode::End | VirtualKeyCode::Down => {
+                                        let glyph_len = focused_text.text.graphemes(true).count() as isize;
+                                        focused_edit.highlight_vector = if inputs.modifiers.shift() {
+                                            focused_edit.cursor_position - glyph_len
+                                        } else {
+                                            0
+                                        };
+                                        focused_edit.cursor_position = glyph_len;
+                                        focused_edit.cursor_blink_timer = 0.0;
                                     }
-                                    focused_edit.cursor_blink_timer = 0.0;
-                                }
-                            } else {
-                                focused_edit.cursor_position = focused_edit.cursor_position.max(
-                                    focused_edit.cursor_position + focused_edit.highlight_vector,
-                                );
-                                focused_edit.highlight_vector = 0;
-                            }
-                        }
-                        VirtualKeyCode::A => {
-                            if ctrl_or_cmd(modifiers) {
-                                let glyph_len = focused_text.text.graphemes(true).count() as isize;
-                                focused_edit.cursor_position = glyph_len;
-                                focused_edit.highlight_vector = -glyph_len;
-                            }
-                        }
-                        VirtualKeyCode::X => {
-                            if ctrl_or_cmd(modifiers) {
-                                let new_clip = extract_highlighted(focused_edit, focused_text);
-                                if !new_clip.is_empty() {
-                                    match ClipboardProvider::new().and_then(
-                                        |mut ctx: ClipboardContext| ctx.set_contents(new_clip),
-                                    ) {
-                                        Ok(_) => edit_events.single_write(UiEvent::new(
-                                            UiEventType::ValueChange,
-                                            entity,
-                                        )),
-                                        Err(e) => error!(
-                                            "Error occured when cutting to clipboard: {:?}",
-                                            e
-                                        ),
-                                    }
-                                }
-                            }
-                        }
-                        VirtualKeyCode::C => {
-                            if ctrl_or_cmd(modifiers) {
-                                let new_clip = read_highlighted(focused_edit, focused_text);
-                                if !new_clip.is_empty() {
-                                    if let Err(e) = ClipboardProvider::new().and_then(
-                                        |mut ctx: ClipboardContext| {
-                                            ctx.set_contents(new_clip.to_owned())
-                                        },
-                                    ) {
-                                        error!("Error occured when copying to clipboard: {:?}", e);
-                                    }
-                                }
-                            }
-                        }
-                        VirtualKeyCode::V => {
-                            if ctrl_or_cmd(modifiers) {
-                                delete_highlighted(focused_edit, focused_text);
-
-                                match ClipboardProvider::new()
-                                    .and_then(|mut ctx: ClipboardContext| ctx.get_contents())
-                                {
-                                    Ok(contents) => {
-                                        let index = cursor_byte_index(focused_edit, focused_text);
-                                        let empty_space = focused_edit.max_length
-                                            - focused_text.text.graphemes(true).count();
-                                        let contents = contents
-                                            .graphemes(true)
-                                            .take(empty_space)
-                                            .fold(String::new(), |mut init, new| {
-                                                init.push_str(new);
-                                                init
-                                            });
-                                        focused_text.text.insert_str(index, &contents);
-                                        focused_edit.cursor_position +=
-                                            contents.graphemes(true).count() as isize;
-
-                                        edit_events.single_write(UiEvent::new(
-                                            UiEventType::ValueChange,
-                                            entity,
-                                        ));
-                                    }
-                                    Err(e) => error!(
-                                        "Error occured when pasting contents of clipboard: {:?}",
-                                        e
-                                    ),
-                                }
-                            }
-                        }
-                        VirtualKeyCode::Return | VirtualKeyCode::NumpadEnter => {
-                            match focused_text.line_mode {
-                                LineMode::Single => {
-                                    edit_events.single_write(UiEvent::new(
-                                        UiEventType::ValueCommit,
-                                        entity,
-                                    ));
-                                }
-                                LineMode::Wrap => {
-                                    if modifiers.shift {
-                                        if focused_text.text.graphemes(true).count()
-                                            < focused_edit.max_length
+                                    VirtualKeyCode::Back => {
+                                        if !delete_highlighted(focused_edit, focused_text)
+                                            && focused_edit.cursor_position > 0
                                         {
-                                            let start_byte = focused_text
+                                            if let Some((byte, len)) = focused_text
+                                                .text
+                                                .grapheme_indices(true)
+                                                .nth(focused_edit.cursor_position as usize - 1)
+                                                .map(|i| (i.0, i.1.len()))
+                                            {
+                                                focused_text.text.drain(byte..(byte + len));
+                                                focused_edit.cursor_position -= 1;
+                                            }
+                                        }
+                                    }
+                                    VirtualKeyCode::Delete => {
+                                        if !delete_highlighted(focused_edit, focused_text) {
+                                            if let Some((start_byte, start_glyph_len)) = focused_text
                                                 .text
                                                 .grapheme_indices(true)
                                                 .nth(focused_edit.cursor_position as usize)
-                                                .map(|i| i.0)
-                                                .unwrap_or_else(|| focused_text.text.len());
-
-                                            focused_text.text.insert(start_byte, '\n');
-                                            focused_edit.cursor_position += 1;
-
-                                            edit_events.single_write(UiEvent::new(
-                                                UiEventType::ValueChange,
-                                                entity,
-                                            ));
+                                                .map(|i| (i.0, i.1.len()))
+                                            {
+                                                focused_edit.cursor_blink_timer = 0.0;
+                                                focused_text
+                                                    .text
+                                                    .drain(start_byte..(start_byte + start_glyph_len));
+                                            }
                                         }
-                                    } else {
-                                        edit_events.single_write(UiEvent::new(
-                                            UiEventType::ValueCommit,
-                                            entity,
-                                        ));
                                     }
-                                }
+                                    VirtualKeyCode::Left => {
+                                        if focused_edit.highlight_vector == 0 || inputs.modifiers.shift() {
+                                            if focused_edit.cursor_position > 0 {
+                                                let delta = if ctrl_or_cmd(&inputs.modifiers) {
+                                                    let mut graphemes = 0;
+                                                    for word in focused_text.text.split_word_bounds() {
+                                                        let word_graphemes =
+                                                            word.graphemes(true).count() as isize;
+                                                        if graphemes + word_graphemes
+                                                            >= focused_edit.cursor_position
+                                                        {
+                                                            break;
+                                                        }
+                                                        graphemes += word_graphemes;
+                                                    }
+                                                    focused_edit.cursor_position - graphemes
+                                                } else {
+                                                    1
+                                                };
+                                                focused_edit.cursor_position -= delta;
+                                                if inputs.modifiers.shift() {
+                                                    focused_edit.highlight_vector += delta;
+                                                }
+                                                focused_edit.cursor_blink_timer = 0.0;
+                                            }
+                                        } else {
+                                            focused_edit.cursor_position = focused_edit.cursor_position.min(
+                                                focused_edit.cursor_position + focused_edit.highlight_vector,
+                                            );
+                                            focused_edit.highlight_vector = 0;
+                                        }
+                                    }
+                                    VirtualKeyCode::Right => {
+                                        if focused_edit.highlight_vector == 0 || inputs.modifiers.shift() {
+                                            let glyph_len = focused_text.text.graphemes(true).count();
+                                            if (focused_edit.cursor_position as usize) < glyph_len {
+                                                let delta = if ctrl_or_cmd(&inputs.modifiers) {
+                                                    let mut graphemes = 0;
+                                                    for word in focused_text.text.split_word_bounds() {
+                                                        graphemes += word.graphemes(true).count() as isize;
+                                                        if graphemes > focused_edit.cursor_position {
+                                                            break;
+                                                        }
+                                                    }
+                                                    graphemes - focused_edit.cursor_position
+                                                } else {
+                                                    1
+                                                };
+                                                focused_edit.cursor_position += delta;
+                                                if inputs.modifiers.shift() {
+                                                    focused_edit.highlight_vector -= delta;
+                                                }
+                                                focused_edit.cursor_blink_timer = 0.0;
+                                            }
+                                        } else {
+                                            focused_edit.cursor_position = focused_edit.cursor_position.max(
+                                                focused_edit.cursor_position + focused_edit.highlight_vector,
+                                            );
+                                            focused_edit.highlight_vector = 0;
+                                        }
+                                    }
+                                    VirtualKeyCode::A => {
+                                        if ctrl_or_cmd(&inputs.modifiers) {
+                                            let glyph_len = focused_text.text.graphemes(true).count() as isize;
+                                            focused_edit.cursor_position = glyph_len;
+                                            focused_edit.highlight_vector = -glyph_len;
+                                        }
+                                    }
+                                    VirtualKeyCode::X => {
+                                        if ctrl_or_cmd(&inputs.modifiers) {
+                                            let new_clip = extract_highlighted(focused_edit, focused_text);
+                                            if !new_clip.is_empty() {
+                                                match ClipboardContext::new().and_then(
+                                                    |mut ctx: ClipboardContext| ctx.set_contents(new_clip),
+                                                ) {
+                                                    Ok(_) => ui_events.single_write(UiEvent::new(
+                                                        UiEventType::ValueChange,
+                                                        *entity,
+                                                    )),
+                                                    Err(e) => error!(
+                                                        "Error occured when cutting to clipboard: {:?}",
+                                                        e
+                                                    ),
+                                                }
+                                            }
+                                        }
+                                    }
+                                    VirtualKeyCode::C => {
+                                        if ctrl_or_cmd(&inputs.modifiers) {
+                                            let new_clip = read_highlighted(focused_edit, focused_text);
+                                            if !new_clip.is_empty() {
+                                                if let Err(e) = ClipboardContext::new().and_then(
+                                                    |mut ctx: ClipboardContext| {
+                                                        ctx.set_contents(new_clip.to_owned())
+                                                    },
+                                                ) {
+                                                    error!("Error occured when copying to clipboard: {:?}", e);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    VirtualKeyCode::V => {
+                                        if ctrl_or_cmd(&inputs.modifiers) {
+                                            delete_highlighted(focused_edit, focused_text);
+
+                                            match ClipboardContext::new()
+                                                .and_then(|mut ctx: ClipboardContext| ctx.get_contents())
+                                            {
+                                                Ok(contents) => {
+                                                    let index = cursor_byte_index(focused_edit, focused_text);
+                                                    let empty_space = focused_edit.max_length
+                                                        - focused_text.text.graphemes(true).count();
+                                                    let contents = contents
+                                                        .graphemes(true)
+                                                        .take(empty_space)
+                                                        .fold(String::new(), |mut init, new| {
+                                                            init.push_str(new);
+                                                            init
+                                                        });
+                                                    focused_text.text.insert_str(index, &contents);
+                                                    focused_edit.cursor_position +=
+                                                        contents.graphemes(true).count() as isize;
+
+                                                    ui_events.single_write(UiEvent::new(
+                                                        UiEventType::ValueChange,
+                                                        *entity,
+                                                    ));
+                                                }
+                                                Err(e) => error!(
+                                                    "Error occured when pasting contents of clipboard: {:?}",
+                                                    e
+                                                ),
+                                            }
+                                        }
+                                    }
+                                    VirtualKeyCode::Return | VirtualKeyCode::NumpadEnter => {
+                                        match focused_text.line_mode {
+                                            LineMode::Single => {
+                                                ui_events.single_write(UiEvent::new(
+                                                    UiEventType::ValueCommit,
+                                                    *entity,
+                                                ));
+                                            }
+                                            LineMode::Wrap => {
+                                                if inputs.modifiers.shift() {
+                                                    if focused_text.text.graphemes(true).count()
+                                                        < focused_edit.max_length
+                                                    {
+                                                        let start_byte = focused_text
+                                                            .text
+                                                            .grapheme_indices(true)
+                                                            .nth(focused_edit.cursor_position as usize)
+                                                            .map(|i| i.0)
+                                                            .unwrap_or_else(|| focused_text.text.len());
+
+                                                        focused_text.text.insert(start_byte, '\n');
+                                                        focused_edit.cursor_position += 1;
+
+                                                        ui_events.single_write(UiEvent::new(
+                                                            UiEventType::ValueChange,
+                                                            *entity,
+                                                        ));
+                                                    }
+                                                } else {
+                                                    ui_events.single_write(UiEvent::new(
+                                                        UiEventType::ValueCommit,
+                                                        *entity,
+                                                    ));
+                                                }
+                                            }
+                                        }
+                                    }
+                                    _ => {}
+                                },
+                                _ => {}
                             }
                         }
-                        _ => {}
-                    },
-                    _ => {}
-                }
-            }
-        }
+                    }
+
+                })
+        )
     }
 }
 
 /// Returns if the command key is down on OSX, and the CTRL key for everything else.
-fn ctrl_or_cmd(modifiers: ModifiersState) -> bool {
-    (cfg!(target_os = "macos") && modifiers.logo)
-        || (cfg!(not(target_os = "macos")) && modifiers.ctrl)
+fn ctrl_or_cmd(modifiers: &KeyboardModifiersState) -> bool {
+    (cfg!(target_os = "macos") && modifiers.logo())
+        || (cfg!(not(target_os = "macos")) && modifiers.ctrl())
 }
 
 fn read_highlighted<'a>(edit: &TextEditing, text: &'a UiText) -> &'a str {
@@ -402,11 +394,11 @@ fn should_skip_char(input: char) -> bool {
     // properly anyways.  Also ignore newline characters since we don't
     // support multi-line text at the moment.
     input < '\u{20}'
-    // Ignore delete character too
-    || input == '\u{7F}'
-    // Unicode reserves some characters for "private use".  Systems emit
-    // these for no clear reason, so we're just going to ignore all of them.
-    || (input >= '\u{E000}' && input <= '\u{F8FF}')
-    || (input >= '\u{F0000}' && input <= '\u{FFFFF}')
-    || (input >= '\u{100000}' && input <= '\u{10FFFF}')
+        // Ignore delete character too
+        || input == '\u{7F}'
+        // Unicode reserves some characters for "private use".  Systems emit
+        // these for no clear reason, so we're just going to ignore all of them.
+        || ('\u{E000}'..='\u{F8FF}').contains(&input)
+        || ('\u{F0000}'..='\u{FFFFF}').contains(&input)
+        || ('\u{100000}'..='\u{10FFFF}').contains(&input)
 }

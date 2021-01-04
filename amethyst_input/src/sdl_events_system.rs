@@ -1,5 +1,10 @@
 use std::{fmt, marker::PhantomData, path::PathBuf};
 
+use amethyst_core::{
+    ecs::prelude::{System, SystemData, World, Write},
+    shrev::EventChannel,
+    SystemDesc,
+};
 use derivative::Derivative;
 use derive_new::new;
 use sdl2::{
@@ -7,12 +12,6 @@ use sdl2::{
     controller::{AddMappingError, Axis, Button, GameController},
     event::Event,
     EventPump, GameControllerSubsystem, Sdl,
-};
-
-use amethyst_core::{
-    ecs::prelude::{System, SystemData, World, Write},
-    shrev::EventChannel,
-    SystemDesc,
 };
 
 use super::{

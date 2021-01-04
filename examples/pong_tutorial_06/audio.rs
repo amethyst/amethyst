@@ -1,9 +1,10 @@
+use std::{iter::Cycle, vec::IntoIter};
+
 use amethyst::{
-    assets::{AssetStorage, Loader},
+    assets::{AssetStorage, DefaultLoader, Loader},
     audio::{output::Output, AudioSink, OggFormat, Source, SourceHandle},
     ecs::{World, WorldExt},
 };
-use std::{iter::Cycle, vec::IntoIter};
 
 pub struct Sounds {
     pub score_sfx: SourceHandle,
@@ -25,7 +26,7 @@ pub fn initialise_audio(world: &mut World) {
     use crate::{AUDIO_BOUNCE, AUDIO_MUSIC, AUDIO_SCORE};
 
     let (sound_effects, music) = {
-        let loader = world.read_resource::<Loader>();
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
 
         let mut sink = world.write_resource::<AudioSink>();
         sink.set_volume(0.25); // Music is a bit loud, reduce the volume.
