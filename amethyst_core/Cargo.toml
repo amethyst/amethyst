@@ -36,7 +36,7 @@ shrinkwraprs = "0.3"
 simba = "0.3"
 smallvec = "1.4"
 thread_profiler = { version = "0.3", optional = true }
-serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0" }
+serde-diff = "0.4"
 
 [dev-dependencies]
 ron = "0.5.1"

@@ -19,6 +19,11 @@ documentation = "https://docs.amethyst.rs/stable/amethyst_assets/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
+[patch.crates-io]
+legion-transaction = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
+legion-prefab = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
+prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
+
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
