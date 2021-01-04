@@ -119,11 +119,6 @@ where
             .add_system(Box::new(DragWidgetSystem::new(drag_widget_reader)))
             .add_system(Box::new(BlinkSystem));
 
-        /*
-                builder.add_system(
-                    UiLoaderSystemDesc::<<C as ToNativeWidget>::PrefabData, W>::default().build(world),
-                );
-        */
         Ok(())
     }
 

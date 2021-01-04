@@ -1,12 +1,11 @@
 use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
 
-use amethyst_assets::{Asset, AssetStorage, Handle, PrefabData};
+use amethyst_assets::{Asset, AssetStorage, Handle};
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
     shred::SystemData,
     timing::{duration_to_secs, secs_to_duration},
 };
-use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use derivative::Derivative;
 use fnv::FnvHashMap;
@@ -104,8 +103,7 @@ where
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize, PrefabData)]
-#[prefab(Component)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RestState<T>
 where
     T: AnimationSampling + Clone,

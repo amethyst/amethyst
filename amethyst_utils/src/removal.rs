@@ -2,7 +2,6 @@
 
 use std::fmt::Debug;
 
-//use amethyst_assets::PrefabData;
 use amethyst_core::ecs::*;
 use serde::{Deserialize, Serialize};
 
@@ -38,7 +37,6 @@ use serde::{Deserialize, Serialize};
 /// assert_eq!((&*world.entities(),).join().count(), 1);
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
-//#[derive(Debug, Clone, Serialize, Deserialize, PrefabData)]
 pub struct Removal<I>
 where
     I: Debug + Clone + Send + Sync + 'static,

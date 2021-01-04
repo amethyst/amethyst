@@ -101,28 +101,6 @@ impl Format<TextureData> for ImageFormat {
     }
 }
 
-// /// `PrefabData` for loading `Texture`s.
-// ///
-// /// Will not add any `Component`s to the `Entity`, will only return a `Handle`
-// #[derive(Debug, Clone, Deserialize, Serialize)]
-// #[serde(bound = "")]
-// pub enum TexturePrefab {
-//     /// Texture data
-//     Data(TextureData),
-
-//     /// Generate texture
-//     Generate(TextureGenerator),
-//     /// Load file with format
-//     File(String, Box<dyn SerializableFormat<TextureData>>),
-
-//     /// Clone handle only
-//     #[serde(skip)]
-//     Handle(Handle<Texture>),
-//     /// Placeholder during loading
-//     #[serde(skip)]
-//     Placeholder,
-// }
-
 /// Provides enum variant typecasting of texture data.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum TextureGenerator {
@@ -176,47 +154,3 @@ impl TextureGenerator {
         }
     }
 }
-
-// impl<'a> PrefabData<'a> for TexturePrefab {
-//     type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture>>);
-
-//     type Result = Handle<Texture>;
-
-//     fn add_to_entity(
-//         &self,
-//         _: Entity,
-//         _: &mut Self::SystemData,
-//         _: &[Entity],
-//         _: &[Entity],
-//     ) -> Result<Handle<Texture>, Error> {
-//         let handle = match *self {
-//             TexturePrefab::Handle(ref handle) => handle.clone(),
-//             _ => unreachable!(),
-//         };
-//         Ok(handle)
-//     }
-
-//     fn load_sub_assets(
-//         &mut self,
-//         progress: &mut ProgressCounter,
-//         (loader, storage): &mut Self::SystemData,
-//     ) -> Result<bool, Error> {
-//         let (ret, next) = match std::mem::replace(self, TexturePrefab::Placeholder) {
-//             TexturePrefab::Data(data) => {
-//                 let handle = loader.load_from_data(data, progress, storage);
-//                 (true, TexturePrefab::Handle(handle))
-//             }
-//             TexturePrefab::Generate(generator) => {
-//                 let handle = loader.load_from_data(generator.data(), progress, storage);
-//                 (true, TexturePrefab::Handle(handle))
-//             }
-//             TexturePrefab::File(name, format) => {
-//                 let handle = loader.load(name, format, progress, storage);
-//                 (true, TexturePrefab::Handle(handle))
-//             }
-//             slot => (false, slot),
-//         };
-//         *self = next;
-//         Ok(ret)
-//     }
-// }

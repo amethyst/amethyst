@@ -21,7 +21,6 @@ use derive_new::new;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
-#[prefab(Component)]
 #[serde(deny_unknown_fields)]
 pub struct Position(pub f32, pub f32, pub f32);
 

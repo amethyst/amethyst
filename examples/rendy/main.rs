@@ -55,8 +55,6 @@ use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-mod prefab_data;
-
 struct Example {
     entity: Option<Entity>,
     initialised: bool,
