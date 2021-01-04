@@ -1,7 +1,10 @@
 use amethyst::{
-    assets::{DefaultLoader, Handle, Loader},
-    core::Named,
-    input::{is_close_requested, is_key_down, InputBundle, InputHandler},
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
+    core::{
+        transform::{Parent, Transform, TransformBundle},
+        Named,
+    },
+    input::{is_close_requested, is_key_down, InputBundle, InputHandler, VirtualKeyCode},
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
@@ -12,9 +15,6 @@ use amethyst::{
     utils::application_root_dir,
     window::ScreenDimensions,
 };
-use amethyst_assets::{LoaderBundle, ProcessingQueue};
-use amethyst_core::transform::{Parent, Transform, TransformBundle};
-use amethyst_input::VirtualKeyCode;
 
 #[derive(Default)]
 struct Player;

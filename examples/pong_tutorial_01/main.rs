@@ -1,6 +1,7 @@
 //! Pong Tutorial 1
 
 use amethyst::{
+    assets::LoaderBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
@@ -10,7 +11,6 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::LoaderBundle;
 
 pub struct Pong;
 

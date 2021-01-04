@@ -1,9 +1,11 @@
 use amethyst::{
-    core::transform::Transform,
+    core::{
+        ecs::{ParallelRunnable, System},
+        transform::Transform,
+    },
     ecs::{IntoQuery, SystemBuilder},
     ui::UiText,
 };
-use amethyst_core::ecs::{ParallelRunnable, System};
 
 use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
 

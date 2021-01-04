@@ -1,7 +1,7 @@
 //! Demonstrates how to use the fly camera
 
 use amethyst::{
-    assets::Loader,
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
     controls::{FlyControl, FlyControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,
@@ -21,7 +21,7 @@ use amethyst::{
             texture::palette::load_from_linear_rgba,
         },
         shape::Shape,
-        types::DefaultBackend,
+        types::{DefaultBackend, MeshData, TextureData},
         Mesh, RenderingBundle, Texture,
     },
     utils::application_root_dir,
@@ -29,8 +29,6 @@ use amethyst::{
     winit::event::{MouseButton, VirtualKeyCode},
     Error,
 };
-use amethyst_assets::{DefaultLoader, Handle, LoaderBundle, ProcessingQueue};
-use amethyst_rendy::types::{MeshData, TextureData};
 
 //type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 

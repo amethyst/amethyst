@@ -6,13 +6,14 @@ use amethyst::{
         ecs::{System, SystemBundle},
         frame_limiter::FrameRateLimitStrategy,
     },
-    network::simulation::{tcp::TcpNetworkBundle, NetworkSimulationEvent, TransportResource},
+    network::simulation::{
+        tcp::TcpNetworkBundle, NetworkSimulationEvent, NetworkSimulationTime, TransportResource,
+    },
     prelude::*,
     shrev::{EventChannel, ReaderId},
     utils::application_root_dir,
     Result,
 };
-use amethyst_network::simulation::NetworkSimulationTime;
 use log::{error, info};
 use systems::ParallelRunnable;
 

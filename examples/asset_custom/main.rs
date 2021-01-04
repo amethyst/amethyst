@@ -1,15 +1,15 @@
 use amethyst::{
-    assets::{Asset, AssetStorage, Format, Handle, Loader, TypeUuid},
+    assets::{
+        atelier_importer,
+        atelier_importer::{typetag, SerdeImportable},
+        register_asset_type, Asset, AssetProcessorSystem, AssetStorage, DefaultLoader, Format,
+        Handle, Loader, LoaderBundle, RonFormat, TypeUuid,
+    },
     error::Error,
     prelude::*,
+    renderer::{types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
 };
-use amethyst_assets::{
-    atelier_importer,
-    atelier_importer::{typetag, SerdeImportable},
-    register_asset_type, AssetProcessorSystem, DefaultLoader, LoaderBundle, RonFormat,
-};
-use amethyst_rendy::{types::DefaultBackend, RenderingBundle};
 use serde::{Deserialize, Serialize};
 
 /// Custom asset representing an energy blast.
