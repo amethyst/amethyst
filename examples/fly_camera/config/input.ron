@@ -18,8 +18,6 @@
             neg: Key(W),
         ),
     },
-    actions: {
-
-    },
+    actions: { },
 )
 

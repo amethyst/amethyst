@@ -1,0 +1,85 @@
+#![enable(implicit_some)]
+/*!
+    @import /amethyst_assets/src/prefab/mod.rs#Prefab
+    @import ../../prefab/main.rs#MyPrefabData
+    Prefab<MyPrefabData>
+*/
+
+Prefab (
+    id: "5539d74b-405d-4873-b2da-fae66b619ca8",
+    objects: [
+        Entity((
+            id: "c3fdafb3-d472-4fe8-a143-2183847dca5f",
+            components: [
+                (
+                    // Material
+                    type: "e238c036-42e9-4d0e-9aa9-c6511c906820",
+                    data: (
+                        albedo: Generate(Srgba(0.0, 0.0, 1.0, 1.0)),
+                    ),
+                ),
+                (
+                    // Mesh
+                    type: "3017f6f7-b9fa-4d55-8cc5-27f803592569",
+                    data: (
+                        mesh: Asset(File("mesh/cube.obj", ("OBJ", ()))),
+                ),
+                (
+                    // Transform
+                    type: "e20afc7a-6de0-4ea4-95b7-1a6583425208",
+                    data: (
+                        translation: (0.0, 0.0, 5.0),
+                        scale: (2.0, 2.0, 2.0),
+                    ),
+                ),
+            ],
+        )),
+        Entity((
+            id: "84dbd01f-4a1c-4c22-8097-797fe54c42f0",
+            components: [ 
+                (
+                    // Transform
+                    type: "e20afc7a-6de0-4ea4-95b7-1a6583425208",
+                    data: (
+                        translation: (5.0, -20.0, 15.0),
+                    ),
+                ),
+                (
+                    // Light Point
+                    type: "32cf5344-28c1-41c4-a1f9-ea87de4b1a4f",
+                    data: (
+                            intensity: 100.0,
+                            color: (1.0, 1.0, 1.0),
+                            radius: 1.0,
+                        ),
+                    ),
+                ),
+            ],
+        )),
+        Entity((
+            id: "39c7c10c-5cd5-434a-8712-1e2b701b63f1",
+            components: [
+                (
+                    // Transform
+                    type: "e20afc7a-6de0-4ea4-95b7-1a6583425208",
+                    data: (
+                        translation: (0.0, -20.0, 10.0),
+                        rotation: (0.6153864, 0.0, 0.0, 0.7882256),
+                    ),
+                ),
+                (
+                    // Camera Pecrspective
+                    type: "56946ce2-356e-4038-82ad-e55a69ddfde9",
+                    data: (
+                        camera: Perspective(
+                            aspect: 1.0,
+                            fovy: 1.0471975512,
+                            znear: 0.1,
+                            zfar: 2000.0,
+                        ),
+                    )
+                ),
+            ],
+        )),
+    ],
+)

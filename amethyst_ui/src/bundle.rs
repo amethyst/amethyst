@@ -1,22 +1,29 @@
 //! ECS rendering bundle
 
-use crate::{
-    BlinkSystem, CacheSelectionOrderSystem, DragWidgetSystemDesc, FontAsset, NoCustomUi,
-    ResizeSystemDesc, SelectionKeyboardSystemDesc, SelectionMouseSystemDesc,
-    TextEditingInputSystemDesc, TextEditingMouseSystemDesc, ToNativeWidget,
-    UiButtonActionRetriggerSystemDesc, UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem,
-    UiSoundRetriggerSystemDesc, UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
-};
-use amethyst_assets::Processor;
-use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::prelude::{DispatcherBuilder, World},
-    SystemDesc,
-};
-use amethyst_error::Error;
-use amethyst_input::BindingTypes;
-use derive_new::new;
 use std::marker::PhantomData;
+
+use amethyst_assets::ProcessingQueue;
+use amethyst_core::{ecs::*, shrev::EventChannel};
+use amethyst_error::Error;
+use amethyst_rendy::types::DefaultBackend;
+use derive_new::new;
+use winit::event::Event;
+
+use crate::{
+    button::{ui_button_action_retrigger_event_system, UiButtonSystem},
+    drag::DragWidgetSystem,
+    event::UiMouseSystem,
+    glyphs::{GlyphTextureData, GlyphTextureProcessorSystem},
+    layout::UiTransformSystem,
+    resize::ResizeSystem,
+    selection::{SelectionKeyboardSystem, SelectionMouseSystem},
+    selection_order_cache::CacheSelectionSystem,
+    sound::{ui_sound_event_retrigger_system, UiSoundSystem},
+    text::TextEditingMouseSystem,
+    text_editing::TextEditingInputSystem,
+    BlinkSystem, CachedSelectionOrderResource, UiButtonAction, UiEvent, UiLabel, UiPlaySoundAction,
+    WidgetId, Widgets,
+};
 
 /// UI bundle
 ///
@@ -24,106 +31,144 @@ use std::marker::PhantomData;
 /// The generic type T represent the T generic parameter of the InputHandler<T>.
 ///
 /// Will fail with error 'No resource with the given id' if either the InputBundle or TransformBundle are not added.
-#[derive(new, Debug)]
-pub struct UiBundle<T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
+#[derive(new, Debug, Default)]
+pub struct UiBundle</*C = NoCustomUi, */ W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(T, C, W, G)>,
+    _marker: PhantomData<(/*C,*/ W, G)>,
 }
 
-impl<'a, 'b, T, C, W, G> SystemBundle<'a, 'b> for UiBundle<T, C, W, G>
+impl</*C,*/ W, G> SystemBundle for UiBundle</*C,*/ W, G>
 where
-    T: BindingTypes,
-    C: ToNativeWidget,
+    //C: ToNativeWidget,
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
 {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add(
-            UiLoaderSystemDesc::<<C as ToNativeWidget>::PrefabData, W>::default().build(world),
-            "ui_loader",
-            &[],
-        );
-        builder.add(
-            UiTransformSystemDesc::default().build(world),
-            "ui_transform",
-            &["transform_system"],
-        );
-        builder.add(
-            UiMouseSystem::<T>::new(),
-            "ui_mouse_system",
-            &["input_system", "ui_transform"],
-        );
-        builder.add(
-            Processor::<FontAsset>::new(),
-            "font_processor",
-            &["ui_loader"],
-        );
-        builder.add(
-            CacheSelectionOrderSystem::<G>::new(),
-            "selection_order_cache",
-            &[],
-        );
-        builder.add(
-            SelectionMouseSystemDesc::<G, T>::default().build(world),
-            "ui_mouse_selection",
-            &["ui_mouse_system"],
-        );
-        builder.add(
-            SelectionKeyboardSystemDesc::<G>::default().build(world),
-            "ui_keyboard_selection",
-            // Because when you press tab, you want to override the previously selected elements.
-            &["ui_mouse_selection"],
-        );
-        builder.add(
-            TextEditingMouseSystemDesc::default().build(world),
-            "ui_text_editing_mouse_system",
-            &["ui_mouse_selection", "ui_keyboard_selection"],
-        );
-        builder.add(
-            TextEditingInputSystemDesc::default().build(world),
-            "ui_text_editing_input_system",
-            // Hard requirement. The system assumes the text to edit is selected.
-            &["ui_mouse_selection", "ui_keyboard_selection"],
-        );
-        builder.add(
-            ResizeSystemDesc::default().build(world),
-            "ui_resize_system",
-            &[],
-        );
-        builder.add(
-            UiButtonSystemDesc::default().build(world),
-            "ui_button_system",
-            &["ui_mouse_system"],
-        );
-        builder.add(
-            DragWidgetSystemDesc::<T>::default().build(world),
-            "ui_drag_system",
-            &["ui_mouse_system"],
-        );
+        log::debug!("Adding UI Resources");
+        resources.insert(EventChannel::<UiButtonAction>::new());
+        resources.insert(EventChannel::<UiEvent>::new());
+        resources.insert(Widgets::<UiLabel, W>::new());
+        resources.insert(CachedSelectionOrderResource::default());
 
-        builder.add(
-            UiButtonActionRetriggerSystemDesc::default().build(world),
-            "ui_button_action_retrigger_system",
-            &["ui_button_system"],
-        );
-        builder.add(
-            UiSoundSystemDesc::default().build(world),
-            "ui_sound_system",
-            &[],
-        );
-        builder.add(
-            UiSoundRetriggerSystemDesc::default().build(world),
-            "ui_sound_retrigger_system",
-            &["ui_sound_system"],
-        );
+        resources.insert(ProcessingQueue::<GlyphTextureData>::default());
+        builder.add_system(Box::new(
+            GlyphTextureProcessorSystem::<DefaultBackend>::default(),
+        ));
 
-        // Required for text editing. You want the cursor image to blink.
-        builder.add(BlinkSystem, "blink_system", &[]);
+        log::debug!("Creating UI EventChannel Readers");
+        let ui_btn_reader = resources
+            .get_mut::<EventChannel<UiButtonAction>>()
+            .unwrap()
+            .register_reader();
 
+        let ui_btn_action_retrigger_reader = resources
+            .get_mut::<EventChannel<UiEvent>>()
+            .unwrap()
+            .register_reader();
+
+        let text_editing_mouse_reader = resources
+            .get_mut::<EventChannel<Event<'static, ()>>>()
+            .unwrap()
+            .register_reader();
+
+        let selection_mouse_reader = resources
+            .get_mut::<EventChannel<UiEvent>>()
+            .unwrap()
+            .register_reader();
+
+        let selection_keyboard_reader = resources
+            .get_mut::<EventChannel<Event<'static, ()>>>()
+            .unwrap()
+            .register_reader();
+        let text_editing_input_reader = resources
+            .get_mut::<EventChannel<Event<'static, ()>>>()
+            .unwrap()
+            .register_reader();
+        let drag_widget_reader = resources
+            .get_mut::<EventChannel<UiEvent>>()
+            .unwrap()
+            .register_reader();
+
+        log::debug!("Adding UI Systems to Dispatcher");
+        builder
+            .add_system(Box::new(UiTransformSystem::new()))
+            .add_system(Box::new(UiMouseSystem::new()))
+            .add_system(Box::new(UiButtonSystem::new(ui_btn_reader)))
+            .add_system(Box::new(ui_button_action_retrigger_event_system(
+                ui_btn_action_retrigger_reader,
+            )))
+            .add_system(Box::new(CacheSelectionSystem::<G>::new()))
+            .add_system(Box::new(TextEditingMouseSystem::new(
+                text_editing_mouse_reader,
+            )))
+            .add_system(Box::new(SelectionMouseSystem::<G>::new(
+                selection_mouse_reader,
+            )))
+            .add_system(Box::new(SelectionKeyboardSystem::<G>::new(
+                selection_keyboard_reader,
+            )))
+            .add_system(Box::new(TextEditingInputSystem::new(
+                text_editing_input_reader,
+            )))
+            .add_system(Box::new(ResizeSystem::new()))
+            .add_system(Box::new(DragWidgetSystem::new(drag_widget_reader)))
+            .add_system(Box::new(BlinkSystem));
+
+        /*
+                builder.add_system(
+                    UiLoaderSystemDesc::<<C as ToNativeWidget>::PrefabData, W>::default().build(world),
+                );
+        */
+        Ok(())
+    }
+
+    fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> {
+        // FIXME: should get all resources and remove them
+        Ok(())
+    }
+}
+
+/// Audio UI bundle
+///
+/// Will register all necessary components and systems needed for UI, along with any resources.
+/// The generic type T represent the T generic parameter of the InputHandler<T>.
+///
+/// Will fail if no Output added. Add it with `amethyst_audio::output::init_output`
+#[derive(new, Debug, Default)]
+pub struct AudioUiBundle;
+
+impl SystemBundle for AudioUiBundle {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), Error> {
+        resources.insert(EventChannel::<UiPlaySoundAction>::new());
+
+        builder
+            .add_system(Box::new(UiSoundSystem::new(
+                resources
+                    .get_mut::<EventChannel<UiPlaySoundAction>>()
+                    .unwrap()
+                    .register_reader(),
+            )))
+            .add_system(Box::new(ui_sound_event_retrigger_system(
+                resources
+                    .get_mut::<EventChannel<UiEvent>>()
+                    .unwrap()
+                    .register_reader(),
+            )));
+        Ok(())
+    }
+
+    fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> {
+        // FIXME: should get all resources and remove them
         Ok(())
     }
 }

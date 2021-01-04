@@ -1,16 +1,11 @@
 use std::marker::PhantomData;
 
-use derive_new::new;
+use amethyst_assets::AssetStorage;
+use amethyst_core::ecs::*;
+use amethyst_error::Error;
 use log::error;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-
-use amethyst_assets::AssetStorage;
-use amethyst_core::{
-    ecs::prelude::{Read, System, SystemData, World, WriteExpect},
-    shred::Resource,
-    SystemDesc,
-};
 
 use crate::{
     output::init_output,
@@ -18,60 +13,87 @@ use crate::{
     source::{Source, SourceHandle},
 };
 
-/// Creates a new `DjSystem` with the music picker being `f`.
-///
-/// The closure takes a parameter, which needs to be a reference to a resource type,
-/// e.g. `&MusicLibrary`. This resource will be fetched by the system and passed to the picker.
-#[derive(Debug, new)]
-pub struct DjSystemDesc<F, R> {
+/// Dj system bundle which is the default way to construct dj system as it initializes any required resources.
+#[derive(Debug)]
+pub struct DjSystemBundle<F, R>
+where
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
+    R: Send + Sync + 'static,
+{
     f: F,
-    marker: PhantomData<R>,
+    _marker: PhantomData<R>,
 }
 
-impl<'a, 'b, F, R> SystemDesc<'a, 'b, DjSystem<F, R>> for DjSystemDesc<F, R>
+impl<F, R> DjSystemBundle<F, R>
 where
-    F: FnMut(&mut R) -> Option<SourceHandle>,
-    R: Resource,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
+    R: Send + Sync + 'static,
 {
-    fn build(self, world: &mut World) -> DjSystem<F, R> {
-        <DjSystem<F, R> as System<'_>>::SystemData::setup(world);
+    /// Creates a new [DjSystemBundle] where [f] is a function which produces music [SourceHandle].
+    pub fn new(f: F) -> Self {
+        Self {
+            f,
+            _marker: PhantomData,
+        }
+    }
+}
 
-        init_output(world);
-
-        DjSystem::new(self.f)
+impl<F, R> SystemBundle for DjSystemBundle<F, R>
+where
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static + Copy,
+    R: Send + Sync + 'static,
+{
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
+    ) -> Result<(), Error> {
+        init_output(resources);
+        builder.add_system(Box::new(DjSystem {
+            f: self.f,
+            _phantom: PhantomData,
+        }));
+        Ok(())
     }
 }
 
 /// Calls a closure if the `AudioSink` is empty.
-#[derive(Debug, new)]
-pub struct DjSystem<F, R> {
+#[derive(Debug, Clone)]
+pub struct DjSystem<F, R>
+where
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync,
+    R: Send + Sync,
+{
     f: F,
-    marker: PhantomData<R>,
+    _phantom: std::marker::PhantomData<R>,
 }
 
-impl<'a, F, R> System<'a> for DjSystem<F, R>
+impl<F, R> System<'static> for DjSystem<F, R>
 where
-    F: FnMut(&mut R) -> Option<SourceHandle>,
-    R: Resource,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync,
+    R: Send + Sync,
 {
-    type SystemData = (
-        Read<'a, AssetStorage<Source>>,
-        Option<Read<'a, AudioSink>>,
-        WriteExpect<'a, R>,
-    );
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("DjSystem")
+                .read_resource::<AssetStorage<Source>>()
+                .read_resource::<Option<AudioSink>>()
+                .write_resource::<R>()
+                .build(move |_commands, _world, (storage, sink, res), _queries| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("dj_system");
 
-    fn run(&mut self, (storage, sink, mut res): Self::SystemData) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("dj_system");
-
-        if let Some(ref sink) = sink {
-            if sink.empty() {
-                if let Some(source) = (&mut self.f)(&mut res).and_then(|h| storage.get(&h)) {
-                    if let Err(e) = sink.append(source) {
-                        error!("DJ Cannot append source to sink. {}", e);
+                    if let Some(sink) = &**sink {
+                        if sink.empty() {
+                            if let Some(source) = (self.f)(res).and_then(|h| storage.get(&h)) {
+                                if let Err(e) = sink.append(source) {
+                                    error!("DJ Cannot append source to sink. {}", e);
+                                }
+                            }
+                        }
                     }
-                }
-            }
-        }
+                }),
+        )
     }
 }

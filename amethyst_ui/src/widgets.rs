@@ -1,5 +1,3 @@
-use derivative::Derivative;
-use rand::{self, distributions::Alphanumeric, Rng};
 use std::{
     collections::{
         hash_map::{Keys, Values, ValuesMut},
@@ -9,6 +7,9 @@ use std::{
     hash::Hash,
     ops::Index,
 };
+
+use derivative::Derivative;
+use rand::{self, distributions::Alphanumeric, Rng};
 
 /// A widget is an object that keeps track of all components and entities
 /// that make up an element of the user interface. Using the widget_components!
@@ -60,7 +61,7 @@ impl WidgetId for String {
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
 #[allow(missing_debug_implementations)]
-pub struct Widgets<T: Widget, I: WidgetId = u32> {
+pub struct Widgets<T: Widget, I: WidgetId> {
     items: HashMap<I, T>,
     last_key: Option<I>,
 }
@@ -70,6 +71,11 @@ where
     T: Widget,
     I: WidgetId,
 {
+    /// Creates a new `Widgets` and initializes it with the default values.
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     /// Adds a widget to the map and returns the ID that was created
     /// for it.
     pub fn add(&mut self, widget: T) -> I {
@@ -127,25 +133,35 @@ macro_rules! define_widget_component_fn_impl {
     ( (has $t:ty as $name:ident on $entity:ident) ) => {
         paste::item! {
             /// Get a reference to the $t component for this widget.
-            pub fn [<get_ $name>]<'a>(
+            pub fn [<get_ $name>]<'a, I>(
                 &self,
-                storage: &'a amethyst_core::ecs::prelude::ReadStorage<'a, $t>
-            ) -> &'a $t {
+                chunk_iter: I
+            ) -> &'a $t
+            where
+                I: Iterator<Item=(amethyst_core::ecs::Entity,&'a $t)> + 'a {
                 // TODO: Better error message
-                storage.get(self.$entity)
+                chunk_iter.filter(|(e, _)| *e == self.$entity)
+                    .map(|(_, t)| t)
+                    .next()
                     .expect("Component should exist on entity")
             }
         }
 
         paste::item! {
-            /// Get a mutable reference to the $t component for this widget.
-            pub fn [<get_ $name _mut>]<'a>(
-                &self,
-                storage: &'a mut amethyst_core::ecs::prelude::WriteStorage<'a, $t>
-            ) -> &'a mut $t {
-                // TODO: Better error message
-                storage.get_mut(self.$entity)
-                    .expect("Component should exist on entity")
+                /// Get a mutable reference to the $t component for this widget.
+                pub fn [<get_ $name _mut>]<'a, I>(
+                    &self,
+                    chunk_iter: I
+                ) -> &'a mut $t
+                where
+                    I: Iterator<Item=(amethyst_core::ecs::Entity,&'a mut $t)> + 'a {
+
+                    // TODO: Better error message
+                    chunk_iter.filter(|(e, _)| *e == self.$entity)
+                        .map(|(_, t)| t)
+                        .next()
+                        .expect("Component should exist on entity")
+
             }
         }
     };
@@ -154,22 +170,32 @@ macro_rules! define_widget_component_fn_impl {
         paste::item! {
             /// Get a reference to the $t component for this widget if it exists,
             /// `None` otherwise.
-            pub fn [<get_ $name _maybe>]<'a>(
+            pub fn [<get_ $name _maybe>]<'a, I>(
                 &self,
-                storage: &'a amethyst_core::ecs::prelude::ReadStorage<'a, $t>
-            ) -> Option<&'a $t> {
-                storage.get(self.$entity)
+                chunk_iter: I
+            ) -> Option<&'a $t>
+             where
+                I: Iterator<Item=(amethyst_core::ecs::Entity,Option<&'a $t>)> + 'a {
+                chunk_iter.filter(|(e, _)| *e == self.$entity)
+                    .map(|(_, t)| t)
+                    .next()
+                    .expect("Option<Component> should exist on iterator")
             }
         }
 
         paste::item! {
             /// Get a mutable reference to the $t component for this widget
             /// if it exists, `None` otherwise.
-            pub fn [<get_ $name _mut_maybe>]<'a>(
+            pub fn [<get_ $name _mut_maybe>]<'a, I>(
                 &self,
-                storage: &'a mut amethyst_core::ecs::prelude::WriteStorage<'a, $t>
-            ) -> Option<&'a mut $t> {
-                storage.get_mut(self.$entity)
+                chunk_iter: I
+            ) -> Option<&'a mut $t>
+            where
+                I: Iterator<Item=(amethyst_core::ecs::Entity, Option<&'a mut $t>)> + 'a {
+                 chunk_iter.filter(|(e, _)| *e == self.$entity)
+                    .map(|(_, t)| t)
+                    .next()
+                    .expect("Option<Component> should exist on iterator")
             }
         }
     };
@@ -190,7 +216,7 @@ macro_rules! define_widget {
         pub struct $t {
             $(
                 /// `$field` Entity
-                pub $field: $crate::Entity
+                pub $field: amethyst_core::ecs::Entity
             ),*
         }
 
@@ -199,7 +225,7 @@ macro_rules! define_widget {
         impl $t {
             /// Create a new $t widget from its associated entities.
             pub fn new(
-                $($field: $crate::Entity),*
+                $($field: amethyst_core::ecs::Entity),*
             ) -> Self {
                 Self {
                     $($field),*

@@ -1,13 +1,8 @@
-use std::marker::PhantomData;
+use std::borrow::Cow;
 
-use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::prelude::{DispatcherBuilder, World},
-    math::one,
-    SystemDesc,
-};
+use amethyst_core::{ecs::*, math::one, shrev::EventChannel};
 use amethyst_error::Error;
-use amethyst_input::BindingTypes;
+use winit::event::Event;
 
 use super::*;
 
@@ -33,29 +28,29 @@ use super::*;
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
 #[derive(Debug)]
-pub struct FlyControlBundle<T: BindingTypes> {
+pub struct FlyControlBundle {
     sensitivity_x: f32,
     sensitivity_y: f32,
     speed: f32,
-    right_input_axis: Option<T::Axis>,
-    up_input_axis: Option<T::Axis>,
-    forward_input_axis: Option<T::Axis>,
+    horizontal_axis: Option<Cow<'static, str>>,
+    vertical_axis: Option<Cow<'static, str>>,
+    longitudinal_axis: Option<Cow<'static, str>>,
 }
 
-impl<T: BindingTypes> FlyControlBundle<T> {
+impl FlyControlBundle {
     /// Builds a new fly control bundle using the provided axes as controls.
     pub fn new(
-        right_input_axis: Option<T::Axis>,
-        up_input_axis: Option<T::Axis>,
-        forward_input_axis: Option<T::Axis>,
+        horizontal_axis: Option<Cow<'static, str>>,
+        vertical_axis: Option<Cow<'static, str>>,
+        longitudinal_axis: Option<Cow<'static, str>>,
     ) -> Self {
         FlyControlBundle {
             sensitivity_x: 1.0,
             sensitivity_y: 1.0,
             speed: one(),
-            right_input_axis,
-            up_input_axis,
-            forward_input_axis,
+            horizontal_axis,
+            vertical_axis,
+            longitudinal_axis,
         }
     }
 
@@ -73,38 +68,43 @@ impl<T: BindingTypes> FlyControlBundle<T> {
     }
 }
 
-impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+impl SystemBundle for FlyControlBundle {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add(
-            FlyMovementSystemDesc::<T>::new(
-                self.speed,
-                self.right_input_axis,
-                self.up_input_axis,
-                self.forward_input_axis,
-            )
-            .build(world),
-            "fly_movement",
-            &[],
-        );
-        builder.add(
-            FreeRotationSystemDesc::new(self.sensitivity_x, self.sensitivity_y).build(world),
-            "free_rotation",
-            &[],
-        );
-        builder.add(
-            MouseFocusUpdateSystemDesc::default().build(world),
-            "mouse_focus",
-            &["free_rotation"],
-        );
-        builder.add(
-            CursorHideSystemDesc::default().build(world),
-            "cursor_hide",
-            &["mouse_focus"],
-        );
+        builder.add_system(Box::new(FlyMovementSystem {
+            speed: self.speed,
+            horizontal_axis: self.horizontal_axis.clone(),
+            vertical_axis: self.vertical_axis.clone(),
+            longitudinal_axis: self.longitudinal_axis.clone(),
+        }));
+
+        let reader = resources
+            .get_mut::<EventChannel<Event<'static, ()>>>()
+            .expect("Window event channel not found in resources")
+            .register_reader();
+
+        builder.add_system(Box::new(FreeRotationSystem {
+            sensitivity_x: self.sensitivity_x,
+            sensitivity_y: self.sensitivity_y,
+            reader,
+        }));
+
+        resources.insert(WindowFocus::new());
+
+        let reader = resources
+            .get_mut::<EventChannel<Event<'static, ()>>>()
+            .expect("Window event channel not found in resources")
+            .register_reader();
+
+        builder.add_system(Box::new(MouseFocusUpdateSystem { reader }));
+
+        resources.insert(HideCursor::default());
+        builder.add_thread_local(Box::new(CursorHideSystem));
+
         Ok(())
     }
 }
@@ -117,19 +117,17 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
 ///
 /// See the `arc_ball_camera` example to see how to use the arc ball camera.
 #[derive(Debug)]
-pub struct ArcBallControlBundle<T: BindingTypes> {
+pub struct ArcBallControlBundle {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    _marker: PhantomData<T>,
 }
 
-impl<T: BindingTypes> ArcBallControlBundle<T> {
+impl ArcBallControlBundle {
     /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
     pub fn new() -> Self {
         ArcBallControlBundle {
             sensitivity_x: 1.0,
             sensitivity_y: 1.0,
-            _marker: PhantomData,
         }
     }
 
@@ -141,34 +139,44 @@ impl<T: BindingTypes> ArcBallControlBundle<T> {
     }
 }
 
-impl<T: BindingTypes> Default for ArcBallControlBundle<T> {
+impl Default for ArcBallControlBundle {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for ArcBallControlBundle<T> {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+impl SystemBundle for ArcBallControlBundle {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
-        builder.add(
-            FreeRotationSystemDesc::new(self.sensitivity_x, self.sensitivity_y).build(world),
-            "free_rotation",
-            &[],
-        );
-        builder.add(
-            MouseFocusUpdateSystemDesc::default().build(world),
-            "mouse_focus",
-            &["free_rotation"],
-        );
-        builder.add(
-            CursorHideSystemDesc::default().build(world),
-            "cursor_hide",
-            &["mouse_focus"],
-        );
+        let reader = resources
+            .get_mut::<EventChannel<Event<'static, ()>>>()
+            .expect("Window event channel not found in resources")
+            .register_reader();
+
+        builder.add_system(Box::new(FreeRotationSystem {
+            sensitivity_x: self.sensitivity_x,
+            sensitivity_y: self.sensitivity_y,
+            reader,
+        }));
+
+        builder.add_system(Box::new(ArcBallRotationSystem));
+
+        resources.insert(WindowFocus::new());
+
+        let reader = resources
+            .get_mut::<EventChannel<Event<'static, ()>>>()
+            .expect("Window event channel not found in resources")
+            .register_reader();
+
+        builder.add_system(Box::new(MouseFocusUpdateSystem { reader }));
+
+        resources.insert(HideCursor::default());
+        builder.add_thread_local(Box::new(CursorHideSystem));
+
         Ok(())
     }
 }

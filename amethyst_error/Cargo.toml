@@ -15,8 +15,5 @@ documentation = "https://docs.amethyst.rs/stable/amethyst_error/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 backtrace = "0.3.44"

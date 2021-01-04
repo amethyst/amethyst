@@ -117,7 +117,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
         AmethystApplication::blank()
             .with_bundle(TransformBundle::new())
             .with_ui_bundles::<B>()
-            .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT, HIDPI))
+            .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT))
     }
 
     /// Returns a `PathBuf` to `<crate_dir>/assets`.
@@ -167,8 +167,8 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let game_data = bundle_add_fns.into_iter().fold(
-            Ok(GameDataBuilder::default()),
+        let mut game_data = bundle_add_fns.into_iter().fold(
+            Ok(DispatcherBuilder::default()),
             |game_data: Result<GameDataBuilder<'_, '_>, Error>, function: BundleAddFn| {
                 game_data.and_then(function)
             },
@@ -591,7 +591,7 @@ mod test {
     use std::marker::PhantomData;
 
     use amethyst::{
-        assets::{Asset, AssetStorage, Handle, Loader, ProcessingState, Processor},
+        assets::{Asset, AssetStorage, DefaultLoader, Handle, Loader, ProcessingState, Processor},
         core::{bundle::SystemBundle, SystemDesc},
         derive::SystemDesc,
         ecs::prelude::*,
@@ -1040,7 +1040,7 @@ mod test {
         S: State<GameData<'a, 'b>, E> + 'static,
         E: Send + Sync + 'static,
     {
-        fn update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> Trans<GameData<'a, 'b>, E> {
+        fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData<'a, 'b>, E> {
             data.data.update(&data.world);
             data.world.insert(LoadResource);
             Trans::Switch(Box::new(self.next_state.take().unwrap()))
@@ -1163,7 +1163,9 @@ mod test {
     #[derive(Debug, PartialEq)]
     struct AssetZero(u32);
     impl Asset for AssetZero {
-        const NAME: &'static str = "amethyst_test::AssetZero";
+        fn name() -> &'static str {
+            "amethyst_test::AssetZero"
+        }
         type Data = Self;
         type HandleStorage = VecStorage<Handle<Self>>;
     }
@@ -1184,7 +1186,7 @@ mod test {
             world: &World,
             asset_translation_zero: AssetZero,
         ) -> Result<AssetZeroHandle, Error> {
-            let loader = world.read_resource::<Loader>();
+            let loader = data.resources.get::<DefaultLoader>().unwrap();
             Ok(loader.load_from_data(
                 asset_translation_zero,
                 (),

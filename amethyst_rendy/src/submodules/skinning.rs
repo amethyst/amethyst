@@ -1,4 +1,10 @@
 //! 3D Skinned per-image buffer handling.
+use amethyst_core::ecs::*;
+use fnv::FnvHashMap;
+use rendy::resource::SubRange;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     rendy::{
         command::RenderPassEncoder,
@@ -9,18 +15,14 @@ use crate::{
     },
     skinning::JointTransforms,
     types::Backend,
-    util,
+    util::{self},
 };
-use fnv::FnvHashMap;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// Provides per-image abstraction for submitting skinned mesh skeletal information.
 #[derive(Debug)]
 pub struct SkinningSub<B: Backend> {
     layout: RendyHandle<DescriptorSetLayout<B>>,
-    skin_offset_map: FnvHashMap<u32, u32>,
+    skin_offset_map: FnvHashMap<Entity, u32>,
     staging: Vec<[[f32; 4]; 4]>,
     per_image: Vec<PerImageSkinningSub<B>>,
 }
@@ -33,9 +35,24 @@ struct PerImageSkinningSub<B: Backend> {
 
 impl<B: Backend> SkinningSub<B> {
     /// Create a new `SkinningSub`, allocating using the provided `Factory`
-    pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+    pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
+        use rendy::hal::pso::*;
+
+        let layout = factory
+            .create_descriptor_set_layout(util::set_layout_bindings(vec![(
+                1,
+                DescriptorType::Buffer {
+                    ty: BufferDescriptorType::Storage { read_only: false },
+                    format: BufferDescriptorFormat::Structured {
+                        dynamic_offset: false,
+                    },
+                },
+                ShaderStageFlags::VERTEX,
+            )]))?
+            .into();
+
         Ok(Self {
-            layout: set_layout! {factory, [1] StorageBuffer hal::pso::ShaderStageFlags::VERTEX},
+            layout,
             skin_offset_map: Default::default(),
             staging: Vec::new(),
             per_image: Vec::new(),
@@ -67,19 +84,16 @@ impl<B: Backend> SkinningSub<B> {
         profile_scope!("insert");
 
         let staging = &mut self.staging;
-        *self
-            .skin_offset_map
-            .entry(joints.skin.id())
-            .or_insert_with(|| {
-                let len = staging.len();
-                staging.extend(
-                    joints
-                        .matrices
-                        .iter()
-                        .map(|m| -> [[f32; 4]; 4] { (*m).into() }),
-                );
-                len as u32
-            })
+        *self.skin_offset_map.entry(joints.skin).or_insert_with(|| {
+            let len = staging.len();
+            staging.extend(
+                joints
+                    .matrices
+                    .iter()
+                    .map(|m| -> [[f32; 4]; 4] { (*m).into() }),
+            );
+            len as u32
+        })
     }
 
     /// Bind the skinned skeletal information.
@@ -123,7 +137,7 @@ impl<B: Backend> PerImageSkinningSub<B> {
                     factory.write_descriptor_sets(Some(util::desc_write(
                         self.set.raw(),
                         0,
-                        Descriptor::Buffer(buffer.raw(), Some(0)..None),
+                        Descriptor::Buffer(buffer.raw(), SubRange::WHOLE),
                     )));
                 }
             }

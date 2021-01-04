@@ -1,16 +1,7 @@
-use crate::ecs::{
-    prelude::Component,
-    storage::{DenseVecStorage, FlaggedStorage, NullStorage},
-};
-
 /// Hidden mesh component
 /// Useful for entities, that should not be rendered, but stay loaded in memory.
 #[derive(Clone, Debug, Default)]
 pub struct Hidden;
-
-impl Component for Hidden {
-    type Storage = NullStorage<Self>;
-}
 
 /// Like [Hidden](struct.Hidden.html), but can propagate through children when the [HideHierarchySystem](struct.HideHierarchySystem.html)
 /// is enabled in the [RenderBundle](struct.RenderBundle.html).
@@ -21,10 +12,6 @@ pub struct HiddenPropagate {
     /// If true, then the `HideHierarchySystem` should manage (insert / remove) the component.
     /// If the user inserts it themselves, then the `HideHierarchySystem` should not remove it.
     pub(crate) is_propagated: bool,
-}
-
-impl Component for HiddenPropagate {
-    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
 impl HiddenPropagate {

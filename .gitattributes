@@ -10,10 +10,10 @@ COPYING text
 LICENSE-* text
 *.spv binary
 # LFS
-examples/assets/large/**/*.obj filter=lfs diff=lfs merge=lfs -text
-examples/assets/large/**/*.png filter=lfs diff=lfs merge=lfs -text
-examples/assets/large/**/*.ogg filter=lfs diff=lfs merge=lfs -text
-examples/assets/large/**/*.dds filter=lfs diff=lfs merge=lfs -text
-examples/assets/large/**/*.glb filter=lfs diff=lfs merge=lfs -text
-examples/assets/large/**/*.bin filter=lfs diff=lfs merge=lfs -text
-examples/assets/large/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+examples/**/assets/large/**/*.obj filter=lfs diff=lfs merge=lfs -text
+examples/**/assets/large/**/*.png filter=lfs diff=lfs merge=lfs -text
+examples/**/assets/large/**/*.ogg filter=lfs diff=lfs merge=lfs -text
+examples/**/assets/large**/*.dds filter=lfs diff=lfs merge=lfs -text
+examples/**/assets/large/**/*.glb filter=lfs diff=lfs merge=lfs -text
+examples/**/assets/large/**/*.bin filter=lfs diff=lfs merge=lfs -text
+examples/**/assets/large/**/*.jpg filter=lfs diff=lfs merge=lfs -text

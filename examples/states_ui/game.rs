@@ -1,5 +1,3 @@
-use crate::pause::PauseMenuState;
-
 use amethyst::{
     audio::output::init_output,
     core::Time,
@@ -10,6 +8,8 @@ use amethyst::{
     utils::fps_counter::FpsCounter,
     winit::VirtualKeyCode,
 };
+
+use crate::pause::PauseMenuState;
 
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
 /// The main differences include the added 'paused' field in the state, which is toggled when
@@ -28,7 +28,7 @@ pub struct Game {
 }
 
 impl SimpleState for Game {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { mut world, .. } = data;
 
         // needed for registering audio output.
@@ -38,15 +38,15 @@ impl SimpleState for Game {
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/example.ron", ())));
     }
 
-    fn on_pause(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
+    fn on_pause(&mut self, _data: StateData<'_, GameData>) {
         self.paused = true;
     }
 
-    fn on_resume(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
+    fn on_resume(&mut self, _data: StateData<'_, GameData>) {
         self.paused = false;
     }
 
-    fn on_stop(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_stop(&mut self, data: StateData<'_, GameData>) {
         if let Some(root_entity) = self.ui_root {
             data.world
                 .delete_entity(root_entity)
@@ -58,11 +58,7 @@ impl SimpleState for Game {
         self.random_text = None;
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) {
@@ -89,7 +85,7 @@ impl SimpleState for Game {
         }
     }
 
-    fn update(&mut self, state_data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, state_data: &mut StateData<'_, GameData>) -> SimpleTrans {
         let StateData { world, .. } = state_data;
 
         // this cannot happen in 'on_start', as the entity might not be fully

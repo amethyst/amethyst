@@ -137,7 +137,7 @@ impl Tracker for ProgressCounterTracker {
 
     fn fail(
         self: Box<Self>,
-        handle_id: u32,
+        handle_id: u64,
         asset_type_name: &'static str,
         asset_name: String,
         error: Error,
@@ -160,7 +160,7 @@ impl Tracker for ProgressCounterTracker {
 #[derive(Debug)]
 pub struct AssetErrorMeta {
     pub error: Error,
-    pub handle_id: u32,
+    pub handle_id: u64,
     pub asset_type_name: &'static str,
     pub asset_name: String,
 }
@@ -174,7 +174,7 @@ pub trait Tracker: Send + 'static {
     /// Called if the asset couldn't be imported to an error.
     fn fail(
         self: Box<Self>,
-        handle_id: u32,
+        handle_id: u64,
         asset_type_name: &'static str,
         asset_name: String,
         error: Error,
@@ -185,7 +185,7 @@ impl Tracker for () {
     fn success(self: Box<Self>) {}
     fn fail(
         self: Box<Self>,
-        handle_id: u32,
+        handle_id: u64,
         asset_type_name: &'static str,
         asset_name: String,
         error: Error,
@@ -195,7 +195,7 @@ impl Tracker for () {
     }
 }
 
-fn show_error(handle_id: u32, asset_type_name: &'static str, asset_name: &str, error: &Error) {
+fn show_error(handle_id: u64, asset_type_name: &'static str, asset_name: &str, error: &Error) {
     let mut err_out = format!(
         "Error loading handle {}, {}, with name {}: {}",
         handle_id, asset_type_name, asset_name, error,

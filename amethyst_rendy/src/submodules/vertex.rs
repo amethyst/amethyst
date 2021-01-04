@@ -1,6 +1,8 @@
 //! Wrapper and management data structures for providing automatic buffering, resizing and management
 //! of rendy vertex buffer types.
 
+use core::{marker::PhantomData, ops::Range};
+
 use crate::{
     rendy::{
         command::RenderPassEncoder,
@@ -12,7 +14,6 @@ use crate::{
     types::Backend,
     util,
 };
-use core::{marker::PhantomData, ops::Range};
 
 /// Type alias for a set of dynamic vertex buffer data to be managed. See the documentation
 /// for [DynamicVertexData] for implementation details.

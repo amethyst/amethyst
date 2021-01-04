@@ -15,12 +15,11 @@
 
 pub use self::{
     bundles::{ArcBallControlBundle, FlyControlBundle},
-    components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag},
+    components::{ArcBallControl, FlyControl},
     resources::{HideCursor, WindowFocus},
     systems::{
-        ArcBallRotationSystem, CursorHideSystem, CursorHideSystemDesc, FlyMovementSystem,
-        FlyMovementSystemDesc, FreeRotationSystem, FreeRotationSystemDesc, MouseFocusUpdateSystem,
-        MouseFocusUpdateSystemDesc,
+        ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
+        MouseFocusUpdateSystem,
     },
 };
 

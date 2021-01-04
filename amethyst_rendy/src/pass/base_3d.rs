@@ -1,22 +1,7 @@
-use crate::{
-    batch::{GroupIterator, OrderedTwoLevelBatch, TwoLevelBatch},
-    mtl::{FullTextureSet, Material, StaticTextureSet},
-    pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::{SkinnedVertexArgs, VertexArgs},
-    resources::Tint,
-    skinning::JointTransforms,
-    submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
-    transparent::Transparent,
-    types::{Backend, Mesh},
-    util,
-    visibility::Visibility,
-};
-use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{
-    ecs::{Join, Read, ReadExpect, ReadStorage, SystemData, World},
-    transform::Transform,
-    Hidden, HiddenPropagate,
-};
+use std::marker::PhantomData;
+
+use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle};
+use amethyst_core::{ecs::*, transform::Transform};
 use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
@@ -30,7 +15,20 @@ use rendy::{
     shader::{Shader, SpirvShader},
 };
 use smallvec::SmallVec;
-use std::marker::PhantomData;
+
+use crate::{
+    batch::{GroupIterator, OrderedTwoLevelBatch, TwoLevelBatch},
+    mtl::{FullTextureSet, Material, StaticTextureSet},
+    pipeline::{PipelineDescBuilder, PipelinesBuilder},
+    pod::{SkinnedVertexArgs, VertexArgs},
+    resources::Tint,
+    skinning::JointTransforms,
+    submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
+    system::GraphAuxData,
+    types::{Backend, Mesh},
+    util,
+    visibility::Visibility,
+};
 
 macro_rules! profile_scope_impl {
     ($string:expr) => {
@@ -97,19 +95,19 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DDesc<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData> for DrawBase3DDesc<B, T> {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _aux: &GraphAuxData,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         profile_scope_impl!("build");
 
         let env = EnvironmentSub::new(
@@ -170,8 +168,8 @@ pub struct DrawBase3D<B: Backend, T: Base3DPassDef> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
-    static_batches: TwoLevelBatch<MaterialId, u32, SmallVec<[VertexArgs; 4]>>,
-    skinned_batches: TwoLevelBatch<MaterialId, u32, SmallVec<[SkinnedVertexArgs; 4]>>,
+    static_batches: TwoLevelBatch<MaterialId, LoadHandle, SmallVec<[VertexArgs; 4]>>,
+    skinned_batches: TwoLevelBatch<MaterialId, LoadHandle, SmallVec<[SkinnedVertexArgs; 4]>>,
     vertex_format_base: Vec<VertexFormat>,
     vertex_format_skinned: Vec<VertexFormat>,
     env: EnvironmentSub<B>,
@@ -182,43 +180,24 @@ pub struct DrawBase3D<B: Backend, T: Base3DPassDef> {
     marker: PhantomData<T>,
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B, T> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        aux: &GraphAuxData,
     ) -> PrepareResult {
         profile_scope_impl!("prepare opaque");
 
-        let (
-            mesh_storage,
-            visibility,
-            transparent,
-            hiddens,
-            hiddens_prop,
-            meshes,
-            materials,
-            transforms,
-            joints,
-            tints,
-        ) = <(
-            Read<'_, AssetStorage<Mesh>>,
-            ReadExpect<'_, Visibility>,
-            ReadStorage<'_, Transparent>,
-            ReadStorage<'_, Hidden>,
-            ReadStorage<'_, HiddenPropagate>,
-            ReadStorage<'_, Handle<Mesh>>,
-            ReadStorage<'_, Handle<Material>>,
-            ReadStorage<'_, Transform>,
-            ReadStorage<'_, JointTransforms>,
-            ReadStorage<'_, Tint>,
-        )>::fetch(resources);
+        let GraphAuxData { world, resources } = aux;
+
+        let visibility = resources.get::<Visibility>().unwrap();
+        let mesh_storage = resources.get::<AssetStorage<Mesh>>().unwrap();
 
         // Prepare environment
-        self.env.process(factory, index, resources);
+        self.env.process(factory, index, world, resources);
         self.materials.maintain();
 
         self.static_batches.clear_inner();
@@ -229,41 +208,80 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
         let statics_ref = &mut self.static_batches;
         let skinned_ref = &mut self.skinned_batches;
 
-        let static_input = || ((&materials, &meshes, &transforms, tints.maybe()), !&joints);
-        let skinned_input = || (&materials, &meshes, &transforms, tints.maybe(), &joints);
         {
             profile_scope_impl!("prepare");
-            (static_input(), &visibility.visible_unordered)
-                .join()
-                .map(|(((mat, mesh, tform, tint), _), _)| {
-                    ((mat, mesh.id()), VertexArgs::from_object_data(tform, tint))
+            let mut query =
+                <(&Handle<Material>, &Handle<Mesh>, &Transform, Option<&Tint>)>::query();
+
+            visibility
+                .visible_unordered
+                .iter()
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
+                .map(|(entity, (mat, mesh, tform, tint))| {
+                    // log::debug!("(entity, (mat, mesh, tform, tint))");
+                    if let Some(tint) = tint {
+                        (
+                            (mat, mesh.load_handle()),
+                            VertexArgs::from_object_data(tform, Some(&tint)),
+                        )
+                    } else {
+                        (
+                            (mat, mesh.load_handle()),
+                            VertexArgs::from_object_data(tform, None),
+                        )
+                    }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
-                    if mesh_storage.contains_id(mesh_id) {
-                        if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
+                    // log::debug!("mesh_id: {:?}, mat_id: {:?}", mesh_id, mat);
+                    if mesh_storage.contains(mesh_id) {
+                        // log::debug!("if mesh_storage.contains(mesh_id)");
+                        if let Some((mat, _)) = materials_ref.insert(factory, resources, &mat) {
+                            // log::debug!("statics_ref.insert(mat, mesh_id, data.drain(..))");
                             statics_ref.insert(mat, mesh_id, data.drain(..));
                         }
                     }
                 });
         }
+
         if self.pipeline_skinned.is_some() {
             profile_scope_impl!("prepare_skinning");
 
-            (skinned_input(), &visibility.visible_unordered)
-                .join()
-                .map(|((mat, mesh, tform, tint, joints), _)| {
-                    (
-                        (mat, mesh.id()),
-                        SkinnedVertexArgs::from_object_data(
-                            tform,
-                            tint,
-                            skinning_ref.insert(joints),
-                        ),
-                    )
+            let mut query = <(
+                &Handle<Material>,
+                &Handle<Mesh>,
+                &Transform,
+                Option<&Tint>,
+                &JointTransforms,
+            )>::query();
+
+            visibility
+                .visible_unordered
+                .iter()
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
+                .map(|(_, (mat, mesh, tform, tint, joints))| {
+                    if let Some(tint) = tint {
+                        (
+                            (mat, mesh.load_handle()),
+                            SkinnedVertexArgs::from_object_data(
+                                &tform,
+                                Some(&tint),
+                                skinning_ref.insert(&joints),
+                            ),
+                        )
+                    } else {
+                        (
+                            (mat, mesh.load_handle()),
+                            SkinnedVertexArgs::from_object_data(
+                                &tform,
+                                None,
+                                skinning_ref.insert(&joints),
+                            ),
+                        )
+                    }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
-                    if mesh_storage.contains_id(mesh_id) {
-                        if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
+                    if mesh_storage.contains(mesh_id) {
+                        if let Some((mat, _)) = materials_ref.insert(factory, resources, &mat) {
                             skinned_ref.insert(mat, mesh_id, data.drain(..));
                         }
                     }
@@ -299,11 +317,11 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        aux: &GraphAuxData,
     ) {
         profile_scope_impl!("draw opaque");
 
-        let mesh_storage = <Read<'_, AssetStorage<Mesh>>>::fetch(resources);
+        let mesh_storage = aux.resources.get::<AssetStorage<Mesh>>().unwrap();
         let models_loc = self.vertex_format_base.len() as u32;
         let skin_models_loc = self.vertex_format_skinned.len() as u32;
 
@@ -317,10 +335,12 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
                     self.materials
                         .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                     for (mesh_id, batch_data) in batches {
-                        debug_assert!(mesh_storage.contains_id(*mesh_id));
-                        if let Some(mesh) =
-                            B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh_id) })
-                        {
+                        debug_assert!(mesh_storage.contains(*mesh_id));
+                        if let Some(mesh) = B::unwrap_mesh({
+                            mesh_storage
+                                .get_for_load_handle(*mesh_id)
+                                .expect("Could not get mesh.")
+                        }) {
                             mesh.bind_and_draw(
                                 0,
                                 &self.vertex_format_base,
@@ -351,9 +371,11 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
                         self.materials
                             .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                         for (mesh_id, batch_data) in batches {
-                            debug_assert!(mesh_storage.contains_id(*mesh_id));
-                            if let Some(mesh) = B::unwrap_mesh(unsafe {
-                                mesh_storage.get_by_id_unchecked(*mesh_id)
+                            debug_assert!(mesh_storage.contains(*mesh_id));
+                            if let Some(mesh) = B::unwrap_mesh({
+                                mesh_storage
+                                    .get_for_load_handle(*mesh_id)
+                                    .expect("Could not get mesh.")
                             }) {
                                 mesh.bind_and_draw(
                                     0,
@@ -371,7 +393,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3D<B, T> {
         }
     }
 
-    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &GraphAuxData) {
         profile_scope_impl!("dispose");
         unsafe {
             factory
@@ -419,19 +441,21 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, World> for DrawBase3DTransparentDesc<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData>
+    for DrawBase3DTransparentDesc<B, T>
+{
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _aux: &GraphAuxData,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         let env = EnvironmentSub::new(
             factory,
             [
@@ -491,8 +515,8 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
-    static_batches: OrderedTwoLevelBatch<MaterialId, u32, VertexArgs>,
-    skinned_batches: OrderedTwoLevelBatch<MaterialId, u32, SkinnedVertexArgs>,
+    static_batches: OrderedTwoLevelBatch<MaterialId, LoadHandle, VertexArgs>,
+    skinned_batches: OrderedTwoLevelBatch<MaterialId, LoadHandle, SkinnedVertexArgs>,
     vertex_format_base: Vec<VertexFormat>,
     vertex_format_skinned: Vec<VertexFormat>,
     env: EnvironmentSub<B>,
@@ -504,30 +528,24 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef> {
     marker: PhantomData<T>,
 }
 
-impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTransparent<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTransparent<B, T> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        aux: &GraphAuxData,
     ) -> PrepareResult {
         profile_scope_impl!("prepare transparent");
 
-        let (mesh_storage, visibility, meshes, materials, transforms, joints, tints) =
-            <(
-                Read<'_, AssetStorage<Mesh>>,
-                ReadExpect<'_, Visibility>,
-                ReadStorage<'_, Handle<Mesh>>,
-                ReadStorage<'_, Handle<Material>>,
-                ReadStorage<'_, Transform>,
-                ReadStorage<'_, JointTransforms>,
-                ReadStorage<'_, Tint>,
-            )>::fetch(resources);
+        let GraphAuxData { world, resources } = aux;
+
+        let visibility = resources.get::<Visibility>().unwrap();
+        let mesh_storage = resources.get::<AssetStorage<Mesh>>().unwrap();
 
         // Prepare environment
-        self.env.process(factory, index, resources);
+        self.env.process(factory, index, world, resources);
         self.materials.maintain();
 
         self.static_batches.swap_clear();
@@ -539,52 +557,90 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
         let skinned_ref = &mut self.skinned_batches;
         let mut changed = false;
 
-        let mut joined = ((&materials, &meshes, &transforms, tints.maybe()), !&joints).join();
-        visibility
-            .visible_ordered
-            .iter()
-            .filter_map(|e| joined.get_unchecked(e.id()))
-            .map(|((mat, mesh, tform, tint), _)| {
-                ((mat, mesh.id()), VertexArgs::from_object_data(tform, tint))
-            })
-            .for_each_group(|(mat, mesh_id), data| {
-                if mesh_storage.contains_id(mesh_id) {
-                    if let Some((mat, this_changed)) = materials_ref.insert(factory, resources, mat)
-                    {
-                        changed = changed || this_changed;
-                        statics_ref.insert(mat, mesh_id, data.drain(..));
-                    }
-                }
-            });
+        {
+            profile_scope_impl!("prepare");
 
-        if self.pipeline_skinned.is_some() {
-            let mut joined = (&materials, &meshes, &transforms, tints.maybe(), &joints).join();
+            let mut query =
+                <(&Handle<Material>, &Handle<Mesh>, &Transform, Option<&Tint>)>::query();
 
             visibility
                 .visible_ordered
                 .iter()
-                .filter_map(|e| joined.get_unchecked(e.id()))
-                .map(|(mat, mesh, tform, tint, joints)| {
-                    (
-                        (mat, mesh.id()),
-                        SkinnedVertexArgs::from_object_data(
-                            tform,
-                            tint,
-                            skinning_ref.insert(joints),
-                        ),
-                    )
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
+                .map(|(entity, (mat, mesh, tform, tint))| {
+                    if let Some(tint) = tint {
+                        (
+                            (mat, mesh.load_handle()),
+                            VertexArgs::from_object_data(&tform, Some(&tint)),
+                        )
+                    } else {
+                        (
+                            (mat, mesh.load_handle()),
+                            VertexArgs::from_object_data(&tform, None),
+                        )
+                    }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
-                    if mesh_storage.contains_id(mesh_id) {
+                    if mesh_storage.contains(mesh_id) {
                         if let Some((mat, this_changed)) =
-                            materials_ref.insert(factory, resources, mat)
+                            materials_ref.insert(factory, resources, &mat)
+                        {
+                            changed = changed || this_changed;
+                            statics_ref.insert(mat, mesh_id, data.drain(..));
+                        }
+                    } else {
+                        log::error!("Gathered mesh with invalid mesh ID for rendering");
+                    }
+                });
+        }
+
+        if self.pipeline_skinned.is_some() {
+            profile_scope_impl!("prepare_skinning");
+
+            let mut query = <(
+                &Handle<Material>,
+                &Handle<Mesh>,
+                &Transform,
+                Option<&Tint>,
+                &JointTransforms,
+            )>::query();
+
+            visibility
+                .visible_unordered
+                .iter()
+                .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
+                .map(|(_, (mat, mesh, tform, tint, joints))| {
+                    if let Some(tint) = tint {
+                        (
+                            (mat, mesh.load_handle()),
+                            SkinnedVertexArgs::from_object_data(
+                                &tform,
+                                Some(&tint),
+                                skinning_ref.insert(&joints),
+                            ),
+                        )
+                    } else {
+                        (
+                            (mat, mesh.load_handle()),
+                            SkinnedVertexArgs::from_object_data(
+                                &tform,
+                                None,
+                                skinning_ref.insert(&joints),
+                            ),
+                        )
+                    }
+                })
+                .for_each_group(|(mat, mesh_id), data| {
+                    if mesh_storage.contains(mesh_id) {
+                        if let Some((mat, this_changed)) =
+                            materials_ref.insert(factory, resources, &mat)
                         {
                             changed = changed || this_changed;
                             skinned_ref.insert(mat, mesh_id, data.drain(..));
                         }
                     }
                 });
-        }
+        };
 
         self.models.write(
             factory,
@@ -613,11 +669,11 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        aux: &GraphAuxData,
     ) {
         profile_scope_impl!("draw transparent");
 
-        let mesh_storage = <Read<'_, AssetStorage<Mesh>>>::fetch(resources);
+        let mesh_storage = aux.resources.get::<AssetStorage<Mesh>>().unwrap();
         let layout = &self.pipeline_layout;
         let encoder = &mut encoder;
 
@@ -632,10 +688,12 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
                 if self.materials.loaded(mat) {
                     self.materials.bind(layout, 1, mat, encoder);
                     for (mesh, range) in batches {
-                        debug_assert!(mesh_storage.contains_id(*mesh));
-                        if let Some(mesh) =
-                            B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh) })
-                        {
+                        debug_assert!(mesh_storage.contains(*mesh));
+                        if let Some(mesh) = B::unwrap_mesh({
+                            mesh_storage
+                                .get_for_load_handle(*mesh)
+                                .expect("Could not get mesh.")
+                        }) {
                             if let Err(error) = mesh.bind_and_draw(
                                 0,
                                 &self.vertex_format_base,
@@ -664,10 +722,12 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
                     if self.materials.loaded(mat) {
                         self.materials.bind(layout, 1, mat, encoder);
                         for (mesh, range) in batches {
-                            debug_assert!(mesh_storage.contains_id(*mesh));
-                            if let Some(mesh) =
-                                B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh) })
-                            {
+                            debug_assert!(mesh_storage.contains(*mesh));
+                            if let Some(mesh) = B::unwrap_mesh({
+                                mesh_storage
+                                    .get_for_load_handle(*mesh)
+                                    .expect("Could not get mesh.")
+                            }) {
                                 if let Err(error) = mesh.bind_and_draw(
                                     0,
                                     &self.vertex_format_skinned,
@@ -689,7 +749,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, World> for DrawBase3DTranspare
         }
     }
 
-    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &GraphAuxData) {
         unsafe {
             factory
                 .device()
@@ -714,7 +774,7 @@ fn build_pipelines<B: Backend, T: Base3DPassDef>(
     skinning: bool,
     transparent: bool,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(Vec<B::GraphicsPipeline>, B::PipelineLayout), failure::Error> {
+) -> Result<(Vec<B::GraphicsPipeline>, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()

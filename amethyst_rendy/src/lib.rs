@@ -49,12 +49,6 @@
 #![allow(clippy::new_without_default)]
 #![allow(unused_variables, dead_code)]
 
-#[macro_use]
-extern crate amethyst_derive;
-
-#[macro_use]
-mod macros;
-
 #[doc(inline)]
 pub use palette;
 #[doc(inline)]
@@ -90,26 +84,8 @@ pub mod util;
 #[cfg(feature = "test-support")]
 mod render_test_bundle;
 
-#[doc(inline)]
-pub use crate::{
-    bundle::{RenderPlugin, RenderingBundle},
-    camera::{ActiveCamera, Camera},
-    formats::{
-        mesh::MeshPrefab,
-        texture::{ImageFormat, TexturePrefab},
-    },
-    mtl::{Material, MaterialDefaults},
-    plugins::*,
-    sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
-    system::{GraphCreator, MeshProcessorSystem, RenderingSystem, TextureProcessorSystem},
-    transparent::Transparent,
-    types::{Backend, Mesh, Texture},
-    util::{simple_shader_set, ChangeDetection},
-};
-
 #[cfg(feature = "test-support")]
 pub use render_test_bundle::{RenderEmptyBundle, RenderTestBundle};
-
 pub use rendy::{
     factory::Factory,
     graph::{
@@ -117,6 +93,20 @@ pub use rendy::{
         GraphBuilder,
     },
     hal::{format::Format, image::Kind},
+};
+
+#[doc(inline)]
+pub use crate::{
+    bundle::{RenderPlugin, RenderingBundle},
+    camera::{ActiveCamera, Camera},
+    formats::texture::ImageFormat,
+    mtl::{Material, MaterialDefaults},
+    plugins::*,
+    sprite::{Sprite, SpriteRender, SpriteSheet},
+    system::{GraphCreator, MeshProcessorSystem, TextureProcessorSystem},
+    transparent::Transparent,
+    types::{Backend, Mesh, Texture},
+    util::{simple_shader_set, ChangeDetection},
 };
 
 pub mod loaders {

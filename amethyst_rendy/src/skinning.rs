@@ -1,15 +1,12 @@
 //! Skinned mesh and bone implementation for renderer.
-use amethyst_assets::PrefabData;
-use amethyst_core::{
-    ecs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage},
-    math::Matrix4,
-};
-use amethyst_error::Error;
+// use amethyst_assets::PrefabData;
+use amethyst_core::{ecs::*, math::Matrix4};
+// use amethyst_error::Error;
 use rendy::{
     hal::format::Format,
     mesh::{AsAttribute, AsVertex, VertexFormat},
 };
-use std::result::Result as StdResult;
+// use std::result::Result as StdResult;
 
 /// Type for joint weights attribute of vertex
 #[repr(C)]
@@ -78,10 +75,6 @@ pub struct JointTransforms {
     pub matrices: Vec<Matrix4<f32>>,
 }
 
-impl Component for JointTransforms {
-    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
-}
-
 /// Prefab for `JointTransforms`
 #[derive(Default, Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct JointTransformsPrefab {
@@ -98,25 +91,25 @@ impl JointTransformsPrefab {
     }
 }
 
-impl<'a> PrefabData<'a> for JointTransformsPrefab {
-    type SystemData = WriteStorage<'a, JointTransforms>;
-    type Result = ();
+// impl<'a> PrefabData<'a> for JointTransformsPrefab {
+//     type SystemData = WriteStorage<'a, JointTransforms>;
+//     type Result = ();
 
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        storage: &mut Self::SystemData,
-        entities: &[Entity],
-        _: &[Entity],
-    ) -> StdResult<(), Error> {
-        storage.insert(
-            entity,
-            JointTransforms {
-                skin: entities[self.skin],
-                matrices: vec![Matrix4::identity(); self.size],
-            },
-        )?;
+//     fn add_to_entity(
+//         &self,
+//         entity: Entity,
+//         storage: &mut Self::SystemData,
+//         entities: &[Entity],
+//         _: &[Entity],
+//     ) -> StdResult<(), Error> {
+//         storage.insert(
+//             entity,
+//             JointTransforms {
+//                 skin: entities[self.skin],
+//                 matrices: vec![Matrix4::identity(); self.size],
+//             },
+//         )?;
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }

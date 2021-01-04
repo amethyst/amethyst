@@ -1,7 +1,11 @@
 [package]
 name = "amethyst_core"
 version = "0.15.3"
-authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Simon Rönnberg <seamonr@gmail.com>",
+    "Joël Lupien <jojolepro@jojolepro.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "Amethyst core"
 
@@ -11,34 +15,32 @@ repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
-nalgebra = { version = "0.19.0", features = ["serde-serialize", "mint"] }
-alga = { version = "0.9.2", default-features = false }
-alga_derive = "0.9.1"
-approx = "0.3.2"
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
-fnv = "1.0.6"
+type-uuid = "0.1"
 log = "0.4.8"
 num-traits = "0.2.11"
-rayon = "1.4.0"
 serde = { version = "1", features = ["derive"] }
-specs = { version = "0.16.0", default-features = false, features = ["shred-derive", "specs-derive"] }
-specs-hierarchy = { version = "0.6", default-features = false }
-getset = "0.0.9"
+approx = "0.4"
 derive-new = "0.5.8"
-derivative = "2.1.1"
-
+getset = "0.1.1"
+legion = { version = "0.3.1", default-features = false, features = [
+    "serialize",
+    "crossbeam-events",
+    "codegen",
+] }
+nalgebra = { version = "0.23.1", features = ["serde-serialize"] }
+rayon = "1.5"
+shrev = "1.1.1"
+shrinkwraprs = "0.3"
+simba = "0.3"
+smallvec = "1.4"
 thread_profiler = { version = "0.3", optional = true }
+serde-diff = "0.4"
 
 [dev-dependencies]
-amethyst = { path = "..", version = "0.15.3" }
 ron = "0.5.1"
 
 [features]
-default = ["specs/parallel", "specs-hierarchy/parallel"]
 profiler = ["thread_profiler/thread_profiler"]
-saveload = ["specs/serde"]
-storage-event-control = ["specs/storage-event-control"]
+parallel = ["legion/parallel"]

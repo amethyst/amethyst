@@ -2,7 +2,6 @@ use amethyst_core::{
     math::{zero, Quaternion, Unit, Vector3, Vector4},
     Transform,
 };
-
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -30,9 +29,8 @@ impl AnimationSampling for Transform {
     type Channel = TransformChannel;
 
     fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
-        use crate::util::SamplerPrimitive::*;
-
         use self::TransformChannel::*;
+        use crate::util::SamplerPrimitive::*;
 
         match (channel, *data) {
             (&Translation, Vec3(ref d)) => {

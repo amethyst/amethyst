@@ -1,36 +1,23 @@
 use std::marker::PhantomData;
 
-use amethyst_core::{
-    ecs::{
-        prelude::{
-            Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage, World,
-        },
-        shred::{ResourceId, SystemData},
-        storage::GenericReadStorage,
-    },
-    ParentHierarchy,
-};
+use amethyst_core::{ecs::*, transform::Parent};
 use amethyst_window::ScreenDimensions;
-
 use serde::{Deserialize, Serialize};
 
 use super::{Anchor, ScaleMode, Stretch};
 
-/// Utility `SystemData` for finding UI entities based on `UiTransform` id
-#[derive(SystemData)]
-#[allow(missing_debug_implementations)]
-pub struct UiFinder<'a> {
-    entities: Entities<'a>,
-    storage: ReadStorage<'a, UiTransform>,
-}
+/// Utility lookup for finding UI entities based on `UiTransform` id
+#[derive(Debug)]
+pub struct UiFinder;
 
-impl<'a> UiFinder<'a> {
+impl UiFinder {
     /// Find the `UiTransform` entity with the given id
-    pub fn find(&self, id: &str) -> Option<Entity> {
-        (&*self.entities, &self.storage)
-            .join()
-            .find(|(_, transform)| transform.id == id)
-            .map(|(entity, _)| entity)
+    pub fn find(&self, world: &mut World, id: &str) -> Option<Entity> {
+        <(Entity, &UiTransform)>::query()
+            .iter(world)
+            .filter(|(_, transform)| transform.id == id)
+            .map(|(e, _)| *e)
+            .next()
     }
 }
 
@@ -183,28 +170,22 @@ impl UiTransform {
     }
 }
 
-impl Component for UiTransform {
-    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
-}
-
 /// Get the (width, height) in pixels of the parent of this `UiTransform`.
-pub fn get_parent_pixel_size<S: GenericReadStorage<Component = UiTransform>>(
-    entity: Entity,
-    hierarchy: &ParentHierarchy,
-    ui_transforms: &S,
+pub fn get_parent_pixel_size<'a, I>(
+    maybe_parent: Option<&Parent>,
+    mut maybe_transforms: I,
     screen_dimensions: &ScreenDimensions,
-) -> (f32, f32) {
-    let mut parent_width = screen_dimensions.width();
-    let mut parent_height = screen_dimensions.height();
-
-    if let Some(parent) = hierarchy.parent(entity) {
-        if let Some(ui_transform) = ui_transforms.get(parent) {
-            parent_width = ui_transform.pixel_width();
-            parent_height = ui_transform.pixel_height();
+) -> (f32, f32)
+where
+    I: Iterator<Item = (&'a Entity, Option<&'a UiTransform>)>,
+{
+    if let Some(parent) = maybe_parent {
+        let maybe_transform = maybe_transforms.find(|(e, _)| *e == &parent.0);
+        if let Some((_, Some(t))) = maybe_transform {
+            return (t.pixel_width(), t.pixel_height());
         }
     }
-
-    (parent_width, parent_height)
+    (screen_dimensions.width(), screen_dimensions.height())
 }
 
 #[cfg(test)]

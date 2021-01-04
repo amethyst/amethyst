@@ -1,19 +1,32 @@
-use crate::Format;
+use std::marker::PhantomData;
+
 use amethyst_error::{format_err, Error, ResultExt};
 use serde::{Deserialize, Serialize};
+
+use crate::Format;
 
 /// Format for loading from RON files. Mostly useful for prefabs.
 /// This type cannot be used for tagged deserialization.
 /// It is meant to be used at top-level loading, manually specified to the loader.
 /// ```rust,ignore
-/// loader.load("prefab.ron", RonFormat, ());
+/// loader.load("prefab.ron");
 /// ```
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct RonFormat;
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RonFormat<D> {
+    _marker: PhantomData<D>,
+}
 
-impl<D> Format<D> for RonFormat
+impl<D> Default for RonFormat<D> {
+    fn default() -> Self {
+        RonFormat {
+            _marker: PhantomData::default(),
+        }
+    }
+}
+
+impl<D> Format<D> for RonFormat<D>
 where
-    D: for<'a> Deserialize<'a> + Send + Sync + 'static,
+    D: for<'a> Deserialize<'a> + Send + Sync + Clone + 'static,
 {
     fn name(&self) -> &'static str {
         "Ron"

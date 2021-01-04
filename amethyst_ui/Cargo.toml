@@ -1,7 +1,11 @@
 [package]
 name = "amethyst_ui"
 version = "0.15.3"
-authors = ["Jacob Kiesel <kieseljake@gmail.com>", "Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Jacob Kiesel <kieseljake@gmail.com>",
+    "Joël Lupien <jojolepro@jojolepro.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "Amethyst UI crate"
 keywords = ["ui", "specs", "ecs", "amethyst"]
@@ -31,19 +35,19 @@ serde = { version = "1.0", features = ["derive"] }
 smallvec = "1.2"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.6"
-winit = { version = "0.19", features = ["serde"] }
+winit = { git = "https://git@github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 log = "0.4.6"
-font-kit = "0.5"
+font-kit = "0.10.0"
 paste = "0.1"
 rand = "0.7"
 lazy_static = "1.4"
-failure = "0.1"
 glyph_brush = "0.6.0"
 thread_profiler = { version = "0.3", optional = true }
+type-uuid = "0.1"
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
+vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = ["thread_profiler/thread_profiler"]
