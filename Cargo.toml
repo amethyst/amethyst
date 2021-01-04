@@ -25,7 +25,6 @@ autoexamples = false
 legion-transaction = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
 legion-prefab = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
 prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
-serde-diff = { git = "https://github.com/amethyst/serde-diff", branch = "v0.4.0" }
 
 [features]
 default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
@@ -55,11 +54,11 @@ profiler = [
     "amethyst_audio/profiler",
     "amethyst_config/profiler",
     "amethyst_core/profiler",
-    #"amethyst_controls/profiler",
+    "amethyst_controls/profiler",
     "amethyst_input/profiler",
     "amethyst_locale/profiler",
     "amethyst_rendy/profiler",
-    #"amethyst_ui/profiler",
+    "amethyst_ui/profiler",
     "amethyst_utils/profiler",
     "amethyst_tiles/profiler",
 ]
@@ -117,8 +116,6 @@ legion = { version = "0.3", default-features = false, features = [
 [dev-dependencies]
 rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
 derive-new = "0.5.8"
-env_logger = "0.7.1"
-genmesh = "0.6.2"
 ron = "0.5.1"
 type-uuid = "0.1"
 serde-diff = "0.4"
