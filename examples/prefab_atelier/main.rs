@@ -1,6 +1,6 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Cursor};
 
 use amethyst::{
     assets::{
@@ -47,13 +47,16 @@ fn write_prefab<P: AsRef<std::path::Path>>(
         registered_components: component_registry.components_by_uuid(),
     };
 
-    let mut ron_ser = ron::ser::Serializer::new(Some(ron::ser::PrettyConfig::default()), true);
+    let mut buf = Cursor::new(Vec::new());
+    let mut ron_ser =
+        ron::ser::Serializer::new(buf.get_mut(), Some(ron::ser::PrettyConfig::default()), true)
+            .expect("created ron serializer");
     let prefab_ser = legion_prefab::PrefabFormatSerializer::new(prefab_serde_context, prefab);
 
     prefab_format::serialize(&mut ron_ser, &prefab_ser, prefab.prefab_id())
         .expect("failed to round-trip prefab");
 
-    let buf = ron_ser.into_output_string();
+    let buf = String::from_utf8(buf.into_inner()).expect("String from prefab.");
 
     std::fs::write(path, buf)?;
     Ok(())

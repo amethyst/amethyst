@@ -26,6 +26,7 @@ fn setup() -> (Dispatcher, World, Resources) {
 }
 
 #[test]
+#[cfg(not(target_os = "macos"))] // FIXME: macos CI has race condition
 fn a_prefab_can_be_loaded() {
     let (mut dispatcher, mut world, mut resources) = setup();
 
@@ -63,6 +64,7 @@ struct Position2D {
 register_component_type!(Position2D);
 
 #[test]
+#[cfg(not(target_os = "macos"))] // FIXME: macos CI has race condition
 fn a_prefab_is_applied_to_an_entity() {
     let (mut dispatcher, mut world, mut resources) = setup();
 

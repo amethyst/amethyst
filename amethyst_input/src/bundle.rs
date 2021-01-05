@@ -10,6 +10,8 @@ use winit::event::Event;
 
 #[cfg(feature = "sdl_controller")]
 use crate::sdl_events_system::ControllerMappings;
+#[cfg(feature = "sdl_controller")]
+use crate::InputEvent;
 use crate::{BindingError, Bindings, InputHandler, InputSystem};
 
 /// Bundle for adding the `InputHandler`.
@@ -81,15 +83,6 @@ impl SystemBundle for InputBundle {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        #[cfg(feature = "sdl_controller")]
-        {
-            use super::SdlEventsSystem;
-            builder.add_thread_local(
-                // TODO: improve errors when migrating to failure
-                SdlEventsSystem::new(world, self.controller_mappings).unwrap(),
-            );
-        }
-
         let reader = resources
             .get_mut::<EventChannel<Event<'_, ()>>>()
             .expect("Window event channel not found in resources")
@@ -98,6 +91,22 @@ impl SystemBundle for InputBundle {
         let mut handler = InputHandler::new();
         if let Some(bindings) = self.bindings.as_ref() {
             handler.bindings = bindings.clone();
+        }
+
+        #[cfg(feature = "sdl_controller")]
+        {
+            use super::SdlEventsSystem;
+            builder.add_thread_local(
+                // TODO: improve errors when migrating to failure
+                Box::new(
+                    SdlEventsSystem::new(
+                        &mut handler,
+                        &mut resources.get_mut::<EventChannel<InputEvent>>().unwrap(),
+                        &self.controller_mappings,
+                    )
+                    .unwrap(),
+                ),
+            );
         }
 
         resources.insert(handler);

@@ -31,7 +31,7 @@ glsl-layout = "0.3"
 lazy_static = "1.4"
 log = "0.4"
 palette = { version = "0.4", features = ["serde"] }
-ron = "0.5"
+ron = "0.6.4"
 serde = { version = "1", features = ["serde_derive"] }
 fnv = "1"
 derivative = "2.1.1"
