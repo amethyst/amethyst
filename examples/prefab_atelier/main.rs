@@ -4,7 +4,9 @@ use std::collections::HashMap;
 
 use amethyst::{
     assets::{
-        prefab::{register_component_type, ComponentRegistry, Prefab, RawPrefab},
+        prefab::{
+            register_component_type, ComponentRegistry, ComponentRegistryBuilder, Prefab, RawPrefab,
+        },
         AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle,
     },
     core::transform::{Transform, TransformBundle},
@@ -12,14 +14,13 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
     utils::application_root_dir,
     Error,
 };
-use amethyst_assets::prefab::ComponentRegistryBuilder;
-use amethyst_rendy::rendy::hal::command::ClearColor;
 
 // type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 

@@ -3,7 +3,10 @@
 mod custom_pass;
 
 use amethyst::{
-    input::{is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection},
+    assets::LoaderBundle,
+    input::{
+        is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection, VirtualKeyCode,
+    },
     prelude::*,
     renderer::{
         plugins::RenderToWindow, rendy::hal::command::ClearColor, types::DefaultBackend,
@@ -11,8 +14,6 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::LoaderBundle;
-use amethyst_input::VirtualKeyCode;
 
 use crate::custom_pass::{CustomUniformArgs, RenderCustom, Triangle};
 

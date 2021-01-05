@@ -5,8 +5,8 @@ use amethyst::{
     },
     derive::EventReader,
     ecs::Resources,
+    input::InputEvent,
 };
-use amethyst_input::InputEvent;
 
 /// Here's a copy of the original StateEvent with our own type added
 #[derive(Clone, Debug, EventReader)]

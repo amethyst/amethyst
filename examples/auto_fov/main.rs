@@ -42,7 +42,7 @@ const CLEAR_COLOR: ClearColor = ClearColor {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let app_dir = amethyst_utils::application_dir("examples")?;
+    let app_dir = amethyst::utils::application_dir("examples")?;
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
     let assets_dir = app_dir.join("auto_fov/assets");
 
