@@ -6,12 +6,15 @@ template: |
   $CHANGES
 categories:
   - title: '🚀 Features and Improvements'
-    labels: 'type: feature'
-    labels: 'type: improvement'
+    labels:
+      - 'type: feature'
+      - 'type: improvement'
   - title: '🐛 Bug Fixes'
-    labels: 'type: bug'
+    labels:
+      - 'type: bug'
   - title: '🧰 Maintenance'
-    label: 'type: maintenance'
+    labels:
+      - 'type: maintenance'
 
 version-resolver:
   major:
