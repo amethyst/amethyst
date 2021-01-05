@@ -17,15 +17,13 @@ categories:
       - 'type: maintenance'
 
 version-resolver:
-  major:
+  minor:
     labels:
       - 'type: breaking'
-  minor:
+  patch:
     labels:
       - 'type: feature'
       - 'type: improvement'
-  patch:
-    labels:
       - 'type: bug'
       - 'type: maintenance'
       - 'team: documentation'
