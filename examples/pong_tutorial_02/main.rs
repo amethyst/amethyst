@@ -3,6 +3,7 @@
 mod pong;
 
 use amethyst::{
+    assets::LoaderBundle,
     core::transform::TransformBundle,
     prelude::*,
     renderer::{
@@ -13,7 +14,6 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::LoaderBundle;
 
 use crate::pong::Pong;
 

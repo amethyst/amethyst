@@ -4,6 +4,7 @@ mod pong;
 mod systems;
 
 use amethyst::{
+    assets::LoaderBundle,
     core::transform::TransformBundle,
     input::InputBundle,
     prelude::*,
@@ -15,7 +16,6 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::LoaderBundle;
 use systems::paddle::PaddleSystem;
 
 use crate::pong::Pong;

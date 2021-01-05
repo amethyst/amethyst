@@ -124,12 +124,18 @@ where
     fn load<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
         use std::{fs::File, io::Read};
 
+        use encoding_rs_io::DecodeReaderBytes;
+
         let path = path.as_ref();
 
         let content = {
-            let mut file = File::open(path)?;
+            let file = File::open(path)?;
+
+            // Convert UTF-8-BOM & UTF-16-BOM to regular UTF-8. Else bytes are passed through
+            let mut decoder = DecodeReaderBytes::new(file);
+
             let mut buffer = Vec::new();
-            file.read_to_end(&mut buffer)?;
+            decoder.read_to_end(&mut buffer)?;
 
             buffer
         };
@@ -158,5 +164,54 @@ where
         File::create(path)?.write_all(s.as_bytes())?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::path::Path;
+
+    use serde::{Deserialize, Serialize};
+
+    use crate::Config;
+
+    #[derive(Debug, PartialEq, Deserialize, Serialize)]
+    struct TestConfig {
+        amethyst: bool,
+    }
+
+    #[test]
+    fn load_file() {
+        let expected = TestConfig { amethyst: true };
+
+        let parsed =
+            TestConfig::load(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/config.ron"));
+
+        assert_eq!(expected, parsed.unwrap());
+    }
+
+    #[test]
+    fn load_file_with_bom_encodings() {
+        let expected = TestConfig { amethyst: true };
+
+        let utf8_bom =
+            TestConfig::load(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/UTF8-BOM.ron"));
+        let utf16_le_bom =
+            TestConfig::load(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/UTF16-LE-BOM.ron"));
+        let utf16_be_bom =
+            TestConfig::load(Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/UTF16-BE-BOM.ron"));
+
+        assert_eq!(
+            expected,
+            utf8_bom.expect("Failed to parse UTF8 file with BOM")
+        );
+        assert_eq!(
+            expected,
+            utf16_le_bom.expect("Failed to parse UTF16-LE file with BOM")
+        );
+        assert_eq!(
+            expected,
+            utf16_be_bom.expect("Failed to parse UTF16-BE file with BOM")
+        );
     }
 }

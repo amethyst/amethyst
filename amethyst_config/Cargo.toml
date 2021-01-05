@@ -18,6 +18,7 @@ license = "MIT/Apache-2.0"
 [dependencies]
 ron = "0.5"
 serde = "1.0"
+encoding_rs_io = "0.1"
 
 thread_profiler = { version = "0.3", optional = true }
 

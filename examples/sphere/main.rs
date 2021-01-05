@@ -1,30 +1,24 @@
 //! Displays a shaded sphere to the user.
 
 use amethyst::{
-    core::transform::TransformBundle,
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
+    core::transform::{Transform, TransformBundle},
     prelude::*,
     renderer::{
+        light::{Light, PointLight},
+        loaders::load_from_linear_rgba,
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::{
             hal::command::ClearColor,
-            mesh::{Normal, Position, TexCoord},
+            mesh::{Normal, Position, Tangent, TexCoord},
         },
-        types::DefaultBackend,
-        RenderingBundle,
+        shape::Shape,
+        types::{DefaultBackend, MeshData, TextureData},
+        Camera, Material, MaterialDefaults, Mesh, RenderingBundle,
     },
     utils::application_root_dir,
+    window::ScreenDimensions,
 };
-use amethyst_assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue};
-use amethyst_core::transform::Transform;
-use amethyst_rendy::{
-    light::{Light, PointLight},
-    loaders::load_from_linear_rgba,
-    rendy::mesh::Tangent,
-    shape::Shape,
-    types::{MeshData, TextureData},
-    Camera, Material, MaterialDefaults, Mesh,
-};
-use amethyst_window::ScreenDimensions;
 use palette::{LinSrgba, Srgb};
 
 struct SphereExample;

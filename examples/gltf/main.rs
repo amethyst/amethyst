@@ -13,6 +13,7 @@ use amethyst::{
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
     ecs::{Entity, ReadStorage, Write, WriteStorage},
+    gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystemDesc},
     input::{is_close_requested, is_key_down, StringBindings, VirtualKeyCode},
     prelude::*,
     renderer::{
@@ -29,7 +30,6 @@ use amethyst::{
     },
     Error,
 };
-use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystemDesc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Default)]

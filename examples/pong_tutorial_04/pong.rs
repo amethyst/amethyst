@@ -1,10 +1,9 @@
 use amethyst::{
-    assets::{DefaultLoader, Handle, Loader},
+    assets::{DefaultLoader, Handle, Loader, ProcessingQueue},
     core::{timing::Time, transform::Transform},
     prelude::*,
     renderer::{Camera, SpriteRender, SpriteSheet, Texture},
 };
-use amethyst_assets::ProcessingQueue;
 
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;

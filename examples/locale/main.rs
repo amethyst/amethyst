@@ -1,16 +1,15 @@
 //! Example showing how to load a Locale file as an Asset using the Loader.
 
 use amethyst::{
-    assets::{AssetStorage, DefaultLoader, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle},
     ecs::*,
     locale::*,
     prelude::*,
+    renderer::{
+        rendy::hal::command::ClearColor, types::DefaultBackend, RenderToWindow, RenderingBundle,
+    },
     utils::application_root_dir,
     Error,
-};
-use amethyst_assets::LoaderBundle;
-use amethyst_rendy::{
-    rendy::hal::command::ClearColor, types::DefaultBackend, RenderToWindow, RenderingBundle,
 };
 
 struct Example {

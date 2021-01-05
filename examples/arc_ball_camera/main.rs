@@ -1,7 +1,7 @@
 //! Demonstrates the arc ball camera
 
 use amethyst::{
-    assets::Loader,
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
     controls::{ArcBallControl, ArcBallControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,
@@ -16,22 +16,18 @@ use amethyst::{
         palette::{LinSrgba, Srgb},
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::{
+            hal::command::ClearColor,
             mesh::{Normal, Position, Tangent, TexCoord},
             texture::palette::load_from_linear_rgba,
         },
         shape::Shape,
-        types::DefaultBackend,
+        types::{DefaultBackend, MeshData, TextureData},
         Mesh, RenderingBundle, Texture,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
     winit::event::{MouseButton, VirtualKeyCode},
     Error,
-};
-use amethyst_assets::{DefaultLoader, Handle, LoaderBundle, ProcessingQueue};
-use amethyst_rendy::{
-    rendy::hal::command::ClearColor,
-    types::{MeshData, TextureData},
 };
 
 struct ExampleState;
