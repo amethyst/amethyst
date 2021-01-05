@@ -1,0 +1,31 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+template: |
+  # What's Changed
+
+  $CHANGES
+categories:
+  - title: '🚀 Features and Improvements'
+    labels: 'type: feature'
+    labels: 'type: improvement'
+  - title: '🐛 Bug Fixes'
+    labels: 'type: bug'
+  - title: '🧰 Maintenance'
+    label: 'type: maintenance'
+
+version-resolver:
+  major:
+    labels:
+      - 'type: breaking'
+  minor:
+    labels:
+      - 'type: feature'
+      - 'type: improvement'
+  patch:
+    labels:
+      - 'type: bug'
+      - 'type: maintenance'
+      - 'team: documentation'
+
+exclude-labels:
+  - 'skip-changelog'
