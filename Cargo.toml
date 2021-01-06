@@ -134,12 +134,6 @@ legion = { version = "0.3", default-features = false, features = [
 
 [dev-dependencies]
 rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
-derive-new = "0.5.8"
-ron = "0.6.4"
-type-uuid = "0.1"
-serde-diff = "0.4"
-legion-prefab = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
-prefab-format = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
 
 [build-dependencies]
 dirs = "2.0.2"
