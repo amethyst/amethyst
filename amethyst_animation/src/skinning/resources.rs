@@ -1,4 +1,4 @@
-use amethyst_core::{ecs::prelude::*, math::Matrix4};
+use amethyst_core::{ecs::*, math::Matrix4};
 use amethyst_rendy::skinning::JointTransformsPrefab;
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ pub struct Skin {
     /// Joint entities for the skin
     pub joints: Vec<Entity>,
     /// Mesh entities that use the skin
-    pub meshes: BitSet,
+    pub meshes: Vec<Entity>,
     /// Bind shape matrix
     pub bind_shape_matrix: Matrix4<f32>,
     /// Bring the mesh into the joints local coordinate system
@@ -29,7 +29,7 @@ impl Skin {
     /// Creates a new `Skin`
     pub fn new(
         joints: Vec<Entity>,
-        meshes: BitSet,
+        meshes: Vec<Entity>,
         inverse_bind_matrices: Vec<Matrix4<f32>>,
     ) -> Self {
         let len = joints.len();

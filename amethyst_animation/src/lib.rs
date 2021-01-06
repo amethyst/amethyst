@@ -76,7 +76,7 @@ mod bundle;
 mod material;
 mod prefab;
 mod resources;
-// mod skinning;
+mod skinning;
 mod sprite;
 mod systems;
 mod transform;
