@@ -4,6 +4,8 @@ use amethyst_core::ecs::*;
 use atelier_assets::importer as atelier_importer;
 use atelier_importer::{typetag, SerdeImportable};
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 use type_uuid::TypeUuid;
 
 use crate::{
