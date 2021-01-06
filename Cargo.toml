@@ -70,7 +70,6 @@ exclude = [
     "amethyst_test",
     "examples/Cargo.toml",
     "examples/_unused_assets",
-    "examples/animation",
     "examples/spotlights",
     "examples/renderable",
     "examples/renderable_custom",
