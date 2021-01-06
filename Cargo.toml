@@ -86,7 +86,6 @@ exclude = [
     "examples/mouse_raycast",
     "examples/ui",
     "examples/custom_ui",
-    "examples/debug_lines_ortho",
     "examples/auto_fov",
     "examples/custom_game_data",
     "examples/gltf",
