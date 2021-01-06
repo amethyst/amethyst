@@ -29,20 +29,20 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/pong_tutorial_05/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     // This line is not mentioned in the pong tutorial as it is specific to the context
     // of the git repository. It only is a different location to load the assets from.
-    let assets_dir = app_root.join("examples/pong_tutorial_05/assets/");
+    let assets_dir = app_root.join("assets/");
 
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher
         .add_bundle(LoaderBundle)
         // Add the transform bundle which handles tracking entity positions
         .add_bundle(TransformBundle)
-        .add_bundle(InputBundle::new().with_bindings_from_file(
-            app_root.join("examples/pong_tutorial_05/config/bindings.ron"),
-        )?)
+        .add_bundle(
+            InputBundle::new().with_bindings_from_file(app_root.join("config/bindings.ron"))?,
+        )
         // We have now added our own systems, defined in the systems module
         .add_system(Box::new(PaddleSystem))
         .add_system(Box::new(BallSystem))

@@ -221,8 +221,8 @@ fn main() -> amethyst::Result<()> {
     .start();
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/animation/config/display.ron");
-    let assets_dir = app_root.join("examples/animation/assets/");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets/");
 
     let mut game_data = DispatcherBuilder::default()
         //.with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])

@@ -64,7 +64,7 @@ fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("examples/locale/assets");
+    let assets_dir = app_root.join("assets");
 
     let mut builder = DispatcherBuilder::default();
 

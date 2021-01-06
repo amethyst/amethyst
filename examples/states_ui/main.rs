@@ -35,10 +35,10 @@ pub fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
 
     // our display config is in our configs folder.
-    let display_config_path = app_root.join("examples/states_ui/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     // other assets ('*.ron' files, '*.png' textures, '*.ogg' audio files, ui prefab files, ...) are here
-    let assets_dir = app_root.join("examples/states_ui/assets");
+    let assets_dir = app_root.join("assets");
 
     let mut game_data = DispatcherBuilder::default()
         // a lot of other bundles/systems depend on this (without it being explicitly clear), so it

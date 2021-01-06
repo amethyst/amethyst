@@ -76,8 +76,8 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/custom_render_pass/config/display.ron");
-    let assets_dir = app_root.join("examples/custom_render_pass/assets/");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets/");
 
     let mut game_data = DispatcherBuilder::default();
     game_data

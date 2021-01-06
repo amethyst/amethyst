@@ -59,6 +59,7 @@ impl Format<EnergyBlast> for MyLangFormat {
     }
 }
 
+use amethyst::assets as amethyst_assets;
 register_asset_type!(EnergyBlast => EnergyBlast; AssetProcessorSystem<EnergyBlast>);
 
 impl SimpleState for LoadingState {
@@ -103,7 +104,7 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(config);
 
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("examples/asset_custom/assets/");
+    let assets_dir = app_root.join("assets/");
 
     let mut builder = DispatcherBuilder::default();
 

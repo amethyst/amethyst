@@ -256,8 +256,8 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("examples/mouse_raycast/assets/");
-    let display_config_path = app_root.join("examples/mouse_raycast/config/display.ron");
+    let assets_dir = app_root.join("assets/");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut game_data = DispatcherBuilder::default()
         .add_bundle(TransformBundle::new())?

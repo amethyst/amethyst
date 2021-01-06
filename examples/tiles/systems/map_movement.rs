@@ -1,10 +1,9 @@
 use amethyst::{
     core::{math::Vector3, transform::Transform, Time},
-    ecs::{IntoQuery, ParallelRunnable, System},
+    ecs::{IntoQuery, ParallelRunnable, System, SystemBuilder},
     input::InputHandler,
     tiles::{MortonEncoder, TileMap},
 };
-use legion::SystemBuilder;
 
 use crate::ExampleTile;
 

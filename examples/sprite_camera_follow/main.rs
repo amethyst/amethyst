@@ -159,16 +159,14 @@ fn main() -> amethyst::Result<()> {
         .start();
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/sprite_camera_follow/assets");
-    let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
+    let assets_directory = app_root.join("assets");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut game_data = DispatcherBuilder::default();
     game_data
         .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
-        .add_bundle(InputBundle::new().with_bindings_from_file(
-            app_root.join("examples/sprite_camera_follow/config/input.ron"),
-        )?)
+        .add_bundle(InputBundle::new().with_bindings_from_file(app_root.join("config/input.ron"))?)
         .add_system(Box::new(MovementSystem))
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()

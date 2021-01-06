@@ -3,13 +3,11 @@ use amethyst::{
         math::{Point3, Vector2},
         transform::Transform,
     },
-    ecs::{IntoQuery, ParallelRunnable, System},
+    ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     input::InputHandler,
-    renderer::{debug_drawing::DebugLinesComponent, ActiveCamera, Camera},
+    renderer::{debug_drawing::DebugLinesComponent, palette::Srgba, ActiveCamera, Camera},
     window::ScreenDimensions,
 };
-use legion::{Entity, SystemBuilder};
-use palette::Srgba;
 #[derive(Default)]
 pub struct DrawSelectionSystem {
     start_coordinate: Option<Point3<f32>>,
