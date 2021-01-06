@@ -45,6 +45,9 @@ where
     fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
         self.next_id = 1;
         let mut remove_sets = Vec::default();
+        let mut remove_ids = Vec::default();
+        let mut state_set = FnvHashMap::default();
+        let mut deferred_start = Vec::default();
 
         Box::new(
         SystemBuilder::new("AnimationControlSystem")  
@@ -61,8 +64,9 @@ where
 
             for (entity, control_set, hierarchy) in query.iter_mut(&mut query_world) {
                 debug!("{:?}", control_set);
-                let mut remove_ids = Vec::default();
-                let mut state_set = FnvHashMap::default();
+
+                remove_ids.clear();
+                state_set.clear();
 
                 // process each animation in control set
                 for  (ref id, ref mut control) in control_set.animations.iter_mut() {
@@ -130,7 +134,8 @@ where
                     state_set.insert(deferred_animation.animation_id, -1.0);
                 }
 
-                let mut deferred_start = Vec::default();
+                deferred_start.clear();
+
                 for deferred_animation in &control_set.deferred_animations {
                     let (start, start_dur) =
                         if let Some(dur) = state_set.get(&deferred_animation.relation.0) {
