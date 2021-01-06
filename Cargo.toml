@@ -78,7 +78,6 @@ exclude = [
     "examples/states_ui",
     "examples/state_dispatcher",
     "examples/pong_tutorial_06",
-    "examples/sprite_animation",
     "examples/prefab_basic",
     "examples/prefab_multi",
     "examples/prefab_custom",
