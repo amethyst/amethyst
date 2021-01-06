@@ -115,7 +115,7 @@ where
                                                 .and_then(|h| h.nodes.values().next())
                                                 .unwrap_or(&entity),
                                         )
-                                        .unwrap()
+                                        .expect("Retrieve hierarchy node entry ref")
                                         .get_component::<SamplerControlSet<T>>()
                                         .ok(),
                                 ),
@@ -355,7 +355,7 @@ where
                 for node_entity in hierarchy.nodes.values() {
                     let empty = world
                         .entry_mut(entity)
-                        .unwrap()
+                        .expect("Failed to get hierarchy entity entry")
                         .get_component_mut::<SamplerControlSet<T>>()
                         .map(|sampler| {
                             sampler.clear(control.id);
@@ -589,7 +589,7 @@ where
         for node_entity in hierarchy.nodes.values() {
             let empty = world
                 .entry_mut(*node_entity)
-                .unwrap()
+                .expect("get hierarchy node entry_mut")
                 .get_component_mut::<SamplerControlSet<T>>()
                 .map(|sampler| {
                     sampler.clear(control_id);
@@ -626,9 +626,9 @@ where
     hierarchy.nodes.iter().all(|(_, node_entity)| {
         world
             .entry_ref(*node_entity)
-            .unwrap()
+            .expect("node entry ref")
             .get_component::<SamplerControlSet<T>>()
-            .unwrap()
+            .expect("sampler control set for node")
             .check_termination(control_id)
     })
 }

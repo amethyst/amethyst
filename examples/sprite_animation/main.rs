@@ -59,16 +59,16 @@ impl SimpleState for Example {
             let loader = resources
                 .get_mut::<DefaultLoader>()
                 .expect("Missing loader");
-            // let bat_prefab = loader.load("prefab/sprite_animation.ron");
-            // let arrow_test_prefab = loader.load("prefab/sprite_animation_test.ron");
 
             let texture = loader.load("texture/bat.32x32.png");
             let sprites = loader.load("sprites/bat.ron");
-            let sprite_sheet_store = resources.get::<ProcessingQueue<SpriteSheet>>().unwrap();
-            let sheet: Handle<SpriteSheet> =
-                loader.load_from_data(SpriteSheet { texture, sprites }, (), &sprite_sheet_store);
 
-            //let anims: Handle<Sampler<SpriteRenderPrimitive>> = loader.load("anims/bat.ron");
+            let sheet: Handle<SpriteSheet> = loader.load_from_data(
+                SpriteSheet { texture, sprites },
+                self.progress_counter.as_mut().unwrap(),
+                &resources.get().expect("processing queue for SpriteSheet"),
+            );
+
             let anims = loader.load_from_data(
                 Sampler::<SpriteRenderPrimitive> {
                     input: vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
@@ -81,12 +81,10 @@ impl SimpleState for Example {
                     ],
                     function: InterpolationFunction::Step,
                 },
-                (),
-                &resources
-                    .get::<ProcessingQueue<Sampler<SpriteRenderPrimitive>>>()
-                    .unwrap(),
+                self.progress_counter.as_mut().unwrap(),
+                &resources.get().expect("queue for Sampler"),
             );
-            let mut anim_set = AnimationSet::new();
+
             let anim_handle: Handle<Animation<SpriteRender>> = loader.load_from_data(
                 Animation::<SpriteRender>::new_single(
                     0,
@@ -94,19 +92,15 @@ impl SimpleState for Example {
                     anims,
                 ),
                 self.progress_counter.as_mut().unwrap(),
-                &resources
-                    .get::<ProcessingQueue<Animation<SpriteRender>>>()
-                    .unwrap(),
+                &resources.get().expect("queue for Animation"),
             );
+
+            let mut anim_set = AnimationSet::new();
             anim_set.insert(AnimationId::Fly, anim_handle);
 
             world.push((SpriteRender::new(sheet, 0), Transform::default(), anim_set));
         }
-        // Creates new entities with components from MyPrefabData
-        // world.create_entity().with(bat_prefab).build();
-        // world.create_entity().with(arrow_test_prefab).build();
 
-        // Creates a new camera
         initialise_camera(world, resources);
     }
 
@@ -168,6 +162,7 @@ fn main() -> amethyst::Result<()> {
         .add_bundle(LoaderBundle)
         .add_bundle(AnimationBundle::<AnimationId, SpriteRender>::default())
         .add_bundle(TransformBundle::default())
+        .flush() // to ensure that animation changes are flushed before rendering
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
