@@ -80,7 +80,7 @@ fn a_prefab_is_applied_to_an_entity() {
         let loader = resources
             .get_mut::<DefaultLoader>()
             .expect("Missing loader");
-        loader.load("test_provided_component.prefab")
+        loader.load_prefab("test_provided_component.prefab")
     };
 
     execute_dispatcher_until_loaded(

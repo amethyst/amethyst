@@ -56,11 +56,13 @@ legion-transaction = { git = "https://github.com/amethyst/prefab", rev = "7c3024
 legion-prefab = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
 prefab-format = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
 encoding_rs_io = "0.1"
+dashmap = "4.0"
 
 [dev-dependencies]
 serde_json = "1"
 fern = { version = "0.6.0", features = ["colored"] }
 serde-diff = "0.4"
+hamcrest2 = "*"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

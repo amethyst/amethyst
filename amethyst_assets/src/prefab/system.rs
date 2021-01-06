@@ -1,11 +1,20 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use amethyst_core::ecs::{query, Entity, IntoQuery, Resources, World};
 
+use dashmap::DashMap;
+
 use crate::{
-    prefab::{ComponentRegistry, Prefab},
-    AssetStorage, Handle,
+    prefab::{ComponentRegistry, Prefab, RawPrefab},
+    AssetStorage, Handle, LoadHandle, ProcessingQueue,
 };
+
+pub struct RawPrefabMapping {
+    pub raw_prefab_handle: Handle<RawPrefab>,
+    pub prefab_load_handle: LoadHandle,
+}
+
+pub type RootPrefabs = Arc<DashMap<LoadHandle, RawPrefabMapping>>;
 
 /// Attaches prefabs to entities that have Handle<Prefab>
 /// FIXME: Add a check so that the prefab is only applied once.

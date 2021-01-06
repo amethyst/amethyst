@@ -8,7 +8,7 @@ use atelier_assets::daemon::{
 use log::info;
 
 use crate::{
-    prefab::{prefab_spawning_tick, ComponentRegistryBuilder, PrefabImporter},
+    prefab::{prefab_spawning_tick, ComponentRegistryBuilder, PrefabImporter, RootPrefabs},
     simple_importer::get_source_importers,
     DefaultLoader, Loader,
 };
@@ -67,7 +67,9 @@ impl SystemBundle for LoaderBundle {
             .auto_register_components()
             .build();
         resources.insert(component_registry);
-        let mut loader = DefaultLoader::default();
+        let mut root_prefabs = RootPrefabs::default();
+        let root_prefabs = RootPrefabs::default();
+        let mut loader = DefaultLoader::new(root_prefabs);
         loader.init_world(resources);
         loader.init_dispatcher(builder);
         resources.insert(loader);
