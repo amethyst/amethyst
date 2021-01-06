@@ -21,11 +21,6 @@ license = "MIT/Apache-2.0"
 # FIXME: remove after all existing examples working
 autoexamples = false
 
-[patch.crates-io]
-legion-transaction = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
-legion-prefab = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
-prefab-format = { git = "https://github.com/jlowry/prefab", branch = "serde-diff-0.4" }
-
 [features]
 default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
 optional = ["audio", "network", "locale", "ui", "tiles", "animation"]
@@ -116,13 +111,11 @@ legion = { version = "0.3", default-features = false, features = [
 [dev-dependencies]
 rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
 derive-new = "0.5.8"
-env_logger = "0.7.1"
-genmesh = "0.6.2"
-ron = "0.5.1"
+ron = "0.6.4"
 type-uuid = "0.1"
 serde-diff = "0.4"
-legion-prefab = "0.1"
-prefab-format = "0.1"
+legion-prefab = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
+prefab-format = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
 
 [build-dependencies]
 dirs = "2.0.2"

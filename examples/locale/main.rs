@@ -65,7 +65,6 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
     let assets_dir = app_root.join("examples/locale/assets");
-    let _display_config_path = app_root.join("examples/ui_from_code/config/display.ron");
 
     let mut builder = DispatcherBuilder::default();
 

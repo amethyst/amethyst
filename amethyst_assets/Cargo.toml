@@ -32,14 +32,14 @@ parking_lot = "0.10"
 rayon = "1.4.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }
-ron = "0.5"
+ron = "0.6.4"
 thread_profiler = { version = "0.3", optional = true }
 err-derive = "0.2.3"
 objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
-atelier-assets = { git = "https://github.com/radium-io/atelier-assets.git", rev = "de0e3ab231cabd95c355ebd7da57be8a6405562a", features = [
+atelier-assets = { git = "https://github.com/radium-io/atelier-assets.git", rev = "a06899a", features = [
     "serde-1",
     "type_uuid",
     "asset_uuid_macro",
@@ -52,9 +52,10 @@ uuid = { version = "0.8", features = ["v4"] }
 bincode = "1.1"
 type-uuid = "0.1"
 futures-executor = { version = "0.3", default-features = false }
-legion-transaction = "0.1"
-legion-prefab = "0.1"
-prefab-format = "0.1"
+legion-transaction = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
+legion-prefab = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
+prefab-format = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
+encoding_rs_io = "0.1"
 
 [dev-dependencies]
 serde_json = "1"
