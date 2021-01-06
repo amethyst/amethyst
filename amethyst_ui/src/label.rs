@@ -4,8 +4,8 @@ use amethyst_assets::{DefaultLoader, Handle, ProcessingQueue};
 use amethyst_core::ecs::*;
 
 use crate::{
-    define_widget, font::default::get_default_font, format::FontData, Anchor, FontAsset, LineMode,
-    Selectable, Stretch, UiText, UiTransform, WidgetId, Widgets,
+    define_widget, format::FontData, Anchor, FontAsset, LineMode, Selectable, Stretch, UiText,
+    UiTransform, WidgetId, Widgets,
 };
 
 const DEFAULT_Z: f32 = 1.0;
@@ -215,18 +215,8 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
             .with_stretch(self.stretch),
         );
 
-        let font_asset_storage = resources.get::<ProcessingQueue<FontData>>().unwrap();
-
-        let loader = resources
-            .get::<DefaultLoader>()
-            .expect("Could not get Loader resource");
-
-        let font_handle = self
-            .font
-            .unwrap_or_else(|| get_default_font(&loader, &font_asset_storage));
-
         text_entry.add_component(UiText::new(
-            font_handle,
+            self.font,
             self.text,
             self.text_color,
             self.font_size,

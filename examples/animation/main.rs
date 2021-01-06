@@ -2,9 +2,7 @@
 
 use amethyst::{
     animation::*,
-    assets::{Loader, PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
-    core::{Transform, TransformBundle},
-    ecs::prelude::{Entity, World, WorldExt},
+    assets::{Loader, LoaderBundle},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     renderer::{
@@ -16,15 +14,9 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    utils::{application_root_dir, scene::BasicScenePrefab},
-    winit::{ElementState, VirtualKeyCode},
+    utils::application_root_dir,
 };
 use serde::{Deserialize, Serialize};
-
-type MyPrefabData = (
-    Option<BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>>,
-    Option<AnimationSetPrefab<AnimationId, Transform>>,
-);
 
 const CLEAR_COLOR: ClearColor = ClearColor {
     float32: [0.0, 0.0, 0.0, 1.0],
@@ -58,9 +50,7 @@ impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
-        let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-            loader.load("prefab/animation.ron", RonFormat, ())
-        });
+        let prefab_handle = loader.load("prefab/animation.ron");
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
 
         let (animation_set, animation) = {

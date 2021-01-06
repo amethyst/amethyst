@@ -1,5 +1,6 @@
 use amethyst_assets::{
-    register_asset_type, Asset, AssetProcessorSystem, Format, ProcessableAsset, ProcessingState,
+    register_asset_type, Asset, AssetProcessorSystem, Format, Handle, ProcessableAsset,
+    ProcessingState,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 use glyph_brush::rusttype::Font;

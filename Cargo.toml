@@ -82,7 +82,6 @@ exclude = [
     "examples/prefab_multi",
     "examples/prefab_custom",
     "examples/prefab_adapter",
-    "examples/mouse_raycast",
     "examples/ui",
     "examples/custom_ui",
     "examples/auto_fov",

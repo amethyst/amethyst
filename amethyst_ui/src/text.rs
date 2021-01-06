@@ -16,17 +16,19 @@ use super::*;
 use crate::Anchor;
 
 /// How lines should behave when they are longer than the maximum line length.
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Derivative, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
+#[derivative(Default)]
 pub enum LineMode {
     /// Single line. It ignores line breaks.
     Single,
     /// Multiple lines. The text will automatically wrap when exceeding the maximum width.
+    #[derivative(Default)]
     Wrap,
 }
 
 /// A component used to display text in this entity's UiTransform
 #[derive(Clone, Derivative, Serialize)]
-#[derivative(Debug)]
+#[derivative(Debug, Default)]
 pub struct UiText {
     /// The string rendered by this.
     pub text: String,
@@ -36,7 +38,7 @@ pub struct UiText {
     pub color: [f32; 4],
     /// The font used for rendering.
     #[serde(skip)]
-    pub font: Handle<FontAsset>,
+    pub font: Option<Handle<FontAsset>>,
     /// If true this will be rendered as dots instead of the text.
     pub password: bool,
     /// How the text should handle new lines.
@@ -60,14 +62,14 @@ impl UiText {
     ///
     /// # Parameters
     ///
-    /// * `font`: A handle to a `Font` asset
+    /// * `font`: An optional handle to a `Font` asset, `None` will use default font
     /// * `text`: The glyphs to render
     /// * `color`: RGBA color with a maximum of 1.0 and a minimum of 0.0 for each channel
     /// * `font_size`: A uniform scale applied to the glyphs
     /// * `line_mode`: Text mode allowing single line or multiple lines
     /// * `align`: Text alignment within its `UiTransform`
     pub fn new(
-        font: Handle<FontAsset>,
+        font: Option<Handle<FontAsset>>,
         text: String,
         color: [f32; 4],
         font_size: f32,
