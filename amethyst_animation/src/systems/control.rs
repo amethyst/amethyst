@@ -44,6 +44,7 @@ where
 {
     fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
         self.next_id = 1;
+        let mut remove_sets = Vec::default();
 
         Box::new(
         SystemBuilder::new("AnimationControlSystem")  
@@ -54,8 +55,7 @@ where
         .write_component::<RestState<T>>()
         .with_query(<(Entity, Write<AnimationControlSet<I, T>>, TryRead<AnimationHierarchy<T>>)>::query())
         .build(move |mut buffer, world, (animation_storage, sampler_storage), query| {
-            debug!("AnimationControlSystem");
-            let mut remove_sets = Vec::default();
+            remove_sets.clear();
 
             let (mut query_world, mut world) = world.split_for_query(&query);
 
@@ -196,12 +196,12 @@ where
                     debug!("Removing AnimationControlSet {:?}", id);
                     control_set.remove(*id);
                     if control_set.is_empty() {
-                        remove_sets.push(entity);
+                        remove_sets.push(*entity);
                     }
                 }
             }
 
-            for entity in remove_sets {
+            for entity in remove_sets.iter() {
                 buffer.remove_component::<AnimationControlSet<I,T>>(*entity)
             }
         }
