@@ -7,7 +7,7 @@ use amethyst::{
         get_animation_set, Animation, AnimationBundle, AnimationCommand, AnimationSet, EndControl,
         InterpolationFunction, Sampler, SpriteRenderPrimitive,
     },
-    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue, ProgressCounter},
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProgressCounter},
     core::transform::{Transform, TransformBundle},
     ecs::*,
     renderer::{
@@ -24,30 +24,18 @@ use amethyst::{
 };
 use serde::{Deserialize, Serialize};
 
-/// Animation ids used in a AnimationSet
+/// a list of possible animations to play for a Bat sprite
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
-enum AnimationId {
+enum BatAnimations {
     Fly,
 }
 
-/// Loading data for one entity
-// #[derive(Debug, Clone, Deserialize)]
-// struct MyPrefabData {
-//     /// Information for rendering a scene with sprites
-//     sprite_scene: SpriteScenePrefab,
-//     /// Аll animations that can be run on the entity
-//     animation_set: AnimationSetPrefab<AnimationId, SpriteRender>,
-// }
-
-/// The main state
 #[derive(Default)]
-struct Example {
-    /// A progress tracker to check that assets are loaded
+struct ExampleState {
     pub progress_counter: Option<ProgressCounter>,
-    pub animated: bool,
 }
 
-impl SimpleState for Example {
+impl SimpleState for ExampleState {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData {
             world, resources, ..
@@ -96,7 +84,7 @@ impl SimpleState for Example {
             );
 
             let mut anim_set = AnimationSet::new();
-            anim_set.insert(AnimationId::Fly, anim_handle);
+            anim_set.insert(BatAnimations::Fly, anim_handle);
 
             world.push((SpriteRender::new(sheet, 0), Transform::default(), anim_set));
         }
@@ -105,7 +93,7 @@ impl SimpleState for Example {
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let mut query = <(Entity, Read<AnimationSet<AnimationId, SpriteRender>>)>::query();
+        let mut query = <(Entity, Read<AnimationSet<BatAnimations, SpriteRender>>)>::query();
         let mut buffer = CommandBuffer::new(data.world);
 
         if let Some(ref progress_counter) = self.progress_counter {
@@ -117,16 +105,16 @@ impl SimpleState for Example {
                     if let Some(control_set) =
                         get_animation_set(&mut subworld, &mut buffer, *entity)
                     {
-                        if control_set.is_empty() && !self.animated {
+                        if control_set.is_empty() {
                             // Adds the `Fly` animation to AnimationControlSet and loops infinitely
                             control_set.add_animation(
-                                AnimationId::Fly,
-                                &animation_set.get(&AnimationId::Fly).unwrap(),
+                                BatAnimations::Fly,
+                                &animation_set.get(&BatAnimations::Fly).unwrap(),
                                 EndControl::Loop(None),
                                 1.0,
                                 AnimationCommand::Start,
                             );
-                            self.animated = true;
+                            self.progress_counter = None;
                         }
                     }
                 }
@@ -160,7 +148,7 @@ fn main() -> amethyst::Result<()> {
     let mut game_data = DispatcherBuilder::default();
     game_data
         .add_bundle(LoaderBundle)
-        .add_bundle(AnimationBundle::<AnimationId, SpriteRender>::default())
+        .add_bundle(AnimationBundle::<BatAnimations, SpriteRender>::default())
         .add_bundle(TransformBundle::default())
         .flush() // to ensure that animation changes are flushed before rendering
         .add_bundle(
@@ -173,7 +161,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         );
 
-    let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
+    let game = Application::build(assets_dir, ExampleState::default())?.build(game_data)?;
     game.run();
 
     Ok(())
