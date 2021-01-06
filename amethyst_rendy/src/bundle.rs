@@ -338,10 +338,12 @@ impl<B: Backend> PlanContext<B> {
             None => {}
             Some(EvaluationState::Evaluating) => {}
             // this case is not a soft runtime error, as this should never be allowed by the API.
-            Some(EvaluationState::Built(_)) => panic!(
-                "Trying to resubmit a render pass for {:?}. This is a RenderingBundle bug.",
-                target
-            ),
+            Some(EvaluationState::Built(_)) => {
+                panic!(
+                    "Trying to resubmit a render pass for {:?}. This is a RenderingBundle bug.",
+                    target
+                )
+            }
         };
         let node = self.graph_builder.add_node(pass);
         self.passes.insert(target, EvaluationState::Built(node));

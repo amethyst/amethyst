@@ -142,17 +142,21 @@ where
         match *self {
             Scalar(ref s) => Scalar(mul_f32(*s, scalar)),
             Vec2(ref s) => Vec2([mul_f32(s[0], scalar), mul_f32(s[1], scalar)]),
-            Vec3(ref s) => Vec3([
-                mul_f32(s[0], scalar),
-                mul_f32(s[1], scalar),
-                mul_f32(s[2], scalar),
-            ]),
-            Vec4(ref s) => Vec4([
-                mul_f32(s[0], scalar),
-                mul_f32(s[1], scalar),
-                mul_f32(s[2], scalar),
-                mul_f32(s[3], scalar),
-            ]),
+            Vec3(ref s) => {
+                Vec3([
+                    mul_f32(s[0], scalar),
+                    mul_f32(s[1], scalar),
+                    mul_f32(s[2], scalar),
+                ])
+            }
+            Vec4(ref s) => {
+                Vec4([
+                    mul_f32(s[0], scalar),
+                    mul_f32(s[1], scalar),
+                    mul_f32(s[2], scalar),
+                    mul_f32(s[3], scalar),
+                ])
+            }
         }
     }
 

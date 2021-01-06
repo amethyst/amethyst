@@ -18,10 +18,12 @@ pub enum StateError {
 impl Display for StateError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         match *self {
-            StateError::NoStatesPresent => write!(
-                fmt,
-                "Tried to start state machine without any states present"
-            ),
+            StateError::NoStatesPresent => {
+                write!(
+                    fmt,
+                    "Tried to start state machine without any states present"
+                )
+            }
         }
     }
 }
@@ -402,14 +404,16 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.handle_event(
-                    StateData {
-                        world,
-                        resources,
-                        data,
-                    },
-                    event,
-                ),
+                Some(state) => {
+                    state.handle_event(
+                        StateData {
+                            world,
+                            resources,
+                            data,
+                        },
+                        event,
+                    )
+                }
                 None => Trans::None,
             };
 

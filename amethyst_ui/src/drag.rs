@@ -79,9 +79,8 @@ impl System<'static> for DragWidgetSystem {
                             Vector2::new(mouse_pos.0, screen_dimensions.height() - mouse_pos.1);
                         let mut click_stopped: HashSet<Entity> = HashSet::new();
                         let event_reader = &mut self.event_reader;
-                        ui_events
-                            .read(event_reader)
-                            .for_each(|event| match event.event_type {
+                        ui_events.read(event_reader).for_each(|event| {
+                            match event.event_type {
                                 UiEventType::ClickStart => {
                                     if draggables.iter(world).any(|(e, _)| *e == event.target) {
                                         self.record.insert(event.target, (mouse_pos, mouse_pos));
@@ -93,7 +92,8 @@ impl System<'static> for DragWidgetSystem {
                                     }
                                 }
                                 _ => (),
-                            });
+                            }
+                        });
 
                         for (entity, _) in self.record.iter() {
                             if hiddens.get(world, *entity).is_ok()

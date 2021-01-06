@@ -65,10 +65,12 @@ impl System<'_> for LaminarNetworkSendSystem {
 
                             for message in messages {
                                 let packet = match message.delivery {
-                                    DeliveryRequirement::Unreliable => Packet::unreliable(
-                                        message.destination,
-                                        message.payload.to_vec(),
-                                    ),
+                                    DeliveryRequirement::Unreliable => {
+                                        Packet::unreliable(
+                                            message.destination,
+                                            message.payload.to_vec(),
+                                        )
+                                    }
                                     DeliveryRequirement::UnreliableSequenced(stream_id) => {
                                         Packet::unreliable_sequenced(
                                             message.destination,
@@ -76,10 +78,12 @@ impl System<'_> for LaminarNetworkSendSystem {
                                             stream_id,
                                         )
                                     }
-                                    DeliveryRequirement::Reliable => Packet::reliable_unordered(
-                                        message.destination,
-                                        message.payload.to_vec(),
-                                    ),
+                                    DeliveryRequirement::Reliable => {
+                                        Packet::reliable_unordered(
+                                            message.destination,
+                                            message.payload.to_vec(),
+                                        )
+                                    }
                                     DeliveryRequirement::ReliableSequenced(stream_id) => {
                                         Packet::reliable_sequenced(
                                             message.destination,
@@ -94,11 +98,13 @@ impl System<'_> for LaminarNetworkSendSystem {
                                             stream_id,
                                         )
                                     }
-                                    DeliveryRequirement::Default => Packet::reliable_ordered(
-                                        message.destination,
-                                        message.payload.to_vec(),
-                                        None,
-                                    ),
+                                    DeliveryRequirement::Default => {
+                                        Packet::reliable_ordered(
+                                            message.destination,
+                                            message.payload.to_vec(),
+                                            None,
+                                        )
+                                    }
                                 };
 
                                 match socket.send(packet) {
@@ -150,10 +156,12 @@ impl System<'_> for LaminarNetworkRecvSystem {
                     if let Some(socket) = socket.get_mut() {
                         while let Some(event) = socket.recv() {
                             let event = match event {
-                                SocketEvent::Packet(packet) => NetworkSimulationEvent::Message(
-                                    packet.addr(),
-                                    Bytes::copy_from_slice(packet.payload()),
-                                ),
+                                SocketEvent::Packet(packet) => {
+                                    NetworkSimulationEvent::Message(
+                                        packet.addr(),
+                                        Bytes::copy_from_slice(packet.payload()),
+                                    )
+                                }
                                 SocketEvent::Connect(addr) => NetworkSimulationEvent::Connect(addr),
                                 SocketEvent::Timeout(addr) => {
                                     NetworkSimulationEvent::Disconnect(addr)

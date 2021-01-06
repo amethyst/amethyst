@@ -29,14 +29,17 @@ fn check_sentry_allowed(amethyst_home: &Path) -> Option<bool> {
     let sentry_status_file = amethyst_home.join("sentry_status.txt");
     if sentry_status_file.exists() {
         match read_to_string(&sentry_status_file) {
-            Ok(result) => match result.as_str().trim() {
-                "true" => Some(true),
-                "false" => Some(false),
-                _ => {
-                    remove_file(sentry_status_file).expect("Failed to remove invalid sentry file.");
-                    None
+            Ok(result) => {
+                match result.as_str().trim() {
+                    "true" => Some(true),
+                    "false" => Some(false),
+                    _ => {
+                        remove_file(sentry_status_file)
+                            .expect("Failed to remove invalid sentry file.");
+                        None
+                    }
                 }
-            },
+            }
             Err(_) => None,
         }
     } else {

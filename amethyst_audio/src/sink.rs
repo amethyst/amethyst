@@ -93,15 +93,19 @@ mod tests {
 
         // Call play
         match sink.append(&src) {
-            Ok(_pass) => assert!(
-                should_pass,
-                "Expected `append` result to be Err(..), but was Ok(..)"
-            ),
-            Err(fail) => assert!(
-                !should_pass,
-                "Expected `append` result to be `Ok(..)`, but was {:?}",
-                fail
-            ),
+            Ok(_pass) => {
+                assert!(
+                    should_pass,
+                    "Expected `append` result to be Err(..), but was Ok(..)"
+                )
+            }
+            Err(fail) => {
+                assert!(
+                    !should_pass,
+                    "Expected `append` result to be `Ok(..)`, but was {:?}",
+                    fail
+                )
+            }
         };
     }
 
