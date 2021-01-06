@@ -3,9 +3,9 @@ use amethyst::{
         atelier_importer,
         atelier_importer::{typetag, SerdeImportable},
         register_asset_type, Asset, AssetProcessorSystem, AssetStorage, DefaultLoader, Format,
-        Handle, Loader, LoaderBundle, RonFormat, TypeUuid,
+        Handle, Loader, LoaderBundle, TypeUuid,
     },
-    error::Error,
+    error::{format_err, Error, ResultExt},
     prelude::*,
     renderer::{types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
@@ -38,7 +38,7 @@ pub struct LoadingState {
 /// Format for loading from `.mylang` files.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TypeUuid)]
 #[uuid = "1aacd480-2eb5-4e02-8ed4-daaf33245a45"]
-pub struct MyLangFormat(RonFormat<EnergyBlast>);
+pub struct MyLangFormat;
 
 impl Format<EnergyBlast> for MyLangFormat {
     fn name(&self) -> &'static str {
@@ -47,7 +47,15 @@ impl Format<EnergyBlast> for MyLangFormat {
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<EnergyBlast, Error> {
         println!("Importing a mylang file to EnergyBlast");
-        self.0.import_simple(bytes)
+        use ron::de::Deserializer;
+        let mut d = Deserializer::from_bytes(&bytes)
+            .with_context(|_| format_err!("Failed deserializing Ron file"))?;
+        let val = EnergyBlast::deserialize(&mut d)
+            .with_context(|_| format_err!("Failed parsing Ron file"))?;
+        d.end()
+            .with_context(|_| format_err!("Failed parsing Ron file"))?;
+
+        Ok(val)
     }
 }
 
@@ -79,7 +87,7 @@ fn main() -> amethyst::Result<()> {
         level_filter: amethyst::LogLevelFilter::Info,
         module_levels: vec![
             (
-                "amethyst_assets".to_string(),
+                "amethyst::assets".to_string(),
                 amethyst::LogLevelFilter::Debug,
             ),
             (

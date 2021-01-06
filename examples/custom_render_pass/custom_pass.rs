@@ -343,9 +343,11 @@ impl Triangle {
     /// Helper function to convert triangle into 3 vertices
     pub fn get_args(&self) -> Vec<CustomArgs> {
         let mut vec = Vec::new();
-        vec.extend((0..3).map(|i| CustomArgs {
-            pos: self.points[i].into(),
-            color: self.colors[i].into(),
+        vec.extend((0..3).map(|i| {
+            CustomArgs {
+                pos: self.points[i].into(),
+                color: self.colors[i].into(),
+            }
         }));
         vec
     }

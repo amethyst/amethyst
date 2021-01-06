@@ -107,11 +107,13 @@ impl System<'_> for SpriteVisibilitySortingSystem {
                                 })
                                 // filter entities behind the camera
                                 .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
-                                .map(|(entity, centroid)| Internals {
-                                    entity,
-                                    centroid,
-                                    camera_distance: (centroid.z - camera_centroid.z).abs(),
-                                    from_camera: centroid - camera_centroid,
+                                .map(|(entity, centroid)| {
+                                    Internals {
+                                        entity,
+                                        centroid,
+                                        camera_distance: (centroid.z - camera_centroid.z).abs(),
+                                        from_camera: centroid - camera_centroid,
+                                    }
                                 }),
                         );
 

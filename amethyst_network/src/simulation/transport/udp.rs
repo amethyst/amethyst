@@ -69,10 +69,12 @@ impl System<'_> for UdpNetworkSendSystem {
                                             );
                                         }
                                     }
-                                    delivery => panic!(
+                                    delivery => {
+                                        panic!(
                                 "{:?} is unsupported. UDP only supports Unreliable by design.",
                                 delivery
-                            ),
+                            )
+                                    }
                                 }
                             }
                         }

@@ -204,15 +204,15 @@ pub fn set_layout_bindings(
         .into_iter()
         .flat_map(|(times, ty, stage_flags)| (0..times).map(move |_| (ty, stage_flags)))
         .enumerate()
-        .map(
-            |(binding, (ty, stage_flags))| pso::DescriptorSetLayoutBinding {
+        .map(|(binding, (ty, stage_flags))| {
+            pso::DescriptorSetLayoutBinding {
                 binding: binding as u32,
                 ty,
                 count: 1,
                 stage_flags,
                 immutable_samplers: false,
-            },
-        )
+            }
+        })
         .collect()
 }
 

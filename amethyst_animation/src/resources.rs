@@ -1,16 +1,13 @@
 use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
 
-use amethyst_assets::{Asset, AssetStorage, Handle, PrefabData};
+use amethyst_assets::{Asset, AssetStorage, Handle};
 use amethyst_core::{
-    ecs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
-    shred::SystemData,
+    ecs::*,
     timing::{duration_to_secs, secs_to_duration},
 };
-use amethyst_derive::PrefabData;
-use amethyst_error::Error;
 use derivative::Derivative;
 use fnv::FnvHashMap;
-use log::error;
+use log::debug;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 use serde::{Deserialize, Serialize};
 
@@ -21,14 +18,8 @@ pub enum BlendMethod {
     Linear,
 }
 
-/// Extra data to extract from `World`, for use when applying or fetching a sample
-pub trait ApplyData<'a> {
-    /// The actual data, must implement `SystemData`
-    type ApplyData: SystemData<'a>;
-}
-
 /// Master trait used to define animation sampling on a component
-pub trait AnimationSampling: Send + Sync + 'static + for<'b> ApplyData<'b> {
+pub trait AnimationSampling: Send + Sync + 'static {
     /// The interpolation primitive
     type Primitive: InterpolationPrimitive + Debug + Clone + Send + Sync + 'static;
     /// An independent grouping or type of functions that operate on attributes of a component
@@ -38,19 +29,15 @@ pub trait AnimationSampling: Send + Sync + 'static + for<'b> ApplyData<'b> {
     type Channel: Debug + Clone + Hash + Eq + Send + Sync + 'static;
 
     /// Apply a sample to a channel
-    fn apply_sample<'a>(
+    fn apply_sample(
         &mut self,
         channel: &Self::Channel,
         data: &Self::Primitive,
-        extra: &<Self as ApplyData<'a>>::ApplyData,
+        buffer: &mut CommandBuffer,
     );
 
     /// Get the current sample for a channel
-    fn current_sample<'a>(
-        &self,
-        channel: &Self::Channel,
-        extra: &<Self as ApplyData<'a>>::ApplyData,
-    ) -> Self::Primitive;
+    fn current_sample(&self, channel: &Self::Channel) -> Self::Primitive;
 
     /// Get default primitive
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive;
@@ -100,12 +87,11 @@ where
         "animation::Sampler"
     }
     type Data = Self;
-    type HandleStorage = VecStorage<Handle<Self>>;
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize, PrefabData)]
-#[prefab(Component)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+// #[prefab(Component)]
 pub struct RestState<T>
 where
     T: AnimationSampling + Clone,
@@ -126,13 +112,6 @@ where
     pub fn state(&self) -> &T {
         &self.state
     }
-}
-
-impl<T> Component for RestState<T>
-where
-    T: AnimationSampling + Clone,
-{
-    type Storage = DenseVecStorage<Self>;
 }
 
 /// Defines the hierarchy of nodes that a single animation can control.
@@ -181,31 +160,20 @@ where
 
     /// Create rest state for the hierarchy. Will copy the values from the base components for each
     /// entity in the hierarchy.
-    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<'_, RestState<T>>)
+    pub fn rest_state(&self, world: &SubWorld<'_>, buffer: &mut CommandBuffer)
     where
         T: AnimationSampling + Clone,
-        F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {
-            if !states.contains(*entity) {
-                if let Some(comp) = get_component(*entity) {
-                    if let Err(err) = states.insert(*entity, RestState::new(comp)) {
-                        error!(
-                            "Failed creating rest state for AnimationHierarchy, because of: {}",
-                            err
-                        );
+            if let Ok(entry) = world.entry_ref(*entity) {
+                if entry.get_component::<RestState<T>>().is_err() {
+                    if let Some(comp) = entry.get_component::<T>().ok().cloned() {
+                        buffer.add_component(*entity, RestState::new(comp));
                     }
                 }
             }
         }
     }
-}
-
-impl<T> Component for AnimationHierarchy<T>
-where
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
 }
 
 /// Defines a single animation.
@@ -220,7 +188,11 @@ where
 /// - `T`: the component type that the animation should be applied to
 ///
 /// [sampler]: struct.Sampler.html
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(bound(
+    serialize = "T::Channel: Serialize, T::Primitive: Serialize",
+    deserialize = "T::Channel: Deserialize<'de>, T::Primitive: Deserialize<'de>",
+))]
 pub struct Animation<T>
 where
     T: AnimationSampling,
@@ -279,7 +251,6 @@ where
         "animation::Animation"
     }
     type Data = Self;
-    type HandleStorage = VecStorage<Handle<Self>>;
 }
 
 /// State of animation
@@ -302,18 +273,12 @@ pub enum ControlState {
 impl ControlState {
     /// Is the state `Running`
     pub fn is_running(&self) -> bool {
-        match *self {
-            ControlState::Running(_) => true,
-            _ => false,
-        }
+        matches!(*self, ControlState::Running(_))
     }
 
     /// Is the state `Paused`
     pub fn is_paused(&self) -> bool {
-        match *self {
-            ControlState::Paused(_) => true,
-            _ => false,
-        }
+        matches!(*self, ControlState::Paused(_))
     }
 }
 
@@ -557,13 +522,6 @@ fn set_step_state<T>(
     }
 }
 
-impl<T> Component for SamplerControlSet<T>
-where
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// Used when doing animation stepping (i.e only move forward/backward to discrete input values)
 #[derive(Clone, Debug)]
 pub enum StepDirection {
@@ -649,13 +607,6 @@ where
     }
 }
 
-impl<T> Component for AnimationControl<T>
-where
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// Defer the start of an animation until the relationship has done this
 #[derive(Debug, Clone, PartialEq)]
 pub enum DeferStartRelation {
@@ -710,7 +661,7 @@ where
 
 impl<I, T> AnimationControlSet<I, T>
 where
-    I: PartialEq,
+    I: PartialEq + Debug,
     T: AnimationSampling,
 {
     /// Is the animation set empty?
@@ -812,6 +763,7 @@ where
         command: AnimationCommand<T>,
     ) -> &mut Self {
         if !self.animations.iter().any(|a| a.0 == id) {
+            debug!("Adding animation {:?}", id);
             self.animations.push((
                 id,
                 AnimationControl::new(
@@ -867,14 +819,6 @@ where
     }
 }
 
-impl<I, T> Component for AnimationControlSet<I, T>
-where
-    I: Send + Sync + 'static,
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// Attaches to an entity that have animations, with links to all animations that can be run on the
 /// entity. Is not used directly by the animation systems, provided for convenience.
 ///
@@ -925,12 +869,4 @@ where
     pub fn get(&self, id: &I) -> Option<&Handle<Animation<T>>> {
         self.animations.get(id)
     }
-}
-
-impl<I, T> Component for AnimationSet<I, T>
-where
-    I: Eq + Hash + Send + Sync + 'static,
-    T: AnimationSampling,
-{
-    type Storage = DenseVecStorage<Self>;
 }

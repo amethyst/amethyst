@@ -152,11 +152,16 @@ impl System<'static> for VisibilitySortingSystem {
                                 .filter(|(_, _, centroid, radius)| {
                                     frustum.check_sphere(centroid, *radius)
                                 })
-                                .map(|(entity, transparent, centroid, _)| Internals {
-                                    entity,
-                                    transparent,
-                                    centroid,
-                                    camera_distance: distance_squared(&centroid, &camera_centroid),
+                                .map(|(entity, transparent, centroid, _)| {
+                                    Internals {
+                                        entity,
+                                        transparent,
+                                        centroid,
+                                        camera_distance: distance_squared(
+                                            &centroid,
+                                            &camera_centroid,
+                                        ),
+                                    }
                                 }),
                         );
 

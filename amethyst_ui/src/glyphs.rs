@@ -271,12 +271,14 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                         let scale = Scale::uniform(ui_text.font_size);
 
                                         let text = match (ui_text.password, editing) {
-                                            (false, None) => vec![SectionText {
-                                                text: &ui_text.text,
-                                                scale,
-                                                color: base_color,
-                                                font_id,
-                                            }],
+                                            (false, None) => {
+                                                vec![SectionText {
+                                                    text: &ui_text.text,
+                                                    scale,
+                                                    color: base_color,
+                                                    font_id,
+                                                }]
+                                            }
                                             (false, Some(sel)) => {
                                                 if let Some((start, end)) =
                                                     selection_span(sel, &ui_text.text)
@@ -317,11 +319,13 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                                 let string_len =
                                                     ui_text.text.graphemes(true).count();
                                                 password_sections(string_len)
-                                                    .map(|text| SectionText {
-                                                        text,
-                                                        scale,
-                                                        color: base_color,
-                                                        font_id,
+                                                    .map(|text| {
+                                                        SectionText {
+                                                            text,
+                                                            scale,
+                                                            color: base_color,
+                                                            font_id,
+                                                        }
                                                     })
                                                     .collect()
                                             }
@@ -350,11 +354,13 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                                 .cloned()
                                                 .flat_map(|(subsection_len, color)| {
                                                     password_sections(subsection_len).map(
-                                                        move |text| SectionText {
-                                                            text,
-                                                            scale,
-                                                            color,
-                                                            font_id,
+                                                        move |text| {
+                                                            SectionText {
+                                                                text,
+                                                                scale,
+                                                                color,
+                                                                font_id,
+                                                            }
                                                         },
                                                     )
                                                 })
@@ -363,18 +369,22 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                         };
 
                                         let layout = match ui_text.line_mode {
-                                            LineMode::Single => Layout::SingleLine {
-                                                line_breaker: CustomLineBreaker::None,
-                                                h_align: ui_text.align.horizontal_align(),
-                                                v_align: ui_text.align.vertical_align(),
-                                            },
-                                            LineMode::Wrap => Layout::Wrap {
-                                                line_breaker: CustomLineBreaker::BuiltIn(
-                                                    BuiltInLineBreaker::UnicodeLineBreaker,
-                                                ),
-                                                h_align: ui_text.align.horizontal_align(),
-                                                v_align: ui_text.align.vertical_align(),
-                                            },
+                                            LineMode::Single => {
+                                                Layout::SingleLine {
+                                                    line_breaker: CustomLineBreaker::None,
+                                                    h_align: ui_text.align.horizontal_align(),
+                                                    v_align: ui_text.align.vertical_align(),
+                                                }
+                                            }
+                                            LineMode::Wrap => {
+                                                Layout::Wrap {
+                                                    line_breaker: CustomLineBreaker::BuiltIn(
+                                                        BuiltInLineBreaker::UnicodeLineBreaker,
+                                                    ),
+                                                    h_align: ui_text.align.horizontal_align(),
+                                                    v_align: ui_text.align.vertical_align(),
+                                                }
+                                            }
                                         };
 
                                         let next_z = if let Some(val) =
@@ -680,21 +690,26 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                                         let iter = ui_text.cached_glyphs
                                                             [start..end]
                                                             .iter()
-                                                            .map(|g| UiArgs {
-                                                                coords: [
-                                                                    g.x + g.advance_width * 0.5,
-                                                                    g.y + offset,
-                                                                ]
-                                                                .into(),
-                                                                dimensions: [
-                                                                    g.advance_width,
-                                                                    height,
-                                                                ]
-                                                                .into(),
-                                                                tex_coord_bounds: [0., 0., 1., 1.]
+                                                            .map(|g| {
+                                                                UiArgs {
+                                                                    coords: [
+                                                                        g.x + g.advance_width * 0.5,
+                                                                        g.y + offset,
+                                                                    ]
                                                                     .into(),
-                                                                color: bg_color.into(),
-                                                                color_bias: [1., 1., 1., 0.].into(),
+                                                                    dimensions: [
+                                                                        g.advance_width,
+                                                                        height,
+                                                                    ]
+                                                                    .into(),
+                                                                    tex_coord_bounds: [
+                                                                        0., 0., 1., 1.,
+                                                                    ]
+                                                                    .into(),
+                                                                    color: bg_color.into(),
+                                                                    color_bias: [1., 1., 1., 0.]
+                                                                        .into(),
+                                                                }
                                                             });
 
                                                         if let Ok(glyph_data) = glyphs_query

@@ -1,0 +1,14 @@
+#![enable(implicit_some)]
+{
+    "04c60333-c790-4586-aa76-086b19167a04":
+
+                            Grid((
+                                texture_width: 192,
+                                texture_height: 64,
+                                columns: 6,
+                                rows: 1,
+                                cell_size: (32, 32),
+                                // Shifts the grid by 32 pixels down and the bat changes to brown
+                                // position: (0, 32),
+                            )),
+}

@@ -49,7 +49,6 @@ pub use crate::{
     asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
     bundle::{start_asset_daemon, LoaderBundle},
     cache::Cache,
-    formats::RonFormat,
     loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
     processor::{AssetProcessorSystem, ProcessingQueue, ProcessingState},
     progress::{Completion, Progress, ProgressCounter, Tracker},

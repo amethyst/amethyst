@@ -263,22 +263,28 @@ impl System<'static> for UiTransformSystem {
 
                             let new_size = match transform.stretch {
                                 Stretch::NoStretch => (transform.width, transform.height),
-                                Stretch::X { x_margin } => (
-                                    parent_transform_copy.pixel_width - x_margin * 2.0,
-                                    transform.height,
-                                ),
-                                Stretch::Y { y_margin } => (
-                                    transform.width,
-                                    parent_transform_copy.pixel_height - y_margin * 2.0,
-                                ),
+                                Stretch::X { x_margin } => {
+                                    (
+                                        parent_transform_copy.pixel_width - x_margin * 2.0,
+                                        transform.height,
+                                    )
+                                }
+                                Stretch::Y { y_margin } => {
+                                    (
+                                        transform.width,
+                                        parent_transform_copy.pixel_height - y_margin * 2.0,
+                                    )
+                                }
                                 Stretch::XY {
                                     keep_aspect_ratio: false,
                                     x_margin,
                                     y_margin,
-                                } => (
-                                    parent_transform_copy.pixel_width - x_margin * 2.0,
-                                    parent_transform_copy.pixel_height - y_margin * 2.0,
-                                ),
+                                } => {
+                                    (
+                                        parent_transform_copy.pixel_width - x_margin * 2.0,
+                                        parent_transform_copy.pixel_height - y_margin * 2.0,
+                                    )
+                                }
                                 Stretch::XY {
                                     keep_aspect_ratio: true,
                                     x_margin,
@@ -351,10 +357,12 @@ where
                 keep_aspect_ratio: false,
                 x_margin,
                 y_margin,
-            } => (
-                screen_dim.width() - x_margin * 2.0,
-                screen_dim.height() - y_margin * 2.0,
-            ),
+            } => {
+                (
+                    screen_dim.width() - x_margin * 2.0,
+                    screen_dim.height() - y_margin * 2.0,
+                )
+            }
             Stretch::XY {
                 keep_aspect_ratio: true,
                 x_margin,

@@ -50,10 +50,12 @@ impl System<'static> for DrawSelectionSystem {
                                 // Return active camera or fetch first available
                                 let camera_transform = match camera_transform {
                                     Some(e) => Some(e),
-                                    None => camera_query
-                                        .iter_mut(&mut subworld)
-                                        .next()
-                                        .map(|(_, c, t)| (c, t)),
+                                    None => {
+                                        camera_query
+                                            .iter_mut(&mut subworld)
+                                            .next()
+                                            .map(|(_, c, t)| (c, t))
+                                    }
                                 };
 
                                 if let Some((camera, camera_transform)) = camera_transform {

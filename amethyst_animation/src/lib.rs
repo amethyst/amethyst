@@ -62,20 +62,13 @@ pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 pub use self::{
     bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle},
-    material::{MaterialChannel, MaterialPrimitive},
-    prefab::{AnimatablePrefab, AnimationHierarchyPrefab, AnimationPrefab, AnimationSetPrefab},
     resources::{
         Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
-        AnimationSampling, AnimationSet, ApplyData, BlendMethod, ControlState, DeferStartRelation,
-        EndControl, RestState, Sampler, SamplerControl, SamplerControlSet, StepDirection,
+        AnimationSampling, AnimationSet, BlendMethod, ControlState, DeferStartRelation, EndControl,
+        RestState, Sampler, SamplerControl, SamplerControlSet, StepDirection,
     },
-    skinning::{Joint, JointPrefab, Skin, SkinPrefab, SkinnablePrefab, VertexSkinningSystem},
     sprite::{SpriteRenderChannel, SpriteRenderPrimitive},
-    systems::{
-        AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
-    },
     transform::TransformChannel,
-    ui_transform::UiTransformChannel,
     util::{get_animation_set, SamplerPrimitive},
 };
 
