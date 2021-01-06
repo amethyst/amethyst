@@ -131,9 +131,9 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/prefab_atelier/assets");
+    let assets_dir = app_root.join("assets");
 
-    let display_config_path = app_root.join("examples/prefab_atelier/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut dispatcher_builder = DispatcherBuilder::default();
     dispatcher_builder

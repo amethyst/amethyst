@@ -203,9 +203,9 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/custom_game_data/assets");
+    let assets_dir = app_root.join("assets");
 
-    let display_config_path = app_root.join("examples/custom_game_data/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut game_data = CustomDispatcherBuilder::default()
         .with_base(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])

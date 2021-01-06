@@ -4,12 +4,11 @@ use amethyst::{
         transform::{Parent, Transform},
         Named,
     },
-    ecs::{IntoQuery, ParallelRunnable, System},
+    ecs::{component, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     input::InputHandler,
     renderer::{ActiveCamera, Camera},
     window::ScreenDimensions,
 };
-use legion::{component, Entity, SystemBuilder};
 
 pub struct CameraSwitchSystem {
     pressed: bool,

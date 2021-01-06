@@ -21,7 +21,7 @@ impl EmptyState for Example {
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
-    let assets_dir = application_root_dir()?.join("examples/hello_world/assets");
+    let assets_dir = application_root_dir()?.join("assets");
     let game = Application::build(assets_dir, Example)?.build(())?;
     game.run();
 

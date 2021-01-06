@@ -5,9 +5,7 @@ use amethyst::{
     ecs::*,
     locale::*,
     prelude::*,
-    renderer::{
-        rendy::hal::command::ClearColor, types::DefaultBackend, RenderToWindow, RenderingBundle,
-    },
+    renderer::{types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
     Error,
 };
@@ -66,8 +64,8 @@ fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("examples/locale/assets");
-    let display_config_path = app_root.join("examples/ui_from_code/config/display.ron");
+    let assets_dir = app_root.join("assets");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut builder = DispatcherBuilder::default();
 
