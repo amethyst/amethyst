@@ -48,7 +48,7 @@ impl Default for Example {
         Example {
             sphere: None,
             rate: 1.0,
-            current_animation: AnimationId::Translate,
+            current_animation: AnimationId::Test,
             progress_counter: Some(ProgressCounter::default()),
         }
     }
@@ -148,9 +148,9 @@ impl SimpleState for Example {
             &resources.get().unwrap(),
         );
         let mut animation_set: AnimationSet<AnimationId, Transform> = AnimationSet::new();
-        animation_set.insert(AnimationId::Test, animation.clone());
+        animation_set.insert(AnimationId::Test, animation);
 
-        let entity = world.push((Transform::default(), mesh, mtl, animation_set));
+        self.sphere = Some(world.push((Transform::default(), mesh, mtl, animation_set)));
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
@@ -195,43 +195,44 @@ impl SimpleState for Example {
                 return Trans::Quit;
             }
             match get_key(&event) {
-                // Some((VirtualKeyCode::Space, ElementState::Pressed)) => {
-                //     add_animation(
-                //         world,
-                //         self.sphere.unwrap(),
-                //         self.current_animation,
-                //         self.rate,
-                //         None,
-                //         true,
-                //     );
-                // }
+                Some((VirtualKeyCode::Space, ElementState::Pressed)) => {
+                    add_animation(
+                        world,
+                        self.sphere.unwrap(),
+                        self.current_animation,
+                        self.rate,
+                        None,
+                        true,
+                    );
+                }
 
-                // Some((VirtualKeyCode::D, ElementState::Pressed)) => {
-                //     add_animation(
-                //         world,
-                //         self.sphere.unwrap(),
-                //         AnimationId::Translate,
-                //         self.rate,
-                //         None,
-                //         false,
-                //     );
-                //     add_animation(
-                //         world,
-                //         self.sphere.unwrap(),
-                //         AnimationId::Rotate,
-                //         self.rate,
-                //         Some((AnimationId::Translate, DeferStartRelation::End)),
-                //         false,
-                //     );
-                //     add_animation(
-                //         world,
-                //         self.sphere.unwrap(),
-                //         AnimationId::Scale,
-                //         self.rate,
-                //         Some((AnimationId::Rotate, DeferStartRelation::Start(0.666))),
-                //         false,
-                //     );
-                // }
+                Some((VirtualKeyCode::D, ElementState::Pressed)) => {
+                    add_animation(
+                        world,
+                        self.sphere.unwrap(),
+                        AnimationId::Translate,
+                        self.rate,
+                        None,
+                        false,
+                    );
+                    add_animation(
+                        world,
+                        self.sphere.unwrap(),
+                        AnimationId::Rotate,
+                        self.rate,
+                        Some((AnimationId::Translate, DeferStartRelation::End)),
+                        false,
+                    );
+                    add_animation(
+                        world,
+                        self.sphere.unwrap(),
+                        AnimationId::Scale,
+                        self.rate,
+                        Some((AnimationId::Rotate, DeferStartRelation::Start(0.666))),
+                        false,
+                    );
+                }
+
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
                     get_animation_set::<AnimationId, Transform, World>(
                         world,
@@ -336,47 +337,57 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
-// fn add_animation(
-//     world: &mut World,
-//     entity: Entity,
-//     id: AnimationId,
-//     rate: f32,
-//     defer: Option<(AnimationId, DeferStartRelation)>,
-//     toggle_if_exists: bool,
-// ) {
-//     let animation = world
-//         .read_storage::<AnimationSet<AnimationId, Transform>>()
-//         .get(entity)
-//         .and_then(|s| s.get(&id))
-//         .cloned()
-//         .unwrap();
-//     let mut sets = world.write_storage();
-//     let control_set = get_animation_set::<AnimationId, Transform>(&mut sets, entity).unwrap();
-//     match defer {
-//         None => {
-//             if toggle_if_exists && control_set.has_animation(id) {
-//                 control_set.toggle(id);
-//             } else {
-//                 control_set.add_animation(
-//                     id,
-//                     &animation,
-//                     EndControl::Normal,
-//                     rate,
-//                     AnimationCommand::Start,
-//                 );
-//             }
-//         }
+fn add_animation(
+    world: &mut World,
+    entity: Entity,
+    id: AnimationId,
+    rate: f32,
+    defer: Option<(AnimationId, DeferStartRelation)>,
+    toggle_if_exists: bool,
+) {
+    let animation = {
+        let entry = world.entry_ref(entity).unwrap();
 
-//         Some((defer_id, defer_relation)) => {
-//             control_set.add_deferred_animation(
-//                 id,
-//                 &animation,
-//                 EndControl::Normal,
-//                 rate,
-//                 AnimationCommand::Start,
-//                 defer_id,
-//                 defer_relation,
-//             );
-//         }
-//     }
-// }
+        let set = entry
+            .get_component::<AnimationSet<AnimationId, Transform>>()
+            .expect("AnimationSet for Entity");
+
+        set.get(&id).cloned()
+    };
+
+    if let Some(animation) = animation {
+        let mut buffer = CommandBuffer::new(world);
+        let control_set =
+            get_animation_set::<AnimationId, Transform, World>(world, &mut buffer, entity).unwrap();
+
+        match defer {
+            None => {
+                if toggle_if_exists && control_set.has_animation(id) {
+                    control_set.toggle(id);
+                } else {
+                    control_set.add_animation(
+                        id,
+                        &animation,
+                        EndControl::Normal,
+                        rate,
+                        AnimationCommand::Start,
+                    );
+                }
+            }
+
+            Some((defer_id, defer_relation)) => {
+                control_set.add_deferred_animation(
+                    id,
+                    &animation,
+                    EndControl::Normal,
+                    rate,
+                    AnimationCommand::Start,
+                    defer_id,
+                    defer_relation,
+                );
+            }
+        }
+
+        buffer.flush(world);
+    }
+}
