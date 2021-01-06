@@ -81,10 +81,9 @@ impl UiText {
             color,
             font_size,
             font,
-            password: false,
             line_mode,
             align,
-            cached_glyphs: Vec::new(),
+            ..Default::default()
         }
     }
 }

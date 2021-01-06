@@ -3,11 +3,13 @@
 //!
 
 use amethyst::{
-    assets::{AssetStorage, DefaultLoader, Handle, Loader, Progress, ProgressCounter},
+    assets::{
+        AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle, Progress, ProgressCounter,
+    },
     core::{
         geometry::Plane,
         math::{coordinates::XY, Point2, Vector2, Vector3},
-        transform::{Transform, TransformBundle},
+        transform::{Parent, Transform, TransformBundle},
         Named,
     },
     ecs::{
@@ -37,16 +39,12 @@ impl System<'_> for MouseRaycastSystem {
             SystemBuilder::new("MouseRaycastSystem")
                 .with_query(<(&Camera, &Transform)>::query())
                 .with_query(<(&SpriteRender, &Transform, &Named)>::query())
-                .with_query(<&UiText>::query())
+                .with_query(<(&UiTransform, &mut UiText)>::query())
                 .read_resource::<InputHandler>()
                 .read_resource::<ActiveCamera>()
                 .read_resource::<ScreenDimensions>()
                 .read_resource::<AssetStorage<SpriteSheet>>()
                 .read_resource::<AssetStorage<Sprites>>()
-                //     Entities<'s>,
-                //     WriteStorage<'s, UiText>,
-                //     ReadExpect<'s, ScreenDimensions>,
-                //     UiFinder<'s>,
                 .build(
                     |_,
                      world,
@@ -55,10 +53,11 @@ impl System<'_> for MouseRaycastSystem {
                         // Get the mouse position if its available
                         if let Some(mouse_position) = input.mouse_position() {
                             // Get the active camera if it is spawned and ready
+                            let (left, mut right) = world.split_for_query(camera_query);
                             if let Some((camera, camera_transform)) = active_camera
                                 .entity
-                                .and_then(|a| camera_query.get(world, a).ok())
-                                .or_else(|| camera_query.iter(world).next())
+                                .and_then(|a| camera_query.get(&left, a).ok())
+                                .or_else(|| camera_query.iter(&left).next())
                             {
                                 // Project a ray from the camera to the 0z axis
                                 let ray = camera.screen_ray(
@@ -72,18 +71,19 @@ impl System<'_> for MouseRaycastSystem {
                                 let distance = ray.intersect_plane(&Plane::with_z(0.0)).unwrap();
                                 let mouse_world_position = ray.at_distance(distance);
 
-                                if let Some(t) = UiFinder::find(world, "mouse_position")
-                                    .and_then(|e| ui_texts.get_mut(world, e).ok())
-                                {
-                                    t.text = format!(
-                                        "({:.0}, {:.0})",
-                                        mouse_world_position.x, mouse_world_position.y
-                                    );
+                                for (transform, text) in ui_texts.iter_mut(&mut right) {
+                                    if transform.id == "mouse_position" {
+                                        text.text = format!(
+                                            "({:.0}, {:.0})",
+                                            mouse_world_position.x, mouse_world_position.y
+                                        );
+                                    }
                                 }
 
                                 // Find any sprites which the mouse is currently inside
                                 let mut found_name = None;
-                                for (sprite, transform, name) in sprite_query.iter(world) {
+                                let (left, mut right) = world.split_for_query(sprite_query);
+                                for (sprite, transform, name) in sprite_query.iter(&left) {
                                     let sprite_sheet =
                                         sprite_sheets.get(&sprite.sprite_sheet).unwrap();
                                     let sprites =
@@ -109,13 +109,13 @@ impl System<'_> for MouseRaycastSystem {
                                     }
                                 }
 
-                                if let Some(t) = UiFinder::find(world, "under_mouse")
-                                    .and_then(|e| ui_texts.get_mut(world, e).ok())
-                                {
-                                    if let Some(name) = found_name {
-                                        t.text = format!("{}", name);
-                                    } else {
-                                        t.text = "".to_string();
+                                for (transform, text) in ui_texts.iter_mut(&mut right) {
+                                    if transform.id == "under_mouse" {
+                                        if let Some(name) = found_name {
+                                            text.text = format!("{}", name);
+                                        } else {
+                                            text.text = "".to_string();
+                                        }
                                     }
                                 }
                             }
@@ -185,6 +185,8 @@ impl SimpleState for Example {
             ..Default::default()
         };
 
+        let parent = world.push((ui_transform,));
+
         let font = {
             resources
                 .get::<DefaultLoader>()
@@ -192,13 +194,49 @@ impl SimpleState for Example {
                 .load("font/square.ttf")
         };
 
-        let text = UiText {
-            font: Some(font),
-            text: "N/A".into(),
-            color: [1., 1., 1., 1.],
-            font_size: 25.,
+        let text = UiText::new(
+            Some(font.clone()),
+            "Hippopotamus".into(),
+            [1., 1., 1., 1.],
+            25.,
+            amethyst::ui::LineMode::Single,
+            Anchor::Middle,
+        );
+
+        let transform = UiTransform {
+            id: "mouse_position".into(),
+            anchor: Anchor::TopLeft,
+            local_x: 100.,
+            local_y: -25.,
+            width: 200.,
+            height: 50.,
+            opaque: false,
             ..Default::default()
         };
+
+        world.push((text, transform));
+
+        let text = UiText::new(
+            Some(font),
+            "Rhinoceros".into(),
+            [1., 1., 1., 1.],
+            25.,
+            amethyst::ui::LineMode::Single,
+            Anchor::Middle,
+        );
+
+        let transform = UiTransform {
+            id: "under_mouse".into(),
+            anchor: Anchor::TopLeft,
+            local_x: 100.,
+            local_y: -50.,
+            width: 200.,
+            height: 50.,
+            opaque: false,
+            ..Default::default()
+        };
+
+        world.push((text, transform));
 
         init_camera(world, resources);
     }
@@ -220,10 +258,10 @@ fn init_sprite(
     transform.set_translation(position);
 
     let sprite = SpriteRender::new(sprite_sheet.clone(), sprite_number);
-    world.push((transform, sprite, name))
+    world.push((transform, sprite, Named(name.into())))
 }
 
-fn init_camera(world: &mut World, resources: &mut Resources) {
+fn init_camera(world: &mut World, resources: &mut Resources) -> Entity {
     let (width, height) = {
         let dim = resources.get::<ScreenDimensions>().unwrap();
         (dim.width(), dim.height())
@@ -267,9 +305,10 @@ fn main() -> amethyst::Result<()> {
 
     let mut game_data = DispatcherBuilder::default();
     game_data
-        .add_bundle(TransformBundle::new())?
-        .add_bundle(InputBundle::new())?
-        .add_bundle(UiBundle::new())?
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle::default())
+        .add_bundle(InputBundle::default())
+        .add_bundle(UiBundle::<u32>::default())
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -279,8 +318,8 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderUi::default())
                 .with_plugin(RenderFlat2D::default()),
-        )?
-        .with(MouseRaycastSystem, "MouseRaycastSystem", &["input_system"]);
+        )
+        .add_system(Box::new(MouseRaycastSystem));
 
     let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
