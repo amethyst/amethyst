@@ -460,9 +460,11 @@ where
     I: Iterator<Item = UiButtonActionType>,
 {
     actions
-        .map(|action| UiButtonAction {
-            target,
-            event_type: action,
+        .map(|action| {
+            UiButtonAction {
+                target,
+                event_type: action,
+            }
         })
         .collect()
 }

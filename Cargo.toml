@@ -22,26 +22,26 @@ autoexamples = false # Our examples come with their own Cargo.toml and are in th
 
 [features]
 default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
-optional = ["audio", "network", "locale", "ui", "tiles"]
+optional = ["audio", "network", "locale", "ui", "tiles", "animation"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 empty = ["amethyst_rendy/empty"]
 
 tiles = ["amethyst_tiles"]
-#animation = ["amethyst_animation"]
+animation = ["amethyst_animation"]
 audio = ["amethyst_audio"]
 #gltf = ["amethyst_gltf", "amethyst_animation"]
 locale = ["amethyst_locale"]
 network = ["amethyst_network"]
 utils = ["amethyst_utils"]
 renderer = ["amethyst_rendy"]
-ui = ["amethyst_ui"] #, "amethyst_animation/ui"]
+ui = ["amethyst_ui", "amethyst_animation/ui"]
 
 profiler = [
     "thread_profiler",
     "thread_profiler/thread_profiler",
-    #"amethyst_animation/profiler",
+    "amethyst_animation/profiler",
     "amethyst_assets/profiler",
     "amethyst_audio/profiler",
     "amethyst_config/profiler",
@@ -67,7 +67,6 @@ parallel = ["amethyst_core/parallel"]
 members = ["examples/*", "amethyst_*"]
 exclude = [
     "amethyst_gltf",
-    "amethyst_animation",
     "amethyst_test",
     "examples/Cargo.toml",
     "examples/_unused_assets",
@@ -95,7 +94,7 @@ exclude = [
 ]
 
 [dependencies]
-#amethyst_animation = { path = "amethyst_animation", version = "0.15.3", optional = true }
+amethyst_animation = { path = "amethyst_animation", version = "0.15.3", optional = true }
 amethyst_assets = { path = "amethyst_assets", version = "0.15.3" }
 amethyst_audio = { path = "amethyst_audio", version = "0.15.3", optional = true }
 amethyst_config = { path = "amethyst_config", version = "0.15.3" }

@@ -227,58 +227,70 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             let mut point_lights_query = <(Read<Light>, Read<Transform>)>::query();
             let point_lights = point_lights_query
                 .iter(world)
-                .filter_map(|(light, transform)| match &*light {
-                    Light::Point(light) => Some(
-                        pod::PointLight {
-                            position: convert::<_, Vector3<f32>>(
-                                transform.global_matrix().column(3).xyz(),
+                .filter_map(|(light, transform)| {
+                    match &*light {
+                        Light::Point(light) => {
+                            Some(
+                                pod::PointLight {
+                                    position: convert::<_, Vector3<f32>>(
+                                        transform.global_matrix().column(3).xyz(),
+                                    )
+                                    .into_pod(),
+                                    color: light.color.into_pod(),
+                                    intensity: light.intensity,
+                                }
+                                .std140(),
                             )
-                            .into_pod(),
-                            color: light.color.into_pod(),
-                            intensity: light.intensity,
                         }
-                        .std140(),
-                    ),
-                    _ => None,
+                        _ => None,
+                    }
                 })
                 .take(MAX_POINT_LIGHTS);
 
             let mut dir_lights_query = <Read<Light>>::query();
             let dir_lights = dir_lights_query
                 .iter(world)
-                .filter_map(|light| match &*light {
-                    Light::Directional(light) => Some(
-                        pod::DirectionalLight {
-                            color: light.color.into_pod(),
-                            intensity: light.intensity,
-                            direction: light.direction.into_pod(),
+                .filter_map(|light| {
+                    match &*light {
+                        Light::Directional(light) => {
+                            Some(
+                                pod::DirectionalLight {
+                                    color: light.color.into_pod(),
+                                    intensity: light.intensity,
+                                    direction: light.direction.into_pod(),
+                                }
+                                .std140(),
+                            )
                         }
-                        .std140(),
-                    ),
-                    _ => None,
+                        _ => None,
+                    }
                 })
                 .take(MAX_DIR_LIGHTS);
 
             let mut spot_lights_query = <(Read<Light>, Read<Transform>)>::query();
             let spot_lights = spot_lights_query
                 .iter(world)
-                .filter_map(|(light, transform)| match &*light {
-                    Light::Spot(light) => Some(
-                        pod::SpotLight {
-                            position: convert::<_, Vector3<f32>>(
-                                transform.global_matrix().column(3).xyz(),
+                .filter_map(|(light, transform)| {
+                    match &*light {
+                        Light::Spot(light) => {
+                            Some(
+                                pod::SpotLight {
+                                    position: convert::<_, Vector3<f32>>(
+                                        transform.global_matrix().column(3).xyz(),
+                                    )
+                                    .into_pod(),
+                                    color: light.color.into_pod(),
+                                    direction: light.direction.into_pod(),
+                                    angle: light.angle.cos(),
+                                    intensity: light.intensity,
+                                    range: light.range,
+                                    smoothness: light.smoothness,
+                                }
+                                .std140(),
                             )
-                            .into_pod(),
-                            color: light.color.into_pod(),
-                            direction: light.direction.into_pod(),
-                            angle: light.angle.cos(),
-                            intensity: light.intensity,
-                            range: light.range,
-                            smoothness: light.smoothness,
                         }
-                        .std140(),
-                    ),
-                    _ => None,
+                        _ => None,
+                    }
                 })
                 .take(MAX_SPOT_LIGHTS);
 

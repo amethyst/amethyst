@@ -101,9 +101,11 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawSkyboxDesc {
         let mesh = Shape::Sphere(16, 16)
             .generate::<Vec<PosTex>>(None)
             .build(queue, factory)
-            .map_err(|e| match e {
-                UploadError::Upload(oom) => oom.into(),
-                _ => pso::CreationError::Other,
+            .map_err(|e| {
+                match e {
+                    UploadError::Upload(oom) => oom.into(),
+                    _ => pso::CreationError::Other,
+                }
             })?;
 
         let (pipeline, pipeline_layout) = build_skybox_pipeline(

@@ -176,10 +176,12 @@ impl System<'_> for TcpNetworkSendSystem {
                                 | DeliveryRequirement::Default => {
                                     write_message(message, net, channel);
                                 }
-                                delivery => panic!(
+                                delivery => {
+                                    panic!(
                             "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
                             delivery
-                        ),
+                        )
+                                }
                             }
                         }
                     },

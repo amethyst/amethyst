@@ -8,18 +8,20 @@ use crate::input_handler::InputHandler;
 /// and the new state.
 pub fn get_key(event: &Event<'_, ()>) -> Option<(VirtualKeyCode, ElementState)> {
     match *event {
-        Event::WindowEvent { ref event, .. } => match *event {
-            WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        virtual_keycode: Some(ref virtual_keycode),
-                        state,
-                        ..
-                    },
-                ..
-            } => Some((*virtual_keycode, state)),
-            _ => None,
-        },
+        Event::WindowEvent { ref event, .. } => {
+            match *event {
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(ref virtual_keycode),
+                            state,
+                            ..
+                        },
+                    ..
+                } => Some((*virtual_keycode, state)),
+                _ => None,
+            }
+        }
         _ => None,
     }
 }
@@ -74,10 +76,12 @@ pub fn get_action_simple(name: &Option<Cow<'static, str>>, input: &InputHandler)
 /// and the new state.
 pub fn get_mouse_button(event: &Event<'_, ()>) -> Option<(MouseButton, ElementState)> {
     match *event {
-        Event::WindowEvent { ref event, .. } => match *event {
-            WindowEvent::MouseInput { button, state, .. } => Some((button, state)),
-            _ => None,
-        },
+        Event::WindowEvent { ref event, .. } => {
+            match *event {
+                WindowEvent::MouseInput { button, state, .. } => Some((button, state)),
+                _ => None,
+            }
+        }
         _ => None,
     }
 }

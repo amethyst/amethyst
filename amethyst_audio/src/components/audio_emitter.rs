@@ -75,15 +75,19 @@ mod tests {
 
         // Call play
         match emitter.play(&src) {
-            Ok(_pass) => assert!(
-                should_pass,
-                "Expected `play` result to be Err(..), but was Ok(..)"
-            ),
-            Err(fail) => assert!(
-                !should_pass,
-                "Expected `play` result to be `Ok(..)`, but was {:?}",
-                fail
-            ),
+            Ok(_pass) => {
+                assert!(
+                    should_pass,
+                    "Expected `play` result to be Err(..), but was Ok(..)"
+                )
+            }
+            Err(fail) => {
+                assert!(
+                    !should_pass,
+                    "Expected `play` result to be `Ok(..)`, but was {:?}",
+                    fail
+                )
+            }
         };
     }
 

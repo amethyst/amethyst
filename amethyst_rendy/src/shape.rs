@@ -224,29 +224,35 @@ impl Shape {
             Shape::Cube => generate_vertices(Cube::new(), scale),
             Shape::Sphere(u, v) => generate_vertices(SphereUv::new(u, v), scale),
             Shape::Cone(u) => generate_vertices(Cone::new(u), scale),
-            Shape::Cylinder(u, h) => generate_vertices(
-                h.map(|h| Cylinder::subdivide(u, h))
-                    .unwrap_or_else(|| Cylinder::new(u)),
-                scale,
-            ),
-            Shape::IcoSphere(divide) => generate_vertices(
-                divide
-                    .map(IcoSphere::subdivide)
-                    .unwrap_or_else(IcoSphere::new),
-                scale,
-            ),
+            Shape::Cylinder(u, h) => {
+                generate_vertices(
+                    h.map(|h| Cylinder::subdivide(u, h))
+                        .unwrap_or_else(|| Cylinder::new(u)),
+                    scale,
+                )
+            }
+            Shape::IcoSphere(divide) => {
+                generate_vertices(
+                    divide
+                        .map(IcoSphere::subdivide)
+                        .unwrap_or_else(IcoSphere::new),
+                    scale,
+                )
+            }
             Shape::Torus(radius, tube_radius, radial_segments, tubular_segments) => {
                 generate_vertices(
                     Torus::new(radius, tube_radius, radial_segments, tubular_segments),
                     scale,
                 )
             }
-            Shape::Plane(divide) => generate_vertices(
-                divide
-                    .map(|(x, y)| Plane::subdivide(x, y))
-                    .unwrap_or_else(Plane::new),
-                scale,
-            ),
+            Shape::Plane(divide) => {
+                generate_vertices(
+                    divide
+                        .map(|(x, y)| Plane::subdivide(x, y))
+                        .unwrap_or_else(Plane::new),
+                    scale,
+                )
+            }
             Shape::Circle(u) => generate_vertices(Circle::new(u), scale),
         };
         InternalShape(vertices)
