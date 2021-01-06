@@ -1,10 +1,10 @@
 use amethyst::{
     core::{math::Vector3, transform::Transform},
-    ecs::{IntoQuery, ParallelRunnable, System},
+    ecs::{component, Entity, ParallelRunnable, System, SystemBuilder},
     input::InputHandler,
+    prelude::IntoQuery,
     renderer::{ActiveCamera, Camera},
 };
-use legion::{component, Entity, SystemBuilder};
 pub(crate) struct CameraMovementSystem;
 
 impl System<'static> for CameraMovementSystem {

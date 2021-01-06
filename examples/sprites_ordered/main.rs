@@ -356,9 +356,9 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/sprites_ordered/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
-    let assets_dir = app_root.join("examples/sprites_ordered/assets/");
+    let assets_dir = app_root.join("assets/");
 
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher

@@ -18,8 +18,7 @@ repository = "https://github.com/amethyst/amethyst"
 readme = "README.md"
 license = "MIT/Apache-2.0"
 
-# FIXME: remove after all existing examples working
-autoexamples = false
+autoexamples = false # Our examples come with their own Cargo.toml and are in the [workspace] section
 
 [features]
 default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
@@ -36,9 +35,7 @@ audio = ["amethyst_audio"]
 locale = ["amethyst_locale"]
 network = ["amethyst_network"]
 utils = ["amethyst_utils"]
-
 renderer = ["amethyst_rendy"]
-
 ui = ["amethyst_ui"] #, "amethyst_animation/ui"]
 
 profiler = [
@@ -67,8 +64,35 @@ experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 parallel = ["amethyst_core/parallel"]
 
 [workspace]
-members = ["amethyst_*"]
-exclude = ["amethyst_gltf", "amethyst_animation", "amethyst_test"]
+members = ["examples/*", "amethyst_*"]
+exclude = [
+    "amethyst_gltf",
+    "amethyst_animation",
+    "amethyst_test",
+    "examples/Cargo.toml",
+    "examples/_unused_assets",
+    "examples/animation",
+    "examples/spotlights",
+    "examples/renderable",
+    "examples/renderable_custom",
+    "examples/rendy",
+    "examples/states_ui",
+    "examples/state_dispatcher",
+    "examples/pong_tutorial_06",
+    "examples/sprite_animation",
+    "examples/prefab_basic",
+    "examples/prefab_multi",
+    "examples/prefab_custom",
+    "examples/prefab_adapter",
+    "examples/mouse_raycast",
+    "examples/ui",
+    "examples/custom_ui",
+    "examples/debug_lines",
+    "examples/debug_lines_ortho",
+    "examples/auto_fov",
+    "examples/custom_game_data",
+    "examples/gltf",
+]
 
 [dependencies]
 #amethyst_animation = { path = "amethyst_animation", version = "0.15.3", optional = true }
@@ -110,174 +134,10 @@ legion = { version = "0.3", default-features = false, features = [
 
 [dev-dependencies]
 rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
-derive-new = "0.5.8"
-ron = "0.6.4"
-type-uuid = "0.1"
-serde-diff = "0.4"
-legion-prefab = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
-prefab-format = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
 
 [build-dependencies]
 dirs = "2.0.2"
 vergen = "3.1.0"
-
-[[example]]
-name = "hello_world"
-
-[[example]]
-name = "window"
-
-[[example]]
-name = "sphere"
-
-# [[example]]
-# name = "renderable"
-
-# [[example]]
-# name = "renderable_custom"
-
-[[example]]
-name = "optional_graphics"
-
-[[example]]
-name = "asset_custom"
-
-[[example]]
-name = "asset_loading"
-
-[[example]]
-name = "material"
-
-# [[example]]
-# name = "gltf"
-# required-features = ["animation", "gltf"]
-
-# [[example]]
-# name = "ui"
-# required-features = ["audio"]
-
-[[example]]
-name = "ui_from_code"
-required-features = ["ui", "audio"]
-
-# [[example]]
-# name = "states_ui"
-# required-features = ["audio"]
-
-[[example]]
-name = "custom_render_pass"
-
-# [[example]]
-# name = "custom_ui"
-# required-features = ["audio"]
-
-# [[example]]
-# name = "animation"
-# required-features = ["animation"]
-
-[[example]]
-name = "fly_camera"
-
-# [[example]]
-# name = "sprite_animation"
-# required-features = ["animation"]
-
-[[example]]
-name = "sprites_ordered"
-
-[[example]]
-name = "pong_tutorial_01"
-
-[[example]]
-name = "pong_tutorial_02"
-
-[[example]]
-name = "pong_tutorial_03"
-
-[[example]]
-name = "pong_tutorial_04"
-
-[[example]]
-name = "pong_tutorial_05"
-required-features = ["ui"]
-
-# [[example]]
-# name = "pong_tutorial_06"
-# required-features = ["audio"]
-
-[[example]]
-name = "net_client"
-required-features = ["network"]
-
-[[example]]
-name = "net_server"
-required-features = ["network"]
-
-[[example]]
-name = "locale"
-required-features = ["locale"]
-
-# [[example]]
-# name = "custom_game_data"
-
-[[example]]
-name = "arc_ball_camera"
-
-[[example]]
-name = "prefab_atelier"
-
-[[example]]
-name = "prefab"
-
-# [[example]]
-# name = "prefab_adapter"
-
-# [[example]]
-# name = "prefab_basic"
-
-# [[example]]
-# name = "prefab_multi"
-
-# [[example]]
-# name = "prefab_custom"
-
-# [[example]]
-# name = "debug_lines"
-
-# [[example]]
-# name = "debug_lines_ortho"
-
-# [[example]]
-# name = "state_dispatcher"
-
-# [[example]]
-# name = "spotlights"
-
-[[example]]
-name = "sprite_camera_follow"
-
-# [[example]]
-# name = "auto_fov"
-
-[[example]]
-name = "events"
-
-[[example]]
-name = "events_custom_state_event"
-
-# [[example]]
-# name = "state_dispatcher"
-
-# [[example]]
-# name = "mouse_raycast"
-
-# [[example]]
-# name = "rendy"
-# required-features = ["animation", "gltf"]
-
-[[example]]
-name = "tiles"
-required-features = ["tiles"]
 
 [package.metadata.docs.rs]
 features = [

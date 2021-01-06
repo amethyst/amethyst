@@ -133,8 +133,8 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/material/config/display.ron");
-    let assets_dir = app_root.join("examples/material/assets/");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets/");
 
     let mut builder = DispatcherBuilder::default();
     builder

@@ -1,0 +1,22 @@
+[package]
+name = "arc_ball_camera"
+version = "0.0.1"
+authors = ["Amethyst Foundation <contact@amethyst.rs>"]
+edition = "2018"
+
+[[bin]]
+path = "main.rs"
+name = "arc_ball_camera"
+
+[dependencies]
+amethyst = { path = "../../", features = ["optional"] }
+log = { version = "^0.4", features = ["serde"] }
+serde = "^1"
+derivative = "^2"
+lazy_static = "^1.4"
+serde-diff = "0.4"
+type-uuid = "0.1"
+glsl-layout = "0.3"
+ron = "^0.6"
+legion-prefab = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
+prefab-format = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }

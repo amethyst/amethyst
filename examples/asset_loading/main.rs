@@ -34,6 +34,7 @@ use type_uuid::TypeUuid;
 #[uuid = "f245dc2b-88a9-413e-bd51-f6c341c32017"]
 struct Custom;
 
+use amethyst::assets as amethyst_assets;
 amethyst::assets::register_importer!(".custom", Custom);
 impl Format<MeshData> for Custom {
     fn name(&self) -> &'static str {
@@ -145,9 +146,9 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/asset_loading/assets/");
+    let assets_dir = app_root.join("assets/");
 
-    let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut dispatcher_builder = DispatcherBuilder::default();
     dispatcher_builder

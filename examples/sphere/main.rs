@@ -7,6 +7,7 @@ use amethyst::{
     renderer::{
         light::{Light, PointLight},
         loaders::load_from_linear_rgba,
+        palette::{LinSrgba, Srgb},
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::{
             hal::command::ClearColor,
@@ -19,7 +20,6 @@ use amethyst::{
     utils::application_root_dir,
     window::ScreenDimensions,
 };
-use palette::{LinSrgba, Srgb};
 
 struct SphereExample;
 
@@ -108,8 +108,8 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/sphere/config/display.ron");
-    let assets_dir = app_root.join("examples/sphere/assets");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets");
 
     let mut game_data = DispatcherBuilder::default();
     game_data

@@ -149,8 +149,8 @@ fn main() -> amethyst::Result<()> {
         .start();
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/tiles/assets");
-    let display_config_path = app_root.join("examples/tiles/config/display.ron");
+    let assets_directory = app_root.join("assets");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher.add_bundle(LoaderBundle);

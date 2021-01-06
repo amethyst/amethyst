@@ -24,19 +24,19 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/pong_tutorial_03/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     // This line is not mentioned in the pong tutorial as it is specific to the context
     // of the git repository. It only is a different location to load the assets from.
-    let assets_dir = app_root.join("examples/pong_tutorial_03/assets/");
+    let assets_dir = app_root.join("assets/");
 
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher
         .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
-        .add_bundle(InputBundle::new().with_bindings_from_file(
-            app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
-        )?)
+        .add_bundle(
+            InputBundle::new().with_bindings_from_file(app_root.join("config/bindings.ron"))?,
+        )
         // We have now added our own system, the PaddleSystem, defined in systems/paddle.rs
         .add_system(Box::new(PaddleSystem))
         .add_bundle(
