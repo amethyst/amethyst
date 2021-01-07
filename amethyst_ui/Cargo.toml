@@ -46,8 +46,4 @@ thread_profiler = { version = "0.3", optional = true }
 type-uuid = "0.1"
 
 [features]
-vulkan = ["amethyst_rendy/vulkan"]
-metal = ["amethyst_rendy/metal"]
-empty = ["amethyst_rendy/empty"]
-
 profiler = ["thread_profiler/thread_profiler"]

@@ -29,9 +29,6 @@ serde = "1.0"
 [features]
 default = ["animation", "audio", "locale", "network", "renderer"]
 
-vulkan = ["amethyst/vulkan"]
-metal = ["amethyst/metal"]
-empty = ["amethyst/empty"]
 tiles = ["amethyst/tiles"]
 animation = ["amethyst/animation"]
 audio = ["amethyst/audio"]

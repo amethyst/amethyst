@@ -24,10 +24,6 @@ autoexamples = false # Our examples come with their own Cargo.toml and are in th
 default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
 optional = ["audio", "network", "locale", "ui", "tiles", "animation"]
 
-vulkan = ["amethyst_rendy/vulkan"]
-metal = ["amethyst_rendy/metal"]
-empty = ["amethyst_rendy/empty"]
-
 tiles = ["amethyst_tiles"]
 animation = ["amethyst_animation"]
 audio = ["amethyst_audio"]
@@ -37,6 +33,10 @@ network = ["amethyst_network"]
 utils = ["amethyst_utils"]
 renderer = ["amethyst_rendy"]
 ui = ["amethyst_ui", "amethyst_animation/ui"]
+
+empty = ["amethyst_rendy/empty"]
+vulkan = ["amethyst_rendy/vulkan"]
+metal = ["amethyst_rendy/metal"]
 
 profiler = [
     "thread_profiler",
@@ -54,7 +54,7 @@ profiler = [
     "amethyst_utils/profiler",
     "amethyst_tiles/profiler",
 ]
-sdl_controller = ["amethyst_input/sdl_controller"]
+# sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
 server = ["locale", "network"]
 no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]

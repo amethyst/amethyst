@@ -17,71 +17,56 @@ pub trait Backend: rendy::hal::Backend {
     fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture;
 }
 
-// Create `DefaultBackend` type alias only when exactly one backend is selected.
-macro_rules! impl_single_default {
-    ( $([$feature:literal, $backend:ty]),* ) => {
-        impl_single_default!(@ (), ($([$feature, $backend])*));
-    };
-    (@ ($($prev:literal)*), ([$cur:literal, $backend:ty]) ) => {
-        #[cfg(all( feature = $cur, not(any($(feature = $prev),*)) ))]
-        #[doc = "Default backend"]
-        pub type DefaultBackend = $backend;
-    };
-    (@ ($($prev:literal)*), ([$cur:literal, $backend:ty] $([$nf:literal, $nb:ty])*) ) => {
-        #[cfg(all( feature = $cur, not(any($(feature = $prev,)* $(feature = $nf),*)) ))]
-        #[doc = "Default backend"]
-        pub type DefaultBackend = $backend;
+#[cfg(any(
+    all(target_os = "macos", not(feature = "empty")),
+    all(feature = "metal", not(any(feature = "vulkan", feature = "empty")))
+))]
+#[doc = "Default backend"]
+pub type DefaultBackend = rendy::metal::Backend;
 
-        impl_single_default!(@ ($($prev)* $cur), ($([$nf, $nb])*) );
-    };
-}
+#[cfg(any(
+    all(not(target_os = "macos"), not(feature = "empty")),
+    all(feature = "vulkan", not(any(feature = "metal", feature = "empty")))
+))]
+#[doc = "Default backend"]
+pub type DefaultBackend = rendy::vulkan::Backend;
 
-impl_single_default!(["metal", Metal], ["vulkan", Vulkan], ["empty", Empty]);
-
-/// Backend wrapper.
-#[derive(Debug)]
-pub enum BackendVariant {
-    #[cfg(feature = "metal")]
-    #[doc = "Backend Variant"]
-    Metal,
-    #[cfg(feature = "vulkan")]
-    #[doc = "Backend Variant"]
-    Vulkan,
-    #[cfg(feature = "empty")]
-    #[doc = "Backend Variant"]
-    Empty,
-}
+#[cfg(feature = "empty")]
+#[doc = "Default backend"]
+pub type DefaultBackend = rendy::empty::Backend;
 
 /// Mesh wrapper.
-#[derive(Debug)]
+#[derive(Debug, TypeUuid)]
+#[uuid = "3017f6f7-b9fa-4d55-8cc5-27f803592569"]
 pub enum Mesh {
-    #[cfg(feature = "metal")]
+    #[cfg(target_os = "macos")]
     #[doc = "Mesh Variant"]
-    Metal(rendy::mesh::Mesh<metal>),
-    #[cfg(feature = "vulkan")]
+    Metal(rendy::mesh::Mesh<rendy::metal::Backend>),
+    #[cfg(all(not(target_os = "macos"), not(feature = "empty")))]
     #[doc = "Mesh Variant"]
-    Vulkan(rendy::mesh::Mesh<vulkan>),
+    Vulkan(rendy::mesh::Mesh<rendy::vulkan::Backend>),
     #[cfg(feature = "empty")]
     #[doc = "Mesh Variant"]
-    Empty(rendy::mesh::Mesh<empty>),
+    Empty(rendy::mesh::Mesh<rendy::empty::Backend>),
 }
 
 /// Texture wrapper.
-#[derive(Debug)]
+#[derive(Debug, TypeUuid)]
+#[uuid = "af14628f-c707-4921-9ac1-f6ae42b8ee8e"]
 pub enum Texture {
-    #[cfg(feature = "metal")]
+    #[cfg(target_os = "macos")]
     #[doc = "Texture Variant"]
-    Metal(rendy::texture::Texture<metal>),
-    #[cfg(feature = "vulkan")]
+    Metal(rendy::texture::Texture<rendy::metal::Backend>),
+    #[cfg(all(not(target_os = "macos"), not(feature = "empty")))]
     #[doc = "Texture Variant"]
-    Vulkan(rendy::texture::Texture<vulkan>),
+    Vulkan(rendy::texture::Texture<rendy::vulkan::Backend>),
     #[cfg(feature = "empty")]
     #[doc = "Texture Variant"]
-    Empty(rendy::texture::Texture<empty>),
+    Empty(rendy::texture::Texture<rendy::empty::Backend>),
 }
 
-#[cfg(feature = "metal")]
-impl Backend for Metal {
+#[cfg(target_os = "macos")]
+impl Backend for rendy::metal::Backend {
     #[inline]
     #[allow(irrefutable_let_patterns)]
     fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
@@ -110,8 +95,8 @@ impl Backend for Metal {
     }
 }
 
-#[cfg(feature = "vulkan")]
-impl Backend for Vulkan {
+#[cfg(all(not(target_os = "macos"), not(feature = "empty")))]
+impl Backend for rendy::vulkan::Backend {
     #[inline]
     #[allow(irrefutable_let_patterns)]
     fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
@@ -141,7 +126,7 @@ impl Backend for Vulkan {
 }
 
 #[cfg(feature = "empty")]
-impl Backend for Empty {
+impl Backend for rendy::empty::Backend {
     #[inline]
     #[allow(irrefutable_let_patterns)]
     fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {

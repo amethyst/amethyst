@@ -58,6 +58,9 @@ where
         .write_component::<RestState<T>>()
         .with_query(<(Entity, Write<AnimationControlSet<I, T>>, TryRead<AnimationHierarchy<T>>)>::query())
         .build(move |mut buffer, world, (animation_storage, sampler_storage), query| {
+            #[cfg(feature = "profiler")]
+            profile_scope!("animation_control_system");
+
             remove_sets.clear();
 
             let (mut query_world, mut world) = world.split_for_query(&query);
