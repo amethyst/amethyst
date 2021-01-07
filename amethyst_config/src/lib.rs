@@ -22,7 +22,7 @@ use std::{
 
 #[cfg(feature = "binary")]
 use bincode::Error as BincodeError;
-use ron::{self, de::Error as DeError, ser::Error as SerError};
+use ron::{self, error::Error as RonError};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "json")]
 use serde_json::error::Error as SerJsonError;
@@ -84,6 +84,12 @@ impl fmt::Display for ConfigError {
             #[cfg(feature = "binary")]
             ConfigError::BincodeError(ref msg) => write!(f, "{}", msg),
         }
+    }
+}
+
+impl From<RonError> for ConfigError {
+    fn from(e: RonError) -> Self {
+        ConfigError::Parser(e)
     }
 }
 
