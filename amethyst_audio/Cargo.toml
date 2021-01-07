@@ -15,9 +15,6 @@ repository = "https://github.com/amethyst/amethyst"
 readme = "README.md"
 license = "MIT/Apache-2.0"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
@@ -29,6 +26,7 @@ rodio = "0.11"
 serde = { version = "1.0", features = ["derive"] }
 smallvec = { version = "1.2", features = ["serde"] }
 thread_profiler = { version = "0.3", optional = true }
+type-uuid = "0.1"
 
 [dev-dependencies]
 amethyst_utils = { path = "../amethyst_utils", version = "0.15.3" }

@@ -1,5 +1,12 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
+use std::collections::HashMap;
+
+use amethyst_assets::{register_asset_type, AssetProcessorSystem, AssetStorage};
+use amethyst_core::ecs::*;
+use amethyst_error::{format_err, Error};
+use rendy::init::Rendy;
+
 use crate::{
     camera::ActiveCamera,
     mtl::{Material, MaterialDefaults},
@@ -14,16 +21,10 @@ use crate::{
         wsi::Surface,
     },
     system::{
-        build_mesh_processor, build_texture_processor, create_default_mat, make_graph_aux_data,
-        render, GraphAuxData, GraphCreator, RenderState,
+        create_default_mat, make_graph_aux_data, render, GraphAuxData, GraphCreator, RenderState,
     },
-    types::{Backend, Mesh, Texture},
-    SpriteSheet,
+    types::{Backend, DefaultBackend, Mesh, Texture},
 };
-use amethyst_assets::{AssetProcessorSystemBundle, AssetStorage};
-use amethyst_core::ecs::*;
-use amethyst_error::{format_err, Error};
-use std::collections::HashMap;
 
 /// A bundle of systems used for rendering using `Rendy` render graph.
 ///
@@ -68,6 +69,8 @@ impl<B: Backend> RenderingBundle<B> {
     }
 }
 
+register_asset_type!(Material => Material; AssetProcessorSystem<Material>);
+
 impl<B: Backend> SystemBundle for RenderingBundle<B> {
     fn load(
         &mut self,
@@ -75,33 +78,21 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        resources.insert(AssetStorage::<Mesh>::default());
-        builder.add_system(build_mesh_processor::<B>());
-
-        resources.insert(AssetStorage::<Texture>::default());
-        builder.add_system(build_texture_processor::<B>());
-
-        builder.add_bundle(AssetProcessorSystemBundle::<Material>::default());
-        builder.add_bundle(AssetProcessorSystemBundle::<SpriteSheet>::default());
-
         resources.insert(ActiveCamera::default());
-
-        // make sure that all renderer-specific systems run after game code
-        //builder.flush(); TODO: flush legion here?
 
         for plugin in &mut self.plugins {
             plugin.on_build(world, resources, builder)?;
         }
 
         let config: rendy::factory::Config = Default::default();
-        let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
+        let r: Rendy<DefaultBackend> = rendy::init::Rendy::init(&config).unwrap();
 
         let queue_id = QueueId {
-            family: families.family_by_index(0).id(),
+            family: r.families.family_by_index(0).id(),
             index: 0,
         };
 
-        resources.insert(factory);
+        resources.insert(r.factory);
         resources.insert(queue_id);
 
         let mat = create_default_mat::<B>(resources);
@@ -109,7 +100,7 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
 
         resources.insert(RenderState {
             graph: None,
-            families,
+            families: r.families,
             graph_creator: self.into_graph_creator(),
         });
 
@@ -342,23 +333,20 @@ impl<B: Backend> PlanContext<B> {
         Ok(())
     }
 
-    fn submit_pass(
-        &mut self,
-        target: Target,
-        pass: RenderPassNodeBuilder<B, GraphAuxData>,
-    ) -> Result<(), Error> {
+    fn submit_pass(&mut self, target: Target, pass: RenderPassNodeBuilder<B, GraphAuxData>) {
         match self.passes.get(&target) {
             None => {}
             Some(EvaluationState::Evaluating) => {}
             // this case is not a soft runtime error, as this should never be allowed by the API.
-            Some(EvaluationState::Built(_)) => panic!(
-                "Trying to resubmit a render pass for {:?}. This is a RenderingBundle bug.",
-                target
-            ),
+            Some(EvaluationState::Built(_)) => {
+                panic!(
+                    "Trying to resubmit a render pass for {:?}. This is a RenderingBundle bug.",
+                    target
+                )
+            }
         };
         let node = self.graph_builder.add_node(pass);
         self.passes.insert(target, EvaluationState::Built(node));
-        Ok(())
     }
 
     fn get_pass_node_raw(&self, target: Target) -> Option<NodeId> {
@@ -550,7 +538,7 @@ impl TargetImage {
 }
 
 /// Set of options required to create an image node in render graph.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct ImageOptions {
     /// Image kind and size
     pub kind: hal::image::Kind,
@@ -670,6 +658,13 @@ impl<B: Backend> TargetPlan<B> {
             ));
         }
         let mut outputs = self.outputs.unwrap();
+        let suggested_extent = {
+            let metadata = ctx.target_metadata(self.key).unwrap();
+            hal::window::Extent2D {
+                width: metadata.width,
+                height: metadata.height,
+            }
+        };
 
         ctx.mark_evaluating(self.key)?;
 
@@ -706,7 +701,7 @@ impl<B: Backend> TargetPlan<B> {
             match color {
                 OutputColor::Surface(surface, clear) => {
                     subpass.add_color_surface();
-                    pass.add_surface(surface, clear);
+                    pass.add_surface(surface, suggested_extent, clear);
                 }
                 OutputColor::Image(opts) => {
                     let node = ctx.create_image(opts);
@@ -727,7 +722,7 @@ impl<B: Backend> TargetPlan<B> {
         }
 
         pass.add_subpass(subpass);
-        ctx.submit_pass(self.key, pass)?;
+        ctx.submit_pass(self.key, pass);
         Ok(())
     }
 }
@@ -831,6 +826,12 @@ impl Default for Target {
 
 #[cfg(test)]
 mod tests {
+    use hal::{
+        command::{ClearDepthStencil, ClearValue},
+        format::Format,
+    };
+    use winit::{event_loop::EventLoop, window::WindowBuilder};
+
     use super::*;
     use crate::{
         rendy::{
@@ -841,10 +842,6 @@ mod tests {
             },
         },
         types::{Backend, DefaultBackend},
-    };
-    use hal::{
-        command::{ClearDepthStencil, ClearValue},
-        format::Format,
     };
 
     #[derive(Debug)]
@@ -864,7 +861,7 @@ mod tests {
             subpass: hal::pass::Subpass<'_, B>,
             buffers: Vec<NodeBuffer>,
             images: Vec<NodeImage>,
-        ) -> Result<Box<dyn RenderGroup<B, T>>, failure::Error> {
+        ) -> Result<Box<dyn RenderGroup<B, T>>, hal::pso::CreationError> {
             unimplemented!()
         }
     }
@@ -880,7 +877,7 @@ mod tests {
             subpass: hal::pass::Subpass<'_, B>,
             buffers: Vec<NodeBuffer>,
             images: Vec<NodeImage>,
-        ) -> Result<Box<dyn RenderGroup<B, T>>, failure::Error> {
+        ) -> Result<Box<dyn RenderGroup<B, T>>, hal::pso::CreationError> {
             unimplemented!()
         }
     }
@@ -889,8 +886,7 @@ mod tests {
     #[ignore] // CI can't run tests requiring actual backend
     fn main_pass_color_image_plan() {
         let config: rendy::factory::Config = Default::default();
-        let (factory, families): (Factory<DefaultBackend>, _) =
-            rendy::factory::init(config).unwrap();
+        let factory: Factory<DefaultBackend> = rendy::init::Rendy::init(&config).unwrap().factory;
         let mut plan = RenderPlan::<DefaultBackend>::new();
 
         plan.extend_target(Target::Main, |ctx| {
@@ -914,7 +910,12 @@ mod tests {
                     kind,
                     levels: 1,
                     format: Format::D32Sfloat,
-                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+                    clear: Some(ClearValue {
+                        depth_stencil: ClearDepthStencil {
+                            depth: 0.0,
+                            stencil: 0,
+                        },
+                    }),
                 }),
             },
         )
@@ -928,7 +929,12 @@ mod tests {
             kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+            Some(ClearValue {
+                depth_stencil: ClearDepthStencil {
+                    depth: 0.0,
+                    stencil: 0,
+                },
+            }),
         );
         manual_graph.add_node(
             RenderPassNodeBuilder::new().with_subpass(
@@ -950,26 +956,21 @@ mod tests {
     #[ignore] // CI can't run tests requiring actual backend
     #[cfg(feature = "window")]
     fn main_pass_surface_plan() {
-        use winit::{EventsLoop, WindowBuilder};
-
-        let ev_loop = EventsLoop::new();
+        let ev_loop = EventLoop::new();
         let mut window_builder = WindowBuilder::new();
         window_builder.window.visible = false;
         let window = window_builder.build(&ev_loop).unwrap();
 
-        let size = window
-            .get_inner_size()
-            .unwrap()
-            .to_physical(window.get_hidpi_factor());
+        let size = window.inner_size();
         let window_kind = crate::Kind::D2(size.width as u32, size.height as u32, 1, 1);
 
         let config: rendy::factory::Config = Default::default();
-        let (mut factory, families): (Factory<DefaultBackend>, _) =
-            rendy::factory::init(config).unwrap();
+        let mut factory: Factory<DefaultBackend> =
+            rendy::init::Rendy::init(&config).unwrap().factory;
         let mut plan = RenderPlan::<DefaultBackend>::new();
 
-        let surface1 = factory.create_surface(&window);
-        let surface2 = factory.create_surface(&window);
+        let surface1 = factory.create_surface(&window).unwrap();
+        let surface2 = factory.create_surface(&window).unwrap();
 
         plan.extend_target(Target::Main, |ctx| {
             ctx.add(RenderOrder::Opaque, TestGroup2.builder())?;
@@ -985,7 +986,12 @@ mod tests {
                     kind: window_kind,
                     levels: 1,
                     format: Format::D32Sfloat,
-                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+                    clear: Some(ClearValue {
+                        depth_stencil: ClearDepthStencil {
+                            depth: 0.0,
+                            stencil: 0,
+                        },
+                    }),
                 }),
             },
         )
@@ -1003,7 +1009,12 @@ mod tests {
             window_kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+            Some(ClearValue {
+                depth_stencil: ClearDepthStencil {
+                    depth: 0.0,
+                    stencil: 0,
+                },
+            }),
         );
         manual_graph.add_node(
             RenderPassNodeBuilder::new()
@@ -1014,7 +1025,14 @@ mod tests {
                         .with_color_surface()
                         .with_depth_stencil(depth),
                 )
-                .with_surface(surface2, None),
+                .with_surface(
+                    surface2,
+                    hal::window::Extent2D {
+                        width: 1,
+                        height: 1,
+                    },
+                    None,
+                ),
         );
 
         assert_eq!(

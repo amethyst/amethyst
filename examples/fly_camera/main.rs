@@ -1,13 +1,13 @@
 //! Demonstrates how to use the fly camera
 
 use amethyst::{
-    assets::{AssetStorage, Loader},
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
     controls::{FlyControl, FlyControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,
         transform::{Transform, TransformBundle},
     },
-    input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
+    input::{is_key_down, is_mouse_button_down, InputBundle},
     prelude::*,
     renderer::{
         camera::Camera,
@@ -16,16 +16,17 @@ use amethyst::{
         palette::{LinSrgba, Srgb},
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::{
+            hal::command::ClearColor,
             mesh::{Normal, Position, Tangent, TexCoord},
             texture::palette::load_from_linear_rgba,
         },
         shape::Shape,
-        types::DefaultBackend,
+        types::{DefaultBackend, MeshData, TextureData},
         Mesh, RenderingBundle, Texture,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    winit::{MouseButton, VirtualKeyCode},
+    winit::event::{MouseButton, VirtualKeyCode},
     Error,
 };
 
@@ -40,13 +41,13 @@ impl SimpleState for ExampleState {
         } = data;
 
         let mat_defaults = resources.get::<MaterialDefaults>().unwrap().0.clone();
-        let loader = resources.get::<Loader>().unwrap();
-        let mesh_storage = resources.get::<AssetStorage<Mesh>>().unwrap();
-        let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        let mtl_storage = resources.get::<AssetStorage<Material>>().unwrap();
+        let loader = resources.get::<DefaultLoader>().unwrap();
+        let mesh_storage = resources.get::<ProcessingQueue<MeshData>>().unwrap();
+        let tex_storage = resources.get::<ProcessingQueue<TextureData>>().unwrap();
+        let mtl_storage = resources.get::<ProcessingQueue<Material>>().unwrap();
 
         println!("Load mesh");
-        let (mesh, albedo) = {
+        let (mesh, albedo): (Handle<Mesh>, Handle<Texture>) = {
             let mesh = loader.load_from_data(
                 Shape::Sphere(32, 32)
                     .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(None)
@@ -75,7 +76,7 @@ impl SimpleState for ExampleState {
             let mut pos = Transform::default();
             pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
-            let mtl = {
+            let mtl: Handle<Material> = {
                 let metallic_roughness = loader.load_from_data(
                     load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0)).into(),
                     (),
@@ -142,11 +143,11 @@ impl SimpleState for ExampleState {
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { resources, .. } = data;
         if let StateEvent::Window(event) = &event {
+            let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
+
             if is_key_down(&event, VirtualKeyCode::Escape) {
-                let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
                 hide_cursor.hide = false;
             } else if is_mouse_button_down(&event, MouseButton::Left) {
-                let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
                 hide_cursor.hide = true;
             }
         }
@@ -159,34 +160,35 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let assets_dir = app_root.join("examples/fly_camera/assets");
-    let display_config_path = app_root.join("examples/fly_camera/config/display.ron");
-    let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
+    let assets_dir = app_root.join("assets");
+    let display_config_path = app_root.join("config/display.ron");
+    let key_bindings_path = app_root.join("config/input.ron");
 
     let mut builder = DispatcherBuilder::default();
     builder
+        .add_bundle(LoaderBundle)
+        .add_bundle(InputBundle::new().with_bindings_from_file(&key_bindings_path)?)
         .add_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
-        )
-        .add_bundle(
-            FlyControlBundle::<StringBindings>::new(
-                Some(String::from("move_x")),
-                Some(String::from("move_y")),
-                Some(String::from("move_z")),
+            FlyControlBundle::new(
+                Some("move_x".into()),
+                Some("move_y".into()),
+                Some("move_z".into()),
             )
-            .with_sensitivity(0.1, 0.1),
+            .with_sensitivity(0.1, 0.1)
+            .with_speed(5.),
         )
         .add_bundle(TransformBundle)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderShaded3D::default()),
         );
 
-    let mut game = Application::build(assets_dir, ExampleState)?
+    let game = Application::build(assets_dir, ExampleState)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 60)
         .build(builder)?;
 

@@ -16,11 +16,12 @@ mod system;
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let assets_dir = application_root_dir()?.join("examples/events_custom_state_event/assets");
+    let assets_dir = application_root_dir()?.join("assets");
 
-    let game_data = GameDataBuilder::default().with(system::IncreaseGameDifficultySystem, "", &[]);
+    let mut game_data = DispatcherBuilder::default();
+    game_data.add_bundle(system::MyBundle);
 
-    let mut game = CoreApplication::<_, MyExtendedStateEvent, MyExtendedStateEventReader>::build(
+    let game = CoreApplication::<_, MyExtendedStateEvent, MyExtendedStateEventReader>::build(
         assets_dir,
         GameplayState::default(),
     )?

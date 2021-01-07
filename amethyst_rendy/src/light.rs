@@ -5,11 +5,13 @@
 //use crate::resources::AmbientColor;
 //use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::math::Vector3;
+use type_uuid::TypeUuid;
 //use amethyst_error::Error;
 
 /// A light source.
-#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, TypeUuid)]
 // #[prefab(Component)]
+#[uuid = "32cf5344-28c1-41c4-a1f9-ea87de4b1a4f"]
 pub enum Light {
     /// An area light.
     /// FIXME: Missing implementation!

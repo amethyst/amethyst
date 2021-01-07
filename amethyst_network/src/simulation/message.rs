@@ -1,6 +1,8 @@
-use super::requirements::{DeliveryRequirement, UrgencyRequirement};
-use bytes::Bytes;
 use std::net::SocketAddr;
+
+use bytes::Bytes;
+
+use super::requirements::{DeliveryRequirement, UrgencyRequirement};
 
 /// Structure used to hold message payloads before they are consumed and sent by an underlying
 /// NetworkSystem.

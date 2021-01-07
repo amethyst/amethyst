@@ -59,24 +59,21 @@ Contributors should be familiar with the [Git Style Guide](https://github.com/ag
 Before submitting your pull request to the repository, please make sure you have
 done the following things first:
 
-1. You have ensured the pull request is based on a recent version of your
-   respective branch.
-2. You used `cargo fmt` at the root of the crate to format the code.
-   Make sure that `cargo fmt --version` returns the latest stable version.
-   If this is not the case, run `rustup update` or install [rustfmt]
-3. All of the following commands completed without errors.
-   * `cargo +stable fmt --all`
-   * `cargo clippy --workspace --features "empty"` (may require `cargo clean` before)
-   * `cargo build --features "empty"`
-   * `cargo test --workspace --features "empty"`
-   * `cargo run --example {example-name} --features YOUR_BACKEND`
-4. You have granted non-exclusive right to your source code under both the
+1. You have ensured the pull request is rebased on a recent version of your
+   respective branch or the latest upstream has been merged.
+2. All of the following commands completed without errors.  You can pass whatever features are relevant for your change. CI will test with all features enabled.
+   * `rustup update stable nightly`
+   * `cargo +nightly fmt --all`
+   * `cargo +nightly clippy --workspace --all-targets --features empty -Z unstable-options`
+   * `cargo test --all-targets --workspace --features empty`
+   * `cargo run --example $YOUR_EXAMPLE --features $YOUR_BACKEND`
+3. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
-5. You added your change in docs/CHANGELOG.md and linked your pull request number.
-7. For new features or changes to an existing one,
+4. You added your change in docs/CHANGELOG.md and linked your pull request number.
+5. For new features or changes to an existing one,
    add or change either the book tutorial or the examples.
 
 [lm]: LICENSE-MIT

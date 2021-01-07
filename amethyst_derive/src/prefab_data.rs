@@ -92,29 +92,30 @@ fn prepare_prefab_aggregate_struct(
 ) -> (Vec<(Type, bool)>, TokenStream, TokenStream) {
     let mut data_types = Vec::new();
     let (add_to_entity, subs) = prepare_prefab_aggregate_fields(&mut data_types, &data.fields);
-    let extract_fields_add =
-        data.fields
-            .iter()
-            .enumerate()
-            .map(|(field_number, field)| match &field.ident {
-                Some(name) => quote! {
+    let extract_fields_add = data.fields.iter().enumerate().map(|(field_number, field)| {
+        match &field.ident {
+            Some(name) => {
+                quote! {
                     let #name = &self.#name;
-                },
-                None => {
-                    let var_name =
-                        Ident::new(&format!("field_{}", field_number), Span::call_site());
-                    let number = Literal::usize_unsuffixed(field_number);
-                    quote! {
-                        let #var_name = &self.#number;
-                    }
                 }
-            });
+            }
+            None => {
+                let var_name = Ident::new(&format!("field_{}", field_number), Span::call_site());
+                let number = Literal::usize_unsuffixed(field_number);
+                quote! {
+                    let #var_name = &self.#number;
+                }
+            }
+        }
+    });
     let extract_fields_sub = data.fields.iter().enumerate().map(|(field_number, field)| {
         if is_aggregate_prefab(&field.attrs[..]) {
             match &field.ident {
-                Some(name) => Some(quote! {
-                    let #name = &mut self.#name;
-                }),
+                Some(name) => {
+                    Some(quote! {
+                        let #name = &mut self.#name;
+                    })
+                }
                 None => {
                     // Unnamed fields (tuple structs) do not have an ident, so we name based on their position instead.
                     let var_name =
@@ -157,69 +158,85 @@ fn prepare_prefab_aggregate_enum(
             .fields
             .iter()
             .enumerate()
-            .map(|(field_number, field)| match &field.ident {
-                Some(name) => name.clone(),
-                None => Ident::new(&format!("field_{}", field_number), Span::call_site()),
+            .map(|(field_number, field)| {
+                match &field.ident {
+                    Some(name) => name.clone(),
+                    None => Ident::new(&format!("field_{}", field_number), Span::call_site()),
+                }
             })
             .collect();
         let field_names_sub: Vec<_> = variant
             .fields
             .iter()
             .enumerate()
-            .map(|(field_number, field)| match &field.ident {
-                Some(name) => {
-                    if is_aggregate_prefab(&field.attrs[..]) {
-                        quote! {
-                            #name
-                        }
-                    } else {
-                        quote! {
-                            #name: _
+            .map(|(field_number, field)| {
+                match &field.ident {
+                    Some(name) => {
+                        if is_aggregate_prefab(&field.attrs[..]) {
+                            quote! {
+                                #name
+                            }
+                        } else {
+                            quote! {
+                                #name: _
+                            }
                         }
                     }
-                }
-                None => {
-                    let var_name = if is_aggregate_prefab(&field.attrs[..]) {
-                        Ident::new(&format!("field_{}", field_number), Span::call_site())
-                    } else {
-                        Ident::new(&format!("_field_{}", field_number), Span::call_site())
-                    };
-                    quote! {
-                        #var_name
+                    None => {
+                        let var_name = if is_aggregate_prefab(&field.attrs[..]) {
+                            Ident::new(&format!("field_{}", field_number), Span::call_site())
+                        } else {
+                            Ident::new(&format!("_field_{}", field_number), Span::call_site())
+                        };
+                        quote! {
+                            #var_name
+                        }
                     }
                 }
             })
             .collect();
         let ident = &variant.ident;
         add_to_entity.push(match variant.fields {
-            Fields::Named(_) => quote! {
-                #base::#ident {#(#field_names_add,)*} => {
-                    #(#variant_add_to_entity)*
+            Fields::Named(_) => {
+                quote! {
+                    #base::#ident {#(#field_names_add,)*} => {
+                        #(#variant_add_to_entity)*
+                    }
                 }
-            },
-            Fields::Unnamed(_) => quote! {
-                #base::#ident (#(#field_names_add,)*) => {
-                    #(#variant_add_to_entity)*
+            }
+            Fields::Unnamed(_) => {
+                quote! {
+                    #base::#ident (#(#field_names_add,)*) => {
+                        #(#variant_add_to_entity)*
+                    }
                 }
-            },
-            Fields::Unit => quote! {
-                #base::#ident => ()
-            },
+            }
+            Fields::Unit => {
+                quote! {
+                    #base::#ident => ()
+                }
+            }
         });
         subs.push(match variant.fields {
-            Fields::Named(_) => quote! {
-                #base::#ident {#(#field_names_sub,)*} => {
-                    #(#variant_subs)*
+            Fields::Named(_) => {
+                quote! {
+                    #base::#ident {#(#field_names_sub,)*} => {
+                        #(#variant_subs)*
+                    }
                 }
-            },
-            Fields::Unnamed(_) => quote! {
-                #base::#ident (#(#field_names_sub,)*) => {
-                    #(#variant_subs)*
+            }
+            Fields::Unnamed(_) => {
+                quote! {
+                    #base::#ident (#(#field_names_sub,)*) => {
+                        #(#variant_subs)*
+                    }
                 }
-            },
-            Fields::Unit => quote! {
-                #base::#ident => ()
-            },
+            }
+            Fields::Unit => {
+                quote! {
+                    #base::#ident => ()
+                }
+            }
         });
     }
 

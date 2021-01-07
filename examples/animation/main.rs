@@ -9,7 +9,10 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderPbr3D, RenderToWindow},
-        rendy::mesh::{Normal, Position, Tangent, TexCoord},
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, Tangent, TexCoord},
+        },
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -23,7 +26,9 @@ type MyPrefabData = (
     Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
 
-const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+const CLEAR_COLOR: ClearColor = ClearColor {
+    float32: [0.0, 0.0, 0.0, 1.0],
+};
 
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
 enum AnimationId {
@@ -50,7 +55,7 @@ impl Default for Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
@@ -59,7 +64,7 @@ impl SimpleState for Example {
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
 
         let (animation_set, animation) = {
-            let loader = world.read_resource::<Loader>();
+            let loader = data.resources.get::<DefaultLoader>().unwrap();
 
             let sampler = loader.load_from_data(
                 Sampler {
@@ -96,11 +101,7 @@ impl SimpleState for Example {
         );
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -220,17 +221,17 @@ fn main() -> amethyst::Result<()> {
     .start();
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/animation/config/display.ron");
-    let assets_dir = app_root.join("examples/animation/assets/");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets/");
 
-    let game_data = GameDataBuilder::default()
-        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
+    let mut game_data = DispatcherBuilder::default()
+        //.with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .add_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
-        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_bundle(
+        .add_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?.with_clear(CLEAR_COLOR),
@@ -238,7 +239,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderPbr3D::default()),
         )?;
     let state: Example = Default::default();
-    let mut game = Application::new(assets_dir, state, game_data)?;
+    let game = Application::build(assets_dir, state)?.build(game_data)?;
     game.run();
 
     Ok(())

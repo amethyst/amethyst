@@ -1,7 +1,6 @@
 use amethyst::{
-    core::ecs::{
-        Component, DenseVecStorage, DispatcherBuilder, Join, ReadStorage, SystemData, World,
-    },
+    core::ecs::{DispatcherBuilder, World},
+    error::Error,
     prelude::*,
     renderer::{
         bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
@@ -18,12 +17,11 @@ use amethyst::{
             shader::{Shader, SpirvShader},
         },
         submodules::{DynamicUniform, DynamicVertexBuffer},
+        system::GraphAuxData,
         types::Backend,
         util, ChangeDetection,
     },
 };
-
-use amethyst_error::Error;
 use derivative::Derivative;
 use glsl_layout::*;
 
@@ -80,19 +78,19 @@ impl DrawCustomDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawCustomDesc {
+impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawCustomDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _world: &World,
+        _world: &GraphAuxData,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let vertex = DynamicVertexBuffer::new();
 
@@ -126,30 +124,32 @@ pub struct DrawCustom<B: Backend> {
     change: ChangeDetection,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
+impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawCustom<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        world: &World,
+        aux: &GraphAuxData,
     ) -> PrepareResult {
-        let (triangles,) = <(ReadStorage<'_, Triangle>,)>::fetch(world);
+        let mut triangles = <&Triangle>::query();
 
         // Get our scale value
-        let scale = world.read_resource::<CustomUniformArgs>();
+        let scale = aux.resources.get::<CustomUniformArgs>().unwrap();
 
         // Write to our DynamicUniform
         self.env.write(factory, index, scale.std140());
 
         //Update vertex count and see if it has changed
         let old_vertex_count = self.vertex_count;
-        self.vertex_count = triangles.join().count() * 3;
+        self.vertex_count = triangles.iter(aux.world).count() * 3;
         let changed = old_vertex_count != self.vertex_count;
 
         // Create an iterator over the Triangle vertices
-        let vertex_data_iter = triangles.join().flat_map(|triangle| triangle.get_args());
+        let vertex_data_iter = triangles
+            .iter(aux.world)
+            .flat_map(|triangle| triangle.get_args());
 
         // Write the vector to a Vertex buffer
         self.vertex.write(
@@ -168,7 +168,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _world: &World,
+        _aux: &GraphAuxData,
     ) {
         // Don't worry about drawing if there are no vertices. Like before the state adds them to the screen.
         if self.vertex_count == 0 {
@@ -190,7 +190,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawCustom<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _world: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &GraphAuxData) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -206,7 +206,7 @@ fn build_custom_pipeline<B: Backend>(
     framebuffer_width: u32,
     framebuffer_height: u32,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()
@@ -223,7 +223,7 @@ fn build_custom_pipeline<B: Backend>(
             PipelineDescBuilder::new()
                 // This Pipeline uses our custom vertex description and does not use instancing
                 .with_vertex_desc(&[(CustomArgs::vertex(), pso::VertexInputRate::Vertex)])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleList))
+                .with_input_assembler(pso::InputAssemblerDesc::new(pso::Primitive::TriangleList))
                 // Add the shaders
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
@@ -265,12 +265,12 @@ pub struct RenderCustom {}
 impl<B: Backend> RenderPlugin<B> for RenderCustom {
     fn on_build<'a, 'b>(
         &mut self,
-        world: &mut World,
-        _builder: &mut DispatcherBuilder<'a, 'b>,
+        _world: &mut World,
+        resources: &mut Resources,
+        _builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         // Add the required components to the world ECS
-        world.register::<Triangle>();
-        world.insert(CustomUniformArgs { scale: 1.0 });
+        resources.insert(CustomUniformArgs { scale: 1.0 });
         Ok(())
     }
 
@@ -279,9 +279,9 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
         _world: &World,
+        _resources: &Resources,
     ) -> Result<(), Error> {
         plan.extend_target(Target::Main, |ctx| {
-            // Add our Description
             ctx.add(RenderOrder::Transparent, DrawCustomDesc::new().builder())?;
             Ok(())
         });
@@ -339,17 +339,15 @@ pub struct Triangle {
     pub colors: [[f32; 4]; 3],
 }
 
-impl Component for Triangle {
-    type Storage = DenseVecStorage<Self>;
-}
-
 impl Triangle {
     /// Helper function to convert triangle into 3 vertices
     pub fn get_args(&self) -> Vec<CustomArgs> {
         let mut vec = Vec::new();
-        vec.extend((0..3).map(|i| CustomArgs {
-            pos: self.points[i].into(),
-            color: self.colors[i].into(),
+        vec.extend((0..3).map(|i| {
+            CustomArgs {
+                pos: self.points[i].into(),
+                color: self.colors[i].into(),
+            }
         }));
         vec
     }

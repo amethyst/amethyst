@@ -25,9 +25,9 @@ previous chapters, but here we will save the entity in our struct:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{
-#  assets::{AssetStorage, Loader},
+#  assets::{AssetStorage,  DefaultLoader, Loader},
 # 	ecs::{Entity, World, WorldExt},
-# 	ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiText, UiTransform},
+# 	ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiText, UiTransform},
 # 	prelude::{Builder, GameData, SimpleState, StateData},
 # };
 #
@@ -36,7 +36,7 @@ previous chapters, but here we will save the entity in our struct:
 #   button: Option<Entity>,
 # }
 impl SimpleState for MenuState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
 #
@@ -54,7 +54,7 @@ impl SimpleState for MenuState {
         );
 
         /* Create the text */
-#       let font_handle = world.read_resource::<Loader>().load(
+#       let font_handle = world.read_resource::<DefaultLoader>().load(
 #       "font/square.ttf",
 #       TtfFormat,
 #       (),
@@ -90,9 +90,9 @@ method of our state:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{
-#   assets::{AssetStorage, Loader},
+#   assets::{AssetStorage,  DefaultLoader, Loader},
 #   ecs::{Entity, World, WorldExt},
-#   ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
+#   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
 #   StateEvent,
 # };
@@ -102,7 +102,7 @@ method of our state:
 #   button: Option<Entity>,
 # }
 impl SimpleState for MenuState {
-#   fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+#   fn on_start(&mut self, data: StateData<'_, GameData>) {
     // ...
 #       let world = data.world;
 #
@@ -120,7 +120,7 @@ impl SimpleState for MenuState {
 #       );
 #
 #       /* Create the text */
-#       let font_handle = world.read_resource::<Loader>().load(
+#       let font_handle = world.read_resource::<DefaultLoader>().load(
 #          "font/square.ttf",
 #          TtfFormat,
 #          (),
@@ -149,7 +149,7 @@ impl SimpleState for MenuState {
 
     fn handle_event(
         &mut self,
-    	_data: StateData<'_, GameData<'_, '_>>,
+    	_data: StateData<'_, GameData>,
     	event: StateEvent) -> SimpleTrans {
     	if let StateEvent::Ui(ui_event) = event {
     		let is_target = ui_event.target == self.button.unwrap();
@@ -192,10 +192,10 @@ component to our button:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{
-#   assets::{AssetStorage, Loader},
+#   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
 #   ecs::{Entity, World, WorldExt},
-#   ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
+#   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
 #   StateEvent
 # };
@@ -206,7 +206,7 @@ component to our button:
 # }
 impl SimpleState for MenuState {
     // ...
-#   fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+#   fn on_start(&mut self, data: StateData<'_, GameData>) {
 #       let world = data.world;
 #
 #
@@ -223,7 +223,7 @@ impl SimpleState for MenuState {
 #       );
 #
 #       /* Create the text */
-#       let font_handle = world.read_resource::<Loader>().load(
+#       let font_handle = world.read_resource::<DefaultLoader>().load(
 #           "font/square.ttf",
 #           TtfFormat,
 #           (),
@@ -252,7 +252,7 @@ impl SimpleState for MenuState {
 #
 #   fn handle_event(
 #       &mut self,
-#       _data: StateData<'_, GameData<'_, '_>>,
+#       _data: StateData<'_, GameData>,
 #       event: StateEvent) -> SimpleTrans {
 #       if let StateEvent::Ui(ui_event) = event {
 #           let is_target = ui_event.target == self.button.unwrap();
@@ -270,7 +270,7 @@ impl SimpleState for MenuState {
 #       SimpleTrans::None
 #   }
 
-    fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_pause(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
         let mut hiddens = world.write_storage::<Hidden>();
 
@@ -286,10 +286,10 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{
-#   assets::{AssetStorage, Loader},
+#   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
 #   ecs::{Entity, World, WorldExt},
-#   ui::{Anchor, FontHandle, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
+#   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
 #   StateEvent
 # };
@@ -300,7 +300,7 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 # }
 impl SimpleState for MenuState {
     // ...
-#   fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+#   fn on_start(&mut self, data: StateData<'_, GameData>) {
 #       let world = data.world;
 #
 #
@@ -317,7 +317,7 @@ impl SimpleState for MenuState {
 #       );
 #
 #       /* Create the text */
-#       let font_handle = world.read_resource::<Loader>().load(
+#       let font_handle = world.read_resource::<DefaultLoader>().load(
 #           "font/square.ttf",
 #           TtfFormat,
 #           (),
@@ -346,7 +346,7 @@ impl SimpleState for MenuState {
 #
 #   fn handle_event(
 #   &mut self,
-#   _data: StateData<'_, GameData<'_, '_>>,
+#   _data: StateData<'_, GameData>,
 #   event: StateEvent) -> SimpleTrans {
 #       if let StateEvent::Ui(ui_event) = event {
 #           let is_target = ui_event.target == self.button.unwrap();
@@ -364,7 +364,7 @@ impl SimpleState for MenuState {
 #       SimpleTrans::None
 #   }
 #
-#   fn on_pause(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+#   fn on_pause(&mut self, data: StateData<'_, GameData>) {
 #   let world = data.world;
 #   let mut hiddens = world.write_storage::<Hidden>();
 #
@@ -373,7 +373,7 @@ impl SimpleState for MenuState {
 #   }
 # }
 
-    fn on_resume(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_resume(&mut self, data: StateData<'_, GameData>) {
         let world = data.world; 	
         let mut hiddens = world.write_storage::<Hidden>();
 

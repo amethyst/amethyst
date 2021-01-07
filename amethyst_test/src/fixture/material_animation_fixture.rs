@@ -1,6 +1,6 @@
 use amethyst::{
     animation::{Animation, InterpolationFunction, MaterialChannel, MaterialPrimitive, Sampler},
-    assets::{AssetStorage, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
     ecs::prelude::*,
     renderer::{loaders::load_from_srgba, palette::Srgba, Material},
 };
@@ -20,7 +20,7 @@ impl MaterialAnimationFixture {
     pub fn effect(world: &mut World) {
         // Load the animation.
         let animation_handle = {
-            let loader = world.read_resource::<Loader>();
+            let loader = data.resources.get::<DefaultLoader>().unwrap();
             let tex_handle = loader.load_from_data(
                 load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 0.5)).into(),
                 (),

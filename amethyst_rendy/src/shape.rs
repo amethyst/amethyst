@@ -1,6 +1,7 @@
 //! Basic shape prefabs.
-use crate::types::Mesh;
-use amethyst_assets::{AssetStorage, Handle, Loader, Progress};
+use std::marker::PhantomData;
+
+use amethyst_assets::{DefaultLoader, Handle, Loader, ProcessingQueue, Progress};
 use amethyst_core::math::Vector3;
 use genmesh::{
     generators::{
@@ -12,8 +13,8 @@ use genmesh::{
 use rendy::mesh::{
     MeshBuilder, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Tangent, TexCoord,
 };
-use std::marker::PhantomData;
 
+use crate::types::{Mesh, MeshData};
 fn option_none<T>() -> Option<T> {
     None
 }
@@ -108,8 +109,8 @@ pub enum Shape {
 /// Required resource access to upload shape
 #[allow(missing_debug_implementations)]
 pub struct ShapeUpload<'a> {
-    loader: &'a Loader,
-    storage: &'a mut AssetStorage<Mesh>,
+    loader: &'a DefaultLoader,
+    storage: &'a mut ProcessingQueue<MeshData>,
 }
 
 /// Vertex data for a basic shape.
@@ -223,29 +224,35 @@ impl Shape {
             Shape::Cube => generate_vertices(Cube::new(), scale),
             Shape::Sphere(u, v) => generate_vertices(SphereUv::new(u, v), scale),
             Shape::Cone(u) => generate_vertices(Cone::new(u), scale),
-            Shape::Cylinder(u, h) => generate_vertices(
-                h.map(|h| Cylinder::subdivide(u, h))
-                    .unwrap_or_else(|| Cylinder::new(u)),
-                scale,
-            ),
-            Shape::IcoSphere(divide) => generate_vertices(
-                divide
-                    .map(IcoSphere::subdivide)
-                    .unwrap_or_else(IcoSphere::new),
-                scale,
-            ),
+            Shape::Cylinder(u, h) => {
+                generate_vertices(
+                    h.map(|h| Cylinder::subdivide(u, h))
+                        .unwrap_or_else(|| Cylinder::new(u)),
+                    scale,
+                )
+            }
+            Shape::IcoSphere(divide) => {
+                generate_vertices(
+                    divide
+                        .map(IcoSphere::subdivide)
+                        .unwrap_or_else(IcoSphere::new),
+                    scale,
+                )
+            }
             Shape::Torus(radius, tube_radius, radial_segments, tubular_segments) => {
                 generate_vertices(
                     Torus::new(radius, tube_radius, radial_segments, tubular_segments),
                     scale,
                 )
             }
-            Shape::Plane(divide) => generate_vertices(
-                divide
-                    .map(|(x, y)| Plane::subdivide(x, y))
-                    .unwrap_or_else(Plane::new),
-                scale,
-            ),
+            Shape::Plane(divide) => {
+                generate_vertices(
+                    divide
+                        .map(|(x, y)| Plane::subdivide(x, y))
+                        .unwrap_or_else(Plane::new),
+                    scale,
+                )
+            }
             Shape::Circle(u) => generate_vertices(Circle::new(u), scale),
         };
         InternalShape(vertices)
@@ -271,12 +278,12 @@ where
                 let v = vertices[u];
                 let pos = scale
                     .map(|(x, y, z)| Vector3::new(v.pos.x * x, v.pos.y * y, v.pos.z * z))
-                    .unwrap_or_else(|| Vector3::from(v.pos));
+                    .unwrap_or_else(|| Vector3::new(v.pos.x, v.pos.y, v.pos.z));
                 let normal = scale
                     .map(|(x, y, z)| {
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()
                     })
-                    .unwrap_or_else(|| Vector3::from(v.normal));
+                    .unwrap_or_else(|| Vector3::new(v.normal.x, v.normal.y, v.normal.z));
                 let tangent1 = normal.cross(&Vector3::x());
                 let tangent2 = normal.cross(&Vector3::y());
                 let tangent = if tangent1.norm_squared() > tangent2.norm_squared() {

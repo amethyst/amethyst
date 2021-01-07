@@ -1,3 +1,19 @@
+use derivative::Derivative;
+use glsl_layout::{vec3, AsStd140};
+use rendy::{
+    command::{QueueId, RenderPassEncoder},
+    factory::{Factory, UploadError},
+    graph::{
+        render::{PrepareResult, RenderGroup, RenderGroupDesc},
+        GraphContext, NodeBuffer, NodeImage,
+    },
+    hal::{self, device::Device, pso},
+    mesh::{AsVertex, Mesh, PosTex},
+    shader::Shader,
+};
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     palette::Srgb,
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
@@ -8,22 +24,6 @@ use crate::{
     types::Backend,
     util,
 };
-use derivative::Derivative;
-use glsl_layout::{vec3, AsStd140};
-use rendy::{
-    command::{QueueId, RenderPassEncoder},
-    factory::Factory,
-    graph::{
-        render::{PrepareResult, RenderGroup, RenderGroupDesc},
-        GraphContext, NodeBuffer, NodeImage,
-    },
-    hal::{self, device::Device, pso},
-    mesh::{AsVertex, Mesh, PosTex},
-    shader::Shader,
-};
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 #[derive(Clone, Debug, PartialEq)]
 struct SkyboxSettings {
@@ -92,7 +92,7 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawSkyboxDesc {
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -100,7 +100,13 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawSkyboxDesc {
         let colors = DynamicUniform::new(factory, pso::ShaderStageFlags::FRAGMENT)?;
         let mesh = Shape::Sphere(16, 16)
             .generate::<Vec<PosTex>>(None)
-            .build(queue, factory)?;
+            .build(queue, factory)
+            .map_err(|e| {
+                match e {
+                    UploadError::Upload(oom) => oom.into(),
+                    _ => pso::CreationError::Other,
+                }
+            })?;
 
         let (pipeline, pipeline_layout) = build_skybox_pipeline(
             factory,
@@ -197,7 +203,7 @@ fn build_skybox_pipeline<B: Backend>(
     framebuffer_width: u32,
     framebuffer_height: u32,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()

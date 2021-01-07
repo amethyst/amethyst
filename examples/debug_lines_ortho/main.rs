@@ -1,18 +1,18 @@
 //! Displays debug lines using an orthographic camera.
 
 use amethyst::{
+    assets::LoaderBundle,
     core::{
         transform::{Transform, TransformBundle},
         Time,
     },
-    derive::SystemDesc,
-    ecs::{Read, ReadExpect, System, SystemData, WorldExt, Write},
     prelude::*,
     renderer::{
         camera::Camera,
         debug_drawing::{DebugLines, DebugLinesComponent, DebugLinesParams},
         palette::Srgba,
         plugins::{RenderDebugLines, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -20,52 +20,51 @@ use amethyst::{
     window::ScreenDimensions,
 };
 
-#[derive(SystemDesc)]
 struct ExampleLinesSystem;
 
-impl ExampleLinesSystem {
-    pub fn new() -> Self {
-        Self
-    }
-}
+impl System<'_> for ExampleLinesSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("ExampleLinesSystem")
+                .read_resource::<ScreenDimensions>()
+                .read_resource::<Time>()
+                .write_resource::<DebugLines>()
+                .build(|_, _, (screen_dimensions, time, debug_lines_resource), _| {
+                    let t = (time.absolute_time_seconds() as f32).cos() / 2.0 + 0.5;
 
-impl<'s> System<'s> for ExampleLinesSystem {
-    type SystemData = (
-        ReadExpect<'s, ScreenDimensions>,
-        Write<'s, DebugLines>,
-        Read<'s, Time>,
-    );
+                    let screen_w = screen_dimensions.width();
+                    let screen_h = screen_dimensions.height();
+                    let y = t * screen_h;
 
-    fn run(&mut self, (screen_dimensions, mut debug_lines_resource, time): Self::SystemData) {
-        let t = (time.absolute_time_seconds() as f32).cos() / 2.0 + 0.5;
-
-        let screen_w = screen_dimensions.width();
-        let screen_h = screen_dimensions.height();
-        let y = t * screen_h;
-
-        debug_lines_resource.draw_line(
-            [0.0, y, 1.0].into(),
-            [screen_w, y + 2.0, 1.0].into(),
-            Srgba::new(0.3, 0.3, 1.0, 1.0),
-        );
+                    debug_lines_resource.draw_line(
+                        [0.0, y, 1.0].into(),
+                        [screen_w, y + 2.0, 1.0].into(),
+                        Srgba::new(0.3, 0.3, 1.0, 1.0),
+                    );
+                }),
+        )
     }
 }
 
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let StateData {
+            world, resources, ..
+        } = data;
+
         // Setup debug lines as a resource
-        data.world.insert(DebugLines::new());
+        resources.insert(DebugLines::new());
         // Configure width of lines. Optional step
-        data.world.insert(DebugLinesParams { line_width: 2.0 });
+        resources.insert(DebugLinesParams { line_width: 2.0 });
 
         // Setup debug lines as a component and add lines to render axis&grid
         let mut debug_lines_component = DebugLinesComponent::new();
 
         let (screen_w, screen_h) = {
-            let screen_dimensions = data.world.read_resource::<ScreenDimensions>();
-            (screen_dimensions.width(), screen_dimensions.height())
+            let dim = resources.get::<ScreenDimensions>().unwrap();
+            (dim.width(), dim.height())
         };
 
         for y in (0..(screen_h as u16)).step_by(50).map(f32::from) {
@@ -90,19 +89,12 @@ impl SimpleState for ExampleState {
             Srgba::new(1.0, 0.0, 0.2, 1.0), // Red
         );
 
-        data.world
-            .create_entity()
-            .with(debug_lines_component)
-            .build();
+        world.push((debug_lines_component,));
 
         // Setup camera
         let mut local_transform = Transform::default();
         local_transform.set_translation_xyz(screen_w / 2., screen_h / 2., 10.0);
-        data.world
-            .create_entity()
-            .with(Camera::standard_2d(screen_w, screen_h))
-            .with(local_transform)
-            .build();
+        world.push((Camera::standard_2d(screen_w, screen_h), local_transform));
     }
 }
 
@@ -111,22 +103,25 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/debug_lines_ortho/config/display.ron");
-    let assets_dir = app_root.join("examples/debug_lines_ortho/assets/");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets/");
 
-    let game_data = GameDataBuilder::default()
-        .with(ExampleLinesSystem::new(), "example_lines_system", &[])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
+    let mut game_data = DispatcherBuilder::default();
+    game_data
+        .add_system(Box::new(ExampleLinesSystem))
+        .add_bundle(TransformBundle::default())
+        .add_bundle(LoaderBundle)
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.0, 0.0, 0.0, 1.0],
+                    }),
                 )
                 .with_plugin(RenderDebugLines::default()),
-        )?;
+        );
 
-    let mut game = Application::new(assets_dir, ExampleState, game_data)?;
+    let game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

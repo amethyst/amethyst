@@ -4,20 +4,27 @@ use super::components::*;
 use crate::ecs::*;
 
 /// System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
-pub fn build() -> impl Runnable {
-    SystemBuilder::new("MissingPreviousParentSystem")
-        // Entities with missing `PreviousParent`
-        .with_query(
-            <(Entity, &Parent)>::query()
-                .filter(component::<Transform>() & !component::<PreviousParent>()),
+#[derive(Debug)]
+pub struct MissingPreviousParentSystem;
+
+impl System<'_> for MissingPreviousParentSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MissingPreviousParentSystem")
+                // Entities with missing `PreviousParent`
+                .with_query(
+                    <(Entity, &Parent)>::query()
+                        .filter(component::<Transform>() & !component::<PreviousParent>()),
+                )
+                .build(move |commands, world, _resource, query| {
+                    // Add missing `PreviousParent` components
+                    for (entity, _parent) in query.iter(world) {
+                        log::trace!("Adding missing PreviousParent to {:?}", entity);
+                        commands.add_component(*entity, PreviousParent(None));
+                    }
+                }),
         )
-        .build(move |commands, world, _resource, query| {
-            // Add missing `PreviousParent` components
-            for (entity, _parent) in query.iter(world) {
-                log::trace!("Adding missing PreviousParent to {:?}", entity);
-                commands.add_component(*entity, PreviousParent(None));
-            }
-        })
+    }
 }
 
 #[cfg(test)]
@@ -29,7 +36,12 @@ mod test {
         let mut resources = Resources::default();
         let mut world = World::default();
 
-        let mut schedule = Schedule::builder().add_system(build()).build();
+        let mut schedule = Schedule::from(vec![
+            systems::Step::Systems(systems::Executor::new(vec![
+                MissingPreviousParentSystem.build()
+            ])),
+            systems::Step::FlushCmdBuffers,
+        ]);
 
         let e1 = world.push((Transform::default(),));
 

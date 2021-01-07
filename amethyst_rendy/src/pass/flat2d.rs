@@ -1,15 +1,3 @@
-use crate::{
-    batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
-    pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::SpriteArgs,
-    resources::Tint,
-    sprite::{SpriteRender, SpriteSheet},
-    sprite_visibility::SpriteVisibility,
-    submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
-    system::GraphAuxData,
-    types::{Backend, Texture},
-    util,
-};
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{systems::ResourceSet, *},
@@ -27,9 +15,21 @@ use rendy::{
     mesh::AsVertex,
     shader::Shader,
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
+    pipeline::{PipelineDescBuilder, PipelinesBuilder},
+    pod::SpriteArgs,
+    resources::Tint,
+    sprite::{SpriteRender, SpriteSheet, Sprites},
+    sprite_visibility::SpriteVisibility,
+    submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
+    system::GraphAuxData,
+    types::{Backend, Texture},
+    util,
+};
 
 /// Draw opaque sprites without lighting.
 #[derive(Clone, Debug, PartialEq, Derivative)]
@@ -55,7 +55,7 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawFlat2DDesc {
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -108,11 +108,13 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
 
         let GraphAuxData { world, resources } = aux;
 
-        let (sprite_sheet_storage, tex_storage, visibility) = <(
-            Read<AssetStorage<SpriteSheet>>,
-            Read<AssetStorage<Texture>>,
-            Read<SpriteVisibility>,
-        )>::fetch(resources);
+        let (sprite_sheet_storage, sprites_storage, tex_storage, visibility) =
+            <(
+                Read<AssetStorage<SpriteSheet>>,
+                Read<AssetStorage<Sprites>>,
+                Read<AssetStorage<Texture>>,
+                Read<SpriteVisibility>,
+            )>::fetch(resources);
 
         self.env.process(factory, index, world, resources);
 
@@ -132,28 +134,17 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
                 .iter()
                 .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .filter_map(|(entity, (sprite_render, global, tint))| {
-                    let (batch_data, texture) = if let Some(tint) = tint {
-                        SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprite_render,
-                            &global,
-                            Some(&tint),
-                        )?
-                    } else {
-                        SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprite_render,
-                            &global,
-                            None,
-                        )?
-                    };
+                    let sprite_sheet = sprite_sheet_storage.get(&sprite_render.sprite_sheet)?;
+                    let sprites = sprites_storage.get(&sprite_sheet.sprites)?.build_sprites();
+
+                    let sprite = &sprites[sprite_render.sprite_number];
+
+                    let batch_data = SpriteArgs::from_data(&sprite, &global, tint);
 
                     let (tex_id, _) = textures_ref.insert(
                         factory,
                         resources,
-                        texture,
+                        &sprite_sheet.texture,
                         hal::image::Layout::ShaderReadOnlyOptimal,
                     )?;
                     Some((tex_id, batch_data))
@@ -238,7 +229,7 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawFlat2DTransparentDesc 
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build_trans");
 
@@ -293,11 +284,13 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
 
         let GraphAuxData { world, resources } = aux;
 
-        let (sprite_sheet_storage, tex_storage, visibility) = <(
-            Read<AssetStorage<SpriteSheet>>,
-            Read<AssetStorage<Texture>>,
-            Read<SpriteVisibility>,
-        )>::fetch(resources);
+        let (sprite_sheet_storage, sprites_storage, tex_storage, visibility) =
+            <(
+                Read<AssetStorage<SpriteSheet>>,
+                Read<AssetStorage<Sprites>>,
+                Read<AssetStorage<Texture>>,
+                Read<SpriteVisibility>,
+            )>::fetch(resources);
 
         self.env.process(factory, index, world, resources);
 
@@ -318,28 +311,17 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
                 .iter()
                 .filter_map(|entity| Some((entity, query.get(*world, *entity).ok()?)))
                 .filter_map(|(entity, (sprite_render, global, tint))| {
-                    let (batch_data, texture) = if let Some(tint) = tint {
-                        SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprite_render,
-                            &global,
-                            Some(&tint),
-                        )?
-                    } else {
-                        SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprite_render,
-                            &global,
-                            None,
-                        )?
-                    };
+                    let sprite_sheet = sprite_sheet_storage.get(&sprite_render.sprite_sheet)?;
+                    let sprites = sprites_storage.get(&sprite_sheet.sprites)?.build_sprites();
+
+                    let sprite = &sprites[sprite_render.sprite_number];
+
+                    let batch_data = SpriteArgs::from_data(&sprite, &global, tint);
 
                     let (tex_id, this_changed) = textures_ref.insert(
                         factory,
                         resources,
-                        texture,
+                        &sprite_sheet.texture,
                         hal::image::Layout::ShaderReadOnlyOptimal,
                     )?;
 
@@ -410,7 +392,7 @@ fn build_sprite_pipeline<B: Backend>(
     framebuffer_height: u32,
     transparent: bool,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()
@@ -424,7 +406,7 @@ fn build_sprite_pipeline<B: Backend>(
         .with_pipeline(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(SpriteArgs::vertex(), pso::VertexInputRate::Instance(1))])
-                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
+                .with_input_assembler(pso::InputAssemblerDesc::new(pso::Primitive::TriangleStrip))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),

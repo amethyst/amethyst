@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use winit::{MouseButton, VirtualKeyCode};
-
 use std::borrow::Cow;
+
+use serde::{Deserialize, Serialize};
+use winit::event::{MouseButton, VirtualKeyCode};
 
 use super::{
     button::Button,

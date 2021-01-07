@@ -79,27 +79,33 @@ pub enum BindingError {
 impl Display for BindingError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match *self {
-            BindingError::ComboContainsDuplicates(ref id) => write!(
-                f,
-                "Combo provided contained two (or more) of the same button: {}",
-                id
-            ),
+            BindingError::ComboContainsDuplicates(ref id) => {
+                write!(
+                    f,
+                    "Combo provided contained two (or more) of the same button: {}",
+                    id
+                )
+            }
             BindingError::ComboAlreadyBound(ref action) => {
                 write!(f, "Combo provided was already bound to action {}", action)
             }
             BindingError::ButtonBoundToAxis(ref id, ref _axis) => {
                 write!(f, "Button provided was a button in use by axis {}", id)
             }
-            BindingError::AxisButtonAlreadyBoundToAxis(ref id, ref _axis) => write!(
-                f,
-                "Axis provided contained a button that's already in use by axis {}",
-                id
-            ),
-            BindingError::AxisButtonAlreadyBoundToAction(ref id, ref _action) => write!(
+            BindingError::AxisButtonAlreadyBoundToAxis(ref id, ref _axis) => {
+                write!(
+                    f,
+                    "Axis provided contained a button that's already in use by axis {}",
+                    id
+                )
+            }
+            BindingError::AxisButtonAlreadyBoundToAction(ref id, ref _action) => {
+                write!(
                 f,
                 "Axis provided contained a button that's already in use by single button action {}",
                 id
-            ),
+            )
+            }
             BindingError::ControllerAxisAlreadyBound(ref id) => {
                 write!(f, "Controller axis provided is already in use by {}", id)
             }
@@ -363,9 +369,11 @@ impl Bindings {
 
 #[cfg(test)]
 mod tests {
+
+    use winit::event::{MouseButton, VirtualKeyCode};
+
     use super::*;
     use crate::{button::*, controller::ControllerAxis};
-    use winit::{MouseButton, VirtualKeyCode};
 
     #[test]
     fn add_and_remove_actions() {

@@ -1,13 +1,14 @@
 #![allow(unused_variables)]
 
-use crate::{CoordinateEncoder, TileOutOfBoundsError};
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
-    ecs::{Component, HashMapStorage, World},
+    ecs::world::World,
     math::{Matrix4, Point3, Vector3},
-    Transform,
+    transform::Transform,
 };
 use amethyst_rendy::{palette::Srgba, SpriteSheet};
+
+use crate::{CoordinateEncoder, TileOutOfBoundsError};
 
 /// Trait providing generic rendering functionality to all tiles. Using a tilemap requires you to provide a `Tile` type,
 /// which must implement this trait to provide the `RenderPass` with the appropriate sprite and tint values.
@@ -123,11 +124,10 @@ pub struct TileMap<T: Tile, E: CoordinateEncoder = crate::MortonEncoder2D> {
     pub(crate) encoder: E,
 }
 impl<T: Tile, E: CoordinateEncoder> Asset for TileMap<T, E> {
-    const NAME: &'static str = "tiles::map";
+    fn name() -> &'static str {
+        "tiles::map"
+    }
     type Data = Self;
-}
-impl<T: Tile, E: CoordinateEncoder> Component for TileMap<T, E> {
-    type Storage = HashMapStorage<Self>;
 }
 
 #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
@@ -292,14 +292,10 @@ fn to_world(
     map_transform: Option<&Transform>,
 ) -> Vector3<f32> {
     let coord_f = Point3::new(coord.x as f32, -1.0 * coord.y as f32, coord.z as f32);
-    if let Some(map_trans) = map_transform {
-        map_trans
-            .global_matrix()
-            .transform_point(&transform.transform_point(&coord_f))
-            .coords
-    } else {
-        transform.transform_point(&coord_f).coords
-    }
+    let point = transform.transform_point(&coord_f);
+    map_transform.map_or(point.coords, |map_trans| {
+        map_trans.global_matrix().transform_point(&point).coords
+    })
 }
 
 #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
@@ -309,13 +305,10 @@ fn to_tile(
     max_dimensions: &Vector3<u32>,
     map_transform: Option<&Transform>,
 ) -> Result<Point3<u32>, TileOutOfBoundsError> {
-    let point = if let Some(map_trans) = map_transform {
-        map_trans
-            .global_view_matrix()
-            .transform_point(&Point3::from(*coord))
-    } else {
-        Point3::from(*coord)
-    };
+    let point = Point3::from(*coord);
+    let point = map_transform.map_or(point, |map_trans| {
+        map_trans.global_view_matrix().transform_point(&point)
+    });
 
     let mut inverse = transform
         .try_inverse()
@@ -351,13 +344,14 @@ fn to_tile(
 
 #[cfg(test)]
 mod tests {
+    use amethyst_core::math::Point3;
+    use rayon::prelude::*;
+
     use super::*;
     use crate::{
         morton::{MortonEncoder, MortonEncoder2D},
         FlatEncoder,
     };
-    use amethyst_core::math::Point3;
-    use rayon::prelude::*;
 
     #[derive(Clone, Debug)]
     struct TestTile {

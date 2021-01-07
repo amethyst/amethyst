@@ -35,6 +35,10 @@
 //! * [`JointTransforms`](skinning::JointTransforms)
 //! * [`SpriteRender`](sprite::SpriteRender)
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -44,9 +48,6 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 #![allow(unused_variables, dead_code)]
-
-#[macro_use]
-mod macros;
 
 #[doc(inline)]
 pub use palette;
@@ -83,23 +84,8 @@ pub mod util;
 #[cfg(feature = "test-support")]
 mod render_test_bundle;
 
-#[doc(inline)]
-pub use crate::{
-    bundle::{RenderPlugin, RenderingBundle},
-    camera::{ActiveCamera, Camera},
-    formats::texture::ImageFormat,
-    mtl::{Material, MaterialDefaults},
-    plugins::*,
-    sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
-    system::{build_mesh_processor, build_texture_processor, GraphCreator},
-    transparent::Transparent,
-    types::{Backend, Mesh, Texture},
-    util::{simple_shader_set, ChangeDetection},
-};
-
 #[cfg(feature = "test-support")]
 pub use render_test_bundle::{RenderEmptyBundle, RenderTestBundle};
-
 pub use rendy::{
     factory::Factory,
     graph::{
@@ -107,6 +93,20 @@ pub use rendy::{
         GraphBuilder,
     },
     hal::{format::Format, image::Kind},
+};
+
+#[doc(inline)]
+pub use crate::{
+    bundle::{RenderPlugin, RenderingBundle},
+    camera::{ActiveCamera, Camera},
+    formats::texture::ImageFormat,
+    mtl::{Material, MaterialDefaults},
+    plugins::*,
+    sprite::{Sprite, SpriteRender, SpriteSheet},
+    system::{GraphCreator, MeshProcessorSystem, TextureProcessorSystem},
+    transparent::Transparent,
+    types::{Backend, Mesh, Texture},
+    util::{simple_shader_set, ChangeDetection},
 };
 
 pub mod loaders {

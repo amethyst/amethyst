@@ -1,27 +1,27 @@
-use crate::Ball;
 use amethyst::{
     core::{timing::Time, transform::Transform},
-    derive::SystemDesc,
-    ecs::{Join, Read, ReadStorage, System, SystemData, WriteStorage},
+    ecs::SystemBuilder,
+    prelude::*,
 };
 
-/// This system is responsible for moving all balls according to their speed
-/// and the time passed.
-#[derive(SystemDesc)]
-pub struct MoveBallsSystem;
+use crate::pong::Ball;
 
-impl<'s> System<'s> for MoveBallsSystem {
-    type SystemData = (
-        ReadStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
-        Read<'s, Time>,
-    );
+pub struct BallSystem;
 
-    fn run(&mut self, (balls, mut locals, time): Self::SystemData) {
-        // Move every ball according to its speed, and the time passed.
-        for (ball, local) in (&balls, &mut locals).join() {
-            local.prepend_translation_x(ball.velocity[0] * time.delta_seconds());
-            local.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
-        }
+impl System<'_> for BallSystem {
+    fn build(&'_ mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MoveBallsSystem")
+                .with_query(<(&Ball, &mut Transform)>::query())
+                .read_resource::<Time>()
+                .read_component::<Ball>()
+                .write_component::<Transform>()
+                .build(move |_commands, world, time, query_balls| {
+                    for (ball, local) in query_balls.iter_mut(world) {
+                        local.prepend_translation_x(ball.velocity[0] * time.delta_seconds());
+                        local.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
+                    }
+                }),
+        )
     }
 }

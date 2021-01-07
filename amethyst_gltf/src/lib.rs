@@ -1,5 +1,9 @@
 //! A crate for loading GLTF format scenes into Amethyst
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -8,6 +12,8 @@
 )]
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
+
+use std::{collections::HashMap, ops::Range};
 
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{
@@ -27,7 +33,6 @@ use amethyst_rendy::{
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, ops::Range};
 
 pub use crate::format::GltfSceneFormat;
 

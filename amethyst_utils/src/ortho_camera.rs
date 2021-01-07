@@ -5,9 +5,7 @@ use amethyst_core::{ecs::*, Axis2};
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
 use derive_new::new;
-
 use serde::{Deserialize, Serialize};
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -165,10 +163,16 @@ impl CameraNormalizeMode {
         match self {
             CameraNormalizeMode::Lossy {
                 ref stretch_direction,
-            } => match stretch_direction {
-                Axis2::X => CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates),
-                Axis2::Y => CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates),
-            },
+            } => {
+                match stretch_direction {
+                    Axis2::X => {
+                        CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates)
+                    }
+                    Axis2::Y => {
+                        CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates)
+                    }
+                }
+            }
             CameraNormalizeMode::Contain => {
                 let desired_aspect_ratio = desired_coordinates.aspect_ratio();
                 // We don't need an == case because lossy handles it just fine
@@ -239,7 +243,7 @@ pub fn build_camera_normalize_system() -> impl Runnable {
             let aspect = dimensions.aspect_ratio();
 
             for (camera, ortho_camera) in query.iter_mut(subworld) {
-                if aspect != ortho_camera.aspect_ratio_cache {
+                if (aspect - ortho_camera.aspect_ratio_cache).abs() > f32::EPSILON {
                     ortho_camera.aspect_ratio_cache = aspect;
                     let offsets = ortho_camera.camera_offsets(aspect);
 
@@ -258,9 +262,8 @@ pub fn build_camera_normalize_system() -> impl Runnable {
 
 #[cfg(test)]
 mod test {
-    use crate::ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
-
     use super::Axis2;
+    use crate::ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
 
     // TODO: Disabled until someone fixes the formula (if possible).
     /*#[test]

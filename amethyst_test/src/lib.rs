@@ -1,3 +1,7 @@
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -49,7 +53,7 @@
 //! # where
 //! #     E: Send + Sync + 'static,
 //! # {
-//! #     fn update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> Trans<GameData<'a, 'b>, E> {
+//! #     fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData<'a, 'b>, E> {
 //! #         data.data.update(&data.world);
 //! #
 //! #         data.world.insert(LoadResource);
@@ -315,8 +319,10 @@
 //! # system_increases_resource_value_by_one();
 //! ```
 
+#[cfg(feature = "animation")]
+pub use crate::fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture};
 pub use crate::{
-    amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH},
+    amethyst_application::{AmethystApplication, SCREEN_HEIGHT, SCREEN_WIDTH},
     effect_return::EffectReturn,
     game_update::GameUpdate,
     in_memory_source::{InMemorySource, IN_MEMORY_SOURCE_ID},
@@ -331,9 +337,6 @@ pub(crate) use crate::{
     system_injection_bundle::SystemInjectionBundle,
     thread_local_injection_bundle::ThreadLocalInjectionBundle,
 };
-
-#[cfg(feature = "animation")]
-pub use crate::fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture};
 
 mod amethyst_application;
 mod effect_return;

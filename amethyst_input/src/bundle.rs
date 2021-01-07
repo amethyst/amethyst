@@ -1,15 +1,18 @@
 //! ECS input bundle
 
-use crate::{build_input_system, BindingError, Bindings, InputHandler};
+use std::{error, fmt, path::Path};
+
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{ecs::*, shrev::EventChannel};
 use amethyst_error::Error;
 use derivative::Derivative;
-use std::{error, fmt, path::Path};
-use winit::Event;
+use winit::event::Event;
 
 #[cfg(feature = "sdl_controller")]
 use crate::sdl_events_system::ControllerMappings;
+#[cfg(feature = "sdl_controller")]
+use crate::InputEvent;
+use crate::{BindingError, Bindings, InputHandler, InputSystem};
 
 /// Bundle for adding the `InputHandler`.
 ///
@@ -80,17 +83,8 @@ impl SystemBundle for InputBundle {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        #[cfg(feature = "sdl_controller")]
-        {
-            use super::SdlEventsSystem;
-            builder.add_thread_local(
-                // TODO: improve errors when migrating to failure
-                SdlEventsSystem::new(world, self.controller_mappings).unwrap(),
-            );
-        }
-
         let reader = resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'_, ()>>>()
             .expect("Window event channel not found in resources")
             .register_reader();
 
@@ -99,9 +93,25 @@ impl SystemBundle for InputBundle {
             handler.bindings = bindings.clone();
         }
 
+        #[cfg(feature = "sdl_controller")]
+        {
+            use super::SdlEventsSystem;
+            builder.add_thread_local(
+                // TODO: improve errors when migrating to failure
+                Box::new(
+                    SdlEventsSystem::new(
+                        &mut handler,
+                        &mut resources.get_mut::<EventChannel<InputEvent>>().unwrap(),
+                        &self.controller_mappings,
+                    )
+                    .unwrap(),
+                ),
+            );
+        }
+
         resources.insert(handler);
 
-        builder.add_system(build_input_system(reader));
+        builder.add_system(Box::new(InputSystem { reader }));
 
         Ok(())
     }

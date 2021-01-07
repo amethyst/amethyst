@@ -1,5 +1,4 @@
 use amethyst::prelude::*;
-
 use derivative::Derivative;
 use derive_new::new;
 

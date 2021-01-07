@@ -1,15 +1,13 @@
+use amethyst_core::{
+    ecs::*,
+    math::{convert, RealField, Vector2, Vector3, Vector4},
+    simd::scalar::*,
+};
 use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
 
-use amethyst_core::{
-    alga::general::{SubsetOf, SupersetOf},
-    ecs::prelude::{Entity, WriteStorage},
-    math::{convert, RealField, Vector2, Vector3, Vector4},
-};
-
-use crate::resources::{AnimationControlSet, AnimationSampling};
-
 use self::SamplerPrimitive::*;
+use crate::resources::{AnimationControlSet, AnimationSampling};
 
 /// Get the animation set for an entity. If none exists, one will be added. If entity is invalid,
 /// (eg. removed before) None will be returned.
@@ -20,17 +18,26 @@ use self::SamplerPrimitive::*;
 ///        with the same id
 /// - `T`: the component type that the animation applies to
 pub fn get_animation_set<'a, I, T>(
-    controls: &'a mut WriteStorage<'_, AnimationControlSet<I, T>>,
+    world: &'a mut SubWorld<'_>,
+    buffer: &mut CommandBuffer,
     entity: Entity,
 ) -> Option<&'a mut AnimationControlSet<I, T>>
 where
     I: Send + Sync + 'static,
     T: AnimationSampling,
 {
-    controls
-        .entry(entity)
-        .ok()
-        .map(|entry| entry.or_insert_with(AnimationControlSet::default))
+    if let Ok(entry) = world.entry_mut(entity) {
+        let c = entry.into_component_mut::<AnimationControlSet<I, T>>();
+        if c.is_ok() {
+            c.ok()
+        } else {
+            let set = AnimationControlSet::<I, T>::default();
+            buffer.add_component(entity, set);
+            None
+        }
+    } else {
+        None
+    }
 }
 
 /// Sampler primitive
@@ -135,17 +142,21 @@ where
         match *self {
             Scalar(ref s) => Scalar(mul_f32(*s, scalar)),
             Vec2(ref s) => Vec2([mul_f32(s[0], scalar), mul_f32(s[1], scalar)]),
-            Vec3(ref s) => Vec3([
-                mul_f32(s[0], scalar),
-                mul_f32(s[1], scalar),
-                mul_f32(s[2], scalar),
-            ]),
-            Vec4(ref s) => Vec4([
-                mul_f32(s[0], scalar),
-                mul_f32(s[1], scalar),
-                mul_f32(s[2], scalar),
-                mul_f32(s[3], scalar),
-            ]),
+            Vec3(ref s) => {
+                Vec3([
+                    mul_f32(s[0], scalar),
+                    mul_f32(s[1], scalar),
+                    mul_f32(s[2], scalar),
+                ])
+            }
+            Vec4(ref s) => {
+                Vec4([
+                    mul_f32(s[0], scalar),
+                    mul_f32(s[1], scalar),
+                    mul_f32(s[2], scalar),
+                    mul_f32(s[3], scalar),
+                ])
+            }
         }
     }
 

@@ -1,0 +1,37 @@
+Prefab(
+    // Prefab AssetUuid
+    id: "7bf6de66-ce85-4f36-9961-d8bc6a7924fd",
+    objects: [
+        // Inline definition of an entity and its components
+        Entity((
+             // Entity AssetUuid
+             id: "26b3770a-50be-46eb-9d3a-53b72b7a0005",
+             // Component data and types
+             components: [
+                 (
+                     // Component AssetTypeId
+                     type: "f5780013-bae4-49f0-ac0e-a108ff52fec0",
+                     data: (
+                         x: 100,
+                         y: 100,
+                     ),
+                 ),
+             ]
+        )),
+        Entity((
+             // Entity AssetUuid
+             id: "82e18eda-a3d1-43a5-b169-073a915a0f44",
+             // Component data and types
+             components: [
+                 (
+                     // Component AssetTypeId
+                     type: "f5780013-bae4-49f0-ac0e-a108ff52fec0",
+                     data: (
+                         x: 100,
+                         y: 100,
+                     ),
+                 ),
+             ]
+        )),
+    ]
+)

@@ -1,5 +1,9 @@
 //! Amethyst control crate.
 
+#![doc(
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
+)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -14,8 +18,8 @@ pub use self::{
     components::{ArcBallControl, FlyControl},
     resources::{HideCursor, WindowFocus},
     systems::{
-        build_arc_ball_rotation_system, build_cursor_hide_system, build_fly_movement_system,
-        build_free_rotation_system, build_mouse_focus_update_system,
+        ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
+        MouseFocusUpdateSystem,
     },
 };
 

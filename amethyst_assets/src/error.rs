@@ -1,5 +1,6 @@
 use err_derive::Error;
 
+#[allow(missing_docs)]
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum Error {

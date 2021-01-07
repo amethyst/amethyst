@@ -7,14 +7,13 @@ use std::{
     sync::Arc,
 };
 
+use amethyst_core::ecs::*;
 use cpal::traits::DeviceTrait;
 use log::error;
 use rodio::{
     default_output_device, output_devices, Decoder, Device, Devices, OutputDevices, Sink,
     Source as RSource,
 };
-
-use amethyst_core::ecs::*;
 
 use crate::{sink::AudioSink, source::Source, DecoderError};
 
@@ -34,8 +33,10 @@ pub struct Output {
 impl Default for Output {
     fn default() -> Self {
         default_output_device()
-            .map(|device| Output {
-                device: Arc::new(device),
+            .map(|device| {
+                Output {
+                    device: Arc::new(device),
+                }
             })
             .expect("No default output device")
     }
@@ -113,16 +114,20 @@ impl Iterator for OutputIterator {
     type Item = Output;
 
     fn next(&mut self) -> Option<Output> {
-        self.devices.next().map(|device| Output {
-            device: Arc::new(device),
+        self.devices.next().map(|device| {
+            Output {
+                device: Arc::new(device),
+            }
         })
     }
 }
 
 /// Get the default output, returns none if no outputs are available.
 pub fn default_output() -> Option<Output> {
-    default_output_device().map(|device| Output {
-        device: Arc::new(device),
+    default_output_device().map(|device| {
+        Output {
+            device: Arc::new(device),
+        }
     })
 }
 
@@ -222,15 +227,19 @@ mod tests {
     #[cfg(target_os = "linux")]
     fn check_result(result: Result<(), DecoderError>, should_pass: bool) {
         match result {
-            Ok(_pass) => assert!(
-                should_pass,
-                "Expected `play` result to be Err(..), but was Ok(..)"
-            ),
-            Err(fail) => assert!(
-                !should_pass,
-                "Expected `play` result to be `Ok(..)`, but was {:?}",
-                fail
-            ),
+            Ok(_pass) => {
+                assert!(
+                    should_pass,
+                    "Expected `play` result to be Err(..), but was Ok(..)"
+                )
+            }
+            Err(fail) => {
+                assert!(
+                    !should_pass,
+                    "Expected `play` result to be `Ok(..)`, but was {:?}",
+                    fail
+                )
+            }
         };
     }
 }

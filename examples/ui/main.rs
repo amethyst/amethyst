@@ -10,7 +10,10 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::RenderToWindow,
-        rendy::mesh::{Normal, Position, TexCoord},
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, TexCoord},
+        },
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -36,7 +39,7 @@ struct Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { mut world, .. } = data;
 
         // Make a button using the UiButtonBuilder.
@@ -61,11 +64,7 @@ impl SimpleState for Example {
         });
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -88,7 +87,7 @@ impl SimpleState for Example {
         }
     }
 
-    fn update(&mut self, state_data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, state_data: &mut StateData<'_, GameData>) -> SimpleTrans {
         let StateData { world, .. } = state_data;
 
         if self.fps_display.is_none() {
@@ -139,27 +138,28 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/ui/config/display.ron");
-    let assets_dir = app_root.join("examples/ui/assets");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets");
 
-    let game_data = GameDataBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(UiBundle::<StringBindings>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
         .with_system_desc(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
-        .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(
+        .add_bundle(FpsCounterBundle::default())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Example::default())?
+    let game = Application::build(assets_dir, Example::default())?
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;

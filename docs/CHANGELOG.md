@@ -14,13 +14,23 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+- Upgraded `approx` dependency from `0.3` to `0.4`. ([#2521])
+- Upgraded `nalgebra` dependency from `0.19` to `0.23`. ([#2521])
+- Upgraded `rayon` dependency from `1.4` to `1.5`. ([#2521])
+- Replaced `alga` dependency with `simba` to be compatible with `nalgebra 0.23`. ([#2521])
 - Upgraded from `rayon 1.3.0` to `rayon 1.4.0`, drastically decreasing idle CPU usage in some situations ([#2489])
 - Make `TextEditingPrefab` public ([#2492])
+- Replace `clipboard` crate with `copypasta` (see #2438)
+- Make ui a default but optional feature ([#2490])
+- Allow config files and text assets to be encoded with UTF-8-BOM & UTF-16-BOM ([#2487])
+
+[#2487]: https://github.com/amethyst/amethyst/pull/2487
 
 ### Fixed
 
 [#2489]: https://github.com/amethyst/amethyst/pull/2489
 [#2492]: https://github.com/amethyst/amethyst/pull/2492
+[#2521]: https://github.com/amethyst/amethyst/pull/2521
 
 ## [0.15.3] - 2020-08-22
 

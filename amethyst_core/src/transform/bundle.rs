@@ -5,6 +5,8 @@ use amethyst_error::Error;
 use crate::{ecs::*, transform::*};
 
 /// Transform bundle
+#[derive(Default)]
+#[allow(missing_debug_implementations)]
 pub struct TransformBundle;
 
 impl SystemBundle for TransformBundle {
@@ -15,9 +17,9 @@ impl SystemBundle for TransformBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         builder
-            .add_system(missing_previous_parent_system::build())
-            .add_system(parent_update_system::build())
-            .add_system(transform_system::build());
+            .add_system(Box::new(MissingPreviousParentSystem))
+            .add_system(Box::new(ParentUpdateSystem))
+            .add_system(Box::new(TransformSystem));
 
         Ok(())
     }

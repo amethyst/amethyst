@@ -7,13 +7,12 @@ use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 #[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
-use winit::Event;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
+use winit::event::{Event, WindowEvent};
 
 use crate::{
-    assets::{Loader, Source},
+    assets::{start_asset_daemon, DefaultLoader, Source},
     core::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
@@ -54,7 +53,8 @@ where
     reader: R,
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
-    event_reader_id: ReaderId<Event>,
+    #[derivative(Debug = "ignore")]
+    event_reader_id: ReaderId<Event<'static, ()>>,
     #[derivative(Debug = "ignore")]
     trans_reader_id: ReaderId<TransEvent<T, E>>,
     states: StateMachine<'a, T, E>,
@@ -79,7 +79,6 @@ where
 /// ```
 /// use amethyst::prelude::*;
 /// use amethyst::core::transform::{Parent, Transform};
-/// use amethyst::ecs::prelude::System;
 ///
 /// use log::{info, warn};
 ///
@@ -91,7 +90,7 @@ where
 ///
 ///     // Build the application instance to initialize the default logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
+///     let game = Application::build(assets_dir, NullState)?
 ///         .build(())?;
 ///
 ///     // Now logging can be performed as normal.
@@ -108,7 +107,6 @@ where
 /// ```
 /// use amethyst::prelude::*;
 /// use amethyst::core::transform::{Parent, Transform};
-/// use amethyst::ecs::prelude::System;
 ///
 /// struct NullState;
 /// impl EmptyState for NullState {}
@@ -121,7 +119,7 @@ where
 ///     // The default logger will be automatically disabled and any logging amethyst does
 ///     // will go through your custom logger.
 ///     let assets_dir = "assets/";
-///     let mut game = Application::build(assets_dir, NullState)?
+///     let game = Application::build(assets_dir, NullState)?
 ///         .build(())?;
 ///
 ///     Ok(())
@@ -131,11 +129,11 @@ where
 /// [log]: https://crates.io/crates/log
 pub type Application<'a, T> = CoreApplication<'a, T, StateEvent, StateEventReader>;
 
-impl<'a, T, E, R> CoreApplication<'a, T, E, R>
+impl<'a, T, E, R> CoreApplication<'static, T, E, R>
 where
     T: DataDispose + 'static,
     E: Clone + Send + Sync + 'static,
-    R: EventReader<Event = E>,
+    R: EventReader<Event = E> + 'static,
 {
     /// Creates a new CoreApplication with the given initial game state.
     /// This will create and allocate all the needed resources for
@@ -185,16 +183,16 @@ where
     /// # fn main() -> amethyst::Result<()> {
     /// #
     /// let assets_dir = "assets/";
-    /// let mut game = Application::new(assets_dir, NullState, ())?;
+    /// let game = Application::build(assets_dir, NullState)?.build(())?;
     /// game.run();
     ///
-    /// #     Ok(())
+    /// #  Ok(())
     /// # }
     /// ~~~
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self, Error>
     where
         P: AsRef<Path>,
-        S: State<T, E> + 'a,
+        S: State<T, E> + 'static,
         I: DataInit<T>,
         R: EventReader<Event = E> + Default,
     {
@@ -223,7 +221,7 @@ where
     ///
     /// See the example supplied in the
     /// [`new`](struct.Application.html#examples) method.
-    pub fn run(&mut self) {
+    pub fn run(mut self) {
         #[cfg(feature = "sentry")]
         let _sentry_guard = if let Some(dsn) = option_env!("SENTRY_DSN") {
             let guard = sentry::init(dsn);
@@ -234,7 +232,9 @@ where
         };
 
         self.initialize();
+
         self.resources.get_mut::<Stopwatch>().unwrap().start();
+
         while self.states.is_running() {
             self.advance_frame();
             {
@@ -243,16 +243,15 @@ where
                 self.resources.get_mut::<FrameLimiter>().unwrap().wait();
             }
             {
-                let elapsed = self.resources.get::<Stopwatch>().unwrap().elapsed();
+                let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
+                let elapsed = stopwatch.elapsed();
                 let mut time = self.resources.get_mut::<Time>().unwrap();
                 time.increment_frame_number();
                 time.set_delta_time(elapsed);
+                stopwatch.stop();
+                stopwatch.restart();
             }
-            let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
-            stopwatch.stop();
-            stopwatch.restart();
         }
-
         self.shutdown();
     }
 
@@ -274,31 +273,28 @@ where
         if self.ignore_window_close {
             false
         } else {
-            use crate::winit::WindowEvent;
             let reader_id = &mut self.event_reader_id;
             self.resources
-                .get_mut::<EventChannel<Event>>()
+                .get_mut::<EventChannel<Event<'_, ()>>>()
                 .unwrap()
                 .read(reader_id)
                 .any(|e| {
                     if cfg!(target_os = "ios") {
-                        if let Event::WindowEvent {
-                            event: WindowEvent::Destroyed,
-                            ..
-                        } = e
-                        {
-                            true
-                        } else {
-                            false
-                        }
-                    } else if let Event::WindowEvent {
-                        event: WindowEvent::CloseRequested,
-                        ..
-                    } = e
-                    {
-                        true
+                        matches!(
+                            e,
+                            Event::WindowEvent {
+                                event: WindowEvent::Destroyed,
+                                ..
+                            }
+                        )
                     } else {
-                        false
+                        matches!(
+                            e,
+                            Event::WindowEvent {
+                                event: WindowEvent::CloseRequested,
+                                ..
+                            }
+                        )
                     }
                 })
         }
@@ -315,41 +311,33 @@ where
         }
 
         // Read the Trans queue and apply changes.
-        {
-            let world = &mut self.world;
-            let resources = &mut self.resources;
-            let states = &mut self.states;
-            let reader = &mut self.trans_reader_id;
 
-            let trans = resources
-                .get_mut::<EventChannel<TransEvent<T, E>>>()
-                .unwrap()
-                .read(reader)
-                .map(|e| e())
-                .collect::<Vec<_>>();
-            for tr in trans {
-                states.transition(tr, StateData::new(world, resources, &mut self.data));
-            }
+        let world = &mut self.world;
+        let resources = &mut self.resources;
+        let states = &mut self.states;
+        let reader = &mut self.trans_reader_id;
+
+        let trans = resources
+            .get_mut::<EventChannel<TransEvent<T, E>>>()
+            .unwrap()
+            .read(reader)
+            .map(|e| e())
+            .collect::<Vec<_>>();
+        for tr in trans {
+            states.transition(tr, StateData::new(world, resources, &mut self.data));
         }
 
         {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            {
-                let events = &mut self.events;
-                self.reader.read(&mut self.resources, events);
-            }
+            self.reader.read(resources, &mut self.events);
 
-            {
-                let world = &mut self.world;
-                let resources = &mut self.resources;
-                let states = &mut self.states;
-                for e in self.events.drain(..) {
-                    states.handle_event(StateData::new(world, resources, &mut self.data), e);
-                }
+            for e in self.events.drain(..) {
+                states.handle_event(StateData::new(world, resources, &mut self.data), e);
             }
         }
+
         {
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
@@ -436,6 +424,7 @@ pub struct ApplicationBuilder<S, T, E, R> {
 impl<S, T, E, X> ApplicationBuilder<S, T, E, X>
 where
     T: DataDispose + 'static,
+    E: 'static,
 {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
@@ -473,7 +462,6 @@ where
     /// ~~~no_run
     /// use amethyst::prelude::*;
     /// use amethyst::core::transform::{Parent, Transform};
-    /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
     /// impl EmptyState for NullState {}
@@ -485,12 +473,7 @@ where
     /// // in the rust ecosystem. Each function modifies the object
     /// // returning a new object with the modified configuration.
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?
-    ///
-    /// // components can be registered at this stage
-    ///     .register::<Parent>()
-    ///     .register::<Transform>()
-    ///
+    /// let game = Application::build(assets_dir, NullState)?
     /// // lastly we can build the Application object
     /// // the `build` function takes the user defined game data initializer as input
     ///     .build(())?;
@@ -528,6 +511,9 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
+        let asset_dirs = vec![path.as_ref().to_path_buf()];
+        start_asset_daemon(asset_dirs);
+
         let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
             .as_ref()
             .map(|s| {
@@ -555,11 +541,11 @@ where
         } else {
             pool = thread_pool_builder.build().map(Arc::new)?;
         }
-        resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
+        // FIXME check that the loader is added to the resources
+        // resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         resources.insert(pool);
-        resources.insert(EventChannel::<Event>::with_capacity(2000));
+        resources.insert(EventChannel::<Event<'static, ()>>::with_capacity(2000));
         //resources.insert(EventChannel::<UiEvent>::with_capacity(40));
-        resources.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         resources.insert(FrameLimiter::default());
         resources.insert(Stopwatch::default());
         resources.insert(Time::default());
@@ -614,7 +600,7 @@ where
     /// # fn main() -> amethyst::Result<()> {
     /// let score_board = HighScores(Vec::new());
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, NullState)?
+    /// let game = Application::build(assets_dir, NullState)?
     ///     .with_resource(score_board);
     /// #     Ok(())
     /// # }
@@ -650,40 +636,40 @@ where
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader, Handle};
+    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
-    /// use amethyst::ecs::prelude::World;
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, LoadingState)?
+    /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" under the name "resources".
     ///     .with_source("custom_store", Directory::new("custom_directory"))
-    ///     .build(GameDataBuilder::default())?
+    ///     .build(DispatcherBuilder::default())?
     ///     .run();
     /// #     Ok(())
     /// # }
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
-    ///     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-    ///         let storage = data.world.read_resource();
+    ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
+    ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
+    ///         let storage = data.resources.get().unwrap();
     ///
-    ///         let loader = data.world.read_resource::<Loader>();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh: Handle<Mesh> =
     ///             loader.load_from("teapot", ObjFormat, "custom_directory", (), &storage);
     ///     }
     /// }
     /// ~~~
-    pub fn with_source<I, O>(self, name: I, store: O) -> Self
+    pub fn with_source<I, O>(self, _name: I, _store: O) -> Self
     where
         I: Into<String>,
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<Loader>().unwrap();
-            loader.add_source(name, store);
+            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            // FIXME Update the source on the loader
+            // loader.add_source(name, store);
         }
         self
     }
@@ -706,38 +692,37 @@ where
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader, Handle};
+    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
-    /// use amethyst::ecs::prelude::World;
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
-    /// let mut game = Application::build(assets_dir, LoadingState)?
+    /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" as default source for the loader.
     ///     .with_default_source(Directory::new("custom_directory"))
-    ///     .build(GameDataBuilder::default())?
+    ///     .build(DispatcherBuilder::default())?
     ///     .run();
     /// #     Ok(())
     /// # }
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
-    ///     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-    ///         let storage = data.world.read_resource();
-    ///
-    ///         let loader = data.world.read_resource::<Loader>();
+    ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
+    ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
+    ///         let storage = data.resources.get().unwrap();
     ///         // Load a teapot mesh from the directory that registered above.
     ///         let mesh: Handle<Mesh> = loader.load("teapot", ObjFormat, (), &storage);
     ///     }
     /// }
     /// ~~~
-    pub fn with_default_source<O>(self, store: O) -> Self
+    pub fn with_default_source<O>(self, _store: O) -> Self
     where
         O: Source,
     {
         {
-            let mut loader = self.resources.get_mut::<Loader>().unwrap();
-            loader.set_default_source(store);
+            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            // FIXME Update the location on the loader
+            // loader.set_default_source(store);
         }
         self
     }
@@ -838,21 +823,20 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let mut reader = X::default();
-        reader.setup(&mut self.resources);
         let data = init.build(&mut self.world, &mut self.resources)?;
 
         let event_reader_id = self
             .resources
-            .get_mut::<EventChannel<Event>>()
+            .get_mut::<EventChannel<Event<'static, ()>>>()
             .unwrap()
             .register_reader();
 
-        let trans_reader_id = self
-            .resources
-            .get_mut::<EventChannel<TransEvent<T, E>>>()
-            .unwrap()
-            .register_reader();
+        let mut trans_event_channel = EventChannel::<TransEvent<T, E>>::with_capacity(2);
+        let trans_reader_id = trans_event_channel.register_reader();
+        self.resources.insert(trans_event_channel);
+
+        let mut reader = X::default();
+        reader.setup(&mut self.resources);
 
         Ok(CoreApplication {
             world: self.world,

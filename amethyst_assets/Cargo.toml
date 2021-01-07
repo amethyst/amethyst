@@ -1,7 +1,10 @@
 [package]
 name = "amethyst_assets"
 version = "0.15.3"
-authors = ["torkleyy <torkleyy@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "torkleyy <torkleyy@gmail.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 readme = "README.md"
 edition = "2018"
 description = """
@@ -16,15 +19,12 @@ documentation = "https://docs.amethyst.rs/stable/amethyst_assets/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 crossbeam-queue = "0.1.2"
 derivative = "2.1.1"
+crossbeam-channel = "0.3"
 derive-new = "0.5"
 fnv = "1"
 log = "0.4.6"
@@ -32,18 +32,36 @@ parking_lot = "0.10"
 rayon = "1.4.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }
-ron = "0.5"
+ron = "0.6.4"
 thread_profiler = { version = "0.3", optional = true }
 err-derive = "0.2.3"
 objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
-specs = "0.16"
+atelier-assets = { git = "https://github.com/radium-io/atelier-assets.git", rev = "a06899a", features = [
+    "serde-1",
+    "type_uuid",
+    "asset_uuid_macro",
+    "serde_importers",
+    "parallel_hash",
+    "rpc_io",
+    "handle",
+] }
+uuid = { version = "0.8", features = ["v4"] }
+bincode = "1.1"
+type-uuid = "0.1"
+futures-executor = { version = "0.3", default-features = false }
+legion-transaction = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
+legion-prefab = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
+prefab-format = { git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
+encoding_rs_io = "0.1"
 
 [dev-dependencies]
 serde_json = "1"
+fern = { version = "0.6.0", features = ["colored"] }
+serde-diff = "0.4"
 
 [features]
-profiler = [ "thread_profiler/thread_profiler" ]
-json = [ "serde_json" ]
+profiler = ["thread_profiler/thread_profiler"]
+json = ["serde_json"]

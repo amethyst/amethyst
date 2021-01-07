@@ -1,5 +1,4 @@
 use amethyst_assets::Handle;
-use amethyst_core::ecs::{Component, DenseVecStorage};
 use amethyst_rendy::{SpriteRender, Texture};
 
 /// Image used UI widgets, often as background.
@@ -64,8 +63,4 @@ pub enum UiImage {
     /// UiImage::SolidColor([r, g, b, a]);
     /// ```
     SolidColor([f32; 4]),
-}
-
-impl Component for UiImage {
-    type Storage = DenseVecStorage<Self>;
 }

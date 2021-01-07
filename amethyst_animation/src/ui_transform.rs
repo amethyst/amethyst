@@ -1,11 +1,13 @@
-use amethyst_core::math::zero;
+use amethyst_assets::{register_asset_type, AssetProcessorSystem, TypeUuid};
+use amethyst_core::{ecs::CommandBuffer, math::zero};
 use amethyst_ui::UiTransform;
-
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::{
-    resources::{AnimationSampling, ApplyData, BlendMethod},
+    resources::{AnimationSampling, BlendMethod},
     util::SamplerPrimitive,
+    Animation,
 };
 
 /// Channels that can be animated on `UiTransform`
@@ -15,18 +17,24 @@ pub enum UiTransformChannel {
     Translation,
 }
 
-impl<'a> ApplyData<'a> for UiTransform {
-    type ApplyData = ();
+impl TypeUuid for Animation<UiTransform> {
+    const UUID: type_uuid::Bytes =
+        *Uuid::from_u128(338570003214035303785978659011038647737).as_bytes();
 }
+register_asset_type!(Animation<UiTransform> => Animation<UiTransform>; AssetProcessorSystem<Animation<UiTransform>>);
 
 impl AnimationSampling for UiTransform {
     type Primitive = SamplerPrimitive<f32>;
     type Channel = UiTransformChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
-        use crate::util::SamplerPrimitive::*;
-
+    fn apply_sample(
+        &mut self,
+        channel: &Self::Channel,
+        data: &SamplerPrimitive<f32>,
+        _buffer: &mut CommandBuffer,
+    ) {
         use self::UiTransformChannel::*;
+        use crate::util::SamplerPrimitive::*;
 
         match (channel, *data) {
             (&Translation, Vec2(ref d)) => {
@@ -37,7 +45,7 @@ impl AnimationSampling for UiTransform {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
+    fn current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<f32> {
         use self::UiTransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec2([self.local_x, self.local_y]),

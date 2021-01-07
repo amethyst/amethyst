@@ -1,19 +1,20 @@
 use amethyst::{
     assets::{
-        Asset, AssetStorage, Format, Handle, Loader, ProcessingState, Processor, ProgressCounter,
-        Source,
+        atelier_importer,
+        atelier_importer::{typetag, SerdeImportable},
+        register_asset_type, Asset, AssetProcessorSystem, AssetStorage, DefaultLoader, Format,
+        Handle, Loader, LoaderBundle, TypeUuid,
     },
-    ecs::VecStorage,
     error::{format_err, Error, ResultExt},
     prelude::*,
+    renderer::{types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
 };
-use log::info;
-use ron::de::Deserializer;
 use serde::{Deserialize, Serialize};
 
 /// Custom asset representing an energy blast.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, TypeUuid, SerdeImportable)]
+#[uuid = "a016abff-623d-48cf-a6e4-e76e069fe843"]
 pub struct EnergyBlast {
     /// How much HP to subtract.
     pub hp_damage: u32,
@@ -21,97 +22,58 @@ pub struct EnergyBlast {
     pub mp_damage: u32,
 }
 
-/// A handle to a `EnergyBlast` asset.
-pub type EnergyBlastHandle = Handle<EnergyBlast>;
-
 impl Asset for EnergyBlast {
-    const NAME: &'static str = "my_crate::EnergyBlast";
     type Data = Self;
-    type HandleStorage = VecStorage<EnergyBlastHandle>;
-}
 
-impl From<EnergyBlast> for Result<ProcessingState<EnergyBlast>, Error> {
-    fn from(energy_blast: EnergyBlast) -> Result<ProcessingState<EnergyBlast>, Error> {
-        Ok(ProcessingState::Loaded(energy_blast))
+    fn name() -> &'static str {
+        "EnergyBlast"
     }
 }
 
 pub struct LoadingState {
-    /// Tracks loaded assets.
-    progress_counter: ProgressCounter,
     /// Handle to the energy blast.
-    energy_blast_handle: Option<EnergyBlastHandle>,
+    energy_blast_handle: Option<Handle<EnergyBlast>>,
 }
 
 /// Format for loading from `.mylang` files.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, TypeUuid)]
+#[uuid = "1aacd480-2eb5-4e02-8ed4-daaf33245a45"]
 pub struct MyLangFormat;
 
-impl<D> Format<D> for MyLangFormat
-where
-    D: for<'a> Deserialize<'a> + Send + Sync + 'static,
-{
+impl Format<EnergyBlast> for MyLangFormat {
     fn name(&self) -> &'static str {
-        "MyLang"
+        "MyLangEnergyBlast"
     }
 
-    fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
-        let mut deserializer = Deserializer::from_bytes(&bytes)
-            .with_context(|_| format_err!("Failed deserializing MyLang file"))?;
-        let val = D::deserialize(&mut deserializer)
-            .with_context(|_| format_err!("Failed parsing MyLang file"))?;
-        deserializer
-            .end()
-            .with_context(|_| format_err!("Failed parsing MyLang file"))?;
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<EnergyBlast, Error> {
+        println!("Importing a mylang file to EnergyBlast");
+        use ron::de::Deserializer;
+        let mut d = Deserializer::from_bytes(&bytes)
+            .with_context(|_| format_err!("Failed deserializing Ron file"))?;
+        let val = EnergyBlast::deserialize(&mut d)
+            .with_context(|_| format_err!("Failed parsing Ron file"))?;
+        d.end()
+            .with_context(|_| format_err!("Failed parsing Ron file"))?;
 
         Ok(val)
     }
 }
 
-#[derive(Debug)]
-struct CodeSource;
-
-impl Source for CodeSource {
-    fn modified(&self, _path: &str) -> Result<u64, Error> {
-        Ok(0)
-    }
-    fn load(&self, _path: &str) -> Result<Vec<u8>, Error> {
-        let bytes = b"EnergyBlast(hp_damage: 10, mp_damage: 10)".to_vec();
-        Ok(bytes)
-    }
-}
+use amethyst::assets as amethyst_assets;
+register_asset_type!(EnergyBlast => EnergyBlast; AssetProcessorSystem<EnergyBlast>);
 
 impl SimpleState for LoadingState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        {
-            let mut loader = data.world.write_resource::<Loader>();
-            loader.add_source("code_source", CodeSource);
-        }
-
-        let loader = &data.world.read_resource::<Loader>();
-
-        let energy_blast_handle = loader.load_from(
-            "energy_blast.mylang",
-            self::MyLangFormat,
-            "code_source",
-            &mut self.progress_counter,
-            &data.world.read_resource::<AssetStorage<EnergyBlast>>(),
-        );
-
-        self.energy_blast_handle = Some(energy_blast_handle);
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
+        self.energy_blast_handle = Some(loader.load("energy_blast.ron"));
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        if self.progress_counter.is_complete() {
-            let energy_blast_assets = data.world.read_resource::<AssetStorage<EnergyBlast>>();
-            let energy_blast = energy_blast_assets
-                .get(
-                    self.energy_blast_handle
-                        .as_ref()
-                        .expect("Expected energy_blast_handle to be set."),
-                )
-                .expect("Expected energy blast to be loaded.");
-            info!("Loaded energy blast: {:?}", energy_blast);
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+        let energy_blast_assets = data.resources.get::<AssetStorage<EnergyBlast>>().unwrap();
+        if let Some(energy_blast) =
+            energy_blast_assets.get(self.energy_blast_handle.as_ref().unwrap())
+        {
+            println!("Loaded energy blast: {:?}", energy_blast);
             Trans::Quit
         } else {
             Trans::None
@@ -120,18 +82,41 @@ impl SimpleState for LoadingState {
 }
 
 fn main() -> amethyst::Result<()> {
-    amethyst::start_logger(Default::default());
-    let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("example/asset_custom/assets");
+    let config = amethyst::LoggerConfig {
+        log_file: Some(std::path::PathBuf::from("asset_loading.log")),
+        level_filter: amethyst::LogLevelFilter::Info,
+        module_levels: vec![
+            (
+                "amethyst::assets".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_daemon".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_loader".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+        ],
+        ..Default::default()
+    };
+    amethyst::start_logger(config);
 
-    let game_data = GameDataBuilder::default().with(Processor::<EnergyBlast>::new(), "", &[]);
-    let mut game = Application::new(
+    let app_root = application_root_dir()?;
+    let assets_dir = app_root.join("assets/");
+
+    let mut builder = DispatcherBuilder::default();
+
+    builder.add_bundle(LoaderBundle);
+    builder.add_bundle(RenderingBundle::<DefaultBackend>::new());
+
+    let game = Application::new(
         assets_dir,
         LoadingState {
-            progress_counter: ProgressCounter::new(),
             energy_blast_handle: None,
         },
-        game_data,
+        builder,
     )?;
 
     game.run();

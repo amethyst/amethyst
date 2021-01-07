@@ -1,31 +1,33 @@
 //! Set of predefined implementations of `RenderPlugin` for use with `RenderingBundle`.
 
-use crate::{
-    bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
-    pass::*,
-    sprite_visibility::{build_sprite_visibility_sorting_system, SpriteVisibility},
-    visibility::{build_visibility_sorting_system, Visibility},
-    Backend, Factory,
-};
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
-
 #[cfg(feature = "window")]
 pub use window::RenderToWindow;
 
+use crate::{
+    bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
+    pass::*,
+    sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
+    visibility::{Visibility, VisibilitySortingSystem},
+    Backend, Factory,
+};
+
 #[cfg(feature = "window")]
 mod window {
+    use std::path::Path;
+
+    use amethyst_config::{Config, ConfigError};
+    use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
+    use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
+
     use super::*;
     use crate::{
         bundle::{ImageOptions, OutputColor},
         Format, Kind,
     };
-    use amethyst_config::{Config, ConfigError};
-    use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
-    use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
-    use std::path::Path;
 
     /// A [RenderPlugin] for opening a window and displaying a render target to it.
     ///
@@ -64,7 +66,7 @@ mod window {
         ///
         /// ```
         /// use amethyst_rendy::palette::Srgba;
-        /// use amethyst_rendy::RenderToWindow;
+        /// use amethyst_rendy::{RenderToWindow, rendy::hal::command::ClearColor};
         /// use amethyst_window::DisplayConfig;
         ///
         /// let your_red: f32 = 255.;
@@ -76,7 +78,7 @@ mod window {
         ///     .into_linear()
         ///     .into_components();
         ///
-        /// RenderToWindow::from_config(DisplayConfig::default()).with_clear([r, g, b, a]);
+        /// RenderToWindow::from_config(DisplayConfig::default()).with_clear(ClearColor { float32: [r, g, b, a] });
         /// ```
         pub fn with_clear(mut self, clear: impl Into<ClearColor>) -> Self {
             self.clear = Some(clear.into());
@@ -119,7 +121,9 @@ mod window {
             self.dirty = false;
 
             let window = resources.get::<Window>().unwrap();
-            let surface = factory.create_surface(&window);
+            // Explicitly deref so we get a type that implements HasRawWindowHandle.
+            let window: &Window = &window;
+            let surface = factory.create_surface(window)?;
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
@@ -127,7 +131,12 @@ mod window {
                 kind: window_kind,
                 levels: 1,
                 format: Format::D32Sfloat,
-                clear: Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+                clear: Some(ClearValue {
+                    depth_stencil: ClearDepthStencil {
+                        depth: 0.0,
+                        stencil: 0,
+                    },
+                }),
             };
 
             plan.add_root(Target::Main);
@@ -136,7 +145,7 @@ mod window {
                 crate::bundle::TargetPlanOutputs {
                     colors: vec![OutputColor::Surface(
                         surface,
-                        self.clear.map(ClearValue::Color),
+                        self.clear.map(|color| ClearValue { color }),
                     )],
                     depth: Some(depth_options),
                 },
@@ -188,7 +197,7 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(Visibility::default());
-        builder.add_system(build_visibility_sorting_system());
+        builder.add_system(Box::new(VisibilitySortingSystem::default()));
         Ok(())
     }
 
@@ -242,7 +251,7 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(SpriteVisibility::default());
-        builder.add_system(build_sprite_visibility_sorting_system());
+        builder.add_system(Box::new(SpriteVisibilitySortingSystem));
         Ok(())
     }
 

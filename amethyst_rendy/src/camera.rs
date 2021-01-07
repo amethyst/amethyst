@@ -7,6 +7,7 @@ use amethyst_core::{
     math::{Matrix4, Point2, Point3, Vector2},
     transform::Transform,
 };
+use type_uuid::TypeUuid;
 // use amethyst_error::Error;
 
 /// Camera struct.
@@ -32,7 +33,8 @@ use amethyst_core::{
 ///
 /// If you change `matrix` you must also change `inverse` so that they stay in sync.
 /// You should probably use from_matrix instead.
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, TypeUuid)]
+#[uuid = "56946ce2-356e-4038-82ad-e55a69ddfde9"]
 pub struct Camera {
     /// The projection matrix
     pub matrix: Matrix4<f32>,
@@ -334,15 +336,15 @@ mod tests {
     //! Our view space is +Y Down, +X Right, +Z Away
     //! Current render target is +Y Down, +X Right, +Z Away
 
-    use super::*;
     use amethyst_core::{
         math::{convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3},
         transform::Transform,
     };
-    use ron::{de::from_str, ser::to_string_pretty};
-
     use approx::{assert_abs_diff_eq, assert_ulps_eq};
     use more_asserts::{assert_ge, assert_gt, assert_le, assert_lt};
+    use ron::{de::from_str, ser::to_string_pretty};
+
+    use super::*;
 
     #[test]
     fn screen_to_world_3d() {
@@ -364,12 +366,12 @@ mod tests {
 
         assert_ulps_eq!(
             camera.screen_to_world_point(top_left, diagonal, &transform),
-            Point3::new(-0.09622504486493762, 0.07216878364870322, -0.125)
+            Point3::new(-0.096_225_046, 0.072_168_78, -0.125)
         );
 
         assert_ulps_eq!(
             camera.screen_to_world_point(bottom_right, diagonal, &transform),
-            Point3::new(0.09622504486493762, -0.07216878364870322, -0.125)
+            Point3::new(0.096_225_046, -0.072_168_78, -0.125)
         );
 
         transform.set_translation_x(100.0);
