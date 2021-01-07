@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use amethyst_core::{ecs::*, transform::Parent};
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};

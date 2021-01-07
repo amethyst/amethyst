@@ -17,7 +17,7 @@ use amethyst::{
         },
         shape::Shape,
         types::{DefaultBackend, MeshData, TextureData},
-        Camera, Material, MaterialDefaults, Mesh, RenderShaded3D, RenderingBundle, Texture,
+        Camera, Material, MaterialDefaults, Mesh, RenderingBundle, Texture,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
@@ -328,7 +328,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?.with_clear(CLEAR_COLOR),
                 )
-                .with_plugin(RenderShaded3D::default()),
+                .with_plugin(RenderPbr3D::default()),
         );
     let state: Example = Default::default();
     let game = Application::build(assets_dir, state)?.build(game_data)?;

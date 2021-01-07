@@ -35,8 +35,7 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
         if let Some((root_entity,)) = entity_query.iter(&prefab.world).next() {
             clone_impl_result.insert(*root_entity, *entity);
         };
-        let mut spawn_impl =
-            component_registry.spawn_clone_impl(&resources, &mut clone_impl_result);
+        let mut spawn_impl = component_registry.spawn_clone_impl(&resources, &clone_impl_result);
         world.clone_from(&prefab.world, &query::any(), &mut spawn_impl);
         log::debug!("Spawn {:?}", entity);
     }

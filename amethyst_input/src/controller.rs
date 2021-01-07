@@ -118,10 +118,10 @@ pub enum ControllerEvent {
     },
 }
 
-impl<'a> Into<InputEvent> for &'a ControllerEvent {
-    fn into(self) -> InputEvent {
+impl From<&ControllerEvent> for InputEvent {
+    fn from(c: &ControllerEvent) -> Self {
         use self::ControllerEvent::*;
-        match *self {
+        match *c {
             ControllerAxisMoved { which, axis, value } => {
                 InputEvent::ControllerAxisMoved { which, axis, value }
             }

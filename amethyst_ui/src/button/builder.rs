@@ -12,7 +12,6 @@ use amethyst_rendy::{
 use smallvec::{smallvec, SmallVec};
 
 use crate::{
-    format::FontData,
     Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, UiButton, UiButtonAction,
     UiButtonActionRetrigger,
     UiButtonActionType::{self, *},

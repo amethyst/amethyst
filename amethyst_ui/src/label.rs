@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
-use amethyst_assets::{DefaultLoader, Handle, ProcessingQueue};
+use amethyst_assets::Handle;
 use amethyst_core::ecs::*;
 
 use crate::{
-    define_widget, format::FontData, Anchor, FontAsset, LineMode, Selectable, Stretch, UiText,
-    UiTransform, WidgetId, Widgets,
+    define_widget, Anchor, FontAsset, LineMode, Selectable, Stretch, UiText, UiTransform, WidgetId,
+    Widgets,
 };
 
 const DEFAULT_Z: f32 = 1.0;

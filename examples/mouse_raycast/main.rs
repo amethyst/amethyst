@@ -8,8 +8,8 @@ use amethyst::{
     },
     core::{
         geometry::Plane,
-        math::{coordinates::XY, Point2, Vector2, Vector3},
-        transform::{Parent, Transform, TransformBundle},
+        math::{Point2, Vector2, Vector3},
+        transform::{Transform, TransformBundle},
         Named,
     },
     ecs::{
@@ -23,9 +23,9 @@ use amethyst::{
         rendy::hal::command::ClearColor,
         sprite::{SpriteRender, SpriteSheet, Sprites},
         types::DefaultBackend,
-        ImageFormat, RenderingBundle, Texture,
+        RenderingBundle,
     },
-    ui::{Anchor, RenderUi, Stretch, UiBundle, UiFinder, UiLabel, UiText, UiTransform},
+    ui::{Anchor, RenderUi, UiBundle, UiText, UiTransform},
     utils::application_root_dir,
     window::ScreenDimensions,
     Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
@@ -171,21 +171,6 @@ impl SimpleState for Example {
             world,
             &sprite_sheet_handle,
         );
-
-        let ui_transform = UiTransform {
-            id: "background".into(),
-            anchor: Anchor::Middle,
-            stretch: Stretch::XY {
-                x_margin: 0.,
-                y_margin: 0.,
-                keep_aspect_ratio: false,
-            },
-            width: 20.,
-            height: 20.,
-            ..Default::default()
-        };
-
-        let parent = world.push((ui_transform,));
 
         let font = {
             resources
