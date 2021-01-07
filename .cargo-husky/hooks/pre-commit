@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+exec < /dev/tty
+read -r -p "Would you like to check your code before committing? [y/N]" response
+response=${response,,} # tolower
+if [[ $response =~ ^(yes|y|Y) ]]; then
+    cargo +nightly fix -q --workspace --features empty,optional --allow-dirty --allow-staged
+    sleep 1 # fixes possibly newer errors
+    cargo +nightly clippy -q -Z unstable-options --workspace --features empty,optional --fix --allow-dirty --allow-staged
+    cargo +nightly fmt --all
+    echo "stage the fixed files before committing again."
+fi

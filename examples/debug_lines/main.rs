@@ -11,7 +11,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Time,
     },
-    input::{is_close_requested, is_key_down, is_mouse_button_down, InputBundle, VirtualKeyCode},
+    input::{is_key_down, is_mouse_button_down, InputBundle, VirtualKeyCode},
     prelude::*,
     renderer::{
         camera::Camera,

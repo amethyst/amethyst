@@ -65,20 +65,17 @@ done the following things first:
    * `rustup update stable nightly`
    * `cargo +nightly fmt --all`
    * `cargo +nightly clippy --workspace --all-targets --features empty -Z unstable-options`
-   * `cargo test --all-targets --workspace --features empty`
-   * `cargo run --example $YOUR_EXAMPLE --features $YOUR_BACKEND`
+   * `cargo test --all-targets --workspace`
 3. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
-4. You added your change in docs/CHANGELOG.md and linked your pull request number.
-5. For new features or changes to an existing one,
-   add or change either the book tutorial or the examples.
+4. For new features or changes to an existing feature,
+   update the book, docs and examples.
 
 [lm]: LICENSE-MIT
 [la]: LICENSE-APACHE
-[rustfmt]: https://github.com/rust-lang-nursery/rustfmt
 
 Once you have submitted your pull request, please wait for a reviewer to give
 feedback on it. If no one responds, feel free to @-mention a developer or post

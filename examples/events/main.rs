@@ -1,5 +1,3 @@
-extern crate amethyst;
-
 use core::result::Result;
 
 use amethyst::{

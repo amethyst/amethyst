@@ -128,8 +128,10 @@ legion = { version = "0.3", default-features = false, features = [
     "codegen",
 ] }
 
-[dev-dependencies]
-rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
+[dev-dependencies.cargo-husky]
+version = "1"
+default-features = false
+features = ["user-hooks"]
 
 [build-dependencies]
 dirs = "2.0.2"
