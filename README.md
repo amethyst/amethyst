@@ -95,7 +95,7 @@ You can download it and read the installation instructions at [Git LFS home page
 To compile any of the examples run:
 
 ```
-$ cargo run --example name_of_example
+$ cargo run -p name_of_example
 ```
 
 All available examples are listed under the [examples][exm] directory.

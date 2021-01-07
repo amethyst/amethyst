@@ -81,11 +81,14 @@ pub mod visibility;
 pub mod pod;
 pub mod util;
 
+/* FIXME
 #[cfg(feature = "test-support")]
 mod render_test_bundle;
 
 #[cfg(feature = "test-support")]
 pub use render_test_bundle::{RenderEmptyBundle, RenderTestBundle};
+*/
+
 pub use rendy::{
     factory::Factory,
     graph::{

@@ -64,9 +64,9 @@ done the following things first:
 2. All of the following commands completed without errors.  You can pass whatever features are relevant for your change. CI will test with all features enabled.
    * `rustup update stable nightly`
    * `cargo +nightly fmt --all`
-   * `cargo +nightly clippy --workspace --all-targets --features empty -Z unstable-options`
-   * `cargo test --all-targets --workspace --features empty`
-   * `cargo run --example $YOUR_EXAMPLE --features $YOUR_BACKEND`
+   * `cargo +nightly clippy --workspace --all-targets --all-features -Z unstable-options`
+   * `cargo test --all-targets --workspace --all-features`
+   * `cargo run -p $YOUR_EXAMPLE`
 3. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
@@ -293,7 +293,7 @@ cargo build --release --features profiler
 ```
 Or if you wanted to run an example with profiler:
 ```
-cargo run --example my_example --release --features profiler
+cargo run -p my_example --release --features profiler
 ```
 After an Amethyst instance built with `profiler` feature shuts down a
 `thread_profile.json` file is generated. It holds information about engine performance

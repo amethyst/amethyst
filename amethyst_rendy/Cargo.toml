@@ -12,13 +12,6 @@ license = "MIT/Apache-2.0"
 features = ["shader-compiler", "test-support", "winit", "vulkan"]
 
 [dependencies]
-rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = [
-    "base",
-    "mesh-obj",
-    "texture-image",
-    "texture-palette",
-    "serde-1",
-] }
 amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
@@ -42,6 +35,16 @@ type-uuid = "0.1"
 thread_profiler = { version = "0.3", optional = true }
 approx = "0.4.0"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["metal"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["vulkan"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["vulkan"] }
+
+
 [dev-dependencies]
 winit = { git = "https://git@github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 rayon = "1.4.0"
@@ -49,6 +52,13 @@ more-asserts = "0.2.1"
 criterion = "0.3.0"
 
 [features]
+default = [
+    "rendy/base",
+    "rendy/mesh-obj",
+    "rendy/texture-image",
+    "rendy/texture-palette",
+    "rendy/serde-1",
+]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
 empty = ["rendy/empty"]

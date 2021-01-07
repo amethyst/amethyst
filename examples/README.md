@@ -3,7 +3,7 @@
 All examples can be run with the following command, where `$NAME` is the name of the example, and `$BACKEND` is your graphics backend (usually `metal` on MacOS and `vulkan` on everything else.) Note that some examples require the additional `gltf` feature.
 
 ```
-cargo run -p $NAME --features $BACKEND
+cargo run -p $NAME
 ```
 
 ---

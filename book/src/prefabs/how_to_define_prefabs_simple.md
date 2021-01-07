@@ -94,7 +94,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 To see this in a complete example, run the [`prefab_basic` example] from the Amethyst repository:
 
 ```bash
-cargo run --example prefab_basic
+cargo run -p prefab_basic
 ```
 
 [`Component`]: https://docs.rs/specs/~0.16/specs/trait.Component.html

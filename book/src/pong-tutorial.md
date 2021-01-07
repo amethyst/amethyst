@@ -15,13 +15,11 @@ starting with the tutorial / running the examples.
 If you've cloned the Amethyst repo, you can run any of the examples like so:
 
 ```norun
-cargo run --example pong_tutorial_01 --features "vulkan"
+cargo run -p pong_tutorial_01
 ```
 
 The example named `pong_tutorial_xy` contains the code which you should have
 after following all tutorials from 1 to xy.
-
-> **Note:** On macOS, you might want to use `"metal"` instead of `"vulkan"`.
 
 [pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong_tutorial_06
 [examples]: https://github.com/amethyst/amethyst/tree/master/examples

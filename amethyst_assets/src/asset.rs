@@ -1,8 +1,6 @@
 use std::ops::Deref;
 
 use amethyst_error::Error;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::processor::ProcessingState;
 

@@ -68,23 +68,6 @@ cargo (build/test/run) --features profiler
 The next time you will run a project, upon closing it, a file will be created at the root of the project called `thread_profile.json`.
 You can open this file using the chromium browser (or google chrome) and navigating to chrome://tracing
 
-## Nightly
-
-> **Note:** Only applicable to Amethyst 0.14 and earlier.
->
-> Version after 0.14 no longer have the `"nightly"` feature, as the type names are available on stable Rust.
-
-Enabling the `nightly` feature adds a bit of debug information when running into runtime issues. To
-use it, you need to use the nightly rust compiler toolchain.
-
-Here is how to enable it:
-
-```ignore
-cargo (build/test/run) --features nightly
-```
-
-The most common use of this feature is to find out the type name of the resource that is missing, such as when a `Resources::fetch()` or `World::read_resource()` invocation fails.
-
 ## Amethyst as a dependency
 
 When using Amethyst as a dependency of your project, you can use the following to disable default features and enable other ones.
