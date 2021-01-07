@@ -505,7 +505,9 @@ where
         data_uuid: AssetTypeId(Intermediate::UUID),
         asset_uuid: AssetTypeId(Asset::UUID),
         create_storage: |res, indirection_table| {
+            debug!("Creating storage for {:x?}", Asset::UUID);
             res.get_or_insert_with(|| AssetStorage::<Asset>::new(indirection_table.clone()));
+            debug!("Creating queue for intermediate {:x?}", Intermediate::UUID);
             res.get_or_insert_with(ProcessingQueue::<Intermediate>::default);
         },
         register_system: |builder| {

@@ -12,7 +12,7 @@ pub struct UiFinder;
 
 impl UiFinder {
     /// Find the `UiTransform` entity with the given id
-    pub fn find(&self, world: &mut World, id: &str) -> Option<Entity> {
+    pub fn find<W: EntityStore>(world: &mut W, id: &str) -> Option<Entity> {
         <(Entity, &UiTransform)>::query()
             .iter(world)
             .filter(|(_, transform)| transform.id == id)
@@ -24,7 +24,7 @@ impl UiFinder {
 /// The UiTransform represents the transformation of a ui element.
 /// Values are in pixel and the position is calculated from the bottom left of the screen
 /// to the center of the ui element's area.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct UiTransform {
     /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
     pub id: String,
@@ -52,15 +52,20 @@ pub struct UiTransform {
     /// The height of this UI element.
     pub height: f32,
     /// Global x position set by the `UiTransformSystem`.
-    pub(crate) pixel_x: f32,
+    #[doc(hidden)]
+    pub pixel_x: f32,
     /// Global y position set by the `UiTransformSystem`.
-    pub(crate) pixel_y: f32,
+    #[doc(hidden)]
+    pub pixel_y: f32,
     /// Global z position set by the `UiTransformSystem`.
-    pub(crate) global_z: f32,
+    #[doc(hidden)]
+    pub global_z: f32,
     /// Width in pixels, used for rendering.  Duplicate of `width` if `scale_mode == ScaleMode::Pixel`.
-    pub(crate) pixel_width: f32,
+    #[doc(hidden)]
+    pub pixel_width: f32,
     /// Height in pixels, used for rendering.  Duplicate of `height` if `scale_mode == ScaleMode::Pixel`.
-    pub(crate) pixel_height: f32,
+    #[doc(hidden)]
+    pub pixel_height: f32,
     /// The scale mode indicates if the position is in pixel or is relative (%) (WIP!) to the parent's size.
     pub scale_mode: ScaleMode,
     /// Indicates if actions on the ui can go through this element.
@@ -70,8 +75,6 @@ pub struct UiTransform {
     /// Allows transparent (opaque = false) transforms to still be targeted by the events that pass
     /// through them.
     pub transparent_target: bool,
-    /// A private field to keep this from being initialized without new.
-    pd: PhantomData<()>,
 }
 
 impl UiTransform {
@@ -105,7 +108,6 @@ impl UiTransform {
             scale_mode: ScaleMode::Pixel,
             opaque: true,
             transparent_target: false,
-            pd: PhantomData,
         }
     }
     /// Checks if the input position is in the UiTransform rectangle.

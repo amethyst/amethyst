@@ -4,10 +4,12 @@
 */
 
 #![enable(implicit_some)]
-
+{
+"04c60333-c790-4586-aa76-086b19167a04":
 Grid((
     texture_width: 320,
     texture_height: 320,
     columns: 16,
     rows: 16,
 ))
+}
