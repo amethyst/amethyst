@@ -1,4 +1,7 @@
 #!/bin/sh
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
 set -e
 exec < /dev/tty
@@ -7,9 +10,9 @@ response=${response,,} # tolower
 if [[ $response =~ ^(yes|y|Y) ]]; then
     echo "Linting..."
     cargo +nightly check -q --workspace --all-targets --features empty,optional ||
-    echo "Lint Errors Found, Try this command: cargo +nightly fix --workspace --features empty,optional --allow-dirty --allow-staged"
+    echo -e "${RED}Lint Errors Found, Try this command: ${GREEN}cargo +nightly fix --workspace --features empty,optional --allow-dirty --allow-staged${NC}" && exit 1
     sleep 1 # fixes possibly newer errors
     cargo +nightly clippy -q -Z unstable-options --workspace --features empty,optional ||
-    echo "Lint Errors Found, Try this command: cargo +nightly clippy -Z unstable-options --workspace --features empty,optional --fix --allow-dirty --allow-staged"
+    echo -e "${RED}Lint Errors Found, Try this command: ${GREEN}cargo +nightly clippy -Z unstable-options --workspace --features empty,optional --fix --allow-dirty --allow-staged${NC}" && exit 1
     cargo +nightly fmt --all
 fi
