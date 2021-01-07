@@ -205,13 +205,15 @@ where
 
     fn load_bytes_format(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError> {
         match format {
-            ConfigFormat::Ron => ron::de::Deserializer::from_bytes(bytes)
-                .and_then(|mut de| {
-                    let val = T::deserialize(&mut de)?;
-                    de.end()?;
-                    Ok(val)
-                })
-                .map_err(ConfigError::Parser),
+            ConfigFormat::Ron => {
+                ron::de::Deserializer::from_bytes(bytes)
+                    .and_then(|mut de| {
+                        let val = T::deserialize(&mut de)?;
+                        de.end()?;
+                        Ok(val)
+                    })
+                    .map_err(ConfigError::Parser)
+            }
             #[cfg(feature = "json")]
             ConfigFormat::Json => {
                 let mut de = serde_json::de::Deserializer::from_slice(bytes);
@@ -221,7 +223,6 @@ where
             }
             #[cfg(feature = "binary")]
             ConfigFormat::Binary => {
-                use bincode::config::Options;
                 let des: T = bincode::deserialize(bytes)?;
                 Ok(des)
             }

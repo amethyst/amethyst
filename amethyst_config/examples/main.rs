@@ -1,5 +1,4 @@
 use amethyst_config::{Config, ConfigFormat};
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
