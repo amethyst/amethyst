@@ -12,6 +12,7 @@ pub use component_registry::{ComponentRegistry, ComponentRegistryBuilder};
 pub use legion_prefab::{register_component_type, ComponentRegistration};
 
 mod processor;
+pub use processor::PrefabProcessingQueue;
 
 // register core components
 register_component_type!(amethyst_core::transform::Transform);

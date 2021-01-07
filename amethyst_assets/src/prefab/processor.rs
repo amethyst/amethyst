@@ -1,17 +1,21 @@
 use crate::{
-    loader::{AssetType, AssetTypeStorage, DefaultLoader},
-    prefab::{ComponentRegistry, Prefab, RawPrefab},
+    loader::{AssetType, AssetTypeStorage, DefaultLoader, Loader},
+    prefab::{ComponentRegistry, Prefab, RawPrefab, RawPrefabMapping, RootPrefabs},
     processor::LoadNotifier,
     storage::AssetStorage,
-    LoadHandle,
+    AssetHandle, LoadHandle,
 };
 use amethyst_core::{
     dispatcher::System,
     ecs::{systems::ParallelRunnable, SystemBuilder},
 };
 use amethyst_error::Error as AmethystError;
-use atelier_assets::loader::{storage::AssetLoadOp, AssetTypeId};
+use atelier_assets::{
+    core::AssetUuid,
+    loader::{storage::AssetLoadOp, AssetTypeId},
+};
 use crossbeam_queue::SegQueue;
+use prefab_format::{ComponentTypeUuid, PrefabUuid};
 use std::{
     collections::HashMap,
     error::Error as StdError,
@@ -24,7 +28,7 @@ use type_uuid::TypeUuid;
 ///
 /// This function is not intended to be called be directly. Use the `register_asset_type!` macro
 /// macro instead.
-pub fn create_asset_type() -> AssetType {
+pub fn create_prefab_asset_type() -> AssetType {
     log::debug!("Creating asset type: {:x?}", RawPrefab::UUID);
     AssetType {
         data_uuid: AssetTypeId(RawPrefab::UUID),
@@ -32,7 +36,6 @@ pub fn create_asset_type() -> AssetType {
         create_storage: |res, indirection_table| {
             res.get_or_insert_with(|| AssetStorage::<RawPrefab>::new(indirection_table.clone()));
             res.get_or_insert_with(|| AssetStorage::<Prefab>::new(indirection_table.clone()));
-            res.get_or_insert_with(PrefabProcessingQueue::default);
         },
         register_system: |builder| {
             builder.add_system(Box::new(PrefabAssetProcessor::default()));
@@ -49,6 +52,8 @@ pub fn create_asset_type() -> AssetType {
         },
     }
 }
+
+inventory::submit!(create_prefab_asset_type());
 
 impl AssetTypeStorage for (&PrefabProcessingQueue, &mut AssetStorage<RawPrefab>) {
     fn update_asset(
@@ -106,18 +111,18 @@ pub enum ProcessingState<D, A> {
 pub struct PrefabProcessingQueue {
     pub(crate) processed: Arc<SegQueue<Processed<RawPrefab>>>,
     requeue: Mutex<Vec<Processed<RawPrefab>>>,
-}
-
-impl Default for PrefabProcessingQueue {
-    fn default() -> Self {
-        Self {
-            processed: Arc::new(SegQueue::new()),
-            requeue: Mutex::new(Vec::new()),
-        }
-    }
+    root_prefabs: RootPrefabs,
 }
 
 impl PrefabProcessingQueue {
+    pub(crate) fn new(root_prefabs: RootPrefabs) -> Self {
+        Self {
+            processed: Arc::new(SegQueue::new()),
+            requeue: Mutex::new(Vec::new()),
+            root_prefabs,
+        }
+    }
+
     /// Enqueue asset data for processing
     pub(crate) fn enqueue(
         &self,
@@ -189,21 +194,39 @@ impl PrefabProcessingQueue {
                     version,
                     commit,
                 } = processed;
+                println!("processing");
+                let raw_prefab = match data.and_then(
+                    |RawPrefab {
+                         raw_prefab,
+                         mut dependencies,
+                     }| {
+                        let deps = dependencies.get_or_insert_with(|| {
+                            raw_prefab
+                                .prefab_meta
+                                .prefab_refs
+                                .iter()
+                                .map(|(other_prefab_id, _)| {
+                                    loader.load_asset(AssetUuid(*other_prefab_id))
+                                })
+                                .collect()
+                        });
 
-                let asset = match data.and_then(|RawPrefab { raw_prefab }| {
-                    let prefab_cook_order = vec![raw_prefab.prefab_id()];
-                    let mut prefab_lookup = HashMap::new();
-                    prefab_lookup.insert(raw_prefab.prefab_id(), &raw_prefab);
-
-                    let prefab = legion_prefab::cook_prefab(
-                        component_registry.components(),
-                        component_registry.components_by_uuid(),
-                        prefab_cook_order.as_slice(),
-                        &prefab_lookup,
-                    );
-
-                    Ok(ProcessingState::Loaded(RawPrefab { raw_prefab }))
-                }) {
+                        if deps
+                            .into_iter()
+                            .all(|handle| raw_storage.contains(handle.load_handle()))
+                        {
+                            Ok(ProcessingState::Loaded(RawPrefab {
+                                raw_prefab,
+                                dependencies,
+                            }))
+                        } else {
+                            Ok(ProcessingState::Loading(RawPrefab {
+                                raw_prefab,
+                                dependencies,
+                            }))
+                        }
+                    },
+                ) {
                     Ok(ProcessingState::Loaded(x)) => {
                         log::debug!(
                             "Asset (handle id: {:?}) has been loaded successfully",
@@ -227,7 +250,76 @@ impl PrefabProcessingQueue {
                         continue;
                     }
                 };
-                raw_storage.update_asset(handle, asset, version);
+
+                if let Some(prefab_mapping) = self.root_prefabs.get(&handle) {
+                    // This will allowus to look up prefab references by AssetUuid
+                    let mut prefab_lookup = HashMap::new();
+
+                    // This will hold the asset IDs sorted with dependencies first. This ensures that
+                    // prefab_lookup and entity_lookup are populated with all dependent prefabs/entities
+                    let mut prefab_cook_order: Vec<PrefabUuid> = vec![];
+                    let first_iter = raw_prefab
+                        .dependencies
+                        .as_ref()
+                        .expect("dependencies have not been processed")
+                        .iter();
+                    let mut dependency_stack = vec![(&raw_prefab, first_iter)];
+                    loop {
+                        if let Some((raw_prefab, iter)) = dependency_stack.last_mut() {
+                            if let Some(next_handle) = iter.next() {
+                                if let Some(next_raw_prefab) = raw_storage.get(next_handle) {
+                                    if prefab_lookup
+                                        .contains_key(&next_raw_prefab.raw_prefab.prefab_meta.id)
+                                    {
+                                        continue;
+                                    }
+                                    let next_iter = next_raw_prefab
+                                        .dependencies
+                                        .as_ref()
+                                        .expect("dependencies have not been processed")
+                                        .iter();
+                                    dependency_stack.push((next_raw_prefab, next_iter));
+                                } else {
+                                    log::error!("Missing raw_prefab");
+                                }
+                            } else {
+                                // No more dependencies, add this prefab to prefab_cook_order and
+                                // pop the stack.
+                                prefab_cook_order.push(raw_prefab.raw_prefab.prefab_id());
+                                prefab_lookup.insert(
+                                    raw_prefab.raw_prefab.prefab_id(),
+                                    &raw_prefab.raw_prefab,
+                                );
+                                dependency_stack.pop();
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    println!("cook");
+                    let prefab = legion_prefab::cook_prefab(
+                        component_registry.components(),
+                        component_registry.components_by_uuid(),
+                        prefab_cook_order.as_slice(),
+                        &prefab_lookup,
+                    );
+                    let version = storage
+                        .get_version_for_load_handle(prefab_mapping.prefab_load_handle)
+                        .unwrap_or(0)
+                        + 1;
+                    println!(
+                        "update_asset {:?}, version {:?}",
+                        prefab_mapping.prefab_load_handle, version
+                    );
+                    storage.update_asset(
+                        prefab_mapping.prefab_load_handle,
+                        Prefab { prefab },
+                        version,
+                    );
+                    storage.commit_asset(prefab_mapping.prefab_load_handle, version);
+                }
+
+                raw_storage.update_asset(handle, raw_prefab, version);
                 if commit {
                     raw_storage.commit_asset(handle, version);
                 }
@@ -323,7 +415,7 @@ mod tests {
         fn setup() -> Self {
             let root_prefabs = RootPrefabs::default();
             let loader = DefaultLoader::new(root_prefabs.clone());
-            let processing_queue = PrefabProcessingQueue::default();
+            let processing_queue = PrefabProcessingQueue::new(root_prefabs.clone());
             let prefab_storage = AssetStorage::<Prefab>::new(loader.indirection_table.clone());
             let raw_prefab_storage =
                 AssetStorage::<RawPrefab>::new(loader.indirection_table.clone());
@@ -389,6 +481,7 @@ mod tests {
         let prefab_world = World::default();
         let raw_prefab = RawPrefab {
             raw_prefab: legion_prefab::Prefab::new(prefab_world),
+            dependencies: None,
         };
         let version = 0;
 
@@ -400,7 +493,6 @@ mod tests {
             version,
             false,
         );
-
         prefab_asset_processor(
             &component_registry,
             &mut processing_queue,
@@ -411,7 +503,7 @@ mod tests {
 
         raw_prefab_storage.commit_asset(raw_prefab_handle.load_handle(), version);
 
-        let asset = prefab_storage.get(&raw_prefab_handle);
+        let asset = prefab_storage.get(&prefab_handle);
         assert!(asset.is_some());
     }
 }

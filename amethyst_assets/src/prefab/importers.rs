@@ -2,7 +2,7 @@ use std::{collections::HashMap, io::Read};
 
 use atelier_assets::{
     core::AssetUuid,
-    importer::{self as atelier_importer, ImportedAsset, Importer, ImporterValue},
+    importer::{self as atelier_importer, ImportOp, ImportedAsset, Importer, ImporterValue},
 };
 use atelier_importer::ImportOp;
 use legion_prefab::ComponentRegistration;
@@ -81,10 +81,15 @@ impl Importer for PrefabImporter {
         };
 
         let prefab_deser = legion_prefab::PrefabFormatDeserializer::new(prefab_serde_context);
-        prefab_format::deserialize(&mut de, &prefab_deser)?;
+        if let Err(err) = prefab_format::deserialize(&mut de, &prefab_deser) {
+            return Err(atelier_importer::Error::RonDe(err));
+        }
         let raw_prefab = prefab_deser.prefab();
 
-        let prefab_asset = RawPrefab { raw_prefab };
+        let prefab_asset = RawPrefab {
+            raw_prefab,
+            dependencies: None,
+        };
 
         ///////////////////////////////////////////////////////////////
         // STEP 3: Now we need to save it into an asset

@@ -9,8 +9,8 @@ use thread_profiler::profile_scope;
 use type_uuid::TypeUuid;
 
 use crate::{
-    asset::Asset, prefab::ComponentRegistry, register_asset_type, AssetStorage, ProcessingQueue,
-    ProcessingState,
+    asset::Asset, prefab::ComponentRegistry, register_asset_type, AssetStorage, Handle,
+    ProcessingQueue, ProcessingState,
 };
 
 /// Cooked Prefab, containing a World with Entities
@@ -27,6 +27,9 @@ pub struct Prefab {
 pub struct RawPrefab {
     /// Contains World to cook and references to other prefabs
     pub raw_prefab: legion_prefab::Prefab,
+    /// `None`: dependencies have not been processed yet
+    /// `Some(Vec::len())` is 0: There are no dependencies
+    pub(crate) dependencies: Option<Vec<Handle<RawPrefab>>>,
 }
 
 impl Asset for Prefab {
@@ -36,40 +39,40 @@ impl Asset for Prefab {
     type Data = RawPrefab;
 }
 
-register_asset_type!(crate; RawPrefab => Prefab; PrefabAssetProcessor);
+// register_asset_type!(crate; RawPrefab => Prefab; PrefabAssetProcessor);
 
-#[derive(Default)]
-struct PrefabAssetProcessor;
+// #[derive(Default)]
+// struct PrefabAssetProcessor;
 
-impl System<'static> for PrefabAssetProcessor {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
-        Box::new(
-            SystemBuilder::new("PrefabAssetProcessorSystem")
-                .read_resource::<ComponentRegistry>()
-                .write_resource::<ProcessingQueue<RawPrefab>>()
-                .write_resource::<AssetStorage<Prefab>>()
-                .build(
-                    move |_, _, (component_registry, processing_queue, prefab_storage), _| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("prefab_asset_processor");
+// impl System<'static> for PrefabAssetProcessor {
+//     fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+//         Box::new(
+//             SystemBuilder::new("PrefabAssetProcessorSystem")
+//                 .read_resource::<ComponentRegistry>()
+//                 .write_resource::<ProcessingQueue<RawPrefab>>()
+//                 .write_resource::<AssetStorage<Prefab>>()
+//                 .build(
+//                     move |_, _, (component_registry, processing_queue, prefab_storage), _| {
+//                         #[cfg(feature = "profiler")]
+//                         profile_scope!("prefab_asset_processor");
 
-                        processing_queue.process(prefab_storage, |RawPrefab { raw_prefab }| {
-                            let prefab_cook_order = vec![raw_prefab.prefab_id()];
-                            let mut prefab_lookup = HashMap::new();
-                            prefab_lookup.insert(raw_prefab.prefab_id(), &raw_prefab);
+//                         processing_queue.process(prefab_storage, |RawPrefab { raw_prefab }| {
+//                             let prefab_cook_order = vec![raw_prefab.prefab_id()];
+//                             let mut prefab_lookup = HashMap::new();
+//                             prefab_lookup.insert(raw_prefab.prefab_id(), &raw_prefab);
 
-                            let prefab = legion_prefab::cook_prefab(
-                                component_registry.components(),
-                                component_registry.components_by_uuid(),
-                                prefab_cook_order.as_slice(),
-                                &prefab_lookup,
-                            );
+//                             let prefab = legion_prefab::cook_prefab(
+//                                 component_registry.components(),
+//                                 component_registry.components_by_uuid(),
+//                                 prefab_cook_order.as_slice(),
+//                                 &prefab_lookup,
+//                             );
 
-                            Ok(ProcessingState::Loaded(Prefab { prefab }))
-                        });
-                        prefab_storage.process_custom_drop(|_| {});
-                    },
-                ),
-        )
-    }
-}
+//                             Ok(ProcessingState::Loaded(Prefab { prefab }))
+//                         });
+//                         prefab_storage.process_custom_drop(|_| {});
+//                     },
+//                 ),
+//         )
+//     }
+// }
