@@ -18,14 +18,17 @@ pub trait Backend: rendy::hal::Backend {
 }
 
 #[cfg(any(
-    all(target_os = "macos", not(feature = "empty")),
+    all(target_os = "macos", not(any(feature = "empty", feature = "vulkan"))),
     all(feature = "metal", not(any(feature = "vulkan", feature = "empty")))
 ))]
 #[doc = "Default backend"]
 pub type DefaultBackend = rendy::metal::Backend;
 
 #[cfg(any(
-    all(not(target_os = "macos"), not(feature = "empty")),
+    all(
+        not(target_os = "macos"),
+        not(any(feature = "empty", feature = "metal"))
+    ),
     all(feature = "vulkan", not(any(feature = "metal", feature = "empty")))
 ))]
 #[doc = "Default backend"]
