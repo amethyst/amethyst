@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ### Added
+- Added page to book documenting watching input events ([#2434]).
+
+[#2434]: https://github.com/amethyst/amethyst/pull/2434
 
 ### Changed
 

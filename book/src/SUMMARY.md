@@ -25,6 +25,7 @@
 * [Input](./input.md)
     * [Handling Input](./input/handling_input.md)
     * [How to Define Custom Control Bindings](./input/how_to_define_custom_control_bindings.md)
+    * [Watching Input Events](./input/watching_input_events.md)
 * [Assets](./assets.md)
     * [Formats](./assets/formats.md)
     * [How to Use Assets](./assets/how_to_use_assets.md)
