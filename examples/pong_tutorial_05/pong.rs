@@ -223,7 +223,7 @@ fn initialise_scoreboard(world: &mut World, resources: &mut Resources) {
     let p1_score = world.push((
         p1_transform,
         UiText::new(
-            font.clone(),
+            Some(font.clone()),
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
@@ -235,7 +235,7 @@ fn initialise_scoreboard(world: &mut World, resources: &mut Resources) {
     let p2_score = world.push((
         p2_transform,
         UiText::new(
-            font,
+            Some(font),
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,

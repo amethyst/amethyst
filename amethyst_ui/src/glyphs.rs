@@ -27,13 +27,29 @@ use type_uuid::TypeUuid;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::{
-    pass::UiArgs, text::CachedGlyph, FontAsset, LineMode, Selected, TextEditing, UiText,
-    UiTransform,
+    format::FontData, get_default_font, pass::UiArgs, text::CachedGlyph, FontAsset, LineMode,
+    Selected, TextEditing, UiText, UiTransform,
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct UiGlyphsResource {
     glyph_tex: Option<Handle<Texture>>,
+    default_font: Handle<FontAsset>,
+}
+
+impl UiGlyphsResource {
+    pub fn new(resources: &Resources) -> Self {
+        let loader = resources
+            .get::<DefaultLoader>()
+            .expect("Could not get Loader resource");
+
+        let font_storage = resources.get::<ProcessingQueue<FontData>>().unwrap();
+
+        Self {
+            glyph_tex: None,
+            default_font: get_default_font(&loader, &font_storage),
+        }
+    }
 }
 
 impl UiGlyphsResource {
@@ -237,26 +253,29 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                 &mut else_world,
                                 |(entity, transform, ui_text, editing, tint)| {
                                     ui_text.cached_glyphs.clear();
+                                    let font_handle =
+                                        ui_text.font.as_ref().unwrap_or(&glyphs_res.default_font);
+
                                     let font_asset =
-                                        font_storage.get(&ui_text.font).map(|font| font.0.clone());
+                                        font_storage.get(font_handle).map(|font| font.0.clone());
 
                                     if let FontState::NotFound = self
                                         .fonts_map
-                                        .entry(ui_text.font.load_handle())
+                                        .entry(font_handle.load_handle())
                                         .or_insert(FontState::NotFound)
                                     {
-                                        if let Some(font) = font_storage.get(&ui_text.font) {
+                                        if let Some(font) = font_storage.get(font_handle) {
                                             log::debug!("Adding font to glyph brush.");
                                             let new_font = FontState::Ready(
                                                 self.glyph_brush.add_font(font.0.clone()),
                                             );
                                             self.fonts_map
-                                                .insert(ui_text.font.load_handle(), new_font);
+                                                .insert(font_handle.load_handle(), new_font);
                                         }
                                     }
 
                                     let font_lookup =
-                                        self.fonts_map.get(&ui_text.font.load_handle()).unwrap();
+                                        self.fonts_map.get(&font_handle.load_handle()).unwrap();
 
                                     if let (Some(font_id), Some(font_asset)) =
                                         (font_lookup.id(), font_asset)
@@ -643,9 +662,14 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                                     );
                                                 }
 
+                                                let font_handle = ui_text
+                                                    .font
+                                                    .as_ref()
+                                                    .unwrap_or(&glyphs_res.default_font);
+
                                                 if let Some(editing) = editing {
                                                     if let Some(font) =
-                                                        font_storage.get(&ui_text.font)
+                                                        font_storage.get(font_handle)
                                                     {
                                                         let scale =
                                                             Scale::uniform(ui_text.font_size);
@@ -741,8 +765,12 @@ impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
                                         not_hidden_glyphs_query_with_editing.for_each_mut(
                                             world,
                                             |(_, glyph_data, transform, ui_text, editing)| {
-                                                if let Some(font) = font_storage.get(&ui_text.font)
-                                                {
+                                                let font_handle = ui_text
+                                                    .font
+                                                    .as_ref()
+                                                    .unwrap_or(&glyphs_res.default_font);
+
+                                                if let Some(font) = font_storage.get(font_handle) {
                                                     let scale = Scale::uniform(ui_text.font_size);
                                                     let v_metrics = font.0.v_metrics(scale);
                                                     let pos = editing.cursor_position;
