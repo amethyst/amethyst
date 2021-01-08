@@ -337,8 +337,8 @@ mod tests {
 
     #[test]
     fn restart() {
-        const DURATION0: u64 = 60; // in milliseconds.
-        const DURATION: u64 = 30; // in milliseconds.
+        const DURATION0: u64 = 200; // in milliseconds.
+        const DURATION: u64 = 100; // in milliseconds.
         let uncertainty = get_uncertainty(); // in percents.
         let mut watch = Stopwatch::new();
 
