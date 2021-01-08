@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ### Added
+- Support for JSON & Binary config files ([#2387])
 
 ### Changed
 
@@ -28,6 +29,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+[#2387]: https://github.com/amethyst/amethyst/issues/2387
 [#2489]: https://github.com/amethyst/amethyst/pull/2489
 [#2492]: https://github.com/amethyst/amethyst/pull/2492
 [#2521]: https://github.com/amethyst/amethyst/pull/2521
