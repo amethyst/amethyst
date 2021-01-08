@@ -24,9 +24,6 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         toolchain: [stable, beta, nightly]
-        include:
-        - os: macos-latest
-          MACOS: true
     steps:
       - uses: actions/checkout@v2
 
@@ -66,8 +63,6 @@ jobs:
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
       - run: cargo test --workspace --all-targets --all-features
-        env:
-          MACOS: ${{ matrix.MACOS }} # Used by some tests
 
       - name: install mdbook on stable, ubuntu-latest
         uses: peaceiris/actions-mdbook@v1

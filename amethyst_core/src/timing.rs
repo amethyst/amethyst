@@ -290,16 +290,11 @@ mod tests {
 
     // Timing varies more on macOS CI
     fn get_uncertainty() -> u32 {
-        let is_macos = !std::env::var("MACOS").unwrap_or_default().is_empty();
-        let is_ci = std::env::var("CI").is_ok();
-        if is_macos && is_ci {
-            25
-        } else {
-            15
-        }
+        15
     }
 
     #[test]
+    #[cfg(not(target_os = "mac_os"))]
     fn elapsed() {
         const DURATION: u64 = 1; // in seconds.
         let mut watch = Stopwatch::new();
@@ -324,6 +319,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "mac_os"))]
     fn reset() {
         let mut watch = Stopwatch::new();
 
@@ -336,6 +332,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "mac_os"))]
     fn restart() {
         const DURATION0: u64 = 1000; // in milliseconds.
         const DURATION: u64 = 500; // in milliseconds.
@@ -366,6 +363,7 @@ mod tests {
 
     // test that multiple start-stop cycles are cumulative
     #[test]
+    #[cfg(not(target_os = "mac_os"))]
     fn stop_start() {
         let uncertainty = get_uncertainty(); // in percents.
         let mut watch = Stopwatch::new();
