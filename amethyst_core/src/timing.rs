@@ -294,7 +294,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(target_os = "mac_os"))]
+    #[cfg(not(target_os = "macos"))]
     fn elapsed() {
         const DURATION: u64 = 1; // in seconds.
         let mut watch = Stopwatch::new();
@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(target_os = "mac_os"))]
+    #[cfg(not(target_os = "macos"))]
     fn reset() {
         let mut watch = Stopwatch::new();
 
@@ -332,7 +332,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(not(target_os = "mac_os"))]
+    #[cfg(not(target_os = "macos"))]
     fn restart() {
         const DURATION0: u64 = 1000; // in milliseconds.
         const DURATION: u64 = 500; // in milliseconds.
@@ -363,7 +363,7 @@ mod tests {
 
     // test that multiple start-stop cycles are cumulative
     #[test]
-    #[cfg(not(target_os = "mac_os"))]
+    #[cfg(not(target_os = "macos"))]
     fn stop_start() {
         let uncertainty = get_uncertainty(); // in percents.
         let mut watch = Stopwatch::new();
