@@ -5,9 +5,7 @@ use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
-#[cfg(feature = "sentry")]
-use sentry::integrations::panic::register_panic_handler;
-#[cfg(feature = "profiler")]
+ #[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 use winit::event::{Event, WindowEvent};
 
@@ -225,7 +223,6 @@ where
         #[cfg(feature = "sentry")]
         let _sentry_guard = if let Some(dsn) = option_env!("SENTRY_DSN") {
             let guard = sentry::init(dsn);
-            register_panic_handler();
             Some(guard)
         } else {
             None
