@@ -88,7 +88,7 @@ In the background, the [`PrefabLoaderSystem`] will run, and attach the `Position
 This can be seen by running the `prefab_basic` example from the Amethyst repository:
 
 ```bash
-cargo run --example prefab_basic
+cargo run -p prefab_basic
 ```
 
 ### Multiple Components
@@ -156,7 +156,7 @@ Now, when we create an entity with the prefab handle, both components will be at
 This can be seen by running the `prefab_multi` example from the Amethyst repository:
 
 ```bash
-cargo run --example prefab_multi
+cargo run -p prefab_multi
 ```
 
 ### Multiple Entities, Different Components
@@ -275,7 +275,7 @@ The sword entity `2` has player entity `0` as its parent, and sword entity `3` h
 This can be seen by running the `prefab_custom` example from the Amethyst repository:
 
 ```bash
-cargo run --example prefab_custom
+cargo run -p prefab_custom
 ```
 
 ---

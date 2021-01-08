@@ -34,4 +34,4 @@ approx = "0.3"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]
-sdl_controller = ["sdl2"]
+# sdl_controller = ["sdl2"]

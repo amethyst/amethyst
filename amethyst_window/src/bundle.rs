@@ -42,9 +42,11 @@ impl WindowBundle {
     /// * `visibility` is `false`.
     #[cfg(feature = "test-support")]
     pub fn from_test_config() -> Self {
-        let mut display_config = DisplayConfig::default();
-        display_config.dimensions = Some((SCREEN_WIDTH, SCREEN_HEIGHT));
-        display_config.visibility = false;
+        let display_config = DisplayConfig {
+            dimensions: Some((SCREEN_WIDTH, SCREEN_HEIGHT)),
+            visibility: false,
+            ..Default::default()
+        };
 
         WindowBundle::from_config(display_config)
     }

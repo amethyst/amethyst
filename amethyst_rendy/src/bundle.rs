@@ -795,9 +795,9 @@ pub enum RenderOrder {
     Overlay = 600,
 }
 
-impl Into<i32> for RenderOrder {
-    fn into(self) -> i32 {
-        self as i32
+impl From<RenderOrder> for i32 {
+    fn from(r: RenderOrder) -> Self {
+        r as i32
     }
 }
 

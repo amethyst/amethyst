@@ -25,23 +25,23 @@ pub struct Skin {
     pub joint_matrices: Vec<Matrix4<f32>>,
 }
 
-impl Skin {
-    /// Creates a new `Skin`
-    pub fn new(
-        joints: Vec<Entity>,
-        meshes: Vec<Entity>,
-        inverse_bind_matrices: Vec<Matrix4<f32>>,
-    ) -> Self {
-        let len = joints.len();
-        Skin {
-            joints,
-            meshes,
-            inverse_bind_matrices,
-            bind_shape_matrix: Matrix4::identity(),
-            joint_matrices: Vec::with_capacity(len),
-        }
-    }
-}
+// impl Skin {
+//     /// Creates a new `Skin`
+//     pub fn new(
+//         joints: Vec<Entity>,
+//         meshes: Vec<Entity>,
+//         inverse_bind_matrices: Vec<Matrix4<f32>>,
+//     ) -> Self {
+//         let len = joints.len();
+//         Skin {
+//             joints,
+//             meshes,
+//             inverse_bind_matrices,
+//             bind_shape_matrix: Matrix4::identity(),
+//             joint_matrices: Vec::with_capacity(len),
+//         }
+//     }
+// }
 
 /// `PrefabData` for loading `Joint`s
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

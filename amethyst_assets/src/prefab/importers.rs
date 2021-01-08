@@ -4,6 +4,7 @@ use atelier_assets::{
     core::AssetUuid,
     importer::{self as atelier_importer, ImportedAsset, Importer, ImporterValue},
 };
+use atelier_importer::ImportOp;
 use legion_prefab::ComponentRegistration;
 use prefab_format::ComponentTypeUuid;
 use serde::{Deserialize, Serialize};
@@ -42,6 +43,7 @@ impl Importer for PrefabImporter {
 
     fn import(
         &self,
+        _op: &mut ImportOp,
         source: &mut dyn Read,
         _: &Self::Options,
         state: &mut Self::State,

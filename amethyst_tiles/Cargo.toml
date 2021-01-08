@@ -1,7 +1,10 @@
 [package]
 name = "amethyst_tiles"
 version = "0.15.3"
-authors = ["Walter Pearce <jaynus@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Walter Pearce <jaynus@gmail.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "2D and 3D Tile Support Library"
 
@@ -40,8 +43,4 @@ more-asserts = "0.2"
 approx = "0.3"
 
 [features]
-vulkan = ["amethyst_rendy/vulkan"]
-metal = ["amethyst_rendy/metal"]
-empty = ["amethyst_rendy/empty"]
-
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = ["thread_profiler/thread_profiler"]

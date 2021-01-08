@@ -17,109 +17,146 @@ pub trait Backend: rendy::hal::Backend {
     fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture;
 }
 
-macro_rules! impl_backends {
-    ($($variant:ident, $feature:literal, $backend:ty;)*) => {
+#[cfg(any(
+    all(target_os = "macos", not(any(feature = "empty", feature = "vulkan"))),
+    all(feature = "metal", not(any(feature = "vulkan", feature = "empty")))
+))]
+#[doc = "Default backend"]
+pub type DefaultBackend = rendy::metal::Backend;
 
-        impl_single_default!($([$feature, $backend]),*);
+#[cfg(any(
+    all(
+        not(target_os = "macos"),
+        not(any(feature = "empty", feature = "metal"))
+    ),
+    all(feature = "vulkan", not(any(feature = "metal", feature = "empty")))
+))]
+#[doc = "Default backend"]
+pub type DefaultBackend = rendy::vulkan::Backend;
 
-        static_assertions::assert_cfg!(
-            any($(feature = $feature),*),
-            concat!("You must specify at least one graphical backend feature: ", stringify!($($feature),* "See the wiki article https://book.amethyst.rs/stable/appendices/c_feature_gates.html#graphics-features for more details."))
-        );
+#[cfg(feature = "empty")]
+#[doc = "Default backend"]
+pub type DefaultBackend = rendy::empty::Backend;
 
-        /// Backend wrapper.
-        #[derive(Debug)]
-        pub enum BackendVariant {
-            $(
-                #[cfg(feature = $feature)]
-                #[doc = "Backend Variant"]
-                $variant,
-            )*
-        }
-
-        /// Mesh wrapper.
-        #[derive(Debug, TypeUuid)]
-        #[uuid = "3017f6f7-b9fa-4d55-8cc5-27f803592569"]
-        pub enum Mesh {
-            $(
-                #[cfg(feature = $feature)]
-                #[doc = "Mesh Variant"]
-                $variant(rendy::mesh::Mesh<$backend>),
-            )*
-        }
-
-        /// Texture wrapper.
-        #[derive(Debug, TypeUuid)]
-        #[uuid = "af14628f-c707-4921-9ac1-f6ae42b8ee8e"]
-        pub enum Texture {
-            $(
-                #[cfg(feature = $feature)]
-                #[doc = "Texture Variant"]
-                $variant(rendy::texture::Texture<$backend>),
-            )*
-        }
-
-        $(
-            #[cfg(feature = $feature)]
-            impl Backend for $backend {
-                #[inline]
-                #[allow(irrefutable_let_patterns)]
-                fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
-                    if let Mesh::$variant(inner) = mesh {
-                        Some(inner)
-                    } else {
-                        None
-                    }
-                }
-                #[inline]
-                #[allow(irrefutable_let_patterns)]
-                fn unwrap_texture(texture: &Texture) -> Option<&rendy::texture::Texture<Self>> {
-                    if let Texture::$variant(inner) = texture {
-                        Some(inner)
-                    } else {
-                        None
-                    }
-                }
-                #[inline]
-                fn wrap_mesh(mesh: rendy::mesh::Mesh<Self>) -> Mesh {
-                    Mesh::$variant(mesh)
-                }
-                #[inline]
-                fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture {
-                    Texture::$variant(texture)
-                }
-            }
-        )*
-    };
+/// Mesh wrapper.
+#[derive(Debug, TypeUuid)]
+#[uuid = "3017f6f7-b9fa-4d55-8cc5-27f803592569"]
+pub enum Mesh {
+    #[cfg(target_os = "macos")]
+    #[doc = "Mesh Variant"]
+    Metal(rendy::mesh::Mesh<rendy::metal::Backend>),
+    #[cfg(all(not(target_os = "macos"), not(feature = "empty")))]
+    #[doc = "Mesh Variant"]
+    Vulkan(rendy::mesh::Mesh<rendy::vulkan::Backend>),
+    #[cfg(feature = "empty")]
+    #[doc = "Mesh Variant"]
+    Empty(rendy::mesh::Mesh<rendy::empty::Backend>),
 }
 
-// Create `DefaultBackend` type alias only when exactly one backend is selected.
-macro_rules! impl_single_default {
-    ( $([$feature:literal, $backend:ty]),* ) => {
-        impl_single_default!(@ (), ($([$feature, $backend])*));
-    };
-    (@ ($($prev:literal)*), ([$cur:literal, $backend:ty]) ) => {
-        #[cfg(all( feature = $cur, not(any($(feature = $prev),*)) ))]
-        #[doc = "Default backend"]
-        pub type DefaultBackend = $backend;
-    };
-    (@ ($($prev:literal)*), ([$cur:literal, $backend:ty] $([$nf:literal, $nb:ty])*) ) => {
-        #[cfg(all( feature = $cur, not(any($(feature = $prev,)* $(feature = $nf),*)) ))]
-        #[doc = "Default backend"]
-        pub type DefaultBackend = $backend;
-
-        impl_single_default!(@ ($($prev)* $cur), ($([$nf, $nb])*) );
-    };
+/// Texture wrapper.
+#[derive(Debug, TypeUuid)]
+#[uuid = "af14628f-c707-4921-9ac1-f6ae42b8ee8e"]
+pub enum Texture {
+    #[cfg(target_os = "macos")]
+    #[doc = "Texture Variant"]
+    Metal(rendy::texture::Texture<rendy::metal::Backend>),
+    #[cfg(all(not(target_os = "macos"), not(feature = "empty")))]
+    #[doc = "Texture Variant"]
+    Vulkan(rendy::texture::Texture<rendy::vulkan::Backend>),
+    #[cfg(feature = "empty")]
+    #[doc = "Texture Variant"]
+    Empty(rendy::texture::Texture<rendy::empty::Backend>),
 }
 
-impl_backends!(
-    // DirectX 12 is currently disabled because of incomplete gfx-hal support for it.
-    // It will be re-enabled when it actually works.
-    // Dx12, "dx12", rendy::dx12::Backend;
-    Metal, "metal", rendy::metal::Backend;
-    Vulkan, "vulkan", rendy::vulkan::Backend;
-    Empty, "empty", rendy::empty::Backend;
-);
+#[cfg(target_os = "macos")]
+impl Backend for rendy::metal::Backend {
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
+        if let Mesh::Metal(inner) = mesh {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_texture(texture: &Texture) -> Option<&rendy::texture::Texture<Self>> {
+        if let Texture::Metal(inner) = texture {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn wrap_mesh(mesh: rendy::mesh::Mesh<Self>) -> Mesh {
+        Mesh::Metal(mesh)
+    }
+    #[inline]
+    fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture {
+        Texture::Metal(texture)
+    }
+}
+
+#[cfg(all(not(target_os = "macos"), not(feature = "empty")))]
+impl Backend for rendy::vulkan::Backend {
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
+        if let Mesh::Vulkan(inner) = mesh {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_texture(texture: &Texture) -> Option<&rendy::texture::Texture<Self>> {
+        if let Texture::Vulkan(inner) = texture {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn wrap_mesh(mesh: rendy::mesh::Mesh<Self>) -> Mesh {
+        Mesh::Vulkan(mesh)
+    }
+    #[inline]
+    fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture {
+        Texture::Vulkan(texture)
+    }
+}
+
+#[cfg(feature = "empty")]
+impl Backend for rendy::empty::Backend {
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
+        if let Mesh::Empty(inner) = mesh {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    #[allow(irrefutable_let_patterns)]
+    fn unwrap_texture(texture: &Texture) -> Option<&rendy::texture::Texture<Self>> {
+        if let Texture::Empty(inner) = texture {
+            Some(inner)
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn wrap_mesh(mesh: rendy::mesh::Mesh<Self>) -> Mesh {
+        Mesh::Empty(mesh)
+    }
+    #[inline]
+    fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture {
+        Texture::Empty(texture)
+    }
+}
 
 amethyst_assets::register_asset_type!(MeshData => Mesh; MeshProcessorSystem<DefaultBackend>);
 amethyst_assets::register_asset_type!(TextureData => Texture; TextureProcessorSystem<DefaultBackend>);

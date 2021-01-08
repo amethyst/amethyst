@@ -26,12 +26,7 @@ jobs:
         toolchain: [stable, beta, nightly]
         include:
         - os: macos-latest
-          BACKEND: metal
           MACOS: true
-        - os: windows-latest
-          BACKEND: vulkan
-        - os: ubuntu-latest
-          BACKEND: vulkan
     steps:
       - uses: actions/checkout@v2
 
@@ -49,6 +44,9 @@ jobs:
           profile: minimal
           override: true
 
+      - uses: seanmiddleditch/gha-setup-ninja@master
+        if: matrix.os == 'windows-latest'
+
       - run: rustup component add rustfmt
         if: matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest'
 
@@ -58,7 +56,7 @@ jobs:
       - run: rustup component add clippy
         if: matrix.toolchain == 'nightly'
 
-      - run: cargo +nightly clippy -Z unstable-options --workspace --all-targets --features=optional,${{ matrix.BACKEND }}
+      - run: cargo +nightly clippy -Z unstable-options --workspace --all-targets --all-features
         if: matrix.toolchain == 'nightly'
 
       - name: clean clippy-generated amethyst libs
@@ -67,7 +65,7 @@ jobs:
         run: rm -rf ./target/debug/deps/libamethyst*
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - run: cargo test --workspace --all-targets --features=optional,${{ matrix.BACKEND }}
+      - run: cargo test --workspace --all-targets --all-features
         env:
           MACOS: ${{ matrix.MACOS }} # Used by some tests
 
