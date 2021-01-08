@@ -126,7 +126,7 @@ legion = { version = "0.3", default-features = false, features = [
 ] }
 
 [build-dependencies]
-dirs = "2.0.2"
+dirs-next = "2.0.0"
 vergen = "3.1.0"
 
 [package.metadata.docs.rs]
