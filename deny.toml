@@ -1,26 +1,17 @@
 
 [licenses]
-unlicensed = "deny"
 allow = ["MIT", "Apache-2.0"]
 copyleft = "deny"
-allow-osi-fsf-free = "neither"
-default = "deny"
 confidence-threshold = 1.0
 
 exceptions = []
 
-[licenses.private]
-ignore = false
-
 [bans]
 multiple-versions = "deny"
 wildcards = "warn"
-highlight = "all"
-
 
 [sources]
-unknown-registry = "warn"
 unknown-git = "deny"
 
-[sources.all-org]
+[sources.allow-org]
 github = ["amethyst", "radium-io"]
