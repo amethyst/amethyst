@@ -128,11 +128,6 @@ legion = { version = "0.3", default-features = false, features = [
     "codegen",
 ] }
 
-[dev-dependencies.cargo-husky]
-version = "1"
-default-features = false
-features = ["user-hooks"]
-
 [build-dependencies]
 dirs = "2.0.2"
 vergen = "3.1.0"

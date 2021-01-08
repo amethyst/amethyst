@@ -66,6 +66,8 @@ done the following things first:
     * `cargo +nightly clippy --workspace --all-targets --features empty -Z unstable-options`
     * `cargo test --all-targets --workspace`
     * `cargo +nightly fmt --all`
+
+    You can copy `script/pre-commit` to `.git/hooks/pre-commit` for a prompt to remind you of these requirements and automatically lint and fix some of them for you when committing.
 3. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
