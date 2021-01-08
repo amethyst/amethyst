@@ -1,5 +1,3 @@
-extern crate amethyst;
-
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy, prelude::*, utils::application_root_dir,
 };

@@ -126,9 +126,6 @@ legion = { version = "0.3", default-features = false, features = [
     "codegen",
 ] }
 
-[dev-dependencies]
-rusty-hook = { git = "https://git@github.com/swellaby/rusty-hook", branch = "master" }
-
 [build-dependencies]
 dirs = "2.0.2"
 vergen = "3.1.0"
