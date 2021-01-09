@@ -1,14 +1,14 @@
-use minterpolate::InterpolationPrimitive;
-use serde::{Deserialize, Serialize};
-
-use amethyst_assets::Handle;
+use amethyst_assets::{register_asset_type, AssetProcessorSystem, Handle};
+use amethyst_core::ecs::CommandBuffer;
 use amethyst_rendy::{
     mtl::{Material, TextureOffset},
     sprite::Sprite,
     types::Texture,
 };
+use minterpolate::InterpolationPrimitive;
+use serde::{Deserialize, Serialize};
 
-use crate::{AnimationSampling, ApplyData, BlendMethod};
+use crate::{Animation, AnimationSampling, BlendMethod, Sampler};
 
 /// Sampler primitive for Material animations
 /// Note that material can only ever be animated with `Step`, or a panic will occur.
@@ -21,6 +21,15 @@ pub enum MaterialPrimitive {
     /// Dynamically altering the section of the texture rendered.
     Offset((f32, f32), (f32, f32)),
 }
+
+use type_uuid::TypeUuid;
+use uuid::Uuid;
+
+impl TypeUuid for Sampler<MaterialPrimitive> {
+    const UUID: type_uuid::Bytes =
+        *Uuid::from_u128(241595315345789436729706626074361057644).as_bytes();
+}
+register_asset_type!(Sampler<MaterialPrimitive> => Sampler<MaterialPrimitive>; AssetProcessorSystem<Sampler<MaterialPrimitive>>);
 
 impl InterpolationPrimitive for MaterialPrimitive {
     fn add(&self, _: &Self) -> Self {
@@ -91,10 +100,6 @@ pub enum MaterialChannel {
     UvOffset,
 }
 
-impl<'a> ApplyData<'a> for Material {
-    type ApplyData = ();
-}
-
 fn offset(offset: &TextureOffset) -> MaterialPrimitive {
     MaterialPrimitive::Offset(offset.u, offset.v)
 }
@@ -103,11 +108,22 @@ fn texture_offset(u: (f32, f32), v: (f32, f32)) -> TextureOffset {
     TextureOffset { u, v }
 }
 
+impl TypeUuid for Animation<Material> {
+    const UUID: type_uuid::Bytes =
+        *Uuid::from_u128(83822419317134738729184959262618377566).as_bytes();
+}
+register_asset_type!(Animation<Material> => Animation<Material>; AssetProcessorSystem<Animation<Material>>);
+
 impl AnimationSampling for Material {
     type Primitive = MaterialPrimitive;
     type Channel = MaterialChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive, _: &()) {
+    fn apply_sample<'a>(
+        &mut self,
+        channel: &Self::Channel,
+        data: &Self::Primitive,
+        _buffer: &mut CommandBuffer,
+    ) {
         match (channel, data) {
             (MaterialChannel::AlbedoTexture, MaterialPrimitive::Texture(i)) => {
                 self.albedo = i.clone();
@@ -136,7 +152,7 @@ impl AnimationSampling for Material {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> Self::Primitive {
+    fn current_sample<'a>(&self, channel: &Self::Channel) -> Self::Primitive {
         match *channel {
             MaterialChannel::AlbedoTexture => MaterialPrimitive::Texture(self.albedo.clone()),
             MaterialChannel::EmissionTexture => MaterialPrimitive::Texture(self.emission.clone()),

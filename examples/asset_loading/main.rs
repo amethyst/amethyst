@@ -2,11 +2,14 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
-    assets::{Format as AssetFormat, Handle, Loader},
-    core::{math::Vector3, Transform, TransformBundle},
-    ecs::{World, WorldExt},
+    assets::{AssetHandle, DefaultLoader, Format, Handle, Loader, LoaderBundle, ProcessingQueue},
+    core::{
+        math::Vector3,
+        transform::{Transform, TransformBundle},
+    },
+    ecs::World,
     error::Error,
-    input::{InputBundle, StringBindings},
+    input::InputBundle,
     prelude::*,
     renderer::{
         camera::Camera,
@@ -18,16 +21,22 @@ use amethyst::{
             mesh::{MeshBuilder, Normal, Position, TexCoord},
             texture::palette::load_from_srgba,
         },
-        types::{DefaultBackend, Mesh, MeshData},
-        RenderingBundle,
+        types::{DefaultBackend, Mesh, MeshData, TextureData},
+        RenderingBundle, Texture,
     },
     utils::application_root_dir,
 };
+use log::info;
+use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
-#[derive(Clone, Debug)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, TypeUuid)]
+#[uuid = "f245dc2b-88a9-413e-bd51-f6c341c32017"]
 struct Custom;
 
-impl AssetFormat<MeshData> for Custom {
+use amethyst::assets as amethyst_assets;
+amethyst::assets::register_importer!(".custom", Custom);
+impl Format<MeshData> for Custom {
     fn name(&self) -> &'static str {
         "CUSTOM"
     }
@@ -55,6 +64,7 @@ impl AssetFormat<MeshData> for Custom {
             ]));
             tex.push(TexCoord([0.0, 0.0]))
         }
+        info!("Creating mesh");
         Ok(MeshBuilder::new()
             .with_vertices(pos)
             .with_vertices(norm)
@@ -66,24 +76,25 @@ impl AssetFormat<MeshData> for Custom {
 struct AssetsExample;
 
 impl SimpleState for AssetsExample {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let StateData { world, .. } = data;
-        world.insert(0usize);
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let StateData {
+            world, resources, ..
+        } = data;
+        world.push((0usize,));
 
         initialise_camera(world);
         initialise_lights(world);
 
         // Add custom cube object to scene
         let (mesh, mtl) = {
-            let mat_defaults = world.read_resource::<MaterialDefaults>();
-            let loader = world.read_resource::<Loader>();
+            let mat_defaults = resources.get::<MaterialDefaults>().unwrap();
+            let loader = resources.get::<DefaultLoader>().unwrap();
 
-            let meshes = &world.read_resource();
-            let textures = &world.read_resource();
-            let materials = &world.read_resource();
+            let textures = &resources.get::<ProcessingQueue<TextureData>>().unwrap();
+            let materials = &resources.get().unwrap();
 
-            let mesh: Handle<Mesh> = loader.load("mesh/cuboid.custom", Custom, (), meshes);
-            let albedo = loader.load_from_data(
+            let mesh: Handle<Mesh> = loader.load("mesh/cuboid.custom");
+            let albedo: Handle<Texture> = loader.load_from_data(
                 load_from_srgba(Srgba::new(0.1, 0.5, 0.3, 1.0)).into(),
                 (),
                 textures,
@@ -99,33 +110,52 @@ impl SimpleState for AssetsExample {
 
             (mesh, mat)
         };
-
+        log::debug!(
+            "Handle<Mesh>: {:#?}, LoadHandle: {:?}",
+            mesh,
+            mesh.load_handle()
+        );
         let mut trans = Transform::default();
         trans.set_translation_xyz(-5.0, 0.0, 0.0);
         trans.set_scale(Vector3::new(2.0, 2.0, 2.0));
-        world
-            .create_entity()
-            .with(mesh)
-            .with(mtl)
-            .with(trans)
-            .build();
+        world.push((mesh, mtl, trans));
     }
 }
 
 fn main() -> Result<(), Error> {
-    amethyst::start_logger(Default::default());
+    let config = amethyst::LoggerConfig {
+        log_file: Some(std::path::PathBuf::from("asset_loading.log")),
+        level_filter: amethyst::LogLevelFilter::Info,
+        module_levels: vec![
+            (
+                "amethyst_assets".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_daemon".to_string(),
+                amethyst::LogLevelFilter::Debug,
+            ),
+            (
+                "atelier_loader".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+        ],
+        ..Default::default()
+    };
+    amethyst::start_logger(config);
 
     let app_root = application_root_dir()?;
-
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/asset_loading/assets");
+    let assets_dir = app_root.join("assets/");
 
-    let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
+    let mut dispatcher_builder = DispatcherBuilder::default();
+    dispatcher_builder
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
+        .add_bundle(InputBundle::new())
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
                 .with_plugin(RenderShaded3D::default())
@@ -133,8 +163,8 @@ fn main() -> Result<(), Error> {
                     Srgb::new(0.82, 0.51, 0.50),
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
-        )?;
-    let mut game = Application::new(assets_dir, AssetsExample, game_data)?;
+        );
+    let game = Application::new(assets_dir, AssetsExample, dispatcher_builder)?;
     game.run();
     Ok(())
 }
@@ -144,11 +174,10 @@ fn initialise_camera(world: &mut World) {
     transform.set_translation_xyz(0.0, -20.0, 10.0);
     transform.prepend_rotation_x_axis(1.325_752_1);
 
-    world
-        .create_entity()
-        .with(Camera::perspective(1.0, std::f32::consts::FRAC_PI_3, 0.1))
-        .with(transform)
-        .build();
+    world.push((
+        Camera::perspective(1.0, std::f32::consts::FRAC_PI_3, 0.1),
+        transform,
+    ));
 }
 
 /// Adds lights to the scene.
@@ -165,5 +194,5 @@ fn initialise_lights(world: &mut World) {
     transform.set_translation_xyz(5.0, -20.0, 15.0);
 
     // Add point light.
-    world.create_entity().with(light).with(transform).build();
+    world.push((light, transform));
 }

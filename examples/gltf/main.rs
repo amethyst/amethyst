@@ -13,6 +13,7 @@ use amethyst::{
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
     ecs::{Entity, ReadStorage, Write, WriteStorage},
+    gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystemDesc},
     input::{is_close_requested, is_key_down, StringBindings, VirtualKeyCode},
     prelude::*,
     renderer::{
@@ -29,8 +30,6 @@ use amethyst::{
     },
     Error,
 };
-use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystemDesc};
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Default)]
@@ -62,7 +61,7 @@ struct ScenePrefabData {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
 
         self.progress = Some(ProgressCounter::default());
@@ -78,11 +77,7 @@ impl SimpleState for Example {
         );
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -103,7 +98,7 @@ impl SimpleState for Example {
         }
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
@@ -179,10 +174,10 @@ fn main() -> Result<(), amethyst::Error> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/gltf/config/display.ron");
-    let assets_dir = app_root.join("examples/gltf/assets/");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets/");
 
-    let game_data = GameDataBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
@@ -194,21 +189,21 @@ fn main() -> Result<(), amethyst::Error> {
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
-        .with_bundle(
+        .add_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
         )?
-        .with_bundle(
+        .add_bundle(
             FlyControlBundle::<StringBindings>::new(None, None, None)
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
         )?
-        .with_bundle(TransformBundle::new().with_dep(&[
+        .add_bundle(TransformBundle::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "fly_movement",
         ]))?
-        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+        .add_bundle(VertexSkinningBundle::new().with_dep(&[
             "transform_system",
             "animation_control",
             "sampler_interpolation",
@@ -218,14 +213,14 @@ fn main() -> Result<(), amethyst::Error> {
         //
         // There is currently no way to pass the dependencies to that system. However, since that
         // system is thread local as part of rendering, it runs after all of the systems anyway.
-        .with_bundle(
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
                 .with_plugin(RenderPbr3D::default().with_skinning())
                 .with_plugin(RenderSkybox::default()),
         )?;
 
-    let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
+    let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
     Ok(())
 }

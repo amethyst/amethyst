@@ -1,7 +1,7 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Display};
 
-use crate::ecs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, WriteStorage};
 use serde::{Deserialize, Serialize};
+use shrinkwraprs::Shrinkwrap;
 
 /// A component that gives a name to an [`Entity`].
 ///
@@ -27,126 +27,55 @@ use serde::{Deserialize, Serialize};
 /// Creating a name from string constant:
 ///
 /// ```
-/// use amethyst::core::{Named, WithNamed};
-/// use amethyst::ecs::prelude::*;
+/// use amethyst::{core::Named, ecs::*};
 ///
-/// let mut world = World::new();
-/// world.register::<Named>();
-///
-/// world
-///     .create_entity()
-///     .named("Super Cool Entity")
-///     .build();
+/// let mut world = World::default();
+/// let entity: Entity = world.push((Named {
+///     name: "Reginald".into(),
+/// },));
 /// ```
 ///
 /// Creating a name from a dynamically generated string:
 ///
 /// ```
-/// use amethyst::core::{Named, WithNamed};
-/// use amethyst::ecs::prelude::*;
+/// use amethyst::{core::Named, ecs::*};
 ///
-/// let mut world = World::new();
-/// world.register::<Named>();
-///
+/// let mut world = World::default();
+
 /// for entity_num in 0..10 {
-///     world
-///         .create_entity()
-///         .named(format!("Entity Number {}", entity_num))
-///         .build();
+///     world.push((Named { name: format!("Entity Number {}", entity_num).into() },));
 /// }
 /// ```
 ///
 /// Accessing a named entity in a system:
-///
 /// ```
 /// use amethyst::core::Named;
-/// use amethyst::ecs::prelude::*;
+/// use amethyst::ecs::*;
 ///
-/// pub struct NameSystem;
-///
-/// impl<'s> System<'s> for NameSystem {
-///     type SystemData = (
-///         Entities<'s>,
-///         ReadStorage<'s, Named>,
-///     );
-///
-///     fn run(&mut self, (entities, names): Self::SystemData) {
-///         for (entity, name) in (&*entities, &names).join() {
+/// SystemBuilder::new("NamedSystem")
+///   .with_query(<(Entity, Read<Named>)>::query())
+///   .build(move |_commands, world, _resource, query| {
+///         for (entity, name) in query.iter(world) {
 ///             println!("Entity {:?} is named {}", entity, name.name);
 ///         }
-///     }
-/// }
+/// });
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Named {
+#[derive(Shrinkwrap, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[shrinkwrap(mutable)]
+pub struct Named(
     /// The name of the entity this component is attached to.
-    pub name: Cow<'static, str>,
+    pub Cow<'static, str>,
+);
+
+impl Display for Named {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }
 
 impl Named {
-    /// Constructs a new `Named` from a string.
-    ///
-    /// # Examples
-    ///
-    /// From a string constant:
-    ///
-    /// ```
-    /// use amethyst::core::Named;
-    ///
-    /// let name_component = Named::new("Super Cool Entity");
-    /// ```
-    ///
-    /// From a dynamic string:
-    ///
-    /// ```
-    /// use amethyst::core::Named;
-    ///
-    /// let entity_num = 7;
-    /// let name_component = Named::new(format!("Entity Number {}", entity_num));
-    /// ```
-    pub fn new<S>(name: S) -> Self
-    where
-        S: Into<Cow<'static, str>>,
-    {
-        Named { name: name.into() }
-    }
-}
-
-impl Component for Named {
-    type Storage = DenseVecStorage<Self>;
-}
-
-/// An easy way to name an `Entity` and give it a `Named` `Component`.
-pub trait WithNamed
-where
-    Self: Sized,
-{
-    /// Adds a name to the entity being built.
-    fn named<S>(self, name: S) -> Self
-    where
-        S: Into<Cow<'static, str>>;
-}
-
-impl<'a> WithNamed for EntityBuilder<'a> {
-    fn named<S>(self, name: S) -> Self
-    where
-        S: Into<Cow<'static, str>>,
-    {
-        self.world
-            .system_data::<(WriteStorage<'a, Named>,)>()
-            .0
-            .insert(self.entity, Named::new(name))
-            .expect("Unreachable: Entities should always be valid when just created");
-        self
-    }
-}
-
-impl<'a> WithNamed for LazyBuilder<'a> {
-    fn named<S>(self, name: S) -> Self
-    where
-        S: Into<Cow<'static, str>>,
-    {
-        self.lazy.insert::<Named>(self.entity, Named::new(name));
-        self
+    /// Creates a new instance of `Named`
+    pub fn new<T: Into<Cow<'static, str>>>(name: T) -> Self {
+        Named(name.into())
     }
 }

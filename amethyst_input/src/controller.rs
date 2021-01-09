@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{bindings::BindingTypes, event::InputEvent};
+use crate::event::InputEvent;
 
 /// Controller axes matching SDL controller model
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
@@ -118,13 +118,10 @@ pub enum ControllerEvent {
     },
 }
 
-impl<'a, T> Into<InputEvent<T>> for &'a ControllerEvent
-where
-    T: BindingTypes,
-{
-    fn into(self) -> InputEvent<T> {
+impl From<&ControllerEvent> for InputEvent {
+    fn from(c: &ControllerEvent) -> Self {
         use self::ControllerEvent::*;
-        match *self {
+        match *c {
             ControllerAxisMoved { which, axis, value } => {
                 InputEvent::ControllerAxisMoved { which, axis, value }
             }

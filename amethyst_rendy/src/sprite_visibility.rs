@@ -1,30 +1,37 @@
 //! Transparency, visibility sorting and camera centroid culling for 2D Sprites.
-use crate::{
-    camera::{ActiveCamera, Camera},
-    transparent::Transparent,
-};
-use amethyst_core::{
-    ecs::{
-        hibitset::BitSet,
-        prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    },
-    math::{Point3, Vector3},
-    Hidden, HiddenPropagate, Transform,
-};
-use derivative::Derivative;
 use std::cmp::Ordering;
 
+use amethyst_core::{
+    ecs::*,
+    math::{Point3, Vector3},
+    transform::Transform,
+    Hidden, HiddenPropagate,
+};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    camera::{ActiveCamera, Camera},
+    sprite::SpriteRender,
+    transparent::Transparent,
+};
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.
 #[derive(Default, Debug)]
 pub struct SpriteVisibility {
     /// Visible entities that can be drawn in any order
-    pub visible_unordered: BitSet,
+    pub visible_unordered: Vec<Entity>,
     /// Visible entities that need to be drawn in the given order
     pub visible_ordered: Vec<Entity>,
+}
+
+#[derive(Debug, Clone)]
+struct Internals {
+    entity: Entity,
+    centroid: Point3<f32>,
+    camera_distance: f32,
+    from_camera: Vector3<f32>,
 }
 
 /// Determines what entities to be drawn. Will also sort transparent entities back to front based on
@@ -35,102 +42,104 @@ pub struct SpriteVisibility {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-#[derive(Derivative)]
-#[derivative(Default(bound = ""), Debug(bound = ""))]
-pub struct SpriteVisibilitySortingSystem {
-    centroids: Vec<Internals>,
-    transparent: Vec<Internals>,
-}
+#[derive(Debug)]
+pub struct SpriteVisibilitySortingSystem;
 
-#[derive(Debug, Clone)]
-struct Internals {
-    entity: Entity,
-    transparent: bool,
-    centroid: Point3<f32>,
-    camera_distance: f32,
-    from_camera: Vector3<f32>,
-}
+impl System<'_> for SpriteVisibilitySortingSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        let mut transparent_centroids: Vec<Internals> = Vec::default();
 
-impl SpriteVisibilitySortingSystem {
-    /// Returns a new sprite visibility sorting system
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
+        Box::new(
+            SystemBuilder::<()>::new("SpriteVisibilitySortingSystem")
+                .read_resource::<ActiveCamera>()
+                .write_resource::<SpriteVisibility>()
+                .with_query(<(&Camera, &Transform)>::query())
+                .with_query(<(Entity, &Camera, &Transform)>::query())
+                .with_query(
+                    <(Entity, &Transform, &SpriteRender, &Transparent)>::query()
+                        .filter(!component::<Hidden>() & !component::<HiddenPropagate>()),
+                )
+                .with_query(<(Entity, &Transform, &SpriteRender)>::query().filter(
+                    !component::<Transparent>()
+                        & !component::<Hidden>()
+                        & !component::<HiddenPropagate>(),
+                ))
+                .build(
+                    move |commands,
+                          world,
+                          (active_camera, visibility),
+                          (
+                        camera_query1,
+                        camera_query2,
+                        transparent_query,
+                        non_transparent_query,
+                    )| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("sprite_visibility_system");
 
-impl<'a> System<'a> for SpriteVisibilitySortingSystem {
-    type SystemData = (
-        Entities<'a>,
-        Write<'a, SpriteVisibility>,
-        ReadStorage<'a, Hidden>,
-        ReadStorage<'a, HiddenPropagate>,
-        Read<'a, ActiveCamera>,
-        ReadStorage<'a, Camera>,
-        ReadStorage<'a, Transparent>,
-        ReadStorage<'a, Transform>,
-    );
+                        transparent_centroids.clear();
+                        visibility.visible_ordered.clear();
+                        visibility.visible_unordered.clear();
 
-    fn run(
-        &mut self,
-        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, transform): Self::SystemData,
-    ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("sprite_visibility_sorting_system");
+                        let origin = Point3::origin();
 
-        let origin = Point3::origin();
+                        let (camera, camera_transform) = match active_camera.entity.map_or_else(
+                            || camera_query1.iter(world).next(),
+                            |e| {
+                                camera_query2
+                                    .iter(world)
+                                    .find(|(camera_entity, _, _)| **camera_entity == e)
+                                    .map(|(_entity, camera, camera_transform)| {
+                                        (camera, camera_transform)
+                                    })
+                            },
+                        ) {
+                            Some(r) => r,
+                            None => return,
+                        };
 
-        // The camera position is used to determine culling, but the sprites are ordered based on
-        // the Z coordinate
-        let camera: Option<&Transform> = active
-            .entity
-            .and_then(|a| transform.get(a))
-            .or_else(|| (&camera, &transform).join().map(|ct| ct.1).next());
-        let camera_backward = camera
-            .map(|c| c.global_matrix().column(2).xyz())
-            .unwrap_or_else(Vector3::z);
-        let camera_centroid = camera
-            .map(|t| t.global_matrix().transform_point(&origin))
-            .unwrap_or_else(|| origin);
+                        let camera_backward = camera_transform.global_matrix().column(2).xyz();
+                        let camera_centroid =
+                            camera_transform.global_matrix().transform_point(&origin);
 
-        self.centroids.clear();
-        self.centroids.extend(
-            (&*entities, &transform, !&hidden, !&hidden_prop)
-                .join()
-                .map(|(e, t, _, _)| (e, t.global_matrix().transform_point(&origin)))
-                // filter entities behind the camera
-                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
-                .map(|(entity, centroid)| Internals {
-                    entity,
-                    transparent: transparent.contains(entity),
-                    centroid,
-                    camera_distance: (centroid.z - camera_centroid.z).abs(),
-                    from_camera: centroid - camera_centroid,
-                }),
-        );
+                        transparent_centroids.extend(
+                            transparent_query
+                                .iter(world)
+                                .map(|(e, t, _, _)| {
+                                    (*e, t.global_matrix().transform_point(&origin))
+                                })
+                                // filter entities behind the camera
+                                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
+                                .map(|(entity, centroid)| {
+                                    Internals {
+                                        entity,
+                                        centroid,
+                                        camera_distance: (centroid.z - camera_centroid.z).abs(),
+                                        from_camera: centroid - camera_centroid,
+                                    }
+                                }),
+                        );
 
-        visibility.visible_unordered.clear();
-        visibility.visible_unordered.extend(
-            self.centroids
-                .iter()
-                .filter(|c| !c.transparent)
-                .map(|c| c.entity.id()),
-        );
+                        transparent_centroids.sort_by(|a, b| {
+                            b.camera_distance
+                                .partial_cmp(&a.camera_distance)
+                                .unwrap_or(Ordering::Equal)
+                        });
 
-        self.transparent.clear();
-        self.transparent
-            .extend(self.centroids.drain(..).filter(|c| c.transparent));
+                        visibility
+                            .visible_ordered
+                            .extend(transparent_centroids.iter().map(|c| c.entity));
 
-        // Note: Smaller Z values are placed first, so that semi-transparent sprite colors blend
-        // correctly.
-        self.transparent.sort_by(|a, b| {
-            b.camera_distance
-                .partial_cmp(&a.camera_distance)
-                .unwrap_or(Ordering::Equal)
-        });
-
-        visibility.visible_ordered.clear();
-        visibility
-            .visible_ordered
-            .extend(self.transparent.iter().map(|c| c.entity));
+                        visibility.visible_unordered.extend(
+                            non_transparent_query
+                                .iter(world)
+                                .map(|(e, t, _)| (e, t.global_matrix().transform_point(&origin)))
+                                // filter entities behind the camera
+                                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
+                                .map(|(entity, _)| entity),
+                        );
+                    },
+                ),
+        )
     }
 }

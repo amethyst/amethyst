@@ -9,20 +9,16 @@ pub struct ScreenDimensions {
     pub(crate) h: f64,
     /// Width divided by height.
     aspect_ratio: f32,
-    /// The ratio between the backing framebuffer resolution and the window size in screen pixels.
-    /// This is typically one for a normal display and two for a retina display.
-    hidpi: f64,
     pub(crate) dirty: bool,
 }
 
 impl ScreenDimensions {
     /// Creates a new screen dimensions object with the given width and height.
-    pub fn new(w: u32, h: u32, hidpi: f64) -> Self {
+    pub fn new(w: u32, h: u32) -> Self {
         ScreenDimensions {
             w: f64::from(w),
             h: f64::from(h),
             aspect_ratio: w as f32 / h as f32,
-            hidpi,
             dirty: false,
         }
     }
@@ -47,12 +43,6 @@ impl ScreenDimensions {
         self.aspect_ratio
     }
 
-    /// Returns the ratio between the backing framebuffer resolution and the window size in screen pixels.
-    /// This is typically one for a normal display and two for a retina display.
-    pub fn hidpi_factor(&self) -> f64 {
-        self.hidpi
-    }
-
     /// Updates the width and height of the screen and recomputes the aspect
     /// ratio.
     ///
@@ -64,12 +54,5 @@ impl ScreenDimensions {
         self.h = h;
         self.aspect_ratio = w as f32 / h as f32;
         self.dirty = true;
-    }
-
-    /// Updates the hidpi factor stored in this structure.
-    ///
-    /// Amethyst will call this for you automatically, most engine users won't need this.
-    pub fn update_hidpi_factor(&mut self, factor: f64) {
-        self.hidpi = factor;
     }
 }

@@ -1,23 +1,30 @@
 //! Module for mesh support.
-use crate::{
-    shape::{FromShape, ShapePrefab},
-    types::{Mesh, MeshData},
-};
-use amethyst_assets::{
-    AssetPrefab, AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter,
-};
-use amethyst_core::ecs::{Entity, Read, ReadExpect, WriteStorage};
+use amethyst_assets::Format;
 use amethyst_error::Error;
-use rendy::mesh::MeshBuilder;
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
+
+use crate::types::MeshData;
 
 /// 'Obj' mesh format `Format` implementation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    TypeUuid,
+)]
+#[uuid = "7994868a-3ca1-4498-a6e5-4849598a6b22"]
 pub struct ObjFormat;
 
-amethyst_assets::register_format_type!(MeshData);
-
-amethyst_assets::register_format!("OBJ", ObjFormat as MeshData);
+amethyst_assets::register_importer!(".obj", ObjFormat);
 impl Format<MeshData> for ObjFormat {
     fn name(&self) -> &'static str {
         "OBJ"
@@ -33,64 +40,64 @@ impl Format<MeshData> for ObjFormat {
                 }
                 builder.0.into()
             })
-            .map_err(|e| e.compat().into())
+            .map_err(|e| e.into())
     }
 }
 
-/// Internal mesh loading
-///
-/// ### Type parameters:
-///
-/// `V`: Vertex format to use for generated `Mesh`es, for example:
-///     * `Vec<PosTex>`
-///     * `Vec<PosNormTex>`
-///     * `(Vec<Position>, Vec<Normal>)`
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(bound = "")]
-pub enum MeshPrefab<V> {
-    /// Load an asset Mesh from file
-    Asset(AssetPrefab<Mesh>),
-    /// Generate a Mesh from basic type
-    Shape(ShapePrefab<V>),
-}
+// /// Internal mesh loading
+// ///
+// /// ### Type parameters:
+// ///
+// /// `V`: Vertex format to use for generated `Mesh`es, for example:
+// ///     * `Vec<PosTex>`
+// ///     * `Vec<PosNormTex>`
+// ///     * `(Vec<Position>, Vec<Normal>)`
+// #[derive(Debug, Deserialize, Serialize)]
+// #[serde(bound = "")]
+// pub enum MeshPrefab<V> {
+//     /// Load an asset Mesh from file
+//     Asset(AssetPrefab<Mesh>),
+//     /// Generate a Mesh from basic type
+//     Shape(ShapePrefab<V>),
+// }
 
-impl<'a, V> PrefabData<'a> for MeshPrefab<V>
-where
-    V: FromShape + Into<MeshBuilder<'static>>,
-{
-    type SystemData = (
-        ReadExpect<'a, Loader>,
-        WriteStorage<'a, Handle<Mesh>>,
-        Read<'a, AssetStorage<Mesh>>,
-    );
-    type Result = ();
+// impl<'a, V> PrefabData<'a> for MeshPrefab<V>
+// where
+//     V: FromShape + Into<MeshBuilder<'static>>,
+// {
+//     type SystemData = (
+//         ReadExpect<'a, Loader>,
+//         WriteStorage<'a, Handle<Mesh>>,
+//         Read<'a, AssetStorage<Mesh>>,
+//     );
+//     type Result = ();
 
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        system_data: &mut Self::SystemData,
-        entities: &[Entity],
-        children: &[Entity],
-    ) -> Result<(), Error> {
-        match self {
-            MeshPrefab::Asset(m) => {
-                m.add_to_entity(entity, system_data, entities, children)?;
-            }
-            MeshPrefab::Shape(s) => {
-                s.add_to_entity(entity, system_data, entities, children)?;
-            }
-        }
-        Ok(())
-    }
+//     fn add_to_entity(
+//         &self,
+//         entity: Entity,
+//         system_data: &mut Self::SystemData,
+//         entities: &[Entity],
+//         children: &[Entity],
+//     ) -> Result<(), Error> {
+//         match self {
+//             MeshPrefab::Asset(m) => {
+//                 m.add_to_entity(entity, system_data, entities, children)?;
+//             }
+//             MeshPrefab::Shape(s) => {
+//                 s.add_to_entity(entity, system_data, entities, children)?;
+//             }
+//         }
+//         Ok(())
+//     }
 
-    fn load_sub_assets(
-        &mut self,
-        progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
-    ) -> Result<bool, Error> {
-        Ok(match self {
-            MeshPrefab::Asset(m) => m.load_sub_assets(progress, system_data)?,
-            MeshPrefab::Shape(s) => s.load_sub_assets(progress, system_data)?,
-        })
-    }
-}
+//     fn load_sub_assets(
+//         &mut self,
+//         progress: &mut ProgressCounter,
+//         system_data: &mut Self::SystemData,
+//     ) -> Result<bool, Error> {
+//         Ok(match self {
+//             MeshPrefab::Asset(m) => m.load_sub_assets(progress, system_data)?,
+//             MeshPrefab::Shape(s) => s.load_sub_assets(progress, system_data)?,
+//         })
+//     }
+// }

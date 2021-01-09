@@ -4,15 +4,14 @@
 //! method.
 
 use amethyst::{
-    controls::{FlyControlBundle, FlyControlTag},
+    assets::LoaderBundle,
+    controls::{FlyControl, FlyControlBundle, HideCursor},
     core::{
         math::{Point3, Vector3},
         transform::{Transform, TransformBundle},
         Time,
     },
-    derive::SystemDesc,
-    ecs::{Read, System, SystemData, WorldExt, Write},
-    input::{is_close_requested, is_key_down, InputBundle, StringBindings},
+    input::{is_key_down, is_mouse_button_down, InputBundle, VirtualKeyCode},
     prelude::*,
     renderer::{
         camera::Camera,
@@ -23,43 +22,49 @@ use amethyst::{
         RenderingBundle,
     },
     utils::application_root_dir,
-    winit::VirtualKeyCode,
+    window::ScreenDimensions,
+    winit::event::MouseButton,
 };
 
-#[derive(SystemDesc)]
 struct ExampleLinesSystem;
 
-impl<'s> System<'s> for ExampleLinesSystem {
-    type SystemData = (
-        Write<'s, DebugLines>, // Request DebugLines resource
-        Read<'s, Time>,
-    );
+impl System<'_> for ExampleLinesSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("ExampleLinesSystem")
+                .read_resource::<Time>()
+                .write_resource::<DebugLines>()
+                .build(|_, _, (time, debug_lines_resource), _| {
+                    // Drawing debug lines as a resource
+                    let t = (time.absolute_time_seconds() as f32).cos();
 
-    fn run(&mut self, (mut debug_lines_resource, time): Self::SystemData) {
-        // Drawing debug lines as a resource
-        let t = (time.absolute_time_seconds() as f32).cos();
+                    debug_lines_resource.draw_direction(
+                        Point3::new(t, 0.0, 0.5),
+                        Vector3::new(0.0, 0.3, 0.0),
+                        Srgba::new(0.5, 0.05, 0.65, 1.0),
+                    );
 
-        debug_lines_resource.draw_direction(
-            Point3::new(t, 0.0, 0.5),
-            Vector3::new(0.0, 0.3, 0.0),
-            Srgba::new(0.5, 0.05, 0.65, 1.0),
-        );
-
-        debug_lines_resource.draw_line(
-            Point3::new(t, 0.0, 0.5),
-            Point3::new(0.0, 0.0, 0.2),
-            Srgba::new(0.5, 0.05, 0.65, 1.0),
-        );
+                    debug_lines_resource.draw_line(
+                        Point3::new(t, 0.0, 0.5),
+                        Point3::new(0.0, 0.0, 0.2),
+                        Srgba::new(0.5, 0.05, 0.65, 1.0),
+                    );
+                }),
+        )
     }
 }
 
 struct ExampleState;
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let StateData {
+            world, resources, ..
+        } = data;
+
         // Setup debug lines as a resource
-        data.world.insert(DebugLines::new());
+        resources.insert(DebugLines::new());
         // Configure width of lines. Optional step
-        data.world.insert(DebugLinesParams { line_width: 2.0 });
+        resources.insert(DebugLinesParams { line_width: 2.0 });
 
         // Setup debug lines as a component and add lines to render axes & grid
         let mut debug_lines_component = DebugLinesComponent::with_capacity(100);
@@ -99,7 +104,7 @@ impl SimpleState for ExampleState {
             debug_lines_component.add_direction(position, direction, main_color);
 
             // Sub-grid lines
-            if (x - width).abs() < 0.0001 {
+            if (x - width).abs() < f32::EPSILON {
                 for sub_x in 1..10 {
                     let sub_offset = Vector3::new((1.0 / 10.0) * sub_x as f32, -0.001, 0.0);
 
@@ -122,7 +127,7 @@ impl SimpleState for ExampleState {
             debug_lines_component.add_direction(position, direction, main_color);
 
             // Sub-grid lines
-            if (z - depth).abs() < 0.0001 {
+            if (z - depth).abs() < f32::EPSILON {
                 for sub_z in 1..10 {
                     let sub_offset = Vector3::new(0.0, -0.001, (1.0 / 10.0) * sub_z as f32);
 
@@ -135,43 +140,34 @@ impl SimpleState for ExampleState {
             }
         }
 
-        // Debug lines are automatically rendered by including the debug lines
-        // rendering plugin
-        data.world.register::<DebugLinesComponent>();
-        data.world
-            .create_entity()
-            .with(debug_lines_component)
-            .build();
+        world.push((debug_lines_component,));
 
         // Setup camera
+        let (width, height) = {
+            let dim = resources.get::<ScreenDimensions>().unwrap();
+            (dim.width(), dim.height())
+        };
         let mut local_transform = Transform::default();
         local_transform.set_translation_xyz(0.0, 0.5, 2.0);
-        data.world
-            .create_entity()
-            .with(FlyControlTag)
-            .with(Camera::perspective(
-                1.33333,
-                std::f32::consts::FRAC_PI_2,
-                0.1,
-            ))
-            .with(local_transform)
-            .build();
+        world.push((
+            FlyControl,
+            Camera::standard_3d(width, height),
+            local_transform,
+        ));
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
-        if let StateEvent::Window(event) = event {
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-                Trans::Quit
-            } else {
-                Trans::None
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
+        let StateData { resources, .. } = data;
+        if let StateEvent::Window(event) = &event {
+            let mut hide_cursor = resources.get_mut::<HideCursor>().unwrap();
+
+            if is_key_down(&event, VirtualKeyCode::Escape) {
+                hide_cursor.hide = false;
+            } else if is_mouse_button_down(&event, MouseButton::Left) {
+                hide_cursor.hide = true;
             }
-        } else {
-            Trans::None
         }
+        Trans::None
     }
 }
 
@@ -180,32 +176,33 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/debug_lines/config/display.ron");
-    let key_bindings_path = app_root.join("examples/debug_lines/config/input.ron");
-    let assets_dir = app_root.join("examples/debug_lines/assets/");
+    let display_config_path = app_root.join("config/display.ron");
+    let key_bindings_path = app_root.join("config/input.ron");
+    let assets_dir = app_root.join("assets/");
 
-    let fly_control_bundle = FlyControlBundle::<StringBindings>::new(
-        Some(String::from("move_x")),
-        Some(String::from("move_y")),
-        Some(String::from("move_z")),
-    )
-    .with_sensitivity(0.1, 0.1);
-
-    let game_data = GameDataBuilder::default()
-        .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?
-        .with(ExampleLinesSystem, "example_lines_system", &[])
-        .with_bundle(fly_control_bundle)?
-        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
-        .with_bundle(
+    let mut game_data = DispatcherBuilder::default();
+    game_data
+        .add_bundle(LoaderBundle)
+        .add_bundle(InputBundle::new().with_bindings_from_file(&key_bindings_path)?)
+        .add_system(Box::new(ExampleLinesSystem))
+        .add_bundle(
+            FlyControlBundle::new(
+                Some("move_x".into()),
+                Some("move_y".into()),
+                Some("move_z".into()),
+            )
+            .with_sensitivity(0.1, 0.1)
+            .with_speed(5.0),
+        )
+        .add_bundle(TransformBundle::default())
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::default()),
-        )?;
+        );
 
-    let mut game = Application::new(assets_dir, ExampleState, game_data)?;
+    let game = Application::new(assets_dir, ExampleState, game_data)?;
     game.run();
     Ok(())
 }

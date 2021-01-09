@@ -77,10 +77,12 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # }
     #
     impl Asset for EnergyBlast {
-        const NAME: &'static str = "my_crate::EnergyBlast";
         // use `Self` if the type is directly serialized.
         type Data = EnergyBlastData;
         type HandleStorage = VecStorage<EnergyBlastHandle>;
+        fn name() -> &'static str {
+            "my_crate::EnergyBlast"
+        }
     }
     #
     # /// A handle to a `EnergyBlast` asset.
@@ -125,10 +127,12 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # pub type EnergyBlastHandle = Handle<EnergyBlast>;
     #
     # impl Asset for EnergyBlast {
-    #     const NAME: &'static str = "my_crate::EnergyBlast";
     #     // use `Self` if the type is directly serialized.
     #     type Data = EnergyBlastData;
     #     type HandleStorage = VecStorage<EnergyBlastHandle>;
+    #     fn name() -> &'static str {
+    #         "my_crate::EnergyBlast"
+    #     }
     # }
     #
     # /// Separate serializable type to support different versions
@@ -169,7 +173,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #
     # use amethyst::{
     #     error::Error,
-    #     assets::{AssetStorage, Loader, ProcessableAsset, ProcessingState, ProgressCounter, RonFormat},
+    #     assets::{AssetStorage,  DefaultLoader, Loader, ProcessableAsset, ProcessingState, ProgressCounter, RonFormat},
     #     ecs::{World, WorldExt},
     #     prelude::*,
     #     utils::application_root_dir,
@@ -204,10 +208,12 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # }
     #
     # impl Asset for EnergyBlast {
-    #     const NAME: &'static str = "my_crate::EnergyBlast";
     #     // use `Self` if the type is directly serialized.
     #     type Data = EnergyBlastData;
     #     type HandleStorage = VecStorage<EnergyBlastHandle>;
+    #     fn name() -> &'static str {
+    #         "my_crate::EnergyBlast"
+    #     }
     # }
     #
     # impl ProcessableAsset for EnergyBlast {
@@ -237,8 +243,8 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # }
     #
     impl SimpleState for LoadingState {
-        fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-            let loader = &data.world.read_resource::<Loader>();
+        fn on_start(&mut self, data: StateData<'_, GameData>) {
+            let loader = &data.world.read_resource::<DefaultLoader>();
             let energy_blast_handle = loader.load(
                 "energy_blast.ron",
                 RonFormat,

@@ -1,12 +1,11 @@
-use crate::{
-    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, LineMode,
-    Stretch, UiText, UiTransform, WidgetId, Widgets,
-};
+use std::marker::PhantomData;
 
-use amethyst_assets::{AssetStorage, Loader};
-use amethyst_core::ecs::{
-    prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
-    shred::{ResourceId, SystemData},
+use amethyst_assets::Handle;
+use amethyst_core::ecs::*;
+
+use crate::{
+    define_widget, Anchor, FontAsset, LineMode, Selectable, Stretch, UiText, UiTransform, WidgetId,
+    Widgets,
 };
 
 const DEFAULT_Z: f32 = 1.0;
@@ -22,27 +21,9 @@ define_widget!(UiLabel =>
     ]
 );
 
-/// Container for all the resources the builder needs to make a new UiLabel.
-#[allow(missing_debug_implementations)]
-#[derive(SystemData)]
-pub struct UiLabelBuilderResources<'a, I: WidgetId = u32>
-where
-    I: WidgetId,
-{
-    font_asset: Read<'a, AssetStorage<FontAsset>>,
-    loader: ReadExpect<'a, Loader>,
-    entities: Entities<'a>,
-    text: WriteStorage<'a, UiText>,
-    transform: WriteStorage<'a, UiTransform>,
-    label_widgets: WriteExpect<'a, Widgets<UiLabel, I>>,
-}
-
 /// Convenience structure for building a label
-#[derive(Debug)]
-pub struct UiLabelBuilder<I = u32>
-where
-    I: WidgetId,
-{
+#[derive(Debug, Clone)]
+pub struct UiLabelBuilder<G, I: WidgetId> {
     id: Option<I>,
     x: f32,
     y: f32,
@@ -53,16 +34,18 @@ where
     stretch: Stretch,
     text: String,
     text_color: [f32; 4],
-    font: Option<FontHandle>,
+    font: Option<Handle<FontAsset>>,
     font_size: f32,
     line_mode: LineMode,
     align: Anchor,
     parent: Option<Entity>,
+    selectable: Option<u32>,
+    _phantom: PhantomData<G>,
 }
 
-impl<'a, I> Default for UiLabelBuilder<I>
+impl<G, I> Default for UiLabelBuilder<G, I>
 where
-    I: WidgetId + 'static,
+    I: WidgetId,
 {
     fn default() -> Self {
         UiLabelBuilder {
@@ -81,22 +64,22 @@ where
             line_mode: LineMode::Single,
             align: Anchor::Middle,
             parent: None,
+            selectable: None,
+            _phantom: PhantomData,
         }
     }
 }
 
-impl<'a, I> UiLabelBuilder<I>
-where
-    I: WidgetId + 'static,
-{
+impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I> {
     /// Construct a new UiLabelBuilder.
     /// This allows the user to easily build a UI element with a text that can
     /// easily be retrieved and updated through the appropriate resource,
     /// see [`Widgets`](../struct.Widgets.html).
-    pub fn new<S: ToString>(text: S) -> UiLabelBuilder<I> {
-        let mut builder = UiLabelBuilder::default();
-        builder.text = text.to_string();
-        builder
+    pub fn new<S: ToString>(text: S) -> UiLabelBuilder<G, I> {
+        UiLabelBuilder {
+            text: text.to_string(),
+            ..Default::default()
+        }
     }
 
     /// Sets an ID for this widget. The type of this ID will determine which `Widgets`
@@ -158,7 +141,7 @@ where
     }
 
     /// Use a different font for the button text.
-    pub fn with_font(mut self, font: FontHandle) -> Self {
+    pub fn with_font(mut self, font: Handle<FontAsset>) -> Self {
         self.font = Some(font);
         self
     }
@@ -187,63 +170,64 @@ where
         self
     }
 
+    /// Add a Selectable component to the label with the desired order
+    pub fn with_selectable(mut self, order: u32) -> Self {
+        self.selectable = Some(order);
+        self
+    }
+
     /// Build this with the `UiLabelBuilderResources`.
-    pub fn build(self, mut res: UiLabelBuilderResources<'a, I>) -> (I, UiLabel) {
-        let text_entity = res.entities.create();
+    pub fn build_from_world_and_resources(
+        self,
+        world: &mut World,
+        resources: &mut Resources,
+    ) -> (I, UiLabel) {
+        let text_entity = world.push(());
         let widget = UiLabel::new(text_entity);
 
         let id = {
             let widget = widget.clone();
-
+            let mut label_widgets = resources.get_mut::<Widgets<UiLabel, I>>().unwrap();
             if let Some(id) = self.id {
                 let added_id = id.clone();
-                res.label_widgets.add_with_id(id, widget);
+                label_widgets.add_with_id(id, widget);
                 added_id
             } else {
-                res.label_widgets.add(widget)
+                label_widgets.add(widget)
             }
         };
 
-        res.transform
-            .insert(
-                text_entity,
-                UiTransform::new(
-                    format!("{}_label", id),
-                    self.anchor,
-                    Anchor::Middle,
-                    self.x,
-                    self.y,
-                    self.z,
-                    self.width,
-                    self.height,
-                )
-                .with_stretch(self.stretch),
-            )
+        let mut text_entry = world
+            .entry(text_entity)
             .expect("Unreachable: Inserting newly created entity");
 
-        let font_handle = self
-            .font
-            .unwrap_or_else(|| get_default_font(&res.loader, &res.font_asset));
-
-        res.text
-            .insert(
-                text_entity,
-                UiText::new(
-                    font_handle,
-                    self.text,
-                    self.text_color,
-                    self.font_size,
-                    self.line_mode,
-                    self.align,
-                ),
+        text_entry.add_component(
+            UiTransform::new(
+                format!("{}_label", id),
+                self.anchor,
+                Anchor::Middle,
+                self.x,
+                self.y,
+                self.z,
+                self.width,
+                self.height,
             )
-            .expect("Unreachable: Inserting newly created entity");
+            .with_stretch(self.stretch),
+        );
+
+        text_entry.add_component(UiText::new(
+            self.font,
+            self.text,
+            self.text_color,
+            self.font_size,
+            self.line_mode,
+            self.align,
+        ));
+
+        if let Some(order) = self.selectable {
+            text_entry.add_component(Selectable::<G>::new(order));
+        }
 
         (id, widget)
-    }
-
-    /// Create the UiLabel based on provided configuration parameters.
-    pub fn build_from_world(self, world: &World) -> (I, UiLabel) {
-        self.build(UiLabelBuilderResources::<I>::fetch(&world))
     }
 }

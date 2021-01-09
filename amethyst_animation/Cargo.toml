@@ -1,7 +1,10 @@
 [package]
 name = "amethyst_animation"
 version = "0.15.3"
-authors = ["Simon Rönnberg <seamonr@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Simon Rönnberg <seamonr@gmail.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "Animation support for Amethyst"
 keywords = ["game", "engine", "animation", "3d", "amethyst"]
@@ -13,30 +16,24 @@ repository = "https://github.com/amethyst/amethyst"
 readme = "README.md"
 license = "MIT/Apache-2.0"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
 amethyst_rendy = { path = "../amethyst_rendy", version = "0.15.3" }
-amethyst_ui = { path = "../amethyst_ui", version = "0.15.3" }
+amethyst_ui = { path = "../amethyst_ui", version = "0.15.3", optional = true }
 derivative = "2.1.1"
 fnv = "1"
 itertools = "0.8.0"
 log = "0.4.6"
 minterpolate = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
-
 thread_profiler = { version = "0.3", optional = true }
-
-[dev-dependencies]
+alga = "0.9.3"
+type-uuid = "0.1.2"
+uuid = "0.8.1"
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
-metal = ["amethyst_rendy/metal"]
-empty = ["amethyst_rendy/empty"]
-
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = ["thread_profiler/thread_profiler"]
+ui = ["amethyst_ui"]

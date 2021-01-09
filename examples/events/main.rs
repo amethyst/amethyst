@@ -1,36 +1,33 @@
-extern crate amethyst;
+use core::result::Result;
 
 use amethyst::{
     core::{
-        bundle::SystemBundle,
         frame_limiter::FrameRateLimitStrategy,
         shrev::{EventChannel, ReaderId},
-        SystemDesc,
     },
-    derive::SystemDesc,
-    ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
+    ecs::{DispatcherBuilder, World},
     prelude::*,
     utils::application_root_dir,
+    Error,
 };
-
-use amethyst::Error;
-use core::result::Result;
+use systems::ParallelRunnable;
 
 #[derive(Debug)]
 struct MyBundle;
 
-impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+impl<'a, 'b> SystemBundle for MyBundle {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add(SpammingSystem, "spamming_system", &[]);
-        builder.add(
-            ReceivingSystemDesc::default().build(world),
-            "receiving_system",
-            &[],
-        );
+        let mut chan = EventChannel::<MyEvent>::default();
+        let reader = chan.register_reader();
+        resources.insert(chan);
+
+        builder.add_system(Box::new(SpammingSystem));
+        builder.add_system(Box::new(SpamReceiverSystem { reader }));
         Ok(())
     }
 }
@@ -49,42 +46,40 @@ pub enum MyEvent {
 
 struct GameplayState;
 
-#[derive(SystemDesc)]
 struct SpammingSystem;
 
-impl<'a> System<'a> for SpammingSystem {
-    type SystemData = Write<'a, EventChannel<MyEvent>>;
-
-    fn run(&mut self, mut my_event_channel: Self::SystemData) {
-        my_event_channel.single_write(MyEvent::A);
-        println!("Sending A");
-        my_event_channel.single_write(MyEvent::B);
-        println!("Sending B");
-        my_event_channel.single_write(MyEvent::C);
-        println!("Sending C");
+impl System<'_> for SpammingSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("SpamSystem")
+                .write_resource::<EventChannel<MyEvent>>()
+                .build(move |_, _, my_event_channel, _| {
+                    my_event_channel.single_write(MyEvent::A);
+                    println!("Sending A");
+                    my_event_channel.single_write(MyEvent::B);
+                    println!("Sending B");
+                    my_event_channel.single_write(MyEvent::C);
+                    println!("Sending C");
+                }),
+        )
     }
 }
 
-#[derive(SystemDesc)]
-#[system_desc(name(ReceivingSystemDesc))]
-struct ReceivingSystem {
-    #[system_desc(event_channel_reader)]
+struct SpamReceiverSystem {
     reader: ReaderId<MyEvent>,
 }
 
-impl ReceivingSystem {
-    pub fn new(reader: ReaderId<MyEvent>) -> Self {
-        ReceivingSystem { reader }
-    }
-}
-
-impl<'a> System<'a> for ReceivingSystem {
-    type SystemData = Read<'a, EventChannel<MyEvent>>;
-
-    fn run(&mut self, my_event_channel: Self::SystemData) {
-        for event in my_event_channel.read(&mut self.reader) {
-            println!("Received an event: {:?}", event);
-        }
+impl System<'static> for SpamReceiverSystem {
+    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("SpamSystem")
+                .read_resource::<EventChannel<MyEvent>>()
+                .build(move |_, _, my_event_channel, _| {
+                    for event in my_event_channel.read(&mut self.reader) {
+                        println!("Received an event: {:?}", event);
+                    }
+                }),
+        )
     }
 }
 
@@ -93,11 +88,12 @@ impl SimpleState for GameplayState {}
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let assets_dir = application_root_dir()?.join("examples/events/assets");
+    let assets_dir = application_root_dir()?.join("assets");
 
-    let game_data = GameDataBuilder::default().with_bundle(MyBundle)?;
+    let mut game_data = DispatcherBuilder::default();
+    game_data.add_bundle(MyBundle);
 
-    let mut game = Application::build(assets_dir, GameplayState)?
+    let game = Application::build(assets_dir, GameplayState)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 1)
         .build(game_data)?;
 

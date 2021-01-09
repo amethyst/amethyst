@@ -1,25 +1,30 @@
 //! Material abstraction submodule.
+use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle, WeakHandle};
+use amethyst_core::ecs::*;
+use glsl_layout::*;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     mtl::{Material, StaticTextureSet},
     pod,
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor},
+        hal::{
+            self,
+            adapter::PhysicalDevice,
+            device::Device,
+            pso::{CreationError, Descriptor},
+        },
         memory::Write as _,
         resource::{
             Buffer, BufferInfo, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle,
         },
     },
     types::{Backend, Texture},
-    util,
+    util::{self, sub_range},
 };
-use amethyst_assets::{AssetStorage, Handle, WeakHandle};
-use amethyst_core::ecs::{Read, SystemData, World};
-use glsl_layout::*;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 #[derive(Debug)]
 struct SlotAllocator {
@@ -84,15 +89,26 @@ impl<B: Backend> SlottedBuffer<B> {
         elem_size: u64,
         capacity: usize,
         usage: hal::buffer::Usage,
-    ) -> Result<Self, failure::Error> {
+    ) -> Result<Self, CreationError> {
         Ok(Self {
-            buffer: factory.create_buffer(
-                BufferInfo {
-                    size: elem_size * (capacity as u64),
-                    usage,
-                },
-                rendy::memory::Dynamic,
-            )?,
+            buffer: factory
+                .create_buffer(
+                    BufferInfo {
+                        size: elem_size * (capacity as u64),
+                        usage,
+                    },
+                    rendy::memory::Dynamic,
+                )
+                .map_err(|e| {
+                    match e {
+                        rendy::resource::CreationError::Allocate(
+                            rendy::memory::HeapsError::AllocationError(
+                                hal::device::AllocationError::OutOfMemory(oom),
+                            ),
+                        ) => oom.into(),
+                        _ => CreationError::Other,
+                    }
+                })?,
             elem_size,
         })
     }
@@ -101,7 +117,7 @@ impl<B: Backend> SlottedBuffer<B> {
         let offset = (id as u64) * self.elem_size;
         Descriptor::Buffer(
             self.buffer.raw(),
-            Some(offset)..Some(offset + self.elem_size),
+            sub_range((offset)..(offset + self.elem_size)),
         )
     }
 
@@ -129,7 +145,7 @@ enum MaterialState<B: Backend> {
         set: Escape<DescriptorSet<B>>,
         slot: usize,
         generation: u32,
-        handle: WeakHandle<Material>,
+        handle: WeakHandle,
     },
 }
 
@@ -142,7 +158,7 @@ pub struct MaterialId(u32);
 pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
     generation: u32,
     layout: RendyHandle<DescriptorSetLayout<B>>,
-    lookup: util::LookupBuilder<u32>,
+    lookup: util::LookupBuilder<LoadHandle>,
     allocator: SlotAllocator,
     buffers: Vec<SlottedBuffer<B>>,
     materials: Vec<MaterialState<B>>,
@@ -151,13 +167,33 @@ pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
 
 impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Create a new `MaterialSub` using the provided rendy `Factory`
-    pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
+    pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
+        use rendy::hal::pso::*;
+
+        let layout = factory
+            .create_descriptor_set_layout(util::set_layout_bindings(vec![
+                (
+                    1,
+                    DescriptorType::Buffer {
+                        ty: BufferDescriptorType::Uniform,
+                        format: BufferDescriptorFormat::Structured {
+                            dynamic_offset: false,
+                        },
+                    },
+                    ShaderStageFlags::FRAGMENT,
+                ),
+                (
+                    T::len() as u32,
+                    DescriptorType::Image {
+                        ty: ImageDescriptorType::Sampled { with_sampler: true },
+                    },
+                    ShaderStageFlags::FRAGMENT,
+                ),
+            ]))?
+            .into();
+
         Ok(Self {
-            layout: set_layout! {
-                factory,
-                [1] UniformBuffer hal::pso::ShaderStageFlags::FRAGMENT,
-                [T::len()] CombinedImageSampler hal::pso::ShaderStageFlags::FRAGMENT
-            },
+            layout,
             lookup: util::LookupBuilder::new(),
             allocator: SlotAllocator::new(1024),
             buffers: vec![Self::create_buffer(factory)?],
@@ -167,7 +203,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         })
     }
 
-    fn create_buffer(factory: &Factory<B>) -> Result<SlottedBuffer<B>, failure::Error> {
+    fn create_buffer(factory: &Factory<B>) -> Result<SlottedBuffer<B>, hal::pso::CreationError> {
         let align = factory
             .physical()
             .limits()
@@ -190,9 +226,11 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     fn collect_unused(&mut self) {
         let cur_generation = self.generation;
         // let allocator = &mut self.allocator;
-        for material in self.materials.iter_mut().filter(|m| match m {
-            MaterialState::Loaded { generation, .. } => *generation < cur_generation,
-            _ => false,
+        for material in self.materials.iter_mut().filter(|m| {
+            match m {
+                MaterialState::Loaded { generation, .. } => *generation < cur_generation,
+                _ => false,
+            }
         }) {
             if let MaterialState::Loaded { slot, .. } = material {
                 self.allocator.release(*slot);
@@ -207,19 +245,20 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     fn try_insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        resources: &Resources,
         handle: &Handle<Material>,
     ) -> Option<MaterialState<B>> {
         #[cfg(feature = "profiler")]
         profile_scope!("try_insert");
 
         use util::{desc_write, slice_as_bytes, texture_desc};
-        let (mat_storage, tex_storage) = <(
-            Read<'_, AssetStorage<Material>>,
-            Read<'_, AssetStorage<Texture>>,
-        )>::fetch(world);
 
+        let mat_storage = resources.get::<AssetStorage<Material>>().unwrap();
+        let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
+
+        // log::debug!("attempting to get material_id: {:?}", handle);
         let mat = mat_storage.get(handle)?;
+        // log::debug!("try_insert got material_id: {:?}", handle);
 
         let has_tex = T::textures(mat).any(|t| {
             !tex_storage
@@ -227,6 +266,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                 .map_or(false, |tex| B::unwrap_texture(tex).is_some())
         });
         if has_tex {
+            // log::debug!("has_tex: {:?}", has_tex);
             return None;
         }
 
@@ -277,13 +317,13 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     pub fn insert(
         &mut self,
         factory: &Factory<B>,
-        world: &World,
+        resources: &Resources,
         handle: &Handle<Material>,
     ) -> Option<(MaterialId, bool)> {
         #[cfg(feature = "profiler")]
         profile_scope!("insert");
 
-        let id = self.lookup.forward(handle.id());
+        let id = self.lookup.forward(handle.load_handle());
         match self.materials.get_mut(id) {
             Some(MaterialState::Loaded {
                 slot,
@@ -291,24 +331,27 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                 handle,
                 ..
             }) => {
+                // log::debug!("MaterialState::Loaded");
                 // If handle is dead, new material was loaded (handle id reused)
-                if handle.is_dead() {
-                    self.allocator.release(*slot);
-                } else {
-                    // Material loaded and ready
-                    *generation = self.generation;
-                    return Some((MaterialId(id as u32), false));
-                }
+                // FIXME is this check needed?
+                // if handle.is_dead() {
+                //     self.allocator.release(*slot);
+                // } else {
+                // Material loaded and ready
+                *generation = self.generation;
+                return Some((MaterialId(id as u32), false));
+                // }
             }
             Some(MaterialState::Unloaded { generation }) if *generation == self.generation => {
-                return None
+                // log::debug!("materialstate::Unloaded");
+                return None;
             }
             _ => {}
         };
 
         debug_assert!(self.materials.len() >= id);
         let (new_state, loaded) = self
-            .try_insert(factory, world, handle)
+            .try_insert(factory, resources, handle)
             .map(|s| (s, true))
             .unwrap_or_else(|| {
                 (
@@ -326,8 +369,10 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         }
 
         if loaded {
+            // log::debug!("new_state loaded");
             Some((MaterialId(id as u32), true))
         } else {
+            // log::debug!("new_state not loaded");
             None
         }
     }
@@ -335,10 +380,10 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Returns `true` if the supplied `MaterialId` is already loaded.
     #[inline]
     pub fn loaded(&self, material_id: MaterialId) -> bool {
-        match &self.materials[material_id.0 as usize] {
-            MaterialState::Loaded { .. } => true,
-            _ => false,
-        }
+        matches!(
+            &self.materials[material_id.0 as usize],
+            MaterialState::Loaded { .. }
+        )
     }
 
     /// Binds all material descriptor sets and textures contained in this collection.

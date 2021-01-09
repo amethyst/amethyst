@@ -1,0 +1,18 @@
+#!/bin/sh
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+set -e
+exec < /dev/tty
+read -r -p "Would you like to lint your code before committing? [y/N]" response
+response=${response,,} # tolower
+if [[ $response =~ ^(yes|y|Y) ]]; then
+    echo "Linting..."
+    cargo +nightly check -q --workspace --all-targets --features empty,optional ||
+    echo -e "${RED}Lint Errors Found, Try this command: ${GREEN}cargo +nightly fix --workspace --features empty,optional --allow-dirty --allow-staged${NC}" && exit 1
+    sleep 1 # fixes possibly newer errors
+    cargo +nightly clippy -q -Z unstable-options --workspace --features empty,optional ||
+    echo -e "${RED}Lint Errors Found, Try this command: ${GREEN}cargo +nightly clippy -Z unstable-options --workspace --features empty,optional --fix --allow-dirty --allow-staged${NC}" && exit 1
+    cargo +nightly fmt --all
+fi

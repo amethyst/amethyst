@@ -1,8 +1,10 @@
 //! Physically-based material.
 
-use crate::types::Texture;
 use amethyst_assets::{Asset, Handle};
-use amethyst_core::ecs::prelude::DenseVecStorage;
+use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
+
+use crate::types::Texture;
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -23,7 +25,8 @@ impl Default for TextureOffset {
 }
 
 /// A physically based Material with metallic workflow, fully utilized in PBR render pass.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TypeUuid)]
+#[uuid = "e238c036-42e9-4d0e-9aa9-c6511c906820"]
 pub struct Material {
     /// Alpha cutoff: the value at which we do not draw the pixel
     pub alpha_cutoff: f32,
@@ -44,10 +47,17 @@ pub struct Material {
 }
 
 impl Asset for Material {
-    const NAME: &'static str = "renderer::Material";
+    fn name() -> &'static str {
+        "renderer::Material"
+    }
     type Data = Self;
-    type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
+
+// impl From<Material> for Material {
+//     fn from(material: Material) -> Self {
+//         material
+//     }
+// }
 
 /// A resource providing default textures for `Material`.
 /// These will be be used by the renderer in case a texture

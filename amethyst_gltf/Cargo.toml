@@ -1,7 +1,10 @@
 [package]
 name = "amethyst_gltf"
 version = "0.15.3"
-authors = ["Rhuagh <seamonr@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Rhuagh <seamonr@gmail.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "GLTF asset loading"
 
@@ -10,9 +13,6 @@ homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"
-
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
@@ -35,8 +35,4 @@ image = "0.22.2"
 derivative = "2.1.1"
 
 [features]
-vulkan = ["amethyst_rendy/vulkan", "amethyst_rendy/vulkan-x11"]
-metal = ["amethyst_rendy/metal"]
-empty = ["amethyst_rendy/empty"]
-
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = ["thread_profiler/thread_profiler"]

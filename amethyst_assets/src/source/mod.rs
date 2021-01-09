@@ -1,9 +1,8 @@
 use amethyst_error::Error;
-
-pub use self::dir::Directory;
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+pub use self::dir::Directory;
 
 mod dir;
 

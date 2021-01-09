@@ -1,51 +1,34 @@
-use crate::{
-    resources::AnimationSampling,
-    skinning::VertexSkinningSystemDesc,
-    systems::{
-        AnimationControlSystemDesc, AnimationProcessor, SamplerInterpolationSystem,
-        SamplerProcessor,
-    },
-};
-use amethyst_core::{
-    ecs::prelude::{Component, DispatcherBuilder, World},
-    SystemBundle, SystemDesc,
-};
-use amethyst_error::Error;
 use std::{hash::Hash, marker};
+
+use amethyst_core::ecs::*;
+use amethyst_error::Error;
+use derivative::Derivative;
+use marker::PhantomData;
+
+use crate::{resources::AnimationSampling, skinning::VertexSkinningSystem};
 
 /// Bundle for vertex skinning
 ///
 /// This registers `VertexSkinningSystem`.
 /// Note that the user must make sure this system runs after `TransformSystem`
 #[derive(Default, Debug)]
-pub struct VertexSkinningBundle<'a> {
-    dep: &'a [&'a str],
-}
+pub struct VertexSkinningBundle;
 
-impl<'a> VertexSkinningBundle<'a> {
+impl VertexSkinningBundle {
     /// Create a new sampling bundle
     pub fn new() -> Self {
         Default::default()
     }
-
-    /// Set dependencies for the `VertexSkinningSystem`
-    pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
-        self.dep = dep;
-        self
-    }
 }
 
-impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+impl SystemBundle for VertexSkinningBundle {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        _resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add(
-            VertexSkinningSystemDesc::default().build(world),
-            "vertex_skinning_system",
-            self.dep,
-        );
+        builder.add_system(Box::new(VertexSkinningSystem::default()));
         Ok(())
     }
 }
@@ -59,44 +42,24 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
 ///
 /// - `T`: the component type that sampling should be applied to
 #[derive(Default, Debug)]
-pub struct SamplingBundle<'a, T> {
-    name: &'a str,
-    dep: &'a [&'a str],
+pub struct SamplingBundle<T> {
     m: marker::PhantomData<T>,
 }
 
-impl<'a, T> SamplingBundle<'a, T> {
-    /// Create a new sampling bundle
-    ///
-    /// ### Parameters:
-    ///
-    /// - `name`: name of the `SamplerInterpolationSystem`
-    pub fn new(name: &'a str) -> Self {
-        Self {
-            name,
-            dep: &[],
-            m: marker::PhantomData,
-        }
-    }
-
-    /// Set dependencies for the `SamplerInterpolationSystem`
-    pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
-        self.dep = dep;
-        self
-    }
-}
-
-impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for SamplingBundle<'c, T>
+impl<'a, T> SystemBundle for SamplingBundle<T>
 where
-    T: AnimationSampling + Component,
+    T: AnimationSampling + std::fmt::Debug,
 {
-    fn build(
-        self,
+    fn load(
+        &mut self,
         _world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+        _resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
-        builder.add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep);
+        builder.add_system(Box::new(
+            crate::systems::sampling::SamplerInterpolationSystem::<T>::default(),
+        ));
+
         Ok(())
     }
 }
@@ -113,55 +76,29 @@ where
 /// - `I`: identifier type for running animations, only one animation can be run at the same time
 ///        with the same id (per entity)
 /// - `T`: the component type that sampling should be applied to
-#[derive(Default, Debug)]
-pub struct AnimationBundle<'a, I, T> {
-    animation_name: &'a str,
-    sampling_name: &'a str,
-    dep: &'a [&'a str],
+#[derive(Derivative, Debug)]
+#[derivative(Default)]
+pub struct AnimationBundle<I, T> {
     m: marker::PhantomData<(I, T)>,
 }
 
-impl<'a, I, T> AnimationBundle<'a, I, T> {
-    /// Create a new animation bundle
-    ///
-    /// ### Parameters:
-    ///
-    /// - `animation_name`: name of the `AnimationControlSystem`
-    /// - `sampling_name`: name of the `SamplerInterpolationSystem`
-    pub fn new(animation_name: &'a str, sampling_name: &'a str) -> Self {
-        Self {
-            animation_name,
-            sampling_name,
-            dep: &[],
-            m: marker::PhantomData,
-        }
-    }
-
-    /// Set dependencies for the `AnimationControlSystem`
-    pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
-        self.dep = dep;
-        self
-    }
-}
-
-impl<'a, 'b, 'c, I, T> SystemBundle<'a, 'b> for AnimationBundle<'c, I, T>
+impl<I, T> SystemBundle for AnimationBundle<I, T>
 where
-    I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
-    T: AnimationSampling + Component + Clone,
+    I: std::fmt::Debug + PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
+    T: AnimationSampling + Clone + std::fmt::Debug,
 {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+    fn load(
+        &mut self,
+        _world: &mut World,
+        _resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add(AnimationProcessor::<T>::new(), "", &[]);
-        builder.add(
-            AnimationControlSystemDesc::<I, T>::default().build(world),
-            self.animation_name,
-            self.dep,
-        );
-        SamplingBundle::<T>::new(self.sampling_name)
-            .with_dep(&[self.animation_name])
-            .build(world, builder)
+        builder.add_bundle(SamplingBundle::<T> { m: PhantomData });
+        builder.add_system(Box::new(crate::systems::control::AnimationControlSystem::<
+            I,
+            T,
+        >::default()));
+
+        Ok(())
     }
 }

@@ -1,5 +1,4 @@
 //! Graphics pipeline abstraction
-use crate::{types::Backend, util};
 use derivative::Derivative;
 use rendy::{
     factory::Factory,
@@ -7,18 +6,18 @@ use rendy::{
         device::Device,
         pass::Subpass,
         pso::{
-            AttributeDesc, BakedStates, BasePipeline, BlendDesc, ColorBlendDesc, DepthStencilDesc,
-            DepthTest, Face, GraphicsPipelineDesc, GraphicsShaderSet, InputAssemblerDesc,
-            Multisampling, PipelineCreationFlags, Rasterizer, Rect, VertexBufferDesc,
-            VertexInputRate, Viewport,
+            AttributeDesc, BakedStates, BasePipeline, BlendDesc, ColorBlendDesc, CreationError,
+            DepthStencilDesc, DepthTest, Face, GraphicsPipelineDesc, GraphicsShaderSet,
+            InputAssemblerDesc, Multisampling, PipelineCreationFlags, Primitive, Rasterizer, Rect,
+            VertexBufferDesc, VertexInputRate, Viewport,
         },
-        Primitive,
     },
     mesh::VertexFormat,
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{types::Backend, util};
 
 // TODO: make gfx type cloneable
 #[derive(Derivative, Debug)]
@@ -345,7 +344,7 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
         self,
         factory: &Factory<B>,
         cache: Option<&B::PipelineCache>,
-    ) -> Result<Vec<B::GraphicsPipeline>, failure::Error> {
+    ) -> Result<Vec<B::GraphicsPipeline>, CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("create_pipelines");
 
@@ -361,7 +360,7 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
                     factory.destroy_graphics_pipeline(p);
                 }
             }
-            failure::bail!(err);
+            return Err(err);
         }
 
         Ok(pipelines.into_iter().map(|p| p.unwrap()).collect())

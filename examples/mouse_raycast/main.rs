@@ -3,132 +3,126 @@
 //!
 
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader, Progress, ProgressCounter},
+    assets::{
+        AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle, Progress, ProgressCounter,
+    },
     core::{
         geometry::Plane,
         math::{Point2, Vector2, Vector3},
         transform::{Transform, TransformBundle},
-        Named, WithNamed,
+        Named,
     },
-    derive::SystemDesc,
     ecs::{
-        prelude::Entity, Entities, Join, Read, ReadExpect, ReadStorage, System, SystemData,
-        WriteStorage,
+        DispatcherBuilder, Entity, IntoQuery, ParallelRunnable, Resources, System, SystemBuilder,
     },
-    input::{InputBundle, InputHandler, StringBindings},
-    prelude::{Builder, World, WorldExt},
+    input::{InputBundle, InputHandler},
+    prelude::World,
     renderer::{
         camera::{ActiveCamera, Camera},
         plugins::{RenderFlat2D, RenderToWindow},
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
+        rendy::hal::command::ClearColor,
+        sprite::{SpriteRender, SpriteSheet, Sprites},
         types::DefaultBackend,
-        ImageFormat, RenderingBundle, Texture,
+        RenderingBundle,
     },
-    ui::{RenderUi, UiBundle, UiCreator, UiFinder, UiText},
+    ui::{Anchor, RenderUi, UiBundle, UiText, UiTransform},
     utils::application_root_dir,
     window::ScreenDimensions,
-    Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
+    Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
 };
 
-#[derive(SystemDesc)]
 struct MouseRaycastSystem;
 
-impl<'s> System<'s> for MouseRaycastSystem {
-    type SystemData = (
-        Entities<'s>,
-        ReadStorage<'s, Transform>,
-        ReadStorage<'s, Camera>,
-        ReadStorage<'s, SpriteRender>,
-        ReadStorage<'s, Named>,
-        WriteStorage<'s, UiText>,
-        Read<'s, AssetStorage<SpriteSheet>>,
-        ReadExpect<'s, ScreenDimensions>,
-        Read<'s, ActiveCamera>,
-        Read<'s, InputHandler<StringBindings>>,
-        UiFinder<'s>,
-    );
+impl System<'_> for MouseRaycastSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MouseRaycastSystem")
+                .with_query(<(&Camera, &Transform)>::query())
+                .with_query(<(&SpriteRender, &Transform, &Named)>::query())
+                .with_query(<(&UiTransform, &mut UiText)>::query())
+                .read_resource::<InputHandler>()
+                .read_resource::<ActiveCamera>()
+                .read_resource::<ScreenDimensions>()
+                .read_resource::<AssetStorage<SpriteSheet>>()
+                .read_resource::<AssetStorage<Sprites>>()
+                .build(
+                    |_,
+                     world,
+                     (input, active_camera, screen_dimensions, sprite_sheets, sprites_storage),
+                     (camera_query, sprite_query, ui_texts)| {
+                        // Get the mouse position if its available
+                        if let Some(mouse_position) = input.mouse_position() {
+                            // Get the active camera if it is spawned and ready
+                            let (left, mut right) = world.split_for_query(camera_query);
+                            if let Some((camera, camera_transform)) = active_camera
+                                .entity
+                                .and_then(|a| camera_query.get(&left, a).ok())
+                                .or_else(|| camera_query.iter(&left).next())
+                            {
+                                // Project a ray from the camera to the 0z axis
+                                let ray = camera.screen_ray(
+                                    Point2::new(mouse_position.0, mouse_position.1),
+                                    Vector2::new(
+                                        screen_dimensions.width(),
+                                        screen_dimensions.height(),
+                                    ),
+                                    camera_transform,
+                                );
+                                let distance = ray.intersect_plane(&Plane::with_z(0.0)).unwrap();
+                                let mouse_world_position = ray.at_distance(distance);
 
-    fn run(
-        &mut self,
-        (
-            entities,
-            transforms,
-            cameras,
-            sprites,
-            names,
-            mut ui_texts,
-            sprite_sheets,
-            screen_dimensions,
-            active_camera,
-            input,
-            ui_finder,
-        ): Self::SystemData,
-    ) {
-        // Get the mouse position if its available
-        if let Some(mouse_position) = input.mouse_position() {
-            // Get the active camera if it is spawned and ready
-            let mut camera_join = (&cameras, &transforms).join();
-            if let Some((camera, camera_transform)) = active_camera
-                .entity
-                .and_then(|a| camera_join.get(a, &entities))
-                .or_else(|| camera_join.next())
-            {
-                // Project a ray from the camera to the 0z axis
-                let ray = camera.screen_ray(
-                    Point2::new(mouse_position.0, mouse_position.1),
-                    Vector2::new(screen_dimensions.width(), screen_dimensions.height()),
-                    camera_transform,
-                );
-                let distance = ray.intersect_plane(&Plane::with_z(0.0)).unwrap();
-                let mouse_world_position = ray.at_distance(distance);
+                                for (transform, text) in ui_texts.iter_mut(&mut right) {
+                                    if transform.id == "mouse_position" {
+                                        text.text = format!(
+                                            "({:.0}, {:.0})",
+                                            mouse_world_position.x, mouse_world_position.y
+                                        );
+                                    }
+                                }
 
-                if let Some(t) = ui_finder
-                    .find("mouse_position")
-                    .and_then(|e| ui_texts.get_mut(e))
-                {
-                    t.text = format!(
-                        "({:.0}, {:.0})",
-                        mouse_world_position.x, mouse_world_position.y
-                    );
-                }
+                                // Find any sprites which the mouse is currently inside
+                                let mut found_name = None;
+                                let (left, mut right) = world.split_for_query(sprite_query);
+                                for (sprite, transform, name) in sprite_query.iter(&left) {
+                                    let sprite_sheet =
+                                        sprite_sheets.get(&sprite.sprite_sheet).unwrap();
+                                    let sprites =
+                                        sprites_storage.get(&sprite_sheet.sprites).unwrap();
+                                    let sprite = &sprites.build_sprites()[sprite.sprite_number];
+                                    let (min_x, max_x, min_y, max_y) = {
+                                        // Sprites are centered on a coordinate, so we build out a bbox for the sprite coordinate
+                                        // and dimensions
+                                        // Notice we ignore z-axis for this example.
+                                        (
+                                            transform.translation().x - (sprite.width * 0.5),
+                                            transform.translation().x + (sprite.width * 0.5),
+                                            transform.translation().y - (sprite.height * 0.5),
+                                            transform.translation().y + (sprite.height * 0.5),
+                                        )
+                                    };
+                                    if mouse_world_position.x > min_x
+                                        && mouse_world_position.x < max_x
+                                        && mouse_world_position.y > min_y
+                                        && mouse_world_position.y < max_y
+                                    {
+                                        found_name = Some(&name.0);
+                                    }
+                                }
 
-                // Find any sprites which the mouse is currently inside
-                let mut found_name = None;
-                for (sprite, transform, name) in (&sprites, &transforms, &names).join() {
-                    let sprite_sheet = sprite_sheets.get(&sprite.sprite_sheet).unwrap();
-                    let sprite = &sprite_sheet.sprites[sprite.sprite_number];
-                    let (min_x, max_x, min_y, max_y) = {
-                        // Sprites are centered on a coordinate, so we build out a bbox for the sprite coordinate
-                        // and dimensions
-                        // Notice we ignore z-axis for this example.
-                        (
-                            transform.translation().x - (sprite.width * 0.5),
-                            transform.translation().x + (sprite.width * 0.5),
-                            transform.translation().y - (sprite.height * 0.5),
-                            transform.translation().y + (sprite.height * 0.5),
-                        )
-                    };
-                    if mouse_world_position.x > min_x
-                        && mouse_world_position.x < max_x
-                        && mouse_world_position.y > min_y
-                        && mouse_world_position.y < max_y
-                    {
-                        found_name = Some(&name.name);
-                    }
-                }
-
-                if let Some(t) = ui_finder
-                    .find("under_mouse")
-                    .and_then(|e| ui_texts.get_mut(e))
-                {
-                    if let Some(name) = found_name {
-                        t.text = format!("{}", name);
-                    } else {
-                        t.text = "".to_string();
-                    }
-                }
-            }
-        }
+                                for (transform, text) in ui_texts.iter_mut(&mut right) {
+                                    if transform.id == "under_mouse" {
+                                        if let Some(name) = found_name {
+                                            text.text = format!("{}", name);
+                                        } else {
+                                            text.text = "".to_string();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                ),
+        )
     }
 }
 
@@ -140,13 +134,15 @@ struct Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let StateData { world, .. } = data;
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let StateData {
+            world, resources, ..
+        } = data;
         // Crates new progress counter
         self.progress_counter = Some(Default::default());
 
         let sprite_sheet_handle = load_sprite_sheet(
-            world,
+            resources,
             "texture/cp437_20x20.png",
             "texture/cp437_20x20.ron",
             self.progress_counter.as_mut().unwrap(),
@@ -176,17 +172,61 @@ impl SimpleState for Example {
             &sprite_sheet_handle,
         );
 
-        world.exec(|mut creator: UiCreator<'_>| {
-            creator.create(
-                "ui/mouse_raycast.ron",
-                self.progress_counter.as_mut().unwrap(),
-            );
-        });
+        let font = {
+            resources
+                .get::<DefaultLoader>()
+                .unwrap()
+                .load("font/square.ttf")
+        };
 
-        init_camera(world);
+        let text = UiText::new(
+            Some(font.clone()),
+            "Hippopotamus".into(),
+            [1., 1., 1., 1.],
+            25.,
+            amethyst::ui::LineMode::Single,
+            Anchor::Middle,
+        );
+
+        let transform = UiTransform {
+            id: "mouse_position".into(),
+            anchor: Anchor::TopLeft,
+            local_x: 100.,
+            local_y: -25.,
+            width: 200.,
+            height: 50.,
+            opaque: false,
+            ..Default::default()
+        };
+
+        world.push((text, transform));
+
+        let text = UiText::new(
+            Some(font),
+            "Rhinoceros".into(),
+            [1., 1., 1., 1.],
+            25.,
+            amethyst::ui::LineMode::Single,
+            Anchor::Middle,
+        );
+
+        let transform = UiTransform {
+            id: "under_mouse".into(),
+            anchor: Anchor::TopLeft,
+            local_x: 100.,
+            local_y: -50.,
+            width: 200.,
+            height: 50.,
+            opaque: false,
+            ..Default::default()
+        };
+
+        world.push((text, transform));
+
+        init_camera(world, resources);
     }
 
-    fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, _: &mut StateData<'_, GameData>) -> SimpleTrans {
         Trans::None
     }
 }
@@ -203,33 +243,23 @@ fn init_sprite(
     transform.set_translation(position);
 
     let sprite = SpriteRender::new(sprite_sheet.clone(), sprite_number);
-    world
-        .create_entity()
-        .with(transform)
-        .with(sprite)
-        .named(name)
-        .build()
+    world.push((transform, sprite, Named(name.into())))
 }
 
-fn init_camera(world: &mut World) {
+fn init_camera(world: &mut World, resources: &mut Resources) -> Entity {
     let (width, height) = {
-        let dim = world.read_resource::<ScreenDimensions>();
+        let dim = resources.get::<ScreenDimensions>().unwrap();
         (dim.width(), dim.height())
     };
-    //println!("Init camera with dimensions: {}x{}", width, height);
 
     let mut camera_transform = Transform::default();
     camera_transform.set_translation_z(1.0);
 
-    world
-        .create_entity()
-        .with(camera_transform)
-        .with(Camera::standard_2d(width, height))
-        .build();
+    world.push((camera_transform, Camera::standard_2d(width, height)))
 }
 
 fn load_sprite_sheet<P>(
-    world: &mut World,
+    resources: &mut Resources,
     png_path: &str,
     ron_path: &str,
     progress: P,
@@ -237,18 +267,17 @@ fn load_sprite_sheet<P>(
 where
     P: Progress,
 {
-    let texture_handle = {
-        let loader = world.read_resource::<Loader>();
-        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
-        loader.load(png_path, ImageFormat::default(), (), &texture_storage)
-    };
-    let loader = world.read_resource::<Loader>();
-    let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
-    loader.load(
-        ron_path,
-        SpriteSheetFormat(texture_handle),
+    let loader = resources
+        .get_mut::<DefaultLoader>()
+        .expect("Missing loader");
+
+    let texture = loader.load(png_path);
+    let sprites = loader.load(ron_path);
+
+    loader.load_from_data(
+        SpriteSheet { texture, sprites },
         progress,
-        &sprite_sheet_store,
+        &resources.get().expect("processing queue for SpriteSheet"),
     )
 }
 
@@ -256,25 +285,28 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("examples/mouse_raycast/assets/");
-    let display_config_path = app_root.join("examples/mouse_raycast/config/display.ron");
+    let assets_dir = app_root.join("assets/");
+    let display_config_path = app_root.join("config/display.ron");
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(
+    let mut game_data = DispatcherBuilder::default();
+    game_data
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle::default())
+        .add_bundle(InputBundle::default())
+        .add_bundle(UiBundle::<u32>::default())
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderUi::default())
                 .with_plugin(RenderFlat2D::default()),
-        )?
-        .with(MouseRaycastSystem, "MouseRaycastSystem", &["input_system"]);
+        )
+        .add_system(Box::new(MouseRaycastSystem));
 
-    let mut game = Application::new(assets_dir, Example::default(), game_data)?;
+    let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
 
     Ok(())

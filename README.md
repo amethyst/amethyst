@@ -52,7 +52,7 @@ Using the [ECS][ecs] architecture, the code of games can be cleanly divided betw
 
 ### Community
 
-While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of Amethyst will thrive as we move forward!
+* [Discord](https://discord.gg/amethyst) - Announcements, help, useful information, general discussion.
 
 ## Features
 
@@ -95,7 +95,7 @@ You can download it and read the installation instructions at [Git LFS home page
 To compile any of the examples run:
 
 ```
-$ cargo run --example name_of_example
+$ cargo run -p name_of_example
 ```
 
 All available examples are listed under the [examples][exm] directory.

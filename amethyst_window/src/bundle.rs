@@ -1,8 +1,9 @@
-use crate::{DisplayConfig, EventsLoopSystem, WindowSystem};
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{bundle::SystemBundle, ecs::World, shred::DispatcherBuilder};
+use amethyst_core::ecs::*;
 use amethyst_error::Error;
-use winit::EventsLoop;
+use winit::event_loop::EventLoop;
+
+use crate::{DisplayConfig, EventLoopSystem, ScreenDimensions, WindowSystem};
 
 /// Screen width used in predefined display configuration.
 #[cfg(feature = "test-support")]
@@ -41,27 +42,41 @@ impl WindowBundle {
     /// * `visibility` is `false`.
     #[cfg(feature = "test-support")]
     pub fn from_test_config() -> Self {
-        let mut display_config = DisplayConfig::default();
-        display_config.dimensions = Some((SCREEN_WIDTH, SCREEN_HEIGHT));
-        display_config.visibility = false;
+        let display_config = DisplayConfig {
+            dimensions: Some((SCREEN_WIDTH, SCREEN_HEIGHT)),
+            visibility: false,
+            ..Default::default()
+        };
 
         WindowBundle::from_config(display_config)
     }
 }
 
-impl<'a, 'b> SystemBundle<'a, 'b> for WindowBundle {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
+impl SystemBundle for WindowBundle {
+    fn load(
+        &mut self,
+        _world: &mut World,
+        resources: &mut Resources,
+        builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        let event_loop = EventsLoop::new();
-        builder.add(
-            WindowSystem::from_config(world, &event_loop, self.config),
-            "window",
-            &[],
-        );
-        builder.add_thread_local(EventsLoopSystem::new(event_loop));
+        let event_loop: EventLoop<()> = EventLoop::new();
+
+        let window = self
+            .config
+            .clone()
+            .into_window_builder(&event_loop)
+            .build(&event_loop)
+            .expect("Unable to create window");
+
+        let (width, height) = window.inner_size().into();
+
+        resources.insert(ScreenDimensions::new(width, height));
+        resources.insert(window);
+
+        builder
+            .add_system(Box::new(WindowSystem))
+            .add_thread_local(Box::new(EventLoopSystem { event_loop }));
+
         Ok(())
     }
 }

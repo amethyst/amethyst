@@ -1,5 +1,4 @@
-use amethyst_config::Config;
-
+use amethyst_config::{Config, ConfigFormat};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -32,17 +31,45 @@ pub struct ExampleConfig {
 }
 
 fn main() {
-    let path = format!("{}/examples/display_config.ron", env!("CARGO_MANIFEST_DIR"));
-    let res = ExampleConfig::load(&path);
-
-    match res {
+    let ron_path = format!("{}/examples/config.{}", env!("CARGO_MANIFEST_DIR"), "ron");
+    match ExampleConfig::load(&ron_path) {
         Ok(cfg) => {
-            println!("{:#?}", cfg);
+            println!("RON Config Result:\n{:#?}", cfg);
 
-            if let Err(e) = cfg.write(&path) {
-                println!("{}", e);
+            if let Err(e) = cfg.write_format(ConfigFormat::Ron, &ron_path) {
+                println!("Error:\n{}", e);
             }
         }
         Err(e) => println!("{:?}", e),
+    }
+
+    #[cfg(feature = "json")]
+    {
+        let json_path = format!("{}/examples/config.{}", env!("CARGO_MANIFEST_DIR"), "json");
+        match ExampleConfig::load(&json_path) {
+            Ok(cfg) => {
+                println!("JSON Config Result:\n{:#?}", cfg);
+
+                if let Err(e) = cfg.write_format(ConfigFormat::Json, &json_path) {
+                    println!("Error:\n{}", e);
+                }
+            }
+            Err(e) => println!("{:?}", e),
+        }
+    }
+
+    #[cfg(feature = "binary")]
+    {
+        let binary_path = format!("{}/examples/config.{}", env!("CARGO_MANIFEST_DIR"), "bin");
+        match ExampleConfig::load(&binary_path) {
+            Ok(cfg) => {
+                println!("Binary Config Result:\n{:#?}", cfg);
+
+                if let Err(e) = cfg.write_format(ConfigFormat::Binary, &binary_path) {
+                    println!("Error:\n{}", e);
+                }
+            }
+            Err(e) => println!("{:?}", e),
+        }
     }
 }

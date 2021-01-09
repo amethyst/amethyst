@@ -1,4 +1,7 @@
+unstable_features = true
 reorder_imports = true
-
-# Disabled until stable or unstable features can be used with stable rust
-# merge_imports = true
+merge_imports = true
+group_imports = "StdExternalCrate"
+force_multiline_blocks = true
+# Consider the following after the legion port
+#format_code_in_doc_comments = true

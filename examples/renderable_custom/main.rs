@@ -57,7 +57,7 @@ struct Example {
 }
 
 impl SimpleState for Loading {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         self.prefab = Some(data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, &mut self.progress)
         }));
@@ -68,7 +68,7 @@ impl SimpleState for Loading {
         });
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         match self.progress.complete() {
             Completion::Failed => {
                 println!("Failed loading assets: {:?}", self.progress.errors());
@@ -92,17 +92,13 @@ impl SimpleState for Loading {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
 
         world.create_entity().with(self.scene.clone()).build();
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let w = data.world;
         if let StateEvent::Window(event) = &event {
             // Exit if user hits Escape or closes the window
@@ -194,25 +190,18 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_directory = app_root
-        .join("examples")
-        .join("renderable_custom")
-        .join("assets");
+    let assets_directory = app_root.join("assets");
 
-    let display_config_path = app_root
-        .join("examples")
-        .join("renderable")
-        .join("config")
-        .join("display.ron");
+    let display_config_path = app_root.join("config").join("display.ron");
 
-    let game_data = GameDataBuilder::default()
+    let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FpsCounterBundle::default())?
+        .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(HotReloadBundle::default())?
+        .add_bundle(FpsCounterBundle::default())?
         // The below Systems, are used to handle some rendering resources.
         // Most likely these must be always called as last thing.
         .with_system_desc(
@@ -241,14 +230,14 @@ fn main() -> Result<(), Error> {
             &[],
         )
         .with(Processor::<Material>::new(), "material_processor", &[])
-        .with_bundle(WindowBundle::from_config_path(display_config_path)?)?
+        .add_bundle(WindowBundle::from_config_path(display_config_path)?)?
         // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
         // which will always execute on the main thread.
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
+    let game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
     game.run();
     Ok(())
 }
@@ -312,18 +301,20 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
     ) -> GraphBuilder<DefaultBackend, World> {
         use amethyst::renderer::rendy::{
             graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
+            hal::command::{ClearColor, ClearDepthStencil, ClearValue},
         };
 
         self.dirty = false;
 
         // Retrieve a reference to the target window, which is created by the WindowBundle
         let window = <ReadExpect<'_, Window>>::fetch(world);
+        // Explicitly deref so we get a type that implements HasRawWindowHandle.
+        let window: &Window = &window;
         let dimensions = self.dimensions.as_ref().unwrap();
         let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         // Create a new drawing surface in our window
-        let surface = factory.create_surface(&window);
+        let surface = factory.create_surface(window).unwrap();
         let surface_format = factory.get_surface_format(&surface);
 
         // Begin building our RenderGraph
@@ -333,14 +324,23 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             1,
             surface_format,
             // clear screen to black
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+            Some(ClearValue {
+                color: ClearColor {
+                    float32: [0.34, 0.36, 0.52, 1.0],
+                },
+            }),
         );
 
         let depth = graph_builder.create_image(
             window_kind,
             1,
             Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(0.0, 0))),
+            Some(ClearValue {
+                depth_stencil: ClearDepthStencil {
+                    depth: 0.0,
+                    stencil: 0,
+                },
+            }),
         );
 
         // Create our first `Subpass`, which contains the DrawShaded and DrawUi render groups.

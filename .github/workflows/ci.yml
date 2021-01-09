@@ -8,17 +8,13 @@ on:
       - staging
       - trying
   pull_request:
-    branches:
-      - "**"
 
 env:
   RUSTFLAGS: -Cdebuginfo=0
-
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
 
 jobs:
-
   tests:
     name: Tests
     runs-on: ${{ matrix.os }}
@@ -28,14 +24,6 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         toolchain: [stable, beta, nightly]
-        include:
-        - os: macos-latest
-          FEATURES: metal,tiles
-          MACOS: true
-        - os: windows-latest
-          FEATURES: vulkan,tiles
-        - os: ubuntu-latest
-          FEATURES: vulkan,tiles
     steps:
       - uses: actions/checkout@v2
 
@@ -51,20 +39,22 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           profile: minimal
-          # Don't use a 'components:' entry--we don't need them with beta/nightly, plus nightly often doesn't have them
           override: true
 
-      - run: rustup component add clippy
-        if: matrix.toolchain == 'stable'
+      - uses: seanmiddleditch/gha-setup-ninja@master
+        if: matrix.os == 'windows-latest'
 
       - run: rustup component add rustfmt
-        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
+        if: matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest'
 
-      - run: cargo fmt --all -- --check
-        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
+      - run: cargo +nightly fmt --all -- --check
+        if: matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest'
+        
+      - run: rustup component add clippy
+        if: matrix.toolchain == 'nightly'
 
-      - run: cargo clippy --features=${{matrix.FEATURES}} --workspace
-        if: matrix.toolchain == 'stable'
+      - run: cargo +nightly clippy -Z unstable-options --workspace --all-targets --all-features
+        if: matrix.toolchain == 'nightly'
 
       - name: clean clippy-generated amethyst libs
         # Remove the clippy-generated amethyst files.
@@ -72,9 +62,7 @@ jobs:
         run: rm -rf ./target/debug/deps/libamethyst*
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - run: cargo test --workspace --features=${{matrix.FEATURES}}
-        env:
-          MACOS: ${{ matrix.MACOS }} # Used by some tests
+      - run: cargo test --workspace --all-targets --all-features
 
       - name: install mdbook on stable, ubuntu-latest
         uses: peaceiris/actions-mdbook@v1
@@ -94,5 +82,5 @@ jobs:
       - run: mdbook build book
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - run: mdbook test -L ./target/debug/deps book
-        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
+      # - run: mdbook test -L ./target/debug/deps book
+      #   if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'

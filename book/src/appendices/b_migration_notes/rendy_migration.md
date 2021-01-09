@@ -77,7 +77,7 @@
 
     ```rust,ignore
     use amethyst::{
-        assets::{AssetStorage, Handle, Loader, Prefab, PrefabLoader},
+        assets::{AssetStorage, Handle,  DefaultLoader, Loader, Prefab, PrefabLoader},
         ecs::World,
         renderer::{
             loaders::load_from_srgba,
@@ -87,7 +87,7 @@
         },
     };
 
-    let loader = world.read_resource::<Loader>();
+    let loader = world.read_resource::<DefaultLoader>();
     let texture_assets = world.read_resource::<AssetStorage<Texture>>();
     let texture_builder = load_from_srgba(Srgba::new(0., 0., 0., 0.));
     let texture_handle: Handle<Texture> =

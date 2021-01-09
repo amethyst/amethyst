@@ -1,15 +1,20 @@
+use amethyst_assets::{
+    atelier_importer::{typetag, SerdeImportable},
+    register_asset_type, AssetProcessorSystem,
+};
+use amethyst_core::{
+    ecs::*,
+    math::{convert, RealField, Vector2, Vector3, Vector4},
+    simd::scalar::*,
+};
 use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
 
-use amethyst_core::{
-    alga::general::{SubsetOf, SupersetOf},
-    ecs::prelude::{Entity, WriteStorage},
-    math::{convert, RealField, Vector2, Vector3, Vector4},
-};
-
-use crate::resources::{AnimationControlSet, AnimationSampling};
-
 use self::SamplerPrimitive::*;
+use crate::{
+    resources::{AnimationControlSet, AnimationSampling},
+    Sampler,
+};
 
 /// Get the animation set for an entity. If none exists, one will be added. If entity is invalid,
 /// (eg. removed before) None will be returned.
@@ -19,18 +24,28 @@ use self::SamplerPrimitive::*;
 /// - `I`: identifier type for running animations, only one animation can be run at the same time
 ///        with the same id
 /// - `T`: the component type that the animation applies to
-pub fn get_animation_set<'a, I, T>(
-    controls: &'a mut WriteStorage<'_, AnimationControlSet<I, T>>,
+pub fn get_animation_set<'a, I, T, W>(
+    world: &'a mut W,
+    buffer: &mut CommandBuffer,
     entity: Entity,
 ) -> Option<&'a mut AnimationControlSet<I, T>>
 where
     I: Send + Sync + 'static,
     T: AnimationSampling,
+    W: EntityStore,
 {
-    controls
-        .entry(entity)
-        .ok()
-        .map(|entry| entry.or_insert_with(AnimationControlSet::default))
+    if let Ok(entry) = world.entry_mut(entity) {
+        let c = entry.into_component_mut::<AnimationControlSet<I, T>>();
+        if c.is_ok() {
+            c.ok()
+        } else {
+            let set = AnimationControlSet::<I, T>::default();
+            buffer.add_component(entity, set);
+            None
+        }
+    } else {
+        None
+    }
 }
 
 /// Sampler primitive
@@ -103,6 +118,18 @@ where
     }
 }
 
+use type_uuid::TypeUuid;
+use uuid::Uuid;
+
+// e05c777b-575e-4f7a-930e-d8ea83bb227b
+impl TypeUuid for Sampler<SamplerPrimitive<f32>> {
+    const UUID: type_uuid::Bytes =
+        *Uuid::from_u128(298227185745652393685123926184903254651).as_bytes();
+}
+#[typetag::serde]
+impl SerdeImportable for Sampler<SamplerPrimitive<f32>> {}
+register_asset_type!(Sampler<SamplerPrimitive<f32>> => Sampler<SamplerPrimitive<f32>>; AssetProcessorSystem<Sampler<SamplerPrimitive<f32>>>);
+
 impl<S> InterpolationPrimitive for SamplerPrimitive<S>
 where
     S: RealField + SubsetOf<f32> + SupersetOf<f32>,
@@ -135,17 +162,21 @@ where
         match *self {
             Scalar(ref s) => Scalar(mul_f32(*s, scalar)),
             Vec2(ref s) => Vec2([mul_f32(s[0], scalar), mul_f32(s[1], scalar)]),
-            Vec3(ref s) => Vec3([
-                mul_f32(s[0], scalar),
-                mul_f32(s[1], scalar),
-                mul_f32(s[2], scalar),
-            ]),
-            Vec4(ref s) => Vec4([
-                mul_f32(s[0], scalar),
-                mul_f32(s[1], scalar),
-                mul_f32(s[2], scalar),
-                mul_f32(s[3], scalar),
-            ]),
+            Vec3(ref s) => {
+                Vec3([
+                    mul_f32(s[0], scalar),
+                    mul_f32(s[1], scalar),
+                    mul_f32(s[2], scalar),
+                ])
+            }
+            Vec4(ref s) => {
+                Vec4([
+                    mul_f32(s[0], scalar),
+                    mul_f32(s[1], scalar),
+                    mul_f32(s[2], scalar),
+                    mul_f32(s[3], scalar),
+                ])
+            }
         }
     }
 

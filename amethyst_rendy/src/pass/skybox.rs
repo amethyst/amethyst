@@ -1,18 +1,8 @@
-use crate::{
-    palette::Srgb,
-    pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::IntoPod,
-    shape::Shape,
-    submodules::{DynamicUniform, FlatEnvironmentSub},
-    types::Backend,
-    util,
-};
-use amethyst_core::ecs::{Read, SystemData, World};
 use derivative::Derivative;
 use glsl_layout::{vec3, AsStd140};
 use rendy::{
     command::{QueueId, RenderPassEncoder},
-    factory::Factory,
+    factory::{Factory, UploadError},
     graph::{
         render::{PrepareResult, RenderGroup, RenderGroupDesc},
         GraphContext, NodeBuffer, NodeImage,
@@ -21,9 +11,19 @@ use rendy::{
     mesh::{AsVertex, Mesh, PosTex},
     shader::Shader,
 };
-
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use crate::{
+    palette::Srgb,
+    pipeline::{PipelineDescBuilder, PipelinesBuilder},
+    pod::IntoPod,
+    shape::Shape,
+    submodules::{DynamicUniform, FlatEnvironmentSub},
+    system::GraphAuxData,
+    types::Backend,
+    util,
+};
 
 #[derive(Clone, Debug, PartialEq)]
 struct SkyboxSettings {
@@ -80,19 +80,19 @@ impl DrawSkyboxDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, World> for DrawSkyboxDesc {
+impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawSkyboxDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         queue: QueueId,
-        _resources: &World,
+        _aux: &GraphAuxData,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -100,7 +100,13 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawSkyboxDesc {
         let colors = DynamicUniform::new(factory, pso::ShaderStageFlags::FRAGMENT)?;
         let mesh = Shape::Sphere(16, 16)
             .generate::<Vec<PosTex>>(None)
-            .build(queue, factory)?;
+            .build(queue, factory)
+            .map_err(|e| {
+                match e {
+                    UploadError::Upload(oom) => oom.into(),
+                    _ => pso::CreationError::Other,
+                }
+            })?;
 
         let (pipeline, pipeline_layout) = build_skybox_pipeline(
             factory,
@@ -132,23 +138,25 @@ pub struct DrawSkybox<B: Backend> {
     default_settings: SkyboxSettings,
 }
 
-impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
+impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawSkybox<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        aux: &GraphAuxData,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
 
-        let settings = <Option<Read<'_, SkyboxSettings>>>::fetch(resources)
+        let settings = aux
+            .resources
+            .get::<SkyboxSettings>()
             .map(|s| s.uniform())
             .unwrap_or_else(|| self.default_settings.uniform());
 
-        self.env.process(factory, index, resources);
+        self.env.process(factory, index, aux.world, aux.resources);
         let changed = self.colors.write(factory, index, settings);
 
         if changed {
@@ -163,7 +171,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &World,
+        _aux: &GraphAuxData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -179,7 +187,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawSkybox<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &GraphAuxData) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -195,7 +203,7 @@ fn build_skybox_pipeline<B: Backend>(
     framebuffer_width: u32,
     framebuffer_height: u32,
     layouts: Vec<&B::DescriptorSetLayout>,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), pso::CreationError> {
     let pipeline_layout = unsafe {
         factory
             .device()

@@ -1,12 +1,26 @@
 //! Environment submodule for shared environmental descriptor set data.
 //! Fetches and sets projection and lighting descriptor set information.
+use amethyst_core::{
+    ecs::*,
+    math::{convert, Vector3},
+    transform::Transform,
+};
+use glsl_layout::*;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     light::Light,
     pod::{self, IntoPod},
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor},
+        hal::{
+            self,
+            adapter::PhysicalDevice,
+            device::Device,
+            pso::{CreationError, Descriptor},
+        },
         memory::Write as _,
         resource::{Buffer, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     },
@@ -14,15 +28,6 @@ use crate::{
     types::Backend,
     util::{self, TapCountIter},
 };
-use amethyst_core::{
-    ecs::{Join, ReadStorage, SystemData, World},
-    math::{convert, Vector3},
-    transform::Transform,
-};
-use glsl_layout::*;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 const MAX_POINT_LIGHTS: usize = 128;
 const MAX_DIR_LIGHTS: usize = 16;
@@ -52,9 +57,36 @@ impl<B: Backend> EnvironmentSub<B> {
     pub fn new(
         factory: &Factory<B>,
         flags: [hal::pso::ShaderStageFlags; 2],
-    ) -> Result<Self, failure::Error> {
+    ) -> Result<Self, CreationError> {
+        use rendy::hal::pso::*;
+
+        let layout = factory
+            .create_descriptor_set_layout(util::set_layout_bindings(vec![
+                (
+                    1,
+                    DescriptorType::Buffer {
+                        ty: BufferDescriptorType::Uniform,
+                        format: BufferDescriptorFormat::Structured {
+                            dynamic_offset: false,
+                        },
+                    },
+                    flags[0],
+                ),
+                (
+                    4,
+                    DescriptorType::Buffer {
+                        ty: BufferDescriptorType::Uniform,
+                        format: BufferDescriptorFormat::Structured {
+                            dynamic_offset: false,
+                        },
+                    },
+                    flags[1],
+                ),
+            ]))?
+            .into();
+
         Ok(Self {
-            layout: set_layout! {factory, [1] UniformBuffer flags[0], [4] UniformBuffer flags[1]},
+            layout,
             per_image: Vec::new(),
         })
     }
@@ -65,7 +97,13 @@ impl<B: Backend> EnvironmentSub<B> {
     }
 
     /// Performs any re-allocation and GPU memory writing required for this environment set.
-    pub fn process(&mut self, factory: &Factory<B>, index: usize, world: &World) -> bool {
+    pub fn process(
+        &mut self,
+        factory: &Factory<B>,
+        index: usize,
+        world: &World,
+        resources: &Resources,
+    ) -> bool {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
 
@@ -76,7 +114,7 @@ impl<B: Backend> EnvironmentSub<B> {
             }
             &mut self.per_image[index]
         };
-        this_image.process(factory, world)
+        this_image.process(factory, world, resources)
     }
 
     /// Binds this environment set for all images.
@@ -117,7 +155,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         }
     }
 
-    fn process(&mut self, factory: &Factory<B>, world: &World) -> bool {
+    fn process(&mut self, factory: &Factory<B>, world: &World, resources: &Resources) -> bool {
         let align = factory
             .physical()
             .limits()
@@ -147,15 +185,15 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         .unwrap();
         if let Some(buffer) = self.buffer.as_mut() {
             if new_buffer {
-                use util::{desc_write, opt_range};
+                use util::{desc_write, sub_range};
                 let buffer = buffer.raw();
                 let env_set = self.set.raw();
 
-                let desc_projview = Descriptor::Buffer(buffer, opt_range(projview_range.clone()));
-                let desc_env = Descriptor::Buffer(buffer, opt_range(env_range.clone()));
-                let desc_plight = Descriptor::Buffer(buffer, opt_range(plight_range.clone()));
-                let desc_dlight = Descriptor::Buffer(buffer, opt_range(dlight_range.clone()));
-                let desc_slight = Descriptor::Buffer(buffer, opt_range(slight_range.clone()));
+                let desc_projview = Descriptor::Buffer(buffer, sub_range(projview_range.clone()));
+                let desc_env = Descriptor::Buffer(buffer, sub_range(env_range.clone()));
+                let desc_plight = Descriptor::Buffer(buffer, sub_range(plight_range.clone()));
+                let desc_dlight = Descriptor::Buffer(buffer, sub_range(dlight_range.clone()));
+                let desc_slight = Descriptor::Buffer(buffer, sub_range(slight_range.clone()));
 
                 unsafe {
                     factory.write_descriptor_sets(vec![
@@ -171,14 +209,14 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             let CameraGatherer {
                 camera_position,
                 projview,
-            } = CameraGatherer::gather(world);
+            } = CameraGatherer::gather(world, resources);
 
             let mut mapped = buffer.map(factory, whole_range.clone()).unwrap();
             let mut writer = unsafe { mapped.write::<u8>(factory, whole_range).unwrap() };
             let dst_slice = unsafe { writer.slice() };
 
             let mut env = pod::Environment {
-                ambient_color: AmbientGatherer::gather(world),
+                ambient_color: AmbientGatherer::gather(resources),
                 camera_position,
                 point_light_count: 0,
                 directional_light_count: 0,
@@ -186,63 +224,72 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             }
             .std140();
 
-            let (lights, transforms) =
-                <(ReadStorage<'_, Light>, ReadStorage<'_, Transform>)>::fetch(world);
-
-            let point_lights = (&lights, &transforms)
-                .join()
-                .filter_map(|(light, transform)| match light {
-                    Light::Point(light) => Some(
-                        pod::PointLight {
-                            position: convert::<_, Vector3<f32>>(
-                                transform.global_matrix().column(3).xyz(),
+            let mut point_lights_query = <(Read<Light>, Read<Transform>)>::query();
+            let point_lights = point_lights_query
+                .iter(world)
+                .filter_map(|(light, transform)| {
+                    match &*light {
+                        Light::Point(light) => {
+                            Some(
+                                pod::PointLight {
+                                    position: convert::<_, Vector3<f32>>(
+                                        transform.global_matrix().column(3).xyz(),
+                                    )
+                                    .into_pod(),
+                                    color: light.color.into_pod(),
+                                    intensity: light.intensity,
+                                }
+                                .std140(),
                             )
-                            .into_pod(),
-                            color: light.color.into_pod(),
-                            intensity: light.intensity,
                         }
-                        .std140(),
-                    ),
-                    _ => None,
+                        _ => None,
+                    }
                 })
                 .take(MAX_POINT_LIGHTS);
 
-            let dir_lights = lights
-                .join()
-                .filter_map(|light| match light {
-                    Light::Directional(ref light) => Some(
-                        pod::DirectionalLight {
-                            color: light.color.into_pod(),
-                            intensity: light.intensity,
-                            direction: light.direction.into_pod(),
+            let mut dir_lights_query = <Read<Light>>::query();
+            let dir_lights = dir_lights_query
+                .iter(world)
+                .filter_map(|light| {
+                    match &*light {
+                        Light::Directional(light) => {
+                            Some(
+                                pod::DirectionalLight {
+                                    color: light.color.into_pod(),
+                                    intensity: light.intensity,
+                                    direction: light.direction.into_pod(),
+                                }
+                                .std140(),
+                            )
                         }
-                        .std140(),
-                    ),
-                    _ => None,
+                        _ => None,
+                    }
                 })
                 .take(MAX_DIR_LIGHTS);
 
-            let spot_lights = (&lights, &transforms)
-                .join()
+            let mut spot_lights_query = <(Read<Light>, Read<Transform>)>::query();
+            let spot_lights = spot_lights_query
+                .iter(world)
                 .filter_map(|(light, transform)| {
-                    if let Light::Spot(ref light) = *light {
-                        Some(
-                            pod::SpotLight {
-                                position: convert::<_, Vector3<f32>>(
-                                    transform.global_matrix().column(3).xyz(),
-                                )
-                                .into_pod(),
-                                color: light.color.into_pod(),
-                                direction: light.direction.into_pod(),
-                                angle: light.angle.cos(),
-                                intensity: light.intensity,
-                                range: light.range,
-                                smoothness: light.smoothness,
-                            }
-                            .std140(),
-                        )
-                    } else {
-                        None
+                    match &*light {
+                        Light::Spot(light) => {
+                            Some(
+                                pod::SpotLight {
+                                    position: convert::<_, Vector3<f32>>(
+                                        transform.global_matrix().column(3).xyz(),
+                                    )
+                                    .into_pod(),
+                                    color: light.color.into_pod(),
+                                    direction: light.direction.into_pod(),
+                                    angle: light.angle.cos(),
+                                    intensity: light.intensity,
+                                    range: light.range,
+                                    smoothness: light.smoothness,
+                                }
+                                .std140(),
+                            )
+                        }
+                        _ => None,
                     }
                 })
                 .take(MAX_SPOT_LIGHTS);

@@ -1,7 +1,11 @@
 [package]
 name = "amethyst_input"
 version = "0.15.3"
-authors = ["Rhuagh <seamonr@gmail.com>", "Xaeroxe <kieseljake@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Rhuagh <seamonr@gmail.com>",
+    "Xaeroxe <kieseljake@gmail.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "Input rebinding "
 
@@ -11,19 +15,15 @@ repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"
 
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
-
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 amethyst_config = { path = "../amethyst_config/", version = "0.15.3" }
-amethyst_window = { path = "../amethyst_window", version = "0.15.3" }
 derivative = "2.1.1"
 derive-new = "0.5"
 fnv = "1"
 serde = { version = "1", features = ["derive"] }
-winit = { version = "0.19", features = ["serde"] }
+winit = { git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 sdl2 = { version = "0.33", optional = true }
 smallvec = { version = "1.2", features = ["serde"] }
 
@@ -33,5 +33,5 @@ thread_profiler = { version = "0.3", optional = true }
 approx = "0.3"
 
 [features]
-profiler = [ "thread_profiler/thread_profiler" ]
-sdl_controller = ["sdl2"]
+profiler = ["thread_profiler/thread_profiler"]
+# sdl_controller = ["sdl2"]

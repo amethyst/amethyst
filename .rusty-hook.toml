@@ -1,0 +1,11 @@
+[hooks]
+pre-commit = [
+    "cargo check --workspace --all-targets --all-features",
+    "cargo fix --workspace --all-features --allow-dirty --allow-staged",
+    "cargo +nightly clippy -Z unstable-options --workspace --all-features --fix --allow-dirty --allow-staged",
+    "cargo +nightly fmt --all",
+]
+pre-push = ["cargo test --all-targets --workspace --all-features"]
+
+[logging]
+verbose = true

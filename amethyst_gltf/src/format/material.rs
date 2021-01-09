@@ -1,4 +1,5 @@
-use super::{get_image_data, Buffers, ImageFormat as ImportDataFormat};
+use std::sync::Arc;
+
 use amethyst_assets::Source;
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -13,9 +14,9 @@ use amethyst_rendy::{
         },
     },
 };
-
 use gltf::{self, material::AlphaMode};
-use std::sync::Arc;
+
+use super::{get_image_data, Buffers, ImageFormat as ImportDataFormat};
 
 // Load a single material, and transform into a format usable by the engine
 pub fn load_material(
@@ -158,12 +159,12 @@ fn load_texture(
         ..Default::default()
     };
 
-    load_from_image(std::io::Cursor::new(&data), metadata).map_err(|e| e.compat().into())
+    load_from_image(std::io::Cursor::new(&data), metadata).map_err(|e| e.into())
 }
 
-fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::SamplerInfo {
+fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::SamplerDesc {
     use gltf::texture::{MagFilter, MinFilter};
-    use hal::image::{Filter, SamplerInfo};
+    use hal::image::{Filter, SamplerDesc};
 
     let mag_filter = match sampler.mag_filter() {
         Some(MagFilter::Nearest) => Filter::Nearest,
@@ -184,7 +185,7 @@ fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::Sample
     let wrap_s = map_wrapping(sampler.wrap_s());
     let wrap_t = map_wrapping(sampler.wrap_t());
 
-    let mut s = SamplerInfo::new(min_filter, wrap_s);
+    let mut s = SamplerDesc::new(min_filter, wrap_s);
     s.wrap_mode = (wrap_s, wrap_t, wrap_t);
     s.mag_filter = mag_filter;
     s.mip_filter = mip_filter;

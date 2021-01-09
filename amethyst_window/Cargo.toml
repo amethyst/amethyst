@@ -1,16 +1,16 @@
 [package]
 name = "amethyst_window"
 version = "0.15.3"
-authors = ["Frizi <frizi09@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Frizi <frizi09@gmail.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "Windowing support for Amethyst engine."
 documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_window/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
-
-[badges]
-travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
@@ -20,8 +20,8 @@ amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 log = "0.4.6"
 serde = { version = "1", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
-winit = { version = "0.19", features = ["serde", "icon_loading"] }
+winit = { git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 
 [features]
-profiler = [ "thread_profiler/thread_profiler" ]
-test-support =  []
+profiler = ["thread_profiler/thread_profiler"]
+test-support = []

@@ -1,32 +1,31 @@
+<!--- Provide a general summary of your changes in the Title above -->
 ## Description
+<!--- Describe your changes in detail -->
+<!--- Separate Additions, Removals and Modifications -->
 
-Add a brief summary of your PR here, between one sentence and two paragraphs
 
-## Additions
 
-- Detail API additions here if any
-- Do not list changes or removals
+## Motivation and Context
+<!--- Why is this change required? What problem does it solve? -->
+<!--- If it fixes an open issue, please link to the issue here. -->
 
-## Removals
 
-- List API removals here if any
 
-## Modifications
+## How Has This Been Tested?
+<!--- Please describe in detail how you tested your changes. -->
 
-- List changes to existing structures and functions here if any
 
-## PR Checklist
 
-By placing an x in the boxes I certify that I have:
+## Screenshots (if appropriate):
 
-- [ ] Added unit tests for new code added in this PR.
+
+
+## Checklist:
+<!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
+<!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
 - [ ] Acknowledged that by making this pull request I release this code under an MIT/Apache 2.0 dual licensing scheme.
-- [ ] Added a changelog entry if this will impact users, or modified more than 5 lines of Rust that wasn't a doc comment.
-- [ ] Updated the content of the book if this PR would make the book outdated.
-
-If this modified or created any rs files:
-
-- [ ] Ran `cargo +stable fmt --all`
-- [ ] Ran `cargo clippy --workspace --features "empty"` (may require `cargo clean` before)
-- [ ] Ran `cargo build --features "empty"`
-- [ ] Ran `cargo test --workspace --features "empty"`
+- [ ] My code follows the code style of this project.
+- [ ] If my change required a change to the documentation I have updated the documentation accordingly.
+- [ ] I have updated the content of the book if this PR would make the book outdated.
+- [ ] I have added tests to cover my changes.
+- [ ] My code is used in an example.

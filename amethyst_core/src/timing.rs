@@ -290,16 +290,11 @@ mod tests {
 
     // Timing varies more on macOS CI
     fn get_uncertainty() -> u32 {
-        let is_macos = !std::env::var("MACOS").unwrap_or_default().is_empty();
-        let is_ci = std::env::var("CI").is_ok();
-        if is_macos && is_ci {
-            20
-        } else {
-            10
-        }
+        15
     }
 
     #[test]
+    #[cfg(not(target_os = "macos"))]
     fn elapsed() {
         const DURATION: u64 = 1; // in seconds.
         let mut watch = Stopwatch::new();
@@ -324,12 +319,12 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "macos"))]
     fn reset() {
-        const DURATION: u64 = 2; // in seconds.
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(Duration::from_secs(DURATION));
+        thread::sleep(Duration::from_millis(30));
         watch.stop();
         watch.reset();
 
@@ -337,23 +332,24 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "macos"))]
     fn restart() {
-        const DURATION0: u64 = 2; // in seconds.
-        const DURATION: u64 = 1; // in seconds.
+        const DURATION0: u64 = 1000; // in milliseconds.
+        const DURATION: u64 = 500; // in milliseconds.
         let uncertainty = get_uncertainty(); // in percents.
         let mut watch = Stopwatch::new();
 
         watch.start();
-        thread::sleep(Duration::from_secs(DURATION0));
+        thread::sleep(Duration::from_millis(DURATION0));
         watch.stop();
 
         watch.restart();
-        thread::sleep(Duration::from_secs(DURATION));
+        thread::sleep(Duration::from_millis(DURATION));
         watch.stop();
 
         // check that elapsed time was DURATION sec +/- UNCERTAINTY%
         let elapsed = watch.elapsed();
-        let duration = Duration::new(DURATION, 0);
+        let duration = Duration::from_millis(DURATION);
         let lower = duration / 100 * (100 - uncertainty);
         let upper = duration / 100 * (100 + uncertainty);
         assert!(
@@ -367,26 +363,26 @@ mod tests {
 
     // test that multiple start-stop cycles are cumulative
     #[test]
+    #[cfg(not(target_os = "macos"))]
     fn stop_start() {
-        const DURATION: u64 = 3; // in seconds.
         let uncertainty = get_uncertainty(); // in percents.
         let mut watch = Stopwatch::new();
 
-        for _ in 0..DURATION {
+        for _ in 0..3 {
             watch.start();
-            thread::sleep(Duration::from_secs(1));
+            thread::sleep(Duration::from_millis(200));
             watch.stop();
         }
 
         // check that elapsed time was DURATION sec +/- UNCERTAINTY%
         let elapsed = watch.elapsed();
-        let duration = Duration::new(DURATION, 0);
+        let duration = Duration::from_millis(600);
         let lower = duration / 100 * (100 - uncertainty);
         let upper = duration / 100 * (100 + uncertainty);
         assert!(
             elapsed < upper && elapsed > lower,
-            "expected {}  +- {}% seconds, got {:?}",
-            DURATION,
+            "expected {} +-{}% milliseconds, got {:?}",
+            600,
             uncertainty,
             elapsed
         );

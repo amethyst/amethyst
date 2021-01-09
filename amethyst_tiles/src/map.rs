@@ -1,13 +1,14 @@
 #![allow(unused_variables)]
 
-use crate::{CoordinateEncoder, TileOutOfBoundsError};
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
-    ecs::{Component, HashMapStorage, World},
+    ecs::world::World,
     math::{Matrix4, Point3, Vector3},
-    Transform,
+    transform::Transform,
 };
 use amethyst_rendy::{palette::Srgba, SpriteSheet};
+
+use crate::{CoordinateEncoder, TileOutOfBoundsError};
 
 /// Trait providing generic rendering functionality to all tiles. Using a tilemap requires you to provide a `Tile` type,
 /// which must implement this trait to provide the `RenderPass` with the appropriate sprite and tint values.
@@ -123,12 +124,10 @@ pub struct TileMap<T: Tile, E: CoordinateEncoder = crate::MortonEncoder2D> {
     pub(crate) encoder: E,
 }
 impl<T: Tile, E: CoordinateEncoder> Asset for TileMap<T, E> {
-    const NAME: &'static str = "tiles::map";
+    fn name() -> &'static str {
+        "tiles::map"
+    }
     type Data = Self;
-    type HandleStorage = HashMapStorage<Handle<Self>>;
-}
-impl<T: Tile, E: CoordinateEncoder> Component for TileMap<T, E> {
-    type Storage = HashMapStorage<Self>;
 }
 
 #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
@@ -278,8 +277,8 @@ fn create_transform(map_dimensions: &Vector3<u32>, tile_dimensions: &Vector3<u32
     );
 
     let half_dimensions = Vector3::new(
-        -1.0 * (map_dimensions.x as f32 / 2.0),
-        map_dimensions.y as f32 / 2.0,
+        -1.0 * (map_dimensions.x as f32 / 2.0) + 0.5,
+        map_dimensions.y as f32 / 2.0 - 0.5,
         0.0,
     );
 
@@ -345,13 +344,14 @@ fn to_tile(
 
 #[cfg(test)]
 mod tests {
+    use amethyst_core::math::Point3;
+    use rayon::prelude::*;
+
     use super::*;
     use crate::{
         morton::{MortonEncoder, MortonEncoder2D},
         FlatEncoder,
     };
-    use amethyst_core::math::Point3;
-    use rayon::prelude::*;
 
     #[derive(Clone, Debug)]
     struct TestTile {
@@ -457,23 +457,23 @@ mod tests {
         test_coord(
             &transform,
             Point3::new(0, 0, 0),
-            Point3::new(-320.0, 320.0, 0.0),
+            Point3::new(-315.0, 315.0, 0.0),
         );
         test_coord(
             &transform,
             Point3::new(1, 0, 0),
-            Point3::new(-310.0, 320.0, 0.0),
+            Point3::new(-305.0, 315.0, 0.0),
         );
         test_coord(
             &transform,
             Point3::new(0, 1, 0),
-            Point3::new(-320.0, 310.0, 0.0),
+            Point3::new(-315.0, 305.0, 0.0),
         );
 
         test_coord(
             &transform,
             Point3::new(0, 1, 20),
-            Point3::new(-320.0, 310.0, 20.0),
+            Point3::new(-315.0, 305.0, 20.0),
         );
     }
 
@@ -516,27 +516,32 @@ mod tests {
         test_coord_with_map_transform(
             &transform,
             Point3::new(1, 1, 0),
-            Point3::new(-320.0, 320.0, 0.0),
+            Point3::new(-315.0, 315.0, 0.0),
             &map_transform,
         );
         test_coord_with_map_transform(
             &transform,
             Point3::new(2, 1, 0),
-            Point3::new(-310.0, 320.0, 0.0),
+            Point3::new(-305.0, 315.0, 0.0),
             &map_transform,
         );
         test_coord_with_map_transform(
             &transform,
             Point3::new(1, 2, 0),
-            Point3::new(-320.0, 310.0, 0.0),
+            Point3::new(-315.0, 305.0, 0.0),
             &map_transform,
         );
-
         test_coord_with_map_transform(
             &transform,
             Point3::new(1, 2, 20),
-            Point3::new(-320.0, 310.0, 20.0),
+            Point3::new(-315.0, 305.0, 20.0),
             &map_transform,
         );
+    }
+
+    #[test]
+    pub fn tilemap_transform_positioning() {
+        let transform = create_transform(&Vector3::new(1, 2, 3), &Vector3::new(10, 10, 1));
+        test_coord(&transform, Point3::new(0, 0, 0), Point3::new(0.0, 5.0, 0.0));
     }
 }

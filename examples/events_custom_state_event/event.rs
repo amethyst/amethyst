@@ -4,25 +4,19 @@ use amethyst::{
         EventReader,
     },
     derive::EventReader,
-    ecs::{Read, SystemData, World},
+    ecs::Resources,
+    input::InputEvent,
+    winit::event::Event,
 };
-use amethyst_input::{BindingTypes, InputEvent, StringBindings};
-use amethyst_ui::UiEvent;
-use winit::Event;
 
 /// Here's a copy of the original StateEvent with our own type added
 #[derive(Clone, Debug, EventReader)]
 #[reader(MyExtendedStateEventReader)]
-pub enum MyExtendedStateEvent<T = StringBindings>
-where
-    T: BindingTypes + Clone,
-{
+pub enum MyExtendedStateEvent {
     /// Events sent by the winit window.
-    Window(Event),
-    /// Events sent by the ui system.
-    Ui(UiEvent),
+    Window(Event<'static, ()>),
     /// Events sent by the input system.
-    Input(InputEvent<T>),
+    Input(InputEvent),
     /// Our own events for our own game logic
     Game(GameEvent),
 }

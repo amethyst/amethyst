@@ -1,32 +1,63 @@
 //! World resource that handles all user input.
 
+use amethyst_core::shrev::EventChannel;
+use smallvec::SmallVec;
+use winit::{
+    dpi::PhysicalPosition,
+    event::{
+        DeviceEvent, Event, KeyboardInput, MouseButton, MouseScrollDelta, VirtualKeyCode,
+        WindowEvent,
+    },
+};
+
 use super::{
     controller::{ControllerButton, ControllerEvent},
     event::InputEvent::{self, *},
     scroll_direction::ScrollDirection,
     *,
 };
-use amethyst_core::shrev::EventChannel;
-use derivative::Derivative;
-use smallvec::SmallVec;
-use std::{borrow::Borrow, hash::Hash};
-use winit::{
-    dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
-    MouseScrollDelta, VirtualKeyCode, WindowEvent,
-};
+
+/// This structs holds state information about keyboard modifiers
+#[derive(Debug, Default)]
+pub struct KeyboardModifiersState {
+    shift: bool,
+    ctrl: bool,
+    logo: bool,
+    alt: bool,
+}
+
+impl KeyboardModifiersState {
+    /// Return the current state of the shift modifier (either left or right)
+    pub fn shift(&self) -> bool {
+        self.shift
+    }
+
+    /// Return the current state of the ctrl modifier (either left or right)
+    pub fn ctrl(&self) -> bool {
+        self.ctrl
+    }
+
+    /// Return the current state of the logo modifier (either left or right)
+    pub fn logo(&self) -> bool {
+        self.logo
+    }
+
+    /// Return the current state of the alt modifier (either left or right, no difference made for GR)
+    pub fn alt(&self) -> bool {
+        self.alt
+    }
+}
 
 /// This struct holds state information about input devices.
 ///
 /// For example, if a key is pressed on the keyboard, this struct will record
 /// that the key is pressed until it is released again.
-#[derive(Derivative)]
-#[derivative(Default(bound = ""), Debug(bound = ""))]
-pub struct InputHandler<T>
-where
-    T: BindingTypes,
-{
+#[derive(Debug, Default)]
+pub struct InputHandler {
     /// Maps inputs to actions and axes.
-    pub bindings: Bindings<T>,
+    pub bindings: Bindings,
+    /// Keeps the current state of keyboard modifiers
+    pub modifiers: KeyboardModifiersState,
     /// Encodes the VirtualKeyCode and corresponding scancode.
     pressed_keys: SmallVec<[(VirtualKeyCode, u32); 12]>,
     pressed_mouse_buttons: SmallVec<[MouseButton; 12]>,
@@ -43,10 +74,7 @@ where
     mouse_wheel_horizontal: f32,
 }
 
-impl<T> InputHandler<T>
-where
-    T: BindingTypes,
-{
+impl InputHandler {
     /// Creates a new input handler.
     pub fn new() -> Self {
         Default::default()
@@ -58,220 +86,229 @@ where
     /// the world as a resource.
     pub fn send_event(
         &mut self,
-        event: &Event,
-        event_handler: &mut EventChannel<InputEvent<T>>,
-        hidpi: f32,
+        event: &Event<'_, ()>,
+        event_handler: &mut EventChannel<InputEvent>,
     ) {
         match *event {
-            Event::WindowEvent { ref event, .. } => match *event {
-                WindowEvent::ReceivedCharacter(c) => {
-                    event_handler.single_write(KeyTyped(c));
-                }
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            state: ElementState::Pressed,
-                            virtual_keycode: Some(key_code),
-                            scancode,
-                            ..
-                        },
-                    ..
-                } => {
-                    if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
-                        self.pressed_keys.push((key_code, scancode));
-                        event_handler.iter_write(
-                            [
-                                KeyPressed { key_code, scancode },
-                                ButtonPressed(Button::Key(key_code)),
-                                ButtonPressed(Button::ScanCode(scancode)),
-                            ]
-                            .iter()
-                            .cloned(),
-                        );
-                        self.send_axis_moved_events_key(event_handler, key_code, scancode);
-                        for (action, combinations) in self.bindings.actions.iter() {
-                            for combination in combinations.iter().filter(|c| {
-                                c.contains(&Button::Key(key_code))
-                                    || c.contains(&Button::ScanCode(scancode))
-                            }) {
-                                if combination
-                                    .iter()
-                                    .all(|button| self.button_is_down(*button))
-                                {
-                                    event_handler.single_write(ActionPressed(action.clone()));
-                                }
-                            }
-                        }
+            Event::WindowEvent { ref event, .. } => {
+                match *event {
+                    WindowEvent::ModifiersChanged(modifier) => {
+                        self.modifiers.logo = modifier.logo();
+                        self.modifiers.ctrl = modifier.ctrl();
+                        self.modifiers.alt = modifier.alt();
+                        self.modifiers.shift = modifier.shift();
                     }
-                }
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            state: ElementState::Released,
-                            virtual_keycode: Some(key_code),
-                            scancode,
-                            ..
-                        },
-                    ..
-                } => {
-                    let index = self.pressed_keys.iter().position(|&k| k.0 == key_code);
-                    if let Some(i) = index {
-                        self.pressed_keys.swap_remove(i);
-                        event_handler.iter_write(
-                            [
-                                KeyReleased { key_code, scancode },
-                                ButtonReleased(Button::Key(key_code)),
-                                ButtonReleased(Button::ScanCode(scancode)),
-                            ]
-                            .iter()
-                            .cloned(),
-                        );
-                        self.send_axis_moved_events_key(event_handler, key_code, scancode);
-                        for (action, combinations) in self.bindings.actions.iter() {
-                            for combination in combinations {
-                                if combination.contains(&Button::Key(key_code))
-                                    && combination
-                                        .iter()
-                                        .filter(|b| b != &&Button::Key(key_code))
-                                        .all(|b| self.button_is_down(*b))
-                                {
-                                    event_handler.single_write(ActionReleased(action.clone()));
-                                }
-                                if combination.contains(&Button::ScanCode(scancode))
-                                    && combination
-                                        .iter()
-                                        .filter(|b| b != &&Button::ScanCode(scancode))
-                                        .all(|b| self.button_is_down(*b))
-                                {
-                                    event_handler.single_write(ActionReleased(action.clone()));
-                                }
-                            }
-                        }
+                    WindowEvent::ReceivedCharacter(c) => {
+                        event_handler.single_write(KeyTyped(c));
                     }
-                }
-                WindowEvent::MouseInput {
-                    state: ElementState::Pressed,
-                    button,
-                    ..
-                } => {
-                    let mouse_button = button;
-                    if self
-                        .pressed_mouse_buttons
-                        .iter()
-                        .all(|&b| b != mouse_button)
-                    {
-                        self.pressed_mouse_buttons.push(mouse_button);
-                        event_handler.iter_write(
-                            [
-                                MouseButtonPressed(mouse_button),
-                                ButtonPressed(Button::Mouse(mouse_button)),
-                            ]
-                            .iter()
-                            .cloned(),
-                        );
-                        self.send_axis_moved_events_mouse(event_handler, mouse_button);
-                        for (action, combinations) in self.bindings.actions.iter() {
-                            for combination in combinations
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(key_code),
+                                scancode,
+                                ..
+                            },
+                        ..
+                    } => {
+                        if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
+                            self.pressed_keys.push((key_code, scancode));
+                            event_handler.iter_write(
+                                [
+                                    KeyPressed { key_code, scancode },
+                                    ButtonPressed(Button::Key(key_code)),
+                                    ButtonPressed(Button::ScanCode(scancode)),
+                                ]
                                 .iter()
-                                .filter(|c| c.contains(&Button::Mouse(mouse_button)))
-                            {
-                                if combination
-                                    .iter()
-                                    .all(|button| self.button_is_down(*button))
-                                {
-                                    event_handler.single_write(ActionPressed(action.clone()));
-                                }
-                            }
-                        }
-                    }
-                }
-                WindowEvent::MouseInput {
-                    state: ElementState::Released,
-                    button,
-                    ..
-                } => {
-                    let mouse_button = button;
-                    let index = self
-                        .pressed_mouse_buttons
-                        .iter()
-                        .position(|&b| b == mouse_button);
-                    if let Some(i) = index {
-                        self.pressed_mouse_buttons.swap_remove(i);
-                        event_handler.iter_write(
-                            [
-                                MouseButtonReleased(mouse_button),
-                                ButtonReleased(Button::Mouse(mouse_button)),
-                            ]
-                            .iter()
-                            .cloned(),
-                        );
-                        self.send_axis_moved_events_mouse(event_handler, mouse_button);
-                        for (action, combinations) in self.bindings.actions.iter() {
-                            for combination in combinations {
-                                if combination.contains(&Button::Mouse(mouse_button))
-                                    && combination
+                                .cloned(),
+                            );
+                            self.send_axis_moved_events_key(event_handler, key_code, scancode);
+                            for (action, combinations) in self.bindings.actions.iter() {
+                                for combination in combinations.iter().filter(|c| {
+                                    c.contains(&Button::Key(key_code))
+                                        || c.contains(&Button::ScanCode(scancode))
+                                }) {
+                                    if combination
                                         .iter()
-                                        .filter(|b| b != &&Button::Mouse(mouse_button))
-                                        .all(|b| self.button_is_down(*b))
-                                {
-                                    event_handler.single_write(ActionReleased(action.clone()));
+                                        .all(|button| self.button_is_down(*button))
+                                    {
+                                        event_handler.single_write(ActionPressed(action.clone()));
+                                    }
                                 }
                             }
                         }
                     }
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Released,
+                                virtual_keycode: Some(key_code),
+                                scancode,
+                                ..
+                            },
+                        ..
+                    } => {
+                        let index = self.pressed_keys.iter().position(|&k| k.0 == key_code);
+                        if let Some(i) = index {
+                            self.pressed_keys.swap_remove(i);
+                            event_handler.iter_write(
+                                [
+                                    KeyReleased { key_code, scancode },
+                                    ButtonReleased(Button::Key(key_code)),
+                                    ButtonReleased(Button::ScanCode(scancode)),
+                                ]
+                                .iter()
+                                .cloned(),
+                            );
+                            self.send_axis_moved_events_key(event_handler, key_code, scancode);
+                            for (action, combinations) in self.bindings.actions.iter() {
+                                for combination in combinations {
+                                    if combination.contains(&Button::Key(key_code))
+                                        && combination
+                                            .iter()
+                                            .filter(|b| b != &&Button::Key(key_code))
+                                            .all(|b| self.button_is_down(*b))
+                                    {
+                                        event_handler.single_write(ActionReleased(action.clone()));
+                                    }
+                                    if combination.contains(&Button::ScanCode(scancode))
+                                        && combination
+                                            .iter()
+                                            .filter(|b| b != &&Button::ScanCode(scancode))
+                                            .all(|b| self.button_is_down(*b))
+                                    {
+                                        event_handler.single_write(ActionReleased(action.clone()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    WindowEvent::MouseInput {
+                        state: ElementState::Pressed,
+                        button,
+                        ..
+                    } => {
+                        let mouse_button = button;
+                        if self
+                            .pressed_mouse_buttons
+                            .iter()
+                            .all(|&b| b != mouse_button)
+                        {
+                            self.pressed_mouse_buttons.push(mouse_button);
+                            event_handler.iter_write(
+                                [
+                                    MouseButtonPressed(mouse_button),
+                                    ButtonPressed(Button::Mouse(mouse_button)),
+                                ]
+                                .iter()
+                                .cloned(),
+                            );
+                            self.send_axis_moved_events_mouse(event_handler, mouse_button);
+                            for (action, combinations) in self.bindings.actions.iter() {
+                                for combination in combinations
+                                    .iter()
+                                    .filter(|c| c.contains(&Button::Mouse(mouse_button)))
+                                {
+                                    if combination
+                                        .iter()
+                                        .all(|button| self.button_is_down(*button))
+                                    {
+                                        event_handler.single_write(ActionPressed(action.clone()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    WindowEvent::MouseInput {
+                        state: ElementState::Released,
+                        button,
+                        ..
+                    } => {
+                        let mouse_button = button;
+                        let index = self
+                            .pressed_mouse_buttons
+                            .iter()
+                            .position(|&b| b == mouse_button);
+                        if let Some(i) = index {
+                            self.pressed_mouse_buttons.swap_remove(i);
+                            event_handler.iter_write(
+                                [
+                                    MouseButtonReleased(mouse_button),
+                                    ButtonReleased(Button::Mouse(mouse_button)),
+                                ]
+                                .iter()
+                                .cloned(),
+                            );
+                            self.send_axis_moved_events_mouse(event_handler, mouse_button);
+                            for (action, combinations) in self.bindings.actions.iter() {
+                                for combination in combinations {
+                                    if combination.contains(&Button::Mouse(mouse_button))
+                                        && combination
+                                            .iter()
+                                            .filter(|b| b != &&Button::Mouse(mouse_button))
+                                            .all(|b| self.button_is_down(*b))
+                                    {
+                                        event_handler.single_write(ActionReleased(action.clone()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    WindowEvent::CursorMoved {
+                        position: PhysicalPosition { x, y },
+                        ..
+                    } => {
+                        if let Some((old_x, old_y)) = self.mouse_position {
+                            event_handler.single_write(CursorMoved {
+                                delta_x: (x as f32) - old_x,
+                                delta_y: (y as f32) - old_y,
+                            });
+                        }
+                        self.mouse_position = Some(((x as f32), (y as f32)));
+                    }
+                    WindowEvent::Focused(false) => {
+                        self.pressed_keys.clear();
+                        self.pressed_mouse_buttons.clear();
+                        self.mouse_position = None;
+                    }
+                    _ => {}
                 }
-                WindowEvent::CursorMoved {
-                    position: LogicalPosition { x, y },
-                    ..
-                } => {
-                    if let Some((old_x, old_y)) = self.mouse_position {
-                        event_handler.single_write(CursorMoved {
-                            delta_x: (x as f32) * hidpi - old_x,
-                            delta_y: (y as f32) * hidpi - old_y,
+            }
+            Event::DeviceEvent { ref event, .. } => {
+                match *event {
+                    DeviceEvent::MouseMotion {
+                        delta: (delta_x, delta_y),
+                    } => {
+                        event_handler.single_write(MouseMoved {
+                            delta_x: delta_x as f32,
+                            delta_y: delta_y as f32,
                         });
                     }
-                    self.mouse_position = Some(((x as f32) * hidpi, (y as f32) * hidpi));
-                }
-                WindowEvent::Focused(false) => {
-                    self.pressed_keys.clear();
-                    self.pressed_mouse_buttons.clear();
-                    self.mouse_position = None;
-                }
-                _ => {}
-            },
-            Event::DeviceEvent { ref event, .. } => match *event {
-                DeviceEvent::MouseMotion {
-                    delta: (delta_x, delta_y),
-                } => {
-                    event_handler.single_write(MouseMoved {
-                        delta_x: delta_x as f32,
-                        delta_y: delta_y as f32,
-                    });
-                }
-                DeviceEvent::MouseWheel {
-                    delta: MouseScrollDelta::LineDelta(delta_x, delta_y),
-                } => {
-                    if delta_x != 0.0 {
-                        self.mouse_wheel_horizontal = delta_x.signum();
+                    DeviceEvent::MouseWheel {
+                        delta: MouseScrollDelta::LineDelta(delta_x, delta_y),
+                    } => {
+                        if delta_x != 0.0 {
+                            self.mouse_wheel_horizontal = delta_x.signum();
+                        }
+                        if delta_y != 0.0 {
+                            self.mouse_wheel_vertical = delta_y.signum();
+                        }
+                        self.invoke_wheel_moved(delta_x, delta_y, event_handler);
                     }
-                    if delta_y != 0.0 {
-                        self.mouse_wheel_vertical = delta_y.signum();
+                    DeviceEvent::MouseWheel {
+                        delta: MouseScrollDelta::PixelDelta(PhysicalPosition { x, y }),
+                    } => {
+                        if x != 0.0 {
+                            self.mouse_wheel_horizontal = x.signum() as f32;
+                        }
+                        if y != 0.0 {
+                            self.mouse_wheel_vertical = y.signum() as f32;
+                        }
+                        self.invoke_wheel_moved(x as f32, y as f32, event_handler);
                     }
-                    self.invoke_wheel_moved(delta_x, delta_y, event_handler);
+                    _ => {}
                 }
-                DeviceEvent::MouseWheel {
-                    delta: MouseScrollDelta::PixelDelta(LogicalPosition { x, y }),
-                } => {
-                    if x != 0.0 {
-                        self.mouse_wheel_horizontal = x.signum() as f32;
-                    }
-                    if y != 0.0 {
-                        self.mouse_wheel_vertical = y.signum() as f32;
-                    }
-                    self.invoke_wheel_moved(x as f32, y as f32, event_handler);
-                }
-                _ => {}
-            },
+            }
             _ => {}
         }
     }
@@ -284,7 +321,7 @@ where
     pub fn send_controller_event(
         &mut self,
         event: &ControllerEvent,
-        event_handler: &mut EventChannel<InputEvent<T>>,
+        event_handler: &mut EventChannel<InputEvent>,
     ) {
         use self::ControllerEvent::*;
 
@@ -498,7 +535,11 @@ where
             .pressed_mouse_buttons
             .iter()
             .map(|&mb| Button::Mouse(mb));
-        let keys = self.pressed_keys.iter().flat_map(|v| KeyThenCode::new(*v));
+        let keys = self.pressed_keys.iter().flat_map(|v| {
+            Some(Button::Key(v.0))
+                .into_iter()
+                .chain(Some(Button::ScanCode(v.1)).into_iter())
+        });
         let controller_buttons = self
             .pressed_controller_buttons
             .iter()
@@ -533,22 +574,23 @@ where
                 invert,
                 dead_zone,
                 ..
-            } => self
-                .controller_axes
-                .iter()
-                .find(|&&(id, a, _)| id == *controller_id && a == *axis)
-                .map(|&(_, _, val)| if *invert { -val } else { val })
-                .map(|val| {
-                    let dead_zone = *dead_zone as f32;
-                    if val < -dead_zone {
-                        (val + dead_zone) / (1.0 - dead_zone)
-                    } else if val > dead_zone {
-                        (val - dead_zone) / (1.0 - dead_zone)
-                    } else {
-                        0.0
-                    }
-                })
-                .unwrap_or(0.0),
+            } => {
+                self.controller_axes
+                    .iter()
+                    .find(|&&(id, a, _)| id == *controller_id && a == *axis)
+                    .map(|&(_, _, val)| if *invert { -val } else { val })
+                    .map(|val| {
+                        let dead_zone = *dead_zone as f32;
+                        if val < -dead_zone {
+                            (val + dead_zone) / (1.0 - dead_zone)
+                        } else if val > dead_zone {
+                            (val - dead_zone) / (1.0 - dead_zone)
+                        } else {
+                            0.0
+                        }
+                    })
+                    .unwrap_or(0.0)
+            }
             Axis::Mouse {
                 axis,
                 over_extendable,
@@ -575,31 +617,24 @@ where
                 }
             }
             Axis::MouseWheel { horizontal } => self.mouse_wheel_value(*horizontal),
-            Axis::Multiple(axes) => axes
-                .iter()
-                .map(|a| self.axis_value_impl(a))
-                .max_by(|x, y| x.abs().partial_cmp(&y.abs()).unwrap())
-                .unwrap_or(0.0),
+            Axis::Multiple(axes) => {
+                axes.iter()
+                    .map(|a| self.axis_value_impl(a))
+                    .max_by(|x, y| x.abs().partial_cmp(&y.abs()).unwrap())
+                    .unwrap_or(0.0)
+            }
         }
     }
 
     /// Returns the value of an axis by the id, if the id doesn't exist this returns None.
-    pub fn axis_value<A>(&self, id: &A) -> Option<f32>
-    where
-        T::Axis: Borrow<A>,
-        A: Hash + Eq + ?Sized,
-    {
+    pub fn axis_value(&self, id: &str) -> Option<f32> {
         self.bindings.axes.get(id).map(|a| self.axis_value_impl(a))
     }
 
     /// Returns true if any of the actions bindings is down.
     ///
     /// If a binding represents a combination of buttons, all of them need to be down.
-    pub fn action_is_down<A>(&self, action: &A) -> Option<bool>
-    where
-        T::Action: Borrow<A>,
-        A: Hash + Eq + ?Sized,
-    {
+    pub fn action_is_down(&self, action: &str) -> Option<bool> {
         self.bindings.actions.get(action).map(|combinations| {
             combinations.iter().any(|combination| {
                 combination
@@ -638,9 +673,9 @@ where
         &self,
         delta_x: f32,
         delta_y: f32,
-        event_handler: &mut EventChannel<InputEvent<T>>,
+        event_handler: &mut EventChannel<InputEvent>,
     ) {
-        let mut events = Vec::<InputEvent<T>>::new();
+        let mut events = Vec::<InputEvent>::new();
 
         // determine if a horizontal scroll happend
         let dir_x = match delta_x {
@@ -700,7 +735,7 @@ where
 
     fn send_axis_moved_events_key(
         &self,
-        event_handler: &mut EventChannel<InputEvent<T>>,
+        event_handler: &mut EventChannel<InputEvent>,
         key_code: VirtualKeyCode,
         scancode: u32,
     ) {
@@ -746,7 +781,7 @@ where
 
     fn send_axis_moved_events_mouse(
         &self,
-        event_handler: &mut EventChannel<InputEvent<T>>,
+        event_handler: &mut EventChannel<InputEvent>,
         mouse_button: MouseButton,
     ) {
         for (axis, input_axis) in self.bindings.axes.iter() {
@@ -780,15 +815,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::fmt::Debug;
+    use std::{borrow::Cow, fmt::Debug};
 
-    use super::*;
     use winit::{
-        DeviceId, ElementState, Event, KeyboardInput, ModifiersState, ScanCode, WindowEvent,
-        WindowId,
+        event::{DeviceId, ModifiersState, ScanCode},
+        window::WindowId,
     };
 
-    const HIDPI: f32 = 1.0;
+    use super::*;
 
     #[test]
     fn key_action_response() {
@@ -796,24 +830,27 @@ mod tests {
         // Press the key and check for a press event of both the key and the action.
         // Release the key and check for a release event of both the key and the action.
 
-        let mut handler = InputHandler::<StringBindings>::new();
-        let mut events = EventChannel::<InputEvent<StringBindings>>::new();
+        let mut handler = InputHandler::new();
+        let mut events = EventChannel::<InputEvent>::new();
         let mut reader = events.register_reader();
+
+        const TEST_KEY_ACTION: Cow<'static, str> = Cow::Borrowed("test_key_action");
+
         handler
             .bindings
             .insert_action_binding(
-                String::from("test_key_action"),
+                TEST_KEY_ACTION,
                 [Button::Key(VirtualKeyCode::Up)].iter().cloned(),
             )
             .unwrap();
-        assert_eq!(handler.action_is_down("test_key_action"), Some(false));
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
-        assert_eq!(handler.action_is_down("test_key_action"), Some(true));
+        assert_eq!(handler.action_is_down(&TEST_KEY_ACTION), Some(false));
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
+        assert_eq!(handler.action_is_down(&TEST_KEY_ACTION), Some(true));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
-                InputEvent::ActionPressed(String::from("test_key_action")),
+                InputEvent::ActionPressed(TEST_KEY_ACTION),
                 InputEvent::KeyPressed {
                     key_code: VirtualKeyCode::Up,
                     scancode: 104,
@@ -822,13 +859,13 @@ mod tests {
                 InputEvent::ButtonPressed(Button::ScanCode(104)),
             ],
         );
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
-        assert_eq!(handler.action_is_down("test_key_action"), Some(false));
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
+        assert_eq!(handler.action_is_down(&TEST_KEY_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
-                InputEvent::ActionReleased(String::from("test_key_action")),
+                InputEvent::ActionReleased(TEST_KEY_ACTION),
                 InputEvent::KeyReleased {
                     key_code: VirtualKeyCode::Up,
                     scancode: 104,
@@ -845,35 +882,38 @@ mod tests {
         // Press the button and check for a press event of both the button and the action.
         // Release the button and check for a release event of both the button and the action.
 
-        let mut handler = InputHandler::<StringBindings>::new();
-        let mut events = EventChannel::<InputEvent<StringBindings>>::new();
+        let mut handler = InputHandler::new();
+        let mut events = EventChannel::<InputEvent>::new();
         let mut reader = events.register_reader();
+
+        const TEST_MOUSE_ACTION: Cow<'static, str> = Cow::Borrowed("test_mouse_action");
+
         handler
             .bindings
             .insert_action_binding(
-                String::from("test_mouse_action"),
+                TEST_MOUSE_ACTION,
                 [Button::Mouse(MouseButton::Left)].iter().cloned(),
             )
             .unwrap();
-        assert_eq!(handler.action_is_down("test_mouse_action"), Some(false));
-        handler.send_event(&mouse_press(MouseButton::Left), &mut events, HIDPI);
-        assert_eq!(handler.action_is_down("test_mouse_action"), Some(true));
+        assert_eq!(handler.action_is_down(&TEST_MOUSE_ACTION), Some(false));
+        handler.send_event(&mouse_press(MouseButton::Left), &mut events);
+        assert_eq!(handler.action_is_down(&TEST_MOUSE_ACTION), Some(true));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
-                InputEvent::ActionPressed(String::from("test_mouse_action")),
+                InputEvent::ActionPressed(TEST_MOUSE_ACTION),
                 InputEvent::MouseButtonPressed(MouseButton::Left),
                 InputEvent::ButtonPressed(Button::Mouse(MouseButton::Left)),
             ],
         );
-        handler.send_event(&mouse_release(MouseButton::Left), &mut events, HIDPI);
-        assert_eq!(handler.action_is_down("test_mouse_action"), Some(false));
+        handler.send_event(&mouse_release(MouseButton::Left), &mut events);
+        assert_eq!(handler.action_is_down(&TEST_MOUSE_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
-                InputEvent::ActionReleased(String::from("test_mouse_action")),
+                InputEvent::ActionReleased(TEST_MOUSE_ACTION),
                 InputEvent::MouseButtonReleased(MouseButton::Left),
                 InputEvent::ButtonReleased(Button::Mouse(MouseButton::Left)),
             ],
@@ -888,13 +928,16 @@ mod tests {
         // Release first key, we should get key release and action release
         // Release second key, we should key release and no action release
 
-        let mut handler = InputHandler::<StringBindings>::new();
-        let mut events = EventChannel::<InputEvent<StringBindings>>::new();
+        let mut handler = InputHandler::new();
+        let mut events = EventChannel::<InputEvent>::new();
         let mut reader = events.register_reader();
+
+        const TEST_COMBO_ACTION: Cow<'static, str> = Cow::Borrowed("test_combo_action");
+
         handler
             .bindings
             .insert_action_binding(
-                String::from("test_combo_action"),
+                TEST_COMBO_ACTION,
                 [
                     Button::Key(VirtualKeyCode::Up),
                     Button::Key(VirtualKeyCode::Down),
@@ -903,9 +946,9 @@ mod tests {
                 .cloned(),
             )
             .unwrap();
-        assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
-        assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
+        assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(false));
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
+        assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
@@ -918,13 +961,13 @@ mod tests {
                 InputEvent::ButtonPressed(Button::ScanCode(104)),
             ],
         );
-        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events, HIDPI);
-        assert_eq!(handler.action_is_down("test_combo_action"), Some(true));
+        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events);
+        assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(true));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
-                ActionPressed(String::from("test_combo_action")),
+                ActionPressed(TEST_COMBO_ACTION),
                 InputEvent::KeyPressed {
                     key_code: VirtualKeyCode::Down,
                     scancode: 112,
@@ -933,13 +976,13 @@ mod tests {
                 InputEvent::ButtonPressed(Button::ScanCode(112)),
             ],
         );
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
-        assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
+        assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
-                InputEvent::ActionReleased(String::from("test_combo_action")),
+                InputEvent::ActionReleased(TEST_COMBO_ACTION),
                 InputEvent::KeyReleased {
                     key_code: VirtualKeyCode::Up,
                     scancode: 104,
@@ -949,8 +992,8 @@ mod tests {
             ],
         );
 
-        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events, HIDPI);
-        assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
+        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events);
+        assert_eq!(handler.action_is_down(&TEST_COMBO_ACTION), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
@@ -974,29 +1017,32 @@ mod tests {
         // Press both and check for 0.
         // Release both and check for 0.
 
-        let mut handler = InputHandler::<StringBindings>::new();
-        let mut events = EventChannel::<InputEvent<StringBindings>>::new();
+        let mut handler = InputHandler::new();
+        let mut events = EventChannel::<InputEvent>::new();
         let mut reader = events.register_reader();
+
+        const TEST_AXIS: Cow<'static, str> = Cow::Borrowed("test_axis");
+
         handler
             .bindings
             .insert_axis(
-                String::from("test_axis"),
+                TEST_AXIS,
                 Axis::Emulated {
                     pos: Button::Key(VirtualKeyCode::Up),
                     neg: Button::Key(VirtualKeyCode::Down),
                 },
             )
             .unwrap();
-        assert_eq!(handler.axis_value("test_axis"), Some(0.0));
+        assert_eq!(handler.axis_value(&TEST_AXIS), Some(0.0));
 
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
 
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
                 InputEvent::AxisMoved {
-                    axis: String::from("test_axis"),
+                    axis: TEST_AXIS,
                     value: 1.0,
                 },
                 InputEvent::KeyPressed {
@@ -1007,16 +1053,16 @@ mod tests {
                 InputEvent::ButtonPressed(Button::ScanCode(104)),
             ],
         );
-        assert_eq!(handler.axis_value("test_axis"), Some(1.0));
+        assert_eq!(handler.axis_value(&TEST_AXIS), Some(1.0));
 
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
 
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
                 InputEvent::AxisMoved {
-                    axis: String::from("test_axis"),
+                    axis: TEST_AXIS,
                     value: 0.0,
                 },
                 InputEvent::KeyReleased {
@@ -1027,16 +1073,16 @@ mod tests {
                 InputEvent::ButtonReleased(Button::ScanCode(104)),
             ],
         );
-        assert_eq!(handler.axis_value("test_axis"), Some(0.0));
+        assert_eq!(handler.axis_value(&TEST_AXIS), Some(0.0));
 
-        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events, HIDPI);
+        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events);
 
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
                 InputEvent::AxisMoved {
-                    axis: String::from("test_axis"),
+                    axis: TEST_AXIS,
                     value: -1.0,
                 },
                 InputEvent::KeyPressed {
@@ -1047,16 +1093,16 @@ mod tests {
                 InputEvent::ButtonPressed(Button::ScanCode(112)),
             ],
         );
-        assert_eq!(handler.axis_value("test_axis"), Some(-1.0));
+        assert_eq!(handler.axis_value(&TEST_AXIS), Some(-1.0));
 
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
 
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
         sets_are_equal(
             &event_vec,
             &[
                 InputEvent::AxisMoved {
-                    axis: String::from("test_axis"),
+                    axis: TEST_AXIS,
                     value: 0.0,
                 },
                 InputEvent::KeyPressed {
@@ -1067,11 +1113,11 @@ mod tests {
                 InputEvent::ButtonPressed(Button::ScanCode(104)),
             ],
         );
-        assert_eq!(handler.axis_value("test_axis"), Some(0.0));
+        assert_eq!(handler.axis_value(&TEST_AXIS), Some(0.0));
 
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
-        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events, HIDPI);
-        assert_eq!(handler.axis_value("test_axis"), Some(0.0));
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
+        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events);
+        assert_eq!(handler.axis_value(&TEST_AXIS), Some(0.0));
     }
 
     #[test]
@@ -1079,18 +1125,18 @@ mod tests {
         // Press some buttons and make sure the input handler returns them
         // in iterators
 
-        let mut handler = InputHandler::<StringBindings>::new();
-        let mut events = EventChannel::<InputEvent<StringBindings>>::new();
+        let mut handler = InputHandler::new();
+        let mut events = EventChannel::<InputEvent>::new();
         assert_eq!(handler.keys_that_are_down().next(), None);
         assert_eq!(handler.scan_codes_that_are_down().next(), None);
         assert_eq!(handler.mouse_buttons_that_are_down().next(), None);
         assert_eq!(handler.buttons_that_are_down().next(), None);
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
-        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events, HIDPI);
-        handler.send_event(&key_press(75, VirtualKeyCode::Left), &mut events, HIDPI);
-        handler.send_event(&key_press(109, VirtualKeyCode::Right), &mut events, HIDPI);
-        handler.send_event(&mouse_press(MouseButton::Left), &mut events, HIDPI);
-        handler.send_event(&mouse_press(MouseButton::Right), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
+        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events);
+        handler.send_event(&key_press(75, VirtualKeyCode::Left), &mut events);
+        handler.send_event(&key_press(109, VirtualKeyCode::Right), &mut events);
+        handler.send_event(&mouse_press(MouseButton::Left), &mut events);
+        handler.send_event(&mouse_press(MouseButton::Right), &mut events);
         sets_are_equal(
             &handler.keys_that_are_down().collect::<Vec<_>>(),
             &[
@@ -1123,7 +1169,7 @@ mod tests {
                 Button::Mouse(MouseButton::Right),
             ],
         );
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
         sets_are_equal(
             &handler.keys_that_are_down().collect::<Vec<_>>(),
             &[
@@ -1136,7 +1182,7 @@ mod tests {
             &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
             &[112, 75, 109],
         );
-        handler.send_event(&key_release(109, VirtualKeyCode::Right), &mut events, HIDPI);
+        handler.send_event(&key_release(109, VirtualKeyCode::Right), &mut events);
         sets_are_equal(
             &handler.keys_that_are_down().collect::<Vec<_>>(),
             &[VirtualKeyCode::Down, VirtualKeyCode::Left],
@@ -1145,7 +1191,7 @@ mod tests {
             &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
             &[112, 75],
         );
-        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events, HIDPI);
+        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events);
         sets_are_equal(
             &handler.keys_that_are_down().collect::<Vec<_>>(),
             &[VirtualKeyCode::Left],
@@ -1154,7 +1200,7 @@ mod tests {
             &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
             &[75],
         );
-        handler.send_event(&key_release(75, VirtualKeyCode::Left), &mut events, HIDPI);
+        handler.send_event(&key_release(75, VirtualKeyCode::Left), &mut events);
         assert_eq!(handler.keys_that_are_down().next(), None);
         assert_eq!(handler.scan_codes_that_are_down().next(), None);
         sets_are_equal(
@@ -1164,29 +1210,29 @@ mod tests {
                 Button::Mouse(MouseButton::Right),
             ],
         );
-        handler.send_event(&mouse_release(MouseButton::Left), &mut events, HIDPI);
+        handler.send_event(&mouse_release(MouseButton::Left), &mut events);
         sets_are_equal(
             &handler.buttons_that_are_down().collect::<Vec<_>>(),
             &[Button::Mouse(MouseButton::Right)],
         );
-        handler.send_event(&mouse_release(MouseButton::Right), &mut events, HIDPI);
+        handler.send_event(&mouse_release(MouseButton::Right), &mut events);
         assert_eq!(handler.buttons_that_are_down().next(), None);
     }
 
     #[test]
     fn basic_key_check() {
-        let mut handler = InputHandler::<StringBindings>::new();
-        let mut events = EventChannel::<InputEvent<StringBindings>>::new();
+        let mut handler = InputHandler::new();
+        let mut events = EventChannel::<InputEvent>::new();
         assert!(!handler.key_is_down(VirtualKeyCode::Up));
         assert!(!handler.scan_code_is_down(104));
         assert!(!handler.button_is_down(Button::Key(VirtualKeyCode::Up)));
         assert!(!handler.button_is_down(Button::ScanCode(104)));
-        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events);
         assert!(handler.key_is_down(VirtualKeyCode::Up));
         assert!(handler.scan_code_is_down(104));
         assert!(handler.button_is_down(Button::Key(VirtualKeyCode::Up)));
         assert!(handler.button_is_down(Button::ScanCode(104)));
-        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events);
         assert!(!handler.key_is_down(VirtualKeyCode::Up));
         assert!(!handler.scan_code_is_down(104));
         assert!(!handler.button_is_down(Button::Key(VirtualKeyCode::Up)));
@@ -1195,14 +1241,14 @@ mod tests {
 
     #[test]
     fn basic_mouse_check() {
-        let mut handler = InputHandler::<StringBindings>::new();
-        let mut events = EventChannel::<InputEvent<StringBindings>>::new();
+        let mut handler = InputHandler::new();
+        let mut events = EventChannel::<InputEvent>::new();
         assert!(!handler.mouse_button_is_down(MouseButton::Left));
         assert!(!handler.button_is_down(Button::Mouse(MouseButton::Left)));
-        handler.send_event(&mouse_press(MouseButton::Left), &mut events, HIDPI);
+        handler.send_event(&mouse_press(MouseButton::Left), &mut events);
         assert!(handler.mouse_button_is_down(MouseButton::Left));
         assert!(handler.button_is_down(Button::Mouse(MouseButton::Left)));
-        handler.send_event(&mouse_release(MouseButton::Left), &mut events, HIDPI);
+        handler.send_event(&mouse_release(MouseButton::Left), &mut events);
         assert!(!handler.mouse_button_is_down(MouseButton::Left));
         assert!(!handler.button_is_down(Button::Mouse(MouseButton::Left)));
     }
@@ -1210,29 +1256,29 @@ mod tests {
     #[test]
     fn basic_mouse_wheel_check() {
         use approx::assert_ulps_eq;
-        let mut handler = InputHandler::<StringBindings>::new();
-        let mut events = EventChannel::<InputEvent<StringBindings>>::new();
+        let mut handler = InputHandler::new();
+        let mut events = EventChannel::<InputEvent>::new();
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
-        handler.send_event(&mouse_wheel(0.0, 5.0), &mut events, HIDPI);
+        handler.send_event(&mouse_wheel(0.0, 5.0), &mut events);
         assert_ulps_eq!(handler.mouse_wheel_value(false), 1.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_frame_begin();
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
-        handler.send_event(&mouse_wheel(5.0, 0.0), &mut events, HIDPI);
+        handler.send_event(&mouse_wheel(5.0, 0.0), &mut events);
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 1.0);
         handler.send_frame_begin();
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
-        handler.send_event(&mouse_wheel(0.0, -5.0), &mut events, HIDPI);
+        handler.send_event(&mouse_wheel(0.0, -5.0), &mut events);
         assert_ulps_eq!(handler.mouse_wheel_value(false), -1.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_frame_begin();
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
-        handler.send_event(&mouse_wheel(-5.0, 0.0), &mut events, HIDPI);
+        handler.send_event(&mouse_wheel(-5.0, 0.0), &mut events);
         assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
         assert_ulps_eq!(handler.mouse_wheel_value(true), -1.0);
     }
@@ -1240,7 +1286,7 @@ mod tests {
     /// Compares two sets for equality, but not the order
     fn sets_are_equal<T>(a: &[T], b: &[T])
     where
-        T: PartialEq<T> + Debug,
+        T: PartialEq + Debug,
     {
         let mut ret = a.len() == b.len();
 
@@ -1265,11 +1311,11 @@ right: `{:?}`",
         }
     }
 
-    fn key_press(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event {
+    fn key_press(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event<'static, ()> {
         key_event(scancode, virtual_keycode, ElementState::Pressed)
     }
 
-    fn key_release(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event {
+    fn key_release(scancode: ScanCode, virtual_keycode: VirtualKeyCode) -> Event<'static, ()> {
         key_event(scancode, virtual_keycode, ElementState::Released)
     }
 
@@ -1277,7 +1323,7 @@ right: `{:?}`",
         scancode: ScanCode,
         virtual_keycode: VirtualKeyCode,
         state: ElementState,
-    ) -> Event {
+    ) -> Event<'static, ()> {
         Event::WindowEvent {
             window_id: unsafe { WindowId::dummy() },
             event: WindowEvent::KeyboardInput {
@@ -1286,43 +1332,34 @@ right: `{:?}`",
                     scancode,
                     state,
                     virtual_keycode: Some(virtual_keycode),
-                    modifiers: ModifiersState {
-                        shift: false,
-                        ctrl: false,
-                        alt: false,
-                        logo: false,
-                    },
+                    modifiers: ModifiersState::default(),
                 },
+                is_synthetic: false,
             },
         }
     }
 
-    fn mouse_press(button: MouseButton) -> Event {
+    fn mouse_press(button: MouseButton) -> Event<'static, ()> {
         mouse_event(button, ElementState::Pressed)
     }
 
-    fn mouse_release(button: MouseButton) -> Event {
+    fn mouse_release(button: MouseButton) -> Event<'static, ()> {
         mouse_event(button, ElementState::Released)
     }
 
-    fn mouse_event(button: MouseButton, state: ElementState) -> Event {
+    fn mouse_event(button: MouseButton, state: ElementState) -> Event<'static, ()> {
         Event::WindowEvent {
             window_id: unsafe { WindowId::dummy() },
             event: WindowEvent::MouseInput {
                 device_id: unsafe { DeviceId::dummy() },
                 state,
                 button,
-                modifiers: ModifiersState {
-                    shift: false,
-                    ctrl: false,
-                    alt: false,
-                    logo: false,
-                },
+                modifiers: ModifiersState::default(),
             },
         }
     }
 
-    fn mouse_wheel(x: f32, y: f32) -> Event {
+    fn mouse_wheel(x: f32, y: f32) -> Event<'static, ()> {
         Event::DeviceEvent {
             device_id: unsafe { DeviceId::dummy() },
             event: DeviceEvent::MouseWheel {

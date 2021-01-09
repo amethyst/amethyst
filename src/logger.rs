@@ -1,9 +1,8 @@
-pub use log::LevelFilter;
+use std::{borrow::Cow, env, fmt, io, path::PathBuf, str::FromStr};
 
 use log::debug;
+pub use log::LevelFilter;
 use serde::{Deserialize, Serialize};
-
-use std::{borrow::Cow, env, fmt, io, path::PathBuf, str::FromStr};
 
 /// An enum that contains options for logging to the terminal.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -253,8 +252,9 @@ fn colored_stdout(color_config: fern::colors::ColoredLevelConfig) -> fern::Dispa
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::env;
+
+    use super::*;
 
     #[test]
     fn check_stdout_override() {

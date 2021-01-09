@@ -1,9 +1,10 @@
-use super::base_3d::*;
-use crate::{mtl::FullTextureSet, skinning::JointCombined};
 use rendy::{
     mesh::{AsVertex, Normal, Position, Tangent, TexCoord, VertexFormat},
     shader::SpirvShader,
 };
+
+use super::base_3d::*;
+use crate::{mtl::FullTextureSet, skinning::JointCombined};
 
 /// Implementation of `Base3DPassDef` for Physically-based (PBR) rendering pass.
 #[derive(Debug)]

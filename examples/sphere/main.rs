@@ -1,52 +1,130 @@
 //! Displays a shaded sphere to the user.
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
-    core::transform::TransformBundle,
-    ecs::prelude::WorldExt,
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
+    core::transform::{Transform, TransformBundle},
     prelude::*,
     renderer::{
+        light::{Light, PointLight},
+        loaders::load_from_linear_rgba,
+        palette::{LinSrgba, Srgb},
         plugins::{RenderShaded3D, RenderToWindow},
-        rendy::mesh::{Normal, Position, TexCoord},
-        types::DefaultBackend,
-        RenderingBundle,
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, Tangent, TexCoord},
+        },
+        shape::Shape,
+        types::{DefaultBackend, MeshData, TextureData},
+        Camera, Material, MaterialDefaults, Mesh, RenderingBundle,
     },
-    utils::{application_root_dir, scene::BasicScenePrefab},
+    utils::application_root_dir,
+    window::ScreenDimensions,
 };
 
-type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
+struct SphereExample;
 
-struct Example;
+impl SimpleState for SphereExample {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
+        let mesh_storage = data.resources.get::<ProcessingQueue<MeshData>>().unwrap();
+        let tex_storage = data
+            .resources
+            .get::<ProcessingQueue<TextureData>>()
+            .unwrap();
+        let mtl_storage = data.resources.get::<ProcessingQueue<Material>>().unwrap();
 
-impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-            loader.load("prefab/sphere.ron", RonFormat, ())
-        });
-        data.world.create_entity().with(handle).build();
+        let mesh: Handle<Mesh> = loader.load_from_data(
+            Shape::Sphere(64, 64)
+                .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(None)
+                .into(),
+            (),
+            &mesh_storage,
+        );
+
+        let albedo = loader.load_from_data(
+            load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 0.5)).into(),
+            (),
+            &tex_storage,
+        );
+
+        let mtl: Handle<Material> = {
+            let mat_defaults = data.resources.get::<MaterialDefaults>().unwrap().0.clone();
+
+            loader.load_from_data(
+                Material {
+                    albedo,
+                    ..mat_defaults
+                },
+                (),
+                &mtl_storage,
+            )
+        };
+
+        data.world.push((Transform::default(), mesh, mtl));
+
+        let light1: Light = PointLight {
+            intensity: 6.0,
+            color: Srgb::new(0.8, 0.0, 0.0),
+            ..PointLight::default()
+        }
+        .into();
+
+        let mut light1_transform = Transform::default();
+        light1_transform.set_translation_xyz(6.0, 6.0, -6.0);
+
+        let light2: Light = PointLight {
+            intensity: 5.0,
+            color: Srgb::new(0.0, 0.3, 0.7),
+            ..PointLight::default()
+        }
+        .into();
+
+        let mut light2_transform = Transform::default();
+        light2_transform.set_translation_xyz(6.0, -6.0, -6.0);
+
+        data.world
+            .extend(vec![(light1, light1_transform), (light2, light2_transform)]);
+
+        let mut transform = Transform::default();
+        transform.set_translation_xyz(0.0, 0.0, -4.0);
+        transform.prepend_rotation_y_axis(std::f32::consts::PI);
+
+        let (width, height) = {
+            let dim = data.resources.get::<ScreenDimensions>().unwrap();
+            (dim.width(), dim.height())
+        };
+
+        data.world
+            .extend(vec![(Camera::standard_3d(width, height), transform)]);
     }
 }
 
 fn main() -> amethyst::Result<()> {
-    amethyst::start_logger(Default::default());
+    amethyst::Logger::from_config(amethyst::LoggerConfig {
+        level_filter: log::LevelFilter::Debug,
+        ..Default::default()
+    })
+    .start();
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/sphere/config/display.ron");
-    let assets_dir = app_root.join("examples/sphere/assets");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets");
 
-    let game_data = GameDataBuilder::default()
-        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(
+    let mut game_data = DispatcherBuilder::default();
+    game_data
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?
-                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
                 .with_plugin(RenderShaded3D::default()),
-        )?;
-    let mut game = Application::new(assets_dir, Example, game_data)?;
+        );
+    let game = Application::build(assets_dir, SphereExample)?.build(game_data)?;
     game.run();
     Ok(())
 }

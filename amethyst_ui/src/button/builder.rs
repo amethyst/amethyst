@@ -1,25 +1,22 @@
-use smallvec::{smallvec, SmallVec};
+use std::marker::PhantomData;
 
-use amethyst_assets::{AssetStorage, Loader};
+use amethyst_assets::{DefaultLoader, Handle, Loader, ProcessingQueue};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
-    ecs::{
-        prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
-        shred::{ResourceId, SystemData},
-    },
-    Parent,
+    ecs::*,
+    transform::{Children, Parent, Transform},
 };
-use amethyst_rendy::{palette::Srgba, rendy::texture::palette::load_from_srgba, Texture};
+use amethyst_rendy::{
+    palette::Srgba, rendy::texture::palette::load_from_srgba, types::TextureData,
+};
+use smallvec::{smallvec, SmallVec};
 
 use crate::{
-    font::default::get_default_font,
-    Anchor, FontAsset, FontHandle, Interactable, LineMode, Selectable, Stretch, UiButton,
-    UiButtonAction, UiButtonActionRetrigger,
+    Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, UiButton, UiButtonAction,
+    UiButtonActionRetrigger,
     UiButtonActionType::{self, *},
     UiImage, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
-
-use std::marker::PhantomData;
 
 const DEFAULT_Z: f32 = 1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
@@ -27,25 +24,6 @@ const DEFAULT_HEIGHT: f32 = 64.0;
 const DEFAULT_TAB_ORDER: u32 = 9;
 const DEFAULT_BKGD_COLOR: [f32; 4] = [0.82, 0.83, 0.83, 1.0];
 const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
-
-/// Container for all the resources the builder needs to make a new UiButton.
-#[derive(SystemData)]
-#[allow(missing_debug_implementations)]
-pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId = u32> {
-    font_asset: Read<'a, AssetStorage<FontAsset>>,
-    texture_asset: Read<'a, AssetStorage<Texture>>,
-    loader: ReadExpect<'a, Loader>,
-    entities: Entities<'a>,
-    image: WriteStorage<'a, UiImage>,
-    mouse_reactive: WriteStorage<'a, Interactable>,
-    parent: WriteStorage<'a, Parent>,
-    text: WriteStorage<'a, UiText>,
-    transform: WriteStorage<'a, UiTransform>,
-    button_widgets: WriteExpect<'a, Widgets<UiButton, I>>,
-    sound_retrigger: WriteStorage<'a, UiSoundRetrigger>,
-    button_action_retrigger: WriteStorage<'a, UiButtonActionRetrigger>,
-    selectables: WriteStorage<'a, Selectable<G>>,
-}
 
 /// Convenience structure for building a button
 /// Note that since there can only be one "ui_loader" in use, and WidgetId of the UiBundle and
@@ -64,7 +42,7 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     stretch: Stretch,
     text: String,
     text_color: [f32; 4],
-    font: Option<FontHandle>,
+    font: Option<Handle<FontAsset>>,
     font_size: f32,
     line_mode: LineMode,
     align: Anchor,
@@ -123,9 +101,10 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     /// to easily set other UI-related options. It also allows easy retrieval and updating through
     /// the appropriate widgets resouce, see [`Widgets`](../../struct.Widgets.html).
     pub fn new<S: ToString>(text: S) -> UiButtonBuilder<G, I> {
-        let mut builder = UiButtonBuilder::default();
-        builder.text = text.to_string();
-        builder
+        UiButtonBuilder {
+            text: text.to_string(),
+            ..Default::default()
+        }
     }
 
     /// Sets an ID for this widget. The type of this ID will determine which `Widgets`
@@ -172,7 +151,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Use a different font for the button text.
-    pub fn with_font(mut self, font: FontHandle) -> Self {
+    pub fn with_font(mut self, font: Handle<FontAsset>) -> Self {
         self.font = Some(font);
         self
     }
@@ -278,20 +257,31 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Build this with the `UiButtonBuilderResources`.
-    pub fn build(mut self, res: &mut UiButtonBuilderResources<'a, G, I>) -> (I, UiButton) {
-        let image_entity = res.entities.create();
-        let text_entity = res.entities.create();
+    pub fn build_from_world_and_resources(
+        mut self,
+        world: &mut World,
+        resources: &mut Resources,
+    ) -> (I, UiButton) {
+        let entities = world.extend(vec![(), ()]);
+
+        let (image_entity, text_entity) = (entities[0], entities[1]);
+
         let widget = UiButton::new(text_entity, image_entity);
 
         let id = {
             let widget = widget.clone();
 
+            if !resources.contains::<Widgets<UiButton, I>>() {
+                resources.insert(Widgets::<UiButton, I>::new());
+            }
+
+            let mut button_widgets = resources.get_mut::<Widgets<UiButton, I>>().unwrap();
             if let Some(id) = self.id {
                 let added_id = id.clone();
-                res.button_widgets.add_with_id(id, widget);
+                button_widgets.add_with_id(id, widget);
                 added_id
             } else {
-                res.button_widgets.add(widget)
+                button_widgets.add(widget)
             }
         };
 
@@ -300,7 +290,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
             || !self.on_hover_start.is_empty()
             || !self.on_hover_stop.is_empty()
         {
-            let retrigger = UiButtonActionRetrigger {
+            let button_action_retrigger = UiButtonActionRetrigger {
                 on_click_start: actions_with_target(
                     &mut self.on_click_start.into_iter(),
                     image_entity,
@@ -319,30 +309,33 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 ),
             };
 
-            res.button_action_retrigger
-                .insert(image_entity, retrigger)
-                .expect("Unreachable: Inserting newly created entity");
+            world
+                .entry(image_entity)
+                .expect("Unreachable: Inserting newly created entity")
+                .add_component(button_action_retrigger);
         }
 
         if self.on_click_start_sound.is_some()
             || self.on_click_stop_sound.is_some()
             || self.on_hover_sound.is_some()
         {
-            let retrigger = UiSoundRetrigger {
+            let sound_retrigger = UiSoundRetrigger {
                 on_click_start: self.on_click_start_sound,
                 on_click_stop: self.on_click_stop_sound,
                 on_hover_start: self.on_hover_sound,
                 on_hover_stop: None,
             };
 
-            res.sound_retrigger
-                .insert(image_entity, retrigger)
-                .expect("Unreachable: Inserting newly created entity");
+            world
+                .entry(image_entity)
+                .expect("Unreachable: Inserting newly created entity")
+                .add_component(sound_retrigger);
         }
 
-        res.transform
-            .insert(
-                image_entity,
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(
                 UiTransform::new(
                     format!("{}_btn", id),
                     self.anchor,
@@ -354,14 +347,20 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                     self.height,
                 )
                 .with_stretch(self.stretch),
-            )
-            .expect("Unreachable: Inserting newly created entity");
-        res.selectables
-            .insert(image_entity, Selectable::<G>::new(self.tab_order))
-            .expect("Unreachable: Inserting newly created entity");
+            );
+
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Selectable::<G>::new(self.tab_order));
+
+        let asset_storage = resources.get::<ProcessingQueue<TextureData>>().unwrap();
+        let loader = resources
+            .get::<DefaultLoader>()
+            .expect("Could not get Loader resource");
         let image = self.image.unwrap_or_else(|| {
             UiImage::Texture(
-                res.loader.load_from_data(
+                loader.load_from_data(
                     load_from_srgba(Srgba::new(
                         DEFAULT_BKGD_COLOR[0],
                         DEFAULT_BKGD_COLOR[1],
@@ -370,26 +369,31 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                     ))
                     .into(),
                     (),
-                    &res.texture_asset,
+                    &asset_storage,
                 ),
             )
         });
 
-        res.image
-            .insert(image_entity, image)
-            .expect("Unreachable: Inserting newly created entity");
-        res.mouse_reactive
-            .insert(image_entity, Interactable)
-            .expect("Unreachable: Inserting newly created entity");
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(image);
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Interactable);
+
         if let Some(parent) = self.parent.take() {
-            res.parent
-                .insert(image_entity, Parent { entity: parent })
-                .expect("Unreachable: Inserting newly created entity");
+            world
+                .entry(image_entity)
+                .expect("Unreachable: Inserting newly created entity")
+                .add_component(Parent(parent));
         }
 
-        res.transform
-            .insert(
-                text_entity,
+        world
+            .entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(
                 UiTransform::new(
                     format!("{}_btn_text", id),
                     Anchor::Middle,
@@ -406,39 +410,42 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                     y_margin: 0.,
                     keep_aspect_ratio: false,
                 }),
-            )
-            .expect("Unreachable: Inserting newly created entity");
-        let font_handle = self
-            .font
-            .unwrap_or_else(|| get_default_font(&res.loader, &res.font_asset));
-        res.text
-            .insert(
-                text_entity,
-                UiText::new(
-                    font_handle,
-                    self.text,
-                    self.text_color,
-                    self.font_size,
-                    self.line_mode,
-                    self.align,
-                ),
-            )
-            .expect("Unreachable: Inserting newly created entity");
-        res.parent
-            .insert(
-                text_entity,
-                Parent {
-                    entity: image_entity,
-                },
-            )
-            .expect("Unreachable: Inserting newly created entity");
+            );
+        world
+            .entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(UiText::new(
+                self.font,
+                self.text,
+                self.text_color,
+                self.font_size,
+                self.line_mode,
+                self.align,
+            ));
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Children(smallvec![text_entity]));
+
+        world
+            .entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Parent(image_entity));
+
+        //FIXME : The current parent update system in amethyst_core is updating based on the Transform component...
+        // That's actually a 'bad' linkage. Later to legion port, we'll replace the system by legion_transform which is better,
+        // the following 4 lines won't be usefull anymore.
+        world
+            .entry(image_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Transform::default());
+
+        world
+            .entry(text_entity)
+            .expect("Unreachable: Inserting newly created entity")
+            .add_component(Transform::default());
 
         (id, widget)
-    }
-
-    /// Create the UiButton based on provided configuration parameters.
-    pub fn build_from_world(self, world: &World) -> (I, UiButton) {
-        self.build(&mut UiButtonBuilderResources::<G, I>::fetch(&world))
     }
 }
 
@@ -447,9 +454,11 @@ where
     I: Iterator<Item = UiButtonActionType>,
 {
     actions
-        .map(|action| UiButtonAction {
-            target,
-            event_type: action,
+        .map(|action| {
+            UiButtonAction {
+                target,
+                event_type: action,
+            }
         })
         .collect()
 }

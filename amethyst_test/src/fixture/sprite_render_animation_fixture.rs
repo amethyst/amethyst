@@ -2,7 +2,7 @@ use amethyst::{
     animation::{
         Animation, InterpolationFunction, Sampler, SpriteRenderChannel, SpriteRenderPrimitive,
     },
-    assets::{AssetStorage, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
     ecs::prelude::*,
     renderer::{
         loaders::load_from_srgba, palette::Srgba, Sprite, SpriteRender, SpriteSheet, Texture,
@@ -26,13 +26,13 @@ impl SpriteRenderAnimationFixture {
         let animation_handle = {
             // This invocation sequence of read_resource / write_resource is to satisfy the borrow
             // checker, since we don't have NLL yet.
-            let tex_handle = world.read_resource::<Loader>().load_from_data(
+            let tex_handle = world.read_resource::<DefaultLoader>().load_from_data(
                 load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 0.5)).into(),
                 (),
                 &world.read_resource::<AssetStorage<Texture>>(),
             );
 
-            let loader = world.read_resource::<Loader>();
+            let loader = data.resources.get::<DefaultLoader>().unwrap();
             let sprite_sheet_handle =
                 loader.load_from_data(Self::sprite_sheet(tex_handle), (), &world.read_resource());
             let sprite_sheet_sampler = Sampler {

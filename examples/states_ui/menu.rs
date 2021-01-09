@@ -23,7 +23,7 @@ pub struct MainMenu {
 }
 
 impl SimpleState for MainMenu {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
         // create UI from prefab and save the reference.
         let world = data.world;
 
@@ -31,7 +31,7 @@ impl SimpleState for MainMenu {
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/menu.ron", ())));
     }
 
-    fn update(&mut self, state_data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(&mut self, state_data: &mut StateData<'_, GameData>) -> SimpleTrans {
         // only search for buttons if they have not been found yet
         let StateData { world, .. } = state_data;
 
@@ -51,11 +51,7 @@ impl SimpleState for MainMenu {
         Trans::None
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         match event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) {

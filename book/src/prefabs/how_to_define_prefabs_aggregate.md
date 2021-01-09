@@ -243,8 +243,8 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
 To see this in a complete example, run the [`prefab_custom` example][repo_prefab_custom] or the [`prefab_multi` example][repo_prefab_multi] from the Amethyst repository:
 
 ```bash
-cargo run --example prefab_custom # superset prefab
-cargo run --example prefab_multi # object prefab
+cargo run -p prefab_custom # superset prefab
+cargo run -p prefab_multi # object prefab
 ```
 
 [ser_def]: https://serde.rs/container-attrs.html#default

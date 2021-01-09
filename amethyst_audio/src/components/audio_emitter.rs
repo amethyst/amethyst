@@ -6,8 +6,6 @@ use std::{
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
 
-use amethyst_core::ecs::{prelude::Component, storage::BTreeStorage};
-
 use crate::{source::Source, DecoderError};
 
 /// An audio source, add this component to anything that emits sound.
@@ -52,10 +50,6 @@ impl AudioEmitter {
     }
 }
 
-impl Component for AudioEmitter {
-    type Storage = BTreeStorage<Self>;
-}
-
 #[cfg(test)]
 mod tests {
     use std::{fs::File, io::Read, vec::Vec};
@@ -81,15 +75,19 @@ mod tests {
 
         // Call play
         match emitter.play(&src) {
-            Ok(_pass) => assert!(
-                should_pass,
-                "Expected `play` result to be Err(..), but was Ok(..)"
-            ),
-            Err(fail) => assert!(
-                !should_pass,
-                "Expected `play` result to be `Ok(..)`, but was {:?}",
-                fail
-            ),
+            Ok(_pass) => {
+                assert!(
+                    should_pass,
+                    "Expected `play` result to be Err(..), but was Ok(..)"
+                )
+            }
+            Err(fail) => {
+                assert!(
+                    !should_pass,
+                    "Expected `play` result to be `Ok(..)`, but was {:?}",
+                    fail
+                )
+            }
         };
     }
 
