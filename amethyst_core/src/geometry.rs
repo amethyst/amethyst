@@ -172,7 +172,7 @@ pub mod tests {
                 direction: Vector3::new(0.2, -0.3, -0.9),
             }
             .at_distance(5.0),
-            Point3::new(-1., 1.5, 54.5)
+            Point3::new(1., -1.5, 45.5)
         )
     }
 }
