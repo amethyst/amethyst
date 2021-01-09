@@ -150,6 +150,7 @@ pub mod tests {
             direction: Vector3::new(0.179_559_51, -0.294_313_04, -0.938_689_65),
         };
         let distance = ray.intersect_plane(&plane).unwrap();
+        assert!(distance > 0.0);
         let point = ray.at_distance(distance);
         assert_ulps_eq!(point, Point3::new(9.927_818, -16.272_524, 0.0));
 
