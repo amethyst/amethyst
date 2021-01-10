@@ -99,13 +99,15 @@ impl<B: Backend> SlottedBuffer<B> {
                     },
                     rendy::memory::Dynamic,
                 )
-                .map_err(|e| match e {
-                    rendy::resource::CreationError::Allocate(
-                        rendy::memory::HeapsError::AllocationError(
-                            hal::device::AllocationError::OutOfMemory(oom),
-                        ),
-                    ) => oom.into(),
-                    _ => CreationError::Other,
+                .map_err(|e| {
+                    match e {
+                        rendy::resource::CreationError::Allocate(
+                            rendy::memory::HeapsError::AllocationError(
+                                hal::device::AllocationError::OutOfMemory(oom),
+                            ),
+                        ) => oom.into(),
+                        _ => CreationError::Other,
+                    }
                 })?,
             elem_size,
         })
@@ -224,9 +226,11 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     fn collect_unused(&mut self) {
         let cur_generation = self.generation;
         // let allocator = &mut self.allocator;
-        for material in self.materials.iter_mut().filter(|m| match m {
-            MaterialState::Loaded { generation, .. } => *generation < cur_generation,
-            _ => false,
+        for material in self.materials.iter_mut().filter(|m| {
+            match m {
+                MaterialState::Loaded { generation, .. } => *generation < cur_generation,
+                _ => false,
+            }
         }) {
             if let MaterialState::Loaded { slot, .. } = material {
                 self.allocator.release(*slot);

@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use atelier_assets::importer::{
-    self as importer, BoxedImporter, ImportedAsset, Importer, ImporterValue, SerdeObj,
+    self as importer, BoxedImporter, ImportOp, ImportedAsset, Importer, ImporterValue, SerdeObj,
 };
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -53,6 +53,7 @@ where
 
     fn import(
         &self,
+        _op: &mut ImportOp,
         source: &mut dyn Read,
         options: &Self::Options,
         state: &mut Self::State,

@@ -1,7 +1,7 @@
 //! Demonstrates the arc ball camera
 
 use amethyst::{
-    assets::Loader,
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
     controls::{ArcBallControl, ArcBallControlBundle, HideCursor},
     core::{
         frame_limiter::FrameRateLimitStrategy,
@@ -16,22 +16,18 @@ use amethyst::{
         palette::{LinSrgba, Srgb},
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::{
+            hal::command::ClearColor,
             mesh::{Normal, Position, Tangent, TexCoord},
             texture::palette::load_from_linear_rgba,
         },
         shape::Shape,
-        types::DefaultBackend,
+        types::{DefaultBackend, MeshData, TextureData},
         Mesh, RenderingBundle, Texture,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
     winit::event::{MouseButton, VirtualKeyCode},
     Error,
-};
-use amethyst_assets::{DefaultLoader, Handle, LoaderBundle, ProcessingQueue};
-use amethyst_rendy::{
-    rendy::hal::command::ClearColor,
-    types::{MeshData, TextureData},
 };
 
 struct ExampleState;
@@ -162,9 +158,9 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let assets_dir = app_root.join("examples/arc_ball_camera/assets");
-    let display_config_path = app_root.join("examples/arc_ball_camera/config/display.ron");
-    let key_bindings_path = app_root.join("examples/arc_ball_camera/config/input.ron");
+    let assets_dir = app_root.join("assets");
+    let display_config_path = app_root.join("config/display.ron");
+    let key_bindings_path = app_root.join("config/input.ron");
 
     let mut builder = DispatcherBuilder::default();
     builder

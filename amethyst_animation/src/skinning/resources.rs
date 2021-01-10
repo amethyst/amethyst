@@ -1,8 +1,4 @@
-use amethyst_assets::ProgressCounter;
-use amethyst_core::{ecs::Entity, math::Matrix4};
-use amethyst_error::Error;
-use derivative::Derivative;
-use serde::{Deserialize, Serialize};
+use amethyst_core::{ecs::*, math::Matrix4};
 
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
@@ -17,7 +13,7 @@ pub struct Skin {
     /// Joint entities for the skin
     pub joints: Vec<Entity>,
     /// Mesh entities that use the skin
-    pub meshes: BitSet,
+    pub meshes: Vec<Entity>,
     /// Bind shape matrix
     pub bind_shape_matrix: Matrix4<f32>,
     /// Bring the mesh into the joints local coordinate system
@@ -26,20 +22,20 @@ pub struct Skin {
     pub joint_matrices: Vec<Matrix4<f32>>,
 }
 
-impl Skin {
-    /// Creates a new `Skin`
-    pub fn new(
-        joints: Vec<Entity>,
-        meshes: BitSet,
-        inverse_bind_matrices: Vec<Matrix4<f32>>,
-    ) -> Self {
-        let len = joints.len();
-        Skin {
-            joints,
-            meshes,
-            inverse_bind_matrices,
-            bind_shape_matrix: Matrix4::identity(),
-            joint_matrices: Vec::with_capacity(len),
-        }
-    }
-}
+// impl Skin {
+//     /// Creates a new `Skin`
+//     pub fn new(
+//         joints: Vec<Entity>,
+//         meshes: Vec<Entity>,
+//         inverse_bind_matrices: Vec<Matrix4<f32>>,
+//     ) -> Self {
+//         let len = joints.len();
+//         Skin {
+//             joints,
+//             meshes,
+//             inverse_bind_matrices,
+//             bind_shape_matrix: Matrix4::identity(),
+//             joint_matrices: Vec::with_capacity(len),
+//         }
+//     }
+// }

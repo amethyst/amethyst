@@ -39,7 +39,7 @@ thread_profiler = { version = "0.3", optional = true }
 serde-diff = "0.4"
 
 [dev-dependencies]
-ron = "0.5.1"
+ron = "0.6.4"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

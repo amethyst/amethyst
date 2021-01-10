@@ -12,8 +12,6 @@ use amethyst_rendy::{
 use smallvec::{smallvec, SmallVec};
 
 use crate::{
-    font::default::get_default_font,
-    format::FontData,
     Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, UiButton, UiButtonAction,
     UiButtonActionRetrigger,
     UiButtonActionType::{self, *},
@@ -413,15 +411,11 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                     keep_aspect_ratio: false,
                 }),
             );
-        let font_storage = resources.get::<ProcessingQueue<FontData>>().unwrap();
-        let font_handle = self
-            .font
-            .unwrap_or_else(|| get_default_font(&loader, &font_storage));
         world
             .entry(text_entity)
             .expect("Unreachable: Inserting newly created entity")
             .add_component(UiText::new(
-                font_handle,
+                self.font,
                 self.text,
                 self.text_color,
                 self.font_size,
@@ -460,9 +454,11 @@ where
     I: Iterator<Item = UiButtonActionType>,
 {
     actions
-        .map(|action| UiButtonAction {
-            target,
-            event_type: action,
+        .map(|action| {
+            UiButtonAction {
+                target,
+                event_type: action,
+            }
         })
         .collect()
 }

@@ -25,7 +25,7 @@ fi
 # Builds all crates including tests, but don't run them yet.
 # We will run the tests wrapped in `kcov`.
 test_bins_by_crate="$(
-    cargo test --all --no-run --features "empty" --message-format=json |
+    cargo test --all --no-run --all-features --message-format=json |
     jq -r "select(.profile.test == true) | (.package_id | split(\" \"))[0] + \";\" + .filenames[]"
   )"
 

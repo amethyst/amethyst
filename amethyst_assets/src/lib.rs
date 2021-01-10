@@ -20,7 +20,8 @@ mod bundle;
 mod cache;
 /// asset loading specific errors
 pub mod error;
-mod formats;
+#[cfg(feature = "json")]
+mod json;
 mod loader;
 /// helpers for registering prefab components
 pub mod prefab;
@@ -42,14 +43,12 @@ pub use type_uuid::TypeUuid;
 #[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};
 
-#[doc(hidden)]
 #[cfg(feature = "json")]
-pub use crate::formats::JsonFormat;
+pub use crate::json::JsonFormat;
 pub use crate::{
     asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
     bundle::{start_asset_daemon, LoaderBundle},
     cache::Cache,
-    formats::RonFormat,
     loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
     processor::{AssetProcessorSystem, ProcessingQueue, ProcessingState},
     progress::{Completion, Progress, ProgressCounter, Tracker},

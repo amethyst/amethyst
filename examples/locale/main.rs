@@ -1,16 +1,13 @@
 //! Example showing how to load a Locale file as an Asset using the Loader.
 
 use amethyst::{
-    assets::{AssetStorage, DefaultLoader, Handle, Loader},
+    assets::{AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle},
     ecs::*,
     locale::*,
     prelude::*,
+    renderer::{types::DefaultBackend, RenderingBundle},
     utils::application_root_dir,
     Error,
-};
-use amethyst_assets::LoaderBundle;
-use amethyst_rendy::{
-    rendy::hal::command::ClearColor, types::DefaultBackend, RenderToWindow, RenderingBundle,
 };
 
 struct Example {
@@ -67,8 +64,7 @@ fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let assets_dir = app_root.join("examples/locale/assets");
-    let display_config_path = app_root.join("examples/ui_from_code/config/display.ron");
+    let assets_dir = app_root.join("assets");
 
     let mut builder = DispatcherBuilder::default();
 

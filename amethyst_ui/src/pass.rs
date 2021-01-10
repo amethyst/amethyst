@@ -65,7 +65,7 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        resources.insert(UiGlyphsResource::default());
+        resources.insert(UiGlyphsResource::new(resources));
 
         builder.add_system(Box::new(crate::glyphs::UiGlyphsSystem::<B>::default()));
         Ok(())
@@ -83,6 +83,10 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
             Ok(())
         });
         Ok(())
+    }
+
+    fn should_rebuild(&mut self, _world: &World, _resources: &Resources) -> bool {
+        false
     }
 }
 
@@ -296,14 +300,16 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
                         .iter()
                         .position(|&(cached_z, _)| transform.global_z() >= cached_z);
                     match pos {
-                        Some(pos) => self
-                            .cached_draw_order
-                            .cache
-                            .insert(pos, (transform.global_z(), *entity)),
-                        None => self
-                            .cached_draw_order
-                            .cache
-                            .push((transform.global_z(), *entity)),
+                        Some(pos) => {
+                            self.cached_draw_order
+                                .cache
+                                .insert(pos, (transform.global_z(), *entity))
+                        }
+                        None => {
+                            self.cached_draw_order
+                                .cache
+                                .push((transform.global_z(), *entity))
+                        }
                     }
                 }
             });

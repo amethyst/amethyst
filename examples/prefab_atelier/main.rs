@@ -1,10 +1,12 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Cursor};
 
 use amethyst::{
     assets::{
-        prefab::{register_component_type, ComponentRegistry, Prefab, RawPrefab},
+        prefab::{
+            register_component_type, ComponentRegistry, ComponentRegistryBuilder, Prefab, RawPrefab,
+        },
         AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle,
     },
     core::transform::{Transform, TransformBundle},
@@ -12,14 +14,13 @@ use amethyst::{
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
     utils::application_root_dir,
     Error,
 };
-use amethyst_assets::prefab::ComponentRegistryBuilder;
-use amethyst_rendy::rendy::hal::command::ClearColor;
 
 // type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
@@ -46,13 +47,16 @@ fn write_prefab<P: AsRef<std::path::Path>>(
         registered_components: component_registry.components_by_uuid(),
     };
 
-    let mut ron_ser = ron::ser::Serializer::new(Some(ron::ser::PrettyConfig::default()), true);
+    let mut buf = Cursor::new(Vec::new());
+    let mut ron_ser =
+        ron::ser::Serializer::new(buf.get_mut(), Some(ron::ser::PrettyConfig::default()), true)
+            .expect("created ron serializer");
     let prefab_ser = legion_prefab::PrefabFormatSerializer::new(prefab_serde_context, prefab);
 
     prefab_format::serialize(&mut ron_ser, &prefab_ser, prefab.prefab_id())
         .expect("failed to round-trip prefab");
 
-    let buf = ron_ser.into_output_string();
+    let buf = String::from_utf8(buf.into_inner()).expect("String from prefab.");
 
     std::fs::write(path, buf)?;
     Ok(())
@@ -127,9 +131,9 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/prefab_atelier/assets");
+    let assets_dir = app_root.join("assets");
 
-    let display_config_path = app_root.join("examples/prefab_atelier/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut dispatcher_builder = DispatcherBuilder::default();
     dispatcher_builder

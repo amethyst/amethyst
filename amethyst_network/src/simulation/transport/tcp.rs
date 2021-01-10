@@ -64,9 +64,9 @@ impl SystemBundle for TcpNetworkBundle {
 /// Creates a new tcp stream management system
 // We cannot use `net.streams.entry(message.destination).or_insert_with(|| { .. })` because
 // there is a `return;` statement for early exit, which is not allowed within the closure.
-#[allow(clippy::map_entry)]
 pub struct TcpStreamManagementSystem;
 
+#[allow(clippy::map_entry)]
 impl System<'_> for TcpStreamManagementSystem {
     fn build(&mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
@@ -176,10 +176,12 @@ impl System<'_> for TcpNetworkSendSystem {
                                 | DeliveryRequirement::Default => {
                                     write_message(message, net, channel);
                                 }
-                                delivery => panic!(
+                                delivery => {
+                                    panic!(
                             "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
                             delivery
-                        ),
+                        )
+                                }
                             }
                         }
                     },

@@ -1,6 +1,7 @@
 //! Pong Tutorial 1
 
 use amethyst::{
+    assets::LoaderBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
@@ -10,7 +11,6 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::LoaderBundle;
 
 pub struct Pong;
 
@@ -20,11 +20,11 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/pong_tutorial_01/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     // This line is not mentioned in the pong tutorial as it is specific to the context
     // of the git repository. It only is a different location to load the assets from.
-    let assets_dir = app_root.join("examples/pong_tutorial_01/assets/");
+    let assets_dir = app_root.join("assets/");
 
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher.add_bundle(LoaderBundle).add_bundle(

@@ -567,12 +567,8 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root
-        .join("examples")
-        .join("rendy")
-        .join("config")
-        .join("display.ron");
-    let assets_dir = app_root.join("examples").join("rendy").join("assets");
+    let display_config_path = app_root.join("config").join("display.ron");
+    let assets_dir = app_root.join("assets");
 
     let mut bindings = Bindings::new();
     bindings.insert_axis(

@@ -17,7 +17,7 @@ use systems::ParallelRunnable;
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-    let assets_dir = application_root_dir()?.join("examples/net_client/");
+    let assets_dir = application_root_dir()?.join("");
 
     let mut game_data = DispatcherBuilder::default();
     game_data

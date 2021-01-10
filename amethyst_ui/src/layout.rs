@@ -5,6 +5,7 @@ use amethyst_core::{
     transform::{Children, Parent},
 };
 use amethyst_window::ScreenDimensions;
+use derivative::Derivative;
 use glyph_brush::{HorizontalAlign, VerticalAlign};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "profiler")]
@@ -14,9 +15,11 @@ use super::UiTransform;
 
 /// Indicates if the position and margins should be calculated in pixel or
 /// relative to their parent size.
-#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Derivative, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
+#[derivative(Default)]
 pub enum ScaleMode {
     /// Use directly the pixel value.
+    #[derivative(Default)]
     Pixel,
     /// Use a proportion (%) of the parent's dimensions (or screen, if there is no parent).
     Percent,
@@ -24,7 +27,8 @@ pub enum ScaleMode {
 
 /// Indicated where the anchor is, relative to the parent (or to the screen, if there is no parent).
 /// Follow a normal english Y,X naming.
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Derivative, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
+#[derivative(Default)]
 pub enum Anchor {
     /// Anchors the entity at the top left of the parent.
     TopLeft,
@@ -35,6 +39,7 @@ pub enum Anchor {
     /// Anchors the entity at the middle left of the parent.
     MiddleLeft,
     /// Anchors the entity at the center of the parent.
+    #[derivative(Default)]
     Middle,
     /// Anchors the entity at the middle right of the parent.
     MiddleRight,
@@ -96,9 +101,11 @@ impl Anchor {
 }
 
 /// Indicates if a component should be stretched.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Derivative, Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
+#[derivative(Default)]
 pub enum Stretch {
     /// No stretching occurs
+    #[derivative(Default)]
     NoStretch,
     /// Stretches on the X axis.
     X {
@@ -263,22 +270,28 @@ impl System<'static> for UiTransformSystem {
 
                             let new_size = match transform.stretch {
                                 Stretch::NoStretch => (transform.width, transform.height),
-                                Stretch::X { x_margin } => (
-                                    parent_transform_copy.pixel_width - x_margin * 2.0,
-                                    transform.height,
-                                ),
-                                Stretch::Y { y_margin } => (
-                                    transform.width,
-                                    parent_transform_copy.pixel_height - y_margin * 2.0,
-                                ),
+                                Stretch::X { x_margin } => {
+                                    (
+                                        parent_transform_copy.pixel_width - x_margin * 2.0,
+                                        transform.height,
+                                    )
+                                }
+                                Stretch::Y { y_margin } => {
+                                    (
+                                        transform.width,
+                                        parent_transform_copy.pixel_height - y_margin * 2.0,
+                                    )
+                                }
                                 Stretch::XY {
                                     keep_aspect_ratio: false,
                                     x_margin,
                                     y_margin,
-                                } => (
-                                    parent_transform_copy.pixel_width - x_margin * 2.0,
-                                    parent_transform_copy.pixel_height - y_margin * 2.0,
-                                ),
+                                } => {
+                                    (
+                                        parent_transform_copy.pixel_width - x_margin * 2.0,
+                                        parent_transform_copy.pixel_height - y_margin * 2.0,
+                                    )
+                                }
                                 Stretch::XY {
                                     keep_aspect_ratio: true,
                                     x_margin,
@@ -351,10 +364,12 @@ where
                 keep_aspect_ratio: false,
                 x_margin,
                 y_margin,
-            } => (
-                screen_dim.width() - x_margin * 2.0,
-                screen_dim.height() - y_margin * 2.0,
-            ),
+            } => {
+                (
+                    screen_dim.width() - x_margin * 2.0,
+                    screen_dim.height() - y_margin * 2.0,
+                )
+            }
             Stretch::XY {
                 keep_aspect_ratio: true,
                 x_margin,

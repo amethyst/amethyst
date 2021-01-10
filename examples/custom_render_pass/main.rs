@@ -3,7 +3,10 @@
 mod custom_pass;
 
 use amethyst::{
-    input::{is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection},
+    assets::LoaderBundle,
+    input::{
+        is_close_requested, is_key_down, InputBundle, InputEvent, ScrollDirection, VirtualKeyCode,
+    },
     prelude::*,
     renderer::{
         plugins::RenderToWindow, rendy::hal::command::ClearColor, types::DefaultBackend,
@@ -11,8 +14,6 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
-use amethyst_assets::LoaderBundle;
-use amethyst_input::VirtualKeyCode;
 
 use crate::custom_pass::{CustomUniformArgs, RenderCustom, Triangle};
 
@@ -75,8 +76,8 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/custom_render_pass/config/display.ron");
-    let assets_dir = app_root.join("examples/custom_render_pass/assets/");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets/");
 
     let mut game_data = DispatcherBuilder::default();
     game_data

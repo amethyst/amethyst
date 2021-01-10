@@ -1,12 +1,16 @@
+use amethyst_assets::{register_asset_type, AssetProcessorSystem, TypeUuid};
 use amethyst_core::{
+    ecs::CommandBuffer,
     math::{zero, Quaternion, Unit, Vector3, Vector4},
-    Transform,
+    transform::Transform,
 };
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::{
-    resources::{AnimationSampling, ApplyData, BlendMethod},
+    resources::{AnimationSampling, BlendMethod},
     util::SamplerPrimitive,
+    Animation,
 };
 
 /// Channels that can be animated on `Transform`
@@ -20,15 +24,22 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl<'a> ApplyData<'a> for Transform {
-    type ApplyData = ();
+impl TypeUuid for Animation<Transform> {
+    const UUID: type_uuid::Bytes =
+        *Uuid::from_u128(338570003214035303785978659011038647737).as_bytes();
 }
+register_asset_type!(Animation<Transform> => Animation<Transform>; AssetProcessorSystem<Animation<Transform>>);
 
 impl AnimationSampling for Transform {
     type Primitive = SamplerPrimitive<f32>;
     type Channel = TransformChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
+    fn apply_sample(
+        &mut self,
+        channel: &Self::Channel,
+        data: &Self::Primitive,
+        _buffer: &mut CommandBuffer,
+    ) {
         use self::TransformChannel::*;
         use crate::util::SamplerPrimitive::*;
 
@@ -46,7 +57,7 @@ impl AnimationSampling for Transform {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
+    fn current_sample(&self, channel: &Self::Channel) -> Self::Primitive {
         use self::TransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),
@@ -54,6 +65,7 @@ impl AnimationSampling for Transform {
             Scale => SamplerPrimitive::Vec3((*self.scale()).into()),
         }
     }
+
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
         use self::TransformChannel::*;
         match channel {

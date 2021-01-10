@@ -61,24 +61,24 @@ done the following things first:
 
 1. You have ensured the pull request is rebased on a recent version of your
    respective branch or the latest upstream has been merged.
-2. All of the following commands completed without errors.  You can pass whatever features are relevant for your change. CI will test with all features enabled.
+2. All of the following commands completed without warnings or errors.  CI will test with all features enabled.
    * `rustup update stable nightly`
    * `cargo +nightly fmt --all`
-   * `cargo +nightly clippy --workspace --all-targets --features empty -Z unstable-options`
-   * `cargo test --all-targets --workspace --features empty`
-   * `cargo run --example $YOUR_EXAMPLE --features $YOUR_BACKEND`
+   * `cargo +nightly clippy --workspace --all-targets --all-features -Z unstable-options`
+   * `cargo test --all-targets --workspace --all-features`
+   * `cargo run -p $YOUR_EXAMPLE`
+   
+    You can copy `script/pre-commit` to `.git/hooks/pre-commit` for a prompt to remind you of these requirements and automatically lint and fix some of them for you when committing.
 3. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
-4. You added your change in docs/CHANGELOG.md and linked your pull request number.
-5. For new features or changes to an existing one,
-   add or change either the book tutorial or the examples.
+4. For new features or changes to an existing feature,
+   update the book, docs and examples.
 
 [lm]: LICENSE-MIT
 [la]: LICENSE-APACHE
-[rustfmt]: https://github.com/rust-lang-nursery/rustfmt
 
 Once you have submitted your pull request, please wait for a reviewer to give
 feedback on it. If no one responds, feel free to @-mention a developer or post
@@ -293,7 +293,7 @@ cargo build --release --features profiler
 ```
 Or if you wanted to run an example with profiler:
 ```
-cargo run --example my_example --release --features profiler
+cargo run -p my_example --release --features profiler
 ```
 After an Amethyst instance built with `profiler` feature shuts down a
 `thread_profile.json` file is generated. It holds information about engine performance

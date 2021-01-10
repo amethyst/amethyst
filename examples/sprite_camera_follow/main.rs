@@ -1,7 +1,10 @@
 use amethyst::{
-    assets::{DefaultLoader, Handle, Loader},
-    core::Named,
-    input::{is_close_requested, is_key_down, InputBundle, InputHandler},
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
+    core::{
+        transform::{Parent, Transform, TransformBundle},
+        Named,
+    },
+    input::{is_close_requested, is_key_down, InputBundle, InputHandler, VirtualKeyCode},
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
@@ -12,9 +15,6 @@ use amethyst::{
     utils::application_root_dir,
     window::ScreenDimensions,
 };
-use amethyst_assets::{LoaderBundle, ProcessingQueue};
-use amethyst_core::transform::{Parent, Transform, TransformBundle};
-use amethyst_input::VirtualKeyCode;
 
 #[derive(Default)]
 struct Player;
@@ -155,20 +155,18 @@ impl SimpleState for Example {
 
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(Default::default())
-        .level_for("amethyst_assets", log::LevelFilter::Debug)
+        .level_for("amethyst::assets", log::LevelFilter::Debug)
         .start();
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/sprite_camera_follow/assets");
-    let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
+    let assets_directory = app_root.join("assets");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut game_data = DispatcherBuilder::default();
     game_data
         .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
-        .add_bundle(InputBundle::new().with_bindings_from_file(
-            app_root.join("examples/sprite_camera_follow/config/input.ron"),
-        )?)
+        .add_bundle(InputBundle::new().with_bindings_from_file(app_root.join("config/input.ron"))?)
         .add_system(Box::new(MovementSystem))
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()

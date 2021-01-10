@@ -15,9 +15,9 @@ impl AsRef<palette::Srgba> for AmbientColor {
 #[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Tint(#[serde(with = "crate::serde_shim::srgba")] pub palette::Srgba);
 
-impl Into<[f32; 4]> for Tint {
-    fn into(self) -> [f32; 4] {
-        let (r, g, b, a) = self.0.into_components();
+impl From<Tint> for [f32; 4] {
+    fn from(tint: Tint) -> Self {
+        let (r, g, b, a) = tint.0.into_components();
         [r, g, b, a]
     }
 }

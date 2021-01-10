@@ -2,7 +2,7 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
-    assets::{DefaultLoader, Format, Handle, Loader},
+    assets::{AssetHandle, DefaultLoader, Format, Handle, Loader, LoaderBundle, ProcessingQueue},
     core::{
         math::Vector3,
         transform::{Transform, TransformBundle},
@@ -21,13 +21,11 @@ use amethyst::{
             mesh::{MeshBuilder, Normal, Position, TexCoord},
             texture::palette::load_from_srgba,
         },
-        types::{DefaultBackend, Mesh, MeshData},
-        RenderingBundle,
+        types::{DefaultBackend, Mesh, MeshData, TextureData},
+        RenderingBundle, Texture,
     },
     utils::application_root_dir,
 };
-use amethyst_assets::{AssetHandle, LoaderBundle, ProcessingQueue};
-use amethyst_rendy::{types::TextureData, Texture};
 use log::info;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -36,7 +34,8 @@ use type_uuid::TypeUuid;
 #[uuid = "f245dc2b-88a9-413e-bd51-f6c341c32017"]
 struct Custom;
 
-amethyst_assets::register_importer!(".custom", Custom);
+use amethyst::assets as amethyst_assets;
+amethyst::assets::register_importer!(".custom", Custom);
 impl Format<MeshData> for Custom {
     fn name(&self) -> &'static str {
         "CUSTOM"
@@ -147,9 +146,9 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
     // Add our meshes directory to the asset loader.
-    let assets_dir = app_root.join("examples/asset_loading/assets/");
+    let assets_dir = app_root.join("assets/");
 
-    let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 
     let mut dispatcher_builder = DispatcherBuilder::default();
     dispatcher_builder

@@ -1,12 +1,10 @@
 use amethyst::{
-    assets::{DefaultLoader, Handle, Loader},
+    assets::{DefaultLoader, Handle, Loader, ProcessingQueue},
     core::{timing::Time, transform::Transform},
     prelude::*,
-    renderer::{Camera, SpriteRender, SpriteSheet, Texture},
+    renderer::{sprite::Sprites, Camera, SpriteRender, SpriteSheet, Texture},
+    ui::{Anchor, LineMode, UiText, UiTransform},
 };
-use amethyst_assets::ProcessingQueue;
-use amethyst_rendy::sprite::Sprites;
-use amethyst_ui::{Anchor, LineMode, UiText, UiTransform};
 
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
@@ -225,7 +223,7 @@ fn initialise_scoreboard(world: &mut World, resources: &mut Resources) {
     let p1_score = world.push((
         p1_transform,
         UiText::new(
-            font.clone(),
+            Some(font.clone()),
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
@@ -237,7 +235,7 @@ fn initialise_scoreboard(world: &mut World, resources: &mut Resources) {
     let p2_score = world.push((
         p2_transform,
         UiText::new(
-            font,
+            Some(font),
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,

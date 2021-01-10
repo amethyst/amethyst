@@ -5,15 +5,16 @@ use amethyst::{
     },
     derive::EventReader,
     ecs::Resources,
+    input::InputEvent,
+    winit::event::Event,
 };
-use amethyst_input::InputEvent;
 
 /// Here's a copy of the original StateEvent with our own type added
 #[derive(Clone, Debug, EventReader)]
 #[reader(MyExtendedStateEventReader)]
 pub enum MyExtendedStateEvent {
     /// Events sent by the winit window.
-    Window(winit::event::Event<'static, ()>),
+    Window(Event<'static, ()>),
     /// Events sent by the input system.
     Input(InputEvent),
     /// Our own events for our own game logic

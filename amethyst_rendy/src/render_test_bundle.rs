@@ -1,9 +1,6 @@
 use std::marker::PhantomData;
 
-use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::{DispatcherBuilder, World},
-};
+use amethyst_core::ecs::{DispatcherBuilder, World};
 use amethyst_error::Error;
 use derive_new::new;
 

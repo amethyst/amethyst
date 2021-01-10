@@ -1,17 +1,16 @@
 use amethyst::{
+    assets::LoaderBundle,
+    audio::output::init_output,
+    core::{dispatcher::DispatcherBuilder, transform::TransformBundle},
+    input::InputBundle,
     renderer::{
         rendy::core::hal::command::ClearColor, types::DefaultBackend, RenderToWindow,
         RenderingBundle,
     },
-    ui::AudioUiBundle,
+    ui::{AudioUiBundle, RenderUi, UiBundle},
+    utils::application_root_dir,
     Application, GameData, SimpleState, StateData,
 };
-use amethyst_assets::LoaderBundle;
-use amethyst_audio::output::init_output;
-use amethyst_core::{dispatcher::DispatcherBuilder, transform::TransformBundle};
-use amethyst_input::InputBundle;
-use amethyst_ui::{RenderUi, UiBundle};
-use amethyst_utils::application_root_dir;
 
 #[derive(Default)]
 struct Example;
@@ -45,8 +44,8 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(config);
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/ui_from_code/config/display.ron");
-    let assets_dir = app_root.join("examples/ui_from_code/assets");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets");
 
     let mut dispatcher = DispatcherBuilder::default();
 
@@ -74,12 +73,14 @@ fn main() -> amethyst::Result<()> {
 pub struct TestCpnt;
 
 mod example_utils {
-    use amethyst::ecs::{Resources, World};
-    use amethyst_assets::{DefaultLoader, Format, Loader, ProcessingQueue};
-    use amethyst_rendy::{types::TextureData, ImageFormat};
-    use amethyst_ui::{
-        Anchor, Draggable, Interactable, LineMode, TextEditing, UiButtonBuilder, UiImage,
-        UiLabelBuilder, UiTransform,
+    use amethyst::{
+        assets::{DefaultLoader, Format, Loader, ProcessingQueue},
+        ecs::{Resources, World},
+        renderer::{types::TextureData, ImageFormat},
+        ui::{
+            Anchor, Draggable, Interactable, LineMode, TextEditing, UiButtonBuilder, UiImage,
+            UiLabelBuilder, UiTransform,
+        },
     };
 
     pub fn build_example_button(world: &mut World, resources: &mut Resources) {

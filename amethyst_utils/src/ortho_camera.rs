@@ -161,10 +161,16 @@ impl CameraNormalizeMode {
         match self {
             CameraNormalizeMode::Lossy {
                 ref stretch_direction,
-            } => match stretch_direction {
-                Axis2::X => CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates),
-                Axis2::Y => CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates),
-            },
+            } => {
+                match stretch_direction {
+                    Axis2::X => {
+                        CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates)
+                    }
+                    Axis2::Y => {
+                        CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates)
+                    }
+                }
+            }
             CameraNormalizeMode::Contain => {
                 let desired_aspect_ratio = desired_coordinates.aspect_ratio();
                 // We don't need an == case because lossy handles it just fine

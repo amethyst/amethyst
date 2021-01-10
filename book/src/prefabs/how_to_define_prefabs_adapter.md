@@ -168,7 +168,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 To see this in a complete example, run the [`prefab_adapter` example][repo_prefab_adapter] from the Amethyst repository:
 
 ```bash
-cargo run --example prefab_adapter
+cargo run -p prefab_adapter
 ```
 
 [ser_unk]: https://serde.rs/container-attrs.html#deny_unknown_fields

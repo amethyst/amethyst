@@ -1,6 +1,6 @@
 //! Displays spheres with physically based materials.
 use amethyst::{
-    assets::Loader,
+    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
     core::{
         ecs::*,
         transform::{Transform, TransformBundle},
@@ -17,15 +17,13 @@ use amethyst::{
             texture::palette::load_from_linear_rgba,
         },
         shape::Shape,
-        types::DefaultBackend,
+        types::{DefaultBackend, MeshData, TextureData},
         Mesh, RenderingBundle, Texture,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
     Application, GameData, SimpleState, StateData,
 };
-use amethyst_assets::{DefaultLoader, Handle, LoaderBundle, ProcessingQueue};
-use amethyst_rendy::types::{MeshData, TextureData};
 
 struct Example;
 
@@ -135,8 +133,8 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/material/config/display.ron");
-    let assets_dir = app_root.join("examples/material/assets/");
+    let display_config_path = app_root.join("config/display.ron");
+    let assets_dir = app_root.join("assets/");
 
     let mut builder = DispatcherBuilder::default();
     builder

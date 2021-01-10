@@ -141,16 +141,18 @@ impl TextureGenerator {
             //TextureGenerator::LinearRgbaFloat(red, green, blue, alpha) => load_from_linear_rgba_f32(
             //    LinSrgba::new(red, green, blue, alpha)
             //),
-            TextureGenerator::SrgbaCorners(corners, filter) => simple_builder::<Rgba8Srgb>(
-                corners
-                    .iter()
-                    .map(|(red, green, blue, alpha)| {
-                        palette::Srgba::new(*red, *green, *blue, *alpha).into()
-                    })
-                    .collect(),
-                2,
-                filter,
-            ),
+            TextureGenerator::SrgbaCorners(corners, filter) => {
+                simple_builder::<Rgba8Srgb>(
+                    corners
+                        .iter()
+                        .map(|(red, green, blue, alpha)| {
+                            palette::Srgba::new(*red, *green, *blue, *alpha).into()
+                        })
+                        .collect(),
+                    2,
+                    filter,
+                )
+            }
         }
     }
 }

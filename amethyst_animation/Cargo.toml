@@ -29,16 +29,11 @@ itertools = "0.8.0"
 log = "0.4.6"
 minterpolate = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
-
 thread_profiler = { version = "0.3", optional = true }
-
-[dev-dependencies]
+alga = "0.9.3"
+type-uuid = "0.1.2"
+uuid = "0.8.1"
 
 [features]
-vulkan = ["amethyst_rendy/vulkan"]
-metal = ["amethyst_rendy/metal"]
-empty = ["amethyst_rendy/empty"]
-
 profiler = ["thread_profiler/thread_profiler"]
-
 ui = ["amethyst_ui"]

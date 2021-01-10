@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ### Added
+- Support for JSON & Binary config files ([#2387])
 
 ### Changed
 
@@ -22,9 +23,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Make `TextEditingPrefab` public ([#2492])
 - Replace `clipboard` crate with `copypasta` (see #2438)
 - Make ui a default but optional feature ([#2490])
+- Tile maps are now properly centered at their transform location ([#2540])
+- Allow config files and text assets to be encoded with UTF-8-BOM & UTF-16-BOM ([#2487])
+
+[#2487]: https://github.com/amethyst/amethyst/pull/2487
 
 ### Fixed
 
+[#2387]: https://github.com/amethyst/amethyst/issues/2387
 [#2489]: https://github.com/amethyst/amethyst/pull/2489
 [#2492]: https://github.com/amethyst/amethyst/pull/2492
 [#2521]: https://github.com/amethyst/amethyst/pull/2521

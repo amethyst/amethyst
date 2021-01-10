@@ -1,5 +1,3 @@
-extern crate amethyst;
-
 use core::result::Result;
 
 use amethyst::{
@@ -90,7 +88,7 @@ impl SimpleState for GameplayState {}
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let assets_dir = application_root_dir()?.join("examples/events/assets");
+    let assets_dir = application_root_dir()?.join("assets");
 
     let mut game_data = DispatcherBuilder::default();
     game_data.add_bundle(MyBundle);
