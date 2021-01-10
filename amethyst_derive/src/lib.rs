@@ -1,5 +1,5 @@
 //! This crate implements various derive macros for easing the use of various amethyst features.
-//! At the moment, this consists of event readers, prefab and UI widget derives.
+//! At the moment, this consists of event readers and UI widget derives.
 
 #![doc(
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
@@ -22,7 +22,6 @@ use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
 mod event_reader;
-mod prefab_data;
 mod widget_id;
 
 /// EventReader
@@ -30,17 +29,6 @@ mod widget_id;
 pub fn event_reader_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let gen = event_reader::impl_event_reader(&ast);
-    gen.into()
-}
-
-/// Deriving a `Prefab` requires that `amethyst::ecs::Entity`,
-/// `amethyst:assets::{PrefabData, ProgressCounter}` and
-/// `amethyst::error::Error` are imported and visible in the current scope. This
-/// is due to how Rust macros work.
-#[proc_macro_derive(PrefabData, attributes(prefab))]
-pub fn prefab_data_derive(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    let gen = prefab_data::impl_prefab_data(&ast);
     gen.into()
 }
 

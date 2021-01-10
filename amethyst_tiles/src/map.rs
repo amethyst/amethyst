@@ -277,8 +277,8 @@ fn create_transform(map_dimensions: &Vector3<u32>, tile_dimensions: &Vector3<u32
     );
 
     let half_dimensions = Vector3::new(
-        -1.0 * (map_dimensions.x as f32 / 2.0),
-        map_dimensions.y as f32 / 2.0,
+        -1.0 * (map_dimensions.x as f32 / 2.0) + 0.5,
+        map_dimensions.y as f32 / 2.0 - 0.5,
         0.0,
     );
 
@@ -457,23 +457,23 @@ mod tests {
         test_coord(
             &transform,
             Point3::new(0, 0, 0),
-            Point3::new(-320.0, 320.0, 0.0),
+            Point3::new(-315.0, 315.0, 0.0),
         );
         test_coord(
             &transform,
             Point3::new(1, 0, 0),
-            Point3::new(-310.0, 320.0, 0.0),
+            Point3::new(-305.0, 315.0, 0.0),
         );
         test_coord(
             &transform,
             Point3::new(0, 1, 0),
-            Point3::new(-320.0, 310.0, 0.0),
+            Point3::new(-315.0, 305.0, 0.0),
         );
 
         test_coord(
             &transform,
             Point3::new(0, 1, 20),
-            Point3::new(-320.0, 310.0, 20.0),
+            Point3::new(-315.0, 305.0, 20.0),
         );
     }
 
@@ -516,27 +516,32 @@ mod tests {
         test_coord_with_map_transform(
             &transform,
             Point3::new(1, 1, 0),
-            Point3::new(-320.0, 320.0, 0.0),
+            Point3::new(-315.0, 315.0, 0.0),
             &map_transform,
         );
         test_coord_with_map_transform(
             &transform,
             Point3::new(2, 1, 0),
-            Point3::new(-310.0, 320.0, 0.0),
+            Point3::new(-305.0, 315.0, 0.0),
             &map_transform,
         );
         test_coord_with_map_transform(
             &transform,
             Point3::new(1, 2, 0),
-            Point3::new(-320.0, 310.0, 0.0),
+            Point3::new(-315.0, 305.0, 0.0),
             &map_transform,
         );
-
         test_coord_with_map_transform(
             &transform,
             Point3::new(1, 2, 20),
-            Point3::new(-320.0, 310.0, 20.0),
+            Point3::new(-315.0, 305.0, 20.0),
             &map_transform,
         );
+    }
+
+    #[test]
+    pub fn tilemap_transform_positioning() {
+        let transform = create_transform(&Vector3::new(1, 2, 3), &Vector3::new(10, 10, 1));
+        test_coord(&transform, Point3::new(0, 0, 0), Point3::new(0.0, 5.0, 0.0));
     }
 }

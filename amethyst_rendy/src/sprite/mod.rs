@@ -5,8 +5,6 @@ use type_uuid::TypeUuid;
 
 use crate::types::Texture;
 
-// pub mod prefab;
-
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
@@ -234,8 +232,7 @@ fn default_flip() -> bool {
     false
 }
 
-/// `SpriteList` controls how a sprite list is generated when using `Sprites::List` in a
-/// `SpriteSheetPrefab`.
+/// `SpriteList` controls how a sprite list is generated when using `Sprites::List`
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct SpriteList {
     /// Width of the texture in pixels.
@@ -246,8 +243,7 @@ pub struct SpriteList {
     pub sprites: Vec<SpritePosition>,
 }
 
-/// `SpriteGrid` controls how a sprite grid is generated when using `Sprites::Grid` in a
-/// `SpriteSheetPrefab`.
+/// `SpriteGrid` controls how a sprite grid is generated when using `Sprites::Grid`
 ///
 /// The number of columns in the grid must always be provided, and one of the other fields must also
 /// be provided. The grid will be layout row major, starting with the sprite in the upper left corner,
