@@ -5,8 +5,6 @@ use type_uuid::TypeUuid;
 
 use crate::types::Texture;
 
-// pub mod prefab;
-
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
@@ -234,8 +232,7 @@ fn default_flip() -> bool {
     false
 }
 
-/// `SpriteList` controls how a sprite list is generated when using `Sprites::List` in a
-/// `SpriteSheetPrefab`.
+/// `SpriteList` controls how a sprite list is generated when using `Sprites::List`
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct SpriteList {
     /// Width of the texture in pixels.
@@ -246,8 +243,7 @@ pub struct SpriteList {
     pub sprites: Vec<SpritePosition>,
 }
 
-/// `SpriteGrid` controls how a sprite grid is generated when using `Sprites::Grid` in a
-/// `SpriteSheetPrefab`.
+/// `SpriteGrid` controls how a sprite grid is generated when using `Sprites::Grid`
 ///
 /// The number of columns in the grid must always be provided, and one of the other fields must also
 /// be provided. The grid will be layout row major, starting with the sprite in the upper left corner,
@@ -491,10 +487,9 @@ impl SpriteGrid {
 
 #[cfg(test)]
 mod test {
-    use amethyst_assets::Handle;
 
     use super::{Sprite, TextureCoordinates};
-    use crate::{sprite::Sprites, types::Texture};
+    use crate::sprite::Sprites;
 
     #[test]
     fn texture_coordinates_from_tuple_maps_fields_correctly() {
@@ -579,21 +574,7 @@ mod test {
             )
         );
     }
-    fn create_texture() -> Handle<Texture> {
-        use std::sync::Arc;
 
-        use amethyst_assets::{DefaultLoader, Loader, ProcessingQueue};
-        use rayon::ThreadPoolBuilder;
-
-        use crate::formats::texture::TextureGenerator;
-
-        let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
-        let loader = DefaultLoader::default();
-        let generator = TextureGenerator::Srgba(1.0, 1., 1., 1.);
-
-        let storage = ProcessingQueue::default();
-        loader.load_from_data(generator.data(), (), &storage)
-    }
     #[test]
     fn sprite_sheet_loader_list() {
         let sprite_sheet_ron = "
@@ -705,7 +686,6 @@ Grid((
                 },
             },
         ];
-        let texture = create_texture();
         {
             use ron::de::from_bytes as from_ron_bytes;
             let sprite_list_loaded: Result<Sprites, _> =

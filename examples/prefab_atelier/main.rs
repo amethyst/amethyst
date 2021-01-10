@@ -4,9 +4,7 @@ use std::{collections::HashMap, io::Cursor};
 
 use amethyst::{
     assets::{
-        prefab::{
-            register_component_type, ComponentRegistry, ComponentRegistryBuilder, Prefab, RawPrefab,
-        },
+        prefab::{register_component_type, ComponentRegistry, ComponentRegistryBuilder, Prefab},
         AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle,
     },
     core::transform::{Transform, TransformBundle},
@@ -28,15 +26,6 @@ use amethyst::{
 register_component_type!(Transform);
 // register_component_type!(Handle<Material>);
 // register_component_type!(Handle<Light>);
-
-fn generate_prefab() -> RawPrefab {
-    let mut world = World::default();
-    let transform = Transform::default();
-    world.push((transform, Some(true)));
-    RawPrefab {
-        raw_prefab: legion_prefab::Prefab::new(world),
-    }
-}
 
 fn write_prefab<P: AsRef<std::path::Path>>(
     component_registry: &ComponentRegistry,
@@ -72,9 +61,12 @@ impl SimpleState for AssetsExample {
             .auto_register_components()
             //.add_spawn_mapping::<TransformValues, Transform>()
             .build();
-        let raw_prefab = generate_prefab();
-        write_prefab(&component_registry, &raw_prefab.raw_prefab, "prefab.ron")
-            .expect("Could not serialize Prefab");
+
+        let mut raw_world = World::default();
+        raw_world.push((Transform::default(),));
+        let raw = legion_prefab::Prefab::new(raw_world);
+
+        write_prefab(&component_registry, &raw, "prefab.ron").expect("Could not serialize Prefab");
         let StateData { resources, .. } = data;
         let loader = resources.get_mut::<DefaultLoader>().unwrap();
         let prefab_handle: Handle<Prefab> = loader.load("prefab/example.prefab");

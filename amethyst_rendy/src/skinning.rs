@@ -1,12 +1,9 @@
 //! Skinned mesh and bone implementation for renderer.
-// use amethyst_assets::PrefabData;
 use amethyst_core::{ecs::*, math::Matrix4};
-// use amethyst_error::Error;
 use rendy::{
     hal::format::Format,
     mesh::{AsAttribute, AsVertex, VertexFormat},
 };
-// use std::result::Result as StdResult;
 
 /// Type for joint weights attribute of vertex
 #[repr(C)]
@@ -74,42 +71,3 @@ pub struct JointTransforms {
     /// The current joint matrices
     pub matrices: Vec<Matrix4<f32>>,
 }
-
-/// Prefab for `JointTransforms`
-#[derive(Default, Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub struct JointTransformsPrefab {
-    /// Index of skin `Entity`
-    pub skin: usize,
-    /// Number of joints in the skin
-    pub size: usize,
-}
-
-impl JointTransformsPrefab {
-    /// Creates a new `JointTransformsPrefab`.
-    pub fn new(skin: usize, size: usize) -> Self {
-        JointTransformsPrefab { skin, size }
-    }
-}
-
-// impl<'a> PrefabData<'a> for JointTransformsPrefab {
-//     type SystemData = WriteStorage<'a, JointTransforms>;
-//     type Result = ();
-
-//     fn add_to_entity(
-//         &self,
-//         entity: Entity,
-//         storage: &mut Self::SystemData,
-//         entities: &[Entity],
-//         _: &[Entity],
-//     ) -> StdResult<(), Error> {
-//         storage.insert(
-//             entity,
-//             JointTransforms {
-//                 skin: entities[self.skin],
-//                 matrices: vec![Matrix4::identity(); self.size],
-//             },
-//         )?;
-
-//         Ok(())
-//     }
-// }

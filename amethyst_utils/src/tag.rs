@@ -2,14 +2,10 @@
 
 use std::marker::PhantomData;
 
-//use amethyst_assets::PrefabData;
 use amethyst_core::ecs::*;
-//use amethyst_derive::PrefabData;
-//use amethyst_error::Error;
 use serde::{Deserialize, Serialize};
 
 /// Tag component that can be used with a custom type to tag entities for processing
-//#[derive(Clone, Debug, Serialize, Deserialize,PrefabData)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Tag<T>

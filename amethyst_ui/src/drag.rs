@@ -17,8 +17,7 @@ use crate::{
 };
 
 /// Component that denotes whether a given ui widget is draggable.
-/// Requires UiTransform to work, and its expected way of usage is
-/// through UiTransformData prefab.
+/// Requires UiTransform to work.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Draggable;
 

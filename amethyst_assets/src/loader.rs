@@ -5,6 +5,7 @@ use std::{
     ops::{Deref, DerefMut},
     sync::Arc,
 };
+
 use amethyst_core::{
     dispatcher::System,
     ecs::{DispatcherBuilder, Resources},
@@ -25,7 +26,6 @@ pub use atelier_loader::{storage::LoadStatus, AssetUuid};
 use log::debug;
 use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
-
 use crate::{processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset};
 
 /// Manages asset loading and storage for an application.
@@ -202,7 +202,6 @@ impl Loader for LoaderWithStorage {
                 .add_ref_indirect(IndirectIdentifier::Path(path.to_string())),
         )
     }
-
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {
         self.loader.get_load(id).map(WeakHandle::new)
     }
@@ -300,7 +299,6 @@ pub trait AssetTypeStorage {
     fn free(&mut self, handle: LoadHandle, version: u32);
 }
 
-
 impl<Intermediate, Asset: TypeUuid + Send + Sync> AssetTypeStorage
     for (&ProcessingQueue<Intermediate>, &mut AssetStorage<Asset>)
 where
@@ -381,8 +379,6 @@ struct WorldStorages<'a> {
     resources: &'a Resources,
 }
 
-
-
 impl<'a> WorldStorages<'a> {
     fn new(
         resources: &'a Resources,
@@ -395,9 +391,6 @@ impl<'a> WorldStorages<'a> {
             resources,
         }
     }
-
-
-
 }
 
 impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {

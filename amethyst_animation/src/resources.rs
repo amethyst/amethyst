@@ -91,7 +91,6 @@ where
 
 /// Define the rest state for a component on an entity
 #[derive(Debug, Clone, Deserialize, Serialize)]
-// #[prefab(Component)]
 pub struct RestState<T>
 where
     T: AnimationSampling + Clone,

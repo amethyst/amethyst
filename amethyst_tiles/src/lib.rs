@@ -15,7 +15,6 @@ mod pass;
 pub mod error;
 pub mod iters;
 pub mod pod;
-pub mod prefab;
 
 use amethyst_core::math::Vector3;
 pub use error::TileOutOfBoundsError;
