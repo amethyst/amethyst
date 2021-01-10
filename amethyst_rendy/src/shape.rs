@@ -1,4 +1,3 @@
-//! Basic shape prefabs.
 use std::marker::PhantomData;
 
 use amethyst_assets::{DefaultLoader, Handle, Loader, ProcessingQueue, Progress};

@@ -1,5 +1,5 @@
 //! This crate implements various derive macros for easing the use of various amethyst features.
-//! At the moment, this consists of event readers, prefab and UI widget derives.
+//! At the moment, this consists of event readers and UI widget derives.
 
 #![doc(
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
