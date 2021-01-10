@@ -2,7 +2,6 @@
 
 use std::fmt::Debug;
 
-//use amethyst_assets::PrefabData;
 use amethyst_core::ecs::*;
 use serde::{Deserialize, Serialize};
 
@@ -38,7 +37,6 @@ use serde::{Deserialize, Serialize};
 /// assert_eq!((&*world.entities(),).join().count(), 1);
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
-//#[derive(Debug, Clone, Serialize, Deserialize, PrefabData)]
 pub struct Removal<I>
 where
     I: Debug + Clone + Send + Sync + 'static,
@@ -71,7 +69,6 @@ where
 }
 
 /// Adds a `Removal` component with the specified id to the specified entity.
-/// Usually used with prefabs, when you want to add a `Removal` component at the root of the loaded prefab.
 pub fn add_removal_to_entity<T: PartialEq + Clone + Debug + Send + Sync + 'static>(
     world: &mut World,
     entity: Entity,

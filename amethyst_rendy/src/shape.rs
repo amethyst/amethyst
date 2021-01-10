@@ -1,6 +1,4 @@
-//! Basic shape prefabs.
-use std::marker::PhantomData;
-
+//! 3D Shape Primitives
 use amethyst_assets::{DefaultLoader, Handle, Loader, ProcessingQueue, Progress};
 use amethyst_core::math::Vector3;
 use genmesh::{
@@ -18,70 +16,6 @@ use crate::types::{Mesh, MeshData};
 fn option_none<T>() -> Option<T> {
     None
 }
-
-/// Prefab for generating `Mesh` from basic shapes
-///
-/// ### Type parameters:
-///
-/// `V`: Vertex format to use, must be one of:
-///
-/// - `Vec<PosTex>`
-/// - `Vec<PosNormTex>`
-/// - `Vec<PosNormTangTex>`
-/// - `ComboMeshCreator`
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(bound = "")]
-pub struct ShapePrefab<V> {
-    #[serde(skip)]
-    #[serde(default = "option_none")]
-    handle: Option<Handle<Mesh>>,
-    shape: Shape,
-    #[serde(default)]
-    shape_scale: Option<(f32, f32, f32)>,
-    #[serde(skip)]
-    _m: PhantomData<V>,
-}
-
-// impl<'a, V> PrefabData<'a> for ShapePrefab<V>
-// where
-//     V: FromShape + Into<MeshBuilder<'static>>,
-// {
-//     type SystemData = (
-//         ReadExpect<'a, Loader>,
-//         WriteStorage<'a, Handle<Mesh>>,
-//         Read<'a, AssetStorage<Mesh>>,
-//     );
-//     type Result = ();
-
-//     fn add_to_entity(
-//         &self,
-//         entity: Entity,
-//         system_data: &mut Self::SystemData,
-//         _: &[Entity],
-//         _: &[Entity],
-//     ) -> Result<(), Error> {
-//         let (_, ref mut meshes, _) = system_data;
-//         let self_handle = self.handle.as_ref().expect(
-//             "`ShapePrefab::load_sub_assets` was not called before `ShapePrefab::add_to_entity`",
-//         );
-//         meshes.insert(entity, self_handle.clone())?;
-//         Ok(())
-//     }
-
-//     fn load_sub_assets(
-//         &mut self,
-//         progress: &mut ProgressCounter,
-//         system_data: &mut <Self as PrefabData<'_>>::SystemData,
-//     ) -> Result<bool, Error> {
-//         let (loader, _, mesh_storage) = system_data;
-//         self.handle = Some(loader.load_from_data(
-//             self.shape.generate::<V>(self.shape_scale).into(),
-//             progress,
-//             &mesh_storage,
-//         ));
-//         Ok(true)
-//     }
-// }
 
 /// Shape generators
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
