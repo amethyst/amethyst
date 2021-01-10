@@ -15,21 +15,19 @@ use atelier_assets::{
     loader::{storage::AssetLoadOp, AssetTypeId},
 };
 use crossbeam_queue::SegQueue;
-use prefab_format::{ComponentTypeUuid, PrefabUuid};
+use prefab_format::PrefabUuid;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 use type_uuid::TypeUuid;
 
 use crate::{
     loader::{AssetType, AssetTypeStorage, DefaultLoader, Loader},
-    prefab::{ComponentRegistry, Prefab, RawPrefab, RawPrefabMapping, RootPrefabs},
+    prefab::{ComponentRegistry, Prefab, RawPrefab, RootPrefabs},
     processor::LoadNotifier,
     storage::AssetStorage,
     AssetHandle, LoadHandle,
 };
 
-/// Creates an `AssetType` to be stored in the `AssetType` `inventory`.
-///
-/// This function is not intended to be called be directly. Use the `register_asset_type!` macro
-/// macro instead.
 pub fn create_prefab_asset_type() -> AssetType {
     log::debug!("Creating asset type: {:x?}", RawPrefab::UUID);
     AssetType {
@@ -196,8 +194,7 @@ impl PrefabProcessingQueue {
                     version,
                     commit,
                 } = processed;
-                println!("processing");
-                let raw_prefab = match data.and_then(
+                let raw_prefab = match data.map(
                     |RawPrefab {
                          raw_prefab,
                          mut dependencies,
@@ -214,28 +211,28 @@ impl PrefabProcessingQueue {
                         });
 
                         if deps
-                            .into_iter()
+                            .iter_mut()
                             .all(|handle| raw_storage.contains(handle.load_handle()))
                         {
-                            Ok(ProcessingState::Loaded(RawPrefab {
+                            ProcessingState::Loaded(RawPrefab {
                                 raw_prefab,
                                 dependencies,
-                            }))
+                            })
                         } else {
-                            Ok(ProcessingState::Loading(RawPrefab {
+                            ProcessingState::Loading(RawPrefab {
                                 raw_prefab,
                                 dependencies,
-                            }))
+                            })
                         }
                     },
                 ) {
-                    Ok(ProcessingState::Loaded(x)) => {
+                    Ok(ProcessingState::Loaded(raw)) => {
                         log::debug!(
                             "Asset (handle id: {:?}) has been loaded successfully",
                             handle,
                         );
                         load_notifier.complete();
-                        x
+                        raw
                     }
                     Ok(ProcessingState::Loading(x)) => {
                         requeue.push(Processed {
@@ -254,7 +251,7 @@ impl PrefabProcessingQueue {
                 };
 
                 if let Some(prefab_mapping) = self.root_prefabs.get(&handle) {
-                    // This will allowus to look up prefab references by AssetUuid
+                    // This will allow us to look up prefab references by AssetUuid
                     let mut prefab_lookup = HashMap::new();
 
                     // This will hold the asset IDs sorted with dependencies first. This ensures that
@@ -266,38 +263,33 @@ impl PrefabProcessingQueue {
                         .expect("dependencies have not been processed")
                         .iter();
                     let mut dependency_stack = vec![(&raw_prefab, first_iter)];
-                    loop {
-                        if let Some((raw_prefab, iter)) = dependency_stack.last_mut() {
-                            if let Some(next_handle) = iter.next() {
-                                if let Some(next_raw_prefab) = raw_storage.get(next_handle) {
-                                    if prefab_lookup
-                                        .contains_key(&next_raw_prefab.raw_prefab.prefab_meta.id)
-                                    {
-                                        continue;
-                                    }
-                                    let next_iter = next_raw_prefab
-                                        .dependencies
-                                        .as_ref()
-                                        .expect("dependencies have not been processed")
-                                        .iter();
-                                    dependency_stack.push((next_raw_prefab, next_iter));
-                                } else {
-                                    log::error!("Missing raw_prefab");
+                    while let Some((raw_prefab, iter)) = dependency_stack.last_mut() {
+                        if let Some(next_handle) = iter.next() {
+                            if let Some(next_raw_prefab) = raw_storage.get(next_handle) {
+                                if prefab_lookup
+                                    .contains_key(&next_raw_prefab.raw_prefab.prefab_meta.id)
+                                {
+                                    continue;
                                 }
+                                let next_iter = next_raw_prefab
+                                    .dependencies
+                                    .as_ref()
+                                    .expect("dependencies have not been processed")
+                                    .iter();
+                                dependency_stack.push((next_raw_prefab, next_iter));
                             } else {
-                                // No more dependencies, add this prefab to prefab_cook_order and
-                                // pop the stack.
-                                prefab_cook_order.push(raw_prefab.raw_prefab.prefab_id());
-                                prefab_lookup.insert(
-                                    raw_prefab.raw_prefab.prefab_id(),
-                                    &raw_prefab.raw_prefab,
-                                );
-                                dependency_stack.pop();
+                                log::error!("Missing raw_prefab");
                             }
                         } else {
-                            break;
+                            // No more dependencies, add this prefab to prefab_cook_order and
+                            // pop the stack.
+                            prefab_cook_order.push(raw_prefab.raw_prefab.prefab_id());
+                            prefab_lookup
+                                .insert(raw_prefab.raw_prefab.prefab_id(), &raw_prefab.raw_prefab);
+                            dependency_stack.pop();
                         }
                     }
+
                     println!("cook");
                     let prefab = legion_prefab::cook_prefab(
                         component_registry.components(),
@@ -305,6 +297,7 @@ impl PrefabProcessingQueue {
                         prefab_cook_order.as_slice(),
                         &prefab_lookup,
                     );
+
                     let version = storage
                         .get_version_for_load_handle(prefab_mapping.prefab_load_handle)
                         .unwrap_or(0)
@@ -399,13 +392,12 @@ mod tests {
         handle::{AssetHandle, RefOp},
         storage::{AtomicHandleAllocator, HandleAllocator},
     };
-    use hamcrest2::prelude::*;
 
     use super::*;
     use crate::{
         prefab::{ComponentRegistryBuilder, Prefab, RawPrefabMapping, RootPrefabs},
         processor::LoadNotifier,
-        Handle, LoadHandle,
+        Handle,
     };
 
     struct Fixture {
@@ -430,7 +422,7 @@ mod tests {
                 .auto_register_components()
                 .build();
             let handle_allocator = Arc::new(AtomicHandleAllocator::default());
-            let (ref_sender, ref_receiver) = unbounded();
+            let (ref_sender, _) = unbounded();
             let handle_maker = HandleMaker::new(handle_allocator, ref_sender);
             Self {
                 root_prefabs,

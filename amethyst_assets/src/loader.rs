@@ -5,6 +5,7 @@ use std::{
     ops::{Deref, DerefMut},
     sync::Arc,
 };
+
 use amethyst_core::{
     dispatcher::System,
     ecs::{DispatcherBuilder, Resources},
@@ -26,7 +27,13 @@ use log::debug;
 use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
 
-use crate::{prefab::{RootPrefabs, Prefab, RawPrefabMapping}, processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset};
+use crate::{
+    prefab::{Prefab, RawPrefabMapping, RootPrefabs},
+    processor::ProcessingQueue,
+    progress::Progress,
+    storage::AssetStorage,
+    Asset,
+};
 
 /// Manages asset loading and storage for an application.
 pub trait Loader: Send + Sync {
@@ -210,9 +217,15 @@ impl Loader for LoaderWithStorage {
     fn load_prefab(&self, path: &str) -> Handle<crate::prefab::Prefab> {
         let raw_prefab_handle = self.load(path);
         let prefab_load_handle = self.handle_allocator.alloc();
-        let prefab_handle = Handle::<Prefab>::new(self.ref_sender.clone(), prefab_load_handle);
-        self.root_prefabs.insert(raw_prefab_handle.load_handle(), RawPrefabMapping { raw_prefab_handle, prefab_load_handle });
-        prefab_handle
+        self.root_prefabs.insert(
+            raw_prefab_handle.load_handle(),
+            RawPrefabMapping {
+                raw_prefab_handle,
+                prefab_load_handle,
+            },
+        );
+
+        Handle::<Prefab>::new(self.ref_sender.clone(), prefab_load_handle)
     }
 
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {
@@ -312,7 +325,6 @@ pub trait AssetTypeStorage {
     fn free(&mut self, handle: LoadHandle, version: u32);
 }
 
-
 impl<Intermediate, Asset: TypeUuid + Send + Sync> AssetTypeStorage
     for (&ProcessingQueue<Intermediate>, &mut AssetStorage<Asset>)
 where
@@ -393,8 +405,6 @@ struct WorldStorages<'a> {
     resources: &'a Resources,
 }
 
-
-
 impl<'a> WorldStorages<'a> {
     fn new(
         resources: &'a Resources,
@@ -407,9 +417,6 @@ impl<'a> WorldStorages<'a> {
             resources,
         }
     }
-
-
-
 }
 
 impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {

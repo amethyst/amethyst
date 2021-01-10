@@ -1,17 +1,9 @@
-use std::collections::HashMap;
-
-use amethyst_core::ecs::*;
-use atelier_assets::importer as atelier_importer;
+use atelier_assets::{importer as atelier_importer, loader::handle::Handle};
 use atelier_importer::{typetag, SerdeImportable};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 use type_uuid::TypeUuid;
 
-use crate::{
-    asset::Asset, prefab::ComponentRegistry, register_asset_type, AssetStorage, Handle,
-    ProcessingQueue, ProcessingState,
-};
+use crate::asset::Asset;
 
 /// Cooked Prefab, containing a World with Entities
 #[derive(TypeUuid, Serialize, Deserialize, SerdeImportable)]
@@ -38,41 +30,3 @@ impl Asset for Prefab {
     }
     type Data = RawPrefab;
 }
-
-// register_asset_type!(crate; RawPrefab => Prefab; PrefabAssetProcessor);
-
-// #[derive(Default)]
-// struct PrefabAssetProcessor;
-
-// impl System<'static> for PrefabAssetProcessor {
-//     fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
-//         Box::new(
-//             SystemBuilder::new("PrefabAssetProcessorSystem")
-//                 .read_resource::<ComponentRegistry>()
-//                 .write_resource::<ProcessingQueue<RawPrefab>>()
-//                 .write_resource::<AssetStorage<Prefab>>()
-//                 .build(
-//                     move |_, _, (component_registry, processing_queue, prefab_storage), _| {
-//                         #[cfg(feature = "profiler")]
-//                         profile_scope!("prefab_asset_processor");
-
-//                         processing_queue.process(prefab_storage, |RawPrefab { raw_prefab }| {
-//                             let prefab_cook_order = vec![raw_prefab.prefab_id()];
-//                             let mut prefab_lookup = HashMap::new();
-//                             prefab_lookup.insert(raw_prefab.prefab_id(), &raw_prefab);
-
-//                             let prefab = legion_prefab::cook_prefab(
-//                                 component_registry.components(),
-//                                 component_registry.components_by_uuid(),
-//                                 prefab_cook_order.as_slice(),
-//                                 &prefab_lookup,
-//                             );
-
-//                             Ok(ProcessingState::Loaded(Prefab { prefab }))
-//                         });
-//                         prefab_storage.process_custom_drop(|_| {});
-//                     },
-//                 ),
-//         )
-//     }
-// }

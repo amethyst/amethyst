@@ -70,7 +70,7 @@ impl LoadNotifier {
     }
 
     /// Signals that this load operation has completed succesfully.
-    pub fn complete(mut self) {
+    pub fn complete(self) {
         if let Some(asset_load_op) = self.asset_load_op {
             asset_load_op.complete();
         }
@@ -81,7 +81,7 @@ impl LoadNotifier {
 
     /// Signals that this load operation has completed with an error.
     // FIXME: Make the errors meaningful
-    pub fn error(mut self, error: Error) {
+    pub fn error(self, error: Error) {
         if let Some(asset_load_op) = self.asset_load_op {
             asset_load_op.error(ProcessingError("ProcessingError".into()));
         }

@@ -70,14 +70,18 @@ impl SystemBundle for LoaderBundle {
             .auto_register_components()
             .build();
         resources.insert(component_registry);
+
         let root_prefabs = RootPrefabs::default();
         resources.insert(PrefabProcessingQueue::new(root_prefabs.clone()));
+
         let mut loader = DefaultLoader::new(root_prefabs);
         loader.init_world(resources);
         loader.init_dispatcher(builder);
         resources.insert(loader);
+
         builder.add_thread_local_fn(asset_loading_tick);
         builder.add_thread_local_fn(prefab_spawning_tick);
+
         Ok(())
     }
 }

@@ -1,12 +1,11 @@
 use std::{collections::HashMap, sync::Arc};
 
 use amethyst_core::ecs::{query, Entity, IntoQuery, Resources, World};
-
 use dashmap::DashMap;
 
 use crate::{
     prefab::{ComponentRegistry, Prefab, RawPrefab},
-    AssetStorage, Handle, LoadHandle, ProcessingQueue,
+    AssetStorage, Handle, LoadHandle,
 };
 
 pub struct RawPrefabMapping {

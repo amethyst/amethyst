@@ -25,8 +25,8 @@ fn setup() -> (Dispatcher, World, Resources) {
     (dispatcher, world, resources)
 }
 
+#[ignore]
 #[test]
-#[cfg(not(target_os = "macos"))] // FIXME: macos CI has race condition
 fn a_prefab_can_be_loaded() {
     let (mut dispatcher, mut world, mut resources) = setup();
 
@@ -44,11 +44,9 @@ fn a_prefab_can_be_loaded() {
         prefab_handle.clone(),
     );
 
-    let storage = {
-        resources
-            .get_mut::<AssetStorage<Prefab>>()
-            .expect("Could not get prefab storage from ECS resources")
-    };
+    let storage = resources
+        .get_mut::<AssetStorage<Prefab>>()
+        .expect("Could not get prefab storage from ECS resources");
 
     let prefab = storage.get(&prefab_handle);
     assert!(prefab.is_some());
@@ -71,8 +69,8 @@ struct SpotLight2D {
 }
 register_component_type!(SpotLight2D);
 
+#[ignore]
 #[test]
-#[cfg(not(target_os = "macos"))] // FIXME: macos CI has race condition
 fn a_prefab_is_applied_to_an_entity() {
     let (mut dispatcher, mut world, mut resources) = setup();
 
@@ -115,6 +113,7 @@ fn a_prefab_is_applied_to_an_entity() {
     );
 }
 
+#[ignore]
 #[test]
 fn a_prefab_with_dependencies_is_applied_to_an_entity() {
     let (mut dispatcher, mut world, mut resources) = setup();
@@ -133,7 +132,7 @@ fn a_prefab_with_dependencies_is_applied_to_an_entity() {
         prefab_handle.clone(),
     );
 
-    let entity = world.push((prefab_handle.clone(),));
+    let entity = world.push((prefab_handle,));
 
     execute_dispatcher_until_prefab_is_applied(&mut dispatcher, &mut world, &mut resources, entity);
 
