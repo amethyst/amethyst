@@ -2,10 +2,10 @@ mod importers;
 pub use importers::PrefabImporter;
 
 mod assets;
-pub use assets::{Prefab, RawPrefab};
+pub use assets::Prefab;
 
 mod system;
-pub use system::{prefab_spawning_tick, RawPrefabMapping, RootPrefabs};
+pub use system::prefab_spawning_tick;
 
 mod component_registry;
 pub use component_registry::{ComponentRegistry, ComponentRegistryBuilder};

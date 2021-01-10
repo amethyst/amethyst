@@ -154,10 +154,6 @@ impl<A> AssetStorage<A> {
             .map(|a| a.version)
     }
 
-    pub(crate) fn get_version_for_load_handle(&self, load_handle: LoadHandle) -> Option<u32> {
-        self.get_asset_state(load_handle).map(|a| a.version)
-    }
-
     /// Returns the loaded asset and its version, or `None` if has not completed loading.
     ///
     /// # Parameters

@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use amethyst_assets::{
     prefab::{register_component_type, Prefab},
-    AssetHandle, AssetStorage, DefaultLoader, Handle, LoadStatus, Loader, LoaderBundle,
+    AssetHandle, DefaultLoader, Handle, LoadStatus, Loader, LoaderBundle,
 };
 use amethyst_core::ecs::{
     world::ComponentError, Dispatcher, DispatcherBuilder, Entity, IntoQuery, Resources, World,

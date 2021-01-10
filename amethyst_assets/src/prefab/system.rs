@@ -1,20 +1,11 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use amethyst_core::ecs::{query, Entity, IntoQuery, Resources, World};
 
-use dashmap::DashMap;
-
 use crate::{
-    prefab::{ComponentRegistry, Prefab, RawPrefab},
-    AssetStorage, Handle, LoadHandle, ProcessingQueue,
+    prefab::{ComponentRegistry, Prefab},
+    AssetStorage, Handle,
 };
-
-pub struct RawPrefabMapping {
-    pub raw_prefab_handle: Handle<RawPrefab>,
-    pub prefab_load_handle: LoadHandle,
-}
-
-pub type RootPrefabs = Arc<DashMap<LoadHandle, RawPrefabMapping>>;
 
 /// Attaches prefabs to entities that have Handle<Prefab>
 /// FIXME: Add a check so that the prefab is only applied once.
@@ -32,7 +23,11 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
     let mut prefabs: Vec<(Entity, &legion_prefab::CookedPrefab)> = Vec::new();
 
     prefab_handle_query.for_each(world, |(entity, handle)| {
-        if let Some(Prefab { prefab }) = prefab_storage.get(handle) {
+        if let Some(Prefab {
+            prefab: Some(prefab),
+            ..
+        }) = prefab_storage.get(handle)
+        {
             prefabs.push((*entity, prefab));
         }
     });

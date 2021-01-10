@@ -26,7 +26,7 @@ use log::debug;
 use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
 
-use crate::{prefab::{RootPrefabs, Prefab, RawPrefabMapping}, processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset};
+use crate::{processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset};
 
 /// Manages asset loading and storage for an application.
 pub trait Loader: Send + Sync {
@@ -75,9 +75,6 @@ pub trait Loader: Send + Sync {
     ///
     /// * `T`: Asset `TypeUuid`.
     fn load<T: TypeUuid>(&self, path: &str) -> Handle<T>;
-
-    /// Returns an assest handle to a prefab
-    fn load_prefab(&self, path: &str) -> Handle<crate::prefab::Prefab>;
 
     /// Returns a weak handle to the asset of the given UUID, if any.
     ///
@@ -170,11 +167,10 @@ pub struct LoaderWithStorage {
     ref_receiver: Receiver<RefOp>,
     handle_allocator: Arc<AtomicHandleAllocator>,
     pub indirection_table: IndirectionTable,
-    root_prefabs: RootPrefabs,
 }
 
-impl LoaderWithStorage {
-    pub(crate) fn new(root_prefabs: RootPrefabs) -> Self {
+impl Default for LoaderWithStorage {
+    fn default() -> Self {
         let (tx, rx) = unbounded();
         let handle_allocator = Arc::new(AtomicHandleAllocator::default());
         let loader = AtelierLoader::new_with_handle_allocator(
@@ -188,7 +184,6 @@ impl LoaderWithStorage {
             ref_sender: tx,
             ref_receiver: rx,
             handle_allocator,
-            root_prefabs,
         }
     }
 }
@@ -206,13 +201,6 @@ impl Loader for LoaderWithStorage {
             self.loader
                 .add_ref_indirect(IndirectIdentifier::Path(path.to_string())),
         )
-    }
-    fn load_prefab(&self, path: &str) -> Handle<crate::prefab::Prefab> {
-        let raw_prefab_handle = self.load(path);
-        let prefab_load_handle = self.handle_allocator.alloc();
-        let prefab_handle = Handle::<Prefab>::new(self.ref_sender.clone(), prefab_load_handle);
-        self.root_prefabs.insert(raw_prefab_handle.load_handle(), RawPrefabMapping { raw_prefab_handle, prefab_load_handle });
-        prefab_handle
     }
 
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {

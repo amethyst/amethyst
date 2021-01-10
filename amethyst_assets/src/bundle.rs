@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{default::Default, path::PathBuf};
 
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
@@ -10,7 +10,6 @@ use log::info;
 use crate::{
     prefab::{
         prefab_spawning_tick, ComponentRegistryBuilder, PrefabImporter, PrefabProcessingQueue,
-        RootPrefabs,
     },
     simple_importer::get_source_importers,
     DefaultLoader, Loader,
@@ -70,9 +69,8 @@ impl SystemBundle for LoaderBundle {
             .auto_register_components()
             .build();
         resources.insert(component_registry);
-        let root_prefabs = RootPrefabs::default();
-        resources.insert(PrefabProcessingQueue::new(root_prefabs.clone()));
-        let mut loader = DefaultLoader::new(root_prefabs);
+        resources.insert(PrefabProcessingQueue::default());
+        let mut loader = DefaultLoader::default();
         loader.init_world(resources);
         loader.init_dispatcher(builder);
         resources.insert(loader);
