@@ -74,8 +74,10 @@ impl SystemBundle for LoaderBundle {
         loader.init_world(resources);
         loader.init_dispatcher(builder);
         resources.insert(loader);
+
         builder.add_thread_local_fn(asset_loading_tick);
         builder.add_thread_local_fn(prefab_spawning_tick);
+
         Ok(())
     }
 }

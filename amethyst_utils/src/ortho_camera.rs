@@ -1,6 +1,5 @@
 //! Provides a automatically resized orthographic camera.
 
-//use amethyst_assets::PrefabData;
 use amethyst_core::{ecs::*, Axis2};
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
@@ -87,7 +86,6 @@ impl Default for CameraOrthoWorldCoordinates {
 ///     .build();
 /// ```
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, new)]
-//#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, PrefabData, new)]
 pub struct CameraOrtho {
     /// How the camera's matrix is changed when the window's aspect ratio changes.
     /// See `CameraNormalizeMode` for more info.

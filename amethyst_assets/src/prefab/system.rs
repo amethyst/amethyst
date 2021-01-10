@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 
-use amethyst_core::ecs::{query, Entity, IntoQuery, Resources, World};
-
 use crate::{
     prefab::{ComponentRegistry, Prefab},
     AssetStorage, Handle,
 };
+use amethyst_core::ecs::{query, Entity, IntoQuery, Resources, World};
 
 /// Attaches prefabs to entities that have Handle<Prefab>
 /// FIXME: Add a check so that the prefab is only applied once.

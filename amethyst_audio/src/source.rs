@@ -35,20 +35,3 @@ impl ProcessableAsset for Source {
         Ok(ProcessingState::Loaded(Source { bytes: data.0 }))
     }
 }
-
-// impl<'a> PrefabData<'a> for AudioData {
-//     type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Source>>);
-//     type Result = Handle<Source>;
-//
-//     fn add_to_entity(
-//         &self,
-//         _: Entity,
-//         system_data: &mut Self::SystemData,
-//         _: &[Entity],
-//         _: &[Entity],
-//     ) -> Result<Handle<Source>, Error> {
-//         Ok(system_data
-//             .0
-//             .load_from_data(self.clone(), (), &system_data.1))
-//     }
-// }

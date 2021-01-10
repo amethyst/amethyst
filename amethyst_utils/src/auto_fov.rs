@@ -1,9 +1,6 @@
 //! Utility to adjust the aspect ratio of cameras automatically
 
-//use amethyst_assets::PrefabData;
 use amethyst_core::ecs::*;
-//use amethyst_derive::{PrefabData, SystemDesc};
-//use amethyst_error::Error;
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
@@ -13,7 +10,6 @@ use thread_profiler::profile_scope;
 /// A component that stores the parameters that the associated camera should have
 /// when it is managed by the AutoFovSystem.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-// #[prefab(Component)]
 #[serde(default)]
 pub struct AutoFov {
     fov_y: f32,
@@ -56,10 +52,6 @@ impl Default for AutoFov {
 ///
 /// For a camera component to be managed by this system, the entity with the camera component should
 /// also have an `AutoFov` component attached to it.
-///
-/// If the camera is being loaded by a prefab, it is best to have the `PrefabLoaderSystem` loading
-/// the camera as a dependency of this system. It enables the system to adjust the camera right
-/// after it is created -- simply put, in the same frame.
 pub fn build_auto_fov_system() -> impl Runnable {
     let mut last_dimensions = ScreenDimensions::new(0, 0);
 
