@@ -1,10 +1,10 @@
-use crate::{
-    loader::{AssetType, AssetTypeStorage, DefaultLoader, Loader},
-    prefab::{ComponentRegistry, Prefab, RawPrefab, RawPrefabMapping, RootPrefabs},
-    processor::LoadNotifier,
-    storage::AssetStorage,
-    AssetHandle, LoadHandle,
+use std::{
+    collections::HashMap,
+    error::Error as StdError,
+    ops::{Deref, DerefMut},
+    sync::{Arc, Mutex},
 };
+
 use amethyst_core::{
     dispatcher::System,
     ecs::{systems::ParallelRunnable, SystemBuilder},
@@ -16,13 +16,15 @@ use atelier_assets::{
 };
 use crossbeam_queue::SegQueue;
 use prefab_format::{ComponentTypeUuid, PrefabUuid};
-use std::{
-    collections::HashMap,
-    error::Error as StdError,
-    ops::{Deref, DerefMut},
-    sync::{Arc, Mutex},
-};
 use type_uuid::TypeUuid;
+
+use crate::{
+    loader::{AssetType, AssetTypeStorage, DefaultLoader, Loader},
+    prefab::{ComponentRegistry, Prefab, RawPrefab, RawPrefabMapping, RootPrefabs},
+    processor::LoadNotifier,
+    storage::AssetStorage,
+    AssetHandle, LoadHandle,
+};
 
 /// Creates an `AssetType` to be stored in the `AssetType` `inventory`.
 ///
@@ -389,9 +391,8 @@ fn prefab_asset_processor(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::prefab::{ComponentRegistryBuilder, Prefab, RawPrefabMapping, RootPrefabs};
-    use crate::{processor::LoadNotifier, Handle, LoadHandle};
+    use std::sync::Arc;
+
     use amethyst_core::ecs::World;
     use atelier_assets::loader::{
         crossbeam_channel::{unbounded, Sender},
@@ -399,7 +400,13 @@ mod tests {
         storage::{AtomicHandleAllocator, HandleAllocator},
     };
     use hamcrest2::prelude::*;
-    use std::sync::Arc;
+
+    use super::*;
+    use crate::{
+        prefab::{ComponentRegistryBuilder, Prefab, RawPrefabMapping, RootPrefabs},
+        processor::LoadNotifier,
+        Handle, LoadHandle,
+    };
 
     struct Fixture {
         root_prefabs: RootPrefabs,
