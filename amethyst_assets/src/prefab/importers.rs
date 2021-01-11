@@ -3,6 +3,7 @@ use atelier_assets::{
     core::AssetUuid,
     importer::{self as atelier_importer, ImportOp, ImportedAsset, Importer, ImporterValue},
 };
+use fnv::FnvHashSet;
 use legion_prefab::ComponentRegistration;
 use prefab_format::ComponentTypeUuid;
 use serde::{Deserialize, Serialize};
@@ -87,6 +88,7 @@ impl Importer for PrefabImporter {
             raw_prefab,
             dependencies: None,
             prefab: None,
+            dependers: FnvHashSet::default(),
         };
 
         ///////////////////////////////////////////////////////////////

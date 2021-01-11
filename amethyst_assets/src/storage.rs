@@ -200,3 +200,23 @@ impl<A> atelier_assets::loader::handle::TypedAssetStorage<A> for AssetStorage<A>
         self.get_asset_with_version(handle)
     }
 }
+
+pub(crate) trait MutateAssetInStorage<A> {
+    fn mutate_asset_in_storage<H: AssetHandle, F: FnOnce(&mut A)>(
+        &mut self,
+        handle: &H,
+        mutator: F,
+    );
+}
+
+impl<A> MutateAssetInStorage<A> for AssetStorage<A> {
+    fn mutate_asset_in_storage<H: AssetHandle, F: FnOnce(&mut A)>(
+        &mut self,
+        handle: &H,
+        mutator: F,
+    ) {
+        if let Some(asset_state) = self.assets.get_mut(&handle.load_handle()) {
+            mutator(&mut asset_state.asset);
+        }
+    }
+}

@@ -3,7 +3,7 @@ use crate::{
     prefab::{ComponentRegistry, Prefab},
     processor::LoadNotifier,
     storage::AssetStorage,
-    AssetHandle, LoadHandle,
+    AssetHandle, LoadHandle, WeakHandle,
 };
 use amethyst_core::{
     dispatcher::System,
@@ -15,9 +15,9 @@ use atelier_assets::{
     loader::{storage::AssetLoadOp, AssetTypeId},
 };
 use crossbeam_queue::SegQueue;
+use fnv::{FnvHashMap, FnvHashSet};
 use prefab_format::PrefabUuid;
 use std::{
-    collections::HashMap,
     error::Error as StdError,
     ops::{Deref, DerefMut},
     sync::{Arc, Mutex},
@@ -77,6 +77,7 @@ impl AssetTypeStorage for (&PrefabProcessingQueue, &mut AssetStorage<Prefab>) {
     }
     fn commit_asset_version(&mut self, handle: LoadHandle, version: u32) {
         self.1.commit_asset(handle, version);
+        self.0.enqueue_changed(handle);
     }
     fn free(&mut self, handle: LoadHandle, version: u32) {
         self.1.remove_asset(handle, version);
@@ -107,6 +108,7 @@ pub enum ProcessingState<D, A> {
 /// `T`: Asset data type.
 pub struct PrefabProcessingQueue {
     pub(crate) processed: Arc<SegQueue<Processed<Prefab>>>,
+    changed: SegQueue<LoadHandle>,
     requeue: Mutex<Vec<Processed<Prefab>>>,
 }
 
@@ -114,6 +116,7 @@ impl Default for PrefabProcessingQueue {
     fn default() -> Self {
         Self {
             processed: Arc::new(SegQueue::new()),
+            changed: SegQueue::new(),
             requeue: Mutex::new(Vec::new()),
         }
     }
@@ -154,6 +157,66 @@ impl PrefabProcessingQueue {
         })
     }
 
+    pub(crate) fn enqueue_changed(&self, handle: LoadHandle) {
+        self.changed.push(handle);
+    }
+
+    fn cook_prefab(
+        prefab: &Prefab,
+        storage: &AssetStorage<Prefab>,
+        component_registry: &ComponentRegistry,
+    ) -> legion_prefab::CookedPrefab {
+        // This will allow us to look up prefab references by AssetUuid
+        let mut prefab_lookup = FnvHashMap::default();
+
+        // This will hold the asset IDs sorted with dependencies first. This ensures that
+        // prefab_lookup and entity_lookup are populated with all dependent prefabs/entities
+        let mut prefab_cook_order: Vec<PrefabUuid> = vec![];
+        let first_iter = prefab
+            .dependencies
+            .as_ref()
+            .expect("dependencies have not been processed")
+            .iter();
+        let mut dependency_stack = vec![(prefab, first_iter)];
+        loop {
+            if let Some((cur_prefab, iter)) = dependency_stack.last_mut() {
+                if let Some(next_handle) = iter.next() {
+                    if let Some(next_prefab) = storage.get(next_handle) {
+                        if prefab_lookup.contains_key(&next_prefab.raw_prefab.prefab_id()) {
+                            continue;
+                        }
+                        let next_iter = next_prefab
+                            .dependencies
+                            .as_ref()
+                            .expect("dependencies have not been processed")
+                            .iter();
+                        dependency_stack.push((next_prefab, next_iter));
+                    } else {
+                        log::error!("Missing prefab dependency");
+                    }
+                } else {
+                    // No more dependencies, add cur_prefab to prefab_cook_order and
+                    // pop the stack.
+                    prefab_cook_order.push(cur_prefab.raw_prefab.prefab_id());
+                    prefab_lookup.insert(cur_prefab.raw_prefab.prefab_id(), &cur_prefab.raw_prefab);
+                    dependency_stack.pop();
+                }
+            } else {
+                break;
+            }
+        }
+        log::debug!("cook");
+        log::debug!("prefab_cook_order: {:?}", prefab_cook_order);
+        log::debug!("prefab_lookup: {:?}", prefab_lookup.keys());
+        let cooked_prefab = legion_prefab::cook_prefab(
+            component_registry.components(),
+            component_registry.components_by_uuid(),
+            prefab_cook_order.as_slice(),
+            &prefab_lookup,
+        );
+        cooked_prefab
+    }
+
     /// Process asset data into assets
     pub fn process(
         &mut self,
@@ -162,6 +225,40 @@ impl PrefabProcessingQueue {
         loader: &impl Loader,
     ) {
         {
+            {
+                // cook prefabs with changed dependencies
+                // FIXME: deal with cyclic and diamond dependencies correctly
+                let mut visited = FnvHashSet::default();
+                while let Ok(dependee) = self.changed.pop() {
+                    let updates: Vec<(WeakHandle, legion_prefab::CookedPrefab)> = storage
+                        .get_for_load_handle(dependee)
+                        .iter()
+                        .flat_map(|p| p.dependers.iter())
+                        .flat_map(|weak_handle| {
+                            storage
+                                .get_asset_with_version(weak_handle)
+                                .into_iter()
+                                .map(move |(prefab, _)| (weak_handle, prefab))
+                        })
+                        .map(|(weak_handle, prefab)| {
+                            let cooked_prefab =
+                                Self::cook_prefab(prefab, storage, component_registry);
+                            if visited.insert(weak_handle.load_handle()) {
+                                self.changed.push(weak_handle.load_handle());
+                            }
+                            // FIXME: Add Clone to WeakHandle
+                            (WeakHandle::new(weak_handle.load_handle()), cooked_prefab)
+                        })
+                        .collect();
+                    use crate::storage::MutateAssetInStorage;
+                    for (handle, cooked_prefab) in updates.into_iter() {
+                        storage.mutate_asset_in_storage(&handle, move |asset| {
+                            asset.prefab = Some(cooked_prefab);
+                        });
+                    }
+                }
+            }
+
             let requeue = self
                 .requeue
                 .get_mut()
@@ -180,6 +277,7 @@ impl PrefabProcessingQueue {
                          prefab,
                          raw_prefab,
                          mut dependencies,
+                         dependers,
                      }| {
                         log::debug!("AssetUuid: {:?}", raw_prefab.prefab_id());
                         let deps = dependencies.get_or_insert_with(|| {
@@ -201,12 +299,14 @@ impl PrefabProcessingQueue {
                                 prefab,
                                 raw_prefab,
                                 dependencies,
+                                dependers,
                             }))
                         } else {
                             Ok(ProcessingState::Loading(Prefab {
                                 prefab,
                                 raw_prefab,
                                 dependencies,
+                                dependers,
                             }))
                         }
                     },
@@ -235,55 +335,8 @@ impl PrefabProcessingQueue {
                     }
                 };
 
-                // This will allow us to look up prefab references by AssetUuid
-                let mut prefab_lookup = HashMap::new();
+                let cooked_prefab = Self::cook_prefab(&prefab, storage, component_registry);
 
-                // This will hold the asset IDs sorted with dependencies first. This ensures that
-                // prefab_lookup and entity_lookup are populated with all dependent prefabs/entities
-                let mut prefab_cook_order: Vec<PrefabUuid> = vec![];
-                let first_iter = prefab
-                    .dependencies
-                    .as_ref()
-                    .expect("dependencies have not been processed")
-                    .iter();
-                let mut dependency_stack = vec![(&prefab, first_iter)];
-                loop {
-                    if let Some((cur_prefab, iter)) = dependency_stack.last_mut() {
-                        if let Some(next_handle) = iter.next() {
-                            if let Some(next_prefab) = storage.get(next_handle) {
-                                if prefab_lookup.contains_key(&next_prefab.raw_prefab.prefab_id()) {
-                                    continue;
-                                }
-                                let next_iter = next_prefab
-                                    .dependencies
-                                    .as_ref()
-                                    .expect("dependencies have not been processed")
-                                    .iter();
-                                dependency_stack.push((next_prefab, next_iter));
-                            } else {
-                                log::error!("Missing prefab dependency");
-                            }
-                        } else {
-                            // No more dependencies, add cur_prefab to prefab_cook_order and
-                            // pop the stack.
-                            prefab_cook_order.push(cur_prefab.raw_prefab.prefab_id());
-                            prefab_lookup
-                                .insert(cur_prefab.raw_prefab.prefab_id(), &cur_prefab.raw_prefab);
-                            dependency_stack.pop();
-                        }
-                    } else {
-                        break;
-                    }
-                }
-                log::debug!("cook");
-                log::debug!("prefab_cook_order: {:?}", prefab_cook_order);
-                log::debug!("prefab_lookup: {:?}", prefab_lookup.keys());
-                let cooked_prefab = legion_prefab::cook_prefab(
-                    component_registry.components(),
-                    component_registry.components_by_uuid(),
-                    prefab_cook_order.as_slice(),
-                    &prefab_lookup,
-                );
                 prefab.prefab = Some(cooked_prefab);
                 storage.update_asset(handle, prefab, version);
                 if commit {
@@ -350,8 +403,10 @@ mod tests {
         storage::{AtomicHandleAllocator, HandleAllocator},
     };
     use legion_prefab::PrefabRef;
-    use std::sync::Arc;
-    use std::sync::Once;
+    use std::{
+        collections::HashMap,
+        sync::{Arc, Once},
+    };
 
     pub fn setup_logger() {
         fern::Dispatch::new()
@@ -443,6 +498,7 @@ mod tests {
             raw_prefab: legion_prefab::Prefab::new(prefab_world),
             dependencies: None,
             prefab: None,
+            dependers: FnvHashSet::default(),
         };
         let version = 0;
 
@@ -488,6 +544,7 @@ mod tests {
             raw_prefab: legion_prefab::Prefab::new(prefab_world),
             dependencies: None,
             prefab: None,
+            dependers: FnvHashSet::default(),
         };
 
         let prefab_handle_1 = handle_maker.make_handle::<Prefab>();
@@ -496,6 +553,7 @@ mod tests {
             raw_prefab: legion_prefab::Prefab::new(prefab_world_1),
             dependencies: None,
             prefab: None,
+            dependers: FnvHashSet::default(),
         };
         let version = 0;
         prefab_root.raw_prefab.prefab_meta.prefab_refs.insert(

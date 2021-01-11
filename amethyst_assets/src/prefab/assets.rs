@@ -1,9 +1,10 @@
 use atelier_assets::importer as atelier_importer;
 use atelier_importer::{typetag, SerdeImportable};
+use fnv::FnvHashSet;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
-use crate::{asset::Asset, Handle};
+use crate::{asset::Asset, Handle, WeakHandle};
 
 /// Cooked Prefab, containing a World with Entities
 #[derive(TypeUuid, Serialize, Deserialize, SerdeImportable)]
@@ -15,7 +16,11 @@ pub struct Prefab {
     pub(crate) raw_prefab: legion_prefab::Prefab,
     /// `None`: dependencies have not been processed yet
     /// `Some(Vec::len())` is 0: There are no dependencies
+    #[serde(skip)]
     pub(crate) dependencies: Option<Vec<Handle<Prefab>>>,
+
+    #[serde(skip)]
+    pub(crate) dependers: FnvHashSet<WeakHandle>,
 }
 
 impl Asset for Prefab {
