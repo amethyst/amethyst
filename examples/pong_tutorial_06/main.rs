@@ -1,4 +1,4 @@
-//! Pong
+//! Pong Tutorial 6
 
 mod audio;
 mod bundle;
@@ -8,10 +8,10 @@ mod systems;
 use std::time::Duration;
 
 use amethyst::{
-    audio::{AudioBundle, DjSystemDesc},
+    assets::LoaderBundle,
+    audio::{AudioBundle, DjSystem, DjSystemBundle},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
-    ecs::{Component, DenseVecStorage},
-    input::{InputBundle, StringBindings},
+    input::InputBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
@@ -23,130 +23,53 @@ use amethyst::{
     utils::application_root_dir,
 };
 
-use crate::{audio::Music, bundle::PongBundle};
-
-const ARENA_HEIGHT: f32 = 100.0;
-const ARENA_WIDTH: f32 = 100.0;
-const PADDLE_HEIGHT: f32 = 16.0;
-const PADDLE_WIDTH: f32 = 4.0;
-const PADDLE_VELOCITY: f32 = 75.0;
-
-const BALL_VELOCITY_X: f32 = 75.0;
-const BALL_VELOCITY_Y: f32 = 50.0;
-const BALL_RADIUS: f32 = 2.0;
-
-const AUDIO_MUSIC: &[&str] = &[
-    "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
-    "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
-];
-const AUDIO_BOUNCE: &str = "audio/bounce.ogg";
-const AUDIO_SCORE: &str = "audio/score.ogg";
+use crate::{
+    audio::Music,
+    bundle::PongBundle,
+    pong::Pong,
+    systems::{
+        bounce::BounceSystem, move_balls::BallSystem, paddle::PaddleSystem, winner::WinnerSystem,
+    },
+};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    use crate::pong::Pong;
-
     let app_root = application_root_dir()?;
-
     let display_config_path = app_root.join("config/display.ron");
 
-    let key_bindings_path = {
-        if cfg!(feature = "sdl_controller") {
-            app_root.join("config/input_controller.ron")
-        } else {
-            app_root.join("config/input.ron")
-        }
-    };
-
+    // This line is not mentioned in the pong tutorial as it is specific to the context
+    // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("assets/");
 
-    let mut game_data = DispatcherBuilder::default()
+    let mut dispatcher = DispatcherBuilder::default();
+    dispatcher
+        .add_bundle(LoaderBundle)
         // Add the transform bundle which handles tracking entity positions
-        .add_bundle(TransformBundle::new())?
+        .add_bundle(TransformBundle)
         .add_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
-        )?
-        .add_bundle(PongBundle)?
-        .add_bundle(AudioBundle::default())?
-        .with_system_desc(
-            DjSystemDesc::new(|music: &mut Music| music.music.next()),
-            "dj_system",
-            &[],
+            InputBundle::new().with_bindings_from_file(app_root.join("config/bindings.ron"))?,
         )
-        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(AudioBundle)
+        .add_bundle(DjSystemBundle::new(|music: &mut Music| music.music.next()))
+        // We have now added our own systems, defined in the systems module
+        .add_bundle(PongBundle)
+        .add_bundle(UiBundle::<u32>::default())
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
-                        float32: [0.34, 0.36, 0.52, 1.0],
+                        float32: [0.0, 0.0, 0.0, 1.0],
                     }),
                 )
+                // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderUi::default()),
-        )?;
+        );
 
-    let game = Application::build(assets_dir, Pong::default())?
-        .with_frame_limit(
-            FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
-            144,
-        )
-        .build(game_data)?;
-
+    let game = Application::new(assets_dir, Pong::default(), dispatcher)?;
     game.run();
     Ok(())
-}
-
-pub struct Ball {
-    pub velocity: [f32; 2],
-    pub radius: f32,
-}
-
-impl Component for Ball {
-    type Storage = DenseVecStorage<Self>;
-}
-
-#[derive(PartialEq, Eq)]
-pub enum Side {
-    Left,
-    Right,
-}
-
-pub struct Paddle {
-    pub velocity: f32,
-    pub side: Side,
-    pub width: f32,
-    pub height: f32,
-}
-
-impl Paddle {
-    pub fn new(side: Side) -> Paddle {
-        Paddle {
-            velocity: 1.0,
-            side,
-            width: 1.0,
-            height: 1.0,
-        }
-    }
-}
-
-impl Component for Paddle {
-    type Storage = DenseVecStorage<Self>;
-}
-
-#[derive(Default)]
-pub struct ScoreBoard {
-    score_left: i32,
-    score_right: i32,
-}
-
-impl ScoreBoard {
-    pub fn new() -> ScoreBoard {
-        ScoreBoard {
-            score_left: 0,
-            score_right: 0,
-        }
-    }
 }
