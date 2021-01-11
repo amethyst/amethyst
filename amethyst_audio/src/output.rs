@@ -17,6 +17,16 @@ use rodio::{
 
 use crate::{sink::AudioSink, source::Source, DecoderError};
 
+#[derive(Default)]
+#[allow(missing_debug_implementations)]
+/// A wrapper designed to keep the output and audio_sink used by Audio systems
+pub struct OutputWrapper {
+    /// Speaker used to play any sound
+    pub output: Option<Output>,
+    /// A struct designed to programmatically pick and play music
+    pub audio_sink: Option<AudioSink>,
+}
+
 /// A speaker(s) through which audio can be played.
 ///
 /// By convention, the default output is stored as a resource in the `World`.
@@ -140,12 +150,18 @@ pub fn outputs() -> OutputIterator {
 
 /// Initialize default output
 pub fn init_output(res: &mut Resources) {
+    if !res.contains::<OutputWrapper>() {
+        res.insert(OutputWrapper::default());
+    }
+
+    let mut wrapper = res.get_mut::<OutputWrapper>().unwrap();
+
     if let Some(o) = default_output() {
-        if !res.contains::<AudioSink>() {
-            res.insert(AudioSink::new(&o));
+        if wrapper.audio_sink.is_none() {
+            wrapper.audio_sink = Some(AudioSink::new(&o));
         }
-        if !res.contains::<Output>() {
-            res.insert(o);
+        if wrapper.output.is_none() {
+            wrapper.output = Some(o);
         }
     } else {
         error!("Failed finding a default audio output to hook AudioSink to, audio will not work!")
