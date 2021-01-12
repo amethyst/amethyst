@@ -15,7 +15,7 @@ use thread_profiler::profile_scope;
 use crate::{
     components::{AudioEmitter, AudioListener},
     end_signal::EndSignalSource,
-    output::Output,
+    output::OutputWrapper,
 };
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
@@ -26,42 +26,38 @@ pub struct AudioSystem;
 /// component will be used.  If this resource isn't found then the system will arbitrarily select
 /// the first AudioListener it finds.
 #[derive(Debug)]
-pub struct SelectedListener(pub Entity);
+pub struct SelectedListener(pub Option<Entity>);
 
 impl System<'_> for AudioSystem {
     fn build(&mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("AudioSystem")
-                .read_resource::<Option<Output>>()
-                .read_resource::<Option<SelectedListener>>()
+                .read_resource::<OutputWrapper>()
+                .read_resource::<SelectedListener>()
                 .with_query(<(Entity, Read<AudioListener>)>::query())
                 .with_query(<(Write<AudioEmitter>, Read<Transform>)>::query())
                 .build(
                     move |_commands,
                           world,
-                          (output, select_listener),
+                          (wrapper, select_listener),
                           (q_audio_listener, q_audio_emitter)| {
                         #[cfg(feature = "profiler")]
                         profile_scope!("audio_system");
                         // Process emitters and listener.
-                        if let Some((entity, listener)) = select_listener
-                            .as_ref()
-                            .and_then(|select_listener| {
-                                // Find entity refered by SelectedListener resource
-                                world
-                                    .entry_ref(select_listener.0)
-                                    .ok()
-                                    .and_then(|entry| entry.into_component::<AudioListener>().ok())
-                                    .map(|audio_listener| (select_listener.0, audio_listener))
-                            })
-                            .or_else(|| {
-                                // Otherwise, select the first available AudioListener
-                                q_audio_listener
-                                    .iter(world)
-                                    .next()
-                                    .map(|(entity, audio_listener)| (*entity, audio_listener))
-                            })
-                        {
+                        if let Some((entity, listener)) = if let Some(entity) = select_listener.0 {
+                            // Find entity refered by SelectedListener resource
+                            world
+                                .entry_ref(entity)
+                                .ok()
+                                .and_then(|entry| entry.into_component::<AudioListener>().ok())
+                                .map(|audio_listener| (entity, audio_listener))
+                        } else {
+                            // Otherwise, select the first available AudioListener
+                            q_audio_listener
+                                .iter(world)
+                                .next()
+                                .map(|(entity, audio_listener)| (*entity, audio_listener))
+                        } {
                             if let Some(listener_transform) = world
                                 .entry_ref(entity)
                                 .ok()
@@ -110,7 +106,7 @@ impl System<'_> for AudioSystem {
                                             }
                                         }
                                         while let Some(source) = audio_emitter.sound_queue.pop() {
-                                            if let Some(output) = &**output {
+                                            if let Some(output) = &wrapper.output {
                                                 let sink = SpatialSink::new(
                                                     &output.device,
                                                     emitter_position,

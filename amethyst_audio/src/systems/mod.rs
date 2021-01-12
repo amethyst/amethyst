@@ -1,7 +1,7 @@
 //! `amethyst` audio ecs systems
 
 pub use self::{
-    audio::AudioSystem,
+    audio::{AudioSystem, SelectedListener},
     dj::{DjSystem, DjSystemBundle},
 };
 
