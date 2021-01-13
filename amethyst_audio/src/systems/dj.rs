@@ -8,8 +8,7 @@ use log::error;
 use thread_profiler::profile_scope;
 
 use crate::{
-    output::init_output,
-    sink::AudioSink,
+    output::{init_output, OutputWrapper},
     source::{Source, SourceHandle},
 };
 
@@ -78,22 +77,24 @@ where
         Box::new(
             SystemBuilder::new("DjSystem")
                 .read_resource::<AssetStorage<Source>>()
-                .read_resource::<Option<AudioSink>>()
+                .read_resource::<OutputWrapper>()
                 .write_resource::<R>()
-                .build(move |_commands, _world, (storage, sink, res), _queries| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("dj_system");
+                .build(
+                    move |_commands, _world, (storage, wrapper, res), _queries| {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("dj_system");
 
-                    if let Some(sink) = &**sink {
-                        if sink.empty() {
-                            if let Some(source) = (self.f)(res).and_then(|h| storage.get(&h)) {
-                                if let Err(e) = sink.append(source) {
-                                    error!("DJ Cannot append source to sink. {}", e);
+                        if let Some(sink) = &wrapper.audio_sink {
+                            if sink.empty() {
+                                if let Some(source) = (self.f)(res).and_then(|h| storage.get(&h)) {
+                                    if let Err(e) = sink.append(source) {
+                                        error!("DJ Cannot append source to sink. {}", e);
+                                    }
                                 }
                             }
                         }
-                    }
-                }),
+                    },
+                ),
         )
     }
 }
