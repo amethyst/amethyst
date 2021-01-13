@@ -134,7 +134,7 @@ where
 macro_rules! define_widget_component_fn_impl {
     ( (has $t:ty as $name:ident on $entity:ident) ) => {
         paste::item! {
-            /// Get a reference to the $t component for this widget.
+            #[doc = "Get a reference to the $t component for this widget."]
             pub fn [<get_ $name>]<'a, I>(
                 &self,
                 chunk_iter: I
@@ -150,20 +150,19 @@ macro_rules! define_widget_component_fn_impl {
         }
 
         paste::item! {
-                /// Get a mutable reference to the $t component for this widget.
-                pub fn [<get_ $name _mut>]<'a, I>(
-                    &self,
-                    chunk_iter: I
-                ) -> &'a mut $t
-                where
-                    I: Iterator<Item=(amethyst_core::ecs::Entity,&'a mut $t)> + 'a {
+            /// Get a mutable reference to the $t component for this widget.
+            pub fn [<get_ $name _mut>]<'a, I>(
+                &self,
+                chunk_iter: I
+            ) -> &'a mut $t
+            where
+                I: Iterator<Item=(amethyst_core::ecs::Entity,&'a mut $t)> + 'a {
 
-                    // TODO: Better error message
-                    chunk_iter.filter(|(e, _)| *e == self.$entity)
-                        .map(|(_, t)| t)
-                        .next()
-                        .expect("Component should exist on entity")
-
+                // TODO: Better error message
+                chunk_iter.filter(|(e, _)| *e == self.$entity)
+                    .map(|(_, t)| t)
+                    .next()
+                    .expect("Component should exist on entity")
             }
         }
     };
@@ -209,12 +208,16 @@ macro_rules! define_widget_component_fn_impl {
 /// component will be attached to.
 #[macro_export]
 macro_rules! define_widget {
-    ($t:ident =>
+    (
+    $(#[$meta:meta])*
+    $t:ident =>
+        $uuid:literal,
         entities: [$($field:tt),*]
         components: [$($component:tt),*]
     ) => {
-        /// A $t widget, containing references to its associated entities.
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, Serialize, Deserialize, TypeUuid, SerdeImportable)]
+        #[uuid = $uuid]
+        $(#[$meta])*
         pub struct $t {
             $(
                 /// `$field` Entity

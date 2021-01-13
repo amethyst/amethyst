@@ -52,23 +52,32 @@ impl Default for AutoFov {
 ///
 /// For a camera component to be managed by this system, the entity with the camera component should
 /// also have an `AutoFov` component attached to it.
-pub fn build_auto_fov_system() -> impl Runnable {
-    let mut last_dimensions = ScreenDimensions::new(0, 0);
+pub struct AutoFovSystem;
 
-    SystemBuilder::new("auto_fov_system")
-        .read_resource::<ScreenDimensions>()
-        .with_query(<(Write<Camera>, Write<AutoFov>)>::query())
-        .build(move |_commands, subworld, screen, query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("auto_fov_system");
+impl System<'_> for AutoFovSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        let mut last_dimensions = ScreenDimensions::new(0, 0);
 
-            for (camera, auto_fov) in query.iter_mut(subworld) {
-                if last_dimensions != **screen || auto_fov.dirty {
-                    *camera =
-                        Camera::perspective(screen.aspect_ratio(), auto_fov.fov_y, auto_fov.z_near);
-                    auto_fov.dirty = false;
-                }
-            }
-            last_dimensions = screen.clone();
-        })
+        Box::new(
+            SystemBuilder::new("auto_fov_system")
+                .read_resource::<ScreenDimensions>()
+                .with_query(<(Write<Camera>, Write<AutoFov>)>::query())
+                .build(move |_commands, subworld, screen, query| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("auto_fov_system");
+
+                    for (camera, auto_fov) in query.iter_mut(subworld) {
+                        if last_dimensions != **screen || auto_fov.dirty {
+                            *camera = Camera::perspective(
+                                screen.aspect_ratio(),
+                                auto_fov.fov_y,
+                                auto_fov.z_near,
+                            );
+                            auto_fov.dirty = false;
+                        }
+                    }
+                    last_dimensions = screen.clone();
+                }),
+        )
+    }
 }

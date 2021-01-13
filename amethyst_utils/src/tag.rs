@@ -3,6 +3,7 @@
 use std::marker::PhantomData;
 
 use amethyst_core::ecs::*;
+use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
 /// Tag component that can be used with a custom type to tag entities for processing
@@ -26,6 +27,8 @@ where
 
 /// Utility lookup for tag components
 #[allow(missing_debug_implementations)]
+#[derive(Derivative)]
+#[derivative(Default)]
 pub struct TagFinder<T>
 where
     T: Clone + Send + Sync + 'static,

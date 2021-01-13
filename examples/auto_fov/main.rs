@@ -1,39 +1,32 @@
 use amethyst::{
     assets::{
-        Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystemDesc,
-        ProgressCounter, RonFormat,
+        AssetHandle, AssetStorage, Completion, DefaultLoader, Handle, LoadStatus, Loader,
+        LoaderBundle, ProgressCounter,
     },
-    core::{Transform, TransformBundle},
-    derive::{PrefabData, SystemDesc},
-    ecs::{Entity, ReadExpect, ReadStorage, System, SystemData, WorldExt, WriteStorage},
-    input::{is_close_requested, is_key_down, InputBundle, StringBindings},
+    core::transform::TransformBundle,
+    ecs::{CommandBuffer, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
+    input::{is_close_requested, is_key_down, InputBundle, VirtualKeyCode},
     prelude::{
-        Application, Builder, DispatcherBuilder, GameData, SimpleState, SimpleTrans, StateData,
-        StateEvent, Trans,
+        Application, DispatcherBuilder, GameData, SimpleState, SimpleTrans, StateData, StateEvent,
+        Trans,
     },
     renderer::{
-        camera::{Camera, CameraPrefab},
-        formats::GraphicsPrefab,
-        light::LightPrefab,
         plugins::{RenderShaded3D, RenderToWindow},
-        rendy::{
-            hal::command::ClearColor,
-            mesh::{Normal, Position, Tangent, TexCoord},
-        },
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
-        RenderingBundle,
+        Camera, RenderingBundle,
     },
-    ui::{RenderUi, UiBundle, UiCreator, UiFinder, UiText},
+    ui::{RenderUi, UiBundle, UiFinder, UiLabel, UiText, UiTransform},
     utils::{
+        application_root_dir,
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
     window::ScreenDimensions,
-    winit::VirtualKeyCode,
     Error,
 };
+use lazy_static::__Deref;
 use log::{error, info};
-use serde::{Deserialize, Serialize};
 
 const CLEAR_COLOR: ClearColor = ClearColor {
     float32: [0.0, 0.0, 0.0, 1.0],
@@ -42,23 +35,19 @@ const CLEAR_COLOR: ClearColor = ClearColor {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let app_dir = amethyst::utils::application_dir("examples")?;
-    let display_config_path = app_dir.join("auto_fov/config/display.ron");
-    let assets_dir = app_dir.join("auto_fov/assets");
+    let app_dir = application_root_dir()?;
+    let assets_dir = app_dir.join("assets/ui/");
+    let display_config_path = app_dir.join("config/display.ron");
 
-    let mut game_data = DispatcherBuilder::new()
-        .with_system_desc(
-            PrefabLoaderSystemDesc::<ScenePrefab>::default(),
-            "prefab",
-            &[],
-        )
-        // This makes the system adjust the camera right after it has been loaded (in the same
-        // frame), preventing any flickering
-        .with(AutoFovSystem::new(), "auto_fov", &["prefab"])
-        .with(ShowFovSystem::new(), "show_fov", &["auto_fov"])
-        .add_bundle(TransformBundle::new())?
-        .add_bundle(InputBundle::<StringBindings>::new())?
-        .add_bundle(UiBundle::<StringBindings>::new())?
+    let mut game_data = DispatcherBuilder::default();
+
+    game_data
+        .add_bundle(LoaderBundle)
+        .add_system(Box::new(AutoFovSystem))
+        .add_system(Box::new(ShowFovSystem))
+        .add_bundle(TransformBundle::default())
+        .add_bundle(InputBundle::new())
+        .add_bundle(UiBundle::<u32>::new())
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -66,7 +55,7 @@ fn main() -> Result<(), Error> {
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )?;
+        );
 
     let game = Application::build(assets_dir, Loading::new())?.build(game_data)?;
     game.run();
@@ -74,81 +63,69 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-#[derive(Default, Deserialize, PrefabData, Serialize)]
-#[serde(default)]
-struct ScenePrefab {
-    graphics: Option<GraphicsPrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>>,
-    transform: Option<Transform>,
-    light: Option<LightPrefab>,
-    camera: Option<CameraPrefab>,
-    auto_fov: Option<AutoFov>, // `AutoFov` implements `PrefabData` trait
-    show_fov_tag: Option<Tag<ShowFov>>,
-}
-
 #[derive(Clone, Default)]
 struct ShowFov;
 
 struct Loading {
     progress: ProgressCounter,
-    scene: Option<Handle<Prefab<ScenePrefab>>>,
+    loading_ui: Option<Handle<UiLabel>>,
 }
 
 impl Loading {
     fn new() -> Self {
         Loading {
             progress: ProgressCounter::new(),
-            scene: None,
+            loading_ui: None,
         }
     }
 }
 
 impl SimpleState for Loading {
     fn on_start(&mut self, data: StateData<GameData>) {
-        data.world.exec(|mut creator: UiCreator<'_>| {
-            creator.create("ui/loading.ron", &mut self.progress);
-            creator.create("ui/fov.ron", &mut self.progress);
-        });
-
-        let handle = data.world.exec(|loader: PrefabLoader<'_, ScenePrefab>| {
-            loader.load("prefab/auto_fov.ron", RonFormat, &mut self.progress)
-        });
-        self.scene = Some(handle);
+        data.resources.insert(TagFinder::<ShowFov>::default());
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
+        self.loading_ui = Some(loader.load("ui/loading.ron"));
+        // let fov_ui = loader.load("ui/fov.ron");
+        // let prefab = loader.load("prefab/auto_fov.ron");
     }
 
-    fn update(&mut self, _: &mut StateData<'_, GameData>) -> SimpleTrans {
-        match self.progress.complete() {
-            Completion::Loading => Trans::None,
-            Completion::Failed => {
-                error!("Failed to load the scene");
-                Trans::Quit
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+        let loader = data.resources.get::<AssetStorage<UiLabel>>().unwrap();
+
+        if let Some(label) = self.loading_ui.as_ref().unwrap().asset(loader.deref()) {
+            println!("Label Loaded");
+            let label_storage = data.resources.get::<AssetStorage<UiLabel>>();
+
+            match self.progress.complete() {
+                Completion::Loading => Trans::None,
+                Completion::Failed => {
+                    error!("Failed to load the scene");
+                    Trans::Quit
+                }
+                Completion::Complete => {
+                    info!("Loading finished. Moving to the main state.");
+                    Trans::Switch(Box::new(Example))
+                }
             }
-            Completion::Complete => {
-                info!("Loading finished. Moving to the main state.");
-                Trans::Switch(Box::new(Example {
-                    scene: self.scene.take().unwrap(),
-                }))
-            }
+        } else {
+            println!("ui not yet loaded");
+            Trans::None
         }
     }
 }
 
-struct Example {
-    scene: Handle<Prefab<ScenePrefab>>,
-}
+struct Example;
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        data.world.create_entity().with(self.scene.clone()).build();
-        data.world
-            .exec(|finder: UiFinder| finder.find("loading"))
-            .map_or_else(
-                || error!("Unable to find Ui Text `loading`"),
-                |e| {
-                    data.world
-                        .delete_entity(e)
-                        .unwrap_or_else(|err| error!("{}", err))
-                },
-            );
+        let mut buffer = CommandBuffer::new(data.world);
+        let mut query = <(Entity, &UiTransform)>::query();
+        for (entity, transform) in query.iter(data.world) {
+            if transform.id == "loading" {
+                buffer.remove(*entity)
+            }
+        }
+        buffer.flush(data.world);
     }
 
     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
@@ -164,58 +141,56 @@ impl SimpleState for Example {
     }
 }
 
-#[derive(SystemDesc)]
 struct ShowFovSystem;
 
-impl ShowFovSystem {
-    pub fn new() -> Self {
-        Self
+impl System<'_> for ShowFovSystem {
+    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("ShowFovSystem")
+                // type SystemData = (
+                //     TagFinder<'a, ShowFov>,
+                //     UiFinder<'a>,
+                //     WriteStorage<'a, UiText>,
+                //     ReadStorage<'a, Camera>,
+                // );
+                .read_resource::<ScreenDimensions>()
+                .read_resource::<TagFinder<ShowFov>>()
+                .read_component::<UiText>()
+                .read_component::<Tag<ShowFov>>()
+                .with_query(<(&UiTransform, &mut UiText)>::query())
+                .build(|_, world, (screen, camera_finder), ui_query| {
+                    for (transform, mut text) in ui_query.iter_mut(world) {
+                        if transform.id == "screen_aspect" {
+                            let screen_aspect = screen.aspect_ratio();
+                            text.text = format!("Screen Aspect Ratio: {:.2}", screen_aspect);
+                        }
+                    }
+
+                    let (mut left, mut right) = world.split_for_query(ui_query);
+                    if let Some(entity) = camera_finder.find(&mut right) {
+                        if let Ok(camera) = <&Camera>::query().get(&right, entity) {
+                            let camera_aspect =
+                                (camera.matrix[(1, 1)] / camera.matrix[(0, 0)]).abs();
+
+                            for (transform, mut text) in ui_query.iter_mut(&mut left) {
+                                if transform.id == "camera_aspect" {
+                                    text.text =
+                                        format!("Camera Aspect Ratio: {:.2}", camera_aspect);
+                                }
+
+                                if transform.id == "camera_fov" {
+                                    let fovy = (-1.0 / camera.matrix[(1, 1)]).atan() * 2.0;
+
+                                    text.text = format!(
+                                        "Camera Fov: ({:.2}, {:.2})",
+                                        fovy * camera_aspect,
+                                        fovy
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }),
+        )
     }
-}
-
-impl<'a> System<'a> for ShowFovSystem {
-    type SystemData = (
-        TagFinder<'a, ShowFov>,
-        UiFinder<'a>,
-        WriteStorage<'a, UiText>,
-        ReadStorage<'a, Camera>,
-        ReadExpect<'a, ScreenDimensions>,
-    );
-
-    fn run(&mut self, (tag_finder, ui_finder, mut ui_texts, cameras, screen): Self::SystemData) {
-        let screen_aspect = screen.aspect_ratio();
-        if let Some(t) = ui_finder
-            .find("screen_aspect")
-            .and_then(|e| ui_texts.get_mut(e))
-        {
-            t.text = format!("Screen Aspect Ratio: {:.2}", screen_aspect);
-        }
-
-        if let Some(entity) = tag_finder.find() {
-            if let Some(camera) = cameras.get(entity) {
-                let fovy = get_fovy(camera);
-                let camera_aspect = get_aspect(camera);
-                if let Some(t) = ui_finder
-                    .find("camera_aspect")
-                    .and_then(|e| ui_texts.get_mut(e))
-                {
-                    t.text = format!("Camera Aspect Ratio: {:.2}", camera_aspect);
-                }
-                if let Some(t) = ui_finder
-                    .find("camera_fov")
-                    .and_then(|e| ui_texts.get_mut(e))
-                {
-                    t.text = format!("Camera Fov: ({:.2}, {:.2})", fovy * camera_aspect, fovy);
-                }
-            }
-        }
-    }
-}
-
-fn get_fovy(camera: &Camera) -> f32 {
-    (-1.0 / camera.matrix[(1, 1)]).atan() * 2.0
-}
-
-fn get_aspect(camera: &Camera) -> f32 {
-    (camera.matrix[(1, 1)] / camera.matrix[(0, 0)]).abs()
 }

@@ -15,7 +15,17 @@ mod builder;
 mod retrigger;
 mod system;
 
-define_widget!(UiButton =>
+use amethyst_assets::{
+    atelier_importer,
+    atelier_importer::{typetag, SerdeImportable},
+};
+use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
+
+define_widget!(
+    /// A clickable UI button that can contain UiText and play sounds
+    UiButton =>
+    "73ffc08d-dd34-41e7-a2eb-54b8b82bfe67",
     entities: [text_entity, image_entity]
     components: [
         (has UiTransform as position on image_entity),
