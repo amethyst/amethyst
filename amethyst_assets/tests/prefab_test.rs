@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use type_uuid::TypeUuid;
 mod common;
+use serial_test::serial;
 
 fn setup() -> (Dispatcher, World, Resources) {
-    common::setup();
     let mut dispatcher_builder = DispatcherBuilder::default();
     let mut world = World::default();
     let mut resources = Resources::default();
@@ -26,32 +26,37 @@ fn setup() -> (Dispatcher, World, Resources) {
 }
 
 #[test]
-#[cfg(not(target_os = "macos"))] // FIXME: macos CI has race condition
+#[serial]
 fn a_prefab_can_be_loaded() {
-    let (mut dispatcher, mut world, mut resources) = setup();
+    common::run_test(|| {
+        let (mut dispatcher, mut world, mut resources) = setup();
 
-    let prefab_handle: Handle<Prefab> = {
-        let loader = resources
-            .get_mut::<DefaultLoader>()
-            .expect("Missing loader");
-        loader.load("single_entity.prefab")
-    };
+        let prefab_handle: Handle<Prefab> = {
+            let loader = resources
+                .get_mut::<DefaultLoader>()
+                .expect("Missing loader");
+            loader.load("single_entity.prefab")
+        };
 
-    execute_dispatcher_until_loaded(
-        &mut dispatcher,
-        &mut world,
-        &mut resources,
-        prefab_handle.clone(),
-    );
+        execute_dispatcher_until_loaded(
+            &mut dispatcher,
+            &mut world,
+            &mut resources,
+            prefab_handle.clone(),
+        );
 
-    let storage = {
-        resources
-            .get_mut::<AssetStorage<Prefab>>()
-            .expect("Could not get prefab storage from ECS resources")
-    };
+        let storage = {
+            resources
+                .get_mut::<AssetStorage<Prefab>>()
+                .expect("Could not get prefab storage from ECS resources")
+        };
 
-    let prefab = storage.get(&prefab_handle);
-    assert!(prefab.is_some());
+        let prefab = storage.get(&prefab_handle);
+        assert!(prefab.is_some());
+
+        drop(storage);
+        dispatcher.unload(&mut world, &mut resources).unwrap();
+    })
 }
 
 // Components require TypeUuid + Serialize + Deserialize + SerdeDiff + Send + Sync
@@ -64,47 +69,56 @@ struct Position2D {
 register_component_type!(Position2D);
 
 #[test]
-#[cfg(not(target_os = "macos"))] // FIXME: macos CI has race condition
+#[serial]
 fn a_prefab_is_applied_to_an_entity() {
-    let (mut dispatcher, mut world, mut resources) = setup();
+    common::run_test(|| {
+        let (mut dispatcher, mut world, mut resources) = setup();
 
-    let prefab_handle: Handle<Prefab> = {
-        let loader = resources
-            .get_mut::<DefaultLoader>()
-            .expect("Missing loader");
-        loader.load("test_provided_component.prefab")
-    };
+        let prefab_handle: Handle<Prefab> = {
+            let loader = resources
+                .get_mut::<DefaultLoader>()
+                .expect("Missing loader");
+            loader.load("test_provided_component.prefab")
+        };
 
-    execute_dispatcher_until_loaded(
-        &mut dispatcher,
-        &mut world,
-        &mut resources,
-        prefab_handle.clone(),
-    );
+        execute_dispatcher_until_loaded(
+            &mut dispatcher,
+            &mut world,
+            &mut resources,
+            prefab_handle.clone(),
+        );
 
-    let entity = world.push((prefab_handle,));
+        let entity = world.push((prefab_handle,));
 
-    execute_dispatcher_until_prefab_is_applied(&mut dispatcher, &mut world, &mut resources, entity);
+        execute_dispatcher_until_prefab_is_applied(
+            &mut dispatcher,
+            &mut world,
+            &mut resources,
+            entity,
+        );
 
-    let mut query = <(Entity, &Position2D)>::query();
-    query.for_each(&world, |(entity, position)| {
-        println!("Entity: {:?}, Position: {:?}", entity, position);
-    });
+        let mut query = <(Entity, &Position2D)>::query();
+        query.for_each(&world, |(entity, position)| {
+            println!("Entity: {:?}, Position: {:?}", entity, position);
+        });
 
-    let entry = world
-        .entry(entity)
-        .expect("Could not retrieve entity from world");
+        let entry = world
+            .entry(entity)
+            .expect("Could not retrieve entity from world");
 
-    let component = entry
-        .get_component::<Position2D>()
-        .expect("Could not retrive compont from entry");
+        let component = entry
+            .get_component::<Position2D>()
+            .expect("Could not retrive compont from entry");
 
-    let expected = Position2D { x: 100, y: 100 };
+        let expected = Position2D { x: 100, y: 100 };
 
-    assert_eq!(
-        *component, expected,
-        "Position2D component value does not match",
-    );
+        assert_eq!(
+            *component, expected,
+            "Position2D component value does not match",
+        );
+
+        dispatcher.unload(&mut world, &mut resources).unwrap();
+    })
 }
 
 fn execute_dispatcher_until_prefab_is_applied(
