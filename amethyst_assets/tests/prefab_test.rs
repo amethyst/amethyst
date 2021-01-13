@@ -26,6 +26,7 @@ fn setup() -> (Dispatcher, World, Resources) {
 }
 
 #[test]
+#[serial]
 fn a_prefab_can_be_loaded() {
     common::run_test(|| {
         let (mut dispatcher, mut world, mut resources) = setup();
@@ -68,6 +69,7 @@ struct Position2D {
 register_component_type!(Position2D);
 
 #[test]
+#[serial]
 fn a_prefab_is_applied_to_an_entity() {
     common::run_test(|| {
         let (mut dispatcher, mut world, mut resources) = setup();
