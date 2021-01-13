@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Once};
+use std::{panic, path::PathBuf, sync::Once};
 
 use amethyst_assets::start_asset_daemon;
 
@@ -21,9 +21,16 @@ pub fn setup_logger() {
 
 static INIT: Once = Once::new();
 
-pub fn setup() {
+pub(crate) fn run_test<T>(test: T)
+where
+    T: FnOnce() + panic::UnwindSafe,
+{
     INIT.call_once(|| {
         setup_logger();
         start_asset_daemon(vec![PathBuf::from("tests/assets")]);
     });
+
+    let result = panic::catch_unwind(|| test());
+
+    assert!(result.is_ok())
 }
