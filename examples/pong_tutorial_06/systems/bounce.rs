@@ -1,6 +1,18 @@
-use amethyst::{core::transform::Transform, ecs::SystemBuilder, prelude::*};
+use amethyst::{
+    assets::AssetStorage,
+    audio::{
+        output::{Output, OutputWrapper},
+        Source,
+    },
+    core::transform::Transform,
+    ecs::SystemBuilder,
+    prelude::*,
+};
 
-use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
+use crate::{
+    audio::{play_bounce, Sounds},
+    pong::{Ball, Paddle, Side, ARENA_HEIGHT},
+};
 
 pub struct BounceSystem;
 
@@ -8,13 +20,19 @@ impl System<'_> for BounceSystem {
     fn build(&'_ mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("BounceSystem")
+                .read_resource::<Sounds>()
+                .read_resource::<AssetStorage<Source>>()
+                .read_resource::<OutputWrapper>()
                 .with_query(<(&mut Ball, &Transform)>::query())
                 .with_query(<&Paddle>::query())
                 .read_component::<Paddle>()
                 .read_component::<Transform>()
                 .write_component::<Ball>()
                 .build(
-                    move |_commands, world, _resources, (query_balls, query_paddles)| {
+                    move |_commands,
+                          world,
+                          (sounds, storage, output_wrapper),
+                          (query_balls, query_paddles)| {
                         let (mut ball_world, remaining) = world.split_for_query(query_balls);
 
                         // Check whether a ball collided, and bounce off accordingly.
@@ -50,6 +68,7 @@ impl System<'_> for BounceSystem {
                                     || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
                                 {
                                     println!("Bounce!");
+                                    play_bounce(sounds, storage, output_wrapper.output.as_ref());
                                     ball.velocity[0] = -ball.velocity[0];
                                 }
                             }
