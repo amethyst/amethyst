@@ -1319,6 +1319,7 @@ right: `{:?}`",
         key_event(scancode, virtual_keycode, ElementState::Released)
     }
 
+    #[allow(deprecated)] // We don't really have a choice here since the field is still mandatory.
     fn key_event(
         scancode: ScanCode,
         virtual_keycode: VirtualKeyCode,
