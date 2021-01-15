@@ -9,9 +9,10 @@ use amethyst_core::ecs::{
 };
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
-use type_uuid::TypeUuid;
-mod common;
 use serial_test::serial;
+use type_uuid::TypeUuid;
+
+mod common;
 
 fn setup() -> (Dispatcher, World, Resources) {
     let mut dispatcher_builder = DispatcherBuilder::default();

@@ -108,8 +108,29 @@ pub fn get_source_importers(
 ///
 /// # Examples
 ///
-/// ```rust,ignore
-/// amethyst_assets::register_importer!(".ron", RonFormat<SpriteSheet>);
+/// ```rust
+/// use amethyst_assets::Format;
+/// use amethyst_error::Error;
+/// use serde::{Deserialize, Serialize};
+/// use type_uuid::TypeUuid;
+///
+/// #[derive(Clone, Debug, Serialize, Deserialize, TypeUuid)]
+/// #[uuid = "00000000-0000-0000-0000-000000000000"]
+/// pub struct AudioData(pub Vec<u8>);
+///
+/// #[derive(Clone, Copy, Default, Debug, Serialize, Deserialize, TypeUuid)]
+/// #[uuid = "00000000-0000-0000-0000-000000000000"]
+/// pub struct WavFormat;
+/// impl Format<AudioData> for WavFormat {
+///     fn name(&self) -> &'static str {
+///         "WAV"
+///     }
+
+///     fn import_simple(&self, bytes: Vec<u8>) -> Result<AudioData, Error> {
+///         Ok(AudioData(bytes))
+///     }
+/// }
+/// amethyst_assets::register_importer!(".wav", WavFormat);
 /// ```
 #[macro_export]
 macro_rules! register_importer {
