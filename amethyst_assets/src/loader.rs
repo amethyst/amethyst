@@ -544,7 +544,7 @@ where
 ///     fn name() -> &'static str {
 ///         "Mesh"
 ///     }
-///     type Data = MeshData;
+///     type Data = VertexData;
 /// }
 ///
 /// #[derive(Serialize, Deserialize, TypeUuid)]

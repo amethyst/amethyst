@@ -31,12 +31,12 @@ derive-new = "0.5.6"
 fnv = "1"
 glsl-layout = "0.3"
 ron = "0.6.4"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
 smallvec = "1.2"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.6"
 winit = { git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
-log = "0.4.6"
+log = "0.4"
 font-kit = "0.10.0"
 paste = "0.1"
 rand = "0.7"
