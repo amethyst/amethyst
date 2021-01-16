@@ -27,9 +27,9 @@ derivative = "2.1.1"
 crossbeam-channel = "0.3"
 derive-new = "0.5"
 fnv = "1"
-log = "0.4.6"
+log = "0.4"
 parking_lot = "0.10"
-rayon = "1.4.0"
+rayon = "1.5"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }
 ron = "0.6.4"
@@ -39,7 +39,7 @@ objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
-atelier-assets = { git = "https://github.com/radium-io/atelier-assets.git", rev = "4ba3c5850a0f7c575ec1090c44c0685d830a4da0", features = [
+atelier-assets = { git = "https://github.com/radium-io/atelier-assets.git", rev = "6987e6b4abe061f1810018efd7518866b62b70fb", features = [
     "serde-1",
     "type_uuid",
     "serde_importers",
@@ -58,7 +58,7 @@ encoding_rs_io = "0.1"
 
 [dev-dependencies]
 serde_json = "1"
-fern = { version = "0.6.0", features = ["colored"] }
+fern = { version = "0.6", features = ["colored"] }
 serde-diff = "0.4"
 serial_test = "0.5.1"
 

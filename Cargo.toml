@@ -108,12 +108,12 @@ amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true 
 winit = { git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 crossbeam-channel = "0.4.2"
 derivative = "2.1.1"
-fern = { version = "0.6.0", features = ["colored"] }
-log = { version = "0.4.8", features = ["serde"] }
-rayon = "1.4.0"
+fern = { version = "0.6", features = ["colored"] }
+log = { version = "0.4", features = ["serde"] }
+rayon = "1.5"
 rustc_version_runtime = "0.2.0"
 sentry = { version = "0.18.0", optional = true }
-serde = { version = "1.0.104", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
 thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"

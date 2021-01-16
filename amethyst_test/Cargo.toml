@@ -24,7 +24,7 @@ lazy_static = "1.4"
 log = "0.4"
 
 [dev-dependencies]
-serde = "1.0"
+serde = "1"
 
 [features]
 default = ["animation", "audio", "locale", "network", "renderer"]

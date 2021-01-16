@@ -1,11 +1,14 @@
 [package]
 name = "amethyst_audio"
 version = "0.15.3"
-authors = ["Xaeroxe <kieseljake@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Xaeroxe <kieseljake@gmail.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 edition = "2018"
 description = "Audio support for Amethyst"
 exclude = ["examples/*"]
-keywords = ["game", "engine", "audio","amethyst"]
+keywords = ["game", "engine", "audio", "amethyst"]
 categories = ["multimedia::audio"]
 
 documentation = "https://docs.amethyst.rs/stable/amethyst_audio/"
@@ -21,9 +24,9 @@ amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 cpal = "0.11"
 derive-new = "0.5"
-log = "0.4.6"
+log = "0.4"
 rodio = "0.11"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
 smallvec = { version = "1.2", features = ["serde"] }
 thread_profiler = { version = "0.3", optional = true }
 type-uuid = "0.1"
@@ -32,4 +35,4 @@ type-uuid = "0.1"
 amethyst_utils = { path = "../amethyst_utils", version = "0.15.3" }
 
 [features]
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = ["thread_profiler/thread_profiler"]

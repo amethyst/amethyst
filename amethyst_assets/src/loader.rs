@@ -530,21 +530,31 @@ where
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust
+/// use serde::{Deserialize, Serialize};
+/// use amethyst_assets::{register_asset_type, Asset, AssetProcessorSystem, TypeUuid};
+///
 /// #[derive(TypeUuid)]
-/// #[uuid = "28d51c52-be81-4d99-8cdc-20b26eb12448"]
+/// #[uuid = "00000000-0000-0000-0000-000000000000"]
 /// pub struct MeshAsset {
-///     buffer: (),
+///     buffer: Vec<u8>,
+/// }
+///
+/// impl Asset for MeshAsset {
+///     fn name() -> &'static str {
+///         "Mesh"
+///     }
+///     type Data = VertexData;
 /// }
 ///
 /// #[derive(Serialize, Deserialize, TypeUuid)]
-/// #[uuid = "687b6d94-c653-4663-af73-e967c92ad140"]
+/// #[uuid = "00000000-0000-0000-0000-000000000000"]
 /// pub struct VertexData {
 ///     positions: Vec<[f32; 3]>,
 ///     tex_coords: Vec<[f32; 2]>,
 /// }
 ///
-/// amethyst_assets::register_asset_type!(VertexData => MeshAsset; MeshProcessorSystem);
+/// register_asset_type!(VertexData => MeshAsset; AssetProcessorSystem<MeshAsset>);
 /// ```
 #[macro_export]
 macro_rules! register_asset_type {

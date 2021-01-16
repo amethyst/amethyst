@@ -34,7 +34,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     ```toml
     [dependencies]
     amethyst = ".." # Minimum version 0.10
-    serde = { version = "1.0", features = ["derive"] }
+    serde = { version = "1", features = ["derive"] }
     ```
 
 2. Define the adapter prefab data type.

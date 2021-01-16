@@ -1,7 +1,10 @@
 [package]
 name = "amethyst_locale"
 version = "0.15.3"
-authors = ["Joël Lupien <jojolepro@jojolepro.com>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "Joël Lupien <jojolepro@jojolepro.com>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 readme = "README.md"
 edition = "2018"
 description = """
@@ -20,7 +23,7 @@ repository = "https://github.com/amethyst/amethyst"
 amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
 fluent = "0.11"
 unic-langid = { version = "0.8", features = ["macros"] }
 type-uuid = "0.1"
@@ -28,4 +31,4 @@ type-uuid = "0.1"
 thread_profiler = { version = "0.3", optional = true }
 
 [features]
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = ["thread_profiler/thread_profiler"]
