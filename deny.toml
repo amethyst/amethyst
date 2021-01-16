@@ -39,6 +39,10 @@ skip = [
     { name = "core-foundation-sys", version = "0.6.2" }, # upgrade cpal
     { name = "approx", version = "0.3.2" }, # upgrade alga,rusttype,glyph_brush
     { name = "rand", version = "0.4.6" }, # upgrade genmesh
+    { name = "rand_hc", version = "0.2.0" }, # upgrade nalgebra,glyph_brush
+    { name = "rand_core", version = "0.5.1" }, # upgrade nalgebra,glyph_brush
+    { name = "rand_chacha", version = "0.2.2" }, # upgrade nalgebra,glyph_brush
+    { name = "rand", version = "0.7.3" }, # upgrade nalgebra,glyph_brush
 ]
 skip-tree = [
     { name = "rendy" },
