@@ -1,10 +1,9 @@
-use crate::{
-    loader::{AssetType, AssetTypeStorage, DefaultLoader, Loader},
-    prefab::{ComponentRegistry, Prefab},
-    processor::LoadNotifier,
-    storage::AssetStorage,
-    AssetHandle, LoadHandle, WeakHandle,
+use std::{
+    error::Error as StdError,
+    ops::{Deref, DerefMut},
+    sync::{Arc, Mutex},
 };
+
 use amethyst_core::{
     dispatcher::System,
     ecs::{systems::ParallelRunnable, SystemBuilder},
@@ -17,14 +16,15 @@ use atelier_assets::{
 use crossbeam_queue::SegQueue;
 use fnv::{FnvHashMap, FnvHashSet};
 use prefab_format::PrefabUuid;
-use std::{
-    error::Error as StdError,
-    ops::{Deref, DerefMut},
-    sync::{Arc, Mutex},
-};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 use type_uuid::TypeUuid;
+
+use crate::{
+    loader::{AssetType, AssetTypeStorage, DefaultLoader, Loader},
+    prefab::{ComponentRegistry, Prefab},
+    processor::LoadNotifier,
+    storage::AssetStorage,
+    AssetHandle, LoadHandle, WeakHandle,
+};
 
 pub fn create_prefab_asset_type() -> AssetType {
     log::debug!("Creating asset type: {:x?}", Prefab::UUID);
@@ -178,36 +178,32 @@ impl PrefabProcessingQueue {
             .expect("dependencies have not been processed")
             .iter();
         let mut dependency_stack = vec![(prefab, first_iter)];
-        loop {
-            if let Some((cur_prefab, iter)) = dependency_stack.last_mut() {
-                if let Some(next_handle) = iter.next() {
-                    if let Some(next_prefab) = storage.get(next_handle) {
-                        if prefab_lookup.contains_key(&next_prefab.raw_prefab.prefab_id()) {
-                            continue;
-                        }
-                        let next_iter = next_prefab
-                            .dependencies
-                            .as_ref()
-                            .expect("dependencies have not been processed")
-                            .iter();
-                        dependency_stack.push((next_prefab, next_iter));
-                    } else {
-                        log::error!("Missing prefab dependency");
+        while let Some((cur_prefab, iter)) = dependency_stack.last_mut() {
+            if let Some(next_handle) = iter.next() {
+                if let Some(next_prefab) = storage.get(next_handle) {
+                    if prefab_lookup.contains_key(&next_prefab.raw_prefab.prefab_id()) {
+                        continue;
                     }
+                    let next_iter = next_prefab
+                        .dependencies
+                        .as_ref()
+                        .expect("dependencies have not been processed")
+                        .iter();
+                    dependency_stack.push((next_prefab, next_iter));
                 } else {
-                    // No more dependencies, add cur_prefab to prefab_cook_order and
-                    // pop the stack.
-                    prefab_cook_order.push(cur_prefab.raw_prefab.prefab_id());
-                    prefab_lookup.insert(cur_prefab.raw_prefab.prefab_id(), &cur_prefab.raw_prefab);
-                    dependency_stack.pop();
+                    log::error!("Missing prefab dependency");
                 }
             } else {
-                break;
+                // No more dependencies, add cur_prefab to prefab_cook_order and
+                // pop the stack.
+                prefab_cook_order.push(cur_prefab.raw_prefab.prefab_id());
+                prefab_lookup.insert(cur_prefab.raw_prefab.prefab_id(), &cur_prefab.raw_prefab);
+                dependency_stack.pop();
             }
         }
-        log::debug!("cook");
-        log::debug!("prefab_cook_order: {:?}", prefab_cook_order);
-        log::debug!("prefab_lookup: {:?}", prefab_lookup.keys());
+
+        log::debug!("prefab_cook_order: {:x?}", prefab_cook_order);
+        log::debug!("prefab_lookup: {:x?}", prefab_lookup.keys());
         let cooked_prefab = legion_prefab::cook_prefab(
             component_registry.components(),
             component_registry.components_by_uuid(),
@@ -229,7 +225,7 @@ impl PrefabProcessingQueue {
                 // cook prefabs with changed dependencies
                 // FIXME: deal with cyclic and diamond dependencies correctly
                 let mut visited = FnvHashSet::default();
-                while let Ok(dependee) = self.changed.pop() {
+                while let Some(dependee) = self.changed.pop() {
                     let updates: Vec<(WeakHandle, legion_prefab::CookedPrefab)> = storage
                         .get_for_load_handle(dependee)
                         .iter()
@@ -264,7 +260,7 @@ impl PrefabProcessingQueue {
                 .requeue
                 .get_mut()
                 .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
-            while let Ok(processed) = self.processed.pop() {
+            while let Some(processed) = self.processed.pop() {
                 let Processed {
                     data,
                     handle,
@@ -273,7 +269,7 @@ impl PrefabProcessingQueue {
                     commit,
                 } = processed;
                 log::debug!("processing load_handle {:?}", handle);
-                let mut prefab = match data.and_then(
+                let mut prefab = match data.map(
                     |Prefab {
                          prefab,
                          raw_prefab,
@@ -281,7 +277,7 @@ impl PrefabProcessingQueue {
                          dependers,
                          version,
                      }| {
-                        log::debug!("AssetUuid: {:?}", raw_prefab.prefab_id());
+                        log::debug!("AssetUuid: {:X?}", raw_prefab.prefab_id());
                         let deps = dependencies.get_or_insert_with(|| {
                             raw_prefab
                                 .prefab_meta
@@ -294,24 +290,24 @@ impl PrefabProcessingQueue {
                         });
 
                         if deps
-                            .into_iter()
+                            .iter()
                             .all(|handle| storage.contains(handle.load_handle()))
                         {
-                            Ok(ProcessingState::Loaded(Prefab {
+                            ProcessingState::Loaded(Prefab {
                                 prefab,
                                 raw_prefab,
                                 dependencies,
                                 dependers,
                                 version,
-                            }))
+                            })
                         } else {
-                            Ok(ProcessingState::Loading(Prefab {
+                            ProcessingState::Loading(Prefab {
                                 prefab,
                                 raw_prefab,
                                 dependencies,
                                 dependers,
                                 version,
-                            }))
+                            })
                         }
                     },
                 ) {
@@ -391,18 +387,17 @@ fn prefab_asset_processor(
     prefab_storage: &mut AssetStorage<Prefab>,
     loader: &mut DefaultLoader,
 ) {
-    #[cfg(feature = "profiler")]
-    profile_scope!("prefab_asset_processor");
-
     processing_queue.process(prefab_storage, component_registry, loader);
     prefab_storage.process_custom_drop(|_| {});
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::prefab::{ComponentRegistryBuilder, Prefab};
-    use crate::{processor::LoadNotifier, Handle};
+    use std::{
+        collections::HashMap,
+        sync::{Arc, Once},
+    };
+
     use amethyst_core::ecs::World;
     use atelier_assets::loader::{
         crossbeam_channel::{unbounded, Sender},
@@ -410,9 +405,13 @@ mod tests {
         storage::{AtomicHandleAllocator, HandleAllocator},
     };
     use legion_prefab::PrefabRef;
-    use std::{
-        collections::HashMap,
-        sync::{Arc, Once},
+    use serial_test::serial;
+
+    use super::*;
+    use crate::{
+        prefab::{ComponentRegistryBuilder, Prefab},
+        processor::LoadNotifier,
+        Handle,
     };
 
     pub fn setup_logger() {
@@ -487,6 +486,7 @@ mod tests {
         }
     }
 
+    #[serial]
     #[test]
     fn test() {
         setup();
@@ -533,8 +533,8 @@ mod tests {
         assert!(asset.prefab.is_some());
     }
 
-    #[ignore] // FIXME: We need a MockLoader so that we can control the asset handles that are returned
     #[test]
+    #[ignore] // FIXME: crashes
     fn prefab_with_dependencies() {
         setup();
         let Fixture {

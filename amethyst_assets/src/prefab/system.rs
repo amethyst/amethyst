@@ -1,11 +1,10 @@
+use std::collections::{HashMap, HashSet};
+
+use amethyst_core::ecs::{query, world::EntityHasher, Entity, IntoQuery, Resources, World};
+
 use crate::{
     prefab::{ComponentRegistry, Prefab},
     AssetStorage, Handle,
-};
-use amethyst_core::ecs::{query, world::EntityHasher, Entity, IntoQuery, Resources, World};
-use std::{
-    collections::{HashMap, HashSet},
-    iter::FromIterator,
 };
 
 struct PrefabInstance {

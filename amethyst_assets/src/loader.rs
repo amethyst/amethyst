@@ -26,6 +26,7 @@ pub use atelier_loader::{storage::LoadStatus, AssetUuid};
 use log::debug;
 use serde::de::Deserialize;
 pub use type_uuid::TypeUuid;
+
 use crate::{processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset};
 
 /// Manages asset loading and storage for an application.
@@ -403,7 +404,6 @@ impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error + Send>> {
-        debug!("update_asset");
         // FIXME
         // can't move into closure, so we work around it with a RefCell + Option
         let moved_op = RefCell::new(Some(load_op));
