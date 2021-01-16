@@ -44,13 +44,7 @@ skip = [
     { name = "rand_chacha", version = "0.2.2" }, # upgrade nalgebra,glyph_brush
     { name = "rand", version = "0.7.3" }, # upgrade nalgebra,glyph_brush
 ]
-skip-tree = [
-    { name = "rendy" },
-    { name = "atelier-assets" },
-    # { name = "legion-prefab" },
-    # { name = "legion-transaction" },
-    # { name = "prefab-format" },
-]
+skip-tree = [{ name = "rendy" }, { name = "atelier-assets" }]
 deny = []
 
 [sources]

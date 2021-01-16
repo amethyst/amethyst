@@ -56,3 +56,9 @@ impl Error for DecoderError {
         None
     }
 }
+
+impl From<rodio::decoder::DecoderError> for DecoderError {
+    fn from(_: rodio::decoder::DecoderError) -> Self {
+        DecoderError
+    }
+}

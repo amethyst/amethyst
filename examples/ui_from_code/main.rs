@@ -1,6 +1,6 @@
 use amethyst::{
     assets::LoaderBundle,
-    audio::output::init_output,
+    audio::AudioBundle,
     core::{dispatcher::DispatcherBuilder, transform::TransformBundle},
     input::InputBundle,
     renderer::{
@@ -25,7 +25,6 @@ impl SimpleState for Example {
         example_utils::build_example_button(world, resources);
         example_utils::build_ui_image_texture(world, resources);
 
-        init_output(resources);
         example_utils::build_complex_button_with_font_and_sound(world, resources);
 
         example_utils::build_draggable(world, resources);
@@ -54,6 +53,7 @@ fn main() -> amethyst::Result<()> {
         .add_bundle(TransformBundle)
         .add_bundle(InputBundle::default())
         .add_bundle(UiBundle::<u32>::default())
+        .add_bundle(AudioBundle)
         .add_bundle(AudioUiBundle)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()

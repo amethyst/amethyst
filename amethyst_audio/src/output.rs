@@ -7,13 +7,9 @@ use std::{
     sync::Arc,
 };
 
-use amethyst_core::ecs::*;
 use cpal::traits::DeviceTrait;
 use log::error;
-use rodio::{
-    default_output_device, output_devices, Decoder, Device, Devices, OutputDevices, Sink,
-    Source as RSource,
-};
+use rodio::{default_output_device, Decoder, Device, Sink, Source as RSource};
 
 use crate::{sink::AudioSink, source::Source, DecoderError};
 
@@ -95,11 +91,7 @@ impl Output {
     ) -> Result<(), DecoderError> {
         let sink = Sink::new(&self.device);
         for _ in 0..n {
-            sink.append(
-                Decoder::new(Cursor::new(source.clone()))
-                    .map_err(|_| DecoderError)?
-                    .amplify(volume),
-            );
+            sink.append(Decoder::new(Cursor::new(source.clone()))?.amplify(volume));
         }
         sink.detach();
         Ok(())
@@ -114,101 +106,40 @@ impl Debug for Output {
     }
 }
 
-/// An iterator over outputs
-#[allow(missing_debug_implementations)]
-pub struct OutputIterator {
-    devices: OutputDevices<Devices>,
-}
-
-impl Iterator for OutputIterator {
-    type Item = Output;
-
-    fn next(&mut self) -> Option<Output> {
-        self.devices.next().map(|device| {
-            Output {
-                device: Arc::new(device),
-            }
-        })
-    }
-}
-
-/// Get the default output, returns none if no outputs are available.
-pub fn default_output() -> Option<Output> {
-    default_output_device().map(|device| {
-        Output {
-            device: Arc::new(device),
-        }
-    })
-}
-
-/// Get a list of outputs available to the system.
-pub fn outputs() -> OutputIterator {
-    let devices =
-        output_devices().unwrap_or_else(|e| panic!("Error retrieving output devices: `{}`", e));
-    OutputIterator { devices }
-}
-
-/// Initialize default output
-pub fn init_output(res: &mut Resources) {
-    if !res.contains::<OutputWrapper>() {
-        res.insert(OutputWrapper::default());
-    }
-
-    let mut wrapper = res.get_mut::<OutputWrapper>().unwrap();
-
-    if let Some(o) = default_output() {
-        if wrapper.audio_sink.is_none() {
-            wrapper.audio_sink = Some(AudioSink::new(&o));
-        }
-        if wrapper.output.is_none() {
-            wrapper.output = Some(o);
-        }
-    } else {
-        error!("Failed finding a default audio output to hook AudioSink to, audio will not work!")
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    #[cfg(target_os = "linux")]
-    use {
-        crate::{output::Output, source::Source, DecoderError},
-        amethyst_utils::app_root_dir::application_root_dir,
-        std::{fs::File, io::Read, vec::Vec},
-    };
+    use std::{fs::File, io::Read, vec::Vec};
+
+    use amethyst_utils::app_root_dir::application_root_dir;
+
+    use crate::{output::Output, source::Source, DecoderError};
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_wav() {
         test_play("tests/sound_test.wav", true)
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_mp3() {
         test_play("tests/sound_test.mp3", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_flac() {
         test_play("tests/sound_test.flac", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_ogg() {
         test_play("tests/sound_test.ogg", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_fake() {
         test_play("tests/sound_test.fake", false);
     }
 
     // test_play tests the play APIs for Output
-    #[cfg(target_os = "linux")]
     fn test_play(file_name: &str, should_pass: bool) {
         // Get the full file path
         let app_root = application_root_dir().unwrap();
@@ -240,7 +171,6 @@ mod tests {
         check_result(result_try_play_n_times, should_pass);
     }
 
-    #[cfg(target_os = "linux")]
     fn check_result(result: Result<(), DecoderError>, should_pass: bool) {
         match result {
             Ok(_pass) => {

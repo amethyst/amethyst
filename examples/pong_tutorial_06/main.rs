@@ -5,12 +5,10 @@ mod bundle;
 mod pong;
 mod systems;
 
-use std::time::Duration;
-
 use amethyst::{
     assets::LoaderBundle,
-    audio::{AudioBundle, DjSystem, DjSystemBundle},
-    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
+    audio::{AudioBundle, DjSystemBundle},
+    core::transform::TransformBundle,
     input::InputBundle,
     prelude::*,
     renderer::{
@@ -23,14 +21,7 @@ use amethyst::{
     utils::application_root_dir,
 };
 
-use crate::{
-    audio::Music,
-    bundle::PongBundle,
-    pong::Pong,
-    systems::{
-        bounce::BounceSystem, move_balls::BallSystem, paddle::PaddleSystem, winner::WinnerSystem,
-    },
-};
+use crate::{audio::Music, bundle::PongBundle, pong::Pong};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
