@@ -35,7 +35,7 @@ use amethyst_rendy::{
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
-use glsl_layout::{vec2, vec4, AsStd140};
+use glsl_layout::{vec2, vec4, Uniform};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -90,7 +90,7 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Uniform)]
 #[repr(C, align(4))]
 pub(crate) struct UiArgs {
     pub(crate) coords: vec2,
@@ -112,7 +112,7 @@ impl AsVertex for UiArgs {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Uniform)]
 struct UiViewArgs {
     inverse_window_size: vec2,
 }

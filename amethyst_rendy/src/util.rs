@@ -74,7 +74,7 @@ pub fn ensure_buffer<B: Backend>(
 }
 
 /// Helper function for memory alignment.
-pub fn align_size<T: AsStd140>(align: u64, array_len: usize) -> u64
+pub fn align_size<T: Uniform>(align: u64, array_len: usize) -> u64
 where
     T::Std140: Sized,
 {

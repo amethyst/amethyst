@@ -295,7 +295,7 @@ impl<B: Backend> RenderPlugin<B> for RenderCustom {
 ///    vec2 pos;
 ///    vec4 color;
 /// } vertex;
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Uniform)]
 #[repr(C, align(4))]
 pub struct CustomArgs {
     /// vec2 pos;
@@ -323,7 +323,7 @@ impl AsVertex for CustomArgs {
 /// layout(std140, set = 0, binding = 0) uniform CustomUniformArgs {
 ///    uniform float scale;
 /// };
-#[derive(Clone, Copy, Debug, AsStd140)]
+#[derive(Clone, Copy, Debug, Uniform)]
 #[repr(C, align(4))]
 pub struct CustomUniformArgs {
     /// The value each vertex is scaled by.
