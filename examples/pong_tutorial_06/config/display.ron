@@ -4,6 +4,6 @@
 */
 
 (
+  title: "Pong!",
   dimensions: Some((500, 500)),
-  title: "Pong example",
 )

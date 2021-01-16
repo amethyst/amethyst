@@ -26,9 +26,9 @@ fnv = "1"
 gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
 hibitset = { version = "0.6.2", features = ["parallel"] }
 itertools = "0.8"
-log = "0.4.6"
+log = "0.4"
 mikktspace = "0.2.0"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
 
 thread_profiler = { version = "0.3", optional = true }
 image = "0.22.2"
