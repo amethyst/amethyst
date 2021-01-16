@@ -19,7 +19,7 @@ amethyst_window = { path = "../amethyst_window", version = "0.15.3", optional = 
 amethyst_config = { path = "../amethyst_config", version = "0.15.3" }
 derive-new = "0.5.6"
 genmesh = "0.6"
-glsl-layout = "0.3"
+glsl-layout = "0.4"
 # gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
 lazy_static = "1.4"
 log = "0.4"
@@ -33,20 +33,20 @@ static_assertions = "1.1"
 indexmap = { version = "1.3", features = ["rayon"] }
 type-uuid = "0.1"
 thread_profiler = { version = "0.3", optional = true }
-approx = "0.4.0"
+approx = "0.4"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["metal"] }
+rendy = { version = "0.5", git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["metal"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["vulkan"] }
+rendy = { version = "0.5", git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["vulkan"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["vulkan"] }
+rendy = { version = "0.5", git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["vulkan"] }
 
 
 [dev-dependencies]
-winit = { git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
+winit = { version = "0.24", git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 rayon = "1.5"
 more-asserts = "0.2.1"
 criterion = "0.3.0"

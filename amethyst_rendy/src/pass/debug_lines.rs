@@ -25,7 +25,7 @@ use crate::{
     util,
 };
 
-#[derive(Debug, Clone, AsStd140)]
+#[derive(Debug, Clone, Copy, Uniform)]
 struct DebugLinesArgs {
     screen_space_thickness: vec2,
 }

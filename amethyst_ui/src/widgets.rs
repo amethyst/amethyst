@@ -49,8 +49,10 @@ impl WidgetId for u64 {
 
 impl WidgetId for String {
     fn generate(_: &Option<Self>) -> Self {
-        rand::thread_rng()
-            .sample_iter(&Alphanumeric)
+        let mut rng = rand::thread_rng();
+        std::iter::repeat(())
+            .map(|()| rng.sample(Alphanumeric))
+            .map(char::from)
             .take(16)
             .collect()
     }

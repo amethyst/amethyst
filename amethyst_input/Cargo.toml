@@ -23,14 +23,14 @@ derivative = "2.1.1"
 derive-new = "0.5"
 fnv = "1"
 serde = { version = "1", features = ["derive"] }
-winit = { git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
+winit = { version = "0.24", git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 sdl2 = { version = "0.33", optional = true }
 smallvec = { version = "1.2", features = ["serde"] }
 
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-approx = "0.3"
+approx = "0.4"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

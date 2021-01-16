@@ -183,7 +183,7 @@ impl<A> AssetStorage<A> {
     where
         D: FnMut(A),
     {
-        while let Ok(asset) = self.to_drop.pop() {
+        while let Some(asset) = self.to_drop.pop() {
             drop_fn(asset);
         }
     }

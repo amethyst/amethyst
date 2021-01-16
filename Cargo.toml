@@ -70,6 +70,11 @@ exclude = [
     "amethyst_test",
     "examples/Cargo.toml",
     "examples/_unused_assets",
+    "examples/examples.sh",
+    "examples/README.md",
+    "examples/LICENSE_ASSETS.md",
+    "examples/LICENSE_AUDIO.txt",
+    "examples/LICENSE_TEXTURES.txt",
     "examples/spotlights",
     "examples/renderable",
     "examples/renderable_custom",
@@ -105,19 +110,19 @@ amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3", optional = true }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
 amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
-winit = { git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
-crossbeam-channel = "0.4.2"
+winit = { version = "0.24", git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
+crossbeam-channel = "0.5"
 derivative = "2.1.1"
 fern = { version = "0.6", features = ["colored"] }
 log = { version = "0.4", features = ["serde"] }
 rayon = "1.5"
 rustc_version_runtime = "0.2.0"
-sentry = { version = "0.18.0", optional = true }
+sentry = { version = "0.22.0", optional = true }
 serde = { version = "1", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
 thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"
-glsl-layout = "0.3.2"
+glsl-layout = "0.4"
 # until https://github.com/amethyst/legion/pull/186 passed
 legion = { version = "0.3", default-features = false, features = [
     "serialize",
@@ -126,7 +131,7 @@ legion = { version = "0.3", default-features = false, features = [
 ] }
 
 [build-dependencies]
-dirs = "2.0.2"
+dirs-next = "2.0.0"
 vergen = "3.1.0"
 
 [package.metadata.docs.rs]

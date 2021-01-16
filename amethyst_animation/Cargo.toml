@@ -25,7 +25,6 @@ amethyst_rendy = { path = "../amethyst_rendy", version = "0.15.3" }
 amethyst_ui = { path = "../amethyst_ui", version = "0.15.3", optional = true }
 derivative = "2.1.1"
 fnv = "1"
-itertools = "0.8.0"
 log = "0.4"
 minterpolate = { version = "0.4", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }

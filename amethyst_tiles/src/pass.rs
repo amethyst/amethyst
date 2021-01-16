@@ -46,7 +46,7 @@ use amethyst_rendy::{
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
-use glsl_layout::AsStd140;
+use glsl_layout::Uniform;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
