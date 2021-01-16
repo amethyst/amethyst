@@ -122,7 +122,7 @@ serde = { version = "1", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
 thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"
-glsl-layout = "0.3.2"
+glsl-layout = "0.4"
 # until https://github.com/amethyst/legion/pull/186 passed
 legion = { version = "0.3", default-features = false, features = [
     "serialize",

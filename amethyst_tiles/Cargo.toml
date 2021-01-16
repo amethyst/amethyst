@@ -34,7 +34,7 @@ smallvec = "1.2.0"
 lazy_static = "1.4"
 rayon = "1.5"
 bitintr = "0.3"
-glsl-layout = "0.3"
+glsl-layout = "0.4"
 err-derive = "0.2.3"
 
 [dev-dependencies]
