@@ -21,6 +21,10 @@ pub struct Prefab {
 
     #[serde(skip)]
     pub(crate) dependers: FnvHashSet<WeakHandle>,
+
+    /// Incremented everytime the prefab is cooked.
+    #[serde(skip)]
+    pub(crate) version: u32,
 }
 
 impl Asset for Prefab {

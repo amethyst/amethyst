@@ -89,6 +89,7 @@ impl Importer for PrefabImporter {
             dependencies: None,
             prefab: None,
             dependers: FnvHashSet::default(),
+            version: 0,
         };
 
         ///////////////////////////////////////////////////////////////

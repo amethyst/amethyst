@@ -254,6 +254,7 @@ impl PrefabProcessingQueue {
                     for (handle, cooked_prefab) in updates.into_iter() {
                         storage.mutate_asset_in_storage(&handle, move |asset| {
                             asset.prefab = Some(cooked_prefab);
+                            asset.version += 1;
                         });
                     }
                 }
@@ -278,6 +279,7 @@ impl PrefabProcessingQueue {
                          raw_prefab,
                          mut dependencies,
                          dependers,
+                         version,
                      }| {
                         log::debug!("AssetUuid: {:?}", raw_prefab.prefab_id());
                         let deps = dependencies.get_or_insert_with(|| {
@@ -300,6 +302,7 @@ impl PrefabProcessingQueue {
                                 raw_prefab,
                                 dependencies,
                                 dependers,
+                                version,
                             }))
                         } else {
                             Ok(ProcessingState::Loading(Prefab {
@@ -307,6 +310,7 @@ impl PrefabProcessingQueue {
                                 raw_prefab,
                                 dependencies,
                                 dependers,
+                                version,
                             }))
                         }
                     },
@@ -336,8 +340,11 @@ impl PrefabProcessingQueue {
                 };
 
                 let cooked_prefab = Self::cook_prefab(&prefab, storage, component_registry);
-
+                let cook_version = storage
+                    .get_for_load_handle(handle)
+                    .map_or(1, |Prefab { version, .. }| *version + 1);
                 prefab.prefab = Some(cooked_prefab);
+                prefab.version = cook_version;
                 storage.update_asset(handle, prefab, version);
                 if commit {
                     storage.commit_asset(handle, version);
@@ -499,6 +506,7 @@ mod tests {
             dependencies: None,
             prefab: None,
             dependers: FnvHashSet::default(),
+            version: 0,
         };
         let version = 0;
 
@@ -545,6 +553,7 @@ mod tests {
             dependencies: None,
             prefab: None,
             dependers: FnvHashSet::default(),
+            version: 0,
         };
 
         let prefab_handle_1 = handle_maker.make_handle::<Prefab>();
@@ -554,6 +563,7 @@ mod tests {
             dependencies: None,
             prefab: None,
             dependers: FnvHashSet::default(),
+            version: 0,
         };
         let version = 0;
         prefab_root.raw_prefab.prefab_meta.prefab_refs.insert(
