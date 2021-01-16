@@ -5,7 +5,7 @@ use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
- #[cfg(feature = "profiler")]
+#[cfg(feature = "profiler")]
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 use winit::event::{Event, WindowEvent};
 

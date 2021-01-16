@@ -4,8 +4,7 @@ use amethyst_core::{
     math::{convert, Matrix4, Vector3},
     transform::Transform,
 };
-use glsl_layout::*;
-use glsl_layout::Uniform;
+use glsl_layout::{Uniform, *};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

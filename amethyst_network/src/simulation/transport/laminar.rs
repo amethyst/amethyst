@@ -161,10 +161,14 @@ impl System<'_> for LaminarNetworkRecvSystem {
                                         packet.addr(),
                                         Bytes::copy_from_slice(packet.payload()),
                                     )
-                                }                                
-                                SocketEvent::Disconnect(addr) => NetworkSimulationEvent::Disconnect(addr),
+                                }
+                                SocketEvent::Disconnect(addr) => {
+                                    NetworkSimulationEvent::Disconnect(addr)
+                                }
                                 SocketEvent::Connect(addr) => NetworkSimulationEvent::Connect(addr),
-                                SocketEvent::Timeout(addr) => NetworkSimulationEvent::Disconnect(addr)
+                                SocketEvent::Timeout(addr) => {
+                                    NetworkSimulationEvent::Disconnect(addr)
+                                }
                             };
                             event_channel.single_write(event);
                         }

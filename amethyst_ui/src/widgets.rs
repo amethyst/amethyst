@@ -51,10 +51,10 @@ impl WidgetId for String {
     fn generate(_: &Option<Self>) -> Self {
         let mut rng = rand::thread_rng();
         std::iter::repeat(())
-        .map(|()| rng.sample(Alphanumeric))
-        .map(char::from)
-        .take(16)
-        .collect()
+            .map(|()| rng.sample(Alphanumeric))
+            .map(char::from)
+            .take(16)
+            .collect()
     }
 }
 
