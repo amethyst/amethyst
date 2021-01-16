@@ -1,7 +1,6 @@
 use std::{borrow::Cow, fmt::Display};
 
 use serde::{Deserialize, Serialize};
-use shrinkwraprs::Shrinkwrap;
 
 /// A component that gives a name to an [`Entity`].
 ///
@@ -60,8 +59,7 @@ use shrinkwraprs::Shrinkwrap;
 ///         }
 /// });
 /// ```
-#[derive(Shrinkwrap, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[shrinkwrap(mutable)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Named(
     /// The name of the entity this component is attached to.
     pub Cow<'static, str>,

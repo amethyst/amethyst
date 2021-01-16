@@ -4,7 +4,7 @@ use amethyst_core::{
     math::{convert, Matrix4, Vector3},
     transform::Transform,
 };
-use glsl_layout::*;
+use glsl_layout::{Uniform, *};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -14,15 +14,13 @@ use crate::{
     resources::AmbientColor,
 };
 
-type Std140<T> = <T as AsStd140>::Std140;
-
 /// Helper `CameraGatherer` for fetching appropriate matrix information from camera entities.
 #[derive(Debug)]
 pub struct CameraGatherer {
     /// Fetched camera world position
     pub camera_position: vec3,
     /// Fetched camera projection matrix.
-    pub projview: Std140<pod::ViewArgs>,
+    pub projview: <pod::ViewArgs as Uniform>::Std140,
 }
 
 impl CameraGatherer {

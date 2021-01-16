@@ -26,7 +26,7 @@ profiler = ["thread_profiler/thread_profiler"]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 bytes = "0.5"
-laminar = "0.3"
+laminar = "0.4"
 log = "0.4"
 thread_profiler = { version = "0.3", optional = true }
 derive-new = "0.5.8"

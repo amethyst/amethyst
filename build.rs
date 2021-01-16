@@ -3,7 +3,7 @@ use std::{
     path::Path,
 };
 
-use dirs::config_dir;
+use dirs_next::config_dir;
 use vergen::{self, ConstantsFlags};
 
 fn main() {

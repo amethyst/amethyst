@@ -162,6 +162,9 @@ impl System<'_> for LaminarNetworkRecvSystem {
                                         Bytes::copy_from_slice(packet.payload()),
                                     )
                                 }
+                                SocketEvent::Disconnect(addr) => {
+                                    NetworkSimulationEvent::Disconnect(addr)
+                                }
                                 SocketEvent::Connect(addr) => NetworkSimulationEvent::Connect(addr),
                                 SocketEvent::Timeout(addr) => {
                                     NetworkSimulationEvent::Disconnect(addr)

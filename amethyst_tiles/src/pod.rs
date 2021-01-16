@@ -11,7 +11,7 @@ use amethyst_rendy::{
     resources::Tint as TintComponent,
     Sprite,
 };
-use glsl_layout::{mat4, uvec3, vec2, vec4, AsStd140};
+use glsl_layout::{mat4, uvec3, vec2, vec4, Uniform};
 
 /// `TileMapArgs`
 /// ```glsl,ignore
@@ -22,7 +22,7 @@ use glsl_layout::{mat4, uvec3, vec2, vec4, AsStd140};
 ///    uniform mat4 map_transform;
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, AsStd140)]
+#[derive(Clone, Copy, Debug, Uniform)]
 #[repr(C, align(16))]
 pub struct TileMapArgs {
     /// Projection matrix
@@ -47,7 +47,7 @@ pub struct TileMapArgs {
 /// float depth;
 /// vec4 tint;
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Uniform)]
 #[repr(C, align(4))]
 pub struct TileArgs {
     /// Upper-left coordinate of the sprite in the spritesheet

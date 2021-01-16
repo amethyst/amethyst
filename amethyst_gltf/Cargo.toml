@@ -25,7 +25,6 @@ base64 = "0.11"
 fnv = "1"
 gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
 hibitset = { version = "0.6.2", features = ["parallel"] }
-itertools = "0.8"
 log = "0.4"
 mikktspace = "0.2.0"
 serde = { version = "1", features = ["derive"] }

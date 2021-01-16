@@ -54,7 +54,7 @@ impl System<'_> for TransformSystem {
 
                             if parent_has_transform {
                                 let parent_matrix = right
-                                    .entry_ref(**parent)
+                                    .entry_ref(parent.0)
                                     .expect("Invalid entity in Parent component")
                                     .into_component::<Transform>()
                                     .unwrap()

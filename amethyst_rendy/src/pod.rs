@@ -19,7 +19,7 @@ use crate::{mtl, resources::Tint as TintComponent, Sprite};
 ///    vec2 v_offset;
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, AsStd140)]
+#[derive(Clone, Copy, Debug, Uniform)]
 #[repr(C, align(16))]
 pub struct TextureOffset {
     /// U-axis offset
@@ -46,7 +46,7 @@ impl TextureOffset {
 ///    uniform mat4 proj_view;
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, AsStd140)]
+#[derive(Clone, Copy, Debug, Uniform)]
 #[repr(C, align(16))]
 pub struct ViewArgs {
     /// Projection matrix
@@ -61,7 +61,7 @@ pub struct ViewArgs {
 /// ```glsl,ignore
 /// vec4 tint;
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Uniform)]
 #[repr(C, align(16))]
 pub struct Tint {
     /// Tint color as `Rgba32Sfloat`
@@ -114,7 +114,7 @@ impl AsVertex for VertexArgs {
 /// ```glsl,ignore
 ///  uint joints_offset;
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Uniform)]
 #[repr(C, align(4))]
 pub struct JointsOffset {
     /// `u32` joints offset value
@@ -133,7 +133,7 @@ impl AsAttribute for JointsOffset {
 ///  uint joints_offset:
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-#[repr(C, packed)]
+#[repr(C)]
 pub struct SkinnedVertexArgs {
     /// Instance-rate model matrix
     pub model: mat4,
@@ -178,7 +178,7 @@ impl SkinnedVertexArgs {
 ///    float intensity;
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, AsStd140)]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub struct PointLight {
     /// Light world position
     pub position: vec3,
@@ -196,7 +196,7 @@ pub struct PointLight {
 ///    vec3 direction;
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, AsStd140)]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub struct DirectionalLight {
     /// Light Color
     pub color: vec3,
@@ -218,7 +218,7 @@ pub struct DirectionalLight {
 ///    float smoothness;
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, AsStd140)]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub struct SpotLight {
     /// Light world position
     pub position: vec3,
@@ -246,7 +246,7 @@ pub struct SpotLight {
 ///    int spot_light_count;
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, AsStd140)]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub struct Environment {
     /// Ambient color for the entire image
     pub ambient_color: vec3,
@@ -267,7 +267,7 @@ pub struct Environment {
 ///    float alpha_cutoff;
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, AsStd140)]
+#[derive(Clone, Copy, Debug, Uniform)]
 #[repr(C, align(16))]
 pub struct Material {
     /// UV offset of material
@@ -296,7 +296,7 @@ impl Material {
 /// float depth;
 /// vec4 tint;
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Uniform)]
 #[repr(C, align(4))]
 pub struct SpriteArgs {
     /// Rotation of the sprite, X-axis

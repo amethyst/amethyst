@@ -132,7 +132,7 @@ impl<T> ProcessingQueue<T> {
                 .requeue
                 .get_mut()
                 .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
-            while let Ok(processed) = self.processed.pop() {
+            while let Some(processed) = self.processed.pop() {
                 let f = &mut f;
                 let Processed {
                     data,

@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, time::Duration};
+use std::{collections::HashSet, marker::PhantomData, time::Duration};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
@@ -7,7 +7,6 @@ use amethyst_core::{
     nanos_to_duration, secs_to_duration, Time,
 };
 use derivative::Derivative;
-use itertools::Itertools;
 use log::debug;
 use minterpolate::InterpolationPrimitive;
 #[cfg(feature = "profiler")]
@@ -64,7 +63,8 @@ where
                         }
                         if !inner.is_empty() {
                             channels.clear();
-                            channels.extend(inner.iter().map(|o| &o.1).unique().cloned());
+                            channels
+                                .extend(inner.iter().map(|o| o.1.clone()).collect::<HashSet<_>>());
                             for channel in &channels {
                                 match comp.blend_method(channel) {
                                     None => {

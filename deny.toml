@@ -1,0 +1,92 @@
+# See docs: https://embarkstudios.github.io/cargo-deny/checks/index.html
+
+[advisories]
+vulnerability = "deny"
+unmaintained = "deny"
+yanked = "deny"
+notice = "deny"
+ignore = [
+    "RUSTSEC-2020-0053", # FIXME: font-kit depends on old dirs
+    "RUSTSEC-2020-0077", # FIXME: atelier-assets depends on memmap
+    "RUSTSEC-2020-0056", # FIXME: cpal dependency, check wasm branches for fix
+    "RUSTSEC-2019-0035", # FIXME: old rand_core
+    # FIXME(#2472)
+    # `stb_truetype` crate has been deprecated; use `ttf-parser` instead
+    # This crate was maintained for use in rusttype which has switched to use [ttf-parser](https://crates.io/crates/ttf-parser)
+    # URL: https://gitlab.redox-os.org/redox-os/stb_truetype-rs/-/commit/f1f5be4794e87bfc80a4255bc3f23ed75dd77645
+    "RUSTSEC-2020-0020",
+    # FIXME: net2 is pulled in via `mio` (https://github.com/tokio-rs/mio/issues/1319#issuecomment-683496712)
+    # The [`net2`](https://crates.io/crates/net2) crate has been deprecated
+    # and users are encouraged to considered [`socket2`](https://crates.io/crates/socket2) instead.
+    # URL: https://github.com/deprecrated/net2-rs/commit/3350e3819adf151709047e93f25583a5df681091
+    "RUSTSEC-2020-0016",
+]
+
+[bans]
+multiple-versions = "deny"
+wildcards = "warn"
+skip = [
+    # FIXME: Waiting for alga to update its num-complex dep: https://github.com/dimforge/alga/pull/99
+    { version = "=0.2.4", name = "num-complex" },
+    { name = "cfg-if", version = "0.1.10" },
+    { name = "winapi", version = "0.2.8" }, # upgrade tokio and notify
+    { name = "wasi", version = "0.9.0" }, # upgrade tempfile and uuid
+    { name = "tinyvec", version = "0.3.4" }, # upgrade rodio
+    { name = "rusttype", version = "0.8.3" }, # upgrade glyph_brush
+    { name = "redox_users", version = "0.3.5" }, # upgrade font-kit
+    { name = "nom", version = "5.1.2" }, # upgrade cpal
+    { name = "core-graphics", version = "0.19.2" }, # winit uses both?
+    { name = "core-foundation-sys", version = "0.6.2" }, # upgrade cpal
+    { name = "approx", version = "0.3.2" }, # upgrade alga,rusttype,glyph_brush
+    { name = "rand", version = "0.4.6" }, # upgrade genmesh
+    { name = "rand_hc", version = "0.2.0" }, # upgrade nalgebra,glyph_brush
+    { name = "rand_core", version = "0.5.1" }, # upgrade nalgebra,glyph_brush
+    { name = "rand_chacha", version = "0.2.2" }, # upgrade nalgebra,glyph_brush
+    { name = "rand", version = "0.7.3" }, # upgrade nalgebra,glyph_brush
+]
+skip-tree = [
+    { name = "rendy" },
+    { name = "atelier-assets" },
+    # { name = "legion-prefab" },
+    # { name = "legion-transaction" },
+    # { name = "prefab-format" },
+]
+deny = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
+required-git-spec = "rev"
+
+[licenses]
+unlicensed = "warn"
+copyleft = "deny"
+default = "deny"
+allow-osi-fsf-free = "neither"
+
+deny = []
+
+# Run `cargo deny list` to see which crates use which license
+# and add them to this array if we accept them
+
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Unlicense",
+    "Zlib",
+    "MPL-2.0",
+    "CC0-1.0",
+    "ISC",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+]
+
+exceptions = [{ name = "lazy-bytes-cast", allow = ["BSL-1.0"] }]
+
+# We want really high confidence when inferring licenses from text
+confidence-threshold = 0.93
+
+[sources.allow-org]
+github = ["amethyst", "radium-io", "rust-windowing"]

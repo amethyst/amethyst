@@ -1,7 +1,7 @@
 //!  Helper abstraction for per-image uniform submission.
 use core::marker::PhantomData;
 
-use glsl_layout::AsStd140;
+use glsl_layout::Uniform;
 use rendy::resource::SubRange;
 
 use crate::{
@@ -20,7 +20,7 @@ use crate::{
 
 /// Provides per-image abstraction for an arbitrary `DescriptorSet`.
 #[derive(Debug)]
-pub struct DynamicUniform<B: Backend, T: AsStd140>
+pub struct DynamicUniform<B: Backend, T: Uniform>
 where
     T::Std140: Sized,
 {
@@ -29,7 +29,7 @@ where
 }
 
 #[derive(Debug)]
-struct PerImageDynamicUniform<B: Backend, T: AsStd140>
+struct PerImageDynamicUniform<B: Backend, T: Uniform>
 where
     T::Std140: Sized,
 {
@@ -38,7 +38,7 @@ where
     marker: PhantomData<T>,
 }
 
-impl<B: Backend, T: AsStd140> DynamicUniform<B, T>
+impl<B: Backend, T: Uniform> DynamicUniform<B, T>
 where
     T::Std140: Sized,
 {
@@ -109,7 +109,7 @@ where
     }
 }
 
-impl<B: Backend, T: AsStd140> PerImageDynamicUniform<B, T>
+impl<B: Backend, T: Uniform> PerImageDynamicUniform<B, T>
 where
     T::Std140: Sized,
 {

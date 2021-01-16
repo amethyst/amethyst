@@ -1,5 +1,5 @@
 use derivative::Derivative;
-use glsl_layout::{vec3, AsStd140};
+use glsl_layout::{vec3, Uniform};
 use rendy::{
     command::{QueueId, RenderPassEncoder},
     factory::{Factory, UploadError},
@@ -40,14 +40,14 @@ impl Default for SkyboxSettings {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, AsStd140)]
+#[derive(Clone, Copy, Debug, PartialEq, Uniform)]
 pub(crate) struct SkyboxUniform {
     nadir_color: vec3,
     zenith_color: vec3,
 }
 
 impl SkyboxSettings {
-    pub(crate) fn uniform(&self) -> <SkyboxUniform as AsStd140>::Std140 {
+    pub(crate) fn uniform(&self) -> <SkyboxUniform as Uniform>::Std140 {
         SkyboxUniform {
             nadir_color: self.nadir_color.into_pod(),
             zenith_color: self.zenith_color.into_pod(),
