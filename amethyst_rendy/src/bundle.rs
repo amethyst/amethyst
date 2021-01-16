@@ -61,12 +61,6 @@ impl<B: Backend> RenderingBundle<B> {
     pub fn add_plugin(&mut self, plugin: impl RenderPlugin<B> + 'static) {
         self.plugins.push(Box::new(plugin));
     }
-
-    fn into_graph_creator(&mut self) -> PluggableRenderGraphCreator<B> {
-        PluggableRenderGraphCreator {
-            plugins: self.plugins.drain(..).collect(),
-        }
-    }
 }
 
 register_asset_type!(Material => Material; AssetProcessorSystem<Material>);
@@ -101,7 +95,9 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
         resources.insert(RenderState {
             graph: None,
             families: r.families,
-            graph_creator: self.into_graph_creator(),
+            graph_creator: PluggableRenderGraphCreator {
+                plugins: self.plugins.drain(..).collect(),
+            },
         });
 
         builder.add_thread_local_fn(render::<B, PluggableRenderGraphCreator<B>>);
