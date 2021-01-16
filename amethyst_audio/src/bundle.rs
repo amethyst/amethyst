@@ -4,24 +4,46 @@
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
 
-use crate::{output::Output, systems::*};
+use crate::{output::OutputWrapper, systems::*};
 
 /// Audio bundle
 ///
-/// This will only add the audio system and the asset processor for `Source`.
+/// This will add an empty SelectedListener, OutputWrapper, add the audio system and the asset processor for `Source`.
 ///
 /// `DjSystem` must be added separately if you want to use our background music system.
 #[derive(Default, Debug)]
-pub struct AudioBundle(Output);
+pub struct AudioBundle;
 
 impl SystemBundle for AudioBundle {
     fn load(
         &mut self,
         _world: &mut World,
-        _resources: &mut Resources,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
+        if !resources.contains::<OutputWrapper>() {
+            resources.insert(OutputWrapper::default());
+        }
+        resources.insert(SelectedListener(None));
         builder.add_system(Box::new(AudioSystem));
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn add_audio_bundle_should_not_crash_when_executing_iter() {
+        let mut resources = Resources::default();
+        let mut world = World::default();
+
+        let mut dispatcher = DispatcherBuilder::default()
+            .add_bundle(AudioBundle)
+            .build(&mut world, &mut resources)
+            .unwrap();
+
+        dispatcher.execute(&mut world, &mut resources);
     }
 }

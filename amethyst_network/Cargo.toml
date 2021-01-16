@@ -6,7 +6,7 @@ authors = [
 	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>",
 	"Timon Post (TimonPost) <https://github.com/TimonPost>",
 	"Justin LeFebvre (jstnlef) <https://github.com/jstnlef>",
-        "Amethyst Foundation <contact@amethyst.rs>"
+	"Amethyst Foundation <contact@amethyst.rs>",
 ]
 edition = "2018"
 description = "Amethyst networking crate"
@@ -20,7 +20,7 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [features]
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
@@ -28,5 +28,5 @@ amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 bytes = "0.5"
 laminar = "0.3"
 log = "0.4"
-thread_profiler = { version = "0.3" , optional = true }
+thread_profiler = { version = "0.3", optional = true }
 derive-new = "0.5.8"

@@ -26,33 +26,29 @@ fn asset_loading_tick(_: &mut World, resources: &mut Resources) {
 
 /// starts the asset thread with atelier_daemon
 pub fn start_asset_daemon(asset_dirs: Vec<PathBuf>) {
-    std::thread::spawn(move || {
-        let db_path = ".assets_db";
-        let address = "127.0.0.1:9999";
+    let db_path = ".assets_db";
+    let address = "127.0.0.1:9999";
 
-        info!("Starting AssetDaemon...");
-        info!("db_path: {}", db_path);
-        info!("address: {}", address);
-        info!("asset_dirs: {:?}", asset_dirs);
-        let mut importer_map = ImporterMap::default();
-        let mut importers = default_importers();
-        importers.push(("prefab", Box::new(PrefabImporter::default())));
-        importers.extend(get_source_importers());
+    let mut importer_map = ImporterMap::default();
+    let mut importers = default_importers();
 
-        for (ext, importer) in importers {
-            info!("Adding importer for ext {}", ext);
-            importer_map.insert(ext, importer);
-        }
+    importers.push(("prefab", Box::new(PrefabImporter::default())));
 
-        let daemon = AssetDaemon {
-            db_dir: PathBuf::from(db_path),
-            address: address.parse().unwrap(),
-            importers: importer_map,
-            importer_contexts: default_importer_contexts(),
-            asset_dirs,
-        };
-        daemon.run();
-    });
+    importers.extend(get_source_importers());
+
+    for (ext, importer) in importers {
+        info!("Adding importer for ext {}", ext);
+        importer_map.insert(ext, importer);
+    }
+
+    AssetDaemon {
+        db_dir: PathBuf::from(db_path),
+        address: address.parse().unwrap(),
+        importers: importer_map,
+        importer_contexts: default_importer_contexts(),
+        asset_dirs,
+    }
+    .run();
 }
 
 /// Bundle that initializes Loader as well as related processing systems and resources
