@@ -23,7 +23,7 @@ glsl-layout = "0.4"
 # gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
 lazy_static = "1.4"
 log = "0.4"
-palette = { version = "0.4", features = ["serde"] }
+palette = { version = "0.4", default-features = false, features = ["serde"] }
 ron = "0.6.4"
 serde = { version = "1", features = ["serde_derive"] }
 fnv = "1"
