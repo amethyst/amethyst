@@ -1,36 +1,37 @@
 //! A crate for loading GLTF format scenes into Amethyst
 
 #![doc(
-    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
-    html_root_url = "https://docs.amethyst.rs/stable"
+html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+html_root_url = "https://docs.amethyst.rs/stable"
 )]
 #![warn(
-    missing_debug_implementations,
-    missing_docs,
-    rust_2018_idioms,
-    rust_2018_compatibility
+missing_debug_implementations,
+missing_docs,
+rust_2018_idioms,
+rust_2018_compatibility
 )]
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
 use std::{collections::HashMap, ops::Range};
 
-use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter};
+use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter, prefab::Prefab};
 use amethyst_core::{
     ecs::{Entity, Read, ReadExpect, Write, WriteStorage},
+    ecs::*,
     math::{convert, Point3, Vector3},
     transform::Transform,
     Named,
 };
 use amethyst_error::Error;
-use amethyst_rendy::{rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere};
+use amethyst_rendy::{rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere, Camera, Material};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
-
-pub use crate::format::GltfSceneFormat;
+use type_uuid::TypeUuid;
+use amethyst_rendy::light::Light;
 
 mod error;
-mod format;
+mod importer;
 
 /// A GLTF node extent
 #[derive(Clone, Debug)]
@@ -115,17 +116,21 @@ impl From<Range<[f32; 3]>> for GltfNodeExtent {
 }
 
 /// Used during gltf loading to contain the materials used from scenes in the file
-#[derive(Debug, Derivative)]
+#[derive(Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct GltfMaterialSet {
-    pub(crate) materials: HashMap<usize, MaterialPrefab>,
+    pub(crate) materials: HashMap<usize, Prefab>,
 }
 
 /// Options used when loading a GLTF file
-#[derive(Debug, Clone, Derivative, Serialize, Deserialize)]
-#[derivative(Default)]
+#[derive(Debug, Clone, Default, Derivative, Serialize, Deserialize, TypeUuid)]
 #[serde(default)]
+#[uuid = "8e3da51a-26d4-4b0f-b9f7-7f52d1b78945"]
 pub struct GltfSceneOptions {
+    /// Path of the gltf scene file
+    pub scene_path: String,
+    /// Name of the current scene
+    pub scene_name: String,
     /// Generate texture coordinates if none exist in the Gltf file
     pub generate_tex_coords: (f32, f32),
     #[derivative(Default(value = "true"))]
@@ -148,4 +153,33 @@ pub struct GltfSceneOptions {
     /// Load the given scene index, if not supplied will either load the default scene (if set),
     /// or the first scene (only if there is only one scene, otherwise an `Error` will be returned).
     pub scene_index: Option<usize>,
+}
+
+/// `AssetData` for gltf objects.
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
+pub struct GltfAsset {
+    /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
+    /// certain scenarios (based on the data in the Gltf file)
+    pub transform: Option<Transform>,
+    /// `Camera` will always be placed
+    pub camera: Option<Camera>,
+    /// Lights can be added to a prefab with the `KHR_lights_punctual` feature enabled
+    pub light: Option<Light>,
+    /// `MeshData` is placed on all `Entity`s with graphics primitives
+    pub mesh: Option<MeshBuilder<'static>>,
+    /// Mesh handle after sub asset loading is done
+    pub mesh_handle: Option<Handle<Mesh>>,
+    /// `Material` is placed on all `Entity`s with graphics primitives with material
+    pub material: Option<Material>,
+    /// Loaded animations, if applicable, will always only be placed on the main `Entity`
+    pub animatable: Option<Animatable<usize, Transform>>,
+    /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
+    /// using the skin
+    pub skinnable: Option<Skinnable>,
+    /// Node extent
+    pub extent: Option<GltfNodeExtent>,
+    /// Node name
+    pub name: Option<Named>,
+    pub(crate) materials: Option<GltfMaterialSet>,
+    pub(crate) material_id: Option<usize>,
 }

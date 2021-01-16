@@ -30,7 +30,7 @@ optional = ["audio", "network", "locale", "ui", "tiles", "animation"]
 tiles = ["amethyst_tiles"]
 animation = ["amethyst_animation"]
 audio = ["amethyst_audio"]
-#gltf = ["amethyst_gltf", "amethyst_animation"]
+gltf = ["amethyst_gltf", "amethyst_animation"]
 locale = ["amethyst_locale"]
 network = ["amethyst_network"]
 utils = ["amethyst_utils"]
@@ -56,6 +56,7 @@ profiler = [
     "amethyst_ui/profiler",
     "amethyst_utils/profiler",
     "amethyst_tiles/profiler",
+    "amethyst_gltf/profiler",
 ]
 # sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
@@ -69,7 +70,6 @@ parallel = ["amethyst_core/parallel"]
 [workspace]
 members = ["examples/*", "amethyst_*"]
 exclude = [
-    "amethyst_gltf",
     "amethyst_test",
     "examples/Cargo.toml",
     "examples/_unused_assets",
@@ -102,7 +102,7 @@ amethyst_core = { path = "amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "amethyst_error", version = "0.15.3" }
 amethyst_controls = { path = "amethyst_controls", version = "0.15.3" }
 amethyst_derive = { path = "amethyst_derive", version = "0.15.3" }
-#amethyst_gltf = { path = "amethyst_gltf", version = "0.15.3", optional = true }
+amethyst_gltf = { path = "amethyst_gltf", version = "0.15.3", optional = true }
 amethyst_network = { path = "amethyst_network", version = "0.15.3", optional = true }
 amethyst_locale = { path = "amethyst_locale", version = "0.15.3", optional = true }
 amethyst_rendy = { path = "amethyst_rendy", version = "0.15.3", features = ["window"], optional = true }

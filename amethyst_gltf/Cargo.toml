@@ -20,21 +20,33 @@ amethyst_animation = { path = "../amethyst_animation", version = "0.15.3" }
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 amethyst_rendy = { path = "../amethyst_rendy", version = "0.15.3" }
+atelier-assets = { git = "https://github.com/radium-io/atelier-assets.git", rev = "6987e6b4abe061f1810018efd7518866b62b70fb", features = [
+    "serde-1",
+    "type_uuid",
+    "serde_importers",
+    "parallel_hash",
+    "rpc_io",
+    "handle",
+] }
 err-derive = "0.2.3"
 base64 = "0.11"
 fnv = "1"
-gltf = { version = "0.15", features = ["KHR_lights_punctual"] }
+gltf = { git = "https://github.com/gltf-rs/gltf.git", rev = "4298aac70336ae0413312a61344badbf67fbcbde", features = ["KHR_lights_punctual"] }
 hibitset = { version = "0.6.2", features = ["parallel"] }
 log = "0.4"
 mikktspace = "0.2.0"
 serde = { version = "1", features = ["derive"] }
+serde_bytes = "0.11"
+type-uuid = "0.1"
+uuid = { version = "0.8", features = ["v4"] }
 
 thread_profiler = { version = "0.3", optional = true }
-image = "0.22.2"
+image = "0.23.12"
 derivative = "2.1.1"
 
 [dev-dependencies]
 amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+futures = "0.3"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]
