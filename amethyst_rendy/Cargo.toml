@@ -33,7 +33,7 @@ static_assertions = "1.1"
 indexmap = { version = "1.3", features = ["rayon"] }
 type-uuid = "0.1"
 thread_profiler = { version = "0.3", optional = true }
-approx = "0.4.0"
+approx = "0.4"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 rendy = { git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["metal"] }

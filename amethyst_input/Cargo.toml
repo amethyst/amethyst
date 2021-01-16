@@ -30,7 +30,7 @@ smallvec = { version = "1.2", features = ["serde"] }
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-approx = "0.3"
+approx = "0.4"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

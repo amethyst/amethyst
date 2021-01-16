@@ -40,7 +40,7 @@ err-derive = "0.2.3"
 [dev-dependencies]
 criterion = "0.3"
 more-asserts = "0.2"
-approx = "0.3"
+approx = "0.4"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]
