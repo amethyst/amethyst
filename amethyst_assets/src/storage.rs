@@ -39,11 +39,12 @@ impl<A> AssetStorage<A> {
     }
 
     pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
-        if let Some(data) = self.uncommitted.remove(&handle) {
+        if let Some(data) = self
+            .uncommitted
+            .insert(handle, AssetState { version, asset })
+        {
             self.to_drop.push(data.asset);
         }
-        self.uncommitted
-            .insert(handle, AssetState { version, asset });
     }
 
     pub(crate) fn remove_asset(&mut self, handle: LoadHandle, version: u32) {

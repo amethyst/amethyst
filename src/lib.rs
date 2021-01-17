@@ -96,6 +96,7 @@ pub use winit;
 
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
+    core::logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     error::Error,
     game_data::{DataDispose, DataInit, GameData},
     state::{
@@ -104,7 +105,7 @@ pub use self::{
     },
     state_event::{StateEvent, StateEventReader},
 };
-pub use crate::core::{ecs, shrev, logger};
+pub use crate::core::{ecs, shrev};
 #[doc(hidden)]
 pub use crate::derive::*;
 
