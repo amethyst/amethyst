@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use amethyst_assets::{AssetHandle, AssetStorage, Handle};
 use amethyst_core::{
     dispatcher::{System, ThreadLocalSystem},
-    ecs::{component, world::World, IntoQuery, Resources, TryRead},
+    ecs::{component, world::World, IntoQuery, Resources, TryRead, EntityStore},
     geometry::{Plane, Ray},
     math::{self, clamp, convert, Matrix4, Point2, Point3, Vector2, Vector3, Vector4},
     transform::Transform,
@@ -79,18 +79,113 @@ lazy_static::lazy_static! {
 /// Trait to describe how rendering tiles may be culled for the tilemap to render
 pub trait DrawTiles2DBounds: 'static + std::fmt::Debug + Send + Sync {
     /// Returns the region to render the tiles
-    fn bounds<T: Tile, E: CoordinateEncoder>(map: &TileMap<T, E>, world: &World) -> Region;
+    fn bounds<T: Tile, E: CoordinateEncoder>(
+        map: &TileMap<T, E>,
+        map_transform: Option<&Transform>,
+        aux: &GraphAuxData,
+    ) -> Region;
 }
 
 /// Default bounds that returns the entire tilemap
 #[derive(Default, Debug)]
 pub struct DrawTiles2DBoundsDefault;
 impl DrawTiles2DBounds for DrawTiles2DBoundsDefault {
-    fn bounds<T: Tile, E: CoordinateEncoder>(map: &TileMap<T, E>, world: &World) -> Region {
+    fn bounds<T: Tile, E: CoordinateEncoder>(
+        map: &TileMap<T, E>,
+        map_transform: Option<&Transform>,
+        aux: &GraphAuxData,
+    ) -> Region {
         Region::new(
             Point3::new(0, 0, 0),
             Point3::from(*map.dimensions() - Vector3::new(1, 1, 1)),
         )
+    }
+}
+
+/// Bounds that use the active camera to cull visible tiles only. If there is no active camera, an empty region is returned.
+#[derive(Default, Debug)]
+pub struct DrawTiles2DBoundsCameraCulling;
+
+impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
+    fn bounds<T: Tile, E: CoordinateEncoder>(
+        map: &TileMap<T, E>,
+        map_transform: Option<&Transform>,
+        aux: &GraphAuxData,
+    ) -> Region {
+        let active_camera = aux.resources.get::<ActiveCamera>();
+        if active_camera.is_none() {
+            // No active camera
+            return Region::empty();
+        }
+        let active_camera = active_camera.unwrap();
+        if active_camera.entity.is_none() {
+            // No entity in active camera
+            return Region::empty();
+        }
+        if let Ok(entry) = aux.world.entry_ref(active_camera.entity.unwrap()) {
+            // Build 4 rays for the 4 corners of the camera frustum
+            let rays = {
+                let camera_transform = entry.get_component::<Transform>().unwrap();
+                let camera = entry.get_component::<Camera>().unwrap();
+                let dimensions = aux.resources.get::<ScreenDimensions>().unwrap();
+                let w = dimensions.width();
+                let h = dimensions.height();
+                let diagonal = Vector2::new(w, h);
+                [
+                    camera.screen_ray(Point2::new(0.0, 0.0), diagonal, camera_transform),
+                    camera.screen_ray(Point2::new(0.0, h), diagonal, camera_transform),
+                    camera.screen_ray(Point2::new(w, 0.0), diagonal, camera_transform),
+                    camera.screen_ray(Point2::new(w, h), diagonal, camera_transform),
+                ]
+            };
+            let tile_plane = Plane::from_point_normal(
+                &map_transform.map_or(Point3::new(0.0, 0.0, 0.0), |t| {
+                    Point3::from(*t.translation())
+                }),
+                &map_transform.map_or(Vector3::new(0.0, 0.0, -1.0), |t| {
+                    t.matrix().transform_vector(&Vector3::new(0.0, 0.0, -1.0))
+                }),
+            );
+            // Intersect rays with the tilemap, get intersecting tile coordinates
+            let points = rays
+                .iter()
+                .map(|ray| {
+                    ray.intersect_plane(&tile_plane)
+                        .and_then(|d| {
+                            Some(
+                                map.to_tile(&ray.at_distance(d).coords, map_transform)
+                                    .unwrap_or_else(|e| {
+                                        // If the point is out of bounds, clamp it to the first/last tile of each dimension
+                                        Point3::new(
+                                            (e.point_dimensions.x.max(0) as u32)
+                                                .min(map.dimensions().x - 1),
+                                            (e.point_dimensions.y.max(0) as u32)
+                                                .min(map.dimensions().y - 1),
+                                            (e.point_dimensions.z.max(0) as u32)
+                                                .min(map.dimensions().z - 1),
+                                        )
+                                    }),
+                            )
+                        })
+                        .unwrap()
+                })
+                .collect::<Vec<Point3<u32>>>();
+            // Cull the tilemap using the min and max coordinates along each axis of the tilemap
+            return Region::new(
+                Point3::new(
+                    points.iter().map(|p| p.x).min().unwrap(),
+                    points.iter().map(|p| p.y).min().unwrap(),
+                    0,
+                ),
+                Point3::new(
+                    points.iter().map(|p| p.x).max().unwrap(),
+                    points.iter().map(|p| p.y).max().unwrap(),
+                    map.dimensions().z - 1,
+                ),
+            );
+        }
+        // Active camera exists but its entity is not found
+        return Region::empty();
     }
 }
 
@@ -247,7 +342,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                         .into(),
                     });
 
-                    compute_region::<T, E, Z>(&tile_map, aux.world)
+                    compute_region::<T, E, Z>(&tile_map, transform, aux)
                         .iter()
                         .filter_map(|coord| {
                             let tile = tile_map.get(&coord).unwrap();
@@ -324,10 +419,8 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
             for (tilemap_args_index, range) in ranges {
                 let env = self.env.get(*tilemap_args_index).unwrap();
                 env.bind(index, layout, 0, &mut encoder);
-
                 if self.textures.loaded(tex) {
                     self.textures.bind(layout, 1, tex, &mut encoder);
-
                     unsafe {
                         encoder.draw(0..4, range.to_owned());
                     }
@@ -348,9 +441,10 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
 
 fn compute_region<T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds>(
     tile_map: &TileMap<T, E>,
-    world: &World,
+    map_transform: Option<&Transform>,
+    aux: &GraphAuxData,
 ) -> Region {
-    let mut region = Z::bounds(tile_map, world);
+    let mut region = Z::bounds(tile_map, map_transform, aux);
     let max_value = tile_map.dimensions() - Vector3::new(1, 1, 1);
 
     region.min = Point3::new(
