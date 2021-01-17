@@ -151,21 +151,20 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
                 .iter()
                 .map(|ray| {
                     ray.intersect_plane(&tile_plane)
-                        .and_then(|d| {
-                            Some(
-                                map.to_tile(&ray.at_distance(d).coords, map_transform)
-                                    .unwrap_or_else(|e| {
-                                        // If the point is out of bounds, clamp it to the first/last tile of each dimension
-                                        Point3::new(
-                                            (e.point_dimensions.x.max(0) as u32)
-                                                .min(map.dimensions().x - 1),
-                                            (e.point_dimensions.y.max(0) as u32)
-                                                .min(map.dimensions().y - 1),
-                                            (e.point_dimensions.z.max(0) as u32)
-                                                .min(map.dimensions().z - 1),
-                                        )
-                                    }),
-                            )
+                        .map(|d| {
+                            map.to_tile(&ray.at_distance(d).coords, map_transform)
+                                .unwrap_or_else(|e| {
+                                    // If the point is out of bounds, clamp it to the first/last tile of each dimension
+                                    #[allow(clippy::cast_sign_loss)]
+                                    Point3::new(
+                                        (e.point_dimensions.x.max(0) as u32)
+                                            .min(map.dimensions().x - 1),
+                                        (e.point_dimensions.y.max(0) as u32)
+                                            .min(map.dimensions().y - 1),
+                                        (e.point_dimensions.z.max(0) as u32)
+                                            .min(map.dimensions().z - 1),
+                                    )
+                                })
                         })
                         .unwrap()
                 })
@@ -185,7 +184,7 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
             );
         }
         // Active camera exists but its entity is not found
-        return Region::empty();
+        Region::empty()
     }
 }
 
