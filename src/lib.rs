@@ -98,14 +98,13 @@ pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     error::Error,
     game_data::{DataDispose, DataInit, GameData},
-    logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
         TransEvent,
     },
     state_event::{StateEvent, StateEventReader},
 };
-pub use crate::core::{ecs, shrev};
+pub use crate::core::{ecs, shrev, logger};
 #[doc(hidden)]
 pub use crate::derive::*;
 
@@ -116,6 +115,5 @@ pub mod prelude;
 
 mod app;
 mod game_data;
-mod logger;
 mod state;
 mod state_event;

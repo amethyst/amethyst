@@ -55,8 +55,8 @@ impl Default for LoggerConfig {
 /// # Examples
 /// ```
 /// amethyst::Logger::from_config(Default::default())
-///     .level_for("gfx_device_gl", amethyst::LogLevelFilter::Warn)
-///     .level_for("gfx_glyph", amethyst::LogLevelFilter::Error)
+///     .level_for("gfx_device_gl", log::LevelFilter::Warn)
+///     .level_for("gfx_glyph", log::LevelFilter::Error)
 ///     .start();
 ///
 /// amethyst::Logger::from_config_formatter(Default::default(), |out, message, record| {
