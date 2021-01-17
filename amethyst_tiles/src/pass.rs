@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use amethyst_assets::{AssetHandle, AssetStorage, Handle};
 use amethyst_core::{
     dispatcher::{System, ThreadLocalSystem},
-    ecs::{component, world::World, IntoQuery, Resources, TryRead, EntityStore},
+    ecs::{component, world::World, EntityStore, IntoQuery, Resources, TryRead},
     geometry::{Plane, Ray},
     math::{self, clamp, convert, Matrix4, Point2, Point3, Vector2, Vector3, Vector4},
     transform::Transform,

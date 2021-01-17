@@ -17,7 +17,7 @@ use amethyst::{
         types::DefaultBackend,
         RenderDebugLines, RenderFlat2D, RenderToWindow, RenderingBundle,
     },
-    tiles::{MortonEncoder, RenderTiles2D, Tile, TileMap, DrawTiles2DBoundsCameraCulling},
+    tiles::{DrawTiles2DBoundsCameraCulling, MortonEncoder, RenderTiles2D, Tile, TileMap},
     utils::application_root_dir,
     window::ScreenDimensions,
     winit,
@@ -171,7 +171,11 @@ fn main() -> amethyst::Result<()> {
             )
             .with_plugin(RenderDebugLines::default())
             .with_plugin(RenderFlat2D::default())
-            .with_plugin(RenderTiles2D::<ExampleTile, MortonEncoder, DrawTiles2DBoundsCameraCulling>::default()),
+            .with_plugin(RenderTiles2D::<
+                ExampleTile,
+                MortonEncoder,
+                DrawTiles2DBoundsCameraCulling,
+            >::default()),
     );
 
     let game = Application::build(assets_directory, Example)?.build(dispatcher)?;
