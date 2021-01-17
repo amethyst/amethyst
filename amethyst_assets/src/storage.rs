@@ -39,22 +39,9 @@ impl<A> AssetStorage<A> {
     }
 
     pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
-        debug!(
-            "AssetStorage<A>::update_asset load_handle: {:?}, version: {}",
-            handle, version
-        );
         if let Some(data) = self.uncommitted.remove(&handle) {
-            debug!(
-                "uncommitted data already exists for the handle: {:?}, drop it",
-                handle
-            );
-            // uncommitted data already exists for the handle, drop it
             self.to_drop.push(data.asset);
         }
-        debug!(
-            "insert asset with load_handle: {:?}, version: {}",
-            handle, version
-        );
         self.uncommitted
             .insert(handle, AssetState { version, asset });
     }
@@ -79,17 +66,17 @@ impl<A> AssetStorage<A> {
             if data.version != version {
                 panic!("attempted to commit asset version which mismatches with existing uncommitted version")
             }
-            if let Some(existing) = self.assets.remove(&handle) {
-                // data already exists for the handle, drop it
-                self.to_drop.push(existing.asset);
-            }
-            self.assets.insert(
+
+            if let Some(existing) = self.assets.insert(
                 handle,
                 AssetState {
                     version,
                     asset: data.asset,
                 },
-            );
+            ) {
+                // data already exists for the handle, drop it
+                self.to_drop.push(existing.asset);
+            };
         } else {
             panic!("attempted to commit asset which doesn't exist");
         }

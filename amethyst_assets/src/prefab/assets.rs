@@ -12,8 +12,10 @@ use crate::{asset::Asset, Handle, WeakHandle};
 pub struct Prefab {
     /// contains Legion World and Entity Mappings
     pub(crate) prefab: Option<legion_prefab::CookedPrefab>,
+
     /// Contains World to cook and references to other prefabs
     pub(crate) raw_prefab: legion_prefab::Prefab,
+
     /// `None`: dependencies have not been processed yet
     /// `Some(Vec::len())` is 0: There are no dependencies
     #[serde(skip)]

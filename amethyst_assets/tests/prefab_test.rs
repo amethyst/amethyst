@@ -14,24 +14,10 @@ use type_uuid::TypeUuid;
 
 mod common;
 
-fn setup() -> (Dispatcher, World, Resources) {
-    let mut dispatcher_builder = DispatcherBuilder::default();
-    let mut world = World::default();
-    let mut resources = Resources::default();
-
-    let dispatcher = dispatcher_builder
-        .add_bundle(LoaderBundle)
-        .build(&mut world, &mut resources)
-        .expect("Failed to create dispatcher in test setup");
-    (dispatcher, world, resources)
-}
-
 #[test]
 #[serial]
 fn a_prefab_can_be_loaded() {
-    common::run_test(|| {
-        let (mut dispatcher, mut world, mut resources) = setup();
-
+    common::run_test(|dispatcher, world, resources| {
         let prefab_handle: Handle<Prefab> = {
             let loader = resources
                 .get_mut::<DefaultLoader>()
@@ -39,12 +25,7 @@ fn a_prefab_can_be_loaded() {
             loader.load("single_entity.prefab")
         };
 
-        execute_dispatcher_until_loaded(
-            &mut dispatcher,
-            &mut world,
-            &mut resources,
-            prefab_handle.clone(),
-        );
+        execute_dispatcher_until_loaded(dispatcher, world, resources, prefab_handle.clone());
 
         let storage = {
             resources
@@ -56,7 +37,6 @@ fn a_prefab_can_be_loaded() {
         assert!(prefab.is_some());
 
         drop(storage);
-        dispatcher.unload(&mut world, &mut resources).unwrap();
     })
 }
 
@@ -80,34 +60,19 @@ register_component_type!(SpotLight2D);
 #[test]
 #[serial]
 fn a_prefab_is_applied_to_an_entity() {
-    common::run_test(|| {
-        let (mut dispatcher, mut world, mut resources) = setup();
-
-        let prefab_handle: Handle<Prefab> = {
-            let loader = resources
-                .get_mut::<DefaultLoader>()
-                .expect("Missing loader");
+    common::run_test(|dispatcher, world, resources| {
+        let prefab_handle = {
+            let loader = resources.get::<DefaultLoader>().expect("Missing loader");
             loader.load("test_provided_component.prefab")
         };
 
-        execute_dispatcher_until_loaded(
-            &mut dispatcher,
-            &mut world,
-            &mut resources,
-            prefab_handle.clone(),
-        );
+        execute_dispatcher_until_loaded(dispatcher, world, resources, prefab_handle.clone());
 
         let entity = world.push((prefab_handle,));
 
-        execute_dispatcher_until_prefab_is_applied(
-            &mut dispatcher,
-            &mut world,
-            &mut resources,
-            entity,
-        );
+        execute_dispatcher_until_prefab_is_applied(dispatcher, world, resources, entity);
 
-        let mut query = <(Entity, &Position2D)>::query();
-        query.for_each(&world, |(entity, position)| {
+        <(Entity, &Position2D)>::query().for_each(world, |(entity, position)| {
             println!("Entity: {:?}, Position: {:?}", entity, position);
         });
 
@@ -125,52 +90,45 @@ fn a_prefab_is_applied_to_an_entity() {
             *component, expected,
             "Position2D component value does not match",
         );
-
-        dispatcher.unload(&mut world, &mut resources).unwrap();
     })
 }
 
 #[test]
 fn a_prefab_with_dependencies_is_applied_to_an_entity() {
-    let (mut dispatcher, mut world, mut resources) = setup();
+    common::run_test(|dispatcher, world, resources| {
+        let prefab_handle: Handle<Prefab> = {
+            let loader = resources
+                .get_mut::<DefaultLoader>()
+                .expect("Missing loader");
+            loader.load("entity_with_dependencies.prefab")
+        };
 
-    let prefab_handle: Handle<Prefab> = {
-        let loader = resources
-            .get_mut::<DefaultLoader>()
-            .expect("Missing loader");
-        loader.load("entity_with_dependencies.prefab")
-    };
+        execute_dispatcher_until_loaded(dispatcher, world, resources, prefab_handle.clone());
 
-    execute_dispatcher_until_loaded(
-        &mut dispatcher,
-        &mut world,
-        &mut resources,
-        prefab_handle.clone(),
-    );
+        let entity = world.push((prefab_handle,));
 
-    let entity = world.push((prefab_handle,));
+        execute_dispatcher_until_prefab_is_applied(dispatcher, world, resources, entity);
 
-    execute_dispatcher_until_prefab_is_applied(&mut dispatcher, &mut world, &mut resources, entity);
+        let mut query = <(Entity, &Position2D)>::query();
+        query.for_each(world, |(entity, position)| {
+            println!("Entity: {:?}, Position: {:?}", entity, position);
+        });
 
-    let mut query = <(Entity, &Position2D)>::query();
-    query.for_each(&world, |(entity, position)| {
-        println!("Entity: {:?}, Position: {:?}", entity, position);
+        let entry = world
+            .entry(entity)
+            .expect("Could not retrieve entity from world");
+
+        let component = entry
+            .get_component::<Position2D>()
+            .expect("Could not retrive compont from entry");
+
+        let expected = Position2D { x: 100, y: 0 };
+
+        assert_eq!(
+            *component, expected,
+            "Position2D component value does not match",
+        );
     });
-
-    let entry = world
-        .entry(entity)
-        .expect("Could not retrieve entity from world");
-
-    let component = entry
-        .get_component::<Position2D>()
-        .expect("Could not retrive compont from entry");
-
-    let expected = Position2D { x: 100, y: 0 };
-
-    assert_eq!(
-        *component, expected,
-        "Position2D component value does not match",
-    );
 }
 
 fn execute_dispatcher_until_prefab_is_applied(
@@ -185,15 +143,15 @@ fn execute_dispatcher_until_prefab_is_applied(
             Instant::now() < timeout,
             "Timed out waiting for prefab to be applied"
         );
-        {
-            if let Some(entry) = world.entry(entity) {
-                match entry.get_component::<Position2D>() {
-                    Ok(_position) => break,
-                    Err(ComponentError::NotFound { .. }) => (),
-                    Err(ComponentError::Denied { .. }) => panic!("Access to component was denied"),
-                }
+
+        if let Some(entry) = world.entry(entity) {
+            match entry.get_component::<Position2D>() {
+                Ok(_) => break,
+                Err(ComponentError::NotFound { .. }) => (),
+                Err(ComponentError::Denied { .. }) => panic!("Access to component was denied"),
             }
         }
+
         dispatcher.execute(world, resources);
     }
 }
