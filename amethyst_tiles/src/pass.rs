@@ -617,12 +617,13 @@ mod tests {
             None,
         );
         let mut world = World::new(WorldOptions::default());
+        #[allow(clippy::cast_precision_loss)]
         let camera = world.push((
             cam_transform,
             Camera::standard_2d(cam_dim.x as f32, cam_dim.y as f32),
         ));
         map_transform.copy_local_to_global();
-        let map_entity = world.push((map, map_transform.clone()));
+        let map_entity = world.push((map, map_transform));
         let mut resources = Resources::default();
         resources.insert(ActiveCamera {
             entity: Some(camera),
