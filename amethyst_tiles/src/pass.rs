@@ -106,6 +106,26 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsDefault {
 #[derive(Default, Debug)]
 pub struct DrawTiles2DBoundsCameraCulling;
 
+fn camera_ray_to_tile_coords<T: Tile, E: CoordinateEncoder>(
+    ray: Ray<f32>,
+    tile_plane: &Plane<f32>,
+    map: &TileMap<T, E>,
+    map_transform: Option<&Transform>,
+) -> Point3<u32> {
+    // Intersect rays with the tilemap, get intersecting tile coordinates
+    let distance = ray.intersect_plane(&tile_plane).unwrap_or(0.0);
+    map.to_tile(&ray.at_distance(distance).coords, map_transform)
+        .unwrap_or_else(|e| {
+            // If the point is out of bounds, clamp it to the first/last tile of each dimension
+            #[allow(clippy::cast_sign_loss)]
+            Point3::new(
+                (e.point_dimensions.x.max(0) as u32).min(map.dimensions().x - 1),
+                (e.point_dimensions.y.max(0) as u32).min(map.dimensions().y - 1),
+                (e.point_dimensions.z.max(0) as u32).min(map.dimensions().z - 1),
+            )
+        })
+}
+
 impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
     fn bounds<T: Tile, E: CoordinateEncoder>(
         map: &TileMap<T, E>,
@@ -123,21 +143,6 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
             return Region::empty();
         }
         if let Ok(entry) = aux.world.entry_ref(active_camera.entity.unwrap()) {
-            // Build 4 rays for the 4 corners of the camera frustum
-            let rays = {
-                let camera_transform = entry.get_component::<Transform>().unwrap();
-                let camera = entry.get_component::<Camera>().unwrap();
-                let dimensions = aux.resources.get::<ScreenDimensions>().unwrap();
-                let w = dimensions.width();
-                let h = dimensions.height();
-                let diagonal = Vector2::new(w, h);
-                [
-                    camera.screen_ray(Point2::new(0.0, 0.0), diagonal, camera_transform),
-                    camera.screen_ray(Point2::new(0.0, h), diagonal, camera_transform),
-                    camera.screen_ray(Point2::new(w, 0.0), diagonal, camera_transform),
-                    camera.screen_ray(Point2::new(w, h), diagonal, camera_transform),
-                ]
-            };
             let tile_plane = Plane::from_point_normal(
                 &map_transform.map_or(Point3::new(0.0, 0.0, 0.0), |t| {
                     Point3::from(*t.translation())
@@ -146,29 +151,39 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
                     t.matrix().transform_vector(&Vector3::new(0.0, 0.0, -1.0))
                 }),
             );
-            // Intersect rays with the tilemap, get intersecting tile coordinates
-            let points = rays
-                .iter()
-                .map(|ray| {
-                    ray.intersect_plane(&tile_plane)
-                        .map(|d| {
-                            map.to_tile(&ray.at_distance(d).coords, map_transform)
-                                .unwrap_or_else(|e| {
-                                    // If the point is out of bounds, clamp it to the first/last tile of each dimension
-                                    #[allow(clippy::cast_sign_loss)]
-                                    Point3::new(
-                                        (e.point_dimensions.x.max(0) as u32)
-                                            .min(map.dimensions().x - 1),
-                                        (e.point_dimensions.y.max(0) as u32)
-                                            .min(map.dimensions().y - 1),
-                                        (e.point_dimensions.z.max(0) as u32)
-                                            .min(map.dimensions().z - 1),
-                                    )
-                                })
-                        })
-                        .unwrap()
-                })
-                .collect::<Vec<Point3<u32>>>();
+            let camera_transform = entry.get_component::<Transform>().unwrap();
+            let camera = entry.get_component::<Camera>().unwrap();
+            let dimensions = aux.resources.get::<ScreenDimensions>().unwrap();
+            let w = dimensions.width();
+            let h = dimensions.height();
+            let diagonal = Vector2::new(w, h);
+            // Cast 4 rays from the four corners of the camera, and get at which tile they intersect
+            let points = [
+                camera_ray_to_tile_coords(
+                    camera.screen_ray(Point2::new(0.0, 0.0), diagonal, camera_transform),
+                    &tile_plane,
+                    map,
+                    map_transform,
+                ),
+                camera_ray_to_tile_coords(
+                    camera.screen_ray(Point2::new(0.0, h), diagonal, camera_transform),
+                    &tile_plane,
+                    map,
+                    map_transform,
+                ),
+                camera_ray_to_tile_coords(
+                    camera.screen_ray(Point2::new(w, 0.0), diagonal, camera_transform),
+                    &tile_plane,
+                    map,
+                    map_transform,
+                ),
+                camera_ray_to_tile_coords(
+                    camera.screen_ray(Point2::new(w, h), diagonal, camera_transform),
+                    &tile_plane,
+                    map,
+                    map_transform,
+                ),
+            ];
             // Cull the tilemap using the min and max coordinates along each axis of the tilemap
             return Region::new(
                 Point3::new(
@@ -473,12 +488,12 @@ fn build_tiles_pipeline<B: Backend>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    let mut shaders = SHADERS.build(factory, Default::default()).map_err(|e| {
-        match e {
+    let mut shaders = SHADERS
+        .build(factory, Default::default())
+        .map_err(|e| match e {
             hal::device::ShaderError::OutOfMemory(oom) => oom.into(),
             _ => pso::CreationError::Other,
-        }
-    })?;
+        })?;
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
