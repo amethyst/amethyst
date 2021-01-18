@@ -29,14 +29,7 @@ impl Prefab {
         // prefab_lookup and entity_lookup are populated with all dependent prefabs/entities
         let mut prefab_cook_order: Vec<PrefabUuid> = vec![];
 
-        let mut dependency_stack = vec![(
-            prefab,
-            prefab
-                .dependencies
-                .as_ref()
-                .expect("dependencies have not been processed")
-                .iter(),
-        )];
+        let mut dependency_stack = vec![(prefab, prefab.dependencies.iter())];
 
         while let Some((cur_prefab, children)) = dependency_stack.last_mut() {
             if let Some(child_handle) = children.next() {
@@ -46,14 +39,7 @@ impl Prefab {
                         continue;
                     }
 
-                    dependency_stack.push((
-                        child_prefab,
-                        child_prefab
-                            .dependencies
-                            .as_ref()
-                            .expect("dependencies have not been processed")
-                            .iter(),
-                    ));
+                    dependency_stack.push((child_prefab, child_prefab.dependencies.iter()));
                 } else {
                     log::error!("Prefab dependency is not yet loaded!");
                 }
@@ -148,22 +134,21 @@ fn prefab_asset_processor(
     processing_queue.process(storage, |mut prefab, storage| {
         log::debug!("Processing Prefab {:x?}", AssetUuid(prefab.raw.prefab_id()));
 
-        let dep_refs = prefab.raw.prefab_meta.prefab_refs.iter();
-        prefab.dependencies.get_or_insert_with(|| {
-            dep_refs
-                .map(|(child_prefab_id, _)| {
-                    let handle = loader.load_asset(AssetUuid(*child_prefab_id));
-                    loading.push(handle.clone());
-                    handle
-                })
-                .collect()
-        });
+        prefab.dependencies = prefab
+            .raw
+            .prefab_meta
+            .prefab_refs
+            .iter()
+            .map(|(child_prefab_id, _)| {
+                let handle = loader.load_asset(AssetUuid(*child_prefab_id));
+                loading.push(handle.clone());
+                handle
+            })
+            .collect();
 
         Ok(
             if prefab
                 .dependencies
-                .as_ref()
-                .unwrap()
                 .iter()
                 .all(|handle| storage.contains(handle.load_handle()))
             {

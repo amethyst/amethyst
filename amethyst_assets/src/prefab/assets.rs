@@ -17,10 +17,8 @@ pub struct Prefab {
     /// Contains World to cook and references to other prefabs
     pub(crate) raw: legion_prefab::Prefab,
 
-    /// `None`: dependencies have not been processed yet
-    /// `Some(Vec::len())` is 0: There are no dependencies
     #[serde(skip)]
-    pub(crate) dependencies: Option<Vec<Handle<Prefab>>>,
+    pub(crate) dependencies: Vec<Handle<Prefab>>,
 
     #[serde(skip)]
     pub(crate) dependers: FnvHashSet<WeakHandle>,
@@ -34,7 +32,7 @@ impl Default for Prefab {
     fn default() -> Self {
         Prefab {
             raw: legion_prefab::Prefab::new(World::default()),
-            dependencies: None,
+            dependencies: Vec::new(),
             dependers: FnvHashSet::default(),
             cooked: None,
             version: 0,

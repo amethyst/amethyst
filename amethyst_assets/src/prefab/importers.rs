@@ -88,10 +88,7 @@ impl Importer for PrefabImporter {
 
         let prefab_asset = Prefab {
             raw: raw_prefab,
-            dependencies: None,
-            dependers: FnvHashSet::default(),
-            cooked: None,
-            version: 0,
+            ..Default::default()
         };
 
         ///////////////////////////////////////////////////////////////
