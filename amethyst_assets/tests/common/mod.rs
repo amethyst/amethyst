@@ -4,7 +4,7 @@ use amethyst_assets::{start_asset_daemon, LoaderBundle};
 use amethyst_core::{
     dispatcher::{Dispatcher, DispatcherBuilder},
     ecs::{Resources, World},
-    start_logger, Logger, LoggerConfig,
+    Logger, LoggerConfig,
 };
 
 pub static INIT: Once = Once::new();

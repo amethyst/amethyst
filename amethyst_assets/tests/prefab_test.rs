@@ -2,11 +2,9 @@ use std::time::{Duration, Instant};
 
 use amethyst_assets::{
     prefab::{register_component_type, Prefab},
-    AssetHandle, AssetStorage, DefaultLoader, Handle, LoadStatus, Loader, LoaderBundle,
+    AssetHandle, AssetStorage, DefaultLoader, Handle, LoadStatus, Loader,
 };
-use amethyst_core::ecs::{
-    world::ComponentError, Dispatcher, DispatcherBuilder, Entity, IntoQuery, Resources, World,
-};
+use amethyst_core::ecs::{world::ComponentError, Dispatcher, Entity, IntoQuery, Resources, World};
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use serial_test::serial;

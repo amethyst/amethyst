@@ -260,7 +260,7 @@ pub trait AssetTypeStorage {
     fn update_asset(
         &self,
         handle: LoadHandle,
-        data: &Vec<u8>,
+        data: &[u8],
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error + Send>>;
@@ -290,7 +290,7 @@ where
     fn update_asset(
         &self,
         handle: LoadHandle,
-        data: &Vec<u8>,
+        data: &[u8],
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error + Send>> {

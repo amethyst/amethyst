@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use atelier_assets::loader::{handle::AssetHandle, storage::IndirectionTable, LoadHandle};
 use crossbeam_queue::SegQueue;
-use log::debug;
 
 struct AssetState<A> {
     version: u32,

@@ -18,13 +18,6 @@ pub const BALL_VELOCITY_X: f32 = 75.0;
 pub const BALL_VELOCITY_Y: f32 = 50.0;
 pub const BALL_RADIUS: f32 = 2.0;
 
-const AUDIO_MUSIC: &[&str] = &[
-    "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
-    "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
-];
-const AUDIO_BOUNCE: &str = "audio/bounce.ogg";
-const AUDIO_SCORE: &str = "audio/score.ogg";
-
 #[derive(Default)]
 pub struct Pong {
     ball_spawn_timer: Option<f32>,
