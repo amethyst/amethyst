@@ -112,15 +112,17 @@ fn camera_ray_to_tile_coords<T: Tile, E: CoordinateEncoder>(
     // Intersect rays with the tilemap, get intersecting tile coordinates
     let distance = ray.intersect_plane(&tile_plane).unwrap_or(0.0);
     map.to_tile(&ray.at_distance(distance).coords, map_transform)
-        .map(|p| Point3::new(p.x as i64, p.y as i64, p.z as i64))
-        .unwrap_or_else(|e| {
-            // If the point is out of bounds, clamp it to the first/last tile of each dimension
-            Point3::new(
-                e.point_dimensions.x as i64,
-                e.point_dimensions.y as i64,
-                e.point_dimensions.z as i64,
-            )
-        })
+        .map_or_else(
+            |e| {
+                // If the point is out of bounds, clamp it to the first/last tile of each dimension
+                Point3::new(
+                    i64::from(e.point_dimensions.x),
+                    i64::from(e.point_dimensions.y),
+                    i64::from(e.point_dimensions.z),
+                )
+            },
+            |p| Point3::new(i64::from(p.x), i64::from(p.y), i64::from(p.z)),
+        )
 }
 
 impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
@@ -181,9 +183,10 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
                     map_transform,
                 ),
             ];
-            let x = map.dimensions().x as i64;
-            let y = map.dimensions().y as i64;
+            let x = i64::from(map.dimensions().x);
+            let y = i64::from(map.dimensions().y);
             // Cull the tilemap using the min and max coordinates along each axis of the tilemap
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
             return Region::new(
                 Point3::new(
                     points.iter().map(|p| p.x).min().unwrap().max(0).min(x) as u32,
