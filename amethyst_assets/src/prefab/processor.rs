@@ -109,8 +109,6 @@ fn prefab_asset_processor(
     storage: &mut AssetStorage<Prefab>,
     loader: &mut DefaultLoader,
 ) -> Vec<crate::Handle<Prefab>> {
-    log::debug!("prefab_asset_processor tick");
-
     // Re-cook prefabs with changed dependencies.
     // FIXME: deal with cyclic and diamond dependencies correctly
     let mut visited = FnvHashSet::default();

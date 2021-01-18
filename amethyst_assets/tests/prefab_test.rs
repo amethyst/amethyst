@@ -5,6 +5,7 @@ use amethyst_assets::{
     AssetHandle, AssetStorage, DefaultLoader, Handle, LoadStatus, Loader,
 };
 use amethyst_core::ecs::{world::ComponentError, Dispatcher, Entity, IntoQuery, Resources, World};
+use log::warn;
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use serial_test::serial;
@@ -66,7 +67,7 @@ fn a_prefab_is_applied_to_an_entity() {
 
         execute_dispatcher_until_loaded(dispatcher, world, resources, prefab_handle.clone());
 
-        let entity = world.push((prefab_handle,));
+        let entity = world.push((prefab_handle.clone(),));
 
         execute_dispatcher_until_prefab_is_applied(dispatcher, world, resources, entity);
 
@@ -144,9 +145,10 @@ fn execute_dispatcher_until_prefab_is_applied(
         );
 
         if let Some(entry) = world.entry(entity) {
+            log::warn!("{:?}", entry.archetype());
             match entry.get_component::<Position2D>() {
                 Ok(_) => break,
-                Err(ComponentError::NotFound { .. }) => (),
+                Err(ComponentError::NotFound { .. }) => warn!("Component not found."),
                 Err(ComponentError::Denied { .. }) => panic!("Access to component was denied"),
             }
         }
