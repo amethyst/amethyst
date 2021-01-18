@@ -40,8 +40,9 @@ impl Prefab {
 
         while let Some((cur_prefab, children)) = dependency_stack.last_mut() {
             if let Some(child_handle) = children.next() {
+                log::debug!("Checking for child prefab {:?}", child_handle);
                 if let Some(child_prefab) = storage.get(child_handle) {
-                    if prefab_lookup.contains_key(&child_prefab.raw_prefab.prefab_id()) {
+                    if prefab_lookup.contains_key(&child_prefab.raw.prefab_id()) {
                         continue;
                     }
 
@@ -54,13 +55,13 @@ impl Prefab {
                             .iter(),
                     ));
                 } else {
-                    log::error!("Missing prefab dependency");
+                    log::error!("Prefab dependency is not yet loaded!");
                 }
             } else {
                 // No more dependencies, add cur_prefab to prefab_cook_order and
                 // pop the stack.
-                prefab_cook_order.push(cur_prefab.raw_prefab.prefab_id());
-                prefab_lookup.insert(cur_prefab.raw_prefab.prefab_id(), &cur_prefab.raw_prefab);
+                prefab_cook_order.push(cur_prefab.raw.prefab_id());
+                prefab_lookup.insert(cur_prefab.raw.prefab_id(), &cur_prefab.raw);
                 dependency_stack.pop();
             }
         }
@@ -107,7 +108,10 @@ fn prefab_asset_processor(
     processing_queue: &mut ProcessingQueue<Prefab>,
     storage: &mut AssetStorage<Prefab>,
     loader: &mut DefaultLoader,
-) {
+) -> Vec<crate::Handle<Prefab>> {
+    log::debug!("prefab_asset_processor tick");
+
+    // Re-cook prefabs with changed dependencies.
     // FIXME: deal with cyclic and diamond dependencies correctly
     let mut visited = FnvHashSet::default();
 
@@ -134,27 +138,30 @@ fn prefab_asset_processor(
 
         use crate::storage::MutateAssetInStorage;
         for (handle, cooked_prefab) in updates.into_iter() {
-            storage.mutate_asset_in_storage(&handle, move |asset| {
-                asset.prefab = Some(cooked_prefab);
-                asset.version += 1;
+            storage.mutate_asset_in_storage(&handle, move |prefab| {
+                prefab.cooked = Some(cooked_prefab);
+                prefab.version += 1;
             });
         }
     }
 
+    let mut loading = Vec::new();
+
     processing_queue.process(storage, |mut prefab, storage| {
-        log::debug!("AssetUuid: {:x?}", prefab.raw_prefab.prefab_id());
+        log::debug!("Processing Prefab {:x?}", AssetUuid(prefab.raw.prefab_id()));
 
-        let deps = prefab
-            .raw_prefab
-            .prefab_meta
-            .prefab_refs
-            .iter()
-            .map(|(other_prefab_id, _)| loader.load_asset(AssetUuid(*other_prefab_id)))
-            .collect();
+        let dep_refs = prefab.raw.prefab_meta.prefab_refs.iter();
+        prefab.dependencies.get_or_insert_with(|| {
+            dep_refs
+                .map(|(child_prefab_id, _)| {
+                    let handle = loader.load_asset(AssetUuid(*child_prefab_id));
+                    loading.push(handle.clone());
+                    handle
+                })
+                .collect()
+        });
 
-        prefab.dependencies.get_or_insert(deps);
-
-        prefab.prefab = Some(Prefab::cook_prefab(&prefab, storage, component_registry));
+        prefab.cooked = Some(Prefab::cook_prefab(&prefab, storage, component_registry));
 
         // prefab.version = storage
         //     .get_for_load_handle(handle)
@@ -175,21 +182,15 @@ fn prefab_asset_processor(
         )
     });
     storage.process_custom_drop(|_| {});
+    loading
 }
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::HashMap,
-        sync::{Arc, Once},
-    };
+    use std::{collections::HashMap, sync::Once};
 
-    use amethyst_core::ecs::World;
-    use atelier_assets::loader::{
-        crossbeam_channel::{unbounded, Sender},
-        handle::{AssetHandle, RefOp},
-        storage::{AtomicHandleAllocator, HandleAllocator},
-    };
+    use amethyst_core::{Logger, LoggerConfig};
+    use atelier_assets::loader::handle::AssetHandle;
     use legion_prefab::PrefabRef;
     use serial_test::serial;
 
@@ -205,79 +206,50 @@ mod tests {
         processing_queue: ProcessingQueue<Prefab>,
         prefab_storage: AssetStorage<Prefab>,
         component_registry: ComponentRegistry,
-        handle_maker: HandleMaker,
     }
+
+    static INIT: Once = Once::new();
 
     impl Fixture {
         fn setup() -> Self {
+            INIT.call_once(|| {
+                Logger::from_config(LoggerConfig {
+                    level_filter: log::LevelFilter::Trace,
+                    ..Default::default()
+                })
+                .start();
+            });
+
             let loader = DefaultLoader::default();
             let processing_queue = ProcessingQueue::default();
             let prefab_storage = AssetStorage::<Prefab>::new(loader.indirection_table.clone());
             let component_registry = ComponentRegistryBuilder::default()
                 .auto_register_components()
                 .build();
-            let handle_allocator = Arc::new(AtomicHandleAllocator::default());
-            let (ref_sender, _) = unbounded();
-            let handle_maker = HandleMaker::new(handle_allocator, ref_sender);
+
             Self {
                 loader,
                 processing_queue,
                 prefab_storage,
                 component_registry,
-                handle_maker,
             }
-        }
-    }
-
-    struct HandleMaker {
-        handle_allocator: Arc<AtomicHandleAllocator>,
-        ref_sender: Sender<RefOp>,
-    }
-
-    impl HandleMaker {
-        fn new(handle_allocator: Arc<AtomicHandleAllocator>, ref_sender: Sender<RefOp>) -> Self {
-            Self {
-                handle_allocator,
-                ref_sender,
-            }
-        }
-        fn make_handle<T>(&self) -> Handle<T> {
-            let load_handle = self.handle_allocator.alloc();
-            Handle::<T>::new(self.ref_sender.clone(), load_handle)
         }
     }
 
     #[serial]
     #[test]
-    fn test() {
+    fn prefab_is_cooked() {
         let Fixture {
             mut loader,
             mut processing_queue,
             mut prefab_storage,
             component_registry,
-            handle_maker,
         } = Fixture::setup();
 
-        let prefab_handle = handle_maker.make_handle::<Prefab>();
+        let raw_prefab = Prefab::default();
 
-        let prefab_world = World::default();
-        let raw_prefab = Prefab {
-            raw_prefab: legion_prefab::Prefab::new(prefab_world),
-            dependencies: None,
-            prefab: None,
-            dependers: FnvHashSet::default(),
-            version: 0,
-        };
-        let version = 0;
-
-        let load_notifier = LoadNotifier::new(prefab_handle.load_handle(), None, None);
-        processing_queue.enqueue_processed(
-            Ok(raw_prefab),
-            prefab_handle.load_handle(),
-            load_notifier,
-            version,
-            false,
-        );
+        let prefab_handle: Handle<Prefab> =
+            loader.load_from_data(raw_prefab, (), &processing_queue);
 
         prefab_asset_processor(
             &component_registry,
@@ -286,12 +258,10 @@ mod tests {
             &mut loader,
         );
 
-        prefab_storage.commit_asset(prefab_handle.load_handle(), version);
-
         let asset = prefab_storage
             .get(&prefab_handle)
             .expect("prefab is not in storage");
-        assert!(asset.prefab.is_some());
+        assert!(asset.cooked.is_some());
     }
 
     #[serial]
@@ -302,64 +272,36 @@ mod tests {
             mut processing_queue,
             mut prefab_storage,
             component_registry,
-            handle_maker,
         } = Fixture::setup();
 
-        let mut prefab_root = Prefab {
-            raw_prefab: legion_prefab::Prefab::new(World::default()),
-            dependencies: None,
-            prefab: None,
-            dependers: FnvHashSet::default(),
-            version: 0,
-        };
-
-        let prefab_child = Prefab {
-            raw_prefab: legion_prefab::Prefab::new(World::default()),
-            dependencies: None,
-            prefab: None,
-            dependers: FnvHashSet::default(),
-            version: 0,
-        };
+        let mut prefab_root = Prefab::default();
+        let prefab_child = Prefab::default();
 
         // add prefab_child to dependencies of prefab_root
-        prefab_root.raw_prefab.prefab_meta.prefab_refs.insert(
-            prefab_child.raw_prefab.prefab_id(),
+        prefab_root.raw.prefab_meta.prefab_refs.insert(
+            prefab_child.raw.prefab_id(),
             PrefabRef {
                 overrides: HashMap::new(),
             },
         );
 
-        // process the root prefab before child available
-        let prefab_handle_root = handle_maker.make_handle::<Prefab>();
-        let load_notifier = LoadNotifier::new(prefab_handle_root.load_handle(), None, None);
-        let version = 0;
+        let prefab_handle: Handle<Prefab> =
+            loader.load_from_data(prefab_root, (), &processing_queue);
 
-        processing_queue.enqueue_processed(
-            Ok(prefab_root),
-            prefab_handle_root.load_handle(),
-            load_notifier,
-            version,
-            false,
-        );
-
-        prefab_asset_processor(
+        let children_handles = prefab_asset_processor(
             &component_registry,
             &mut processing_queue,
             &mut prefab_storage,
             &mut loader,
         );
 
-        // TODO: assert prefab not completely loaded
-
-        // load the child prefab
-        let prefab_child_handle = handle_maker.make_handle::<Prefab>();
-        let load_notifier = LoadNotifier::new(prefab_child_handle.load_handle(), None, None);
+        let child_handle = children_handles.get(0).unwrap().load_handle();
 
         processing_queue.enqueue_processed(
             Ok(prefab_child),
-            prefab_child_handle.load_handle(),
-            load_notifier,
-            version,
+            child_handle,
+            LoadNotifier::new(child_handle, None, None),
+            0,
             false,
         );
 
@@ -370,8 +312,7 @@ mod tests {
             &mut loader,
         );
 
-        // not sure why commit_asset is being called here...
-        prefab_storage.commit_asset(prefab_child_handle.load_handle(), version);
+        prefab_storage.commit_asset(child_handle, 0);
 
         prefab_asset_processor(
             &component_registry,
@@ -379,19 +320,10 @@ mod tests {
             &mut prefab_storage,
             &mut loader,
         );
-
-        prefab_asset_processor(
-            &component_registry,
-            &mut processing_queue,
-            &mut prefab_storage,
-            &mut loader,
-        );
-
-        prefab_storage.commit_asset(prefab_handle_root.load_handle(), version);
 
         let asset = prefab_storage
-            .get(&prefab_handle_root)
+            .get(&prefab_handle)
             .expect("prefab is not in storage");
-        assert!(asset.prefab.is_some());
+        assert!(asset.cooked.is_some());
     }
 }

@@ -64,7 +64,7 @@ impl SimpleState for AssetsExample {
             let mut spawn_impl =
                 component_registry.spawn_clone_impl(&resources, &clone_impl_result);
             let mappings = world.clone_from(
-                &opened_prefab.prefab.world,
+                &opened_prefab.cooked.world,
                 &query::any(),
                 &mut spawn_impl,
                 // &mut component_registry, // .spawn_clone_impl(resources, &opened_prefab.prefab_to_world_mappings),

@@ -87,10 +87,10 @@ impl Importer for PrefabImporter {
         let raw_prefab = prefab_deser.prefab();
 
         let prefab_asset = Prefab {
-            raw_prefab,
+            raw: raw_prefab,
             dependencies: None,
-            prefab: None,
             dependers: FnvHashSet::default(),
+            cooked: None,
             version: 0,
         };
 
@@ -125,7 +125,7 @@ impl Importer for PrefabImporter {
         // }
 
         // Add the ID to the .meta
-        let prefab_id = prefab_asset.raw_prefab.prefab_id();
+        let prefab_id = prefab_asset.raw.prefab_id();
         state.id = Some(AssetUuid(prefab_id));
 
         //{

@@ -206,10 +206,7 @@ impl<T> ProcessingQueue<T> {
 
             let asset = match data.and_then(|d| f(d, storage)) {
                 Ok(ProcessingState::Loaded(x)) => {
-                    debug!(
-                        "Asset (handle id: {:?}) has been loaded successfully",
-                        handle,
-                    );
+                    debug!("{:?} has been loaded successfully", handle);
                     load_notifier.complete();
                     x
                 }

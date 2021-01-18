@@ -39,6 +39,7 @@ impl<A> AssetStorage<A> {
     }
 
     pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
+        log::debug!("Updating Asset {:?}", handle);
         if let Some(data) = self
             .uncommitted
             .insert(handle, AssetState { version, asset })
