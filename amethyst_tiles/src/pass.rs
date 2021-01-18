@@ -108,17 +108,17 @@ fn camera_ray_to_tile_coords<T: Tile, E: CoordinateEncoder>(
     tile_plane: &Plane<f32>,
     map: &TileMap<T, E>,
     map_transform: Option<&Transform>,
-) -> Point3<u32> {
+) -> Point3<i64> {
     // Intersect rays with the tilemap, get intersecting tile coordinates
     let distance = ray.intersect_plane(&tile_plane).unwrap_or(0.0);
     map.to_tile(&ray.at_distance(distance).coords, map_transform)
+        .map(|p| Point3::new(p.x as i64, p.y as i64, p.z as i64))
         .unwrap_or_else(|e| {
             // If the point is out of bounds, clamp it to the first/last tile of each dimension
-            #[allow(clippy::cast_sign_loss)]
             Point3::new(
-                (e.point_dimensions.x.max(0) as u32).min(map.dimensions().x),
-                (e.point_dimensions.y.max(0) as u32).min(map.dimensions().y),
-                (e.point_dimensions.z.max(0) as u32).min(map.dimensions().z),
+                e.point_dimensions.x as i64,
+                e.point_dimensions.y as i64,
+                e.point_dimensions.z as i64,
             )
         })
 }
@@ -181,16 +181,18 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
                     map_transform,
                 ),
             ];
+            let x = map.dimensions().x as i64;
+            let y = map.dimensions().y as i64;
             // Cull the tilemap using the min and max coordinates along each axis of the tilemap
             return Region::new(
                 Point3::new(
-                    points.iter().map(|p| p.x).min().unwrap(),
-                    points.iter().map(|p| p.y).min().unwrap(),
+                    points.iter().map(|p| p.x).min().unwrap().max(0).min(x) as u32,
+                    points.iter().map(|p| p.y).min().unwrap().max(0).min(y) as u32,
                     0,
                 ),
                 Point3::new(
-                    points.iter().map(|p| p.x).max().unwrap(),
-                    points.iter().map(|p| p.y).max().unwrap(),
+                    points.iter().map(|p| p.x + 1).max().unwrap().max(0).min(x) as u32,
+                    points.iter().map(|p| p.y + 1).max().unwrap().max(0).min(y) as u32,
                     map.dimensions().z,
                 ),
             );
@@ -456,7 +458,7 @@ fn compute_region<T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds>(
     aux: &GraphAuxData,
 ) -> Region {
     let mut region = Z::bounds(tile_map, map_transform, aux);
-    let max_value = tile_map.dimensions() - Vector3::new(1, 1, 1);
+    let max_value = tile_map.dimensions();
 
     region.min = Point3::new(
         region.min.x.max(0).min(max_value.x),
@@ -579,5 +581,129 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderPlug
             Ok(())
         });
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // use amethyst_core::math::Point3;
+    // use rayon::prelude::*;
+    use amethyst_core::ecs::world::WorldOptions;
+    use amethyst_rendy::system::make_graph_aux_data;
+
+    use super::*;
+    use crate::FlatEncoder;
+    #[derive(Default, Clone, Debug)]
+    struct TestTile;
+    impl Tile for TestTile {
+        fn sprite(&self, _: Point3<u32>, _: &World) -> Option<usize> {
+            None
+        }
+    }
+
+    fn bounds_camera_culling_region(
+        dim_2d: Vector2<u32>,
+        tile_size_2d: Vector2<u32>,
+        cam_dim: Vector2<u32>,
+        cam_transform: Transform,
+        mut map_transform: Transform,
+    ) -> Region {
+        let map = TileMap::<TestTile, FlatEncoder>::new(
+            Vector3::new(dim_2d.x, dim_2d.y, 1),
+            Vector3::new(tile_size_2d.x, tile_size_2d.y, 1),
+            None,
+        );
+        let mut world = World::new(WorldOptions::default());
+        let camera = world.push((
+            cam_transform,
+            Camera::standard_2d(cam_dim.x as f32, cam_dim.y as f32),
+        ));
+        map_transform.copy_local_to_global();
+        let map_entity = world.push((map, map_transform.clone()));
+        let mut resources = Resources::default();
+        resources.insert(ActiveCamera {
+            entity: Some(camera),
+        });
+        resources.insert(ScreenDimensions::new(cam_dim.x, cam_dim.y));
+        let aux = make_graph_aux_data(&world, &resources);
+        let map_entity = world.entry_ref(map_entity).unwrap();
+        let map = map_entity
+            .get_component::<TileMap<TestTile, FlatEncoder>>()
+            .unwrap();
+        DrawTiles2DBoundsCameraCulling::bounds(&map, Some(&map_transform), &aux)
+    }
+
+    #[test]
+    pub fn bounds_camera_culling() {
+        // Tilemap occupies exactly 100% of the camera viewport
+        let region = bounds_camera_culling_region(
+            Vector2::new(10, 10),                         // Number of tiles
+            Vector2::new(50, 40),                         // Tile size
+            Vector2::new(500, 400),                       // Camera size
+            Transform::from(Vector3::new(0.0, 0.0, 2.0)), // Camera transform
+            Transform::from(Vector3::new(0.0, 0.0, 0.0)), // Tilemap transform
+        );
+        assert_eq!(region.min, Point3::new(0, 0, 0));
+        assert_eq!(region.max, Point3::new(10, 10, 1));
+        assert_eq!(region.volume(), 100);
+        // Tilemap is offscreen
+        let region = bounds_camera_culling_region(
+            Vector2::new(10, 10),                               // Number of tiles
+            Vector2::new(50, 40),                               // Tile size
+            Vector2::new(500, 400),                             // Camera size
+            Transform::from(Vector3::new(0.0, 0.0, 2.0)),       // Camera transform
+            Transform::from(Vector3::new(1000.0, -200.0, 0.0)), // Tilemap transform
+        );
+        assert_eq!(region.min, Point3::new(0, 0, 0));
+        assert_eq!(region.max, Point3::new(0, 6, 1));
+        assert_eq!(region.volume(), 0);
+        // Tilemap is offscreen (opposite side)
+        let region = bounds_camera_culling_region(
+            Vector2::new(10, 10),                               // Number of tiles
+            Vector2::new(50, 40),                               // Tile size
+            Vector2::new(500, 400),                             // Camera size
+            Transform::from(Vector3::new(0.0, 0.0, 2.0)),       // Camera transform
+            Transform::from(Vector3::new(-1000.0, 200.0, 0.0)), // Tilemap transform
+        );
+        assert_eq!(region.min, Point3::new(10, 4, 0));
+        assert_eq!(region.max, Point3::new(10, 10, 1));
+        assert_eq!(region.volume(), 0);
+        // Tilemap is larger than the camera viewport
+        let region = bounds_camera_culling_region(
+            Vector2::new(20, 15),                            // Number of tiles
+            Vector2::new(50, 40),                            // Tile size
+            Vector2::new(505, 405),                          // Camera size
+            Transform::from(Vector3::new(50.0, -20.0, 2.0)), // Camera transform
+            Transform::from(Vector3::new(50.0, -20.0, 0.0)), // Tilemap transform
+        );
+        assert_eq!(region.min, Point3::new(3, 1, 0));
+        assert_eq!(region.max, Point3::new(15, 13, 1));
+        assert_eq!(region.volume(), 144);
+        // Tilemap is scaled
+        let mut map_transform = Transform::from(Vector3::new(50.0, -20.0, 0.0));
+        map_transform.set_scale(Vector3::new(2.0, 0.5, 1.0));
+        let region = bounds_camera_culling_region(
+            Vector2::new(10, 40),                            // Number of tiles
+            Vector2::new(50, 40),                            // Tile size
+            Vector2::new(505, 405),                          // Camera size
+            Transform::from(Vector3::new(50.0, -20.0, 2.0)), // Camera transform
+            map_transform,                                   // Tilemap transform
+        );
+        assert_eq!(region.min, Point3::new(1, 8, 0));
+        assert_eq!(region.max, Point3::new(8, 30, 1));
+        assert_eq!(region.volume(), 154);
+        // Tilemap is rotated
+        let mut map_transform = Transform::from(Vector3::new(50.0, -20.0, 0.0));
+        map_transform.append_rotation_z_axis(std::f32::consts::PI / 4.0);
+        let region = bounds_camera_culling_region(
+            Vector2::new(10, 40),                            // Number of tiles
+            Vector2::new(100, 25),                           // Tile size
+            Vector2::new(500, 250),                          // Camera size
+            Transform::from(Vector3::new(50.0, -20.0, 2.0)), // Camera transform
+            map_transform,                                   // Tilemap transform
+        );
+        assert_eq!(region.min, Point3::new(1, 10, 0));
+        assert_eq!(region.max, Point3::new(8, 32, 1));
+        assert_eq!(region.volume(), 154);
     }
 }
