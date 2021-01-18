@@ -65,6 +65,7 @@ pub mod transform;
 /// The hide hierarchy system
 pub mod hide_hierarchy_system;
 
+/// The Amethyst logger based on fern
 pub mod logger;
 
 mod axis;

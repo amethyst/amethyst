@@ -131,7 +131,7 @@ pub trait Loader: Send + Sync {
         A: Asset,
         P: Progress;
 
-    // Creates the `AssetTypeStorage`'s resources in the `World`.
+    /// Creates the `AssetTypeStorage`'s resources in the `World`.
     fn init_world(&mut self, resources: &mut Resources);
 
     /// Registers processing systems in the `Dispatcher`.
@@ -148,7 +148,7 @@ pub struct DefaultLoader {
     ref_sender: Sender<RefOp>,
     ref_receiver: Receiver<RefOp>,
     handle_allocator: Arc<AtomicHandleAllocator>,
-    pub indirection_table: IndirectionTable,
+    pub(crate) indirection_table: IndirectionTable,
 }
 
 impl Default for DefaultLoader {

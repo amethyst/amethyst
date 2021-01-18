@@ -89,6 +89,8 @@ fn a_prefab_is_applied_to_an_entity() {
             *component, expected,
             "Position2D component value does not match",
         );
+
+        drop(prefab_handle);
     })
 }
 

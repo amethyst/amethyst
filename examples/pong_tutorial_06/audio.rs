@@ -4,7 +4,7 @@ use amethyst::{
     assets::{AssetStorage, DefaultLoader, Loader},
     audio::{
         output::{Output, OutputWrapper},
-        AudioSink, OggFormat, Source, SourceHandle,
+        Source, SourceHandle,
     },
     ecs::{Resources, World},
 };
@@ -32,7 +32,7 @@ fn load_audio_track(loader: &DefaultLoader, file: &str) -> SourceHandle {
 
 /// Initialise audio in the world. This includes the background track and the
 /// sound effects.
-pub fn initialise_audio(world: &mut World, resources: &mut Resources) {
+pub fn initialise_audio(_: &mut World, resources: &mut Resources) {
     let (sound_effects, music) = {
         let loader = resources.get::<DefaultLoader>().unwrap();
 
