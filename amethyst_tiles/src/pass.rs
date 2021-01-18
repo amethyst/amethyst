@@ -490,12 +490,12 @@ fn build_tiles_pipeline<B: Backend>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    let mut shaders = SHADERS
-        .build(factory, Default::default())
-        .map_err(|e| match e {
+    let mut shaders = SHADERS.build(factory, Default::default()).map_err(|e| {
+        match e {
             hal::device::ShaderError::OutOfMemory(oom) => oom.into(),
             _ => pso::CreationError::Other,
-        })?;
+        }
+    })?;
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
