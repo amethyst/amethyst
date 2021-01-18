@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use amethyst_error::Error;
+use atelier_assets::loader::LoadHandle;
 
 use crate::{processor::ProcessingState, AssetStorage};
 
@@ -33,6 +34,7 @@ pub trait ProcessableAsset: Asset + Sized {
     fn process(
         data: Self::Data,
         storage: &mut AssetStorage<Self>,
+        handle: &LoadHandle,
     ) -> Result<ProcessingState<Self::Data, Self>, Error>;
 }
 
@@ -40,6 +42,7 @@ impl<T: Asset<Data = T>> ProcessableAsset for T {
     fn process(
         data: Self::Data,
         _storage: &mut AssetStorage<Self>,
+        _handle: &LoadHandle,
     ) -> Result<ProcessingState<Self::Data, Self>, Error> {
         Ok(ProcessingState::Loaded(data))
     }

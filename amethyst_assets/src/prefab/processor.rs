@@ -100,6 +100,7 @@ fn prefab_asset_processor(
     let mut visited = FnvHashSet::default();
 
     while let Some(dependee) = processing_queue.changed.pop() {
+        log::debug!("Prefab Changed: {:?}", dependee);
         let updates: Vec<(WeakHandle, legion_prefab::CookedPrefab)> = storage
             .get_for_load_handle(dependee)
             .iter()
@@ -131,7 +132,7 @@ fn prefab_asset_processor(
 
     let mut loading = Vec::new();
 
-    processing_queue.process(storage, |mut prefab, storage| {
+    processing_queue.process(storage, |mut prefab, storage, handle| {
         log::debug!("Processing Prefab {:x?}", AssetUuid(prefab.raw.prefab_id()));
 
         prefab.dependencies = prefab
@@ -153,7 +154,9 @@ fn prefab_asset_processor(
                 .all(|handle| storage.contains(handle.load_handle()))
             {
                 prefab.cooked = Some(Prefab::cook_prefab(&prefab, storage, component_registry));
-                prefab.version += 1;
+                prefab.version += storage
+                    .get_for_load_handle(*handle)
+                    .map_or(1, |Prefab { version, .. }| *version + 1);
 
                 ProcessingState::Loaded(prefab)
             } else {

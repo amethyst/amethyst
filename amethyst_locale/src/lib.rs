@@ -16,7 +16,7 @@
 
 use amethyst_assets::{
     register_asset_type, register_importer, Asset, AssetProcessorSystem, AssetStorage, Format,
-    ProcessableAsset, ProcessingState,
+    LoadHandle, ProcessableAsset, ProcessingState,
 };
 use amethyst_error::Error;
 pub use fluent::{concurrent::FluentBundle, FluentResource};
@@ -50,6 +50,7 @@ impl ProcessableAsset for Locale {
     fn process(
         data: LocaleData,
         _storage: &mut AssetStorage<Locale>,
+        _handle: &LoadHandle,
     ) -> Result<amethyst_assets::ProcessingState<LocaleData, Locale>, Error> {
         let s = String::from_utf8(data.0)?;
 

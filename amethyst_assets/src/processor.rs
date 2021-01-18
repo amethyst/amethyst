@@ -188,7 +188,7 @@ impl<T> ProcessingQueue<T> {
     /// Process asset data into assets
     pub fn process<F, A>(&mut self, storage: &mut AssetStorage<A>, mut f: F)
     where
-        F: FnMut(T, &mut AssetStorage<A>) -> Result<ProcessingState<T, A>, Error>,
+        F: FnMut(T, &mut AssetStorage<A>, &LoadHandle) -> Result<ProcessingState<T, A>, Error>,
     {
         let requeue = self
             .requeue
@@ -204,7 +204,7 @@ impl<T> ProcessingQueue<T> {
         {
             let f = &mut f;
 
-            let asset = match data.and_then(|d| f(d, storage)) {
+            let asset = match data.and_then(|d| f(d, storage, &handle)) {
                 Ok(ProcessingState::Loaded(x)) => {
                     debug!("{:?} has been loaded successfully", handle);
                     load_notifier.complete();
