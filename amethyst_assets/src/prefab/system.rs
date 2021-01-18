@@ -91,10 +91,7 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
         log::debug!("Spawn for {:?}", entity);
 
         if let Some(mut entry) = world.entry(entity) {
-            entry.add_component(PrefabInstance {
-                version,
-                entity_map,
-            });
+            entry.add_component(PrefabInstance { version });
             entry.add_component(handle);
         } else {
             log::error!("Could not update entity");

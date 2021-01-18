@@ -12,7 +12,7 @@ Prefab(
                      // Component AssetTypeId
                      type: "f5780013-bae4-49f0-ac0e-a108ff52fec0",
                      data: (
-                         position: [100.0, 200.0]
+                         position: [100.0, 100.0]
                      ),
                  ),
              ]
