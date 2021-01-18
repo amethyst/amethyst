@@ -95,10 +95,7 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsDefault {
         map_transform: Option<&Transform>,
         aux: &GraphAuxData,
     ) -> Region {
-        Region::new(
-            Point3::new(0, 0, 0),
-            Point3::from(*map.dimensions() - Vector3::new(1, 1, 1)),
-        )
+        Region::new(Point3::new(0, 0, 0), Point3::from(*map.dimensions()))
     }
 }
 
@@ -119,9 +116,9 @@ fn camera_ray_to_tile_coords<T: Tile, E: CoordinateEncoder>(
             // If the point is out of bounds, clamp it to the first/last tile of each dimension
             #[allow(clippy::cast_sign_loss)]
             Point3::new(
-                (e.point_dimensions.x.max(0) as u32).min(map.dimensions().x - 1),
-                (e.point_dimensions.y.max(0) as u32).min(map.dimensions().y - 1),
-                (e.point_dimensions.z.max(0) as u32).min(map.dimensions().z - 1),
+                (e.point_dimensions.x.max(0) as u32).min(map.dimensions().x),
+                (e.point_dimensions.y.max(0) as u32).min(map.dimensions().y),
+                (e.point_dimensions.z.max(0) as u32).min(map.dimensions().z),
             )
         })
 }
@@ -194,7 +191,7 @@ impl DrawTiles2DBounds for DrawTiles2DBoundsCameraCulling {
                 Point3::new(
                     points.iter().map(|p| p.x).max().unwrap(),
                     points.iter().map(|p| p.y).max().unwrap(),
-                    map.dimensions().z - 1,
+                    map.dimensions().z,
                 ),
             );
         }
