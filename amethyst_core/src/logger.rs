@@ -238,7 +238,7 @@ fn env_var_override(config: &mut LoggerConfig) {
 
 fn colored_stdout(color_config: fern::colors::ColoredLevelConfig) -> fern::Dispatch {
     fern::Dispatch::new()
-        .chain(io::stderr())
+        .chain(io::stdout())
         .format(move |out, message, record| {
             let color = color_config.get_color(&record.level());
             out.finish(format_args!(

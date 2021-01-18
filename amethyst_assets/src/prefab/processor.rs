@@ -153,9 +153,7 @@ fn prefab_asset_processor(
                 .all(|handle| storage.contains(handle.load_handle()))
             {
                 prefab.cooked = Some(Prefab::cook_prefab(&prefab, storage, component_registry));
-                // prefab.version = storage
-                //     .get_for_load_handle(handle)
-                //     .map_or(1, |Prefab { version, .. }| *version + 1);
+                prefab.version += 1;
 
                 ProcessingState::Loaded(prefab)
             } else {
