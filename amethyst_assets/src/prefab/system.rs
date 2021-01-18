@@ -2,12 +2,12 @@ use crate::{
     prefab::{ComponentRegistry, Prefab},
     AssetStorage, Handle,
 };
-use amethyst_core::ecs::{query, world::EntityHasher, Entity, IntoQuery, Resources, World};
-use std::{
-    collections::{HashMap, HashSet},
-    iter::FromIterator,
+use amethyst_core::ecs::{
+    query, world::EntityHasher, Entity, IntoQuery, Read, Resources, TryRead, World,
 };
+use std::collections::{HashMap, HashSet};
 
+#[derive(Default)]
 struct PrefabInstance {
     version: u32,
     entity_map: HashMap<Entity, Entity, EntityHasher>,
@@ -21,7 +21,8 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
     let prefab_storage = resources
         .get::<AssetStorage<Prefab>>()
         .expect("AssetStorage<Prefab> can not be retrieved from ECS Resources");
-    let mut prefab_handle_query = <(Entity, &Handle<Prefab>, &mut PrefabInstance)>::query();
+    let mut prefab_handle_query =
+        <(Entity, Read<Handle<Prefab>>, TryRead<PrefabInstance>)>::query();
 
     let mut prefabs: Vec<(
         Entity,
@@ -32,22 +33,23 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
 
     let mut entity_query = <(Entity,)>::query();
     prefab_handle_query.for_each_mut(world, |(entity, handle, instance)| {
-        if let Some(prefab) = prefab_storage.get(handle) {
-            if instance.version < prefab.version {
-                if let Some(cooked_prefab) = prefab.prefab.as_ref() {
-                    if instance.entity_map.is_empty() {
-                        if let Some((root_entity,)) = entity_query.iter(&cooked_prefab.world).next()
-                        {
-                            instance.entity_map.insert(*root_entity, *entity);
-                        }
+        if let Some(Prefab {
+            prefab: Some(cooked_prefab),
+            version: prefab_version,
+            ..
+        }) = prefab_storage.get(handle)
+        {
+            let instance_version = instance.map(|instance| instance.version).unwrap_or(0);
+            if instance_version < *prefab_version {
+                let mut entity_map = instance
+                    .map(|instance| instance.entity_map.clone())
+                    .unwrap_or_default();
+                if entity_map.is_empty() {
+                    if let Some((root_entity,)) = entity_query.iter(&cooked_prefab.world).next() {
+                        entity_map.insert(*root_entity, *entity);
                     }
-                    prefabs.push((
-                        *entity,
-                        cooked_prefab,
-                        prefab.version,
-                        instance.entity_map.clone(),
-                    ));
                 }
+                prefabs.push((*entity, cooked_prefab, *prefab_version, entity_map));
             }
         }
     });

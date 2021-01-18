@@ -1,14 +1,11 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
 
-use std::collections::HashMap;
-
 use amethyst::{
     assets::{
-        prefab::{register_component_type, ComponentRegistry, Prefab},
-        AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle,
+        prefab::{register_component_type, Prefab},
+        DefaultLoader, Handle, Loader, LoaderBundle,
     },
     core::transform::TransformBundle,
-    ecs::query,
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
@@ -30,47 +27,35 @@ struct Position2D {
 }
 
 register_component_type!(Position2D);
-// type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
 struct AssetsExample {
     prefab_handle: Option<Handle<Prefab>>,
+    root_entity: Option<Entity>,
 }
 
 impl SimpleState for AssetsExample {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let StateData { resources, .. } = data;
-        // let prefab_handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-        //     loader.load("prefab/example.prefab", RonFormat, ())
-        // });
-        // data.world.create_entity().with(prefab_handle).build();
-        let loader = resources.get_mut::<DefaultLoader>().unwrap();
-        let prefab_handle: Handle<Prefab> = loader.load("prefab/test.prefab");
-        self.prefab_handle = Some(prefab_handle);
-    }
-    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         let StateData {
             world, resources, ..
         } = data;
+        let loader = resources.get_mut::<DefaultLoader>().unwrap();
+        let prefab_handle: Handle<Prefab> = loader.load("prefab/test.prefab");
+        self.prefab_handle = Some(prefab_handle.clone());
+        self.root_entity = Some(world.push((prefab_handle,)));
+    }
+
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+        let StateData { world, .. } = data;
 
         if self.prefab_handle.is_none() {
             log::info!("No prefab");
             return Trans::None;
         }
 
-        let component_registry = resources.get_mut::<ComponentRegistry>().unwrap();
-        let prefab_storage = resources.get_mut::<AssetStorage<Prefab>>().unwrap();
-        if let Some(opened_prefab) = prefab_storage.get(self.prefab_handle.as_ref().unwrap()) {
-            let clone_impl_result = HashMap::default();
-            let mut spawn_impl =
-                component_registry.spawn_clone_impl(&resources, &clone_impl_result);
-            let mappings = world.clone_from(
-                &opened_prefab.prefab.world,
-                &query::any(),
-                &mut spawn_impl,
-                // &mut component_registry, // .spawn_clone_impl(resources, &opened_prefab.prefab_to_world_mappings),
-            );
-            log::info!("{:?}", mappings);
-        };
+        let mut query = <(Entity, &Position2D)>::query();
+        query.for_each(*world, |(entity, _position)| {
+            log::info!("Entity: {:?}", entity,);
+        });
         Trans::None
     }
 }
@@ -123,6 +108,7 @@ fn main() -> Result<(), Error> {
         assets_dir,
         AssetsExample {
             prefab_handle: None,
+            root_entity: None,
         },
         dispatcher_builder,
     )?;
