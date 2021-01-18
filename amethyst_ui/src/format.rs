@@ -1,5 +1,6 @@
 use amethyst_assets::{
-    register_asset_type, Asset, AssetProcessorSystem, Format, ProcessableAsset, ProcessingState,
+    register_asset_type, Asset, AssetProcessorSystem, AssetStorage, Format, ProcessableAsset,
+    ProcessingState,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 use glyph_brush::rusttype::Font;
@@ -45,7 +46,10 @@ impl Asset for FontAsset {
 }
 
 impl ProcessableAsset for FontAsset {
-    fn process(data: FontData) -> Result<ProcessingState<FontData, FontAsset>, Error> {
+    fn process(
+        data: FontData,
+        _storage: &mut AssetStorage<FontAsset>,
+    ) -> Result<ProcessingState<FontData, FontAsset>, Error> {
         log::debug!("Loading Font");
         Ok(ProcessingState::Loaded(FontAsset(data.0)))
     }

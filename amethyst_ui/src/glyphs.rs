@@ -148,7 +148,7 @@ impl<B: Backend> System<'static> for GlyphTextureProcessorSystem<B> {
                 .write_resource::<Factory<B>>()
                 .build(
                     move |_commands, _world, (processing_queue, tex_storage, queue, factory), _| {
-                        processing_queue.process(tex_storage, |b| {
+                        processing_queue.process(tex_storage, |b, _| {
                             log::debug!("Creating new glyph texture with size ({}, {})", b.w, b.h);
 
                             TextureBuilder::new()

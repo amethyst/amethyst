@@ -309,6 +309,7 @@ where
 
     fn commit_asset_version(&mut self, handle: LoadHandle, version: u32) {
         self.1.commit_asset(handle, version);
+        self.0.enqueue_changed(handle);
     }
 
     fn free(&mut self, handle: LoadHandle, version: u32) {

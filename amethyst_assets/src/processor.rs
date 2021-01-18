@@ -117,6 +117,7 @@ pub enum ProcessingState<D, A> {
 pub struct ProcessingQueue<T> {
     pub(crate) processed: Arc<SegQueue<Processed<T>>>,
     requeue: Mutex<Vec<Processed<T>>>,
+    pub(crate) changed: SegQueue<LoadHandle>,
 }
 
 impl<T> Default for ProcessingQueue<T> {
@@ -124,6 +125,7 @@ impl<T> Default for ProcessingQueue<T> {
         Self {
             processed: Arc::new(SegQueue::new()),
             requeue: Mutex::new(Vec::new()),
+            changed: SegQueue::new(),
         }
     }
 }
@@ -163,6 +165,10 @@ impl<T> ProcessingQueue<T> {
         })
     }
 
+    pub(crate) fn enqueue_changed(&self, handle: LoadHandle) {
+        self.changed.push(handle);
+    }
+
     pub(crate) fn enqueue_from_data(
         &self,
         handle: LoadHandle,
@@ -182,56 +188,54 @@ impl<T> ProcessingQueue<T> {
     /// Process asset data into assets
     pub fn process<F, A>(&mut self, storage: &mut AssetStorage<A>, mut f: F)
     where
-        F: FnMut(T) -> Result<ProcessingState<T, A>, Error>,
+        F: FnMut(T, &mut AssetStorage<A>) -> Result<ProcessingState<T, A>, Error>,
     {
+        let requeue = self
+            .requeue
+            .get_mut()
+            .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
+        while let Some(Processed {
+            data,
+            handle,
+            load_notifier,
+            version,
+            commit,
+        }) = self.processed.pop()
         {
-            let requeue = self
-                .requeue
-                .get_mut()
-                .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
-            while let Some(processed) = self.processed.pop() {
-                let f = &mut f;
-                let Processed {
-                    data,
-                    handle,
-                    load_notifier,
-                    version,
-                    commit,
-                } = processed;
+            let f = &mut f;
 
-                let asset = match data.and_then(|d| f(d)) {
-                    Ok(ProcessingState::Loaded(x)) => {
-                        debug!(
-                            "Asset (handle id: {:?}) has been loaded successfully",
-                            handle,
-                        );
-                        load_notifier.complete();
-                        x
-                    }
-                    Ok(ProcessingState::Loading(x)) => {
-                        requeue.push(Processed {
-                            data: Ok(x),
-                            handle,
-                            load_notifier,
-                            version,
-                            commit,
-                        });
-                        continue;
-                    }
-                    Err(e) => {
-                        load_notifier.error(e);
-                        continue;
-                    }
-                };
-                storage.update_asset(handle, asset, version);
-                if commit {
-                    storage.commit_asset(handle, version);
+            let asset = match data.and_then(|d| f(d, storage)) {
+                Ok(ProcessingState::Loaded(x)) => {
+                    debug!(
+                        "Asset (handle id: {:?}) has been loaded successfully",
+                        handle,
+                    );
+                    load_notifier.complete();
+                    x
                 }
+                Ok(ProcessingState::Loading(x)) => {
+                    requeue.push(Processed {
+                        data: Ok(x),
+                        handle,
+                        load_notifier,
+                        version,
+                        commit,
+                    });
+                    continue;
+                }
+                Err(e) => {
+                    load_notifier.error(e);
+                    continue;
+                }
+            };
+            storage.update_asset(handle, asset, version);
+            if commit {
+                storage.commit_asset(handle, version);
             }
+        }
 
-            for p in requeue.drain(..) {
-                self.processed.push(p);
-            }
+        for p in requeue.drain(..) {
+            self.processed.push(p);
         }
     }
 }

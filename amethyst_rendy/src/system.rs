@@ -161,7 +161,7 @@ impl<B: Backend> System<'_> for MeshProcessorSystem<B> {
                         #[cfg(feature = "profiler")]
                         profile_scope!("mesh_processor");
 
-                        processing_queue.process(mesh_storage, |b| {
+                        processing_queue.process(mesh_storage, |b, _| {
                             log::trace!("Processing Mesh: {:?}", b);
 
                             #[cfg(feature = "profiler")]
@@ -207,7 +207,7 @@ impl<B: Backend> System<'_> for TextureProcessorSystem<B> {
                         #[cfg(feature = "profiler")]
                         profile_scope!("texture_processor");
 
-                        processing_queue.process(texture_storage, |b| {
+                        processing_queue.process(texture_storage, |b, _| {
                             log::trace!("Processing Texture: {:?}", b);
 
                             #[cfg(feature = "profiler")]

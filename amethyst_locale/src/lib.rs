@@ -15,8 +15,8 @@
 #![warn(clippy::all)]
 
 use amethyst_assets::{
-    register_asset_type, register_importer, Asset, AssetProcessorSystem, Format, ProcessableAsset,
-    ProcessingState,
+    register_asset_type, register_importer, Asset, AssetProcessorSystem, AssetStorage, Format,
+    ProcessableAsset, ProcessingState,
 };
 use amethyst_error::Error;
 pub use fluent::{concurrent::FluentBundle, FluentResource};
@@ -49,6 +49,7 @@ impl Asset for Locale {
 impl ProcessableAsset for Locale {
     fn process(
         data: LocaleData,
+        _storage: &mut AssetStorage<Locale>,
     ) -> Result<amethyst_assets::ProcessingState<LocaleData, Locale>, Error> {
         let s = String::from_utf8(data.0)?;
 

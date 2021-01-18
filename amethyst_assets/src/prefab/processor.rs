@@ -1,163 +1,22 @@
-use std::{
-    error::Error as StdError,
-    ops::{Deref, DerefMut},
-    sync::{Arc, Mutex},
-};
-
 use amethyst_core::{
     dispatcher::System,
     ecs::{systems::ParallelRunnable, SystemBuilder},
 };
-use amethyst_error::Error as AmethystError;
-use atelier_assets::{
-    core::AssetUuid,
-    loader::{storage::AssetLoadOp, AssetTypeId},
-};
-use crossbeam_queue::SegQueue;
+use atelier_assets::core::AssetUuid;
 use fnv::{FnvHashMap, FnvHashSet};
 use prefab_format::PrefabUuid;
-use type_uuid::TypeUuid;
 
 use crate::{
-    loader::{AssetType, AssetTypeStorage, DefaultLoader, Loader},
+    self as amethyst_assets,
+    loader::{DefaultLoader, Loader},
     prefab::{ComponentRegistry, Prefab},
-    processor::LoadNotifier,
     storage::AssetStorage,
-    AssetHandle, LoadHandle, WeakHandle,
+    AssetHandle, ProcessingQueue, ProcessingState, WeakHandle,
 };
 
-pub fn create_prefab_asset_type() -> AssetType {
-    log::debug!("Creating asset type: {:x?}", Prefab::UUID);
-    AssetType {
-        data_uuid: AssetTypeId(Prefab::UUID),
-        asset_uuid: AssetTypeId(Prefab::UUID),
-        create_storage: |res, indirection_table| {
-            res.get_or_insert_with(|| AssetStorage::<Prefab>::new(indirection_table.clone()));
-        },
-        register_system: |builder| {
-            builder.add_system(Box::new(PrefabAssetProcessor::default()));
-        },
-        with_storage: |res, func| {
-            func(&mut (
-                res.get::<PrefabProcessingQueue>()
-                    .expect("Could not get ProcessingQueue")
-                    .deref(),
-                res.get_mut::<AssetStorage<Prefab>>()
-                    .expect("Could not get_mut AssetStorage")
-                    .deref_mut(),
-            ))
-        },
-    }
-}
+crate::register_asset_type!(Prefab => Prefab; PrefabProcessorSystem);
 
-inventory::submit!(create_prefab_asset_type());
-
-impl AssetTypeStorage for (&PrefabProcessingQueue, &mut AssetStorage<Prefab>) {
-    fn update_asset(
-        &self,
-        handle: LoadHandle,
-        data: &Vec<u8>,
-        load_op: AssetLoadOp,
-        version: u32,
-    ) -> Result<(), Box<dyn StdError + Send>> {
-        match bincode::deserialize::<Prefab>(data) {
-            Err(err) => {
-                let e = AmethystError::from_string(format!("{}", err));
-                load_op.error(err);
-                Err(e.into_error())
-            }
-            Ok(asset) => {
-                self.0.enqueue(handle, asset, load_op, version);
-                Ok(())
-            }
-        }
-    }
-    fn commit_asset_version(&mut self, handle: LoadHandle, version: u32) {
-        self.1.commit_asset(handle, version);
-        self.0.enqueue_changed(handle);
-    }
-    fn free(&mut self, handle: LoadHandle, version: u32) {
-        self.1.remove_asset(handle, version);
-    }
-}
-
-/// Represents asset data processed by `atelier-assets` that needs to be loaded by Amethyst.
-pub(crate) struct Processed<T> {
-    data: Result<T, AmethystError>,
-    handle: LoadHandle,
-    load_notifier: LoadNotifier,
-    version: u32,
-    commit: bool,
-}
-
-/// Returned by processor systems, describes the loading state of the asset.
-pub enum ProcessingState<D, A> {
-    /// Asset is not fully loaded yet, need to wait longer
-    Loading(D),
-    /// Asset have finished loading, can now be inserted into storage and tracker notified
-    Loaded(A),
-}
-
-/// Queue of processed asset data, to be loaded by Amethyst.
-///
-/// # Type Parameters
-///
-/// `T`: Asset data type.
-pub struct PrefabProcessingQueue {
-    pub(crate) processed: Arc<SegQueue<Processed<Prefab>>>,
-    changed: SegQueue<LoadHandle>,
-    requeue: Mutex<Vec<Processed<Prefab>>>,
-}
-
-impl Default for PrefabProcessingQueue {
-    fn default() -> Self {
-        Self {
-            processed: Arc::new(SegQueue::new()),
-            changed: SegQueue::new(),
-            requeue: Mutex::new(Vec::new()),
-        }
-    }
-}
-
-impl PrefabProcessingQueue {
-    /// Enqueue asset data for processing
-    pub(crate) fn enqueue(
-        &self,
-        handle: LoadHandle,
-        data: Prefab,
-        asset_load_op: AssetLoadOp,
-        version: u32,
-    ) {
-        self.enqueue_processed(
-            Ok(data),
-            handle,
-            LoadNotifier::new(handle, Some(asset_load_op), None),
-            version,
-            false,
-        );
-    }
-
-    pub(crate) fn enqueue_processed(
-        &self,
-        data: Result<Prefab, AmethystError>,
-        handle: LoadHandle,
-        load_notifier: LoadNotifier,
-        version: u32,
-        commit: bool,
-    ) {
-        self.processed.push(Processed {
-            data,
-            handle,
-            load_notifier,
-            version,
-            commit,
-        })
-    }
-
-    pub(crate) fn enqueue_changed(&self, handle: LoadHandle) {
-        self.changed.push(handle);
-    }
-
+impl Prefab {
     fn cook_prefab(
         prefab: &Prefab,
         storage: &AssetStorage<Prefab>,
@@ -169,25 +28,31 @@ impl PrefabProcessingQueue {
         // This will hold the asset IDs sorted with dependencies first. This ensures that
         // prefab_lookup and entity_lookup are populated with all dependent prefabs/entities
         let mut prefab_cook_order: Vec<PrefabUuid> = vec![];
-        let first_iter = prefab
-            .dependencies
-            .as_ref()
-            .expect("dependencies have not been processed")
-            .iter();
-        let mut dependency_stack = vec![(prefab, first_iter)];
 
-        while let Some((cur_prefab, iter)) = dependency_stack.last_mut() {
-            if let Some(next_handle) = iter.next() {
-                if let Some(next_prefab) = storage.get(next_handle) {
-                    if prefab_lookup.contains_key(&next_prefab.raw_prefab.prefab_id()) {
+        let mut dependency_stack = vec![(
+            prefab,
+            prefab
+                .dependencies
+                .as_ref()
+                .expect("dependencies have not been processed")
+                .iter(),
+        )];
+
+        while let Some((cur_prefab, children)) = dependency_stack.last_mut() {
+            if let Some(child_handle) = children.next() {
+                if let Some(child_prefab) = storage.get(child_handle) {
+                    if prefab_lookup.contains_key(&child_prefab.raw_prefab.prefab_id()) {
                         continue;
                     }
-                    let next_iter = next_prefab
-                        .dependencies
-                        .as_ref()
-                        .expect("dependencies have not been processed")
-                        .iter();
-                    dependency_stack.push((next_prefab, next_iter));
+
+                    dependency_stack.push((
+                        child_prefab,
+                        child_prefab
+                            .dependencies
+                            .as_ref()
+                            .expect("dependencies have not been processed")
+                            .iter(),
+                    ));
                 } else {
                     log::error!("Missing prefab dependency");
                 }
@@ -210,167 +75,25 @@ impl PrefabProcessingQueue {
             &prefab_lookup,
         )
     }
-
-    /// cook prefabs with changed dependencies
-    pub fn process(
-        &mut self,
-        storage: &mut AssetStorage<Prefab>,
-        component_registry: &ComponentRegistry,
-        loader: &impl Loader,
-    ) {
-        // FIXME: deal with cyclic and diamond dependencies correctly
-        let mut visited = FnvHashSet::default();
-
-        while let Some(dependee) = self.changed.pop() {
-            let updates: Vec<(WeakHandle, legion_prefab::CookedPrefab)> = storage
-                .get_for_load_handle(dependee)
-                .iter()
-                .flat_map(|p| p.dependers.iter())
-                .flat_map(|weak_handle| {
-                    storage
-                        .get_asset_with_version(weak_handle)
-                        .map(move |(prefab, _)| (weak_handle, prefab))
-                })
-                .map(|(weak_handle, prefab)| {
-                    if visited.insert(weak_handle.load_handle()) {
-                        self.changed.push(weak_handle.load_handle());
-                    }
-                    (
-                        weak_handle.clone(),
-                        Self::cook_prefab(prefab, storage, component_registry),
-                    )
-                })
-                .collect();
-
-            use crate::storage::MutateAssetInStorage;
-            for (handle, cooked_prefab) in updates.into_iter() {
-                storage.mutate_asset_in_storage(&handle, move |asset| {
-                    asset.prefab = Some(cooked_prefab);
-                    asset.version += 1;
-                });
-            }
-        }
-
-        let requeue = self
-            .requeue
-            .get_mut()
-            .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
-
-        while let Some(Processed {
-            data,
-            handle,
-            load_notifier,
-            version,
-            commit,
-        }) = self.processed.pop()
-        {
-            log::debug!("processing load_handle {:?}", handle);
-            let mut prefab = match data.map(
-                |Prefab {
-                     prefab,
-                     raw_prefab,
-                     mut dependencies,
-                     dependers,
-                     version,
-                 }| {
-                    log::debug!("AssetUuid: {:x?}", raw_prefab.prefab_id());
-
-                    let deps = dependencies.get_or_insert_with(|| {
-                        raw_prefab
-                            .prefab_meta
-                            .prefab_refs
-                            .iter()
-                            .map(|(other_prefab_id, _)| {
-                                loader.load_asset(AssetUuid(*other_prefab_id))
-                            })
-                            .collect()
-                    });
-
-                    if deps
-                        .iter()
-                        .all(|handle| storage.contains(handle.load_handle()))
-                    {
-                        ProcessingState::Loaded(Prefab {
-                            prefab,
-                            raw_prefab,
-                            dependencies,
-                            dependers,
-                            version,
-                        })
-                    } else {
-                        ProcessingState::Loading(Prefab {
-                            prefab,
-                            raw_prefab,
-                            dependencies,
-                            dependers,
-                            version,
-                        })
-                    }
-                },
-            ) {
-                Ok(ProcessingState::Loaded(raw)) => {
-                    load_notifier.complete();
-                    raw
-                }
-                Ok(ProcessingState::Loading(x)) => {
-                    requeue.push(Processed {
-                        data: Ok(x),
-                        handle,
-                        load_notifier,
-                        version,
-                        commit,
-                    });
-                    continue;
-                }
-                Err(e) => {
-                    load_notifier.error(e);
-                    continue;
-                }
-            };
-
-            prefab.prefab = Some(PrefabProcessingQueue::cook_prefab(
-                &prefab,
-                storage,
-                component_registry,
-            ));
-
-            prefab.version = storage
-                .get_for_load_handle(handle)
-                .map_or(1, |Prefab { version, .. }| *version + 1);
-
-            storage.update_asset(handle, prefab, version);
-
-            if commit {
-                storage.commit_asset(handle, version);
-            }
-        }
-
-        for p in requeue.drain(..) {
-            self.processed.push(p);
-        }
-    }
 }
 
 #[derive(Default)]
-struct PrefabAssetProcessor;
+struct PrefabProcessorSystem;
 
-impl System<'static> for PrefabAssetProcessor {
+impl System<'static> for PrefabProcessorSystem {
     fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
-            SystemBuilder::new("PrefabAssetProcessorSystem")
+            SystemBuilder::new("PrefabProcessorSystem")
                 .read_resource::<ComponentRegistry>()
-                .write_resource::<PrefabProcessingQueue>()
+                .write_resource::<ProcessingQueue<Prefab>>()
                 .write_resource::<AssetStorage<Prefab>>()
                 .write_resource::<DefaultLoader>()
                 .build(
-                    move |_,
-                          _,
-                          (component_registry, processing_queue, prefab_storage, loader),
-                          _| {
+                    move |_, _, (component_registry, processing_queue, storage, loader), _| {
                         prefab_asset_processor(
                             component_registry,
                             processing_queue,
-                            prefab_storage,
+                            storage,
                             loader,
                         );
                     },
@@ -381,12 +104,77 @@ impl System<'static> for PrefabAssetProcessor {
 
 fn prefab_asset_processor(
     component_registry: &ComponentRegistry,
-    processing_queue: &mut PrefabProcessingQueue,
-    prefab_storage: &mut AssetStorage<Prefab>,
+    processing_queue: &mut ProcessingQueue<Prefab>,
+    storage: &mut AssetStorage<Prefab>,
     loader: &mut DefaultLoader,
 ) {
-    processing_queue.process(prefab_storage, component_registry, loader);
-    prefab_storage.process_custom_drop(|_| {});
+    // FIXME: deal with cyclic and diamond dependencies correctly
+    let mut visited = FnvHashSet::default();
+
+    while let Some(dependee) = processing_queue.changed.pop() {
+        let updates: Vec<(WeakHandle, legion_prefab::CookedPrefab)> = storage
+            .get_for_load_handle(dependee)
+            .iter()
+            .flat_map(|p| p.dependers.iter())
+            .flat_map(|weak_handle| {
+                storage
+                    .get_asset_with_version(weak_handle)
+                    .map(move |(prefab, _)| (weak_handle, prefab))
+            })
+            .map(|(weak_handle, prefab)| {
+                if visited.insert(weak_handle.load_handle()) {
+                    processing_queue.changed.push(weak_handle.load_handle());
+                }
+                (
+                    weak_handle.clone(),
+                    Prefab::cook_prefab(prefab, storage, component_registry),
+                )
+            })
+            .collect();
+
+        use crate::storage::MutateAssetInStorage;
+        for (handle, cooked_prefab) in updates.into_iter() {
+            storage.mutate_asset_in_storage(&handle, move |asset| {
+                asset.prefab = Some(cooked_prefab);
+                asset.version += 1;
+            });
+        }
+    }
+
+    processing_queue.process(storage, |mut prefab, storage| {
+        log::debug!("AssetUuid: {:x?}", prefab.raw_prefab.prefab_id());
+
+        let deps = prefab
+            .raw_prefab
+            .prefab_meta
+            .prefab_refs
+            .iter()
+            .map(|(other_prefab_id, _)| loader.load_asset(AssetUuid(*other_prefab_id)))
+            .collect();
+
+        prefab.dependencies.get_or_insert(deps);
+
+        prefab.prefab = Some(Prefab::cook_prefab(&prefab, storage, component_registry));
+
+        // prefab.version = storage
+        //     .get_for_load_handle(handle)
+        //     .map_or(1, |Prefab { version, .. }| *version + 1);
+
+        Ok(
+            if prefab
+                .dependencies
+                .as_ref()
+                .unwrap()
+                .iter()
+                .all(|handle| storage.contains(handle.load_handle()))
+            {
+                ProcessingState::Loaded(prefab)
+            } else {
+                ProcessingState::Loading(prefab)
+            },
+        )
+    });
+    storage.process_custom_drop(|_| {});
 }
 
 #[cfg(test)]
@@ -414,7 +202,7 @@ mod tests {
 
     struct Fixture {
         loader: DefaultLoader,
-        processing_queue: PrefabProcessingQueue,
+        processing_queue: ProcessingQueue<Prefab>,
         prefab_storage: AssetStorage<Prefab>,
         component_registry: ComponentRegistry,
         handle_maker: HandleMaker,
@@ -423,7 +211,7 @@ mod tests {
     impl Fixture {
         fn setup() -> Self {
             let loader = DefaultLoader::default();
-            let processing_queue = PrefabProcessingQueue::default();
+            let processing_queue = ProcessingQueue::default();
             let prefab_storage = AssetStorage::<Prefab>::new(loader.indirection_table.clone());
             let component_registry = ComponentRegistryBuilder::default()
                 .auto_register_components()
@@ -490,6 +278,7 @@ mod tests {
             version,
             false,
         );
+
         prefab_asset_processor(
             &component_registry,
             &mut processing_queue,

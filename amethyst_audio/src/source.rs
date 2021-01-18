@@ -1,6 +1,6 @@
 //! Provides structures used to load audio files.
 //!
-use amethyst_assets::{Asset, Handle, ProcessableAsset, ProcessingState};
+use amethyst_assets::{Asset, AssetStorage, Handle, ProcessableAsset, ProcessingState};
 use amethyst_error::Error;
 use type_uuid::TypeUuid;
 
@@ -31,7 +31,10 @@ impl Asset for Source {
 }
 
 impl ProcessableAsset for Source {
-    fn process(data: AudioData) -> Result<ProcessingState<AudioData, Source>, Error> {
+    fn process(
+        data: AudioData,
+        _: &mut AssetStorage<Source>,
+    ) -> Result<ProcessingState<AudioData, Source>, Error> {
         Ok(ProcessingState::Loaded(Source { bytes: data.0 }))
     }
 }
