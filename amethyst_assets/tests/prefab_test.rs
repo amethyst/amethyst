@@ -94,6 +94,7 @@ fn a_prefab_is_applied_to_an_entity() {
 }
 
 #[test]
+#[serial]
 fn a_prefab_with_dependencies_is_applied_to_an_entity() {
     common::run_test(|dispatcher, world, resources| {
         let prefab_handle: Handle<Prefab> = {
