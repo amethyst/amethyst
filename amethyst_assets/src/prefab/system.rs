@@ -36,34 +36,24 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
     <(Entity, &Handle<Prefab>, TryWrite<PrefabInstance>)>::query().for_each_mut(
         world,
         |(entity, handle, instance)| {
-            if let Some(prefab) = prefab_storage.get(handle) {
-                if let Some(cooked_prefab) = prefab.cooked.as_ref() {
-                    if let Some(instance) = instance {
-                        if instance.version < prefab.version {
-                            log::debug!("Updating existing prefab.");
-                            if let Some((root_entity,)) =
-                                entity_query.iter(&cooked_prefab.world).next()
-                            {
-                                instance.entity_map.insert(*root_entity, *entity);
-                            };
-
-                            prefabs.push((
-                                *entity,
-                                cooked_prefab,
-                                prefab.version,
-                                instance.entity_map.clone(),
-                                handle.clone(),
-                            ));
-                        }
-                    } else {
-                        log::debug!("Spawning new prefab.");
-                        let mut map = HashMap::<Entity, Entity, EntityHasher>::default();
+            if let Some(Prefab {
+                prefab: Some(cooked_prefab),
+                version: prefab_version,
+                ..
+            }) = prefab_storage.get(handle)
+            {
+                let instance_version = instance.map(|instance| instance.version).unwrap_or(0);
+                if instance_version < *prefab_version {
+                    let mut entity_map = instance
+                        .map(|instance| instance.entity_map.clone())
+                        .unwrap_or_default();
+                    if entity_map.is_empty() {
                         if let Some((root_entity,)) = entity_query.iter(&cooked_prefab.world).next()
                         {
-                            map.insert(*root_entity, *entity);
-                        };
-                        prefabs.push((*entity, cooked_prefab, prefab.version, map, handle.clone()));
+                            entity_map.insert(*root_entity, *entity);
+                        }
                     }
+                    prefabs.push((*entity, cooked_prefab, *prefab_version, entity_map));
                 }
             }
         },
@@ -82,8 +72,8 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
         log::debug!("new entity_map: {:?}", entity_map);
         log::debug!("old entity map: {:?}", prev_entity_map);
 
-        for value in prev_entities.difference(&live_entities) {
-            if world.remove(*value) {
+        for value in prev_entities.difference(&live_entities).copied() {
+            if world.remove(value) {
                 log::debug!("Removed entity {:?}", value)
             }
         }
@@ -95,7 +85,6 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
                 version,
                 entity_map,
             });
-            entry.add_component(handle);
         } else {
             log::error!("Could not update entity");
         }
