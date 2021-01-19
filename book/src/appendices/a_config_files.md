@@ -12,7 +12,7 @@ Luckily, Amethyst uses [RON][ron] configuration files and has infrastructure in 
 
 The existing example uses the following constants:
 
-```rust,ignore
+```rust
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
 const PADDLE_HEIGHT: f32 = 15.0;
@@ -30,7 +30,7 @@ to specify the look of the game. We want to replace this with something more fle
 file. To start, let's create a new file, `config.rs`, to hold our configuration structures. Add the following 
 `use` statements to the top of this file:
 
-```rust,ignore
+```rust
 use std::path::Path;
 
 use amethyst::config::Config;

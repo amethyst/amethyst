@@ -2,7 +2,7 @@
 
 To begin with, let's make the `Arena` dimensions configurable. Add this structure to a new file `config.rs`.
 
-```rust,ignore
+```rust
 #[derive(Debug, Deserialize, Serialize)]
 struct ArenaConfig {
     pub height: f32,
@@ -29,13 +29,13 @@ be present. For now though, let's just use the `Default` trait.
 
 Now, in `main.rs`, add the following lines:
 
-```rust,ignore
+```rust
 use crate::config::ArenaConfig;
 ```
 
 We'll need to load the config at startup, so let's add this to the `run` function in `main.rs`
 
-```rust,ignore
+```rust
 let arena_config = ArenaConfig::load(&config)?;
 ```
 

@@ -20,6 +20,9 @@ license = "MIT/Apache-2.0"
 
 autoexamples = false # Our examples come with their own Cargo.toml and are in the [workspace] section
 
+[lib]
+crate-type = ["lib"]
+
 [features]
 default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
 optional = ["audio", "network", "locale", "ui", "tiles", "animation"]

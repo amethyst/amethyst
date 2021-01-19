@@ -173,7 +173,7 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
+    /// ```
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
@@ -187,7 +187,7 @@ where
     ///
     /// #  Ok(())
     /// # }
-    /// ~~~
+    /// ```
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self, Error>
     where
         P: AsRef<Path>,
@@ -457,9 +457,11 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::core::transform::{Parent, Transform};
+    /// ```rust
+    /// use amethyst::{
+    ///     core::transform::{Parent, Transform},
+    ///     prelude::*,
+    /// };
     ///
     /// struct NullState;
     /// impl EmptyState for NullState {}
@@ -472,8 +474,8 @@ where
     /// // returning a new object with the modified configuration.
     /// let assets_dir = "assets/";
     /// let game = Application::build(assets_dir, NullState)?
-    /// // lastly we can build the Application object
-    /// // the `build` function takes the user defined game data initializer as input
+    ///     // lastly we can build the Application object
+    ///     // the `build` function takes the user defined game data initializer as input
     ///     .build(())?;
     ///
     /// // the game instance can now be run, this exits only when the game is done
@@ -481,7 +483,7 @@ where
     ///
     /// # Ok(())
     /// # }
-    /// ~~~
+    /// ```
     pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self, Error> {
         if !log_enabled!(Level::Error) {
             eprintln!(
@@ -580,7 +582,7 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
+    /// ```
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
@@ -603,7 +605,7 @@ where
     /// #     Ok(())
     /// # }
     ///
-    /// ~~~
+    /// ```
     pub fn with_resource<R: Resource>(mut self, resource: R) -> Self {
         self.resources.insert(resource);
         self
@@ -632,7 +634,7 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
+    /// ```
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
@@ -658,7 +660,7 @@ where
     ///             loader.load_from("teapot", ObjFormat, "custom_directory", (), &storage);
     ///     }
     /// }
-    /// ~~~
+    /// ```
     pub fn with_source<I, O>(self, _name: I, _store: O) -> Self
     where
         I: Into<String>,
@@ -688,7 +690,7 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
+    /// ```
     /// use amethyst::prelude::*;
     /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
@@ -712,7 +714,7 @@ where
     ///         let mesh: Handle<Mesh> = loader.load("teapot", ObjFormat, (), &storage);
     ///     }
     /// }
-    /// ~~~
+    /// ```
     pub fn with_default_source<O>(self, _store: O) -> Self
     where
         O: Source,

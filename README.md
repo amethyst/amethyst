@@ -94,7 +94,7 @@ You can download it and read the installation instructions at [Git LFS home page
 
 To compile any of the examples run:
 
-```
+```shell
 $ cargo run -p name_of_example
 ```
 
@@ -123,26 +123,26 @@ If you are compiling on Linux, make sure to install the dependencies below.
 
 ### Arch Linux
 
-```
-# pacman -Syu grep gcc pkgconf openssl alsa-lib cmake make python3 freetype2 awk libxcb
+```sh
+pacman -Syu grep gcc pkgconf openssl alsa-lib cmake make python3 freetype2 awk libxcb
 ```
 
 ### Debian/Ubuntu
 
-```
-# apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev libfontconfig1-dev
+```sh
+apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev libfontconfig1-dev
 ```
 
 ### Fedora
 
-```
-# dnf install pkgconfig gcc openssl-devel alsa-lib-devel cmake make gcc-c++ freetype-devel expat-devel libxcb-devel libX11-devel
+```sh
+dnf install pkgconfig gcc openssl-devel alsa-lib-devel cmake make gcc-c++ freetype-devel expat-devel libxcb-devel libX11-devel
 ```
 
 ### openSUSE
 
-```
-# zypper install gcc pkg-config libopenssl-devel alsa-devel cmake gcc-c++ python3 freetype2-devel libexpat-devel libxcb-devel
+```sh
+zypper install gcc pkg-config libopenssl-devel alsa-devel cmake gcc-c++ python3 freetype2-devel libexpat-devel libxcb-devel
 ```
 
 ### Nix/NixOS
@@ -194,22 +194,22 @@ See your distribution-specific installation process for the equivalent dependenc
 
 You can build the book locally with:
 
-```
-$ cargo install mdbook
-$ mdbook build book
+```sh
+cargo install mdbook
+mdbook build book
 ```
 
 If you're actively editing the book, it's easiest to run:
 
-```
-$ mdbook serve book
+```shell
+mdbook serve book
 ```
 
 and navigate to `http://localhost:3000`. The text itself can be found in `book/html/index.html`. For more information, please see the [mdBook project](https://github.com/rust-lang-nursery/mdBook).
 
 To generate the API documentation locally, do:
 
-```
+```shell
 $ cargo doc
 ```
 

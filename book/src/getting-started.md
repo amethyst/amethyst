@@ -61,7 +61,7 @@ Depending on the book version that you choose to read, make sure that the amethy
 
 For the released crates.io version, you should have something like this:
 
-```rust,ignore
+```toml,ignore
 [dependencies]
 amethyst = "LATEST_CRATES.IO_VERSION"
 ```
@@ -69,7 +69,7 @@ The latest crates.io version can be found [here](https://crates.io/crates/amethy
 
 If you want to use the latest unreleased changes, your Cargo.toml file should look like this:
 
-```rust,ignore
+```toml,ignore
 [dependencies]
 amethyst = { git = "https://github.com/amethyst/amethyst", rev = "COMMIT_HASH" }
 ```
