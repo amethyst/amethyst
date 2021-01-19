@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use amethyst_error::Error;
 use atelier_assets::loader::LoadHandle;
+use dyn_clone::DynClone;
 
 use crate::{processor::ProcessingState, AssetStorage};
 
@@ -55,7 +56,7 @@ impl<T: Asset<Data = T>> ProcessableAsset for T {
 /// The format type itself represents loading options, which are passed to `import`.
 /// E.g. for textures this would be stuff like mipmap levels and
 /// sampler info.
-pub trait Format<D: 'static>: objekt::Clone + Send + Sync + 'static {
+pub trait Format<D: 'static>: DynClone + Send + Sync + 'static {
     /// A unique identifier for this format.
     fn name(&self) -> &'static str;
 
@@ -71,7 +72,7 @@ pub trait Format<D: 'static>: objekt::Clone + Send + Sync + 'static {
     }
 }
 
-objekt::clone_trait_object!(<D> Format<D>);
+dyn_clone::clone_trait_object!(<D> Format<D>);
 
 /// SerializableFormat is a marker trait which is required for Format types that are supposed
 /// to be serialized. This trait implies both `Serialize` and `Deserialize` implementation.

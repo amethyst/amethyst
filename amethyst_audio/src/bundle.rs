@@ -21,10 +21,9 @@ impl SystemBundle for AudioBundle {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        if !resources.contains::<OutputWrapper>() {
-            resources.insert(OutputWrapper::default());
-        }
-        resources.insert(SelectedListener(None));
+        resources.get_or_default::<OutputWrapper>();
+        resources.get_or_default::<SelectedListener>();
+
         builder.add_system(Box::new(AudioSystem));
         Ok(())
     }
