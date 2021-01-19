@@ -2,7 +2,7 @@
 
 This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. This can be applied where the [`Component`] type itself is completely serializable &ndash; the data is self-contained:
 
-```rust,no_run,noplaypen
+```rust, no_run,noplaypen
 # extern crate serde;
 #
 # use amethyst::ecs::{storage::DenseVecStorage, Component};
@@ -26,7 +26,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
 2. Import the following items:
 
-    ```rust,ignore
+    ```rust
     use amethyst::{
         assets::{PrefabData, ProgressCounter},
         derive::PrefabData,
@@ -38,7 +38,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
 3. Add the following attributes on your type:
 
-    ```rust,ignore
+    ```rust
     #[derive(Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
     #[serde(default)] // <--- optional
@@ -47,7 +47,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
     Example:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # extern crate derivative;
     # extern crate serde;
     #
@@ -78,7 +78,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
 4. Now the type can be used in a prefab:
 
-    ```rust,ignore
+    ```rust
     #![enable(implicit_some)]
     Prefab(
         entities: [

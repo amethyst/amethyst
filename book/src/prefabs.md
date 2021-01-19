@@ -12,7 +12,7 @@ It is certainly possible to define the values for each monster in code. However,
 
 In data-oriented design, instantiating monsters is logic and is part of the executable, but the values to use for the components is data. The executable can instantiate any monster using the data for the monsters read from a *prefab* file like the following:
 
-```ron,ignore
+```ron
 // monster_weak.ron
 //
 // This is simply an example of what a prefab can look like.

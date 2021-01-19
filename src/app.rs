@@ -107,6 +107,7 @@ where
 ///     core::transform::{Parent, Transform},
 ///     prelude::*,
 /// };
+/// use env_logger;
 ///
 /// struct NullState;
 /// impl EmptyState for NullState {}
@@ -173,7 +174,7 @@ where
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
@@ -457,7 +458,7 @@ where
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```no_run
     /// use amethyst::{
     ///     core::transform::{Parent, Transform},
     ///     prelude::*,
@@ -594,17 +595,15 @@ where
     ///
     /// struct Score {
     ///     score: u32,
-    ///     user: String
+    ///     user: String,
     /// }
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let score_board = HighScores(Vec::new());
     /// let assets_dir = "assets/";
-    /// let game = Application::build(assets_dir, NullState)?
-    ///     .with_resource(score_board);
+    /// let game = Application::build(assets_dir, NullState)?.with_resource(score_board);
     /// #     Ok(())
     /// # }
-    ///
     /// ```
     pub fn with_resource<R: Resource>(mut self, resource: R) -> Self {
         self.resources.insert(resource);
@@ -634,10 +633,12 @@ where
     ///
     /// # Examples
     ///
-    /// ```
-    /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
-    /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
+    /// ```ignore
+    /// use amethyst::{
+    ///     assets::{DefaultLoader, Directory, Handle, Loader},
+    ///     prelude::*,
+    ///     renderer::{formats::mesh::ObjFormat, Mesh},
+    /// };
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
@@ -653,11 +654,8 @@ where
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
     ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
-    ///         let storage = data.resources.get().unwrap();
-    ///
     ///         // Load a teapot mesh from the directory that registered above.
-    ///         let mesh: Handle<Mesh> =
-    ///             loader.load_from("teapot", ObjFormat, "custom_directory", (), &storage);
+    ///         let mesh: Handle<Mesh> = loader.load("teapot.obj");
     ///     }
     /// }
     /// ```
@@ -690,28 +688,32 @@ where
     ///
     /// # Examples
     ///
-    /// ```
-    /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
-    /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
+    /// ```no_run
+    /// use amethyst::{
+    ///     assets::{DefaultLoader, Directory, Handle, Loader, LoaderBundle},
+    ///     prelude::*,
+    ///     renderer::Mesh,
+    /// };
     ///
     /// # fn main() -> amethyst::Result<()> {
+    /// #      amethyst::start_logger(Default::default());
+    /// let mut dispatcher = DispatcherBuilder::default();
+    /// dispatcher.add_bundle(LoaderBundle);
     /// let assets_dir = "assets/";
     /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" as default source for the loader.
     ///     .with_default_source(Directory::new("custom_directory"))
-    ///     .build(DispatcherBuilder::default())?
+    ///     .build(dispatcher)?
     ///     .run();
-    /// #     Ok(())
+    /// # Ok(())
     /// # }
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
     ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
-    ///         let storage = data.resources.get().unwrap();
     ///         // Load a teapot mesh from the directory that registered above.
-    ///         let mesh: Handle<Mesh> = loader.load("teapot", ObjFormat, (), &storage);
+    ///         let mesh: Handle<Mesh> = loader.load("teapot.obj");
     ///     }
     /// }
     /// ```
@@ -720,7 +722,7 @@ where
         O: Source,
     {
         {
-            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            // let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
             // FIXME Update the location on the loader
             // loader.set_default_source(store);
         }

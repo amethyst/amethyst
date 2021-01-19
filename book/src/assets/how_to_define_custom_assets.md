@@ -4,7 +4,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 
 1. Define the type and handle for your asset.
 
-    ```rust,edition2018,ignore,noplaypen
+    ```rust, edition2018,noplaypen
     # extern crate serde_derive;
     #
     use amethyst::{
@@ -31,14 +31,14 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 
     * The asset type itself, in which case you simply derive `Serialize` and `Deserialize` on the type:
 
-        ```rust,ignore
+        ```rust
         #[derive(Serialize, Deserialize, ..)]
         pub struct EnergyBlast { .. }
         ```
 
     * An enum with different variants &ndash; each for a different data layout:
 
-        ```rust,edition2018,ignore,noplaypen
+        ```rust, edition2018,noplaypen
         # extern crate serde_derive;
         #
         # use serde_derive::{Deserialize, Serialize};
@@ -56,7 +56,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 
 3. Implement the [`Asset`][doc_asset] trait on the asset type.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # extern crate serde_derive;
     #
     # use amethyst::{
@@ -101,7 +101,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 
     The [`Processor<A>` system][doc_processor_system] uses this trait to convert the deserialized asset data into the asset.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # extern crate serde_derive;
     #
     # use amethyst::{
@@ -164,7 +164,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 
     If your asset is stored using one of the existing supported formats such as RON or JSON, it can now be used:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # extern crate serde_derive;
     #
     # use amethyst::{

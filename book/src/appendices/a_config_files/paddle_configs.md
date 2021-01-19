@@ -3,7 +3,7 @@
 We're finally going to add a configuration struct for our Paddles. Because our Pong clone supports two 
 players, we should let them configure each separately. Add the following to the `config.rs` file:
 
-```rust,ignore
+```rust
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PaddleConfig {
     pub height: f32,
@@ -28,7 +28,7 @@ Just like the `BallConfig`, we need to read in the color as a tuple instead of a
 
 Now, to allow us to have two separate `PaddleConfig`s, we will wrap them in a bigger structure as follows:
 
-```rust,ignore
+```rust
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct PaddlesConfig {
     pub left: PaddleConfig,
@@ -38,7 +38,7 @@ pub struct PaddlesConfig {
 
 Now we need to add the `PaddlesConfig` to our `PongConfig` as shown below
 
-```rust,ignore
+```rust
 pub struct PongConfig {
     pub arena: ArenaConfig,
     pub ball: BallConfig,
@@ -48,7 +48,7 @@ pub struct PongConfig {
 
 and modify the `main.rs`'s `run()` function to add our `PaddleConfig`s. 
 
-```rust,ignore
+```rust
     .with_resource(pong_config.arena)
     .with_resource(pong_config.ball)
     .with_resource(pong_config.paddles)
@@ -68,7 +68,7 @@ To avoid issues with the borrow checker, we read the `PaddlesConfig` once and co
 unwrapping them in one big assignment statement.
 In `initialise_paddles()` in `pong.rs`, add this code below reading the `ArenaConfig`.
 
-```rust,ignore
+```rust
 let (
     left_height,
     left_width,
@@ -107,13 +107,13 @@ let (
 
 Now, within this function, replace
 
-```rust,ignore
+```rust
 let y = (arena_height - PADDLE_HEIGHT) / 2.0;
 ```
 
 with 
 
-```rust,ignore
+```rust
 let left_y = (arena_height - left_height) / 2.0;
 let right_y = (arena_height - right_height) / 2.0;
 ```

@@ -2,7 +2,7 @@
 
 This guide explains how to define a [`PrefabData`] for a [`Component`] using an intermediate type called an adapter. This pattern is used when there are multiple ways to serialize / construct the [`Component`]:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # extern crate serde;
 #
 # use amethyst::ecs::{storage::DenseVecStorage, Component};
@@ -40,7 +40,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
     Create a (de)serializable enum type with a variant for each representation. The following is an example of an adapter type for the `Position` component, which allows either `i32` or `f32` values to be specified in the prefab:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # extern crate serde;
     #
     use amethyst::{
@@ -62,7 +62,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
     **Note:** You may already have a type that captures the multiple representations. For example, for the [`Camera`] component, the [`CameraPrefab`] enum captures the different representations:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # extern crate serde;
     #
     # use serde::{Deserialize, Serialize};
@@ -87,7 +87,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
 3. Implement the [`PrefabData`] trait for the adapter type.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # extern crate serde;
     #
     # use amethyst::{
@@ -147,7 +147,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
 4. Now the adapter type can be used in a prefab to attach the component to the entity.
 
-    ```rust,ignore
+    ```rust
     #![enable(implicit_some)]
     Prefab(
         entities: [

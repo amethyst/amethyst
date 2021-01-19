@@ -15,7 +15,7 @@ are essential (like rendering, input and UI).
 
 Let's start by creating the `GameData` structure:
 
-```rust,no_run,noplaypen
+```rust, no_run,noplaypen
 # use amethyst::ecs::prelude::Dispatcher;
 #
 pub struct CustomGameData<'a, 'b> {
@@ -26,7 +26,7 @@ pub struct CustomGameData<'a, 'b> {
 
 We also add a utility function for performing dispatch:
 
-```rust,no_run,noplaypen
+```rust, no_run,noplaypen
 # use amethyst::ecs::prelude::{Dispatcher, World};
 #
 # pub struct CustomGameData<'a, 'b> {
@@ -54,7 +54,7 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 `GameData` structure. These are the only requirements placed on the
 `GameData` structure.
 
-```rust,no_run,noplaypen
+```rust, no_run,noplaypen
 #
 # use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt};
 # use amethyst::core::SystemBundle;
@@ -136,7 +136,7 @@ impl<'a,'b> DataDispose for CustomGameData<'a,'b> {
 We can now use `CustomGameData` in place of the provided `GameData` when building
 our `Application`, but first we should create some `State`s.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 # use amethyst::ecs::prelude::{Dispatcher, World};
 # use amethyst::prelude::{State, StateData, StateEvent, Trans};
@@ -231,7 +231,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
 The only thing that remains now is to use our `CustomGameDataBuilder` when building the
 `Application`.
 
-```rust,ignore
+```rust
 #
 # use amethyst::{
 #     core::{transform::TransformBundle, SystemBundle},

@@ -134,6 +134,9 @@ legion = { version = "0.3", default-features = false, features = [
 dirs-next = "2.0.0"
 vergen = "3.1.0"
 
+[dev-dependencies]
+env_logger = "0.8.2"
+
 [package.metadata.docs.rs]
 features = [
     "animation",

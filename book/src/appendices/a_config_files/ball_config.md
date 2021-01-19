@@ -6,7 +6,7 @@ separately.
 
 To prepare for our `BallConfig`, add the following line to the top of `config.rs`:
 
-```rust,ignore
+```rust
 use amethyst::core::math::Vector2;
 ```
 
@@ -16,7 +16,7 @@ a non-trivial data type to a RON file. The `BALL_COLOR` was originally an array,
 handle arrays as tuples, so it will read in a tuple and convert the color values to an array if needed by a
 particular function (e.g., in `pong.rs`).
 
-```rust,ignore
+```rust
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BallConfig {
     pub velocity: Vector2<f32>,
@@ -27,7 +27,7 @@ pub struct BallConfig {
 
 We'll also add the `Default` trait to this config that will match what the full example uses.
 
-```rust,ignore
+```rust
 impl Default for BallConfig {
     fn default() -> Self {
         BallConfig {
@@ -42,7 +42,7 @@ impl Default for BallConfig {
 Still in `config.rs`, add the following structure definition at the very bottom. This structure will be
 backed by the whole `config.ron` file.
 
-```rust,ignore
+```rust
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct PongConfig {
     pub arena: ArenaConfig,
@@ -59,7 +59,7 @@ the `ArenaConfig`.
 
 In `pong.rs`, underneath our loading of the `ArenaConfig`, add the following lines
 
-```rust,ignore
+```rust
 let (velocity_x, velocity_y, radius, color) = {
     let config = world.read_resource::<BallConfig>();
     let c: [f32; 4] = [
@@ -86,19 +86,19 @@ add each resource separately so systems can use only what they want.
 
 First, we need to change what `main.rs` is using. Change
 
-```rust,ignore
+```rust
 use crate::config::ArenaConfig;
 ```
 
 to
 
-```rust,ignore
+```rust
 use crate::config::PongConfig;
 ```
 
 Now, modify the `run()` function, from
 
-```rust,ignore
+```rust
 let arena_config = ArenaConfig::load(&config)?;
 [..]
     .with_bundle(PongBundle::default())?
@@ -108,7 +108,7 @@ let arena_config = ArenaConfig::load(&config)?;
 
 to
 
-```rust,ignore
+```rust
 let pong_config = PongConfig::load(&config)?;
 [..]
     .with_bundle(PongBundle::default())?

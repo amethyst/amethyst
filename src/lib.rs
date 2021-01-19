@@ -11,9 +11,9 @@
 //!
 //! # Example
 //!
-//! ```rust,no_run
+//! ```rust, no_run
 //! use amethyst::prelude::*;
-//! use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+//! use amethyst::winit::event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 //!
 //! struct GameState;
 //!

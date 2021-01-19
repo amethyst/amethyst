@@ -43,7 +43,7 @@ Now that we have loaded our config, we want to add it to the world so other modu
 it. We do this by adding the config as a resource during `Application` creation:
 
 
-```rust,ignore
+```rust
     .with_resource(arena_config)
     .with_bundle(PongBundle::default())?
 ```
@@ -53,14 +53,14 @@ First, let's change our initialisation steps in `pong.rs`.
 
 Add the following line to the top of `pong.rs`:
 
-```rust,ignore
+```rust
 use crate::config::ArenaConfig;
 ```
 
 Now, in the `initialise_paddles()` function, add the following lines after the initialisation of the
 `left_transform` and `right_transform`.
 
-```rust,ignore
+```rust
 let (arena_height, arena_width) = {
     let config = &world.read_resource::<ArenaConfig>();
     (config.height, config.width)
@@ -76,7 +76,7 @@ It is actually simpler to access a Config file from a system than via the `World
 it in the `System`'s `run()` function, add it to the `SystemData` type. This is what the `BounceSystem` looks
 like when it wants to access the `ArenaConfig`.
 
-```rust,ignore
+```rust
 use crate::config::ArenaConfig;
 ...
 type SystemData = (

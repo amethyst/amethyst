@@ -4,7 +4,7 @@ Finally, you need to tell Amethyst to draw in 2D space. This is done by creating
 
 The following snippet demonstrates how to set up a `Camera` that sees entities within screen bounds, where the entities' Z position is between -10.0 and 10.0:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 use amethyst::{
     core::{math::Orthographic3, transform::Transform},
     prelude::*,

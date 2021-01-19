@@ -6,13 +6,13 @@ If you are looking for a guide for how to define prefab data that combines the c
 
 If you are looking for a guide to define prefab data for a `Component`, first we need to figure out its type based on its serialized representation. The following table summarizes the types, and links to the relevant guide. For additional detail, refer to the code snippets below the table.
 
-Component     | Serialized representation             | Example(s)            | Prefab Data        | Guide
-------------- | ------------------------------------- | --------------------- | ------------------ | ---
-`YourType`    | `Self` &ndash; `YourType`             | `Position`            | `Position`         | [Simple]
-`YourType`    | Multiple &ndash; `V1(..)`, `V2(..)`   | [`Camera`]            | [`CameraPrefab`]   | [Adapter]
-`YourType`    | Subset of `YourType`                  | [`AudioListener`]     | [`AudioPrefab`]    | [Asset]
-`Handle<A>`   | Loaded from `A::Data`                 | [`Mesh`], [`Texture`] | [`MeshData`], [`TexturePrefab`] | [Asset]
-`ManyHandles` | Data that component stores handles of | [`Material`]          | [`MaterialPrefab`] | [Multi-Handle]
+| Component     | Serialized representation             | Example(s)            | Prefab Data                     | Guide          |
+| ------------- | ------------------------------------- | --------------------- | ------------------------------- | -------------- |
+| `YourType`    | `Self` &ndash; `YourType`             | `Position`            | `Position`                      | [Simple]       |
+| `YourType`    | Multiple &ndash; `V1(..)`, `V2(..)`   | [`Camera`]            | [`CameraPrefab`]                | [Adapter]      |
+| `YourType`    | Subset of `YourType`                  | [`AudioListener`]     | [`AudioPrefab`]                 | [Asset]        |
+| `Handle<A>`   | Loaded from `A::Data`                 | [`Mesh`], [`Texture`] | [`MeshData`], [`TexturePrefab`] | [Asset]        |
+| `ManyHandles` | Data that component stores handles of | [`Material`]          | [`MaterialPrefab`]              | [Multi-Handle] |
 
 ### Serialized Representation
 
@@ -20,7 +20,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where the `Component` type itself is completely serializable &ndash; the data is self-contained.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # extern crate serde;
     #
     # use amethyst::ecs::{storage::DenseVecStorage, Component};
@@ -36,7 +36,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where are multiple ways to construct the component, and a user should be able to choose which one to use.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # extern crate serde;
     #
     # use amethyst::ecs::{storage::DenseVecStorage, Component};
@@ -72,7 +72,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where most of the component is serializable, but there is also data that is only accessible at runtime, such as a device ID or an asset handle.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     #
     # use amethyst_audio::output::Output;
     # use amethyst_core::{
@@ -107,7 +107,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where the `Component` itself stores `Handle<_>`s.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     #
     # use amethyst::{
     #     assets::Handle,

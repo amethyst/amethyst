@@ -8,13 +8,13 @@ Let's get started by creating an `audio` subdirectory under `assets`. Then downl
 
 Next, we'll create a Resource to store our sound effects in. In `main.rs`, add:
 
-```rust,ignore
+```rust
 mod audio;
 ```
 
 Create a file called `audio.rs`:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 use amethyst::{
     assets::Loader,
@@ -58,7 +58,7 @@ pub fn initialise_audio(world: &mut World) {
 
 Then, we'll need to add the Sounds Resource to our World. Update `pong.rs`:
 
-```rust,ignore
+```rust
 use crate::audio::initialise_audio;
 
 impl SimpleState for Pong {
@@ -72,7 +72,7 @@ impl SimpleState for Pong {
 
 Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 # use amethyst::GameDataBuilder;
 use amethyst::audio::AudioBundle;
@@ -95,7 +95,7 @@ fn main() -> amethyst::Result<()> {
 
 Let's start by creating a function to play the bounce sound. In `audio.rs`, add:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 use amethyst::{
     assets::AssetStorage,
@@ -118,7 +118,7 @@ pub fn play_bounce_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output
 
 Then, we'll update the Bounce System to play the sound whenever the ball bounces. Update `systems/bounce.rs`:
 
-```rust,ignore
+```rust
 
 use amethyst::{
     assets::AssetStorage,
@@ -179,7 +179,7 @@ Now try running your game (`cargo run`). Don't forget to turn up your volume!
 
 Just as we did for the bounce sound, let's create a function to play the score sound. Update `audio.rs`:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     audio::{output::Output, Source, SourceHandle},
@@ -202,7 +202,7 @@ pub fn play_score_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output:
 
 Then, we'll update our Winner System to play the score sound whenever a player scores. Update `systems/winner.rs`:
 
-```rust,ignore
+```rust
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
@@ -264,7 +264,7 @@ Let's start by downloading [Albatross][albatross] and [Where's My Jetpack?][wher
 
 In `audio.rs`, add the paths to the music tracks below the paths to the sound effects:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 const BOUNCE_SOUND: &str = "audio/bounce.ogg";
 const SCORE_SOUND: &str = "audio/score.ogg";
 
@@ -276,7 +276,7 @@ const MUSIC_TRACKS: &[&str] = &[
 
 Then, create a Music Resource:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 use std::{iter::Cycle, vec::IntoIter};
 #
@@ -291,7 +291,7 @@ Since we only have two music tracks, we use a `Cycle` to infinitely alternate be
 
 Next, we need to add the Music Resource to our World. Update `initialise_audio`:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 # use std::{iter::Cycle, vec::IntoIter};
 #
@@ -354,7 +354,7 @@ pub fn initialise_audio(world: &mut World) {
 
 Finally, let's add a DJ System to our game to play the music. In `main.rs`:
 
-```rust,ignore
+```rust
 use amethyst::audio::DjSystemDesc;
 use crate::audio::Music;
 

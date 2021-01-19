@@ -25,7 +25,7 @@ initialization code from the Pong code.
 1. In the `src` directory, create a new file called `pong.rs` and add the
    following `use` statements. These are needed to make it through this chapter:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     #
     use amethyst::{
         assets::{AssetStorage,  DefaultLoader, Loader, Handle},
@@ -41,7 +41,7 @@ initialization code from the Pong code.
 
 3. In `main.rs` declare `pong` as a module and import the `Pong` state:
 
-    ```rust,ignore
+    ```rust
     mod pong;
 
     use crate::pong::Pong;
@@ -52,7 +52,7 @@ initialization code from the Pong code.
 First, in `pong.rs`, let's add a new method to our `State` implementation: `on_start`.
 This method is called when the State starts. We will leave it empty for now.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # struct Pong;
 impl SimpleState for Pong {
@@ -76,7 +76,7 @@ will.
 
 1. Define the size of the playable area at the top of `pong.rs`.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     pub const ARENA_HEIGHT: f32 = 100.0;
     pub const ARENA_WIDTH: f32 = 100.0;
     ```
@@ -87,7 +87,7 @@ will.
 
     In pong, we want the camera to cover the entire arena. Let's do it in a new function `initialise_camera`:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     #
     # const ARENA_HEIGHT: f32 = 100.0;
     # const ARENA_WIDTH: f32 = 100.0;
@@ -134,7 +134,7 @@ will.
 3. To finish setting up the camera, we need to call `initialise_camera` from the
    Pong state's `on_start` method:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # use amethyst::prelude::*;
     # use amethyst::ecs::World;
     # fn initialise_camera(world: &mut World) { }
@@ -156,14 +156,14 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
 
 1. Define constants for the paddle width and height.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     pub const PADDLE_HEIGHT: f32 = 16.0;
     pub const PADDLE_WIDTH: f32 = 4.0;
     ```
 
 2. Define the `Side` enum and `Paddle` struct:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     # pub const PADDLE_HEIGHT: f32 = 16.0;
     # pub const PADDLE_WIDTH: f32 = 4.0;
     #
@@ -196,7 +196,7 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
 
 3. Implement the `Component` trait for `Paddle`:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     #
     # use amethyst::ecs::{Component, DenseVecStorage};
     #
@@ -222,7 +222,7 @@ include that component and add them to our `World`.
 
 First let's look at our imports:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 use amethyst::core::transform::Transform;
 ```
 
@@ -239,7 +239,7 @@ Keep in mind that the anchor point of our entities will be in the middle of the
 image we will want to render on top of them. This is a good rule to follow in
 general, as it makes operations like rotation easier.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::core::Transform;
 # use amethyst::ecs::World;
@@ -290,7 +290,7 @@ virtual world, but we'll need to do some more work to actually *draw* them.
 As a sanity check, let's make sure the code for initialising the paddles
 compiles. Update the `on_start` method to the following:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::ecs::World;
 # fn initialise_paddles(world: &mut World) { }
@@ -308,7 +308,7 @@ fn on_start(&mut self, data: StateData<'_, GameData>) {
 
 Let's run our blank screen game!
 
-```text,ignore
+```text
 Tried to fetch resource of type `MaskedStorage<Paddle>`[^1] from the `World`, but the resource does not exist.
 
 You may ensure the resource exists through one of the following methods:
@@ -328,7 +328,7 @@ set up in the `World`. The error message above means we have registered the
 this by adding the following line before `initialise_paddles(world)` in the
 `on_start` method:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::ecs::{World, WorldExt};
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
@@ -360,7 +360,7 @@ similarly to how you would register a system. We already have `RenderBundle` in 
 registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 use amethyst::core::transform::TransformBundle;
 #
@@ -407,7 +407,7 @@ function in `pong.rs` called `load_sprite_sheet`.
 
 First, let's declare the function and load the sprite sheet's image data.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     assets::{AssetStorage,  DefaultLoader, Loader, Handle},
@@ -465,7 +465,7 @@ Alongside our sprite sheet texture, we need a file describing where the sprites
 are on the sheet. Let's create, right next to it, a file called
 `pong_spritesheet.ron`. It will contain the following sprite sheet definition:
 
-```text,ignore
+```text
 List((
     texture_width: 8,
     texture_height: 16,
@@ -494,7 +494,7 @@ List((
 
 Finally, we load the file containing the position of each sprite on the sheet.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     assets::{AssetStorage, Handle,  DefaultLoader, Loader},
@@ -549,7 +549,7 @@ So far, so good. We have a sprite sheet loaded, now we need to link the sprites
 to the paddles. We update the `initialise_paddles` function by changing its
 signature to:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::ecs::World;
 # use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
 fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>)
@@ -560,7 +560,7 @@ Inside `initialise_paddles`, we construct a `SpriteRender` for a paddle. We
 only need one here, since the only difference between the two paddles is that
 the right one is flipped horizontally.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::ecs::World;
 # use amethyst::{assets::Handle, renderer::{SpriteRender, SpriteSheet}};
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
@@ -575,7 +575,7 @@ sprite in the sprite sheet, we use `0` for the `sprite_number`.
 
 Next we simply add the components to the paddle entities:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::ecs::World;
 # use amethyst::assets::Handle;
 # use amethyst::renderer::sprite::{SpriteSheet, SpriteRender};
@@ -601,7 +601,7 @@ world
 We're nearly there, we just have to wire up the sprite to the paddles. We put it
 all together in the `on_start()` method:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::assets::Handle;
 # use amethyst::prelude::*;
 # use amethyst::renderer::{sprite::SpriteSheet, Texture};

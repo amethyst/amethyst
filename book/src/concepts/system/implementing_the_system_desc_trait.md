@@ -4,7 +4,7 @@ If the `SystemDesc` derive is unable to generate a `SystemDesc` trait
 implementation for system initialization, the `SystemDesc` trait can be
 implemented manually:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 #
 use amethyst::{
     audio::output::Output,
@@ -46,7 +46,7 @@ impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
 
 ## Templates
 
-```rust,ignore
+```rust
 use amethyst_core::SystemDesc;
 
 /// Builds a `SystemName`.
@@ -66,7 +66,7 @@ impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
 
 With type parameters:
 
-```rust,ignore
+```rust
 use std::marker::PhantomData;
 
 use derivative::Derivative;

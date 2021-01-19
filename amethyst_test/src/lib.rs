@@ -81,7 +81,7 @@
 //! The Amethyst application is initialized with one of the following functions, each providing a
 //! different set of bundles:
 //!
-//! ```rust,no_run
+//! ```rust, no_run
 //! use amethyst_test::prelude::*;
 //!
 //! #[test]
@@ -117,7 +117,7 @@
 //!
 //! Next, attach the logic you wish to test using the various `.with_*(..)` methods:
 //!
-//! ```rust,no_run
+//! ```rust, no_run
 //! # use amethyst::{
 //! #     core::bundle::SystemBundle,
 //! #     ecs::prelude::*,
@@ -155,7 +155,7 @@
 //! Finally, call `.run()` to run the application. This returns `amethyst::Result<()>`, so you can
 //! wrap it in an `assert!(..);`:
 //!
-//! ```rust,no_run
+//! ```rust, no_run
 //! #[test]
 //! fn test_name() {
 //!     let visibility = false; // Whether the window should be shown

@@ -239,7 +239,7 @@ page, we can do this inline.
 Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust,edition2018,no_run,noplaypen`. Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example: 
 
 ````
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 use amethyst::ecs::{World};
 
 // A simple struct with no data.

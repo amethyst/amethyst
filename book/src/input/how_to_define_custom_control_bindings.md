@@ -12,7 +12,7 @@ Using a custom type to handle input instead of using `String` has many advantage
 
 Defining a custom type for the `InputBundle` is done by implementing the `BindingTypes` trait. This trait contains two types, an `Axis` type and an `Action` type. These types are usually defined as enums.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # extern crate serde;
 use std::fmt::{self, Display};
 
@@ -55,13 +55,13 @@ The `Axis` and `Action` type both need to derive all the traits listed above, th
 
 For serializing and deserializing you need to add [serde] to the dependencies like this:
 
-```toml,ignore
+```toml
 serde = { version = "1", features = ["derive"] }
 ```
 
 If you want to add additional information you can add it to the enum or change the `Axis` and `Action` types to a struct. For example:
 
-```rust,ignore
+```rust
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum AxisBinding {
     Horizontal(usize),
@@ -80,7 +80,7 @@ We can now use this custom type in our `InputBundle` and create a RON config fil
 
 The config file might look something like this:
 
-```ron,ignore
+```ron
 (
     axes: {
         Vertical(0): Emulated(pos: Key(W), neg: Key(S)),
@@ -99,7 +99,7 @@ Here the number after the binding type could be the ID of the player, but you ca
 
 With the config file we can create an `InputBundle` like in the previous section.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::input::StringBindings as MovementBindingTypes;
 use amethyst::input::InputBundle;
 
@@ -117,7 +117,7 @@ let input_bundle =
 
 And add the `InputBundle` to the game data just like before.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::input::{InputBundle, StringBindings};
 #
@@ -139,7 +139,7 @@ let game_data = GameDataBuilder::default()
 
 Now that we have added an `InputBundle` with a custom `BindingTypes`, we can use the `InputHandler` just like with `StringBindings`, but instead of using `String`s we use our custom enums.
 
-```rust,edition2018,no_run,noplaypen,ignore
+```rust, edition2018,no_run,noplaypen
 use amethyst::{
     core::{Transform, SystemDesc},
     derive::SystemDesc,
@@ -197,7 +197,7 @@ impl<'s> System<'s> for MovementSystem {
 
 And don't forget to add the `MovementSystem` to the game data.
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::ecs::*;
 # use amethyst::core::SystemDesc;

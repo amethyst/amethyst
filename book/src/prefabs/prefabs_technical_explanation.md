@@ -61,7 +61,7 @@ Ok, so what would a simple implementation of `PrefabData` look like?
 
 Let's take a look at the implementation for `Transform`, which is a core concept in Amethyst:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # use amethyst::assets::PrefabData;
 # use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage};
 # use amethyst::Error;
@@ -108,7 +108,7 @@ are no secondary assets to load from `Source` here.
 Let's look at a slightly more complex implementation, the `AssetPrefab`. This `PrefabData` is used to
 load extra `Asset`s as part of a `Prefab`:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter};
 # use amethyst::assets::PrefabData;
@@ -210,7 +210,7 @@ In addition, deriving a `Prefab` requires that `amethyst::Error`, `amethyst::ecs
 
 An example of a single `Component` derive:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # #[macro_use] extern crate serde_derive;
 # use amethyst::{
 #     assets::{
@@ -238,7 +238,7 @@ This will derive a `PrefabData` implementation that inserts `SomeComponent` on a
 
 Lets look at an example of an aggregate struct:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
@@ -257,7 +257,7 @@ This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities
 
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
@@ -315,7 +315,7 @@ There are a few provided formats that create `Prefab`s, some with very specific 
 For an example of a `Prefab` in `ron` format, look at `examples/assets/prefab/example.ron`. The
 `PrefabData` for this is:
 
-```rust,ignore
+```rust
 (
     Option<GraphicsPrefab<ObjFormat, TextureFormat>>,
     Option<Transform>,

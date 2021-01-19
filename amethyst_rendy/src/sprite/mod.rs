@@ -290,7 +290,7 @@ use amethyst_assets::{
 /// This format allows to conveniently load a sprite sheet from a RON file.
 ///
 /// Example:
-/// ```text,ignore
+/// ```text
 /// #![enable(implicit_some)]
 /// {
 /// "04c60333-c790-4586-aa76-086b19167a04":
@@ -326,7 +326,7 @@ use amethyst_assets::{
 /// ```
 ///
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
-/// ```rust,no_run
+/// ```rust, no_run
 /// # use amethyst::core::ecs::{World, WorldExt};
 /// # use amethyst::assets::{Loader, AssetStorage};
 /// # use amethyst::rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
