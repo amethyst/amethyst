@@ -28,7 +28,6 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
         &legion_prefab::CookedPrefab,
         u32,
         HashMap<Entity, Entity, EntityHasher>,
-        Handle<Prefab>,
     )> = Vec::new();
 
     let mut entity_query = <(Entity,)>::query();
@@ -37,14 +36,18 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
         world,
         |(entity, handle, instance)| {
             if let Some(Prefab {
-                prefab: Some(cooked_prefab),
+                cooked: Some(cooked_prefab),
                 version: prefab_version,
                 ..
             }) = prefab_storage.get(handle)
             {
-                let instance_version = instance.map(|instance| instance.version).unwrap_or(0);
+                let instance_version = instance
+                    .as_ref()
+                    .map(|instance| instance.version)
+                    .unwrap_or(0);
                 if instance_version < *prefab_version {
                     let mut entity_map = instance
+                        .as_ref()
                         .map(|instance| instance.entity_map.clone())
                         .unwrap_or_default();
                     if entity_map.is_empty() {
@@ -59,7 +62,7 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
         },
     );
 
-    for (entity, prefab, version, prev_entity_map, handle) in prefabs.into_iter() {
+    for (entity, prefab, version, prev_entity_map) in prefabs.into_iter() {
         let entity_map = world.clone_from(
             &prefab.world,
             &query::any(),
