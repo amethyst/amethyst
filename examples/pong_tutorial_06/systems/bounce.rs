@@ -1,9 +1,6 @@
 use amethyst::{
     assets::AssetStorage,
-    audio::{
-        output::{Output, OutputWrapper},
-        Source,
-    },
+    audio::{output::OutputWrapper, Source},
     core::transform::Transform,
     ecs::SystemBuilder,
     prelude::*,

@@ -1,8 +1,9 @@
 use std::ops::Deref;
 
 use amethyst_error::Error;
+use atelier_assets::loader::LoadHandle;
 
-use crate::processor::ProcessingState;
+use crate::{processor::ProcessingState, AssetStorage};
 
 /// One of the three core traits of this crate.
 ///
@@ -30,11 +31,19 @@ pub trait Asset: Send + Sync + 'static {
 /// using default `Processor` system to process assets that implement that type.
 pub trait ProcessableAsset: Asset + Sized {
     /// Processes asset data into asset during loading.
-    fn process(data: Self::Data) -> Result<ProcessingState<Self::Data, Self>, Error>;
+    fn process(
+        data: Self::Data,
+        storage: &mut AssetStorage<Self>,
+        handle: &LoadHandle,
+    ) -> Result<ProcessingState<Self::Data, Self>, Error>;
 }
 
 impl<T: Asset<Data = T>> ProcessableAsset for T {
-    fn process(data: Self::Data) -> Result<ProcessingState<Self::Data, Self>, Error> {
+    fn process(
+        data: Self::Data,
+        _storage: &mut AssetStorage<Self>,
+        _handle: &LoadHandle,
+    ) -> Result<ProcessingState<Self::Data, Self>, Error> {
         Ok(ProcessingState::Loaded(data))
     }
 }

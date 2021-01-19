@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{default::Default, path::PathBuf};
 
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
@@ -67,8 +67,10 @@ impl SystemBundle for LoaderBundle {
         loader.init_world(resources);
         loader.init_dispatcher(builder);
         resources.insert(loader);
+
         builder.add_thread_local_fn(asset_loading_tick);
         builder.add_thread_local_fn(prefab_spawning_tick);
+
         Ok(())
     }
 }

@@ -487,10 +487,9 @@ impl SpriteGrid {
 
 #[cfg(test)]
 mod test {
-    use amethyst_assets::Handle;
 
     use super::{Sprite, TextureCoordinates};
-    use crate::{sprite::Sprites, types::Texture};
+    use crate::sprite::Sprites;
 
     #[test]
     fn texture_coordinates_from_tuple_maps_fields_correctly() {
@@ -575,21 +574,7 @@ mod test {
             )
         );
     }
-    fn create_texture() -> Handle<Texture> {
-        use std::sync::Arc;
 
-        use amethyst_assets::{DefaultLoader, Loader, ProcessingQueue};
-        use rayon::ThreadPoolBuilder;
-
-        use crate::formats::texture::TextureGenerator;
-
-        let pool = Arc::new(ThreadPoolBuilder::new().build().expect("Invalid config"));
-        let loader = DefaultLoader::default();
-        let generator = TextureGenerator::Srgba(1.0, 1., 1., 1.);
-
-        let storage = ProcessingQueue::default();
-        loader.load_from_data(generator.data(), (), &storage)
-    }
     #[test]
     fn sprite_sheet_loader_list() {
         let sprite_sheet_ron = "
@@ -701,7 +686,6 @@ Grid((
                 },
             },
         ];
-        let texture = create_texture();
         {
             use ron::de::from_bytes as from_ron_bytes;
             let sprite_list_loaded: Result<Sprites, _> =

@@ -96,9 +96,9 @@ pub use winit;
 
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
+    core::logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     error::Error,
     game_data::{DataDispose, DataInit, GameData},
-    logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
         TransEvent,
@@ -116,6 +116,5 @@ pub mod prelude;
 
 mod app;
 mod game_data;
-mod logger;
 mod state;
 mod state_event;

@@ -2,15 +2,14 @@ use std::{collections::HashMap, io::Read};
 
 use atelier_assets::{
     core::AssetUuid,
-    importer::{self as atelier_importer, ImportedAsset, Importer, ImporterValue},
+    importer::{self as atelier_importer, ImportOp, ImportedAsset, Importer, ImporterValue},
 };
-use atelier_importer::ImportOp;
 use legion_prefab::ComponentRegistration;
 use prefab_format::ComponentTypeUuid;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
-use crate::prefab::RawPrefab;
+use crate::prefab::Prefab;
 
 #[derive(Default, Deserialize, Serialize, TypeUuid, Clone, Copy)]
 #[uuid = "80583980-24d4-4034-8394-ea749b43f55d"]
@@ -49,17 +48,13 @@ impl Importer for PrefabImporter {
         state: &mut Self::State,
     ) -> atelier_importer::Result<ImporterValue> {
         log::info!("Importing prefab");
-        ///////////////////////////////////////////////////////////////
         // STEP 1: Read in the data
-        ///////////////////////////////////////////////////////////////
 
         // Read in the data
         let mut bytes = Vec::new();
         source.read_to_end(&mut bytes)?;
 
-        ///////////////////////////////////////////////////////////////
         // STEP 2: Deserialize the prefab into a legion world
-        ///////////////////////////////////////////////////////////////
 
         // Create a deserializer
         let mut de = ron::de::Deserializer::from_bytes(bytes.as_slice()).unwrap();
@@ -81,69 +76,21 @@ impl Importer for PrefabImporter {
         };
 
         let prefab_deser = legion_prefab::PrefabFormatDeserializer::new(prefab_serde_context);
-        prefab_format::deserialize(&mut de, &prefab_deser)?;
+        if let Err(err) = prefab_format::deserialize(&mut de, &prefab_deser) {
+            return Err(atelier_importer::Error::RonDe(err));
+        }
         let raw_prefab = prefab_deser.prefab();
 
-        let prefab_asset = RawPrefab { raw_prefab };
+        let prefab_asset = Prefab {
+            raw: raw_prefab,
+            ..Default::default()
+        };
 
-        ///////////////////////////////////////////////////////////////
         // STEP 3: Now we need to save it into an asset
-        ///////////////////////////////////////////////////////////////
-
-        // {
-        //     let legion_world_str =
-        //         ron::ser::to_string_pretty(&prefab_asset, ron::ser::PrettyConfig::default())
-        //             .unwrap();
-
-        //     log::trace!("Serialized legion world:");
-        //     log::trace!("legion_world_str {}", legion_world_str);
-
-        //     let mut ron_ser =
-        //         ron::ser::Serializer::new(Some(ron::ser::PrettyConfig::default()), true);
-        //     let prefab_ser = legion_prefab::PrefabFormatSerializer::new(
-        //         prefab_serde_context,
-        //         &prefab_asset.raw_prefab,
-        //     );
-        //     prefab_format::serialize(
-        //         &mut ron_ser,
-        //         &prefab_ser,
-        //         prefab_asset.raw_prefab.prefab_id(),
-        //     )
-        //     .expect("failed to round-trip prefab");
-        //     log::trace!(
-        //         "Round-tripped legion world: {}",
-        //         ron_ser.into_output_string()
-        //     );
-        // }
 
         // Add the ID to the .meta
-        let prefab_id = prefab_asset.raw_prefab.prefab_id();
+        let prefab_id = prefab_asset.raw.prefab_id();
         state.id = Some(AssetUuid(prefab_id));
-
-        //{
-        //    //let mut ron_serializer = ron::ser::Serializer::new(Some(ron::ser::PrettyConfig::default()), true);
-        //    let ron_string = ron::ser::to_string_pretty(&prefab_asset, Default::default()).unwrap();
-        //    println!("{}", ron_string);
-        //    let deser = ron::de::from_str::<RawPrefab>(&ron_string).unwrap();
-        //    println!("ron deser complete");
-        //    println!("read {} entities", deser.prefab.world.len());
-        //}
-
-        //{
-        //    println!("start bincode ser");
-        //    let s = bincode::serialize(&prefab_asset).unwrap();
-        //    let d = bincode::deserialize::<RawPrefab>(&s).unwrap();
-        //    println!("read {} entities", d.prefab.world.len());
-        //}
-
-        // let entities: Vec<Entity> = <(Entity,)>::query()
-        //     .iter(&prefab_asset.raw_prefab.world)
-        //     .map(|(entity,)| *entity)
-        //     .collect();
-        // for entity in entities.iter() {
-        //     let entry = &prefab_asset.raw_prefab.world.entry(*entity).unwrap();
-        //     println!("{:?}", entry.archetype())
-        // }
 
         Ok(ImporterValue {
             assets: vec![ImportedAsset {
