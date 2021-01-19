@@ -104,15 +104,13 @@ impl Transform {
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
-    /// t.face_towards(
-    ///     Vector3::new(0.0, 1.0, 0.0),
-    ///     Vector3::new(0.0, 0.0, 1.0),
-    /// );
+    /// t.face_towards(Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
     /// // our rotation should match the angle from straight ahead to straight up
     /// let rotation = UnitQuaternion::rotation_between(
     ///     &Vector3::new(0.0, 1.0, 0.0),
     ///     &Vector3::new(0.0, 0.0, 1.0),
-    /// ).unwrap();
+    /// )
+    /// .unwrap();
     /// assert_eq!(*t.rotation(), rotation);
     /// // now if we move forwards by 1.0, we'll end up at the point we are facing
     /// // (modulo some floating point error)
@@ -617,7 +615,6 @@ impl From<Vector3<f32>> for Transform {
 /// # use amethyst_core::math::Vector3;
 /// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
 /// assert_eq!(transform.translation().x, 100.0);
-///
 impl From<Vector3<f64>> for Transform {
     #[inline]
     fn from(translation: Vector3<f64>) -> Self {

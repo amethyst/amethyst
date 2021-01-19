@@ -65,8 +65,7 @@ mod window {
         /// This function takes linear RGBA. You can convert rgba to linear rgba like so:
         ///
         /// ```
-        /// use amethyst_rendy::palette::Srgba;
-        /// use amethyst_rendy::{RenderToWindow, rendy::hal::command::ClearColor};
+        /// use amethyst_rendy::{palette::Srgba, rendy::hal::command::ClearColor, RenderToWindow};
         /// use amethyst_window::DisplayConfig;
         ///
         /// let your_red: f32 = 255.;
@@ -74,11 +73,18 @@ mod window {
         /// let your_blue: f32 = 122.;
         /// let your_alpha: f32 = 1.0;
         ///
-        /// let (r, g, b, a) = Srgba::new(your_red / 255., your_green / 255., your_blue / 255., your_alpha)
-        ///     .into_linear()
-        ///     .into_components();
+        /// let (r, g, b, a) = Srgba::new(
+        ///     your_red / 255.,
+        ///     your_green / 255.,
+        ///     your_blue / 255.,
+        ///     your_alpha,
+        /// )
+        /// .into_linear()
+        /// .into_components();
         ///
-        /// RenderToWindow::from_config(DisplayConfig::default()).with_clear(ClearColor { float32: [r, g, b, a] });
+        /// RenderToWindow::from_config(DisplayConfig::default()).with_clear(ClearColor {
+        ///     float32: [r, g, b, a],
+        /// });
         /// ```
         pub fn with_clear(mut self, clear: impl Into<ClearColor>) -> Self {
             self.clear = Some(clear.into());

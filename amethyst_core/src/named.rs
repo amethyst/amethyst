@@ -45,7 +45,7 @@ use serde::{Deserialize, Serialize};
 ///     world.push((Named { name: format!("Entity Number {}", entity_num).into() },));
 /// }
 /// ```
-///
+/// 
 /// Accessing a named entity in a system:
 /// ```
 /// use amethyst::core::Named;

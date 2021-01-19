@@ -25,10 +25,12 @@ use legion::{
 ///
 /// # Examples
 /// ```rust
-/// use legion::{system, Schedule, World, Resources, SystemBuilder};
-/// use amethyst_core::system_ext::pausable;
-/// use amethyst_core::ecs::{System, ParallelRunnable};
-/// use amethyst_core::dispatcher::DispatcherBuilder;
+/// use amethyst_core::{
+///     dispatcher::DispatcherBuilder,
+///     ecs::{ParallelRunnable, System},
+///     system_ext::pausable,
+/// };
+/// use legion::{system, Resources, Schedule, SystemBuilder, World};
 ///
 /// #[derive(PartialEq)]
 /// enum CurrentState {
@@ -36,20 +38,20 @@ use legion::{
 ///     Enabled,
 /// }
 ///
-///
 /// struct TestSystem;
 ///
-/// impl System<'_> for TestSystem{
+/// impl System<'_> for TestSystem {
 ///     fn build(&mut self) -> Box<dyn ParallelRunnable> {
-///         Box::new(
-///             pausable(SystemBuilder::new("TestSystem")
-///                          .write_resource::<u32>()
-///                          .build(move |_commands, _world, resources, _| {
-///                              **resources += 1;
-///                          }),
-///                         CurrentState::Enabled
-///             ))
-/// }}
+///         Box::new(pausable(
+///             SystemBuilder::new("TestSystem")
+///                 .write_resource::<u32>()
+///                 .build(move |_commands, _world, resources, _| {
+///                     **resources += 1;
+///                 }),
+///             CurrentState::Enabled,
+///         ))
+///     }
+/// }
 ///
 /// let mut dispatcher = DispatcherBuilder::default()
 ///     .add_system(Box::new(TestSystem))

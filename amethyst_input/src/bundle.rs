@@ -28,7 +28,6 @@ use crate::{BindingError, Bindings, InputHandler, InputSystem};
 /// ## Errors
 ///
 /// No errors returned from this bundle.
-///
 #[derive(Debug, Default)]
 pub struct InputBundle {
     bindings: Option<Bindings>,
