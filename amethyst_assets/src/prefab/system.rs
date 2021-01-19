@@ -11,6 +11,7 @@ use crate::{
 
 struct PrefabInstance {
     version: u32,
+    entity_map: HashMap<Entity, Entity, EntityHasher>,
 }
 
 /// Attaches prefabs to entities that have Handle<Prefab>
@@ -40,18 +41,17 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
                     if let Some(instance) = instance {
                         if instance.version < prefab.version {
                             log::debug!("Updating existing prefab.");
-                            let mut map = HashMap::<Entity, Entity, EntityHasher>::default();
                             if let Some((root_entity,)) =
                                 entity_query.iter(&cooked_prefab.world).next()
                             {
-                                map.insert(*root_entity, *entity);
+                                instance.entity_map.insert(*root_entity, *entity);
                             };
 
                             prefabs.push((
                                 *entity,
                                 cooked_prefab,
                                 prefab.version,
-                                map,
+                                instance.entity_map.clone(),
                                 handle.clone(),
                             ));
                         }
@@ -91,7 +91,10 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
         log::debug!("Spawn for {:?}", entity);
 
         if let Some(mut entry) = world.entry(entity) {
-            entry.add_component(PrefabInstance { version });
+            entry.add_component(PrefabInstance {
+                version,
+                entity_map,
+            });
             entry.add_component(handle);
         } else {
             log::error!("Could not update entity");

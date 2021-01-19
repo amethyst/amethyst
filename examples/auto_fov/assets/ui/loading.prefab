@@ -1,0 +1,33 @@
+Prefab(
+    // Prefab AssetUuid
+    id: "727e6ad3-76d2-4dd3-a66b-8360ef094328",
+    objects: [
+        // Inline definition of an entity and its components
+        Entity((
+             // Entity AssetUuid
+             id: "6468a56a-8fce-4402-97f5-467f43a1fee8",
+             // Component data and types
+             components: [
+                 (
+                     // UiTransform
+                     type: "d900c11d-f8b2-4145-8a19-537a67d5ee85",
+                     data: (
+                        id: "loading",
+                        anchor: Middle,
+                        width: 1000.,
+                        height: 200.,
+                     ),
+                 ),
+                (
+                    // UiText
+                    type: "a12ccc08-c89b-4476-96ec-1c9b04d34aa2",
+                    data: (
+                        text: "Elephants",
+                        font_size: 128.,
+                        color: (0.3, 0.1, 1., 1.),
+                    ),
+                )
+             ]
+        )),
+    ]
+)

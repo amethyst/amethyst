@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use amethyst_assets::Handle;
+use amethyst_assets::{register_asset_type, Asset, AssetProcessorSystem, Handle};
 use amethyst_core::ecs::*;
 
 use crate::{
@@ -13,13 +13,31 @@ const DEFAULT_WIDTH: f32 = 128.0;
 const DEFAULT_HEIGHT: f32 = 64.0;
 const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
-define_widget!(UiLabel =>
+use amethyst_assets::{
+    atelier_importer,
+    atelier_importer::{typetag, SerdeImportable},
+};
+use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
+
+define_widget!(
+    /// A UI Text with a Transform
+    UiLabel =>
+    "bf47743e-768e-4070-8575-58fd386b14cf",
     entities: [text_entity]
     components: [
         (has UiTransform as position on text_entity),
         (has UiText as text on text_entity)
     ]
 );
+register_asset_type!(UiLabel => UiLabel; AssetProcessorSystem<UiLabel>);
+
+impl Asset for UiLabel {
+    fn name() -> &'static str {
+        "ui::Label"
+    }
+    type Data = Self;
+}
 
 /// Convenience structure for building a label
 #[derive(Debug, Clone)]

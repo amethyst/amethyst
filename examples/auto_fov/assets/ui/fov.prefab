@@ -1,0 +1,117 @@
+Prefab(
+    // Prefab AssetUuid
+    id: "dc786428-2d3b-4515-a1d1-31af3e77eceb",
+    objects: [
+        Entity((
+             // Entity AssetUuid
+             id: "89fa5e26-8cb4-4fc7-921e-02a0f2c0f5e2",
+             // Component data and types
+             components: [
+                 (
+                     // UiTransform
+                     type: "d900c11d-f8b2-4145-8a19-537a67d5ee85",
+                     data: (
+                        id: "fov_container",
+                        anchor: TopRight,
+                        x: 270.0,
+                        y: -80.0,
+                        width: 150.0,
+                        height: 80.0,
+                        opaque: false,
+                     ),
+                 ),
+             ]
+        )),
+        Entity((
+             id: "4fece5b8-c30a-45bd-8e09-a15496e0dd9c",
+             components: [
+                 /*(
+                     // Parent
+                     // FIXME: doesn't deserialize
+                     type: "4f1cb751-d650-4cf0-8418-63cff1e85c84",
+                     data: (
+                         0: "89fa5e26-8cb4-4fc7-921e-02a0f2c0f5e2"
+                     )
+                 ),*/
+                 (
+                     // UiTransform
+                     type: "d900c11d-f8b2-4145-8a19-537a67d5ee85",
+                     data: (
+                        id: "screen_aspect",
+                        anchor: TopLeft,
+                        pivot: TopLeft,
+                        width: 350.0,
+                        height: 25.0,
+                        opaque: false,
+                     ),
+                 ),
+                (
+                    // UiText
+                    type: "a12ccc08-c89b-4476-96ec-1c9b04d34aa2",
+                    data: (
+                        text: "Screen Aspect Ratio: N/A",
+                        align: TopLeft,
+                        font_size: 18.0,
+                        color: (1.0, 1.0, 1.0, 1.0),
+                    ),
+                )
+             ]
+        )),
+        Entity((
+             id: "affaae72-cb61-4a06-add8-7d56d1b3ea4d",
+             components: [
+                 (
+                     // UiTransform
+                     type: "d900c11d-f8b2-4145-8a19-537a67d5ee85",
+                     data: (
+                        id: "camera_aspect",
+                        anchor: TopLeft,
+                        pivot: TopLeft,
+                        y: -20.0,
+                        width: 350.0,
+                        height: 25.0,
+                        opaque: false,
+                     ),
+                 ),
+                (
+                    // UiText
+                    type: "a12ccc08-c89b-4476-96ec-1c9b04d34aa2",
+                    data: (
+                        text: "Camera Aspect Ratio: N/A",
+                        align: TopLeft,
+                        font_size: 18.0,
+                        color: (1.0, 1.0, 1.0, 1.0),
+                    ),
+                )
+             ]
+        )),
+        Entity((
+             id: "01324608-f914-4013-b12c-ef558eaf4fd8",
+             components: [
+                 (
+                     // UiTransform
+                     type: "d900c11d-f8b2-4145-8a19-537a67d5ee85",
+                     data: (
+                        id: "camera_fov",
+                        anchor: TopLeft,
+                        pivot: TopLeft,
+                        y: -40.0,
+                        width: 300.0,
+                        height: 25.0,
+                        opaque: false,
+                     ),
+                 ),
+                (
+                    // UiText
+                    type: "a12ccc08-c89b-4476-96ec-1c9b04d34aa2",
+                    data: (
+                        text: "Camera Fov: N/A",
+                        align: TopLeft,
+                        font_size: 18.0,
+                        color: (1.0, 1.0, 1.0, 1.0),
+                    ),
+                )
+             ]
+        )),
+    ]
+)
