@@ -5,8 +5,6 @@ use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
-#[cfg(feature = "profiler")]
-use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 use winit::event::{Event, WindowEvent};
 
 use crate::{
@@ -235,8 +233,6 @@ where
         while self.states.is_running() {
             self.advance_frame();
             {
-                #[cfg(feature = "profiler")]
-                profile_scope!("frame_limiter wait");
                 self.resources.get_mut::<FrameLimiter>().unwrap().wait();
             }
             {
@@ -254,8 +250,6 @@ where
 
     /// Sets up the application.
     fn initialize(&mut self) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("initialize");
         self.states
             .start(StateData::new(
                 &mut self.world,
@@ -325,9 +319,6 @@ where
         }
 
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("handle_event");
-
             self.reader.read(resources, &mut self.events);
 
             for e in self.events.drain(..) {
@@ -336,9 +327,6 @@ where
         }
 
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("fixed_update");
-
             {
                 self.resources
                     .get_mut::<Time>()
@@ -365,8 +353,6 @@ where
             }
         }
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("update");
             self.states.update(StateData::new(
                 &mut self.world,
                 &mut self.resources,
@@ -374,8 +360,6 @@ where
             ));
         }
 
-        #[cfg(feature = "profiler")]
-        profile_scope!("maintain");
         // TODO: do defrag here?
         //self.world.maintain();
     }
@@ -384,20 +368,6 @@ where
     fn shutdown(&mut self) {
         info!("Engine is shutting down");
         self.data.dispose(&mut self.world, &mut self.resources);
-    }
-}
-
-#[cfg(feature = "profiler")]
-impl<'a, T, E, R> Drop for CoreApplication<'a, T, E, R>
-where
-    T: DataDispose,
-{
-    fn drop(&mut self) {
-        // TODO: Specify filename in config.
-        use crate::utils::application_root_dir;
-        let app_root = application_root_dir().expect("application root dir to exist");
-        let path = app_root.join("thread_profile.json");
-        write_profile(path.to_str().expect("application root dir to be a string"));
     }
 }
 
@@ -524,10 +494,7 @@ where
         let mut resources = Resources::default();
 
         let thread_pool_builder = ThreadPoolBuilder::new();
-        #[cfg(feature = "profiler")]
-        let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
-            register_thread_with_profiler();
-        });
+
         let pool: ArcThreadPool;
         if let Some(thread_count) = thread_count {
             debug!("Running Amethyst with fixed thread pool: {}", thread_count);
@@ -797,11 +764,6 @@ where
     /// This function currently will not produce an error, returning a result
     /// type was strictly for future possibilities.
     ///
-    /// # Notes
-    ///
-    /// If the "profiler" feature is used, this function will register the thread
-    /// that executed this function as the "Main" thread.
-    ///
     /// # Examples
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
@@ -814,11 +776,6 @@ where
         X: EventReader<Event = E> + Default,
     {
         trace!("Entering `ApplicationBuilder::build`");
-
-        #[cfg(feature = "profiler")]
-        register_thread_with_profiler();
-        #[cfg(feature = "profiler")]
-        profile_scope!("new");
 
         let data = init.build(&mut self.world, &mut self.resources)?;
 

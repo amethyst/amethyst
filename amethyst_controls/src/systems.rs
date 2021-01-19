@@ -9,8 +9,6 @@ use amethyst_core::{
     transform::Transform,
 };
 use amethyst_input::{get_input_axis_simple, InputHandler};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 use winit::{
     event::{DeviceEvent, Event, WindowEvent},
     window::Window,
@@ -38,9 +36,6 @@ impl System<'static> for FlyMovementSystem {
                 .read_resource::<InputHandler>()
                 .with_query(<(&FlyControl, &mut Transform)>::query())
                 .build(move |_commands, world, (time, input), controls| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("fly_movement_system");
-
                     let x = get_input_axis_simple(&self.horizontal_axis, &input);
                     let y = get_input_axis_simple(&self.vertical_axis, &input);
                     let z = get_input_axis_simple(&self.longitudinal_axis, &input);
@@ -73,9 +68,6 @@ impl System<'_> for ArcBallRotationSystem {
                 .with_query(<(&ArcBallControl, &mut Transform)>::query())
                 .read_component::<Transform>()
                 .build(move |_commands, world, (), queries| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("arc_ball_rotation_system");
-
                     let targets: HashMap<Entity, Transform> = queries
                         .0
                         .iter(world)
@@ -133,9 +125,6 @@ impl System<'static> for FreeRotationSystem {
                         .filter(component::<FlyControl>() | component::<ArcBallControl>()),
                 )
                 .build(move |_commands, world, (events, focus, hide), controls| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("free_rotation_system");
-
                     let focused = focus.is_focused;
                     for event in events.read(&mut self.reader) {
                         if focused && hide.hide {
@@ -172,9 +161,6 @@ impl System<'static> for MouseFocusUpdateSystem {
                 .read_resource::<EventChannel<Event<'static, ()>>>()
                 .write_resource::<WindowFocus>()
                 .build(move |_commands, _world, (events, focus), ()| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("mouse_focus_update_system");
-
                     for event in events.read(&mut self.reader) {
                         if let Event::WindowEvent { ref event, .. } = *event {
                             if let WindowEvent::Focused(focused) = *event {
@@ -203,9 +189,6 @@ impl ThreadLocalSystem<'_> for CursorHideSystem {
                 .read_resource::<WindowFocus>()
                 .read_resource::<Window>()
                 .build(move |_commands, _world, (hide, focus, window), ()| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("cursor_hide_system");
-
                     let should_be_hidden = focus.is_focused && hide.hide;
 
                     if should_be_hidden != is_hidden {

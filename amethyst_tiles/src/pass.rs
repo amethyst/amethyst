@@ -47,8 +47,6 @@ use amethyst_rendy::{
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use glsl_layout::Uniform;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     iters::Region,
@@ -121,9 +119,6 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds>
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("build");
-
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
 
         let textures = TextureSub::new(factory)?;
@@ -190,9 +185,6 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) -> PrepareResult {
-        #[cfg(feature = "profiler")]
-        profile_scope!("prepare");
-
         let mut changed = false;
         let sprite_sheet_storage = aux
             .resources
@@ -282,8 +274,6 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         changed = changed || self.sprites.changed();
 
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("write");
             self.vertex.write(
                 factory,
                 index,
@@ -313,9 +303,6 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
         _subpass: hal::pass::Subpass<'_, B>,
         _aux: &GraphAuxData,
     ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("draw");
-
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
 

@@ -2,8 +2,6 @@
 use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle, WeakHandle};
 use amethyst_core::ecs::*;
 use glsl_layout::*;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     mtl::{Material, StaticTextureSet},
@@ -248,9 +246,6 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         resources: &Resources,
         handle: &Handle<Material>,
     ) -> Option<MaterialState<B>> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("try_insert");
-
         use util::{desc_write, slice_as_bytes, texture_desc};
 
         let mat_storage = resources.get::<AssetStorage<Material>>().unwrap();
@@ -320,9 +315,6 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         resources: &Resources,
         handle: &Handle<Material>,
     ) -> Option<(MaterialId, bool)> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("insert");
-
         let id = self.lookup.forward(handle.load_handle());
         match self.materials.get_mut(id) {
             Some(MaterialState::Loaded {

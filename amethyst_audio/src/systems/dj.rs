@@ -4,8 +4,6 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
 use log::error;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     output::{init_output, OutputWrapper},
@@ -81,9 +79,6 @@ where
                 .write_resource::<R>()
                 .build(
                     move |_commands, _world, (storage, wrapper, res), _queries| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("dj_system");
-
                         if let Some(sink) = &wrapper.audio_sink {
                             if sink.empty() {
                                 if let Some(source) = (self.f)(res).and_then(|h| storage.get(&h)) {

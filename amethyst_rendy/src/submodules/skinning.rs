@@ -2,8 +2,6 @@
 use amethyst_core::ecs::*;
 use fnv::FnvHashMap;
 use rendy::resource::SubRange;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     rendy::{
@@ -80,9 +78,6 @@ impl<B: Backend> SkinningSub<B> {
 
     /// Insert a new `JointTransforms` instance for submission. Returns an index.
     pub fn insert(&mut self, joints: &JointTransforms) -> u32 {
-        #[cfg(feature = "profiler")]
-        profile_scope!("insert");
-
         let staging = &mut self.staging;
         *self.skin_offset_map.entry(joints.skin).or_insert_with(|| {
             let len = staging.len();

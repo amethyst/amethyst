@@ -7,8 +7,6 @@ use amethyst_core::{
     transform::Transform,
     Hidden, HiddenPropagate,
 };
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     camera::{ActiveCamera, Camera},
@@ -74,9 +72,6 @@ impl System<'_> for SpriteVisibilitySortingSystem {
                         transparent_query,
                         non_transparent_query,
                     )| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("sprite_visibility_system");
-
                         transparent_centroids.clear();
                         visibility.visible_ordered.clear();
                         visibility.visible_unordered.clear();

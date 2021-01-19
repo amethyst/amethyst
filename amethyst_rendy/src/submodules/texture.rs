@@ -1,8 +1,6 @@
 //! Texture submodule for per-image submission.
 use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle, WeakHandle};
 use amethyst_core::ecs::*;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     rendy::{
@@ -73,9 +71,6 @@ impl<B: Backend> TextureSub<B> {
     /// Generationally track our currently allocated vs. used textures and release memory for any
     /// textures which have been removed from this submission set.
     pub fn maintain(&mut self, factory: &Factory<B>, resources: &Resources) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("maintain");
-
         use util::{desc_write, texture_desc};
         let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
         for state in self.textures.iter_mut() {
@@ -122,9 +117,6 @@ impl<B: Backend> TextureSub<B> {
         handle: &Handle<Texture>,
         layout: hal::image::Layout,
     ) -> Option<TextureState<B>> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("try_insert");
-
         use util::{desc_write, texture_desc};
         let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
 
@@ -152,9 +144,6 @@ impl<B: Backend> TextureSub<B> {
         handle: &Handle<Texture>,
         layout: hal::image::Layout,
     ) -> Option<(TextureId, bool)> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("insert");
-
         let id = self.lookup.forward(handle.load_handle());
         match self.textures.get(id) {
             // If handle is dead, new texture was loaded (handle id is reused)

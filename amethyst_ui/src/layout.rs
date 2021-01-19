@@ -8,8 +8,6 @@ use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use glyph_brush::{HorizontalAlign, VerticalAlign};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use super::UiTransform;
 
@@ -177,9 +175,6 @@ impl System<'static> for UiTransformSystem {
                         transform_with_parent_query,
                         transform_isolated_query,
                     )| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("ui_transform_system");
-
                         let mut modified_entities: HashSet<Entity> = HashSet::new();
 
                         changed_transforms_query.for_each_mut(world, |(e, _)| {

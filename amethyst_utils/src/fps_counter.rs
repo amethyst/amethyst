@@ -5,8 +5,6 @@ use amethyst_core::{
     timing::{duration_to_nanos, Time},
 };
 use amethyst_error::Error;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::circular_buffer::CircularBuffer;
 
@@ -89,9 +87,6 @@ impl System<'_> for FpsCounterSystem {
                 .read_resource::<Time>()
                 .write_resource::<FpsCounter>()
                 .build(move |_, _, (time, counter), _| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("fps_counter_system");
-
                     counter.push(duration_to_nanos(time.delta_real_time()));
                     //Enable this to debug performance engine wide.
                     log::debug!(

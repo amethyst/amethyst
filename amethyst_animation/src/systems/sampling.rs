@@ -9,8 +9,6 @@ use amethyst_core::{
 use derivative::Derivative;
 use log::debug;
 use minterpolate::InterpolationPrimitive;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::resources::{
     AnimationSampling, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
@@ -48,9 +46,6 @@ where
                 .read_resource::<AssetStorage<Sampler<T::Primitive>>>()
                 .with_query(<(Write<SamplerControlSet<T>>, Write<T>)>::query())
                 .build(move |commands, world, (time, samplers), query| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("sampler_interpolation_system");
-
                     for (control_set, comp) in query.iter_mut(world) {
                         debug!("Processing SamplerControlSet: {:?}", control_set);
 

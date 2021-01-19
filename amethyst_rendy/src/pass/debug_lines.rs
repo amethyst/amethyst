@@ -12,8 +12,6 @@ use rendy::{
     mesh::AsVertex,
     shader::Shader,
 };
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     debug_drawing::{DebugLine, DebugLines, DebugLinesComponent, DebugLinesParams},
@@ -55,9 +53,6 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawDebugLinesDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("build");
-
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let args = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let vertex = DynamicVertexBuffer::new();
@@ -107,9 +102,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawDebugLines<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) -> PrepareResult {
-        #[cfg(feature = "profiler")]
-        profile_scope!("prepare");
-
         let GraphAuxData { world, resources } = aux;
 
         let old_len = self.lines.len();
@@ -143,8 +135,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawDebugLines<B> {
         );
 
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("write");
             self.vertex
                 .write(factory, index, self.lines.len() as u64, Some(&self.lines));
         }
@@ -160,9 +150,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawDebugLines<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _aux: &GraphAuxData,
     ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("draw");
-
         if self.lines.is_empty() {
             return;
         }

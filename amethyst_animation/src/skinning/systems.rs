@@ -7,8 +7,6 @@ use amethyst_core::{
 };
 use amethyst_rendy::skinning::JointTransforms;
 use log::error;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use super::resources::*;
 
@@ -34,8 +32,7 @@ impl System<'_> for VertexSkinningSystem {
                         .filter(maybe_changed::<Transform>()),
                 )
                 .build(move |_, world, _, global_transforms| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("vertex_skinning_system");
+
 
                     updated.clear();
                     updated_skins.clear();

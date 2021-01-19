@@ -10,8 +10,6 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     mtl::Material,
@@ -73,27 +71,16 @@ where
     B: Backend,
     G: GraphCreator<B>,
 {
-    #[cfg(feature = "profiler")]
-    profile_scope!("rebuild_graph");
-
     let mut factory = resources.get_mut::<Factory<B>>().unwrap();
 
     if let Some(graph) = state.graph.take() {
-        #[cfg(feature = "profiler")]
-        profile_scope!("dispose_graph");
         let aux = make_graph_aux_data(world, resources);
         graph.dispose(&mut *factory, &aux);
     }
 
-    let builder = {
-        #[cfg(feature = "profiler")]
-        profile_scope!("run_graph_creator");
-        state.graph_creator.builder(&mut factory, world, resources)
-    };
+    let builder = { state.graph_creator.builder(&mut factory, world, resources) };
 
     let graph = {
-        #[cfg(feature = "profiler")]
-        profile_scope!("build_graph");
         let aux = make_graph_aux_data(world, resources);
         builder
             .build(&mut factory, &mut state.families, &aux)
@@ -158,14 +145,8 @@ impl<B: Backend> System<'_> for MeshProcessorSystem<B> {
                         /* time, pool, */ factory,
                     ),
                           _| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("mesh_processor");
-
                         processing_queue.process(mesh_storage, |b, _, _| {
                             log::trace!("Processing Mesh: {:?}", b);
-
-                            #[cfg(feature = "profiler")]
-                            profile_scope!("process_mesh");
 
                             b.0.build(**queue_id, &factory)
                                 .map(B::wrap_mesh)
@@ -204,14 +185,8 @@ impl<B: Backend> System<'_> for TextureProcessorSystem<B> {
                         /* time, pool, */ factory,
                     ),
                           _| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("texture_processor");
-
                         processing_queue.process(texture_storage, |b, _, _| {
                             log::trace!("Processing Texture: {:?}", b);
-
-                            #[cfg(feature = "profiler")]
-                            profile_scope!("process_texture");
 
                             b.0.build(
                                 ImageState {

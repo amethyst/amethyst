@@ -1,7 +1,5 @@
 use amethyst_core::ecs::*;
 use amethyst_window::ScreenDimensions;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use super::*;
 
@@ -56,8 +54,6 @@ impl System<'static> for ResizeSystem {
                 .with_query(<(&mut UiTransform, &mut UiResize)>::query())
                 .build(
                     move |_commands, world, screen_dimensions, (resized, all_with_resize)| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("resize_system");
                         let screen_size = (
                             screen_dimensions.width() as f32,
                             screen_dimensions.height() as f32,

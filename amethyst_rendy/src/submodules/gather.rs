@@ -5,8 +5,6 @@ use amethyst_core::{
     transform::Transform,
 };
 use glsl_layout::{Uniform, *};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     camera::{ActiveCamera, Camera},
@@ -26,9 +24,6 @@ pub struct CameraGatherer {
 impl CameraGatherer {
     /// Collect just the entity which has the current `ActiveCamera`
     pub fn gather_camera_entity(world: &World, resources: &Resources) -> Option<Entity> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("gather_camera (1st)");
-
         // Get camera entity from `ActiveCamera` resource
         let active_camera = resources.get::<ActiveCamera>().map(|r| r.entity).flatten();
 
@@ -61,9 +56,6 @@ impl CameraGatherer {
     ///
     /// The matrix returned is the camera's `Projection` matrix and the camera `Transform::global_view_matrix`
     pub fn gather(world: &World, resources: &Resources) -> Self {
-        #[cfg(feature = "profiler")]
-        profile_scope!("gather_cameras");
-
         let defcam = Camera::standard_2d(1.0, 1.0);
         let identity = Transform::default();
 

@@ -6,8 +6,6 @@ use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::{debug, error};
 use minterpolate::InterpolationPrimitive;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::resources::{
     Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
@@ -58,8 +56,7 @@ where
         .write_component::<RestState<T>>()
         .with_query(<(Entity, Write<AnimationControlSet<I, T>>, TryRead<AnimationHierarchy<T>>)>::query())
         .build(move |mut buffer, world, (animation_storage, sampler_storage), query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("animation_control_system");
+
 
             remove_sets.clear();
 

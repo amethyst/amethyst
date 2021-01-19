@@ -1,8 +1,6 @@
 use std::{collections::HashSet, marker::PhantomData};
 
 use amethyst_core::ecs::*;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{Selectable, Selected};
 
@@ -66,9 +64,6 @@ where
                 .write_resource::<CachedSelectionOrderResource>()
                 .with_query(<(Entity, &Selectable<G>)>::query())
                 .build(move |_commands, world, cache, selectables| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("cache_selection_order_system");
-
                     {
                         let mut rm = vec![];
                         cache.cache.retain(|&(_t, entity)| {

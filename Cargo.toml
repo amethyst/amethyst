@@ -38,22 +38,6 @@ empty = ["amethyst_rendy/empty"]
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
 
-profiler = [
-    "thread_profiler",
-    "thread_profiler/thread_profiler",
-    "amethyst_animation/profiler",
-    "amethyst_assets/profiler",
-    "amethyst_audio/profiler",
-    "amethyst_config/profiler",
-    "amethyst_core/profiler",
-    "amethyst_controls/profiler",
-    "amethyst_input/profiler",
-    "amethyst_locale/profiler",
-    "amethyst_rendy/profiler",
-    "amethyst_ui/profiler",
-    "amethyst_utils/profiler",
-    "amethyst_tiles/profiler",
-]
 # sdl_controller = ["amethyst_input/sdl_controller"]
 json = ["amethyst_assets/json"]
 server = ["locale", "network"]
@@ -119,7 +103,6 @@ rustc_version_runtime = "0.2.0"
 sentry = { version = "0.22.0", optional = true }
 serde = { version = "1", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
-thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"
 glsl-layout = "0.4"
 # until https://github.com/amethyst/legion/pull/186 passed

@@ -2,8 +2,6 @@
 
 use amethyst_core::{ecs::*, timing::Time};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// Destroys the entity to which this is attached at the specified time (in seconds).
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,9 +25,6 @@ pub fn build_destroy_at_time_system() -> impl Runnable {
         .read_resource::<Time>()
         .with_query(<(Entity, Read<DestroyAtTime>)>::query())
         .build(move |commands, subworld, time, dat_query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("destroy_at_time_system");
-
             for (ent, dat) in dat_query.iter_mut(subworld) {
                 if time.absolute_time_seconds() > dat.time {
                     commands.remove(*ent);
@@ -44,9 +39,6 @@ pub fn build_destroy_in_time_system() -> impl Runnable {
         .read_resource::<Time>()
         .with_query(<(Entity, Write<DestroyInTime>)>::query())
         .build(move |commands, subworld, time, dit_query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("destroy_in_time_system");
-
             for (ent, mut dit) in dit_query.iter_mut(subworld) {
                 if dit.timer <= 0f64 {
                     commands.remove(*ent);

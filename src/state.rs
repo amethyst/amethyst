@@ -4,8 +4,6 @@ use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 
 use amethyst_input::is_close_requested;
 use derivative::Derivative;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{ecs::*, GameData, StateEvent};
 
@@ -438,8 +436,6 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("stack fixed_update");
                     state.fixed_update(StateData {
                         world,
                         resources,
@@ -449,8 +445,6 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 None => Trans::None,
             };
             for state in &mut self.state_stack {
-                #[cfg(feature = "profiler")]
-                profile_scope!("stack shadow_fixed_update");
                 state.shadow_fixed_update(StateData {
                     world,
                     resources,
@@ -458,8 +452,6 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 });
             }
             {
-                #[cfg(feature = "profiler")]
-                profile_scope!("stack fixed transition");
                 self.transition(
                     trans,
                     StateData {
@@ -482,8 +474,6 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         if self.running {
             let trans = match self.state_stack.last_mut() {
                 Some(state) => {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("stack update");
                     state.update(StateData {
                         world,
                         resources,
@@ -493,8 +483,6 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 None => Trans::None,
             };
             for state in &mut self.state_stack {
-                #[cfg(feature = "profiler")]
-                profile_scope!("stack shadow_update");
                 state.shadow_update(StateData {
                     world,
                     resources,
@@ -503,8 +491,6 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
             }
 
             {
-                #[cfg(feature = "profiler")]
-                profile_scope!("stack transition");
                 self.transition(
                     trans,
                     StateData {
