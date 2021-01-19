@@ -162,6 +162,7 @@ pub fn init_output(res: &mut Resources) {
 }
 
 #[cfg(test)]
+#[cfg(target_os = "linux")] // these tests only work in linux CI
 mod tests {
     use std::{fs::File, io::Read, vec::Vec};
 
