@@ -66,7 +66,6 @@ pub trait Format<D: 'static>: objekt::Clone + Send + Sync + 'static {
     ///
     /// If you are implementing `format` yourself, this method will never be used
     /// and can be left unimplemented.
-    ///
     fn import_simple(&self, _bytes: Vec<u8>) -> Result<D, Error> {
         unimplemented!("You must implement either `import_simple` or `import`.")
     }

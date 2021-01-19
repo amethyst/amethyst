@@ -3,5 +3,4 @@ reorder_imports = true
 merge_imports = true
 group_imports = "StdExternalCrate"
 force_multiline_blocks = true
-# Consider the following after the legion port
-#format_code_in_doc_comments = true
+format_code_in_doc_comments = true

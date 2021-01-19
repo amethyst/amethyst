@@ -1,5 +1,4 @@
 //! 2D/3D Tile data structures and functionality.
-//!
 
 #![doc(
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",

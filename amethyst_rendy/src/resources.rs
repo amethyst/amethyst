@@ -1,5 +1,4 @@
 //! `amethyst` rendering ecs resources
-//!
 
 /// The ambient color of a scene
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]

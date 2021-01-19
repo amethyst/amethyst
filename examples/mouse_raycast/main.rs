@@ -1,6 +1,5 @@
 //! Demonstrates how to perform raycasts with the camera to project from mouse to world coordinates.
 //!
-//!
 
 use amethyst::{
     assets::{
