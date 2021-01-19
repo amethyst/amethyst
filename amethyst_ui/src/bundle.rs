@@ -132,6 +132,8 @@ where
 ///
 /// Will register all necessary components and systems needed for UI, along with any resources.
 /// The generic type T represent the T generic parameter of the InputHandler<T>.
+///
+/// Will fail if no Output added. Add it with `amethyst_audio::output::init_output`
 #[derive(new, Debug, Default)]
 pub struct AudioUiBundle;
 

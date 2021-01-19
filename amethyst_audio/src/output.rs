@@ -7,9 +7,10 @@ use std::{
     sync::Arc,
 };
 
-use cpal::traits::DeviceTrait;
+use amethyst_core::ecs::Resources;
+use cpal::{traits::DeviceTrait, Devices, OutputDevices};
 use log::error;
-use rodio::{default_output_device, Decoder, Device, Sink, Source as RSource};
+use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
 
 use crate::{sink::AudioSink, source::Source, DecoderError};
 
@@ -103,6 +104,60 @@ impl Debug for Output {
         f.debug_struct("Output")
             .field("device", &self.name())
             .finish()
+    }
+}
+
+/// An iterator over outputs
+#[allow(missing_debug_implementations)]
+pub struct OutputIterator {
+    devices: OutputDevices<Devices>,
+}
+
+impl Iterator for OutputIterator {
+    type Item = Output;
+
+    fn next(&mut self) -> Option<Output> {
+        self.devices.next().map(|device| {
+            Output {
+                device: Arc::new(device),
+            }
+        })
+    }
+}
+
+/// Get the default output, returns none if no outputs are available.
+pub fn default_output() -> Option<Output> {
+    default_output_device().map(|device| {
+        Output {
+            device: Arc::new(device),
+        }
+    })
+}
+
+/// Get a list of outputs available to the system.
+pub fn outputs() -> OutputIterator {
+    let devices =
+        output_devices().unwrap_or_else(|e| panic!("Error retrieving output devices: `{}`", e));
+    OutputIterator { devices }
+}
+
+/// Initialize default output
+pub fn init_output(res: &mut Resources) {
+    if !res.contains::<OutputWrapper>() {
+        res.insert(OutputWrapper::default());
+    }
+
+    let mut wrapper = res.get_mut::<OutputWrapper>().unwrap();
+
+    if let Some(o) = default_output() {
+        if wrapper.audio_sink.is_none() {
+            wrapper.audio_sink = Some(AudioSink::new(&o));
+        }
+        if wrapper.output.is_none() {
+            wrapper.output = Some(o);
+        }
+    } else {
+        error!("Failed finding a default audio output to hook AudioSink to, audio will not work!")
     }
 }
 

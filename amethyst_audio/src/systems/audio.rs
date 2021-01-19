@@ -25,7 +25,7 @@ pub struct AudioSystem;
 /// Add this structure to world as a resource with ID 0 to select an entity whose AudioListener
 /// component will be used.  If this resource isn't found then the system will arbitrarily select
 /// the first AudioListener it finds.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SelectedListener(pub Option<Entity>);
 
 impl System<'_> for AudioSystem {

@@ -8,7 +8,7 @@ use log::error;
 use thread_profiler::profile_scope;
 
 use crate::{
-    output::OutputWrapper,
+    output::{init_output, OutputWrapper},
     source::{Source, SourceHandle},
 };
 
@@ -45,10 +45,10 @@ where
     fn load(
         &mut self,
         _world: &mut World,
-        _resources: &mut Resources,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        // requires AudioBundle
+        init_output(resources);
         builder.add_system(Box::new(DjSystem {
             f: self.f,
             _phantom: PhantomData,

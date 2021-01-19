@@ -4,11 +4,7 @@
 use amethyst_core::ecs::*;
 use amethyst_error::Error;
 
-use crate::{
-    output::{Output, OutputWrapper},
-    systems::*,
-    AudioSink,
-};
+use crate::{output::OutputWrapper, systems::*};
 
 /// Audio bundle
 ///
@@ -25,17 +21,9 @@ impl SystemBundle for AudioBundle {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        {
-            let mut wrapper = resources.get_mut_or_default::<OutputWrapper>();
+        resources.get_or_default::<OutputWrapper>();
+        resources.get_or_default::<SelectedListener>();
 
-            wrapper.output.get_or_insert(Output::default());
-
-            wrapper
-                .audio_sink
-                .get_or_insert(AudioSink::new(&Output::default()));
-        }
-
-        resources.insert(SelectedListener(None));
         builder.add_system(Box::new(AudioSystem));
         Ok(())
     }
