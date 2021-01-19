@@ -1,20 +1,30 @@
 use amethyst::{
     assets::{
         prefab::Prefab, AssetHandle, AssetStorage, Completion, DefaultLoader, Handle, LoadStatus,
-        Loader, LoaderBundle, ProgressCounter,
+        Loader, LoaderBundle, ProcessingQueue, ProgressCounter,
     },
-    core::{transform::TransformBundle, Time},
+    core::{
+        transform::{Transform, TransformBundle},
+        Time,
+    },
     ecs::{CommandBuffer, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     input::{is_close_requested, is_key_down, InputBundle, VirtualKeyCode},
     prelude::{
         Application, DispatcherBuilder, GameData, SimpleState, SimpleTrans, StateData, StateEvent,
-        Trans,
+        Trans, *,
     },
     renderer::{
+        light::{Light, PointLight},
+        loaders::load_from_linear_rgba,
+        palette::{LinSrgba, Srgb},
         plugins::{RenderShaded3D, RenderToWindow},
-        rendy::hal::command::ClearColor,
-        types::DefaultBackend,
-        Camera, RenderingBundle,
+        rendy::{
+            hal::command::ClearColor,
+            mesh::{Normal, Position, Tangent, TexCoord},
+        },
+        shape::Shape,
+        types::{DefaultBackend, MeshData, TextureData},
+        Camera, Material, MaterialDefaults, Mesh, RenderingBundle,
     },
     ui::{RenderUi, UiBundle, UiFinder, UiLabel, UiText, UiTransform},
     utils::{
@@ -63,7 +73,7 @@ fn main() -> Result<(), Error> {
                         float32: [0.34, 0.36, 0.52, 1.0],
                     }),
                 )
-                //.with_plugin(RenderShaded3D::default())
+                .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
         );
 
@@ -148,6 +158,82 @@ impl SimpleState for Example {
             }
         }
         buffer.flush(data.world);
+
+        let loader = data.resources.get::<DefaultLoader>().unwrap();
+        let mesh_storage = data.resources.get::<ProcessingQueue<MeshData>>().unwrap();
+        let tex_storage = data
+            .resources
+            .get::<ProcessingQueue<TextureData>>()
+            .unwrap();
+        let mtl_storage = data.resources.get::<ProcessingQueue<Material>>().unwrap();
+
+        let mesh: Handle<Mesh> = loader.load_from_data(
+            Shape::Sphere(64, 64)
+                .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(None)
+                .into(),
+            (),
+            &mesh_storage,
+        );
+
+        let albedo = loader.load_from_data(
+            load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 0.5)).into(),
+            (),
+            &tex_storage,
+        );
+
+        let mtl: Handle<Material> = {
+            let mat_defaults = data.resources.get::<MaterialDefaults>().unwrap().0.clone();
+
+            loader.load_from_data(
+                Material {
+                    albedo,
+                    ..mat_defaults
+                },
+                (),
+                &mtl_storage,
+            )
+        };
+
+        data.world.push((Transform::default(), mesh, mtl));
+
+        let light1: Light = PointLight {
+            intensity: 6.0,
+            color: Srgb::new(0.8, 0.0, 0.0),
+            ..PointLight::default()
+        }
+        .into();
+
+        let mut light1_transform = Transform::default();
+        light1_transform.set_translation_xyz(6.0, 6.0, -6.0);
+
+        let light2: Light = PointLight {
+            intensity: 5.0,
+            color: Srgb::new(0.0, 0.3, 0.7),
+            ..PointLight::default()
+        }
+        .into();
+
+        let mut light2_transform = Transform::default();
+        light2_transform.set_translation_xyz(6.0, -6.0, -6.0);
+
+        data.world
+            .extend(vec![(light1, light1_transform), (light2, light2_transform)]);
+
+        let (width, height) = {
+            let dim = data.resources.get::<ScreenDimensions>().unwrap();
+            (dim.width(), dim.height())
+        };
+
+        let mut transform = Transform::default();
+        transform.set_translation_xyz(0.0, 0.0, -4.0);
+        transform.prepend_rotation_y_axis(std::f32::consts::PI);
+
+        data.world.push((
+            Camera::standard_3d(width, height),
+            transform,
+            AutoFov::default(),
+            Tag::<ShowFov>::default(),
+        ));
     }
 
     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
@@ -169,18 +255,13 @@ impl System<'_> for ShowFovSystem {
     fn build(&mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ShowFovSystem")
-                // type SystemData = (
-                //     TagFinder<'a, ShowFov>,
-                //     UiFinder<'a>,
-                //     WriteStorage<'a, UiText>,
-                //     ReadStorage<'a, Camera>,
-                // );
                 .read_resource::<ScreenDimensions>()
-                .read_resource::<TagFinder<ShowFov>>()
                 .read_component::<UiText>()
+                .read_component::<Camera>()
                 .read_component::<Tag<ShowFov>>()
                 .with_query(<(&UiTransform, &mut UiText)>::query())
-                .build(|_, world, (screen, camera_finder), ui_query| {
+                .with_query(<(Entity, &Tag<ShowFov>)>::query())
+                .build(|_, world, (screen), (ui_query, tag_query)| {
                     for (transform, mut text) in ui_query.iter_mut(world) {
                         if transform.id == "screen_aspect" {
                             let screen_aspect = screen.aspect_ratio();
@@ -189,8 +270,11 @@ impl System<'_> for ShowFovSystem {
                     }
 
                     let (mut left, mut right) = world.split_for_query(ui_query);
-                    if let Some(entity) = camera_finder.find(&mut right) {
-                        if let Ok(camera) = <&Camera>::query().get(&right, entity) {
+
+                    let (lefter, righter) = right.split_for_query(tag_query);
+
+                    if let Some(entity) = tag_query.iter(&lefter).map(|(ent, _)| *ent).next() {
+                        if let Ok((camera,)) = <(&Camera,)>::query().get(&righter, entity) {
                             let camera_aspect =
                                 (camera.matrix[(1, 1)] / camera.matrix[(0, 0)]).abs();
 
