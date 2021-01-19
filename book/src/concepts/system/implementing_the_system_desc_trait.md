@@ -5,7 +5,6 @@ implementation for system initialization, the `SystemDesc` trait can be
 implemented manually:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 #
 use amethyst::{
     audio::output::Output,

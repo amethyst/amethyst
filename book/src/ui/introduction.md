@@ -25,7 +25,6 @@ to draw these widgets.
 A minimalistic game data would now look like this:  
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #     GameDataBuilder,
 #     core::transform::TransformBundle,

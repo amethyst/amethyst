@@ -23,7 +23,6 @@ keeping it simple.
 In `pong.rs`, let's create the `Ball` Component.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Component, DenseVecStorage};
 pub struct Ball {
     pub velocity: [f32; 2],
@@ -41,7 +40,6 @@ Then let's add an `initialise_ball` function the same way we wrote the
 `initialise_paddles` function.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage, Handle};
 # use amethyst::renderer::{Texture, SpriteRender, Sprite, SpriteSheet};
@@ -91,7 +89,6 @@ second one, whose index is `1`.
 Finally, let's make sure the code is working as intended by updating the `on_start` method:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::Handle;
 # use amethyst::renderer::{Texture, SpriteSheet};
@@ -136,7 +133,6 @@ in the center. In the next section, we're going to make this ball actually move!
 We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Component, DenseVecStorage};
 #
 # mod pong {
@@ -203,7 +199,6 @@ If a collision is detected, the ball bounces off. This is done
 by negating the velocity of the `Ball` component on the `x` or `y` axis.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Component, DenseVecStorage};
 #
 # mod pong {
@@ -315,7 +310,6 @@ Also, don't forget to add `mod move_balls` and `mod bounce` in `systems/mod.rs`
 as well as adding our new systems to the game data:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::window::DisplayConfig;
@@ -390,7 +384,6 @@ First, let's add a new method to our state: `update`.
 Let's add that `update` method just below `on_start`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::prelude::*;
 # struct MyState;
 # impl SimpleState for MyState {
@@ -411,7 +404,6 @@ as a local variable inside `on_start`. For that reason, we have to make it a par
 Let's add some fields to our `Pong` struct:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst; use amethyst::renderer::SpriteSheet;
 # use amethyst::assets::Handle;
 #[derive(Default)]
 pub struct Pong {
@@ -428,7 +420,6 @@ We've also added `#[derive(Default)]`, which will automatically implement `Defau
 default empty state. Now let's use that inside our `Application` creation code in `main.rs`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #     ecs::{World, WorldExt},
 #     prelude::*,
@@ -450,7 +441,6 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 - then we have to `initialise_ball` once after the time has passed inside `update`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{assets::Handle, renderer::SpriteSheet};
 # use amethyst::prelude::*;
 use amethyst::core::timing::Time;

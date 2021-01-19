@@ -15,7 +15,6 @@ mod audio;
 Create a file called `audio.rs`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 #
 use amethyst::{
     assets::Loader,
@@ -74,7 +73,6 @@ impl SimpleState for Pong {
 Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 #
 # use amethyst::GameDataBuilder;
 use amethyst::audio::AudioBundle;
@@ -98,7 +96,6 @@ fn main() -> amethyst::Result<()> {
 Let's start by creating a function to play the bounce sound. In `audio.rs`, add:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 #
 use amethyst::{
     assets::AssetStorage,
@@ -183,7 +180,6 @@ Now try running your game (`cargo run`). Don't forget to turn up your volume!
 Just as we did for the bounce sound, let's create a function to play the score sound. Update `audio.rs`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 #
 # use amethyst::{
 #     audio::{output::Output, Source, SourceHandle},
@@ -281,7 +277,6 @@ const MUSIC_TRACKS: &[&str] = &[
 Then, create a Music Resource:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 #
 use std::{iter::Cycle, vec::IntoIter};
 #
@@ -297,7 +292,6 @@ Since we only have two music tracks, we use a `Cycle` to infinitely alternate be
 Next, we need to add the Music Resource to our World. Update `initialise_audio`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 #
 # use std::{iter::Cycle, vec::IntoIter};
 #

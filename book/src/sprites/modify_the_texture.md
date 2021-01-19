@@ -13,7 +13,6 @@ own values, so a [`Tint`][doc_tint] with a white color will have no
 effect on the sprite.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::assets::{AssetStorage,  DefaultLoader, Loader, Handle};
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;

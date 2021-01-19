@@ -3,7 +3,6 @@
 This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. This can be applied where the [`Component`] type itself is completely serializable &ndash; the data is self-contained:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # extern crate serde;
 #
 # use amethyst::ecs::{storage::DenseVecStorage, Component};
@@ -49,7 +48,6 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     Example:
 
     ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
     # extern crate derivative;
     # extern crate serde;
     #

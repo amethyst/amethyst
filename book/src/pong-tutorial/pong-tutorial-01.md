@@ -80,7 +80,6 @@ started! We'll start with our `main()` function, and we'll have it return a
 if any errors occur during setup.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::prelude::*;
 fn main() -> amethyst::Result<()> {
 
@@ -102,7 +101,6 @@ Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
 so we can see errors, warnings and debug messages while the program is running.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 #
 # fn main() {
 amethyst::start_logger(Default::default());
@@ -150,7 +148,6 @@ In `main()` in `main.rs`, we will prepare the path to a file containing
 the display configuration:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 #
 # use amethyst::{
 #     utils::application_root_dir,
@@ -169,7 +166,6 @@ let display_config_path = app_root.join("config").join("display.ron");
 In `main()` in `main.rs` we are going to add the basic application setup:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #     prelude::*,
 #     utils::application_root_dir,
@@ -215,7 +211,6 @@ After preparing the display config and application scaffolding, it's time to act
 Last time we left our `GameDataBuilder` instance empty, now we'll add some systems to it.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #     prelude::*,
 #     renderer::{

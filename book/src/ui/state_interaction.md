@@ -3,7 +3,6 @@
 Let's declare our state, and call it `MenuState`:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::Entity;
 #
 #[derive(Default)]
@@ -23,7 +22,6 @@ In our `on_start` method of this state we can create the button as shown in
 previous chapters, but here we will save the entity in our struct:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #  assets::{AssetStorage,  DefaultLoader, Loader},
 # 	ecs::{Entity, World, WorldExt},
@@ -88,7 +86,6 @@ All the input received will be handled in the [handle_event](https://docs.amethy
 method of our state:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   ecs::{Entity, World, WorldExt},
@@ -190,7 +187,6 @@ The way we do that is by adding a [Hidden](https://docs.amethyst.rs/master/ameth
 component to our button:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
@@ -284,7 +280,6 @@ impl SimpleState for MenuState {
 The same goes for `on_resume` if we actually want to redisplay the button:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,

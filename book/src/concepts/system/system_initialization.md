@@ -20,7 +20,6 @@ initialization logic, the `SystemDesc` derive automatically implements the
 `SystemDesc` trait on the system type itself:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 use amethyst::{
     core::SystemDesc,
     derive::SystemDesc,

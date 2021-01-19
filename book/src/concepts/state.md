@@ -93,7 +93,6 @@ For more advanced examples, see the following pong tutorial.
 ### Creating a State
 
 ```rust,edition2018,no_run,noplaypen
-extern crate amethyst;
 use amethyst::prelude::*;
 
 struct GameplayState {
@@ -132,7 +131,6 @@ Those are:
 Let's use handle_event to go to the `PausedState` and come back by pressing the "Escape" key.
 
 ```rust,edition2018,no_run,noplaypen
-extern crate amethyst;
 use amethyst::prelude::*;
 use amethyst::input::{VirtualKeyCode, is_key_down};
 
@@ -180,7 +178,6 @@ Well, it is simply an enum. It regroups multiple types of events that are emitte
 To change the set of events that the state receives, you create a new event enum and derive `EventReader` for that type.
 
 ```rust,edition2018,no_run,noplaypen
-# #[macro_use] extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::ui::UiEvent;
 # use amethyst::input::{VirtualKeyCode, is_key_down};

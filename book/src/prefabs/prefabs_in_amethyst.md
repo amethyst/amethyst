@@ -20,7 +20,6 @@ The remainder of this page explains these at a conceptual level; subsequent page
 In its stored form, a prefab is a serialized list of entities and their components that should be instantiated together. To begin, we will look at a simple prefab that attaches a simple component to a single entity. We will use the following `Position` component:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # extern crate derivative;
 # extern crate serde;
 #
@@ -96,7 +95,6 @@ cargo run -p prefab_basic
 If there are multiple components to be attached to the entity, then we need a type that aggregates the [`Component`]s:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # extern crate derivative;
 # extern crate serde;
 #
@@ -189,7 +187,6 @@ Prefab(
 Could be implemented using an enum like this:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # extern crate derivative;
 # extern crate serde;
 #

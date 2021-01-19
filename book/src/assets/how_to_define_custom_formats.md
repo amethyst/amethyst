@@ -32,7 +32,6 @@ If you are defining a new format that may be useful to others, [please send us a
     In this example the RON deserializer is used, though it is [already a supported format][doc_ron_format].
 
     ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
     # extern crate ron;
     # extern crate serde;
     #
@@ -68,7 +67,6 @@ If you are defining a new format that may be useful to others, [please send us a
     The custom format can now be used:
 
     ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
     # extern crate ron;
     # extern crate serde;
     # extern crate serde_derive;

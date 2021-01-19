@@ -282,8 +282,7 @@ impl<'a> Iterator for Causes<'a> {
 /// Constructs an `Error` using the standard string interpolation syntax.
 ///
 /// ```rust
-/// #[macro_use]
-/// extern crate amethyst_error;
+/// use amethyst_error::format_err;
 ///
 /// fn main() {
 ///     let err = format_err!("number: {}", 42);

@@ -240,8 +240,7 @@ Code snippets in markdown files should be surrounded by triple backticks with th
 
 ````
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-use amethyst::ecs::{World, WorldExt};
+use amethyst::ecs::{World};
 
 // A simple struct with no data.
 struct MyResource;

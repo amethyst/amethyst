@@ -3,7 +3,6 @@
 With the `tiles` feature installed and our `RenderTiles2D` render pass setup, we can create a `TileMap` component and add it an entity. We need to have a sprite sheet loaded before the creation so this example assume a handle to a sprite sheet exists.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 use amethyst::{
     core::{
         math::{Point3, Vector3},

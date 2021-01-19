@@ -8,7 +8,6 @@ This chapter will showcase those functions and their usage.
 ## Adding a resource
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 use amethyst::ecs::{World, WorldExt};
 
 // A simple struct with no data.
@@ -30,7 +29,6 @@ fn main() {
 
 Here's how to fetch a read-only resource. Be aware that this method panics if the resource isn't inserted into `Resources`.
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{World, WorldExt};
 # struct MyResource;
 # fn main() {
@@ -41,7 +39,6 @@ Here's how to fetch a read-only resource. Be aware that this method panics if th
 
 If you are not sure that the resource will be present, use the methods available on `Resources`, as shown in the resource chapter.
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{World, WorldExt};
 # struct MyResource;
 # fn main() {
@@ -53,7 +50,6 @@ If you are not sure that the resource will be present, use the methods available
 ## Modifying a resource
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{World, WorldExt};
 # struct MyResource;
 # fn main() {
@@ -70,7 +66,6 @@ Finally, you call the build() method on the entity builder to get the actual ent
 Please note that **in order to use this syntax, you need to import the ``amethyst::prelude::Builder`` trait.**
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{World, WorldExt};
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
@@ -89,7 +84,6 @@ Please note that **in order to use this syntax, you need to import the ``amethys
 
 Shorter version:
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{World, WorldExt};
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
@@ -111,7 +105,6 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 ## Accessing a `Component`
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Builder, World, WorldExt};
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
@@ -136,7 +129,6 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 This is almost the same as accessing a component:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Builder, World, WorldExt};
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
@@ -155,7 +147,6 @@ This is almost the same as accessing a component:
 It is pretty rare to use this, but can be useful in some occasions.
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{World, WorldExt};
 # fn main() {
 #   let mut world = World::new();
@@ -168,7 +159,6 @@ It is pretty rare to use this, but can be useful in some occasions.
 
 Single:
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Builder, World, WorldExt};
 # fn main() {
 #   let mut world = World::new();
@@ -179,7 +169,6 @@ Single:
 
 Multiple:
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Builder, World, WorldExt};
 # fn main() {
 #   let mut world = World::new();
@@ -190,7 +179,6 @@ Multiple:
 
 All:
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{World, WorldExt};
 # fn main() {
 #   let mut world = World::new();
@@ -203,7 +191,6 @@ __Note: Entities are lazily deleted, which means that deletion only happens at t
 ## Check if the entity was deleted
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Builder, World, WorldExt};
 # fn main() {
 #   let mut world = World::new();
@@ -221,7 +208,6 @@ Sometimes, you will want to create an entity where you need to fetch resources t
 There is a function that acts as a shorthand for this:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{ReadExpect, World, WorldExt};
 # struct Dummy;
 # type SomeSystemData<'a> = ReadExpect<'a, Dummy>;
