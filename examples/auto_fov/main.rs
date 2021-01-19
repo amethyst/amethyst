@@ -1,7 +1,6 @@
 use amethyst::{
     assets::{
-        prefab::Prefab, AssetHandle, AssetStorage, Completion, DefaultLoader, Handle, LoadStatus,
-        Loader, LoaderBundle, ProcessingQueue, ProgressCounter,
+        prefab::Prefab, AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue,
     },
     core::{
         transform::{Transform, TransformBundle},
@@ -11,7 +10,7 @@ use amethyst::{
     input::{is_close_requested, is_key_down, InputBundle, VirtualKeyCode},
     prelude::{
         Application, DispatcherBuilder, GameData, SimpleState, SimpleTrans, StateData, StateEvent,
-        Trans, *,
+        Trans,
     },
     renderer::{
         light::{Light, PointLight},
@@ -26,7 +25,7 @@ use amethyst::{
         types::{DefaultBackend, MeshData, TextureData},
         Camera, Material, MaterialDefaults, Mesh, RenderingBundle,
     },
-    ui::{RenderUi, UiBundle, UiFinder, UiLabel, UiText, UiTransform},
+    ui::{RenderUi, UiBundle, UiText, UiTransform},
     utils::{
         application_root_dir,
         auto_fov::{AutoFov, AutoFovSystem},
@@ -35,7 +34,6 @@ use amethyst::{
     window::ScreenDimensions,
     Error,
 };
-use log::{error, info};
 
 fn main() -> Result<(), Error> {
     let config = amethyst::LoggerConfig {
@@ -87,7 +85,6 @@ fn main() -> Result<(), Error> {
 struct ShowFov;
 
 struct Loading {
-    progress: ProgressCounter,
     loading_ui: Option<Handle<Prefab>>,
     fov_ui: Option<Handle<Prefab>>,
 }
@@ -95,7 +92,6 @@ struct Loading {
 impl Loading {
     fn new() -> Self {
         Loading {
-            progress: ProgressCounter::new(),
             loading_ui: None,
             fov_ui: None,
         }
@@ -133,7 +129,7 @@ impl SimpleState for Loading {
             }
         }
 
-        if let Some(fov_ui) = loader.get(self.fov_ui.as_ref().unwrap()) {
+        if loader.get(self.fov_ui.as_ref().unwrap()).is_some() {
             Trans::Switch(Box::new(Example {
                 fov_ui: self.fov_ui.take(),
             }))
@@ -261,7 +257,7 @@ impl System<'_> for ShowFovSystem {
                 .read_component::<Tag<ShowFov>>()
                 .with_query(<(&UiTransform, &mut UiText)>::query())
                 .with_query(<(Entity, &Tag<ShowFov>)>::query())
-                .build(|_, world, (screen), (ui_query, tag_query)| {
+                .build(|_, world, screen, (ui_query, tag_query)| {
                     for (transform, mut text) in ui_query.iter_mut(world) {
                         if transform.id == "screen_aspect" {
                             let screen_aspect = screen.aspect_ratio();

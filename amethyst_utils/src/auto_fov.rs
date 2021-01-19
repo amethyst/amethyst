@@ -52,6 +52,7 @@ impl Default for AutoFov {
 ///
 /// For a camera component to be managed by this system, the entity with the camera component should
 /// also have an `AutoFov` component attached to it.
+#[derive(Debug)]
 pub struct AutoFovSystem;
 
 impl System<'_> for AutoFovSystem {

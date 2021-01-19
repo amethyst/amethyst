@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use amethyst_assets::prefab::{legion_prefab, register_component_type, serde_diff, SerdeDiff};
+use amethyst_assets::prefab::{serde_diff, SerdeDiff};
 use amethyst_core::{
     ecs::*,
     transform::{Children, Parent},
