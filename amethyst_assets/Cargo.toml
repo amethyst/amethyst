@@ -28,14 +28,14 @@ crossbeam-channel = "0.5"
 derive-new = "0.5"
 fnv = "1"
 log = "0.4"
-parking_lot = "0.10"
+parking_lot = "0.11"
 rayon = "1.5"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }
 ron = "0.6.4"
 thread_profiler = { version = "0.3", optional = true }
-err-derive = "0.2.3"
-objekt = "0.1.2"
+err-derive = "0.3"
+dyn-clone = "1.0"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"

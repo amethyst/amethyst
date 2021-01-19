@@ -96,6 +96,7 @@ impl System<'static> for UiSoundSystem {
                         for event in sound_events.read(event_reader) {
                             if let Some(sound) = audio_storage.get(&event.0) {
                                 if let Some(output) = &audio_output_wrapper.output {
+                                    log::trace!("Playing sound");
                                     output.play_once(sound, 1.0);
                                 }
                             }

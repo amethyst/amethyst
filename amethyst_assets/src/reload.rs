@@ -268,6 +268,6 @@ impl<D: 'static> Reload<D> for SingleFile<D> {
             ..
         } = this;
 
-        format.import(path, source, Some(objekt::clone(&format)))
+        format.import(path, source, Some(dyn_clone::clone(&format)))
     }
 }

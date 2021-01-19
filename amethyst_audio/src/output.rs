@@ -7,13 +7,10 @@ use std::{
     sync::Arc,
 };
 
-use amethyst_core::ecs::*;
-use cpal::traits::DeviceTrait;
+use amethyst_core::ecs::Resources;
+use cpal::{traits::DeviceTrait, Devices, OutputDevices};
 use log::error;
-use rodio::{
-    default_output_device, output_devices, Decoder, Device, Devices, OutputDevices, Sink,
-    Source as RSource,
-};
+use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
 
 use crate::{sink::AudioSink, source::Source, DecoderError};
 
@@ -95,11 +92,7 @@ impl Output {
     ) -> Result<(), DecoderError> {
         let sink = Sink::new(&self.device);
         for _ in 0..n {
-            sink.append(
-                Decoder::new(Cursor::new(source.clone()))
-                    .map_err(|_| DecoderError)?
-                    .amplify(volume),
-            );
+            sink.append(Decoder::new(Cursor::new(source.clone()))?.amplify(volume));
         }
         sink.detach();
         Ok(())
@@ -169,46 +162,40 @@ pub fn init_output(res: &mut Resources) {
 }
 
 #[cfg(test)]
+#[cfg(target_os = "linux")] // these tests only work in linux CI
 mod tests {
-    #[cfg(target_os = "linux")]
-    use {
-        crate::{output::Output, source::Source, DecoderError},
-        amethyst_utils::app_root_dir::application_root_dir,
-        std::{fs::File, io::Read, vec::Vec},
-    };
+    use std::{fs::File, io::Read, vec::Vec};
+
+    use amethyst_utils::app_root_dir::application_root_dir;
+
+    use crate::{output::Output, source::Source, DecoderError};
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_wav() {
         test_play("tests/sound_test.wav", true)
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_mp3() {
         test_play("tests/sound_test.mp3", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_flac() {
         test_play("tests/sound_test.flac", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_ogg() {
         test_play("tests/sound_test.ogg", true);
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
     fn test_play_fake() {
         test_play("tests/sound_test.fake", false);
     }
 
     // test_play tests the play APIs for Output
-    #[cfg(target_os = "linux")]
     fn test_play(file_name: &str, should_pass: bool) {
         // Get the full file path
         let app_root = application_root_dir().unwrap();
@@ -240,7 +227,6 @@ mod tests {
         check_result(result_try_play_n_times, should_pass);
     }
 
-    #[cfg(target_os = "linux")]
     fn check_result(result: Result<(), DecoderError>, should_pass: bool) {
         match result {
             Ok(_pass) => {

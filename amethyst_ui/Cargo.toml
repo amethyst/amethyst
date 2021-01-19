@@ -41,7 +41,7 @@ font-kit = "0.10.0"
 paste = "1"
 rand = "0.8"
 lazy_static = "1.4"
-glyph_brush = "0.6.0"
+glyph_brush = "0.6"
 thread_profiler = { version = "0.3", optional = true }
 type-uuid = "0.1"
 

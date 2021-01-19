@@ -30,10 +30,10 @@ legion = { version = "0.3.1", default-features = false, features = [
     "crossbeam-events",
     "codegen",
 ] }
-nalgebra = { version = "0.23.1", features = ["serde-serialize"] }
+nalgebra = { version = "0.24", default-features = false, features = ["serde-serialize"] }
 rayon = "1.5"
 shrev = "1.1.1"
-simba = "0.3"
+simba = { version = "0.3" }
 smallvec = "1.4"
 thread_profiler = { version = "0.3", optional = true }
 serde-diff = "0.4"

@@ -56,7 +56,7 @@ impl ProcessableAsset for Locale {
 
         let resource = FluentResource::try_new(s).expect("Failed to parse locale data");
         let lang_en = langid!("en");
-        let mut bundle = FluentBundle::new(&[lang_en]);
+        let mut bundle = FluentBundle::new(vec![lang_en]);
 
         bundle
             .add_resource(resource)
