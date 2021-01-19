@@ -30,6 +30,7 @@ pub use self::{
     axis::{Axis2, Axis3},
     event::EventReader,
     hidden::{Hidden, HiddenPropagate},
+    logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     named::Named,
     shrev::EventChannel,
     timing::*,
@@ -63,6 +64,9 @@ pub mod transform;
 
 /// The hide hierarchy system
 pub mod hide_hierarchy_system;
+
+/// The Amethyst logger based on fern
+pub mod logger;
 
 mod axis;
 mod event;

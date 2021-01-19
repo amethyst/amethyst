@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use atelier_assets::loader::{handle::AssetHandle, storage::IndirectionTable, LoadHandle};
 use crossbeam_queue::SegQueue;
-use log::debug;
 
 struct AssetState<A> {
     version: u32,
@@ -39,24 +38,13 @@ impl<A> AssetStorage<A> {
     }
 
     pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
-        debug!(
-            "AssetStorage<A>::update_asset load_handle: {:?}, version: {}",
-            handle, version
-        );
-        if let Some(data) = self.uncommitted.remove(&handle) {
-            debug!(
-                "uncommitted data already exists for the handle: {:?}, drop it",
-                handle
-            );
-            // uncommitted data already exists for the handle, drop it
+        log::debug!("Updating Asset {:?}", handle);
+        if let Some(data) = self
+            .uncommitted
+            .insert(handle, AssetState { version, asset })
+        {
             self.to_drop.push(data.asset);
         }
-        debug!(
-            "insert asset with load_handle: {:?}, version: {}",
-            handle, version
-        );
-        self.uncommitted
-            .insert(handle, AssetState { version, asset });
     }
 
     pub(crate) fn remove_asset(&mut self, handle: LoadHandle, version: u32) {
@@ -79,17 +67,17 @@ impl<A> AssetStorage<A> {
             if data.version != version {
                 panic!("attempted to commit asset version which mismatches with existing uncommitted version")
             }
-            if let Some(existing) = self.assets.remove(&handle) {
-                // data already exists for the handle, drop it
-                self.to_drop.push(existing.asset);
-            }
-            self.assets.insert(
+
+            if let Some(existing) = self.assets.insert(
                 handle,
                 AssetState {
                     version,
                     asset: data.asset,
                 },
-            );
+            ) {
+                // data already exists for the handle, drop it
+                self.to_drop.push(existing.asset);
+            };
         } else {
             panic!("attempted to commit asset which doesn't exist");
         }
@@ -198,5 +186,25 @@ impl<A> atelier_assets::loader::handle::TypedAssetStorage<A> for AssetStorage<A>
     }
     fn get_asset_with_version<T: AssetHandle>(&self, handle: &T) -> Option<(&A, u32)> {
         self.get_asset_with_version(handle)
+    }
+}
+
+pub(crate) trait MutateAssetInStorage<A> {
+    fn mutate_asset_in_storage<H: AssetHandle, F: FnOnce(&mut A)>(
+        &mut self,
+        handle: &H,
+        mutator: F,
+    );
+}
+
+impl<A> MutateAssetInStorage<A> for AssetStorage<A> {
+    fn mutate_asset_in_storage<H: AssetHandle, F: FnOnce(&mut A)>(
+        &mut self,
+        handle: &H,
+        mutator: F,
+    ) {
+        if let Some(asset_state) = self.assets.get_mut(&handle.load_handle()) {
+            mutator(&mut asset_state.asset);
+        }
     }
 }

@@ -5,8 +5,6 @@ use std::{
 };
 
 use amethyst_error::{format_err, Error, ResultExt};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{error, source::Source};
 
@@ -40,8 +38,6 @@ impl Directory {
 
 impl Source for Directory {
     fn modified(&self, path: &str) -> Result<u64, Error> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("dir_modified_asset");
         use std::fs::metadata;
 
         let path = self.path(path);
@@ -58,8 +54,6 @@ impl Source for Directory {
     }
 
     fn load(&self, path: &str) -> Result<Vec<u8>, Error> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("dir_load_asset");
         use std::io::Read;
 
         use encoding_rs_io::DecodeReaderBytes;

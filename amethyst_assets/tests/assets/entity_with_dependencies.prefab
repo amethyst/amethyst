@@ -1,0 +1,22 @@
+Prefab(
+    // Prefab AssetUuid
+    id: "a1e04f08-8bdd-403a-baa2-1ba83113f186",
+    objects: [
+       // Embed the contents of another prefab in this prefab and override certain values
+       PrefabRef((
+             prefab_id: "8b10e4fb-5a25-40b0-9ddd-a28bc842f834",
+             entity_overrides: [
+                 (
+                      entity_id: "b6cc74e0-1c11-4876-8949-1408736a9613",
+                      // Override values of a component in an entity of the referenced prefab
+                      component_overrides: [
+                          (
+                              component_type: "f5780013-bae4-49f0-ac0e-a108ff52fec0",
+                              diff: "[Enter(Field(\"x\")),Value(100),]",
+                          ),
+                      ],
+                 ),
+             ],
+       ))
+    ]
+)

@@ -1,0 +1,22 @@
+Prefab(
+    // Prefab AssetUuid
+    id: "8b10e4fb-5a25-40b0-9ddd-a28bc842f834",
+    objects: [
+        // Inline definition of an entity and its components
+        Entity((
+             // Entity AssetUuid
+             id: "b6cc74e0-1c11-4876-8949-1408736a9613",
+             // Component data and types
+             components: [
+                 (
+                     // Component AssetTypeId
+                     type: "f5780013-bae4-49f0-ac0e-a108ff52fec0",
+                     data: (
+                         x: 0,
+                         y: 0,
+                     ),
+                 ),
+             ]
+        )),
+    ]
+)

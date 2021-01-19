@@ -1,14 +1,11 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
 
-use std::collections::HashMap;
-
 use amethyst::{
     assets::{
-        prefab::{register_component_type, ComponentRegistry, Prefab},
-        AssetStorage, DefaultLoader, Handle, Loader, LoaderBundle,
+        prefab::{register_component_type, Prefab},
+        DefaultLoader, Handle, Loader, LoaderBundle,
     },
-    core::transform::TransformBundle,
-    ecs::query,
+    core::{transform::TransformBundle, Time},
     prelude::*,
     renderer::{
         plugins::{RenderShaded3D, RenderToWindow},
@@ -23,54 +20,44 @@ use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use type_uuid::TypeUuid;
 
-#[derive(TypeUuid, Serialize, Deserialize, SerdeDiff, Clone, Default)]
+#[derive(TypeUuid, Serialize, Deserialize, SerdeDiff, Clone, Default, Debug)]
 #[uuid = "f5780013-bae4-49f0-ac0e-a108ff52fec0"]
 struct Position2D {
     position: Vec<f32>,
 }
 
 register_component_type!(Position2D);
-// type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
 struct AssetsExample {
     prefab_handle: Option<Handle<Prefab>>,
 }
 
 impl SimpleState for AssetsExample {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let StateData { resources, .. } = data;
-        // let prefab_handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-        //     loader.load("prefab/example.prefab", RonFormat, ())
-        // });
-        // data.world.create_entity().with(prefab_handle).build();
-        let loader = resources.get_mut::<DefaultLoader>().unwrap();
-        let prefab_handle: Handle<Prefab> = loader.load("prefab/test.prefab");
-        self.prefab_handle = Some(prefab_handle);
-    }
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let StateData {
-            world, resources, ..
-        } = data;
-
         if self.prefab_handle.is_none() {
-            log::info!("No prefab");
-            return Trans::None;
+            log::info!("No prefab loaded, loading now...");
+
+            let loader = data.resources.get_mut::<DefaultLoader>().unwrap();
+            let prefab_handle: Handle<Prefab> = loader.load("prefab/test.prefab");
+            self.prefab_handle = Some(prefab_handle.clone());
+            data.world.push((prefab_handle,));
         }
 
-        let component_registry = resources.get_mut::<ComponentRegistry>().unwrap();
-        let prefab_storage = resources.get_mut::<AssetStorage<Prefab>>().unwrap();
-        if let Some(opened_prefab) = prefab_storage.get(self.prefab_handle.as_ref().unwrap()) {
-            let clone_impl_result = HashMap::default();
-            let mut spawn_impl =
-                component_registry.spawn_clone_impl(&resources, &clone_impl_result);
-            let mappings = world.clone_from(
-                &opened_prefab.prefab.world,
-                &query::any(),
-                &mut spawn_impl,
-                // &mut component_registry, // .spawn_clone_impl(resources, &opened_prefab.prefab_to_world_mappings),
-            );
-            log::info!("{:?}", mappings);
-        };
+        let time = data.resources.get::<Time>().unwrap();
+
+        if time.frame_number() % 60 == 0 {
+            let mut query = <(Entity,)>::query();
+            let entities: Vec<Entity> = query.iter(data.world).map(|(ent,)| *ent).collect();
+            for entity in entities {
+                if let Some(entry) = data.world.entry(entity) {
+                    log::info!("{:?}: {:?}", entity, entry.archetype());
+                    if let Ok(pos) = entry.get_component::<Position2D>() {
+                        log::info!("{:?}", pos);
+                    }
+                }
+            }
+        }
+
         Trans::None
     }
 }
@@ -78,20 +65,14 @@ impl SimpleState for AssetsExample {
 /// Wrapper around the main, so we can return errors easily.
 fn main() -> Result<(), Error> {
     let config = amethyst::LoggerConfig {
-        level_filter: amethyst::LogLevelFilter::Info,
+        level_filter: amethyst::LogLevelFilter::Debug,
         module_levels: vec![
             (
                 "amethyst_assets".to_string(),
-                amethyst::LogLevelFilter::Debug,
-            ),
-            (
-                "atelier_daemon".to_string(),
-                amethyst::LogLevelFilter::Debug,
-            ),
-            (
-                "atelier_loader".to_string(),
                 amethyst::LogLevelFilter::Trace,
             ),
+            ("atelier_daemon".to_string(), amethyst::LogLevelFilter::Warn),
+            ("atelier_loader".to_string(), amethyst::LogLevelFilter::Warn),
         ],
         ..Default::default()
     };

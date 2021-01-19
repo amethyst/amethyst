@@ -50,12 +50,53 @@ where
     }
 }
 
+pub(crate) struct LoadNotifier {
+    asset_load_op: Option<AssetLoadOp>,
+    tracker: Option<Box<dyn Tracker>>,
+    load_handle: LoadHandle,
+}
+
+impl LoadNotifier {
+    pub fn new(
+        load_handle: LoadHandle,
+        asset_load_op: Option<AssetLoadOp>,
+        tracker: Option<Box<dyn Tracker>>,
+    ) -> Self {
+        Self {
+            asset_load_op,
+            tracker,
+            load_handle,
+        }
+    }
+
+    /// Signals that this load operation has completed succesfully.
+    pub fn complete(self) {
+        if let Some(asset_load_op) = self.asset_load_op {
+            asset_load_op.complete();
+        }
+        if let Some(tracker) = self.tracker {
+            tracker.success();
+        }
+    }
+
+    /// Signals that this load operation has completed with an error.
+    // FIXME: Make the errors meaningful
+    pub fn error(self, error: Error) {
+        if let Some(asset_load_op) = self.asset_load_op {
+            asset_load_op.error(ProcessingError("ProcessingError".into()));
+        }
+
+        if let Some(tracker) = self.tracker {
+            tracker.fail(self.load_handle.0, &"", "".to_string(), error);
+        }
+    }
+}
+
 /// Represents asset data processed by `atelier-assets` that needs to be loaded by Amethyst.
 pub(crate) struct Processed<T> {
     data: Result<T, Error>,
     handle: LoadHandle,
-    tracker: Option<Box<dyn Tracker>>,
-    load_op: Option<AssetLoadOp>,
+    load_notifier: LoadNotifier,
     version: u32,
     commit: bool,
 }
@@ -76,6 +117,7 @@ pub enum ProcessingState<D, A> {
 pub struct ProcessingQueue<T> {
     pub(crate) processed: Arc<SegQueue<Processed<T>>>,
     requeue: Mutex<Vec<Processed<T>>>,
+    pub(crate) changed: SegQueue<LoadHandle>,
 }
 
 impl<T> Default for ProcessingQueue<T> {
@@ -83,33 +125,48 @@ impl<T> Default for ProcessingQueue<T> {
         Self {
             processed: Arc::new(SegQueue::new()),
             requeue: Mutex::new(Vec::new()),
+            changed: SegQueue::new(),
         }
     }
 }
 
 impl<T> ProcessingQueue<T> {
     /// Enqueue asset data for processing
-    pub(crate) fn enqueue(&self, handle: LoadHandle, data: T, load_op: AssetLoadOp, version: u32) {
-        self.enqueue_processed(Ok(data), handle, None, Some(load_op), version, false);
+    pub(crate) fn enqueue(
+        &self,
+        handle: LoadHandle,
+        data: T,
+        asset_load_op: AssetLoadOp,
+        version: u32,
+    ) {
+        self.enqueue_processed(
+            Ok(data),
+            handle,
+            LoadNotifier::new(handle, Some(asset_load_op), None),
+            version,
+            false,
+        );
     }
 
-    fn enqueue_processed(
+    pub(crate) fn enqueue_processed(
         &self,
         data: Result<T, Error>,
         handle: LoadHandle,
-        tracker: Option<Box<dyn Tracker>>,
-        load_op: Option<AssetLoadOp>,
+        load_notifier: LoadNotifier,
         version: u32,
         commit: bool,
     ) {
         self.processed.push(Processed {
             data,
             handle,
-            tracker,
-            load_op,
+            load_notifier,
             version,
             commit,
         })
+    }
+
+    pub(crate) fn enqueue_changed(&self, handle: LoadHandle) {
+        self.changed.push(handle);
     }
 
     pub(crate) fn enqueue_from_data(
@@ -119,75 +176,63 @@ impl<T> ProcessingQueue<T> {
         tracker: Box<dyn Tracker>,
         version: u32,
     ) {
-        self.enqueue_processed(Ok(data), handle, Some(tracker), None, version, true);
+        self.enqueue_processed(
+            Ok(data),
+            handle,
+            LoadNotifier::new(handle, None, Some(tracker)),
+            version,
+            true,
+        );
     }
 
     /// Process asset data into assets
     pub fn process<F, A>(&mut self, storage: &mut AssetStorage<A>, mut f: F)
     where
-        F: FnMut(T) -> Result<ProcessingState<T, A>, Error>,
+        F: FnMut(T, &mut AssetStorage<A>, &LoadHandle) -> Result<ProcessingState<T, A>, Error>,
     {
+        let requeue = self
+            .requeue
+            .get_mut()
+            .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
+        while let Some(Processed {
+            data,
+            handle,
+            load_notifier,
+            version,
+            commit,
+        }) = self.processed.pop()
         {
-            let requeue = self
-                .requeue
-                .get_mut()
-                .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
-            while let Some(processed) = self.processed.pop() {
-                let f = &mut f;
-                let Processed {
-                    data,
-                    handle,
-                    tracker,
-                    load_op,
-                    version,
-                    commit,
-                } = processed;
+            let f = &mut f;
 
-                let asset = match data.and_then(|d| f(d)) {
-                    Ok(ProcessingState::Loaded(x)) => {
-                        debug!(
-                            "Asset (handle id: {:?}) has been loaded successfully",
-                            handle,
-                        );
-
-                        if let Some(tracker) = tracker {
-                            tracker.success();
-                        }
-                        if let Some(op) = load_op {
-                            op.complete();
-                        }
-                        x
-                    }
-                    Ok(ProcessingState::Loading(x)) => {
-                        requeue.push(Processed {
-                            data: Ok(x),
-                            handle,
-                            tracker,
-                            load_op,
-                            version,
-                            commit,
-                        });
-                        continue;
-                    }
-                    Err(e) => {
-                        if let Some(tracker) = tracker {
-                            tracker.fail(handle.0, &"", "".to_string(), e);
-                        }
-                        if let Some(op) = load_op {
-                            op.error(ProcessingError("ProcessingError".into()));
-                        }
-                        continue;
-                    }
-                };
-                storage.update_asset(handle, asset, version);
-                if commit {
-                    storage.commit_asset(handle, version);
+            let asset = match data.and_then(|d| f(d, storage, &handle)) {
+                Ok(ProcessingState::Loaded(x)) => {
+                    debug!("{:?} has been loaded successfully", handle);
+                    load_notifier.complete();
+                    x
                 }
+                Ok(ProcessingState::Loading(x)) => {
+                    requeue.push(Processed {
+                        data: Ok(x),
+                        handle,
+                        load_notifier,
+                        version,
+                        commit,
+                    });
+                    continue;
+                }
+                Err(e) => {
+                    load_notifier.error(e);
+                    continue;
+                }
+            };
+            storage.update_asset(handle, asset, version);
+            if commit {
+                storage.commit_asset(handle, version);
             }
+        }
 
-            for p in requeue.drain(..) {
-                self.processed.push(p);
-            }
+        for p in requeue.drain(..) {
+            self.processed.push(p);
         }
     }
 }
