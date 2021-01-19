@@ -81,7 +81,6 @@ exclude = [
     "examples/rendy",
     "examples/states_ui",
     "examples/state_dispatcher",
-    "examples/prefab_basic",
     "examples/prefab_multi",
     "examples/prefab_custom",
     "examples/prefab_adapter",
