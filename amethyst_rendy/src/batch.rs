@@ -8,8 +8,6 @@ use std::{
 
 use derivative::Derivative;
 use smallvec::{smallvec, SmallVec};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::util::TapCountIter;
 
@@ -38,9 +36,6 @@ where
     where
         F: FnMut(K, &mut Vec<V>),
     {
-        #[cfg(feature = "profiler")]
-        profile_scope!("for_each_group");
-
         let mut block: Option<(K, Vec<V>)> = None;
 
         for (next_group_id, value) in self {
@@ -112,9 +107,6 @@ where
 
     /// Inserts a set of batch items.
     pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = C::Item>) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("twolevel_insert");
-
         let instance_data = data.into_iter().tap_count(&mut self.data_count);
 
         match self.map.entry(pk) {
@@ -195,9 +187,6 @@ where
 
     /// Inserts a set of batch data to the specified grouping.
     pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = D>) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("ordered_twolevel_insert");
-
         let start = self.data_list.len() as u32;
         self.data_list.extend(data);
         let end = self.data_list.len() as u32;
@@ -276,9 +265,6 @@ where
 
     /// Inserts the provided set of batch data for `PK`
     pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("onelevel_insert");
-
         let instance_data = data.into_iter();
 
         match self.map.entry(pk) {
@@ -344,9 +330,6 @@ where
 
     /// Inserts the provided set of batch data for `PK`
     pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("ordered_onelevel_insert");
-
         let start = self.data_list.len() as u32;
         self.data_list.extend(data);
         let added_len = self.data_list.len() as u32 - start;

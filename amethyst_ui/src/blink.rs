@@ -1,8 +1,6 @@
 //! Module for the Blink component and BlinkSystem.
 
 use amethyst_core::{ecs::*, Hidden, Time};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// # Blink Component
 /// Periodically adds and removes a `Hidden` Component on the entity this is attached to.
@@ -35,9 +33,6 @@ impl System<'_> for BlinkSystem {
                 .with_query(<&mut Hidden>::query())
                 .with_query(<(Entity, Write<Blink>)>::query())
                 .build(move |commands, world, time, (hiddens, blinks)| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("blink_system");
-
                     let abs_sec = time.delta_seconds();
                     let abs_unscaled_sec = time.delta_real_seconds();
 

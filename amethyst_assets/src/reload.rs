@@ -4,8 +4,6 @@ use std::{sync::Arc, time::Instant};
 
 use amethyst_core::{ecs::*, Time};
 use amethyst_error::Error;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{Format, FormatValue, Loader, Source};
 
@@ -145,9 +143,6 @@ impl System<'_> for HotReloadSystem {
                 .write_resource::<HotReloadStrategy>()
                 .read_resource::<Time>()
                 .build(move |_commands, _world, (strategy, time), _query| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("hot_reload_system");
-
                     match strategy.inner {
                         HotReloadStrategyInner::Trigger {
                             ref mut triggered,
@@ -257,9 +252,6 @@ impl<D: 'static> Reload<D> for SingleFile<D> {
     }
 
     fn reload(self: Box<Self>) -> Result<FormatValue<D>, Error> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("reload_single_file");
-
         let this: SingleFile<D> = *self;
         let SingleFile {
             format,

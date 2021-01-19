@@ -17,8 +17,6 @@ use rendy::{
     resource::{BufferCreationError, BufferInfo, Escape, SubRange},
 };
 use smallvec::SmallVec;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::types::{Backend, Texture};
 
@@ -54,9 +52,6 @@ pub fn ensure_buffer<B: Backend>(
     memory_usage: impl MemoryUsage,
     min_size: u64,
 ) -> Result<bool, BufferCreationError> {
-    #[cfg(feature = "profiler")]
-    profile_scope!("ensure_buffer");
-
     if buffer.as_ref().map(|b| b.size()).unwrap_or(0) < min_size {
         let new_size = min_size.next_power_of_two();
         let new_buffer = factory.create_buffer(

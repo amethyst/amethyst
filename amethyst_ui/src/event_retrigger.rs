@@ -4,8 +4,6 @@ use amethyst_core::{
     ecs::{storage::Component, *},
     shrev::{Event, EventChannel, ReaderId},
 };
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::event::TargetedEvent;
 
@@ -76,8 +74,6 @@ impl<T: EventRetrigger + 'static> System<'static> for EventRetriggerSystem<T> {
                 .with_query(<(Entity, &mut T)>::query())
                 .build(
                     move |_commands, world, (in_channel, out_channel), retrigger| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("event_retrigger_system");
                         let event_reader = &mut self.event_reader;
                         for event in in_channel.read(event_reader) {
                             if let Ok((_, entity_retrigger)) =

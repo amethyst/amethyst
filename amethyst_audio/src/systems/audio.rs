@@ -9,8 +9,6 @@ use std::{
 
 use amethyst_core::{ecs::*, math::convert, transform::Transform};
 use rodio::SpatialSink;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     components::{AudioEmitter, AudioListener},
@@ -41,8 +39,6 @@ impl System<'_> for AudioSystem {
                           world,
                           (wrapper, select_listener),
                           (q_audio_listener, q_audio_emitter)| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("audio_system");
                         // Process emitters and listener.
                         if let Some((entity, listener)) = if let Some(entity) = select_listener.0 {
                             // Find entity refered by SelectedListener resource

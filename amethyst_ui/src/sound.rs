@@ -4,8 +4,6 @@ use amethyst_core::{
     ecs::*,
     shrev::{EventChannel, ReaderId},
 };
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     event::{UiEvent, UiEventType::*},
@@ -90,8 +88,6 @@ impl System<'static> for UiSoundSystem {
                           _world,
                           (sound_events, audio_storage, audio_output_wrapper),
                           _| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("ui_sound_system");
                         let event_reader = &mut self.event_reader;
                         for event in sound_events.read(event_reader) {
                             if let Some(sound) = audio_storage.get(&event.0) {

@@ -11,8 +11,6 @@ use rendy::{
     mesh::{AsVertex, Mesh, PosTex},
     shader::Shader,
 };
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     palette::Srgb,
@@ -93,9 +91,6 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawSkyboxDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("build");
-
         let env = FlatEnvironmentSub::new(factory)?;
         let colors = DynamicUniform::new(factory, pso::ShaderStageFlags::FRAGMENT)?;
         let mesh = Shape::Sphere(16, 16)
@@ -147,9 +142,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawSkybox<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) -> PrepareResult {
-        #[cfg(feature = "profiler")]
-        profile_scope!("prepare");
-
         let settings = aux
             .resources
             .get::<SkyboxSettings>()
@@ -173,8 +165,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawSkybox<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _aux: &GraphAuxData,
     ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("draw");
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
         self.colors

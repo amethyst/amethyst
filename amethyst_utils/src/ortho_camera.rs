@@ -5,8 +5,6 @@ use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// The coordinates that `CameraOrtho` will keep visible in the window.
 /// `bottom` can be a higher value than `top`, as is common in 2D coordinates
@@ -235,9 +233,6 @@ pub fn build_camera_normalize_system() -> impl Runnable {
         .read_resource::<ScreenDimensions>()
         .with_query(<(Write<Camera>, Write<CameraOrtho>)>::query())
         .build(move |_, subworld, dimensions, query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("camera_ortho_system");
-
             let aspect = dimensions.aspect_ratio();
 
             for (camera, ortho_camera) in query.iter_mut(subworld) {

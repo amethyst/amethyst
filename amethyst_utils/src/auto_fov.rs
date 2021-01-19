@@ -4,8 +4,6 @@ use amethyst_core::ecs::*;
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 /// A component that stores the parameters that the associated camera should have
 /// when it is managed by the AutoFovSystem.
@@ -59,9 +57,6 @@ pub fn build_auto_fov_system() -> impl Runnable {
         .read_resource::<ScreenDimensions>()
         .with_query(<(Write<Camera>, Write<AutoFov>)>::query())
         .build(move |_commands, subworld, screen, query| {
-            #[cfg(feature = "profiler")]
-            profile_scope!("auto_fov_system");
-
             for (camera, auto_fov) in query.iter_mut(subworld) {
                 if last_dimensions != **screen || auto_fov.dirty {
                     *camera =

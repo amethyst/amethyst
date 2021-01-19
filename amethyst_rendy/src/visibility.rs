@@ -9,8 +9,6 @@ use amethyst_core::{
 };
 use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     camera::{ActiveCamera, Camera},
@@ -101,9 +99,6 @@ impl System<'static> for VisibilitySortingSystem {
                           world,
                           (active_camera, visibility),
                           (camera_query1, camera_query2, entity_query)| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("visibility_sorting_system");
-
                         visibility.visible_unordered.clear();
                         visibility.visible_ordered.clear();
                         self.transparent.clear();

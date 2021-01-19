@@ -3,8 +3,6 @@ use amethyst_core::{
     ecs::*,
     shrev::{EventChannel, ReaderId},
 };
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 use winit::event::Event;
 
 use crate::{InputEvent, InputHandler};
@@ -25,9 +23,6 @@ impl System<'static> for InputSystem {
                 .write_resource::<InputHandler>()
                 .write_resource::<EventChannel<InputEvent>>()
                 .build(move |_commands, _world, (input, handler, output), _query| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("input_system");
-
                     handler.send_frame_begin();
                     for event in input.read(&mut self.reader) {
                         handler.send_event(event, output);

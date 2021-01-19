@@ -52,8 +52,6 @@ use amethyst::{
     },
 };
 use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 struct Example {
     entity: Option<Entity>,
@@ -125,8 +123,6 @@ impl Default for RenderMode {
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("example on_start");
         let StateData { world, .. } = data;
 
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
@@ -327,8 +323,6 @@ impl SimpleState for Example {
     }
 
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
-        #[cfg(feature = "profiler")]
-        profile_scope!("example handle_event");
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, winit::VirtualKeyCode::LShift) {
@@ -364,9 +358,6 @@ impl SimpleState for Example {
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        #[cfg(feature = "profiler")]
-        profile_scope!("example update");
-
         {
             let mut time = data.world.write_resource::<Time>();
             time.set_time_scale(if self.bullet_time { 0.2 } else { 1.0 });

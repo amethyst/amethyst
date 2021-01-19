@@ -6,8 +6,6 @@ use amethyst_core::{
     transform::Transform,
 };
 use glsl_layout::*;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     light::Light,
@@ -104,9 +102,6 @@ impl<B: Backend> EnvironmentSub<B> {
         world: &World,
         resources: &Resources,
     ) -> bool {
-        #[cfg(feature = "profiler")]
-        profile_scope!("process");
-
         let this_image = {
             while self.per_image.len() <= index {
                 self.per_image

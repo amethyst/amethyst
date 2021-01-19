@@ -42,8 +42,7 @@ paste = "1"
 rand = "0.8"
 lazy_static = "1.4"
 glyph_brush = "0.6.0"
-thread_profiler = { version = "0.3", optional = true }
+
 type-uuid = "0.1"
 
 [features]
-profiler = ["thread_profiler/thread_profiler"]

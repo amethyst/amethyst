@@ -36,8 +36,6 @@ use amethyst_rendy::{
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use glsl_layout::{vec2, vec4, Uniform};
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     glyphs::{UiGlyphs, UiGlyphsResource},
@@ -155,9 +153,6 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawUiDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("build");
-
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertexBuffer::new();
@@ -226,8 +221,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) -> PrepareResult {
-        #[cfg(feature = "profiler")]
-        profile_scope!("prepare");
         let GraphAuxData { world, resources } = aux;
 
         let glyphs_res = resources.get::<UiGlyphsResource>().unwrap();
@@ -429,9 +422,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
         changed = changed || self.batches.changed();
 
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("write");
-
             self.vertex.write(
                 factory,
                 index,
@@ -459,9 +449,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _resources: &GraphAuxData,
     ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("draw");
-
         if self.batches.count() > 0 {
             let layout = &self.pipeline_layout;
             encoder.bind_graphics_pipeline(&self.pipeline);

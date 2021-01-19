@@ -28,7 +28,5 @@ fluent = "0.11"
 unic-langid = { version = "0.8", features = ["macros"] }
 type-uuid = "0.1"
 
-thread_profiler = { version = "0.3", optional = true }
 
 [features]
-profiler = ["thread_profiler/thread_profiler"]

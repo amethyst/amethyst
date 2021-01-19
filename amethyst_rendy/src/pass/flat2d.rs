@@ -15,8 +15,6 @@ use rendy::{
     mesh::AsVertex,
     shader::Shader,
 };
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
@@ -56,9 +54,6 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawFlat2DDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("build");
-
         let env = FlatEnvironmentSub::new(factory)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertexBuffer::new();
@@ -103,9 +98,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) -> PrepareResult {
-        #[cfg(feature = "profiler")]
-        profile_scope!("prepare opaque");
-
         let GraphAuxData { world, resources } = aux;
 
         let (sprite_sheet_storage, sprites_storage, tex_storage, visibility) =
@@ -124,9 +116,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
         sprites_ref.clear_inner();
 
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("gather_visibility");
-
             let mut query = <(&SpriteRender, &Transform, Option<&Tint>)>::query();
 
             visibility
@@ -157,9 +146,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
         self.textures.maintain(factory, resources);
 
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("write");
-
             sprites_ref.prune();
             self.vertex.write(
                 factory,
@@ -179,9 +165,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _world: &GraphAuxData,
     ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("draw opaque");
-
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
@@ -230,9 +213,6 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawFlat2DTransparentDesc 
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("build_trans");
-
         let env = FlatEnvironmentSub::new(factory)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertexBuffer::new();
@@ -279,9 +259,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) -> PrepareResult {
-        #[cfg(feature = "profiler")]
-        profile_scope!("prepare transparent");
-
         let GraphAuxData { world, resources } = aux;
 
         let (sprite_sheet_storage, sprites_storage, tex_storage, visibility) =
@@ -301,9 +278,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
         let mut changed = false;
 
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("gather_visibility");
-
             let mut query = <(&SpriteRender, &Transform, Option<&Tint>)>::query();
 
             visibility
@@ -337,9 +311,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
         changed = changed || sprites_ref.changed();
 
         {
-            #[cfg(feature = "profiler")]
-            profile_scope!("write");
-
             self.vertex.write(
                 factory,
                 index,
@@ -358,9 +329,6 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _world: &GraphAuxData,
     ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("draw transparent");
-
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);

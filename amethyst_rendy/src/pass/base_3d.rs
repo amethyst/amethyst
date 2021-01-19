@@ -30,18 +30,6 @@ use crate::{
     visibility::Visibility,
 };
 
-macro_rules! profile_scope_impl {
-    ($string:expr) => {
-        #[cfg(feature = "profiler")]
-        let _profile_scope = thread_profiler::ProfileScope::new(format!(
-            "{} {}: {}",
-            module_path!(),
-            <T as Base3DPassDef>::NAME,
-            $string
-        ));
-    };
-}
-
 /// Define drawing opaque 3d meshes with specified shaders and texture set
 pub trait Base3DPassDef: 'static + std::fmt::Debug + Send + Sync {
     /// The human readable name of this pass
@@ -108,8 +96,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData> for DrawBase
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, GraphAuxData>>, pso::CreationError> {
-        profile_scope_impl!("build");
-
         let env = EnvironmentSub::new(
             factory,
             [
@@ -189,8 +175,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) -> PrepareResult {
-        profile_scope_impl!("prepare opaque");
-
         let GraphAuxData { world, resources } = aux;
 
         let visibility = resources.get::<Visibility>().unwrap();
@@ -209,7 +193,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
         let skinned_ref = &mut self.skinned_batches;
 
         {
-            profile_scope_impl!("prepare");
             let mut query =
                 <(&Handle<Material>, &Handle<Mesh>, &Transform, Option<&Tint>)>::query();
 
@@ -244,8 +227,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
         }
 
         if self.pipeline_skinned.is_some() {
-            profile_scope_impl!("prepare_skinning");
-
             let mut query = <(
                 &Handle<Material>,
                 &Handle<Mesh>,
@@ -289,8 +270,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
         };
 
         {
-            profile_scope_impl!("write");
-
             self.static_batches.prune();
             self.skinned_batches.prune();
 
@@ -319,8 +298,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) {
-        profile_scope_impl!("draw opaque");
-
         let mesh_storage = aux.resources.get::<AssetStorage<Mesh>>().unwrap();
         let models_loc = self.vertex_format_base.len() as u32;
         let skin_models_loc = self.vertex_format_skinned.len() as u32;
@@ -394,7 +371,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
     }
 
     fn dispose(mut self: Box<Self>, factory: &mut Factory<B>, _aux: &GraphAuxData) {
-        profile_scope_impl!("dispose");
         unsafe {
             factory
                 .device()
@@ -537,8 +513,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) -> PrepareResult {
-        profile_scope_impl!("prepare transparent");
-
         let GraphAuxData { world, resources } = aux;
 
         let visibility = resources.get::<Visibility>().unwrap();
@@ -558,8 +532,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
         let mut changed = false;
 
         {
-            profile_scope_impl!("prepare");
-
             let mut query =
                 <(&Handle<Material>, &Handle<Mesh>, &Transform, Option<&Tint>)>::query();
 
@@ -595,8 +567,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
         }
 
         if self.pipeline_skinned.is_some() {
-            profile_scope_impl!("prepare_skinning");
-
             let mut query = <(
                 &Handle<Material>,
                 &Handle<Mesh>,
@@ -671,8 +641,6 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
         _subpass: hal::pass::Subpass<'_, B>,
         aux: &GraphAuxData,
     ) {
-        profile_scope_impl!("draw transparent");
-
         let mesh_storage = aux.resources.get::<AssetStorage<Mesh>>().unwrap();
         let layout = &self.pipeline_layout;
         let encoder = &mut encoder;

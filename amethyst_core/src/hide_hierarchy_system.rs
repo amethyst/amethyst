@@ -1,8 +1,5 @@
 use std::collections::HashSet;
 
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
 use crate::{
     ecs::*,
     transform::{Children, Parent},
@@ -23,9 +20,6 @@ impl System<'_> for HideHierarchySystem {
                 .with_query(<(Entity, &Parent, Option<&HiddenPropagate>)>::query())
                 .write_component::<HiddenPropagate>()
                 .build(move |commands, world, _resources, (parent, children)| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("hide_hierarchy_system");
-
                     let mut children_with_hidden_parent: HashSet<&Entity> = HashSet::new();
                     let mut children_without_hidden_parent: HashSet<&Entity> = HashSet::new();
 

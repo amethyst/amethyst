@@ -35,12 +35,11 @@ rayon = "1.5"
 shrev = "1.1.1"
 simba = "0.3"
 smallvec = "1.4"
-thread_profiler = { version = "0.3", optional = true }
+
 serde-diff = "0.4"
 
 [dev-dependencies]
 ron = "0.6.4"
 
 [features]
-profiler = ["thread_profiler/thread_profiler"]
 parallel = ["legion/parallel"]

@@ -14,8 +14,6 @@ use rendy::{
     },
     mesh::VertexFormat,
 };
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{types::Backend, util};
 
@@ -345,9 +343,6 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
         factory: &Factory<B>,
         cache: Option<&B::PipelineCache>,
     ) -> Result<Vec<B::GraphicsPipeline>, CreationError> {
-        #[cfg(feature = "profiler")]
-        profile_scope!("create_pipelines");
-
         let mut pipelines = unsafe {
             factory
                 .device()

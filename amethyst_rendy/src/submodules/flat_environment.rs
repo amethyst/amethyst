@@ -1,8 +1,6 @@
 //! Environment submodule for shared environmental descriptor set data.
 //! Fetches and sets projection set information for a flat pass.
 use amethyst_core::ecs::*;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
 
 use crate::{
     pod::ViewArgs,
@@ -40,8 +38,6 @@ impl<B: Backend> FlatEnvironmentSub<B> {
         world: &World,
         resources: &Resources,
     ) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("process");
         let projview = CameraGatherer::gather(world, resources).projview;
         self.uniform.write(factory, index, projview);
     }
