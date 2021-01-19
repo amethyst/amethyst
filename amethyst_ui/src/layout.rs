@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use amethyst_assets::prefab::{legion_prefab, register_component_type, serde_diff, SerdeDiff};
 use amethyst_core::{
     ecs::*,
     transform::{Children, Parent},
@@ -15,7 +16,7 @@ use super::UiTransform;
 
 /// Indicates if the position and margins should be calculated in pixel or
 /// relative to their parent size.
-#[derive(Derivative, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Derivative, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize, SerdeDiff)]
 #[derivative(Default)]
 pub enum ScaleMode {
     /// Use directly the pixel value.
@@ -27,7 +28,7 @@ pub enum ScaleMode {
 
 /// Indicated where the anchor is, relative to the parent (or to the screen, if there is no parent).
 /// Follow a normal english Y,X naming.
-#[derive(Derivative, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Derivative, Debug, Clone, Copy, Eq, PartialEq, Deserialize, Serialize, SerdeDiff)]
 #[derivative(Default)]
 pub enum Anchor {
     /// Anchors the entity at the top left of the parent.
@@ -101,7 +102,7 @@ impl Anchor {
 }
 
 /// Indicates if a component should be stretched.
-#[derive(Derivative, Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
+#[derive(Derivative, Debug, Clone, Copy, PartialEq, Deserialize, Serialize, SerdeDiff)]
 #[derivative(Default)]
 pub enum Stretch {
     /// No stretching occurs

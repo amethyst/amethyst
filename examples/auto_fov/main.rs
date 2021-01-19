@@ -1,9 +1,9 @@
 use amethyst::{
     assets::{
-        AssetHandle, AssetStorage, Completion, DefaultLoader, Handle, LoadStatus, Loader,
-        LoaderBundle, ProgressCounter,
+        prefab::Prefab, AssetHandle, AssetStorage, Completion, DefaultLoader, Handle, LoadStatus,
+        Loader, LoaderBundle, ProgressCounter,
     },
-    core::transform::TransformBundle,
+    core::{transform::TransformBundle, Time},
     ecs::{CommandBuffer, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     input::{is_close_requested, is_key_down, InputBundle, VirtualKeyCode},
     prelude::{
@@ -25,35 +25,45 @@ use amethyst::{
     window::ScreenDimensions,
     Error,
 };
-use lazy_static::__Deref;
 use log::{error, info};
 
-const CLEAR_COLOR: ClearColor = ClearColor {
-    float32: [0.0, 0.0, 0.0, 1.0],
-};
-
 fn main() -> Result<(), Error> {
-    amethyst::start_logger(Default::default());
+    let config = amethyst::LoggerConfig {
+        level_filter: amethyst::LogLevelFilter::Debug,
+        module_levels: vec![
+            (
+                "amethyst_assets".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+            ("atelier_daemon".to_string(), amethyst::LogLevelFilter::Warn),
+            ("atelier_loader".to_string(), amethyst::LogLevelFilter::Warn),
+        ],
+        ..Default::default()
+    };
+
+    amethyst::start_logger(config);
 
     let app_dir = application_root_dir()?;
-    let assets_dir = app_dir.join("assets/ui/");
+    let assets_dir = app_dir.join("assets/");
     let display_config_path = app_dir.join("config/display.ron");
 
     let mut game_data = DispatcherBuilder::default();
 
     game_data
         .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
         .add_system(Box::new(AutoFovSystem))
         .add_system(Box::new(ShowFovSystem))
-        .add_bundle(TransformBundle::default())
         .add_bundle(InputBundle::new())
         .add_bundle(UiBundle::<u32>::new())
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
-                    RenderToWindow::from_config_path(display_config_path)?.with_clear(CLEAR_COLOR),
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.34, 0.36, 0.52, 1.0],
+                    }),
                 )
-                .with_plugin(RenderShaded3D::default())
+                //.with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
         );
 
@@ -68,7 +78,8 @@ struct ShowFov;
 
 struct Loading {
     progress: ProgressCounter,
-    loading_ui: Option<Handle<UiLabel>>,
+    loading_ui: Option<Handle<Prefab>>,
+    fov_ui: Option<Handle<Prefab>>,
 }
 
 impl Loading {
@@ -76,6 +87,7 @@ impl Loading {
         Loading {
             progress: ProgressCounter::new(),
             loading_ui: None,
+            fov_ui: None,
         }
     }
 }
@@ -84,40 +96,50 @@ impl SimpleState for Loading {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.resources.insert(TagFinder::<ShowFov>::default());
         let loader = data.resources.get::<DefaultLoader>().unwrap();
-        self.loading_ui = Some(loader.load("ui/loading.ron"));
-        // let fov_ui = loader.load("ui/fov.ron");
+        let loading_ui: Handle<Prefab> = loader.load("ui/loading.prefab");
+        self.loading_ui = Some(loading_ui.clone());
+        data.world.push((loading_ui,));
+        let fov_ui = loader.load("ui/fov.prefab");
+        self.fov_ui = Some(fov_ui);
+
         // let prefab = loader.load("prefab/auto_fov.ron");
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let loader = data.resources.get::<AssetStorage<UiLabel>>().unwrap();
+        let loader = data.resources.get::<AssetStorage<Prefab>>().unwrap();
 
-        if let Some(label) = self.loading_ui.as_ref().unwrap().asset(loader.deref()) {
-            println!("Label Loaded");
-            let label_storage = data.resources.get::<AssetStorage<UiLabel>>();
+        let time = data.resources.get::<Time>().unwrap();
 
-            match self.progress.complete() {
-                Completion::Loading => Trans::None,
-                Completion::Failed => {
-                    error!("Failed to load the scene");
-                    Trans::Quit
-                }
-                Completion::Complete => {
-                    info!("Loading finished. Moving to the main state.");
-                    Trans::Switch(Box::new(Example))
+        if time.frame_number() % 60 == 0 {
+            let mut query = <(Entity,)>::query();
+            let entities: Vec<Entity> = query.iter(data.world).map(|(ent,)| *ent).collect();
+            for entity in entities {
+                if let Some(entry) = data.world.entry(entity) {
+                    log::info!("{:?}: {:?}", entity, entry.archetype());
+                    if let Ok(pos) = entry.get_component::<UiTransform>() {
+                        log::info!("{:?}", pos);
+                    }
                 }
             }
+        }
+
+        if let Some(fov_ui) = loader.get(self.fov_ui.as_ref().unwrap()) {
+            Trans::Switch(Box::new(Example {
+                fov_ui: self.fov_ui.take(),
+            }))
         } else {
-            println!("ui not yet loaded");
             Trans::None
         }
     }
 }
 
-struct Example;
+struct Example {
+    fov_ui: Option<Handle<Prefab>>,
+}
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
+        data.world.push((self.fov_ui.as_ref().unwrap().clone(),));
         let mut buffer = CommandBuffer::new(data.world);
         let mut query = <(Entity, &UiTransform)>::query();
         for (entity, transform) in query.iter(data.world) {

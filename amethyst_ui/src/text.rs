@@ -1,6 +1,9 @@
 //! Module holding the components related to text and text editing.
 
-use amethyst_assets::Handle;
+use amethyst_assets::{
+    prefab::{legion_prefab, register_component_type, serde_diff, SerdeDiff},
+    Handle,
+};
 use amethyst_core::{
     ecs::*,
     shrev::{EventChannel, ReaderId},
@@ -9,6 +12,7 @@ use amethyst_core::{
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use winit::event::{ElementState, Event, MouseButton, WindowEvent};
 
@@ -16,7 +20,7 @@ use super::*;
 use crate::Anchor;
 
 /// How lines should behave when they are longer than the maximum line length.
-#[derive(Debug, Derivative, Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Derivative, Clone, Copy, Eq, PartialEq, Deserialize, Serialize, SerdeDiff)]
 #[derivative(Default)]
 pub enum LineMode {
     /// Single line. It ignores line breaks.
@@ -27,17 +31,22 @@ pub enum LineMode {
 }
 
 /// A component used to display text in this entity's UiTransform
-#[derive(Clone, Derivative, Serialize)]
+#[derive(Clone, Derivative, Deserialize, Serialize, SerdeDiff, TypeUuid)]
+#[uuid = "a12ccc08-c89b-4476-96ec-1c9b04d34aa2"]
 #[derivative(Debug, Default)]
+#[serde(default)]
 pub struct UiText {
     /// The string rendered by this.
     pub text: String,
     /// The height of a line of text in pixels.
+    #[derivative(Default(value = "18."))]
     pub font_size: f32,
     /// The color of the rendered text, using a range of 0.0 to 1.0 per channel.
+    #[derivative(Default(value = "[1., 1., 1., 1.]"))]
     pub color: [f32; 4],
     /// The font used for rendering.
     #[serde(skip)]
+    #[serde_diff(opaque)]
     pub font: Option<Handle<FontAsset>>,
     /// If true this will be rendered as dots instead of the text.
     pub password: bool,
@@ -47,8 +56,11 @@ pub struct UiText {
     pub align: Anchor,
     /// Cached glyph positions including invisible characters, used to process mouse highlighting.
     #[serde(skip)]
+    #[serde_diff(skip)]
     pub(crate) cached_glyphs: Vec<CachedGlyph>,
 }
+
+register_component_type!(UiText);
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct CachedGlyph {

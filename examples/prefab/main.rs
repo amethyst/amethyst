@@ -1,8 +1,7 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
-
 use amethyst::{
     assets::{
-        prefab::{register_component_type, Prefab},
+        prefab::{legion_prefab, register_component_type, serde_diff, Prefab, SerdeDiff},
         DefaultLoader, Handle, Loader, LoaderBundle,
     },
     core::{transform::TransformBundle, Time},
@@ -17,7 +16,6 @@ use amethyst::{
     Error,
 };
 use serde::{Deserialize, Serialize};
-use serde_diff::SerdeDiff;
 use type_uuid::TypeUuid;
 
 #[derive(TypeUuid, Serialize, Deserialize, SerdeDiff, Clone, Default, Debug)]

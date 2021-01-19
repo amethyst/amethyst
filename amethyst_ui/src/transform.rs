@@ -1,6 +1,8 @@
+use amethyst_assets::prefab::{legion_prefab, register_component_type, serde_diff, SerdeDiff};
 use amethyst_core::{ecs::*, transform::Parent};
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
 use super::{Anchor, ScaleMode, Stretch};
 
@@ -22,7 +24,9 @@ impl UiFinder {
 /// The UiTransform represents the transformation of a ui element.
 /// Values are in pixel and the position is calculated from the bottom left of the screen
 /// to the center of the ui element's area.
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize, TypeUuid, SerdeDiff)]
+#[serde(default)]
+#[uuid = "d900c11d-f8b2-4145-8a19-537a67d5ee85"]
 pub struct UiTransform {
     /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
     pub id: String,
@@ -36,14 +40,17 @@ pub struct UiTransform {
     /// screen in pixel is the right edge.  If scale_mode is percent then the right edge is 1.
     ///
     /// Centered in the middle of the ui element.
+    #[serde(alias = "x")]
     pub local_x: f32,
     /// Y coordinate, 0 is the bottom edge of the screen. If scale_mode is set to pixel then the height of the
     /// screen in pixel is the top edge.  If scale_mode is percent then the top edge is 1.
     ///
     /// Centered in the middle of the ui element.
+    #[serde(alias = "y")]
     pub local_y: f32,
     /// Z order, entities with a higher Z order will be rendered on top of entities with a lower
     /// Z order.
+    #[serde(alias = "z")]
     pub local_z: f32,
     /// The width of this UI element.
     pub width: f32,
@@ -51,18 +58,23 @@ pub struct UiTransform {
     pub height: f32,
     /// Global x position set by the `UiTransformSystem`.
     #[doc(hidden)]
+    #[serde(alias = "x")]
     pub pixel_x: f32,
     /// Global y position set by the `UiTransformSystem`.
     #[doc(hidden)]
+    #[serde(alias = "y")]
     pub pixel_y: f32,
     /// Global z position set by the `UiTransformSystem`.
     #[doc(hidden)]
+    #[serde(alias = "z")]
     pub global_z: f32,
     /// Width in pixels, used for rendering.  Duplicate of `width` if `scale_mode == ScaleMode::Pixel`.
     #[doc(hidden)]
+    #[serde(alias = "width")]
     pub pixel_width: f32,
     /// Height in pixels, used for rendering.  Duplicate of `height` if `scale_mode == ScaleMode::Pixel`.
     #[doc(hidden)]
+    #[serde(alias = "height")]
     pub pixel_height: f32,
     /// The scale mode indicates if the position is in pixel or is relative (%) (WIP!) to the parent's size.
     pub scale_mode: ScaleMode,
@@ -74,6 +86,8 @@ pub struct UiTransform {
     /// through them.
     pub transparent_target: bool,
 }
+
+register_component_type!(UiTransform);
 
 impl UiTransform {
     /// Creates a new UiTransform.
