@@ -503,7 +503,7 @@ where
 ///
 /// ```rust
 /// use serde::{Deserialize, Serialize};
-/// use amethyst_assets::{register_asset_type, Asset, AssetProcessorSystem, TypeUuid};
+/// use amethyst::assets::{register_asset_type, Asset, AssetProcessorSystem, TypeUuid};
 ///
 /// #[derive(TypeUuid)]
 /// #[uuid = "00000000-0000-0000-0000-000000000000"]

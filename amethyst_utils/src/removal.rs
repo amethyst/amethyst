@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// # use amethyst_core::ecs::*;
-/// # use amethyst_utils::removal::*;
+/// # use amethyst::core::ecs::*;
+/// # use amethyst::utils::removal::*;
 /// # let mut world = World::new();
 /// # world.register::<Removal<RemovalId>>();
 ///

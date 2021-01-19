@@ -25,7 +25,7 @@ use legion::{
 ///
 /// # Examples
 /// ```rust
-/// use amethyst_core::{
+/// use amethyst::core::{
 ///     dispatcher::DispatcherBuilder,
 ///     ecs::{ParallelRunnable, System},
 ///     system_ext::pausable,

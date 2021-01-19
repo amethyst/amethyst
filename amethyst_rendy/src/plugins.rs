@@ -65,8 +65,10 @@ mod window {
         /// This function takes linear RGBA. You can convert rgba to linear rgba like so:
         ///
         /// ```
-        /// use amethyst_rendy::{palette::Srgba, rendy::hal::command::ClearColor, RenderToWindow};
-        /// use amethyst_window::DisplayConfig;
+        /// use amethyst::{
+        ///     rendy::{palette::Srgba, rendy::hal::command::ClearColor, RenderToWindow},
+        ///     window::DisplayConfig,
+        /// };
         ///
         /// let your_red: f32 = 255.;
         /// let your_green: f32 = 160.;

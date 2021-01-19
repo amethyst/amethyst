@@ -327,9 +327,9 @@ use amethyst_assets::{
 ///
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
 /// ```rust,no_run
-/// # use amethyst_core::ecs::{World, WorldExt};
-/// # use amethyst_assets::{Loader, AssetStorage};
-/// # use amethyst_rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
+/// # use amethyst::core::ecs::{World, WorldExt};
+/// # use amethyst::assets::{Loader, AssetStorage};
+/// # use amethyst::rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
 /// #
 /// # fn load_sprite_sheet() {
 /// #   let world = World::default(); // Normally, you would use Amethyst's world

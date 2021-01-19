@@ -109,8 +109,8 @@ pub fn get_source_importers(
 /// # Examples
 ///
 /// ```rust
-/// use amethyst_assets::Format;
-/// use amethyst_error::Error;
+/// use amethyst::assets::Format;
+/// use amethyst::error::Error;
 /// use serde::{Deserialize, Serialize};
 /// use type_uuid::TypeUuid;
 ///

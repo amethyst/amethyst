@@ -116,7 +116,7 @@ impl Error {
     /// ```rust
     /// use std::io;
     ///
-    /// use amethyst_error::{Error, ResultExt};
+    /// use amethyst::error::{Error, ResultExt};
     ///
     /// let e = io::Error::new(io::ErrorKind::Other, "wrapped");
     /// let a = Error::new(e);
@@ -136,7 +136,7 @@ impl Error {
     /// # Examples
     ///
     /// ```rust
-    /// use amethyst_error::{Error, ResultExt};
+    /// use amethyst::error::{Error, ResultExt};
     ///
     /// fn failing_function() -> Result<(), Error> {
     ///     Err(Error::from_string("failing"))
@@ -217,7 +217,7 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use amethyst_error::{Error, ResultExt};
+    /// use amethyst::error::{Error, ResultExt};
     ///
     /// fn failing_function() -> Result<(), Error> {
     ///     Err(Error::from_string("failing"))

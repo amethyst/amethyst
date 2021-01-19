@@ -64,7 +64,7 @@ pub struct DisplayConfig {
     /// # Examples
     ///
     /// ```rust
-    /// use amethyst_window::{DisplayConfig, Icon};
+    /// use amethyst::window::{DisplayConfig, Icon};
     ///
     /// // First, create your `DisplayConfig` as usual
     /// let mut config = DisplayConfig::default(); // or load from file

@@ -25,8 +25,8 @@ use crate::circular_buffer::CircularBuffer;
 ///
 /// # Example
 /// ```rust
-/// # use amethyst_utils::fps_counter::FpsCounter;
-/// # use amethyst_core::ecs::{World, Resources};
+/// # use amethyst::utils::fps_counter::FpsCounter;
+/// # use amethyst::core::ecs::{World, Resources};
 /// # let mut world = World::default();
 /// let resources = Resources::default();
 /// let counter = FpsCounter::new(2);
