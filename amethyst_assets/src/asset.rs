@@ -1,8 +1,8 @@
 use std::ops::Deref;
 
 use amethyst_error::Error;
-use dyn_clone::DynClone;
 use atelier_assets::loader::LoadHandle;
+use dyn_clone::DynClone;
 
 use crate::{processor::ProcessingState, AssetStorage};
 
