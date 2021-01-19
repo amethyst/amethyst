@@ -76,8 +76,8 @@ impl<'a> From<&'a Region> for MortonRegion {
 }
 
 /// Axis aligned quantized region of space represented in tile coordinates of `u32`. This behaves
-/// like a bounding box volume with `min` and `max` coordinates for iteration. This regions limits are *inclusive*,
-/// in that it considers both min and max values as being inside the region.
+/// like a bounding box volume with `min` and `max` coordinates for iteration. The lower (min) coordinates
+/// are inclusive and the upper (max) coordinates are exclusive.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Region {
     /// The "lower-right" coordinate of this `Region`.
@@ -107,26 +107,26 @@ impl Region {
     #[must_use]
     pub fn contains(&self, target: &Point3<u32>) -> bool {
         target.x >= self.min.x
-            && target.x <= self.max.x
+            && target.x < self.max.x
             && target.y >= self.min.y
-            && target.y <= self.max.y
+            && target.y < self.max.y
             && target.z >= self.min.z
-            && target.z <= self.max.z
+            && target.z < self.max.z
     }
 
     /// Check if this `Region` intersects with the provided `Region`
     #[inline]
     #[must_use]
     pub fn intersects(&self, other: &Self) -> bool {
-        (self.min.x <= other.max.x && self.max.x >= other.min.x)
-            && (self.min.y <= other.max.y && self.max.y >= other.min.y)
-            && (self.min.z <= other.max.z && self.max.z >= other.min.z)
+        (self.min.x < other.max.x && self.max.x > other.min.x)
+            && (self.min.y < other.max.y && self.max.y > other.min.y)
+            && (self.min.z < other.max.z && self.max.z > other.min.z)
     }
 
     /// Calculate the volume of this bounding box volume.
     #[must_use]
     pub fn volume(&self) -> u32 {
-        (self.max.x - self.min.x) * (self.max.y - self.min.y) * ((self.max.z - self.min.z) + 1)
+        (self.max.x - self.min.x) * (self.max.y - self.min.y) * (self.max.z - self.min.z)
     }
 
     /// Create a linear iterator across this region.
@@ -181,22 +181,18 @@ impl Iterator for RegionLinearIter {
     fn next(&mut self) -> Option<Self::Item> {
         let ret = self.track;
 
-        if self.track.z > self.region.max.z {
+        if self.track.z >= self.region.max.z {
             return None;
         }
 
+        self.track.x += 1;
         if self.track.x >= self.region.max.x {
-            self.track.y += 1;
             self.track.x = self.region.min.x;
-        } else {
-            self.track.x += 1;
-            return Some(ret);
-        }
-
-        if self.track.y > self.region.max.y {
-            self.track.z += 1;
-
-            self.track.y = self.region.min.y;
+            self.track.y += 1;
+            if self.track.y >= self.region.max.y {
+                self.track.y = self.region.min.y;
+                self.track.z += 1;
+            }
         }
 
         Some(ret)
@@ -236,16 +232,50 @@ mod tests {
 
         // min/max corners
         assert!(region.contains(&Point3::new(0, 0, 0)));
-        assert!(region.contains(&Point3::new(64, 64, 64)));
+        assert!(region.contains(&Point3::new(63, 63, 63)));
+        assert!(!region.contains(&Point3::new(64, 64, 64)));
 
         // edges
-        assert!(region.contains(&Point3::new(64, 0, 0)));
-        assert!(region.contains(&Point3::new(0, 64, 0)));
-        assert!(region.contains(&Point3::new(0, 0, 64)));
+        assert!(region.contains(&Point3::new(63, 0, 0)));
+        assert!(region.contains(&Point3::new(0, 63, 0)));
+        assert!(region.contains(&Point3::new(0, 0, 63)));
 
-        assert!(region.contains(&Point3::new(64, 64, 0)));
-        assert!(region.contains(&Point3::new(0, 64, 64)));
-        assert!(region.contains(&Point3::new(64, 0, 64)));
+        assert!(region.contains(&Point3::new(63, 63, 0)));
+        assert!(region.contains(&Point3::new(0, 63, 63)));
+        assert!(region.contains(&Point3::new(63, 0, 63)));
+    }
+
+    #[test]
+    fn region_iterator() {
+        let region = Region::new(Point3::new(10, 20, 30), Point3::new(12, 22, 32));
+        let expected_points = [
+            Point3::new(10, 20, 30),
+            Point3::new(11, 20, 30),
+            Point3::new(10, 21, 30),
+            Point3::new(11, 21, 30),
+            Point3::new(10, 20, 31),
+            Point3::new(11, 20, 31),
+            Point3::new(10, 21, 31),
+            Point3::new(11, 21, 31),
+        ];
+        let mut count = 0;
+        for (i, point) in region.into_iter().enumerate() {
+            count += 1;
+            assert_eq!(point, expected_points[i]);
+        }
+        assert_eq!(count, 8);
+    }
+
+    #[test]
+    fn region_volume() {
+        let region = Region::new(Point3::new(0, 0, 0), Point3::new(0, 0, 0));
+        assert_eq!(region.volume(), 0);
+        let region = Region::new(Point3::new(10, 20, 30), Point3::new(10, 20, 30));
+        assert_eq!(region.volume(), 0);
+        let region = Region::new(Point3::new(10, 10, 10), Point3::new(10, 15, 15));
+        assert_eq!(region.volume(), 0);
+        let region = Region::new(Point3::new(10, 10, 10), Point3::new(20, 20, 20));
+        assert_eq!(region.volume(), 1000);
     }
 
     #[test]

@@ -32,12 +32,12 @@ use crate::{
 ///
 /// Will fail with error 'No resource with the given id' if either the InputBundle or TransformBundle are not added.
 #[derive(new, Debug, Default)]
-pub struct UiBundle</*C = NoCustomUi, */ W = u32, G = ()> {
+pub struct UiBundle</* C = NoCustomUi, */ W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(/*C,*/ W, G)>,
+    _marker: PhantomData<(/* C, */ W, G)>,
 }
 
-impl</*C,*/ W, G> SystemBundle for UiBundle</*C,*/ W, G>
+impl</* C, */ W, G> SystemBundle for UiBundle</* C, */ W, G>
 where
     //C: ToNativeWidget,
     W: WidgetId,

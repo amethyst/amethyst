@@ -322,7 +322,7 @@ use amethyst_assets::{
 ///         ),
 ///     ],
 /// ))
-///}
+/// }
 /// ```
 ///
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.

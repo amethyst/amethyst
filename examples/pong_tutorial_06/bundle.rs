@@ -27,8 +27,4 @@ impl SystemBundle for PongBundle {
             .add_system(Box::new(WinnerSystem));
         Ok(())
     }
-
-    fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> {
-        unimplemented!()
-    }
 }

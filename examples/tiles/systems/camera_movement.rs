@@ -44,9 +44,9 @@ impl System<'static> for CameraMovementSystem {
                             let z_scale = 0.01 * z_move_scale;
                             let scale = camera_transform.scale();
                             let scale = Vector3::new(
-                                scale.x + z_scale,
-                                scale.y + z_scale,
-                                scale.z + z_scale,
+                                (scale.x + z_scale).max(0.001),
+                                (scale.y + z_scale).max(0.001),
+                                (scale.z + z_scale).max(0.001),
                             );
                             camera_transform.set_scale(scale);
                         }

@@ -23,11 +23,21 @@ use serde::{Deserialize, Serialize};
 ///     Something2,
 /// }
 ///
-/// let _entity1 = world.create_entity().with(Removal::new(RemovalId::Something)).build();
-/// let _entity2 = world.create_entity().with(Removal::new(RemovalId::Something2)).build();
+/// let _entity1 = world
+///     .create_entity()
+///     .with(Removal::new(RemovalId::Something))
+///     .build();
+/// let _entity2 = world
+///     .create_entity()
+///     .with(Removal::new(RemovalId::Something2))
+///     .build();
 ///
 /// // Remove all entities with the RemovalId value of Something.
-/// exec_removal(&world.entities(), &world.read_storage(), RemovalId::Something);
+/// exec_removal(
+///     &world.entities(),
+///     &world.read_storage(),
+///     RemovalId::Something,
+/// );
 ///
 /// // Force the world to be up to date. This is normally called automatically at the end of the
 /// // frame by amethyst.

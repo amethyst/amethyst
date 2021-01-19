@@ -9,10 +9,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// ```
 /// # use serde::{Serialize, Deserialize};
 /// #[derive(Serialize, Deserialize)]
-/// struct MyType(
-///     #[serde(with="amethyst_rendy::serde_shim::srgb")]
-///     pub palette::Srgb
-/// );
+/// struct MyType(#[serde(with = "amethyst_rendy::serde_shim::srgb")] pub palette::Srgb);
 /// ```
 pub mod srgb {
     use super::*;
@@ -36,10 +33,7 @@ pub mod srgb {
 /// ```
 /// # use serde::{Serialize, Deserialize};
 /// #[derive(Serialize, Deserialize)]
-/// struct MyType(
-///     #[serde(with="amethyst_rendy::serde_shim::srgba")]
-///     pub palette::Srgba
-/// );
+/// struct MyType(#[serde(with = "amethyst_rendy::serde_shim::srgba")] pub palette::Srgba);
 /// ```
 pub mod srgba {
     use super::*;
