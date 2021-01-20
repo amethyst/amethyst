@@ -127,3 +127,10 @@ mod app;
 mod game_data;
 mod state;
 mod state_event;
+
+#[cfg(doctest)]
+#[macro_use]
+extern crate doc_comment;
+
+#[cfg(doctest)]
+amethyst_derive::make_doc_tests! {}

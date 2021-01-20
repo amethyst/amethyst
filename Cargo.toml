@@ -135,7 +135,9 @@ dirs-next = "2.0.0"
 vergen = "3.1.0"
 
 [dev-dependencies]
+doc-comment = "0.3.3"
 env_logger = "0.8.2"
+glob = "0.3.0"
 
 [package.metadata.docs.rs]
 features = [

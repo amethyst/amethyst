@@ -273,13 +273,13 @@ you may have to run `cargo clean` and `cargo build` again before retrying the `m
 
 You can build Amethyst with a `profiler` feature like this:
 
-```
+```sh
 cargo build --release --features profiler
 ```
 
 Or if you wanted to run an example with profiler:
 
-```
+```sh
 cargo run -p my_example --release --features profiler
 ```
 
