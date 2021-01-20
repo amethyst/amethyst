@@ -12,8 +12,10 @@
 //! # Example
 //!
 //! ```no_run
-//! use amethyst::prelude::*;
-//! use amethyst::winit::event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+//! use amethyst::{
+//!     prelude::*,
+//!     winit::event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+//! };
 //!
 //! struct GameState;
 //!
@@ -25,13 +27,20 @@
 //!     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
 //!         if let StateEvent::Window(event) = &event {
 //!             match event {
-//!                  Event::WindowEvent { event, .. } => match event {
-//!                     WindowEvent::KeyboardInput {
-//!                         input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-//!                     } |
-//!                     WindowEvent::CloseRequested => Trans::Quit,
-//!                     _ => Trans::None,
-//!                 },
+//!                 Event::WindowEvent { event, .. } => {
+//!                     match event {
+//!                         WindowEvent::KeyboardInput {
+//!                             input:
+//!                                 KeyboardInput {
+//!                                     virtual_keycode: Some(VirtualKeyCode::Escape),
+//!                                     ..
+//!                                 },
+//!                             ..
+//!                         }
+//!                         | WindowEvent::CloseRequested => Trans::Quit,
+//!                         _ => Trans::None,
+//!                     }
+//!                 }
 //!                 _ => Trans::None,
 //!             }
 //!         } else {
