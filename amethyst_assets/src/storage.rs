@@ -33,8 +33,12 @@ impl<A> AssetStorage<A> {
 
     /// Added to make api compatible with previous storage
     pub fn unload_all(&mut self) {
-        // FIXME do the unload correctly
-        self.assets.clear();
+        for (_, data) in self.uncommitted.drain() {
+            self.to_drop.push(data.asset);
+        }
+        for (_, data) in self.assets.drain() {
+            self.to_drop.push(data.asset);
+        }
     }
 
     pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
