@@ -59,7 +59,7 @@ working on defining our game code.
 
 Now we create our core game struct:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 pub struct Pong;
 ```
 
@@ -79,17 +79,16 @@ started! We'll start with our `main()` function, and we'll have it return a
 `Result` so that we can use `?`. This will allow us to automatically exit
 if any errors occur during setup.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 fn main() -> amethyst::Result<()> {
-
     // We'll put the rest of the code here.
 
     Ok(())
 }
 ```
 
-> **Note:** The [SimpleState][simplestate] is just a simplified version of [State][state] trait.
+> **Note:** The [SimpleState] is just a simplified version of [State] trait.
 > It already implements a bunch of stuff for us, like the `State`'s `update`
 > and `handle_event` methods that you would have to implement yourself were you
 > using just a regular `State`. Its behavior mostly cares about handling the exit signal cleanly,
@@ -100,7 +99,7 @@ fn main() -> amethyst::Result<()> {
 Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
 so we can see errors, warnings and debug messages while the program is running.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # fn main() {
 amethyst::start_logger(Default::default());
@@ -147,7 +146,7 @@ say "Pong!" instead of the sad, lowercase default of "pong".
 In `main()` in `main.rs`, we will prepare the path to a file containing
 the display configuration:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     utils::application_root_dir,
@@ -165,7 +164,7 @@ let display_config_path = app_root.join("config").join("display.ron");
 
 In `main()` in `main.rs` we are going to add the basic application setup:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
 #     prelude::*,
 #     utils::application_root_dir,
@@ -210,7 +209,7 @@ to do by adding a renderer!
 After preparing the display config and application scaffolding, it's time to actually use it.
 Last time we left our `DispatcherBuilder` instance empty, now we'll add some systems to it.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
 #     prelude::*,
 #     renderer::{
@@ -266,10 +265,10 @@ get a window. It should look something like this:
 
 ![Step one](../images/pong_tutorial/pong_01.png)
 
+[ap]: https://docs.amethyst.rs/master/amethyst/type.Application.html
+[displayconf]: https://docs.amethyst.rs/master/amethyst_window/struct.DisplayConfig.html
+[graph]: https://github.com/amethyst/rendy/blob/master/docs/graph.md
+[log]: https://docs.amethyst.rs/master/amethyst/struct.Logger.html
 [ron]: https://github.com/ron-rs/ron
 [simplestate]: https://docs.amethyst.rs/master/amethyst/prelude/trait.SimpleState.html
 [state]: https://docs.amethyst.rs/master/amethyst/prelude/trait.State.html
-[ap]: https://docs.amethyst.rs/master/amethyst/type.Application.html
-[log]: https://docs.amethyst.rs/master/amethyst/struct.Logger.html
-[displayconf]: https://docs.amethyst.rs/master/amethyst_window/struct.DisplayConfig.html
-[graph]: https://github.com/amethyst/rendy/blob/master/docs/graph.md

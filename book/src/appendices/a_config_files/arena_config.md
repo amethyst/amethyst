@@ -42,7 +42,6 @@ let arena_config = ArenaConfig::load(&config)?;
 Now that we have loaded our config, we want to add it to the world so other modules can access
 it. We do this by adding the config as a resource during `Application` creation:
 
-
 ```rust
     .with_resource(arena_config)
     .with_bundle(PongBundle::default())?
@@ -111,5 +110,5 @@ arena: (
 )
 ```
 
-[serde_default]: https://serde.rs/attr-default.html
 [default]: https://doc.rust-lang.org/std/default/trait.Default.html
+[serde_default]: https://serde.rs/attr-default.html

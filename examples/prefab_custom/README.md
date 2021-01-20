@@ -4,7 +4,6 @@ Create a `PrefabData` and instantiates multiple entities with different componen
 
 No window is created for this demo, instead you should see debugging information printed to the console similar to:
 
-
 ```
 [INFO][amethyst::app] Initializing Amethyst...
 [INFO][amethyst::app] Version: 0.15.0

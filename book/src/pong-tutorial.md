@@ -21,6 +21,5 @@ cargo run -p pong_tutorial_01
 The example named `pong_tutorial_xy` contains the code which you should have
 after following all tutorials from 1 to xy.
 
-[pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong_tutorial_06
 [examples]: https://github.com/amethyst/amethyst/tree/master/examples
-
+[pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong_tutorial_06

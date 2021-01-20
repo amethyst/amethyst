@@ -8,6 +8,6 @@ It borrows most of the code from the [window](../window) example.
 
 Keybindings:
 
-* `Esc` or `q` - Quit in graphic mode.  For non-graphic mode there will be no window, so press `ctrl-c` in the terminal to terminate the example.
+- `Esc` or `q` - Quit in graphic mode.  For non-graphic mode there will be no window, so press `ctrl-c` in the terminal to terminate the example.
 
 ![optional_graphics example screenshot](./screenshot.png)

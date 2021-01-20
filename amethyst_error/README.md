@@ -1,4 +1,4 @@
-# amethyst_error
+# amethyst\_error
 
 This crate contains types used internally and externally to handle and communicate errors.
 

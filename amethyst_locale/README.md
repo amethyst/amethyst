@@ -1,4 +1,4 @@
-# amethyst_locale
+# amethyst\_locale
 
 This crate is a simple wrapper around a localisation library.
 In this case, said library is `Fluent`.

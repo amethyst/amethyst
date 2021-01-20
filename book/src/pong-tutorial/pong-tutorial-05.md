@@ -7,7 +7,6 @@ In this chapter, we'll fix that by putting the ball back into play after it
 leaves either side of the arena. We'll also add a scoreboard and keep track of
 who's winning and losing.
 
-
 ## Winning and Losing Rounds
 
 So let's fix the big current issue; having a game that only works for one
@@ -16,6 +15,7 @@ reached either edge of the arena and reset its position and velocity. We'll also
 make a note of who got the point for the round.
 
 First, we'll add a new module to `systems/mod.rs`
+
 ```rust
 pub use self::winner::WinnerSystem;
 
@@ -24,7 +24,7 @@ mod winner;
 
 Then, we'll create `systems/winner.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -48,16 +48,13 @@ use amethyst::{
     ecs::{Join, System, SystemData, World, WriteStorage},
 };
 
-use crate::pong::{Ball, ARENA_WIDTH, ARENA_HEIGHT};
+use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
 
 #[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {
-    type SystemData = (
-        WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
-    );
+    type SystemData = (WriteStorage<'s, Ball>, WriteStorage<'s, Transform>);
 
     fn run(&mut self, (mut balls, mut locals): Self::SystemData) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
@@ -95,7 +92,7 @@ its direction and put it back in the middle of the screen.
 Now, we just need to add our new system to `main.rs`, and we should be able to
 keep playing after someone scores and log who got the point.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #    core::transform::TransformBundle,
@@ -163,7 +160,6 @@ let game_data = DispatcherBuilder::default()
 # }
 ```
 
-
 ## Adding a Scoreboard
 
 We have a pretty functional Pong game now! At this point, the least fun thing
@@ -175,13 +171,13 @@ to display our players' scores.
 
 First, let's add the UI rendering in `main.rs`. Add the following imports:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::ui::{RenderUi, UiBundle};
 ```
 
 Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
 #     ecs::{World, WorldExt},
 #     prelude::*,
@@ -202,7 +198,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
 Finally, add the `UiBundle` after the `InputBundle`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
 #     ecs::{World, WorldExt},
 #     input::StringBindings,
@@ -226,19 +222,16 @@ rendering UI visuals to our game in addition to the existing background and
 sprites.
 
 > **Note:** We're using a `UiBundle` with type `StringBindings` here because the
-`UiBundle` needs to know what types our `InputHandler` is using to map `actions`
-and `axes`. So just know that your `UiBundle` type should match your
-`InputHandler` type. You can read more about those here: [UiBundle][ui-bundle],
-[InputHandler][input-handler].
+> `UiBundle` needs to know what types our `InputHandler` is using to map `actions`
+> and `axes`. So just know that your `UiBundle` type should match your
+> `InputHandler` type. You can read more about those here: [UiBundle][ui-bundle],
+> [InputHandler][input-handler].
 
 Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
-```rust, edition2018,no_run,noplaypen
-use amethyst::{
-    // --snip--
-    ecs::{Component, DenseVecStorage, Entity},
-};
+```rust ,edition2018,no_run,noplaypen
+use amethyst::ecs::{Component, DenseVecStorage, Entity};
 
 /// ScoreBoard contains the actual score data
 #[derive(Default)]
@@ -253,6 +246,7 @@ pub struct ScoreText {
     pub p2_score: Entity,
 }
 ```
+
 > Don't glimpse over the `#[derive(Default)]` annotation for the `ScoreBoard` struct!
 
 `ScoreBoard` is just a container that will allow us to keep track of each
@@ -261,21 +255,15 @@ gone ahead and marked it as public (same with `ScoreText`). `ScoreText` is also
 a container, but this one holds handles to the UI `Entity`s that will be
 rendered to the screen. We'll create those next:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
-use amethyst::{
-#     assets::{AssetStorage,  DefaultLoader, Loader},
-#     ecs::Entity,
-#     prelude::*,
-    // ...
-    ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform},
-};
+use amethyst::ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform};
 
 # pub struct Pong;
 #
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-#       let world = data.world;
+        #       let world = data.world;
         // --snip--
 
         initialise_scoreboard(world);
@@ -292,12 +280,24 @@ fn initialise_scoreboard(world: &mut World) {
         &world.read_resource(),
     );
     let p1_transform = UiTransform::new(
-        "P1".to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
-        -50., -50., 1., 200., 50.,
+        "P1".to_string(),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        -50.,
+        -50.,
+        1.,
+        200.,
+        50.,
     );
     let p2_transform = UiTransform::new(
-        "P2".to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
-        50., -50., 1., 200., 50.,
+        "P2".to_string(),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        50.,
+        -50.,
+        1.,
+        200.,
+        50.,
     );
 
     let p1_score = world
@@ -326,7 +326,7 @@ fn initialise_scoreboard(world: &mut World) {
         ))
         .build();
 
-# pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
+    # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
     world.insert(ScoreText { p1_score, p2_score });
 }
 ```
@@ -357,12 +357,6 @@ If we've done everything right so far, we should see `0` `0` at the top of our
 game window. You'll notice that the scores don't update yet when the ball makes
 it to either side, so we'll add that next!
 
-
-[font-download]: https://github.com/amethyst/amethyst/blob/main/examples/pong_tutorial_05/assets/font/square.ttf?raw=true
-[input-handler]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html
-[ui-bundle]: https://docs.amethyst.rs/master/amethyst_ui/struct.UiBundle.html
-
-
 ## Updating the Scoreboard
 
 All that's left for us to do now is update the UI whenever a player scores a
@@ -370,7 +364,7 @@ point. You'll see just how easy this is with our `ECS` design. All we have to do
 is modify our `WinnerSystem` to access the players' scores and update them
 accordingly:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -399,15 +393,15 @@ accordingly:
 # }
 #
 use amethyst::{
-#     core::transform::Transform,
-#     core::SystemDesc,
-#     derive::SystemDesc,
+    #     core::transform::Transform,
+    #     core::SystemDesc,
+    #     derive::SystemDesc,
     // --snip--
     ecs::{Join, ReadExpect, System, SystemData, World, Write, WriteStorage},
     ui::UiText,
 };
 
-use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH, ARENA_HEIGHT};
+use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_HEIGHT, ARENA_WIDTH};
 
 #[derive(SystemDesc)]
 pub struct WinnerSystem;
@@ -421,22 +415,18 @@ impl<'s> System<'s> for WinnerSystem {
         ReadExpect<'s, ScoreText>,
     );
 
-    fn run(&mut self, (
-        mut balls,
-        mut locals,
-        mut ui_text,
-        mut scores,
-        score_text
-    ): Self::SystemData) {
+    fn run(
+        &mut self,
+        (mut balls, mut locals, mut ui_text, mut scores, score_text): Self::SystemData,
+    ) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
-#             let ball_x = transform.translation().x;
+            #             let ball_x = transform.translation().x;
             // --snip--
 
             let did_hit = if ball_x <= ball.radius {
                 // Right player scored on the left side.
                 // We top the score at 999 to avoid text overlap.
-                scores.score_right = (scores.score_right + 1)
-                    .min(999);
+                scores.score_right = (scores.score_right + 1).min(999);
 
                 if let Some(text) = ui_text.get_mut(score_text.p2_score) {
                     text.text = scores.score_right.to_string();
@@ -445,8 +435,7 @@ impl<'s> System<'s> for WinnerSystem {
             } else if ball_x >= ARENA_WIDTH - ball.radius {
                 // Left player scored on the right side.
                 // We top the score at 999 to avoid text overlap.
-                scores.score_left = (scores.score_left + 1)
-                    .min(999);
+                scores.score_left = (scores.score_left + 1).min(999);
                 if let Some(text) = ui_text.get_mut(score_text.p1_score) {
                     text.text = scores.score_left.to_string();
                 }
@@ -456,9 +445,9 @@ impl<'s> System<'s> for WinnerSystem {
             };
 
             if did_hit {
-#                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
-#                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
-#                 transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
+                #                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
+                #                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
+                #                 transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
 
                 // --snip--
 
@@ -505,7 +494,6 @@ our scores to overlap each other in the window). Then, we use the `UiText`
 reference to our `UiText` component. Lastly, we set the text of the `UiText`
 component to the player's score, after converting it to a string.
 
-
 ## Summary
 
 And that's it! Our game now keeps track of the score for us and displays it at
@@ -515,3 +503,7 @@ the top of our window.
 
 Now don't go just yet, because, in the next chapter, we'll make our Pong game
 even better by adding sound effects and even some music!
+
+[font-download]: https://github.com/amethyst/amethyst/blob/main/examples/pong_tutorial_05/assets/font/square.ttf?raw=true
+[input-handler]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html
+[ui-bundle]: https://docs.amethyst.rs/master/amethyst_ui/struct.UiBundle.html

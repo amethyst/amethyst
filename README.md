@@ -4,24 +4,6 @@
 [![Join us on Discord][s4]][di] [![Community forum][s5]][ds] [![Reddit][s7]][rd]
 [![Code coverage][s8]][cc] ![Lines of Code][s6]
 
-[s1]: https://github.com/amethyst/amethyst/workflows/CI/badge.svg
-[s2]: https://img.shields.io/crates/v/amethyst.svg
-[docs-badge]: https://img.shields.io/badge/docs-website-blue.svg
-[docs]: https://amethyst.rs/doc/
-[s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
-[s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
-[s5]: https://img.shields.io/badge/discourse-online-green.svg
-[s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
-[s7]: https://img.shields.io/badge/dynamic/json.svg?label=r/Amethyst&query=$.data.subscribers&url=https://www.reddit.com/r/Amethyst/about.json
-[s8]: https://img.shields.io/codecov/c/github/amethyst/amethyst.svg
-[ac]: https://github.com/amethyst/amethyst/actions
-[ci]: https://crates.io/crates/amethyst/
-[li]: COPYING
-[di]: https://discord.gg/amethyst
-[ds]: https://community.amethyst.rs/
-[rd]: https://www.reddit.com/r/Amethyst/
-[cc]: https://codecov.io/gh/amethyst/amethyst
-
 ## What is Amethyst?
 
 Amethyst is a data-driven and data-oriented game engine aiming to be fast and as configurable as possible.
@@ -32,33 +14,28 @@ These principles are what makes Amethyst unique and competitive in the world of 
 
 - Massively parallel architecture.
 - Powered by a correct [Entity Component System][ecs] model.
-- Rapid prototyping with [RON][ron] files for prefabs and an abstract scripting API.
+- Rapid prototyping with [RON] files for prefabs and an abstract scripting API.
 - Strong focus on encouraging reusability and clean interfaces.
-
-[ecs]: https://en.wikipedia.org/wiki/Entity–component–system
-[ron]: https://github.com/ron-rs/ron
 
 ## Why Amethyst?
 
 ### Extreme Multithreading
 
-Amethyst is based over a very powerful parallel [ECS][ecs] called Specs. This allows games built with Amethyst to maximize the available processing power to run as smoothly and as quickly as possible, without the headaches of multi-threaded programming.
+Amethyst is based over a very powerful parallel [ECS] called Specs. This allows games built with Amethyst to maximize the available processing power to run as smoothly and as quickly as possible, without the headaches of multi-threaded programming.
 
 ### Clean
 
 By design, the Amethyst engine encourages you to write clean and reusable code for your behaviours and data structures. This allows engine users to easily share useful components, thus reducing development time and cost.
 
-Using the [ECS][ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on, even if the game is running on a massive 64-core processor.
+Using the [ECS] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on, even if the game is running on a massive 64-core processor.
 
 ### Community
 
-* [Discord](https://discord.gg/amethyst) - Announcements, help, useful information, general discussion.
+- [Discord](https://discord.gg/amethyst) - Announcements, help, useful information, general discussion.
 
 ## Features
 
 Please visit the [features page][feat] for a list of features Amethyst provides.
-
-[feat]: docs/FEATURES.md
 
 ## Navigation
 
@@ -74,13 +51,6 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 While the engine can be hard to use at times, we made a lot of [documentation][bkstable] that will teach you everything you need to use Amethyst comfortably.
 
 If you don't understand a part of the documentation, please let us know. Join us on Discord or open an issue; we are always happy to help!
-
-[bkstable]: https://book.amethyst.rs/stable/
-[bks14]: https://book.amethyst.rs/v0.14.0/
-[bkm]: https://book.amethyst.rs/master/
-[exm]: https://github.com/amethyst/amethyst/tree/master/examples
-[ex15]: https://github.com/amethyst/amethyst/tree/v0.15.0/examples
-[ex14]: https://github.com/amethyst/amethyst/tree/v0.14.0/examples
 
 ## Getting started
 
@@ -102,20 +72,14 @@ All available examples are listed under the [examples][exm] directory.
 
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter in the book.
 
-[gs]: https://book.amethyst.rs/stable/getting-started.html
-
 ### Showcase games
 
 Our official showcase games demonstrate larger, continuously developed game projects made with Amethyst:
 
-- [Evoli][evoli] - 3D, ecosystem simulator
+- [Evoli] - 3D, ecosystem simulator
 - [Space Menace][menace] - 2D, action platformer
 
 For more examples see [Games Made With Amethyst][gmwa] topic on the community forum for some good sources of inspiration.
-
-[evoli]: https://github.com/amethyst/evoli
-[menace]: https://github.com/amethyst/space-menace
-[gmwa]: https://community.amethyst.rs/t/games-made-with-amethyst/134
 
 ## Dependencies
 
@@ -219,14 +183,9 @@ The API reference can be found in `target/doc/amethyst/index.html`.
 
 Amethyst supports _only_ the latest stable release of Rust. Use the nightly and beta channels with this project at your own risk.
 
-If you have a question, please check out the [FAQ][faq] before asking. Chances are, the solution to your problem is already present there. If you still need help, feel free to ask on our [Discord server][di].
+If you have a question, please check out the [FAQ] before asking. Chances are, the solution to your problem is already present there. If you still need help, feel free to ask on our [Discord server][di].
 
-Other places you might want to check out are [r/rust_gamedev][rg] and the [#rust-gamedev IRC][irc].
-
-[faq]: https://github.com/amethyst/amethyst/wiki/Frequently-Asked-Questions
-[di]: https://discord.gg/amethyst
-[rg]: https://www.reddit.com/r/rust_gamedev/
-[irc]: https://botbot.me/mozilla/rust-gamedev/
+Other places you might want to check out are [r/rust\_gamedev][rg] and the [#rust-gamedev IRC][irc].
 
 ## Contributing
 
@@ -239,11 +198,6 @@ We have a [good first issue][gfi] category that groups all issues or feature req
 If you think you are not ready to code yet, you can still contribute by reviewing code written by other members of the community. Code reviews ensure that code merged into Amethyst is of the highest quality as possible. Pull requests that are available for reviews can be found [here][pr].
 
 If for some reason we don't have any open PRs in need of a review nor any good first issues (that would be a good thing), feel free to consult our [issue tracker][it].
-
-[cm]: docs/CONTRIBUTING.md
-[pr]: https://github.com/amethyst/amethyst/pulls
-[it]: https://github.com/amethyst/amethyst/issues
-[gfi]: https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 
 ## Backers
 
@@ -268,7 +222,44 @@ Amethyst is supported by:
 
 Amethyst is free and open source software distributed under the terms of both the [MIT License][lm] and the [Apache License 2.0][la].
 
-[lm]: docs/LICENSE-MIT
-[la]: docs/LICENSE-APACHE
-
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+
+[ac]: https://github.com/amethyst/amethyst/actions
+[bkm]: https://book.amethyst.rs/master/
+[bks14]: https://book.amethyst.rs/v0.14.0/
+[bkstable]: https://book.amethyst.rs/stable/
+[cc]: https://codecov.io/gh/amethyst/amethyst
+[ci]: https://crates.io/crates/amethyst/
+[cm]: docs/CONTRIBUTING.md
+[di]: https://discord.gg/amethyst
+[docs]: https://amethyst.rs/doc/
+[docs-badge]: https://img.shields.io/badge/docs-website-blue.svg
+[ds]: https://community.amethyst.rs/
+[ecs]: https://en.wikipedia.org/wiki/Entity%E2%80%93component%E2%80%93system
+[evoli]: https://github.com/amethyst/evoli
+[ex14]: https://github.com/amethyst/amethyst/tree/v0.14.0/examples
+[ex15]: https://github.com/amethyst/amethyst/tree/v0.15.0/examples
+[exm]: https://github.com/amethyst/amethyst/tree/master/examples
+[faq]: https://github.com/amethyst/amethyst/wiki/Frequently-Asked-Questions
+[feat]: docs/FEATURES.md
+[gfi]: https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+[gmwa]: https://community.amethyst.rs/t/games-made-with-amethyst/134
+[gs]: https://book.amethyst.rs/stable/getting-started.html
+[irc]: https://botbot.me/mozilla/rust-gamedev/
+[it]: https://github.com/amethyst/amethyst/issues
+[la]: docs/LICENSE-APACHE
+[li]: COPYING
+[lm]: docs/LICENSE-MIT
+[menace]: https://github.com/amethyst/space-menace
+[pr]: https://github.com/amethyst/amethyst/pulls
+[rd]: https://www.reddit.com/r/Amethyst/
+[rg]: https://www.reddit.com/r/rust_gamedev/
+[ron]: https://github.com/ron-rs/ron
+[s1]: https://github.com/amethyst/amethyst/workflows/CI/badge.svg
+[s2]: https://img.shields.io/crates/v/amethyst.svg
+[s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
+[s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
+[s5]: https://img.shields.io/badge/discourse-online-green.svg
+[s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
+[s7]: https://img.shields.io/badge/dynamic/json.svg?label=r/Amethyst&query=%24.data.subscribers&url=https://www.reddit.com/r/Amethyst/about.json
+[s8]: https://img.shields.io/codecov/c/github/amethyst/amethyst.svg

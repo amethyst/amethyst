@@ -4,9 +4,9 @@
 
 When used well, assets enhance the gaming experience. For example, in an asteroid shooter, when a bullet hits an asteroid we can do the following:
 
-* Draw broken pieces of the asteroid falling away.
-* Display a fireball animation.
-* Play an explosion sound.
+- Draw broken pieces of the asteroid falling away.
+- Display a fireball animation.
+- Play an explosion sound.
 
 ## Handles
 

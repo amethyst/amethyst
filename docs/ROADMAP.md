@@ -12,12 +12,13 @@
 - Basic UI
 - Keyboard and Gamepad input
 - Asset loading
-- glTF support 
+- glTF support
 - Testing utilities
 - Windows, macOS, Linux compatibility
 - Thread Profiling
 
 ## Planned Features
+
 - A scripting language
 - Fully featured and extensible UI Library.
 - An editor

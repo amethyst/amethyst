@@ -12,7 +12,7 @@ A system struct is a structure implementing the trait `amethyst::ecs::System`.
 
 Here is a very simple example implementation:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::System;
 struct MyFirstSystem;
 
@@ -33,14 +33,14 @@ In the definition of a system, the trait requires you to define a type `SystemDa
 
 The Amethyst engine provides useful system data types to use in order to access the context of a game. Here are some of the most important ones:
 
-* **Read<'a, Resource>** (respectively **Write<'a, Resource>**) allows you to obtain an immutable (respectively mutable) reference to a resource of the type you specify. This is guaranteed to not fail as if the resource is not available, it will give you the ``Default::default()`` of your resource. 
-* **ReadExpect<'a, Resource>** (respectively **WriteExpect<'a, Resource>**) is a failable alternative to the previous system data, so that you can use resources that do not implement the `Default` trait.
-* **ReadStorage<'a, Component>** (respectively **WriteStorage<'a, Component>**) allows you to obtain an immutable (respectively mutable) reference to the entire storage of a certain `Component` type.
-* **Entities<'a>** allows you to create or destroy entities in the context of a system.
+- **Read\<'a, Resource>** (respectively **Write\<'a, Resource>**) allows you to obtain an immutable (respectively mutable) reference to a resource of the type you specify. This is guaranteed to not fail as if the resource is not available, it will give you the `Default::default()` of your resource.
+- **ReadExpect\<'a, Resource>** (respectively **WriteExpect\<'a, Resource>**) is a failable alternative to the previous system data, so that you can use resources that do not implement the `Default` trait.
+- **ReadStorage\<'a, Component>** (respectively **WriteStorage\<'a, Component>**) allows you to obtain an immutable (respectively mutable) reference to the entire storage of a certain `Component` type.
+- **Entities\<'a>** allows you to create or destroy entities in the context of a system.
 
 You can then use one, or multiple of them via a tuple.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, Read};
 # use amethyst::core::timing::Time;
 struct MyFirstSystem;
@@ -64,7 +64,7 @@ Once you have access to a storage, you can use them in different ways.
 
 Sometimes, it can be useful to get a component in the storage for a specific entity. This can easily be done using the `get` or, for mutable storages, `get_mut` methods.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{Entity, System, WriteStorage};
 # use amethyst::core::Transform;
 struct WalkPlayerUp {
@@ -75,7 +75,10 @@ impl<'a> System<'a> for WalkPlayerUp {
     type SystemData = WriteStorage<'a, Transform>;
 
     fn run(&mut self, mut transforms: Self::SystemData) {
-        transforms.get_mut(self.player).unwrap().prepend_translation_y(0.1);
+        transforms
+            .get_mut(self.player)
+            .unwrap()
+            .prepend_translation_y(0.1);
     }
 }
 ```
@@ -99,7 +102,7 @@ Needless to say that you can use it with only one storage to iterate over all en
 
 Keep in mind that **the `join` method is only available by importing `amethyst::ecs::Join`**.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, ReadStorage, WriteStorage};
 # use amethyst::core::Transform;
 # struct FallingObject;
@@ -111,10 +114,7 @@ use amethyst::ecs::Join;
 struct MakeObjectsFall;
 
 impl<'a> System<'a> for MakeObjectsFall {
-    type SystemData = (
-        WriteStorage<'a, Transform>,
-        ReadStorage<'a, FallingObject>,
-    );
+    type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (transform, _) in (&mut transforms, &falling).join() {
@@ -136,7 +136,7 @@ There is a special type of `Storage` in specs called `AntiStorage`.
 The not operator (!) turns a Storage into its AntiStorage counterpart, allowing you to iterate over entities that do NOT have this `Component`.
 It is used like this:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, ReadStorage, WriteStorage};
 # use amethyst::core::Transform;
 # struct FallingObject;
@@ -148,10 +148,7 @@ use amethyst::ecs::Join;
 struct NotFallingObjects;
 
 impl<'a> System<'a> for NotFallingObjects {
-    type SystemData = (
-        WriteStorage<'a, Transform>,
-        ReadStorage<'a, FallingObject>,
-    );
+    type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (mut transform, _) in (&mut transforms, !&falling).join() {
@@ -172,7 +169,7 @@ It may sometimes be interesting to manipulate the structure of entities in a sys
 
 Creating an entity while in the context of a system is very similar to the way one would create an entity using the `World` struct. The only difference is that one needs to provide mutable storages of all the components they plan to add to the entity.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, WriteStorage, Entities};
 # use amethyst::core::Transform;
 # struct Enemy;
@@ -193,7 +190,8 @@ impl<'a> System<'a> for SpawnEnemies {
     fn run(&mut self, (mut transforms, mut enemies, entities): Self::SystemData) {
         self.counter += 1;
         if self.counter > 200 {
-            entities.build_entity()
+            entities
+                .build_entity()
                 .with(Transform::default(), &mut transforms)
                 .with(Enemy, &mut enemies)
                 .build();
@@ -208,7 +206,8 @@ This system will spawn a new enemy every 200 game loop iterations.
 ### Removing an entity
 
 Deleting an entity is very easy using `Entities<'a>`.
-```rust, edition2018,no_run,noplaypen
+
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, Entities, Entity};
 # struct MySystem { entity: Entity }
 # impl<'a> System<'a> for MySystem {
@@ -224,7 +223,7 @@ entities.delete(entity);
 
 Sometimes, when you iterate over components, you may want to also know what entity you are working with. To do that, you can use the joining operation with `Entities<'a>`.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{Join, System, Entities, WriteStorage, ReadStorage};
 # use amethyst::core::Transform;
 # struct FallingObject;
@@ -259,7 +258,7 @@ This system does the same thing as the previous `MakeObjectsFall`, but also clea
 You can also insert or remove components from a specific entity.
 To do that, you need to get a mutable storage of the component you want to modify, and simply do:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, Entities, Entity, WriteStorage};
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
@@ -302,14 +301,14 @@ We can use this to our advantage!
 
 Let's say you have the following two states:
 
-* `GameplayState`: State in which the game is running.
-* `GameMenuState`: State where the game is paused and we interact with a game menu.
+- `GameplayState`: State in which the game is running.
+- `GameMenuState`: State where the game is paused and we interact with a game menu.
 
 The following example shows how to keep track of which state we are currently in.
 This allows us to do a bit of conditional logic in our systems to determine what to do depending on
 which state is currently active, and manipulating the states by tracking user actions:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -378,7 +377,7 @@ impl SimpleState for GameMenuState {
             Some(UserAction::Quit) => {
                 // Note: no need to clean up :)
                 Trans::Quit
-            },
+            }
             _ => Trans::None,
         }
     }
@@ -394,7 +393,7 @@ Let's say we want the player to be able to press escape to enter the menu.
 We modify our input handler to map the `open_menu` action to `Esc`, and we write the following
 system:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 # enum CurrentState {
@@ -426,25 +425,20 @@ system:
 # }
 #
 use amethyst::{
-    prelude::*,
-    ecs::{System, prelude::*},
+    ecs::{prelude::*, System},
     input::{InputHandler, StringBindings},
+    prelude::*,
 };
 
 struct MyGameplaySystem;
 
 impl<'s> System<'s> for MyGameplaySystem {
-    type SystemData = (
-        Read<'s, InputHandler<StringBindings>>,
-        Write<'s, Game>,
-    );
+    type SystemData = (Read<'s, InputHandler<StringBindings>>, Write<'s, Game>);
 
     fn run(&mut self, (input, mut game): Self::SystemData) {
         match game.current_state {
             CurrentState::Gameplay => {
-                let open_menu = input
-                    .action_is_down("open_menu")
-                    .unwrap_or(false);
+                let open_menu = input.action_is_down("open_menu").unwrap_or(false);
 
                 // Toggle the `open_menu` variable to signal the state to
                 // transition.
@@ -462,9 +456,6 @@ impl<'s> System<'s> for MyGameplaySystem {
 Now whenever you are playing the game and you press the button associated with the `open_menu`
 action, the `GameMenuState` will resume and the `GameplayState` will pause.
 
-[s]: ./state.md
-[r]: ./resource.md
-
 ## The SystemData trait
 
 While this is rarely useful, it is possible to create custom `SystemData` types.
@@ -475,7 +466,7 @@ This is rather complicated trait to implement, fortunately Amethyst provides a d
 
 Please note that tuples of structs implementing `SystemData` are themselves `SystemData`. This is very useful when you need to request multiple `SystemData` at once quickly.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # extern crate shred;
 # #[macro_use] extern crate shred_derive;
 #
@@ -531,3 +522,5 @@ impl<'a> System<'a> for MyFirstSystem {
 }
 ```
 
+[r]: ./resource.md
+[s]: ./state.md

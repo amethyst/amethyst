@@ -14,7 +14,7 @@ mod audio;
 
 Create a file called `audio.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 use amethyst::{
     assets::Loader,
@@ -72,7 +72,7 @@ impl SimpleState for Pong {
 
 Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::DispatcherBuilder;
 use amethyst::audio::AudioBundle;
@@ -87,7 +87,7 @@ fn main() -> amethyst::Result<()> {
     ;
 
     // --snip--
-# Ok(())
+    # Ok(())
 }
 ```
 
@@ -95,7 +95,7 @@ fn main() -> amethyst::Result<()> {
 
 Let's start by creating a function to play the bounce sound. In `audio.rs`, add:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 use amethyst::{
     assets::AssetStorage,
@@ -119,7 +119,6 @@ pub fn play_bounce_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output
 Then, we'll update the Bounce System to play the sound whenever the ball bounces. Update `systems/bounce.rs`:
 
 ```rust
-
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
@@ -179,7 +178,7 @@ Now try running your game (`cargo run`). Don't forget to turn up your volume!
 
 Just as we did for the bounce sound, let's create a function to play the score sound. Update `audio.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     audio::{output::Output, Source, SourceHandle},
@@ -203,12 +202,12 @@ pub fn play_score_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output:
 Then, we'll update our Winner System to play the score sound whenever a player scores. Update `systems/winner.rs`:
 
 ```rust
+use crate::audio::{play_score_sound, Sounds};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
     ecs::Read,
 };
-use crate::audio::{play_score_sound, Sounds};
 
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
@@ -222,8 +221,9 @@ impl<'s> System<'s> for WinnerSystem {
         Option<Read<'s, Output>>,
     );
 
-
-    fn run(&mut self, (
+    fn run(
+        &mut self,
+        (
         mut balls,
         mut locals,
         mut ui_text,
@@ -232,7 +232,8 @@ impl<'s> System<'s> for WinnerSystem {
         storage,
         sounds,
         audio_output,
-    ): Self::SystemData)  {
+    ): Self::SystemData,
+    ) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
             // --snip--
 
@@ -260,11 +261,11 @@ Next, let's take our game to the next level by adding some background music.
 
 ## Adding background music
 
-Let's start by downloading [Albatross][albatross] and [Where's My Jetpack?][wheres-my-jetpack] Put these files in the `assets/audio` directory.
+Let's start by downloading [Albatross] and [Where's My Jetpack?][wheres-my-jetpack] Put these files in the `assets/audio` directory.
 
 In `audio.rs`, add the paths to the music tracks below the paths to the sound effects:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 const BOUNCE_SOUND: &str = "audio/bounce.ogg";
 const SCORE_SOUND: &str = "audio/score.ogg";
 
@@ -276,7 +277,7 @@ const MUSIC_TRACKS: &[&str] = &[
 
 Then, create a Music Resource:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 use std::{iter::Cycle, vec::IntoIter};
 #
@@ -291,13 +292,13 @@ Since we only have two music tracks, we use a `Cycle` to infinitely alternate be
 
 Next, we need to add the Music Resource to our World. Update `initialise_audio`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use std::{iter::Cycle, vec::IntoIter};
 #
 use amethyst::{
-    audio::{AudioSink, SourceHandle},
     assets::Loader,
+    audio::{AudioSink, SourceHandle},
     ecs::{World, WorldExt},
 };
 #
@@ -355,8 +356,8 @@ pub fn initialise_audio(world: &mut World) {
 Finally, let's add a DJ System to our game to play the music. In `main.rs`:
 
 ```rust
-use amethyst::audio::DjSystemDesc;
 use crate::audio::Music;
+use amethyst::audio::DjSystemDesc;
 
 fn main() -> amethyst::Result<()> {
     // --snip--
@@ -372,13 +373,13 @@ fn main() -> amethyst::Result<()> {
         ;
 
     // --snip--
-# Ok(())
+    # Ok(())
 }
 ```
 
 Now run your game and enjoy the tunes!
 
+[albatross]: ./audio/Computer_Music_All-Stars_-_Albatross_v2.ogg
 [bounce]: ./audio/bounce.ogg
 [score]: ./audio/score.ogg
-[albatross]: ./audio/Computer_Music_All-Stars_-_Albatross_v2.ogg
 [wheres-my-jetpack]: ./audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg

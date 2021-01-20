@@ -8,7 +8,7 @@ Steps:
 
 - Create a new branch / pull request
   - Bump all the versions of all the crates to the new version, push, make sure CI passes.  All crates use the same version as the root amethyst crate for sanity's sake.†
-  - For non-trivial releases: bump dependencies, push, fix things until CI passes.*
+  - For non-trivial releases: bump dependencies, push, fix things until CI passes.\*
   - Review all the PRs since the last release and update the changelog.
     - On the [pull request page], use search filters like: `is:pr is:merged base:master merged:>=YYYY-MM-DD`
     - Reword changelog entries so that they: a) use command form (_Fix..._, not _Fixed..._), and b) describe the problem resolved, not the implementation of the fix -- this often means you have to read the PR to figure it out. For example "Render blue sprites correctly", not "Fixed `render_sprite()` so it uses the correct index into the `rgba` vector".
@@ -23,26 +23,19 @@ Steps:
   - Update the book and API docs with `script/publish-docs.sh`.†
   - Get an approval and merge the branch with `bors r+`
 - Hit publish on your GitHub release entry you drafted earlier.
-- Publish a blog post on the website.*
+- Publish a blog post on the website.\*
 - Announce the release on Discord.
-- Post the release to Reddit.*
-- Tweet about the release.*
+- Post the release to Reddit.\*
+- Tweet about the release.\*
 - Update the `amethyst-starter-2d` repo to use the new version
 
-*Could use more detail!
+\*Could use more detail!
 
 †Let's automate this!
-
-[pull request page]: https://github.com/amethyst/amethyst/pulls
-[the releases page]: https://github.com/amethyst/amethyst/releases
-[tools repository]: https://github.com/amethyst/tools
-[an example of commenting out `dev-dependencies`]: https://github.com/amethyst/amethyst/commit/f911c8b08e960f005fc8013858a971aaa95ac2ed
 
 # Crate dependencies
 
 Here is a snapshot of which crates depend on which others. This is no longer needed for publishing, since the order of publishing is implicit in [publish.sh]
-
-[publish.sh]: https://github.com/amethyst/amethyst/blob/master/script/publish.sh
 
 ### Basic Crates
 
@@ -147,6 +140,7 @@ Here is a snapshot of which crates depend on which others. This is no longer nee
 Aka, `amethyst`
 
 Dependencies:
+
 - Amethyst Animation
 - Amethyst Assets
 - Amethyst Audio
@@ -169,3 +163,7 @@ Dependencies:
 - `amethyst_test` <br/> dependencies:
   - Amethyst
 
+[an example of commenting out `dev-dependencies`]: https://github.com/amethyst/amethyst/commit/f911c8b08e960f005fc8013858a971aaa95ac2ed
+[publish.sh]: https://github.com/amethyst/amethyst/blob/master/script/publish.sh
+[pull request page]: https://github.com/amethyst/amethyst/pulls
+[the releases page]: https://github.com/amethyst/amethyst/releases

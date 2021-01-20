@@ -6,8 +6,8 @@ Some attributes may be mutated by different functions. These functions can be in
 
 Given the following functions are part of the same animation:
 
-* Translate the object to the right
-* Translate the object upwards
-* Scale the object up
+- Translate the object to the right
+- Translate the object upwards
+- Scale the object up
 
 We want to be able to individually apply related functions, i.e. "apply all translations", "apply all scalings", and "apply all rotations". Each of these groupings is called a **channel**.

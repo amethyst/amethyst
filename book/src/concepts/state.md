@@ -1,6 +1,7 @@
 # State
 
 ## What is a state?
+
 The word "state" can mean a lot of different things in computer science.
 In the case of amethyst, it is used to represent the "game state".
 
@@ -10,18 +11,19 @@ A game state is a *general* and *global* section of the game.
 
 As an example, let's say you are making a pong game.
 
-* When the user opens up the game, it first loads all the assets and shows a loading screen.
-* Then, the main menu shows up, asking you if you want to start a game in single or multiplayer.
-* Once you select an option, the game displays the paddles and the ball and starts playing.
-* By pressing escape, you can toggle the "pause" menu.
-* Once the score limit is reached, a result screen is shown with a button to go back to the main menu.
+- When the user opens up the game, it first loads all the assets and shows a loading screen.
+- Then, the main menu shows up, asking you if you want to start a game in single or multiplayer.
+- Once you select an option, the game displays the paddles and the ball and starts playing.
+- By pressing escape, you can toggle the "pause" menu.
+- Once the score limit is reached, a result screen is shown with a button to go back to the main menu.
 
 The game can be divided into different states:
-* LoadingState
-* MainMenuState
-* GameplayState
-* PauseState
-* ResultState
+
+- LoadingState
+- MainMenuState
+- GameplayState
+- PauseState
+- ResultState
 
 While you could effectively insert all the game's logic into a single state `GameState`,
 dividing it into multiple parts makes it much easier to reason about and maintain.
@@ -49,8 +51,9 @@ Transitions are simply the "switching" between two states.
 For example, from `LoadingState`, go to state `MainMenuState`.
 
 Amethyst has multiple types of transitions.
-* You can Push a `State` over another.
-* You can also Switch a `State`, which replaces the current `State` with a new one.
+
+- You can Push a `State` over another.
+- You can also Switch a `State`, which replaces the current `State` with a new one.
 
 Events are what trigger the transitions. In the case of amethyst, it is the different methods called on the `State`. Continue reading to learn about them.
 
@@ -58,15 +61,16 @@ Events are what trigger the transitions. In the case of amethyst, it is the diff
 
 `State`s are only valid for a certain period of time, during which a lot of things can occur.
 A `State` contains methods that reflect the most common of those events:
-* on_start: When a `State` is added to the stack, this method is called on it.
-* on_stop: When a `State` is removed from the stack, this method is called on it.
-* on_pause: When a `State` is pushed over the current one, the current one is paused, and this method is called on it.
-* on_resume: When the `State` that was pushed over the current `State` is popped, the current one resumes, and this method is called on the now-current `State`.
-* handle_event: Allows easily handling events, like the window closing or a key being pressed.
-* fixed_update: This method is called on the active `State` at a fixed time interval (1/60th second by default).
-* update: This method is called on the active `State` as often as possible by the engine.
-* shadow_update: This method is called as often as possible by the engine on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `update`, this does not return a `Trans`.
-* shadow_fixed_update: This method is called at a fixed time interval (1/60th second by default) on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `fixed_update`, this does not return a `Trans`.
+
+- on\_start: When a `State` is added to the stack, this method is called on it.
+- on\_stop: When a `State` is removed from the stack, this method is called on it.
+- on\_pause: When a `State` is pushed over the current one, the current one is paused, and this method is called on it.
+- on\_resume: When the `State` that was pushed over the current `State` is popped, the current one resumes, and this method is called on the now-current `State`.
+- handle\_event: Allows easily handling events, like the window closing or a key being pressed.
+- fixed\_update: This method is called on the active `State` at a fixed time interval (1/60th second by default).
+- update: This method is called on the active `State` as often as possible by the engine.
+- shadow\_update: This method is called as often as possible by the engine on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `update`, this does not return a `Trans`.
+- shadow\_fixed\_update: This method is called at a fixed time interval (1/60th second by default) on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `fixed_update`, this does not return a `Trans`.
 
 If you aren't using `SimpleState` or `EmptyState`, you *must* implement the `update` method to call `data.data.update(&mut data.world)`.
 
@@ -92,7 +96,7 @@ For more advanced examples, see the following pong tutorial.
 
 ### Creating a State
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::prelude::*;
 
 struct GameplayState {
@@ -124,15 +128,16 @@ Now, if we want to change to a second state, how do we do it?
 Well, we'll need to use one of the methods that return the `Trans` type.
 
 Those are:
-* `handle_event`
-* `fixed_update`
-* `update`
 
-Let's use handle_event to go to the `PausedState` and come back by pressing the "Escape" key.
+- `handle_event`
+- `fixed_update`
+- `update`
 
-```rust, edition2018,no_run,noplaypen
+Let's use handle\_event to go to the `PausedState` and come back by pressing the "Escape" key.
+
+```rust ,edition2018,no_run,noplaypen
+use amethyst::input::{is_key_down, VirtualKeyCode};
 use amethyst::prelude::*;
-use amethyst::input::{VirtualKeyCode, is_key_down};
 
 struct GameplayState;
 struct PausedState;
@@ -177,7 +182,7 @@ But what is this weird `StateEvent` all about?
 Well, it is simply an enum. It regroups multiple types of events that are emitted throughout the engine by default.
 To change the set of events that the state receives, you create a new event enum and derive `EventReader` for that type.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::ui::UiEvent;
 # use amethyst::input::{VirtualKeyCode, is_key_down};
@@ -186,8 +191,8 @@ To change the set of events that the state receives, you create a new event enum
 // These imports are required for the #[derive(EventReader)] code to build
 use amethyst::core::{
     ecs::{Read, SystemData, World},
-    shrev::{ReaderId, EventChannel},
-    EventReader
+    shrev::{EventChannel, ReaderId},
+    EventReader,
 };
 
 #[derive(Clone, Debug)]
@@ -208,8 +213,8 @@ struct GameplayState;
 impl State<(), MyEvent> for GameplayState {
     fn handle_event(&mut self, _data: StateData<()>, event: MyEvent) -> Trans<(), MyEvent> {
         match event {
-            MyEvent::Window(_) => {}, // Events related to the window and inputs.
-            MyEvent::Ui(_) => {}, // Ui event. Button presses, mouse hover, etc...
+            MyEvent::Window(_) => {} // Events related to the window and inputs.
+            MyEvent::Ui(_) => {}     // Ui event. Button presses, mouse hover, etc...
             MyEvent::App(ev) => println!("Got an app event: {:?}", ev),
         };
 
@@ -224,6 +229,5 @@ To make `Application` aware of the change to which events to send to the state, 
 event type, and the `EventReader` type (the name you give in the `#[reader(SomeReader)]` derive attribute) when
 the `Application` is created. This is done by replacing `Application::build` (or `Application::new`) with
 `CoreApplication::<_, MyEvent, MyEventReader>::build()` (or `CoreApplication::<_, MyEvent, MyEventReader>::new()`).
-
 
 *Note: Events are gathered from `EventChannel`s. `EventChannel`s are covered in the dedicated book section.*

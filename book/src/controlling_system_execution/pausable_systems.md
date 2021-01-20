@@ -6,7 +6,7 @@ Pausable `System`s can be enabled or disabled depending on the value of a`Resour
 
 Let's get started by creating a new `Resource` that represents the state of our game.
 
-```rust, no_run,noplaypen
+```rust ,no_run,noplaypen
 #[derive(PartialEq)]
 pub enum CurrentState {
     Running,
@@ -22,7 +22,7 @@ impl Default for CurrentState {
 
 We'll use this `enum` `Resource` to control whether or not our `System` is running. Next we'll register our `System` and set it as pausable.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     ecs::prelude::*,
@@ -60,33 +60,32 @@ dispatcher.add(
 
 To register the `Resource` or change its value, we can use the following code:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # #[derive(PartialEq)]
 # pub enum CurrentState {
 #    Running,
 #    Paused,
 # }
-# 
+#
 # impl Default for CurrentState {
 #     fn default() -> Self {
 #         CurrentState::Paused
 #     }
 # }
-# 
+#
 struct GameplayState;
 
 impl SimpleState for GameplayState {
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-#       let my_condition = true;
+        #       let my_condition = true;
         if (my_condition) {
             *data.world.write_resource::<CurrentState>() = CurrentState::Paused;
         }
-        
+
         Trans::None
     }
 }
 ```
 
 However, this cannot be done inside the pausable `System` itself. A pausable `System` can only access its pause `Resource` with immutable `Read` and cannot modify the value, thus the `System` cannot decide on its own if it should run on not. This has to be done from a different location.
- 

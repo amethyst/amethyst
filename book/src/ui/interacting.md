@@ -6,9 +6,9 @@ and the latter interaction through `handle_event` method of your active state.
 
 ## Creating the system
 
-Let's start of with some boilerplate code: 
+Let's start of with some boilerplate code:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::System;
 
 pub struct SimpleButtonSystem;
@@ -16,24 +16,22 @@ pub struct SimpleButtonSystem;
 impl<'s> System<'s> for SimpleButtonSystem {
     type SystemData = ();
 
-    fn run(&mut self, data: Self::SystemData) {
-	
-    }
+    fn run(&mut self, data: Self::SystemData) {}
 }
 ```
 
 This was shown in previous [chapters][sys_ini].
-The way you will be able to read the generated 
+The way you will be able to read the generated
 events is with a [ReaderId].
 The `ReaderId` is added as a field to the system struct.
 
 The events we want to read are of type [UiEvent].
-We also need to fetch the [EventChannel] in our `SystemData`, 
+We also need to fetch the [EventChannel] in our `SystemData`,
 since the `ReaderId` actually pulls (reads) information  from the `EventChannel`.
 
-Adding it up, it should look like this: 
+Adding it up, it should look like this:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, Read};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
@@ -45,15 +43,13 @@ pub struct SimpleButtonSystem {
 impl<'s> System<'s> for SimpleButtonSystem {
     type SystemData = Read<'s, EventChannel<UiEvent>>;
 
-    fn run(&mut self, events: Self::SystemData) {
-
-    }
+    fn run(&mut self, events: Self::SystemData) {}
 }
 ```
 
 We also need a constructor for our system:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, Read};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
@@ -71,16 +67,14 @@ We also need a constructor for our system:
 # }
 impl SimpleButtonSystem {
     pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
-        Self {
-            reader_id,	
-        }
+        Self { reader_id }
     }
 }
 ```
 
 To add the system to our game data we actually need a `SystemDesc` implementation for our system:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, World, Read, Write, SystemData};
 # use amethyst::core::SystemDesc;
 # use amethyst::shrev::{EventChannel, ReaderId};
@@ -99,7 +93,7 @@ To add the system to our game data we actually need a `SystemDesc` implementatio
 # impl SimpleButtonSystem {
 #     pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
 #        Self {
-#             reader_id,	
+#             reader_id,
 #       }
 #     }
 # }
@@ -114,11 +108,12 @@ impl<'a, 'b> SystemDesc<'a, 'b, SimpleButtonSystem> for SimpleButtonSystemDesc {
     }
 }
 ```
+
 Now that this is done we can start reading our events!
 
 In our systems `run` method we are going to loop through all the events:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, World, Read};
 # use amethyst::core::SystemDesc;
 # use amethyst::shrev::{EventChannel, ReaderId};
@@ -132,7 +127,7 @@ In our systems `run` method we are going to loop through all the events:
 #
 fn run(&mut self, events: Self::SystemData) {
     for event in events.read(&mut self.reader_id) {
-        println!("{:?}", event);	
+        println!("{:?}", event);
     }
 }
 # }
@@ -140,10 +135,10 @@ fn run(&mut self, events: Self::SystemData) {
 
 Let's try and change the text color when the button receives a hovered event!
 
-Firstly we need to fetch two more components that 
+Firstly we need to fetch two more components that
 we used for our entity - `UiTransform` and `UiText`.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, World, Read, ReadStorage, WriteStorage};
 # use amethyst::core::SystemDesc;
 # use amethyst::shrev::{EventChannel, ReaderId};
@@ -157,16 +152,16 @@ type SystemData = Read<'s, EventChannel<UiEvent>>;
 #
 # fn run(&mut self, events: Self::SystemData) {
 #     for event in events.read(&mut self.reader_id) {
-#         println!("{:?}", event);	
+#         println!("{:?}", event);
 #     }
 # }
 # }
 ```
 
-Usage of `WriteStorage<'s, UiText>` is needed since we will be changing 
+Usage of `WriteStorage<'s, UiText>` is needed since we will be changing
 the color that is the property of the `UiText` component.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, World, Read, ReadStorage, WriteStorage};
 # use amethyst::core::SystemDesc;
 # use amethyst::shrev::{EventChannel, ReaderId};
@@ -187,40 +182,38 @@ fn run(&mut self, (events, transforms, mut texts): Self::SystemData) {
         let button_text = texts.get_mut(event.target).unwrap();
 
         match event.event_type {
-            UiEventType::HoverStart => { 
-                button_text.color = [1.0, 1.0, 1.0, 1.0]; 
-            },
-            UiEventType::HoverStop  => { 
-                button_text.color = [1.0, 1.0, 1.0, 0.5]; 
-            },
-            _ => {},
-        }   
+            UiEventType::HoverStart => {
+                button_text.color = [1.0, 1.0, 1.0, 1.0];
+            }
+            UiEventType::HoverStop => {
+                button_text.color = [1.0, 1.0, 1.0, 0.5];
+            }
+            _ => {}
+        }
     }
 }
 # }
 ```
 
-The `HoverStart` and `HoverStop` are emitted once, upon the cursor 
-entering the transform area and exiting respectively. 
+The `HoverStart` and `HoverStop` are emitted once, upon the cursor
+entering the transform area and exiting respectively.
 
 This will brighten the button when hovering over it, and dim it otherwise.
 
-**Please note** that you would likely have some kind of checks in order to know 
-for which button the event is generated. 
-We haven't performed any here since we only have one button, so all generated 
+**Please note** that you would likely have some kind of checks in order to know
+for which button the event is generated.
+We haven't performed any here since we only have one button, so all generated
 events are tied to that button.
 
- 
 Basically you want all the magic happening in the systems, like fading
-effects, scaling effect and such. 
+effects, scaling effect and such.
 
 In theory you could set up a connection between the system and the state
 like a resource, which will determine the change of the state.
-Eventhough possible, it is not recommended. That's why now 
+Eventhough possible, it is not recommended. That's why now
 we will go through managing input through the state.
 
-
+[eventchannel]: https://specs.amethyst.rs/docs/api/shrev/struct.eventchannel
+[readerid]: https://docs.rs/specs/~0.16/specs/struct.ReaderId.html
 [sys_ini]: ../concepts/system/system_initialization.html
-[ReaderId]: https://docs.rs/specs/~0.16/specs/struct.ReaderId.html
-[UiEvent]: https://docs.amethyst.rs/master/amethyst_ui/struct.UiEvent.html
-[EventChannel]: https://specs.amethyst.rs/docs/api/shrev/struct.eventchannel
+[uievent]: https://docs.amethyst.rs/master/amethyst_ui/struct.UiEvent.html

@@ -8,7 +8,7 @@ The `amethyst_test` crate provides support to write tests ergonomically and expr
 
 The following shows a simple example of testing a `State`. More examples are in following pages.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use std::marker::PhantomData;
 #
@@ -58,7 +58,7 @@ fn loading_state_adds_load_resource() -> Result<(), Error> {
 
 The Amethyst application is initialized with one of the following functions, each providing a different set of bundles:
 
-```rust, edition2018,no_run,noplaypen
+````rust ,edition2018,no_run,noplaypen
 #
 use amethyst_test::prelude::*;
 
@@ -88,10 +88,9 @@ fn test_name() {
     //
     // Then you can include the `RenderEmptyBundle`:
     use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
-    AmethystApplication::blank()
-        .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
+    AmethystApplication::blank().with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
 }
-```
+````
 
 Next, attach the logic for your test using the various `.with_*(..)` methods:
 
@@ -100,25 +99,24 @@ Next, attach the logic for your test using the various `.with_*(..)` methods:
 fn test_name() {
     let visibility = false; // Whether the window should be shown
     AmethystApplication::render_base::<String, String, _>("test_name", visibility)
-        .with_bundle(MyBundle::new())                // Registers a bundle.
-        .with_bundle_fn(|| MyNonSendBundle::new())   // Registers a `!Send` bundle.
-        .with_resource(MyResource::new())            // Adds a resource to the world.
+        .with_bundle(MyBundle::new()) // Registers a bundle.
+        .with_bundle_fn(|| MyNonSendBundle::new()) // Registers a `!Send` bundle.
+        .with_resource(MyResource::new()) // Adds a resource to the world.
         .with_system(|_| MySystem::new(), "my_sys", &[]) // Registers a system
-                                                     // with the main dispatcher
-
+        // with the main dispatcher
         // These are run in the order they are invoked.
         // You may invoke them multiple times.
         .with_setup(|world| { /* do something */ })
         .with_state(|| MyState::new())
         .with_effect(|world| { /* do something */ })
         .with_assertion(|world| { /* do something */ })
-         // ...
+    // ...
 }
 ```
 
 Finally, call `.run()` to run the application. This returns `amethyst::Result<()>`, so we return that as part of the function:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::Error;
 # use amethyst_test::prelude::*;

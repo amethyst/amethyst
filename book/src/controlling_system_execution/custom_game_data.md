@@ -2,20 +2,20 @@
 
 So far we've been using the `Amethyst` supplied `GameData` struct to handle
 our `System`s. This works well for smaller games and demos, but once we
-start building a larger game, we will quickly realise we need to 
+start building a larger game, we will quickly realise we need to
 manipulate the `System` dispatch based on game `State`, or we need to pass
 data between `State`s that aren't `Send + Sync` which can't be added to `World`.
 
-The solution to our troubles here is to create a custom `GameData` structure 
+The solution to our troubles here is to create a custom `GameData` structure
 to house what we need that can not be added to `World`.
 
-In this tutorial we will look at how one could structure a `Paused` `State`, 
-which disables the game logic, only leaving a few core systems running that 
+In this tutorial we will look at how one could structure a `Paused` `State`,
+which disables the game logic, only leaving a few core systems running that
 are essential (like rendering, input and UI).
 
 Let's start by creating the `GameData` structure:
 
-```rust, no_run,noplaypen
+```rust ,no_run,noplaypen
 # use amethyst::ecs::prelude::Dispatcher;
 #
 pub struct CustomGameData<'a, 'b> {
@@ -26,7 +26,7 @@ pub struct CustomGameData<'a, 'b> {
 
 We also add a utility function for performing dispatch:
 
-```rust, no_run,noplaypen
+```rust ,no_run,noplaypen
 # use amethyst::ecs::prelude::{Dispatcher, World};
 #
 # pub struct CustomGameData<'a, 'b> {
@@ -54,7 +54,7 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 `GameData` structure. These are the only requirements placed on the
 `GameData` structure.
 
-```rust, no_run,noplaypen
+```rust ,no_run,noplaypen
 #
 # use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt};
 # use amethyst::core::SystemBundle;
@@ -116,11 +116,14 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b
         let core_dispatcher = Some(core_dispatcher);
         let running_dispatcher = Some(running_dispatcher);
 
-        CustomGameData { core_dispatcher, running_dispatcher }
+        CustomGameData {
+            core_dispatcher,
+            running_dispatcher,
+        }
     }
 }
 
-impl<'a,'b> DataDispose for CustomGameData<'a,'b> {
+impl<'a, 'b> DataDispose for CustomGameData<'a, 'b> {
     // We dispose each dispatcher owned by the `CustomGameData` structure.
     fn dispose(&mut self, world: &mut World) {
         if let Some(dispatcher) = self.core_dispatcher.take() {
@@ -136,7 +139,7 @@ impl<'a,'b> DataDispose for CustomGameData<'a,'b> {
 We can now use `CustomGameData` in place of the provided `GameData` when building
 our `Application`, but first we should create some `State`s.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::ecs::prelude::{Dispatcher, World};
 # use amethyst::prelude::{State, StateData, StateEvent, Trans};
@@ -192,7 +195,10 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
         }
     }
 
-    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
+    fn update(
+        &mut self,
+        data: StateData<CustomGameData>,
+    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, false); // false to say we should not dispatch running
         Trans::None
     }
@@ -221,7 +227,10 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
         }
     }
 
-    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
+    fn update(
+        &mut self,
+        data: StateData<CustomGameData>,
+    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, true); // true to say we should dispatch running
         Trans::None
     }
@@ -319,4 +328,3 @@ game.run();
 
 Those are the basics of creating a custom `GameData` structure. Now get out there and
 build your game!
-

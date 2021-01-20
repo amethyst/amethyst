@@ -2,11 +2,11 @@
 
 Premade fabrications, or prefabs, are templates that specify components to attach to an entity. For example, imagine a monster entity has the following components:
 
-* Position
-* Velocity
-* Texture
-* Health points
-* Attack damage
+- Position
+- Velocity
+- Texture
+- Health points
+- Attack damage
 
 It is certainly possible to define the values for each monster in code. However, if the components are initialized in code, then the executable needs to be recompiled whenever the component values are changed. Waiting a number of minutes to every time a small change is made is both inefficient and frustrating.
 
@@ -41,10 +41,10 @@ The prefab is distributed alongside the executable as part of the game.
 
 Prefabs have the following properties:
 
-* All entity instances created based on that prefab will receive changes made on the prefab.
-* Prefabs may nest other prefabs, allowing larger prefabs to be composed of other smaller prefabs.
+- All entity instances created based on that prefab will receive changes made on the prefab.
+- Prefabs may nest other prefabs, allowing larger prefabs to be composed of other smaller prefabs.
 
 These make prefabs ideal to use to define scenes or levels:
 
-* City prefab composed of terrain, buildings, and foliage prefabs.
-* Maze prefab composed of walls, a player, and monster prefabs.
+- City prefab composed of terrain, buildings, and foliage prefabs.
+- Maze prefab composed of walls, a player, and monster prefabs.
