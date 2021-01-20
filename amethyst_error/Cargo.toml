@@ -1,7 +1,10 @@
 [package]
 name = "amethyst_error"
 version = "0.15.3"
-authors = ["John-John Tedro <udoprog@tedro.se>", "Amethyst Foundation <contact@amethyst.rs>"]
+authors = [
+    "John-John Tedro <udoprog@tedro.se>",
+    "Amethyst Foundation <contact@amethyst.rs>",
+]
 readme = "README.md"
 edition = "2018"
 description = """
@@ -17,3 +20,6 @@ repository = "https://github.com/amethyst/amethyst"
 
 [dependencies]
 backtrace = "0.3.44"
+
+[dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }

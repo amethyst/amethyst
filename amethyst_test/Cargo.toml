@@ -24,6 +24,7 @@ lazy_static = "1.4"
 log = "0.4"
 
 [dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
 serde = "1"
 
 [features]

@@ -32,6 +32,9 @@ alga = "0.9.3"
 type-uuid = "0.1.2"
 uuid = "0.8.1"
 
+[dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+
 [features]
 profiler = ["thread_profiler/thread_profiler"]
 ui = ["amethyst_ui"]

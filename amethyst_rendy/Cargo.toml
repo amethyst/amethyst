@@ -44,8 +44,8 @@ rendy = { version = "0.5", git = "https://github.com/amethyst/rendy", rev = "506
 [target.'cfg(target_os = "linux")'.dependencies]
 rendy = { version = "0.5", git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["vulkan"] }
 
-
 [dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
 winit = { version = "0.24", git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
 rayon = "1.5"
 more-asserts = "0.2.1"

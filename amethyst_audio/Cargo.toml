@@ -32,6 +32,7 @@ thread_profiler = { version = "0.3", optional = true }
 type-uuid = "0.1"
 
 [dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
 amethyst_utils = { path = "../amethyst_utils", version = "0.15.3" }
 
 [features]

@@ -39,6 +39,7 @@ thread_profiler = { version = "0.3", optional = true }
 serde-diff = "0.4"
 
 [dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
 ron = "0.6.4"
 
 [features]
