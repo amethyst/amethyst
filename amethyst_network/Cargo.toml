@@ -30,3 +30,6 @@ laminar = "0.4"
 log = "0.4"
 thread_profiler = { version = "0.3", optional = true }
 derive-new = "0.5.8"
+
+[dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }

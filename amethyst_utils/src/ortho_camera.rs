@@ -69,21 +69,17 @@ impl Default for CameraOrthoWorldCoordinates {
 ///
 /// # Example
 ///
-/// ```rust
-/// # use amethyst_core::ecs::{Builder, World, WorldExt};
-/// # use amethyst_core::Transform;
-/// # use amethyst_rendy::camera::Camera;
-/// # use amethyst_utils::ortho_camera::*;
-/// # let mut world = World::new();
-/// # world.register::<Transform>();
-/// # world.register::<Camera>();
-/// # world.register::<CameraOrtho>();
-/// world
-///     .create_entity()
-///     .with(Transform::default())
-///     .with(Camera::standard_2d(1920.0, 1080.0))
-///     .with(CameraOrtho::normalized(CameraNormalizeMode::Contain))
-///     .build();
+/// ```
+/// # use amethyst::core::ecs::World;
+/// # use amethyst::core::Transform;
+/// # use amethyst::renderer::camera::Camera;
+/// # use amethyst::utils::ortho_camera::*;
+/// # let mut world = World::default();
+/// world.push((
+///     Transform::default(),
+///     Camera::standard_2d(1920.0, 1080.0),
+///     CameraOrtho::normalized(CameraNormalizeMode::Contain),
+/// ));
 /// ```
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, new)]
 pub struct CameraOrtho {

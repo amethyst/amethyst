@@ -5,8 +5,8 @@ use std::collections::VecDeque;
 /// A CircularBuffer that drops the oldest element inserted when full.
 /// # Example
 ///
-/// ```rust
-/// # use amethyst_utils::circular_buffer::CircularBuffer;
+/// ```
+/// # use amethyst::utils::circular_buffer::CircularBuffer;
 /// # use std::collections::VecDeque;
 /// let mut buf = CircularBuffer::<u32>::new(2);
 /// assert_eq!(*buf.queue(), VecDeque::<u32>::from(vec![]));

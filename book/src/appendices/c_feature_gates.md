@@ -9,7 +9,7 @@ To reduce compilation times, you can disable features that are not needed for yo
 
 When compiling, you can use the following Cargo parameters:
 
-```ignore
+```shell
 cargo (build/test/run) --no-default-features --features feature1,feature2,feature3
 ```
 
@@ -61,7 +61,7 @@ are involved in the test), you need to enable the `test-support` feature.
 
 To enable the profiler, you can use the following feature:
 
-```ignore
+```shell
 cargo (build/test/run) --features profiler
 ```
 
@@ -72,7 +72,7 @@ You can open this file using the chromium browser (or google chrome) and navigat
 
 When using Amethyst as a dependency of your project, you can use the following to disable default features and enable other ones.
 
-```ignore
+```toml
 [dependencies.amethyst]
 version = "*"
 default-features = false

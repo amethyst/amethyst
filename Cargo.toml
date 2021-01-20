@@ -20,6 +20,9 @@ license = "MIT/Apache-2.0"
 
 autoexamples = false # Our examples come with their own Cargo.toml and are in the [workspace] section
 
+[lib]
+crate-type = ["lib"]
+
 [features]
 default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
 optional = ["audio", "network", "locale", "ui", "tiles", "animation"]
@@ -81,7 +84,6 @@ exclude = [
     "examples/rendy",
     "examples/states_ui",
     "examples/state_dispatcher",
-    "examples/prefab_basic",
     "examples/prefab_multi",
     "examples/prefab_custom",
     "examples/prefab_adapter",
@@ -131,6 +133,9 @@ legion = { version = "0.3", default-features = false, features = [
 [build-dependencies]
 dirs-next = "2.0.0"
 vergen = "3.1.0"
+
+[dev-dependencies]
+env_logger = "0.8.2"
 
 [package.metadata.docs.rs]
 features = [

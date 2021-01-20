@@ -107,6 +107,7 @@ where
 ///     core::transform::{Parent, Transform},
 ///     prelude::*,
 /// };
+/// use env_logger;
 ///
 /// struct NullState;
 /// impl EmptyState for NullState {}
@@ -173,7 +174,7 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
+    /// ```no_run
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
@@ -187,7 +188,7 @@ where
     ///
     /// #  Ok(())
     /// # }
-    /// ~~~
+    /// ```
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self, Error>
     where
         P: AsRef<Path>,
@@ -457,9 +458,11 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::core::transform::{Parent, Transform};
+    /// ```no_run
+    /// use amethyst::{
+    ///     core::transform::{Parent, Transform},
+    ///     prelude::*,
+    /// };
     ///
     /// struct NullState;
     /// impl EmptyState for NullState {}
@@ -472,8 +475,8 @@ where
     /// // returning a new object with the modified configuration.
     /// let assets_dir = "assets/";
     /// let game = Application::build(assets_dir, NullState)?
-    /// // lastly we can build the Application object
-    /// // the `build` function takes the user defined game data initializer as input
+    ///     // lastly we can build the Application object
+    ///     // the `build` function takes the user defined game data initializer as input
     ///     .build(())?;
     ///
     /// // the game instance can now be run, this exits only when the game is done
@@ -481,7 +484,7 @@ where
     ///
     /// # Ok(())
     /// # }
-    /// ~~~
+    /// ```
     pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self, Error> {
         if !log_enabled!(Level::Error) {
             eprintln!(
@@ -580,7 +583,7 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
+    /// ```
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
@@ -592,18 +595,16 @@ where
     ///
     /// struct Score {
     ///     score: u32,
-    ///     user: String
+    ///     user: String,
     /// }
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let score_board = HighScores(Vec::new());
     /// let assets_dir = "assets/";
-    /// let game = Application::build(assets_dir, NullState)?
-    ///     .with_resource(score_board);
+    /// let game = Application::build(assets_dir, NullState)?.with_resource(score_board);
     /// #     Ok(())
     /// # }
-    ///
-    /// ~~~
+    /// ```
     pub fn with_resource<R: Resource>(mut self, resource: R) -> Self {
         self.resources.insert(resource);
         self
@@ -632,10 +633,12 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
-    /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
+    /// ```no_run
+    /// use amethyst::{
+    ///     assets::{DefaultLoader, Directory, Handle, Loader},
+    ///     prelude::*,
+    ///     renderer::{formats::mesh::ObjFormat, Mesh},
+    /// };
     ///
     /// # fn main() -> amethyst::Result<()> {
     /// let assets_dir = "assets/";
@@ -651,14 +654,11 @@ where
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
     ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
-    ///         let storage = data.resources.get().unwrap();
-    ///
     ///         // Load a teapot mesh from the directory that registered above.
-    ///         let mesh: Handle<Mesh> =
-    ///             loader.load_from("teapot", ObjFormat, "custom_directory", (), &storage);
+    ///         let mesh: Handle<Mesh> = loader.load("teapot.obj");
     ///     }
     /// }
-    /// ~~~
+    /// ```
     pub fn with_source<I, O>(self, _name: I, _store: O) -> Self
     where
         I: Into<String>,
@@ -688,37 +688,41 @@ where
     ///
     /// # Examples
     ///
-    /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory,  DefaultLoader, Loader, Handle};
-    /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
+    /// ```no_run
+    /// use amethyst::{
+    ///     assets::{DefaultLoader, Directory, Handle, Loader, LoaderBundle},
+    ///     prelude::*,
+    ///     renderer::Mesh,
+    /// };
     ///
     /// # fn main() -> amethyst::Result<()> {
+    /// #      amethyst::start_logger(Default::default());
+    /// let mut dispatcher = DispatcherBuilder::default();
+    /// dispatcher.add_bundle(LoaderBundle);
     /// let assets_dir = "assets/";
     /// let game = Application::build(assets_dir, LoadingState)?
     ///     // Register the directory "custom_directory" as default source for the loader.
     ///     .with_default_source(Directory::new("custom_directory"))
-    ///     .build(DispatcherBuilder::default())?
+    ///     .build(dispatcher)?
     ///     .run();
-    /// #     Ok(())
+    /// # Ok(())
     /// # }
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<'_, GameData>) {
     ///         let loader = data.resources.get::<DefaultLoader>().unwrap();
-    ///         let storage = data.resources.get().unwrap();
     ///         // Load a teapot mesh from the directory that registered above.
-    ///         let mesh: Handle<Mesh> = loader.load("teapot", ObjFormat, (), &storage);
+    ///         let mesh: Handle<Mesh> = loader.load("teapot.obj");
     ///     }
     /// }
-    /// ~~~
+    /// ```
     pub fn with_default_source<O>(self, _store: O) -> Self
     where
         O: Source,
     {
         {
-            let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
+            // let _loader = self.resources.get_mut::<DefaultLoader>().unwrap();
             // FIXME Update the location on the loader
             // loader.set_default_source(store);
         }

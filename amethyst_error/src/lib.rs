@@ -113,10 +113,10 @@ impl Error {
     /// through [`ResultExt`](trait.ResultExt.html) using
     /// [`with_context`](trait.ResultExt.html#method.with_context).
     ///
-    /// ```rust
+    /// ```
     /// use std::io;
     ///
-    /// use amethyst_error::{Error, ResultExt};
+    /// use amethyst::error::{Error, ResultExt};
     ///
     /// let e = io::Error::new(io::ErrorKind::Other, "wrapped");
     /// let a = Error::new(e);
@@ -135,8 +135,8 @@ impl Error {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use amethyst_error::{Error, ResultExt};
+    /// ```
+    /// use amethyst::error::{Error, ResultExt};
     ///
     /// fn failing_function() -> Result<(), Error> {
     ///     Err(Error::from_string("failing"))
@@ -216,8 +216,8 @@ where
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use amethyst_error::{Error, ResultExt};
+    /// ```
+    /// use amethyst::error::{Error, ResultExt};
     ///
     /// fn failing_function() -> Result<(), Error> {
     ///     Err(Error::from_string("failing"))
@@ -281,9 +281,8 @@ impl<'a> Iterator for Causes<'a> {
 
 /// Constructs an `Error` using the standard string interpolation syntax.
 ///
-/// ```rust
-/// #[macro_use]
-/// extern crate amethyst_error;
+/// ```
+/// use amethyst_error::format_err;
 ///
 /// fn main() {
 ///     let err = format_err!("number: {}", 42);

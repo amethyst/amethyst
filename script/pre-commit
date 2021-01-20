@@ -9,10 +9,10 @@ read -r -p "Would you like to lint your code before committing? [y/N]" response
 response=${response,,} # tolower
 if [[ $response =~ ^(yes|y|Y) ]]; then
     echo "Linting..."
-    cargo +nightly check -q --workspace --all-targets --features empty,optional ||
-    echo -e "${RED}Lint Errors Found, Try this command: ${GREEN}cargo +nightly fix --workspace --features empty,optional --allow-dirty --allow-staged${NC}" && exit 1
+    cargo +nightly check -q --workspace --all-targets --all-features ||
+    echo -e "${RED}Lint Errors Found, Try this command: ${GREEN}cargo +nightly fix --workspace --all-features --allow-dirty --allow-staged${NC}" && exit 1
     sleep 1 # fixes possibly newer errors
-    cargo +nightly clippy -q -Z unstable-options --workspace --features empty,optional ||
-    echo -e "${RED}Lint Errors Found, Try this command: ${GREEN}cargo +nightly clippy -Z unstable-options --workspace --features empty,optional --fix --allow-dirty --allow-staged${NC}" && exit 1
+    cargo +nightly clippy -q -Z unstable-options --workspace --all-targets --all-features ||
+    echo -e "${RED}Lint Errors Found, Try this command: ${GREEN}cargo +nightly clippy -Z unstable-options --workspace --all-targets --all-features --fix --allow-dirty --allow-staged${NC}" && exit 1
     cargo +nightly fmt --all
 fi

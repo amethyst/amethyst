@@ -24,11 +24,11 @@ use crate::circular_buffer::CircularBuffer;
 /// framerate by the user.
 ///
 /// # Example
-/// ```rust
-/// # use amethyst_utils::fps_counter::FpsCounter;
-/// # use amethyst_core::ecs::{World, Resources};
+/// ```
+/// # use amethyst::utils::fps_counter::FpsCounter;
+/// # use amethyst::core::ecs::{World, Resources};
 /// # let mut world = World::default();
-/// let resources = Resources::default();
+/// let mut resources = Resources::default();
 /// let counter = FpsCounter::new(2);
 /// resources.insert(counter);
 /// ```

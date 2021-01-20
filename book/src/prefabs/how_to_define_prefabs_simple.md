@@ -2,8 +2,7 @@
 
 This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. This can be applied where the [`Component`] type itself is completely serializable &ndash; the data is self-contained:
 
-```rust,no_run,noplaypen
-# extern crate amethyst;
+```rust, no_run,noplaypen
 # extern crate serde;
 #
 # use amethyst::ecs::{storage::DenseVecStorage, Component};
@@ -27,7 +26,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
 2. Import the following items:
 
-    ```rust,ignore
+    ```rust
     use amethyst::{
         assets::{PrefabData, ProgressCounter},
         derive::PrefabData,
@@ -39,7 +38,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
 3. Add the following attributes on your type:
 
-    ```rust,ignore
+    ```rust
     #[derive(Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
     #[serde(default)] // <--- optional
@@ -48,8 +47,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
     Example:
 
-    ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
+    ```rust, edition2018,no_run,noplaypen
     # extern crate derivative;
     # extern crate serde;
     #
@@ -80,7 +78,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
 4. Now the type can be used in a prefab:
 
-    ```rust,ignore
+    ```rust
     #![enable(implicit_some)]
     Prefab(
         entities: [
@@ -91,10 +89,10 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     )
     ```
 
-To see this in a complete example, run the [`prefab_basic` example] from the Amethyst repository:
+To see this in a complete example, run the [`prefab` example] from the Amethyst repository:
 
 ```bash
-cargo run -p prefab_basic
+cargo run -p prefab
 ```
 
 [`Component`]: https://docs.rs/specs/~0.16/specs/trait.Component.html
@@ -103,5 +101,5 @@ cargo run -p prefab_basic
 [api_pf_derive]: https://docs.amethyst.rs/master/amethyst_derive/derive.PrefabData.html
 [ser_def]: https://serde.rs/container-attrs.html#default
 [ser_unk]: https://serde.rs/container-attrs.html#deny_unknown_fields
-[`prefab_basic` example]: https://github.com/amethyst/amethyst/tree/master/examples/prefab_basic
+[`prefab` example]: https://github.com/amethyst/amethyst/tree/master/examples/prefab
 [bk_prefab_prelude]: ./how_to_define_prefabs_prelude.html

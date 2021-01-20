@@ -93,7 +93,7 @@ impl<T, E> Debug for Trans<T, E> {
 /// Event queue to trigger state `Trans` from other places than a `State`'s methods.
 /// FIXME: needs example
 /// # Example:
-/// ```rust, ignore
+/// ```ignore
 /// resources.get_mut::<EventChannel<TransEvent<MyGameData, StateEvent>>>().single_write(Box::new(|| Trans::Quit));
 /// ```
 ///
@@ -678,12 +678,12 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 });
             }
 
-            //push the new states
+            // push the new states
             let state_count = states.len();
             for (count, state) in states.into_iter().enumerate() {
                 self.state_stack.push(state);
 
-                //State was just pushed, thus pop will always succeed
+                // State was just pushed, thus pop will always succeed
                 let new_state = self.state_stack.last_mut().unwrap();
                 new_state.on_start(StateData {
                     world,
@@ -691,7 +691,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                     data,
                 });
                 if count != state_count - 1 {
-                    //pause on each state but the last
+                    // pause on each state but the last
                     new_state.on_pause(StateData {
                         world,
                         resources,

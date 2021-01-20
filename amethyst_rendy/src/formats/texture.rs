@@ -20,33 +20,68 @@ use crate::types::TextureData;
 /// Image format description newtype wrapper for `ImageTextureConfig` from rendy.
 ///
 /// # Example Usage
-/// ```ignore
-/// 
-///    let loader = res.fetch_mut::<DefaultLoader>();
-///    let texture_storage = res.fetch_mut::<AssetStorage<Texture>>();
+/// ```
+/// use amethyst::{
+///     assets::{AssetStorage, DefaultLoader, Handle, Loader, ProcessingQueue},
+///     ecs::Resources,
+///     error::Error,
+///     renderer::{
+///         rendy::{
+///             hal::{
+///                 format::Format,
+///                 image::{
+///                     Filter, Kind, Lod, PackedColor, SamplerDesc, Size, ViewKind, WrapMode,
+///                 },
+///             },
+///             texture::{
+///                 image::{load_from_image, ImageTextureConfig, Repr, TextureKind},
+///                 pixel::{AsPixel, Rgba8Srgb},
+///                 TextureBuilder,
+///             },
+///         },
+///         types::TextureData,
+///         Texture,
+///     },
+/// };
+/// # let mut resources = Resources::default();
+/// # let mut loader = DefaultLoader::default();
+/// let texture_storage = resources.get_or_default::<ProcessingQueue<TextureData>>();
+/// struct Image {
+///     pixels: Vec<u8>,
+///     width: u32,
+///     height: u32,
+/// }
 ///
-///    let texture_builder = TextureBuilder::new()
-///        .with_data_width(handle.width)
-///        .with_data_height(handle.height)
-///        .with_kind(image::Kind::D2(handle.width, handle.height, 1, 1))
-///        .with_view_kind(image::ViewKind::D2)
-///        .with_sampler_info(SamplerDesc {
-///        min_filter: Filter::Linear,
-///        mag_filter: Filter::Linear,
-///        mip_filter: Filter::Linear,
-///        wrap_mode: (WrapMode::Clamp, WrapMode::Clamp, WrapMode::Clamp),
-///        lod_bias: Lod(0.0),
-///        lod_range: std::ops::Range {
-///            start: Lod(0.0),
-///            end: Lod(1000.0),
-///        },
-///        comparison: None,
-///        border: PackedColor(0),
-///        anisotropic: Anisotropic::Off,
-///        })
-///        .with_raw_data(handle.pixels, Format::Rgba8Unorm);
+/// let handle = Image {
+///     pixels: vec![],
+///     width: 1,
+///     height: 1,
+/// };
 ///
-///    let tex: Handle<Texture> = loader.load_from_data(TextureData(texture_builder), (), &texture_storage);
+/// let texture_builder = TextureBuilder::new()
+///     .with_data_width(handle.width)
+///     .with_data_height(handle.height)
+///     .with_kind(Kind::D2(handle.width, handle.height, 1, 1))
+///     .with_view_kind(ViewKind::D2)
+///     .with_sampler_info(SamplerDesc {
+///         min_filter: Filter::Linear,
+///         mag_filter: Filter::Linear,
+///         mip_filter: Filter::Linear,
+///         wrap_mode: (WrapMode::Clamp, WrapMode::Clamp, WrapMode::Clamp),
+///         lod_bias: Lod(0.0),
+///         lod_range: std::ops::Range {
+///             start: Lod(0.0),
+///             end: Lod(1000.0),
+///         },
+///         comparison: None,
+///         border: PackedColor(0),
+///         normalized: true,
+///         anisotropy_clamp: None,
+///     })
+///     .with_raw_data(handle.pixels, Format::Rgba8Unorm);
+///
+/// let tex: Handle<Texture> =
+///     loader.load_from_data(TextureData(texture_builder), (), &texture_storage);
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
 #[serde(transparent)]

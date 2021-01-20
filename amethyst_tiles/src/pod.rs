@@ -14,7 +14,7 @@ use amethyst_rendy::{
 use glsl_layout::{mat4, uvec3, vec2, vec4, Uniform};
 
 /// `TileMapArgs`
-/// ```glsl,ignore
+/// ```glsl
 /// uniform TileMapArgs {
 ///    uniform mat4 proj;
 ///    uniform mat4 view;
@@ -38,7 +38,7 @@ pub struct TileMapArgs {
 }
 
 /// Tile Vertex Data
-/// ```glsl,ignore
+/// ```glsl
 /// vec2 dir_x;
 /// vec2 dir_y;
 /// vec2 pos;

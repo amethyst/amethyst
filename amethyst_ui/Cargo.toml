@@ -45,5 +45,8 @@ glyph_brush = "0.6"
 thread_profiler = { version = "0.3", optional = true }
 type-uuid = "0.1"
 
+[dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+
 [features]
 profiler = ["thread_profiler/thread_profiler"]

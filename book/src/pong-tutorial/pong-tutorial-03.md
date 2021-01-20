@@ -26,7 +26,7 @@ Let's start by creating a config file under the `config` directory of our
 project, called `bindings.ron`, which will contain a RON representation
 of the [amethyst_input::Bindings][doc_bindings] struct:
 
-```ron,ignore
+```ron
 (
   axes: {
     "left_paddle": Emulated(pos: Key(W), neg: Key(S)),
@@ -50,8 +50,7 @@ Next, we'll add an `InputBundle` to the game's `Application` object, that
 contains an `InputHandler` system which captures inputs, and maps them to the
 axes we defined. Let's make the following changes to `main.rs`.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst_utils::application_root_dir;
@@ -71,7 +70,7 @@ let input_bundle = InputBundle::<StringBindings>::new()
 # let assets_dir = "assets";
 # struct Pong;
 # impl SimpleState for Pong { }
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?
     // ..
@@ -92,7 +91,7 @@ directory called `systems` under `src` to hold all our systems. We'll use a
 module to collect and export each of our systems to the rest of the
 application. Here's our `mod.rs` for `src/systems`:
 
-```rust,ignore
+```rust
 pub use self::paddle::PaddleSystem;
 
 mod paddle;
@@ -100,8 +99,7 @@ mod paddle;
 
 We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -199,14 +197,13 @@ immutable for the `Paddle` and mutable for the `Transform`.
 > by using `par_join` instead of `join`, but here the overhead introduced is not
 > worth the gain offered by parallelism.
 
-Let's add this system to our `GameDataBuilder` in `main.rs`:
+Let's add this system to our `DispatcherBuilder` in `main.rs`:
 
-```rust,ignore
+```rust
 mod systems; // Import the module
 ```
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::input::StringBindings;
@@ -231,7 +228,7 @@ fn main() -> amethyst::Result<()> {
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
     // ...
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?
@@ -258,8 +255,7 @@ If we run the game now, we'll see the console print our keypresses.
 Let's make it update the position of the paddle. To do this, we'll modify the y
 component of the transform's translation.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
@@ -317,8 +313,7 @@ to `PADDLE_HEIGHT * 0.5` (the bottom of the arena plus the offset).
 
 Our run function should now look something like this:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
@@ -375,8 +370,7 @@ Now that we have a system in place that uses the `Paddle` component,
 we no longer need to manually register it with the `world`: the system
 will take care of that for us, as well as set up the storage.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::assets::Handle;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;

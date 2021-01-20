@@ -65,7 +65,7 @@ done the following things first:
    * `rustup update stable nightly`
    * `cargo +nightly fmt --all`
    * `cargo +nightly clippy --workspace --all-targets --all-features -Z unstable-options`
-   * `cargo test --all-targets --workspace --all-features`
+   * `cargo test --workspace --all-features`
    * `cargo run -p $YOUR_EXAMPLE`
    
     You can copy `script/pre-commit` to `.git/hooks/pre-commit` for a prompt to remind you of these requirements and automatically lint and fix some of them for you when committing.
@@ -239,9 +239,8 @@ page, we can do this inline.
 Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust,edition2018,no_run,noplaypen`. Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example: 
 
 ````
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-use amethyst::ecs::{World, WorldExt};
+```rust, edition2018,no_run,noplaypen
+use amethyst::ecs::{World};
 
 // A simple struct with no data.
 struct MyResource;

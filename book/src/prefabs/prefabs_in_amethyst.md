@@ -19,8 +19,7 @@ The remainder of this page explains these at a conceptual level; subsequent page
 
 In its stored form, a prefab is a serialized list of entities and their components that should be instantiated together. To begin, we will look at a simple prefab that attaches a simple component to a single entity. We will use the following `Position` component:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # extern crate derivative;
 # extern crate serde;
 #
@@ -47,7 +46,7 @@ The important derives are the [`Component`] and [`PrefabData`] &ndash; [`Compone
 
 Here is an example `.ron` file of a prefab with an entity with a `Position`:
 
-```rust,ignore
+```rust
 #![enable(implicit_some)]
 Prefab(
     entities: [
@@ -69,34 +68,33 @@ The top level type is a [`Prefab`], and holds a list of `entities`. These are no
 
 When we load this prefab, the prefab entity is read as:
 
-```rust,ignore
+```rust
 PrefabEntity { parent: None, data: Some(Position(1.0, 2.0, 3.0)) }
 ```
 
 Next, we create an entity with the prefab handle, `Handle<Prefab<Position>>`:
 
 | Entity                   | Handle<Prefab&lt;Position>> |
-| ------------------------ | ------------------------ |
-| Entity(0, Generation(1)) | Handle { id: 0 }         |
+| ------------------------ | --------------------------- |
+| Entity(0, Generation(1)) | Handle { id: 0 }            |
 
 In the background, the [`PrefabLoaderSystem`] will run, and attach the `Position` component:
 
 | Entity                   | Handle<Prefab&lt;Position>> | Position                |
-| ------------------------ | ------------------------ | ----------------------- |
-| Entity(0, Generation(1)) | Handle { id: 0 }         | Position(1.0, 2.0, 3.0) |
+| ------------------------ | --------------------------- | ----------------------- |
+| Entity(0, Generation(1)) | Handle { id: 0 }            | Position(1.0, 2.0, 3.0) |
 
-This can be seen by running the `prefab_basic` example from the Amethyst repository:
+This can be seen by running the `prefab` example from the Amethyst repository:
 
 ```bash
-cargo run -p prefab_basic
+cargo run -p prefab
 ```
 
 ### Multiple Components
 
 If there are multiple components to be attached to the entity, then we need a type that aggregates the [`Component`]s:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # extern crate derivative;
 # extern crate serde;
 #
@@ -131,7 +129,7 @@ Here, the `Player` type is **not** a [`Component`], but it does implement [`Pref
 
 The corresponding prefab file is written as follows:
 
-```rust,ignore
+```rust
 #![enable(implicit_some)]
 Prefab(
     entities: [
@@ -150,8 +148,8 @@ When an entity is created with this prefab, Amethyst will recurse into each of t
 Now, when we create an entity with the prefab handle, both components will be attached:
 
 | Handle<Prefab&lt;Player>> | Position                | Player                 |
-| ---------------------- | ----------------------- | ---------------------- |
-| Handle { id: 0 }       | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } |
+| ------------------------- | ----------------------- | ---------------------- |
+| Handle { id: 0 }          | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } |
 
 This can be seen by running the `prefab_multi` example from the Amethyst repository:
 
@@ -163,7 +161,7 @@ cargo run -p prefab_multi
 
 The next level is to instantiate multiple entities, each with their own set of [`Component`]s. The current implementation of [`Prefab`] requires the `data` field to be the same type for *every* [`PrefabEntity`] in the list. This means that to have different types of entity in the same prefab they must be variants of an enum. For instance, a prefab like this:
 
-```rust,ignore
+```rust
 #![enable(implicit_some)]
 Prefab(
     entities: [
@@ -188,8 +186,7 @@ Prefab(
 
 Could be implemented using an enum like this:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # extern crate derivative;
 # extern crate serde;
 #
@@ -241,15 +238,15 @@ pub enum CustomPrefabData {
 When we run this, we start off by creating one entity:
 
 | Entity                   | Handle<Prefab&lt;CustomPrefabData>>> |
-| ------------------------ | --------------------------------- |
-| Entity(0, Generation(1)) | Handle { id: 0 }                  |
+| ------------------------ | ------------------------------------ |
+| Entity(0, Generation(1)) | Handle { id: 0 }                     |
 
 When the [`PrefabLoaderSystem`] runs, this becomes the following:
 
 | Entity                   | Handle<Prefab&lt;CustomPrefabData>>> | Parent                   | Position                | Player                 | Weapon |
-| ------------------------ | --------------------------------- | ------------------------ | ----------------------- | ---------------------- | ------ |
-| Entity(0, Generation(1)) | Handle { id: 0 }                  | None                     | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } | None   |
-| Entity(1, Generation(1)) | None                              | Entity(0, Generation(1)) | Position(4.0, 5.0, 6.0) | None                   | Sword  |
+| ------------------------ | ------------------------------------ | ------------------------ | ----------------------- | ---------------------- | ------ |
+| Entity(0, Generation(1)) | Handle { id: 0 }                     | None                     | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } | None   |
+| Entity(1, Generation(1)) | None                                 | Entity(0, Generation(1)) | Position(4.0, 5.0, 6.0) | None                   | Sword  |
 
 * The entity that the `Handle<Prefab<T>>` is attached will be augmented with [`Component`]s from the first [`PrefabEntity`].
 * A new entity is created for subsequent [`PrefabEntity`] entries in the `entities` list.
@@ -257,18 +254,18 @@ When the [`PrefabLoaderSystem`] runs, this becomes the following:
 Note that the `Weapon` has a parent with index `0`. Let's see what happens when multiple entities are created with this prefab. First, two entities are created with the prefab handle:
 
 | Entity                   | Handle<Prefab&lt;CustomPrefabData>>> |
-| ------------------------ | --------------------------------- |
-| Entity(0, Generation(1)) | Handle { id: 0 }                  |
-| Entity(1, Generation(1)) | Handle { id: 0 }                  |
+| ------------------------ | ------------------------------------ |
+| Entity(0, Generation(1)) | Handle { id: 0 }                     |
+| Entity(1, Generation(1)) | Handle { id: 0 }                     |
 
 Next, the [`PrefabLoaderSystem`] runs and creates and augments the entities:
 
 | Entity                   | Handle<Prefab&lt;CustomPrefabData>>> | Parent                   | Position                | Player                 | Weapon |
-| ------------------------ | --------------------------------- | ------------------------ | ----------------------- | ---------------------- | ------ |
-| Entity(0, Generation(1)) | Handle { id: 0 }                  | None                     | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } | None   |
-| Entity(1, Generation(1)) | Handle { id: 0 }                  | None                     | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } | None   |
-| Entity(2, Generation(1)) | None                              | Entity(0, Generation(1)) | Position(4.0, 5.0, 6.0) | None                   | Sword  |
-| Entity(3, Generation(1)) | None                              | Entity(1, Generation(1)) | Position(4.0, 5.0, 6.0) | None                   | Sword  |
+| ------------------------ | ------------------------------------ | ------------------------ | ----------------------- | ---------------------- | ------ |
+| Entity(0, Generation(1)) | Handle { id: 0 }                     | None                     | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } | None   |
+| Entity(1, Generation(1)) | Handle { id: 0 }                     | None                     | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } | None   |
+| Entity(2, Generation(1)) | None                                 | Entity(0, Generation(1)) | Position(4.0, 5.0, 6.0) | None                   | Sword  |
+| Entity(3, Generation(1)) | None                                 | Entity(1, Generation(1)) | Position(4.0, 5.0, 6.0) | None                   | Sword  |
 
 The sword entity `2` has player entity `0` as its parent, and sword entity `3` has player entity `1` as its parent.
 

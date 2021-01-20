@@ -13,7 +13,7 @@ use rendy::{
 use crate::{mtl, resources::Tint as TintComponent, Sprite};
 
 /// TextureOffset
-/// ```glsl,ignore
+/// ```glsl
 /// struct UvOffset {
 ///    vec2 u_offset;
 ///    vec2 v_offset;
@@ -39,7 +39,7 @@ impl TextureOffset {
 }
 
 /// ViewArgs
-/// ```glsl,ignore
+/// ```glsl
 /// uniform ViewArgs {
 ///    uniform mat4 proj;
 ///    uniform mat4 view;
@@ -58,7 +58,7 @@ pub struct ViewArgs {
 }
 
 /// Tint
-/// ```glsl,ignore
+/// ```glsl
 /// vec4 tint;
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Uniform)]
@@ -74,7 +74,7 @@ impl AsAttribute for Tint {
 }
 
 /// Instance-rate vertex arguments
-/// ```glsl,ignore
+/// ```glsl
 ///  mat4 model;
 ///  vec4 tint;
 /// ```
@@ -111,7 +111,7 @@ impl AsVertex for VertexArgs {
 }
 
 /// Instance-rate joints offset
-/// ```glsl,ignore
+/// ```glsl
 ///  uint joints_offset;
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Uniform)]
@@ -127,7 +127,7 @@ impl AsAttribute for JointsOffset {
 }
 
 /// Skinned Instance-rate vertex arguments.
-/// ```glsl,ignore
+/// ```glsl
 ///  mat4 model;
 ///  vec4 tint;
 ///  uint joints_offset:
@@ -171,7 +171,7 @@ impl SkinnedVertexArgs {
 }
 
 /// point light struct
-/// ```glsl,ignore
+/// ```glsl
 /// struct PointLight {
 ///    vec3 position;
 ///    vec3 color;
@@ -189,7 +189,7 @@ pub struct PointLight {
 }
 
 /// directional light struct
-/// ```glsl,ignore
+/// ```glsl
 /// struct DirectionalLight {
 ///    vec3 color;
 ///    float intensity;
@@ -207,7 +207,7 @@ pub struct DirectionalLight {
 }
 
 /// spot light struct
-/// ```glsl,ignore
+/// ```glsl
 /// struct SpotLight {
 ///    vec3 position;
 ///    vec3 color;
@@ -237,7 +237,7 @@ pub struct SpotLight {
 }
 
 /// Environment Uniform
-/// ```glsl,ignore
+/// ```glsl
 /// uniform Environment {
 ///    vec3 ambient_color;
 ///    vec3 camera_position;
@@ -261,7 +261,7 @@ pub struct Environment {
 }
 
 /// Material Uniform
-/// ```glsl,ignore
+/// ```glsl
 /// uniform Material {
 ///    UvOffset uv_offset;
 ///    float alpha_cutoff;
@@ -287,7 +287,7 @@ impl Material {
 }
 
 /// Sprite Vertex Data
-/// ```glsl,ignore
+/// ```glsl
 /// vec2 dir_x;
 /// vec2 dir_y;
 /// vec2 pos;

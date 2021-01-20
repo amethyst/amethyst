@@ -4,8 +4,7 @@ The first part of loading sprites into Amethyst is to read the image into memory
 
 The following snippet shows how to load a PNG / JPEG / GIF / ICO image:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 use amethyst::assets::{AssetStorage, Handle,  DefaultLoader, Loader};
 use amethyst::prelude::*;
 use amethyst::renderer::{formats::texture::ImageFormat, Texture};
@@ -46,8 +45,7 @@ The loaded texture will use nearest filtering, i.e. the pixels won't be interpol
 If you want to tweak the sampling, you can change `ImageFormat::default()` to
 `ImageFormat(my_config)`, and create your own `my_config` like this:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 use amethyst::renderer::rendy::hal::image::{Filter, SamplerInfo, WrapMode};
 use amethyst::renderer::rendy::texture::image::{ImageTextureConfig, Repr, TextureKind};
 

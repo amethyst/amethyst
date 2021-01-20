@@ -30,6 +30,7 @@ smallvec = { version = "1.2", features = ["serde"] }
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
 approx = "0.4"
 
 [features]

@@ -18,7 +18,7 @@
 * `Bindings<String, String>` is now `Bindings<StringBindings>`.
 * `Bindings<AX, AC>` is now `Bindings<T>`, where `T` is a new type you must implement:
 
-    ```rust,ignore
+    ```rust
     pub struct ControlBindings;
 
     impl BindingTypes for ControlBindings {
@@ -55,7 +55,7 @@
 * `DisplayConfig`'s `fullscreen` field is now an `Option<MonitorIdent>`. `MonitorIdent` is `MonitorIdent(u16, String)`, indicating the native monitor display ID, and its [name][monID].
 * `WindowBundle` is now separate from `amethyst_renderer`.
 
-    ```rust,ignore
+    ```rust
     use amethyst::window::WindowBundle;
 
     game_data.with_bundle(WindowBundle::from_config_file(display_config_path))?;
@@ -75,7 +75,7 @@
 * `Flipped` component is removed. You can specify `flipped` during sprite loading, or mutating `Transform` at run time.
 * To load a texture in memory, you can't use `[0.; 4].into()` as the `TextureData` anymore. Use:
 
-    ```rust,ignore
+    ```rust
     use amethyst::{
         assets::{AssetStorage, Handle,  DefaultLoader, Loader, Prefab, PrefabLoader},
         ecs::World,
@@ -98,10 +98,10 @@
 
     In `main.rs`:
 
-    ```rust,ignore
+    ```rust
     use amethyst::renderer::{types::DefaultBackend, RenderingSystem};
 
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -118,7 +118,7 @@
     ```
 
 * Render passes can be integrated into amethyst by using the newly introduced `RenderPlugin` trait, for example:
-    ```rust,ignore
+    ```rust
     pub struct RenderCustom {
         target: Target,
     }
@@ -157,7 +157,7 @@
     ```
 * `RenderBundle::with_sprite_sheet_processor()` is replaced by:
 
-    ```rust,ignore
+    ```rust
     game_data.with(
         Processor::<SpriteSheet>::new(),
         "sprite_sheet_processor",
@@ -169,7 +169,7 @@
 
 * `RenderBundle::with_sprite_visibility_sorting()` is replaced by:
 
-    ```rust,ignore
+    ```rust
     use amethyst::rendy::sprite_visibility::SpriteVisibilitySortingSystem;
 
     game_data.with(

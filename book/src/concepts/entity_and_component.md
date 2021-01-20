@@ -8,7 +8,7 @@ An `Entity` represents a single object in your world. `Component` represents one
 
 In an inheritance design, entity usually contains components. All the data and methods related to an entity are stored within. However, in the ECS design, entity is just a general purpose object. In fact, the implementation of `Entity` in Amethyst is simply:
 
-```rust,ignore
+```rust
 struct Entity(u32, Generation);
 ```
 
@@ -18,9 +18,9 @@ where u32 is the id of the entity and generation is used to check if the entity 
 
 Consider an example where you have three objects: two bottles and a person.
 
-|  object  |   x   |   y   |   shape  |  color  |   name  |
-|:--------:|:-----:|:-----:|:--------:|:-------:|:-------:|
-| Bottle A | 150.0 | 202.1 |  "round" |  "red"  |         |
+|  object  |   x   |   y   |  shape   |  color  |  name   |
+| :------: | :---: | :---: | :------: | :-----: | :-----: |
+| Bottle A | 150.0 | 202.1 | "round"  |  "red"  |         |
 | Bottle B | 570.0 | 122.0 | "square" | "white" |         |
 | Person C | 100.5 | 300.8 |          |         | "Peter" |
 
@@ -45,8 +45,7 @@ You will see how these methods are used in later chapters.
 
 To declare a component, you first declare the relevant underlying data:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::core::math::{Isometry3, Vector3};
 
 /// This `Component` describes the shape of an `Entity`
@@ -66,8 +65,7 @@ pub struct Transform {
 
 and then you implement the `Component` trait for them:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # struct Shape;
 # struct Transform;
 use amethyst::ecs::{Component, DenseVecStorage, FlaggedStorage};

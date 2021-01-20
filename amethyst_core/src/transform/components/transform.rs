@@ -57,9 +57,9 @@ impl Transform {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// # use amethyst_core::transform::Transform;
-    /// # use amethyst_core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
+    /// ```
+    /// # use amethyst::core::transform::Transform;
+    /// # use amethyst::core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
     /// let position = Translation3::new(0.0, 2.0, 4.0);
     /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
     /// let scale = Vector3::new(1.0, 1.0, 1.0);
@@ -97,9 +97,9 @@ impl Transform {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// # use amethyst_core::transform::Transform;
-    /// # use amethyst_core::math::{UnitQuaternion, Quaternion, Vector3};
+    /// ```
+    /// # use amethyst::core::transform::Transform;
+    /// # use amethyst::core::math::{UnitQuaternion, Quaternion, Vector3};
     /// let mut t = Transform::default();
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
@@ -480,7 +480,7 @@ impl Transform {
     /// rotation about the y axis, and 'yaw' will mean rotation about the z axis.
     ///
     /// ```
-    /// # use amethyst_core::transform::Transform;
+    /// # use amethyst::core::transform::Transform;
     /// let mut transform = Transform::default();
     ///
     /// transform.set_rotation_euler(1.0, 0.0, 0.0);
@@ -595,8 +595,8 @@ impl Default for Transform {
 /// Creates a Transform using the `Vector3` as the translation vector.
 ///
 /// ```
-/// # use amethyst_core::{transform::Transform};
-/// # use amethyst_core::math::Vector3;
+/// # use amethyst::core::{transform::Transform};
+/// # use amethyst::core::math::Vector3;
 /// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
 /// assert_eq!(transform.translation().x, 100.0);
 /// ```
@@ -611,8 +611,8 @@ impl From<Vector3<f32>> for Transform {
 /// Creates a Transform using the `Vector3<f64>` as the translation vector.
 /// Provided for convinience when providing constants.
 /// ```
-/// # use amethyst_core::transform::Transform;
-/// # use amethyst_core::math::Vector3;
+/// # use amethyst::core::transform::Transform;
+/// # use amethyst::core::math::Vector3;
 /// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
 /// assert_eq!(transform.translation().x, 100.0);
 impl From<Vector3<f64>> for Transform {

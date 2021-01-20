@@ -9,5 +9,5 @@
 pub struct UiConfig {
     #[derivative(Default = "0.5")]
     pub cursor_blink_rate: f32,
-    pub cursor_color: [f32; 4]',
+    pub cursor_color: [f32; 4],
 }

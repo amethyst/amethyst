@@ -15,8 +15,7 @@ are essential (like rendering, input and UI).
 
 Let's start by creating the `GameData` structure:
 
-```rust,no_run,noplaypen
-# extern crate amethyst;
+```rust, no_run,noplaypen
 # use amethyst::ecs::prelude::Dispatcher;
 #
 pub struct CustomGameData<'a, 'b> {
@@ -27,8 +26,7 @@ pub struct CustomGameData<'a, 'b> {
 
 We also add a utility function for performing dispatch:
 
-```rust,no_run,noplaypen
-# extern crate amethyst;
+```rust, no_run,noplaypen
 # use amethyst::ecs::prelude::{Dispatcher, World};
 #
 # pub struct CustomGameData<'a, 'b> {
@@ -56,8 +54,7 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 `GameData` structure. These are the only requirements placed on the
 `GameData` structure.
 
-```rust,no_run,noplaypen
-# extern crate amethyst;
+```rust, no_run,noplaypen
 #
 # use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt};
 # use amethyst::core::SystemBundle;
@@ -70,20 +67,20 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 #
 use amethyst::core::ArcThreadPool;
 
-pub struct CustomGameDataBuilder<'a, 'b> {
+pub struct CustomDispatcherBuilder<'a, 'b> {
     pub core: DispatcherBuilder<'a, 'b>,
     pub running: DispatcherBuilder<'a, 'b>,
 }
 
-impl<'a, 'b> Default for CustomGameDataBuilder<'a, 'b> {
+impl<'a, 'b> Default for CustomDispatcherBuilder<'a, 'b> {
     fn default() -> Self {
-        CustomGameDataBuilder::new()
+        CustomDispatcherBuilder::new()
     }
 }
 
-impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
+impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
     pub fn new() -> Self {
-        CustomGameDataBuilder {
+        CustomDispatcherBuilder {
             core: DispatcherBuilder::new(),
             running: DispatcherBuilder::new(),
         }
@@ -106,7 +103,7 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
     }
 }
 
-impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
+impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         // Get a handle to the `ThreadPool`.
         let pool = (*world.read_resource::<ArcThreadPool>()).clone();
@@ -139,8 +136,7 @@ impl<'a,'b> DataDispose for CustomGameData<'a,'b> {
 We can now use `CustomGameData` in place of the provided `GameData` when building
 our `Application`, but first we should create some `State`s.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 #
 # use amethyst::ecs::prelude::{Dispatcher, World};
 # use amethyst::prelude::{State, StateData, StateEvent, Trans};
@@ -232,11 +228,10 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
 }
 ```
 
-The only thing that remains now is to use our `CustomGameDataBuilder` when building the
+The only thing that remains now is to use our `CustomDispatcherBuilder` when building the
 `Application`.
 
-```rust,ignore
-# extern crate amethyst;
+```rust
 #
 # use amethyst::{
 #     core::{transform::TransformBundle, SystemBundle},
@@ -258,16 +253,16 @@ The only thing that remains now is to use our `CustomGameDataBuilder` when build
 #     running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
 #
-# pub struct CustomGameDataBuilder<'a, 'b> {
+# pub struct CustomDispatcherBuilder<'a, 'b> {
 #     pub core: DispatcherBuilder<'a, 'b>,
 #     pub running: DispatcherBuilder<'a, 'b>,
 # }
 #
-# impl<'a, 'b> Default for CustomGameDataBuilder<'a, 'b> {
+# impl<'a, 'b> Default for CustomDispatcherBuilder<'a, 'b> {
 #     fn default() -> Self { unimplemented!() }
 # }
 #
-# impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
+# impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
 #     pub fn new() -> Self { unimplemented!() }
 #     pub fn with_base_bundle<B>(mut self, world: &mut World, bundle: B) -> Result<Self, Error>
 #     where
@@ -284,18 +279,18 @@ The only thing that remains now is to use our `CustomGameDataBuilder` when build
 #     }
 # }
 #
-# impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
+# impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b> {
 #     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> { unimplemented!() }
 # }
 #
-# impl<'a, 'b> DataDispose for CustomGameDataBuilder<'a, 'b> {
+# impl<'a, 'b> DataDispose for CustomDispatcherBuilder<'a, 'b> {
 #     fn dispose(&mut self, world: &mut World) { unimplemented!() }
 # }
 #
 # fn main() -> amethyst::Result<()> {
 #
 let mut app_builder = Application::build(assets_directory, Main)?;
-let game_data = CustomGameDataBuilder::default()
+let game_data = CustomDispatcherBuilder::default()
     .with_running(ExampleSystem, "example_system", &[])
     .with_base_bundle(
         &mut app_builder.world,

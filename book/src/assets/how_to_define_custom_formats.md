@@ -17,7 +17,7 @@ If you are defining a new format that may be useful to others, [please send us a
 
     In most cases a unit struct is sufficient. When possible, this should implement `Clone` and `Copy` for ergonomic usage.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust, edition2018,no_run,noplaypen
     /// Format for loading from `.mylang` files.
     #[derive(Clone, Copy, Debug, Default)]
     pub struct MyLangFormat;
@@ -31,8 +31,7 @@ If you are defining a new format that may be useful to others, [please send us a
 
     In this example the RON deserializer is used, though it is [already a supported format][doc_ron_format].
 
-    ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
+    ```rust, edition2018,no_run,noplaypen
     # extern crate ron;
     # extern crate serde;
     #
@@ -67,8 +66,7 @@ If you are defining a new format that may be useful to others, [please send us a
 
     The custom format can now be used:
 
-    ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
+    ```rust, edition2018,no_run,noplaypen
     # extern crate ron;
     # extern crate serde;
     # extern crate serde_derive;
@@ -167,7 +165,7 @@ If you are defining a new format that may be useful to others, [please send us a
     #     let app_root = application_root_dir()?;
     #     let assets_dir = app_root.join("assets");
     #
-    #     let game_data = GameDataBuilder::default()
+    #     let game_data = DispatcherBuilder::default()
     #         .with(Processor::<EnergyBlast>::new(), "", &[]);
     #     let mut game = Application::new(
     #         assets_dir,

@@ -3,8 +3,7 @@
 Amethyst uses an `InputHandler` to handle user input.
 You initialise this `InputHandler` by creating an `InputBundle` and adding it to the game data.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 use amethyst::{
     prelude::*,
     input::{InputBundle, StringBindings},
@@ -17,7 +16,7 @@ fn main() -> amethyst::Result<()> {
     let input_bundle = InputBundle::<StringBindings>::new();
 
     let mut world = World::new();
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
     //..
     .with_bundle(input_bundle)?
     //..
@@ -29,8 +28,7 @@ fn main() -> amethyst::Result<()> {
 
 To use the `InputHandler` inside a `System` you have to add it to the `SystemData`. With this you can check for events from input devices.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 use amethyst::{
     prelude::*,
     input::{InputHandler, ControllerButton, VirtualKeyCode, StringBindings},
@@ -71,14 +69,13 @@ You can find all the methods from `InputHandler` [here][input_ha].
 
 Now you have to add the `System` to the game data, just like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{prelude::*, ecs::*, core::SystemDesc, derive::SystemDesc};
 # #[derive(SystemDesc)]
 # struct ExampleSystem; 
 # impl<'a> System<'a> for ExampleSystem { type SystemData = (); fn run(&mut self, _: ()) {}}
 #
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
     //..
     .with(ExampleSystem, "example_system", &["input_system"])
     //..
@@ -91,7 +88,7 @@ let game_data = GameDataBuilder::default()
 
 Instead of hard coding in all the key bindings, you can store all the bindings in a config file. A config file for key bindings with the RON format looks something like this:
 
-```ron,ignore
+```ron
 (
     axes: {
         "vertical": Emulated(pos: Key(W), neg: Key(S)),
@@ -120,8 +117,7 @@ The possible inputs you can specify for axes are listed [here][in_axis]. The pos
 
 To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the `InputBundle`.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{prelude::*, input::*, utils::*};
 # fn main() -> amethyst::Result::<()> {
 let root = application_root_dir()?;
@@ -136,8 +132,7 @@ let input_bundle = InputBundle::<StringBindings>::new()
 
 And now you can get the [axis][axis_val] and [action][is_down] values from the `InputHandler`.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 use amethyst::{
     prelude::*,
     core::{Transform, SystemDesc},

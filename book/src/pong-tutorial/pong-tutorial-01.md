@@ -34,7 +34,7 @@ features = ["metal"]
 We can start with editing the `main.rs` file inside `src` directory.
 You can delete everything in that file, then add these imports:
 
-```rust,ignore
+```rust
 //! Pong Tutorial 1
 
 use amethyst::{
@@ -59,14 +59,14 @@ working on defining our game code.
 
 Now we create our core game struct:
 
-```rust,edition2018,no_run,noplaypen
+```rust, edition2018,no_run,noplaypen
 pub struct Pong;
 ```
 
 We'll be implementing the [`SimpleState`][simplestate] trait on this struct, which is
 used by Amethyst's state machine to start, stop, and update the game.
 
-```rust,ignore
+```rust
 impl SimpleState for Pong {}
 ```
 
@@ -79,8 +79,7 @@ started! We'll start with our `main()` function, and we'll have it return a
 `Result` so that we can use `?`. This will allow us to automatically exit
 if any errors occur during setup.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 fn main() -> amethyst::Result<()> {
 
@@ -101,8 +100,7 @@ fn main() -> amethyst::Result<()> {
 Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
 so we can see errors, warnings and debug messages while the program is running.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 #
 # fn main() {
 amethyst::start_logger(Default::default());
@@ -131,7 +129,7 @@ project manually, go ahead and create it now.
 In either case, open `display.ron` and change its contents to the
 following:
 
-```rust,ignore
+```rust
 (
     title: "Pong!",
     dimensions: Some((500, 500)),
@@ -149,8 +147,7 @@ say "Pong!" instead of the sad, lowercase default of "pong".
 In `main()` in `main.rs`, we will prepare the path to a file containing
 the display configuration:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     utils::application_root_dir,
@@ -168,15 +165,14 @@ let display_config_path = app_root.join("config").join("display.ron");
 
 In `main()` in `main.rs` we are going to add the basic application setup:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{
 #     prelude::*,
 #     utils::application_root_dir,
 # };
 # fn main() -> Result<(), amethyst::Error> {
 # struct Pong; impl SimpleState for Pong {}
-let game_data = GameDataBuilder::default();
+let game_data = DispatcherBuilder::default();
 
 # let app_root = application_root_dir()?;
 let assets_dir = app_root.join("assets");
@@ -186,7 +182,7 @@ game.run();
 # }
 ```
 
-Here we're creating a new instance of `GameDataBuilder`, a central repository
+Here we're creating a new instance of `DispatcherBuilder`, a central repository
 of all the game logic that runs periodically during the game runtime. Right now it's empty,
 but soon we will start adding all sorts of systems and bundles to it - which will run our game code.
 
@@ -212,10 +208,9 @@ to do by adding a renderer!
 ## Setting up basic rendering
 
 After preparing the display config and application scaffolding, it's time to actually use it.
-Last time we left our `GameDataBuilder` instance empty, now we'll add some systems to it.
+Last time we left our `DispatcherBuilder` instance empty, now we'll add some systems to it.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{
 #     prelude::*,
 #     renderer::{
@@ -230,7 +225,7 @@ let app_root = application_root_dir()?;
 
 let display_config_path = app_root.join("config").join("display.ron");
 
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
     .with_bundle(
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it

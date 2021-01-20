@@ -16,7 +16,7 @@ reached either edge of the arena and reset its position and velocity. We'll also
 make a note of who got the point for the round.
 
 First, we'll add a new module to `systems/mod.rs`
-```rust,ignore
+```rust
 pub use self::winner::WinnerSystem;
 
 mod winner;
@@ -24,8 +24,7 @@ mod winner;
 
 Then, we'll create `systems/winner.rs`:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -96,8 +95,7 @@ its direction and put it back in the middle of the screen.
 Now, we just need to add our new system to `main.rs`, and we should be able to
 keep playing after someone scores and log who got the point.
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #    core::transform::TransformBundle,
@@ -145,7 +143,7 @@ keep playing after someone scores and log who got the point.
 # let config = DisplayConfig::load(&path)?;
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
 #
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
@@ -177,15 +175,13 @@ to display our players' scores.
 
 First, let's add the UI rendering in `main.rs`. Add the following imports:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 use amethyst::ui::{RenderUi, UiBundle};
 ```
 
 Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{
 #     ecs::{World, WorldExt},
 #     prelude::*,
@@ -196,7 +192,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 #     ui::RenderUi,
 # };
 # fn main() -> Result<(), amethyst::Error>{
-# let game_data = GameDataBuilder::default()
+# let game_data = DispatcherBuilder::default()
     .with_bundle(RenderingBundle::<DefaultBackend>::new()
         // ...
             .with_plugin(RenderUi::default()),
@@ -206,8 +202,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
 Finally, add the `UiBundle` after the `InputBundle`:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{
 #     ecs::{World, WorldExt},
 #     input::StringBindings,
@@ -217,7 +212,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # fn main() -> Result<(), amethyst::Error>{
 # let display_config_path = "";
 # struct Pong;
-# let game_data = GameDataBuilder::default()
+# let game_data = DispatcherBuilder::default()
 .with_bundle(UiBundle::<StringBindings>::new())?
 # ;
 #
@@ -239,8 +234,7 @@ and `axes`. So just know that your `UiBundle` type should match your
 Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 use amethyst::{
     // --snip--
     ecs::{Component, DenseVecStorage, Entity},
@@ -267,8 +261,7 @@ gone ahead and marked it as public (same with `ScoreText`). `ScoreText` is also
 a container, but this one holds handles to the UI `Entity`s that will be
 rendered to the screen. We'll create those next:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 #
 use amethyst::{
 #     assets::{AssetStorage,  DefaultLoader, Loader},
@@ -365,7 +358,7 @@ game window. You'll notice that the scores don't update yet when the ball makes
 it to either side, so we'll add that next!
 
 
-[font-download]: https://github.com/amethyst/amethyst/raw/master/examples/pong_tutorial_05/assets/font/square.ttf
+[font-download]: https://github.com/amethyst/amethyst/blob/main/examples/pong_tutorial_05/assets/font/square.ttf?raw=true
 [input-handler]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html
 [ui-bundle]: https://docs.amethyst.rs/master/amethyst_ui/struct.UiBundle.html
 
@@ -377,8 +370,7 @@ point. You'll see just how easy this is with our `ECS` design. All we have to do
 is modify our `WinnerSystem` to access the players' scores and update them
 accordingly:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;

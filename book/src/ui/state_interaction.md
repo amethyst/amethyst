@@ -2,8 +2,7 @@
 
 Let's declare our state, and call it `MenuState`:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::ecs::Entity;
 #
 #[derive(Default)]
@@ -22,8 +21,7 @@ It will also serve to hold our ui entity.
 In our `on_start` method of this state we can create the button as shown in
 previous chapters, but here we will save the entity in our struct:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{
 #  assets::{AssetStorage,  DefaultLoader, Loader},
 # 	ecs::{Entity, World, WorldExt},
@@ -87,8 +85,7 @@ impl SimpleState for MenuState {
 All the input received will be handled in the [handle_event](https://docs.amethyst.rs/master/amethyst/trait.State.html#method.handle_event)
 method of our state:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   ecs::{Entity, World, WorldExt},
@@ -189,8 +186,7 @@ Upon pushing another state the `on_pause` method will run - here we can hide our
 The way we do that is by adding a [Hidden](https://docs.amethyst.rs/master/amethyst_core/struct.Hidden.html)
 component to our button:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
@@ -283,8 +279,7 @@ impl SimpleState for MenuState {
 
 The same goes for `on_resume` if we actually want to redisplay the button:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,

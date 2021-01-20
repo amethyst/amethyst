@@ -11,8 +11,7 @@ Resources are stored in the `World` container.
 
 Adding a resource to a `World` instance is done like this:
 
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 use amethyst::ecs::World;
 
 struct MyResource {
@@ -33,8 +32,7 @@ fn main() {
 ## Fetching a resource (from `World`)
 
 Fetching a resource can be done like this:
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::ecs::World;
 # #[derive(Debug, PartialEq)]
 # struct MyResource {
@@ -58,8 +56,7 @@ Fetching a resource can be done like this:
 ```
 
 If you want to get a resource and create it if it doesn't exist:
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::ecs::World;
 # struct MyResource;
 # fn main() {
@@ -72,8 +69,7 @@ let fetched = world.entry::<MyResource>().or_insert_with(|| my);
 ```
 
 If you want to change a resource that is already inside of `World`:
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
+```rust, edition2018,no_run,noplaypen
 # use amethyst::ecs::World;
 # struct MyResource {
 #   pub game_score: i32,
