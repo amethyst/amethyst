@@ -5,20 +5,16 @@ This document outlines coding conventions used in the Amethyst.
 We follow the [Rust API Guidelines].
 This document only cover topics which aren't already outlined there.
 
-[Rust API Guidelines]: https://rust-lang-nursery.github.io/api-guidelines/about.html
-
 ## Terminology
 
 In this document we use the keywords _must_, _should_, _must not_, and _should not_.
 
 These loosely conform to [RFC 2119]. Here is a summary of the keywords used:
 
-* _must_ indicates something that is required.
-* _should_ is a recommendation, that can be ignored if there is a good reason.
+- _must_ indicates something that is required.
+- _should_ is a recommendation, that can be ignored if there is a good reason.
 
 Adding _not_ inverts the meaning of the keywords.
-
-[RFC 2119]: https://www.ietf.org/rfc/rfc2119.txt
 
 ## Error Handling
 
@@ -37,8 +33,6 @@ The error _must_ implement `From<T>` conversion traits for any error it wraps (e
 The error _must not_ implement conversion methods from non-error types like `u32`.
 
 A lot of this can be implemented using [`err-derive`], as showcased below.
-
-[`err-derive`]: https://crates.io/crates/err-derive
 
 ###### Example
 
@@ -258,3 +252,7 @@ fn foo() -> Result<u32> {
     Ok(42)
 }
 ```
+
+[rfc 2119]: https://www.ietf.org/rfc/rfc2119.txt
+[rust api guidelines]: https://rust-lang-nursery.github.io/api-guidelines/about.html
+[`err-derive`]: https://crates.io/crates/err-derive

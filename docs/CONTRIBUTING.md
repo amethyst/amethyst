@@ -6,9 +6,9 @@ Amethyst is an open-source project that values community contribution. We could
 always use a helping hand! What would you like to do?
 
 1. [I want to submit issues or request features.](#submitting-issues)
-2. [I want to contribute code.](#pull-requests)
-3. [I want to write documentation.](#writing-documentation)
-4. [Are there any useful resources I can read?](#useful-resources)
+1. [I want to contribute code.](#pull-requests)
+1. [I want to write documentation.](#writing-documentation)
+1. [Are there any useful resources I can read?](#useful-resources)
 
 ## Submitting Issues
 
@@ -17,13 +17,9 @@ GitHub issue trackers. We can't fix problems we don't know about, so please
 report early and often! Make sure to post your issue on the tracker most
 relevant to you:
 
-* [Engine Tracker][et]: Issues on the game engine itself or the documentation.
-* [Tools Tracker][tt]: Issues on the toolchain surrounding the engine.
-* [Website Tracker][wt]: Issues on the website and *This Week in Amethyst*.
-
-[et]: https://github.com/amethyst/amethyst/issues
-[tt]: https://github.com/amethyst/tools/issues
-[wt]: https://github.com/amethyst/website/issues
+- [Engine Tracker][et]: Issues on the game engine itself or the documentation.
+- [Tools Tracker][tt]: Issues on the toolchain surrounding the engine.
+- [Website Tracker][wt]: Issues on the website and *This Week in Amethyst*.
 
 Before posting your issue, please take a moment to search the tracker's existing
 issues first, as it's possible that someone else reported the same issue before
@@ -61,24 +57,25 @@ done the following things first:
 
 1. You have ensured the pull request is rebased on a recent version of your
    respective branch or the latest upstream has been merged.
-2. All of the following commands completed without warnings or errors.  CI will test with all features enabled.
-   * `rustup update stable nightly`
-   * `cargo +nightly fmt --all`
-   * `cargo +nightly clippy --workspace --all-targets --all-features -Z unstable-options`
-   * `cargo test --workspace --all-features`
-   * `cargo run -p $YOUR_EXAMPLE`
-   
-    You can copy `script/pre-commit` to `.git/hooks/pre-commit` for a prompt to remind you of these requirements and automatically lint and fix some of them for you when committing.
-3. You have granted non-exclusive right to your source code under both the
+
+1. All of the following commands completed without warnings or errors.  CI will test with all features enabled.
+
+   - `rustup update stable nightly`
+   - `cargo +nightly fmt --all`
+   - `cargo +nightly clippy --workspace --all-targets --all-features -Z unstable-options`
+   - `cargo test --workspace --all-features`
+   - `cargo run -p $YOUR_EXAMPLE`
+
+   You can copy `script/pre-commit` to `.git/hooks/pre-commit` for a prompt to remind you of these requirements and automatically lint and fix some of them for you when committing.
+
+1. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
    the work by you, as defined in the Apache 2.0 license, shall be dual
    licensed as above, without any additional terms or conditions.
-4. For new features or changes to an existing feature,
-   update the book, docs and examples.
 
-[lm]: LICENSE-MIT
-[la]: LICENSE-APACHE
+1. For new features or changes to an existing feature,
+   update the book, docs and examples.
 
 Once you have submitted your pull request, please wait for a reviewer to give
 feedback on it. If no one responds, feel free to @-mention a developer or post
@@ -91,11 +88,11 @@ developer, it will be merged into the source tree.
 The following rules shall be applied strictly for the `amethyst` repository. For other repositories of this organization,
 thorough review would be desirable, but no strict application is required there due to lower activity and less influence.
 
-* Pull Requests shall be approved by at least one trusted contributor or member.
-* Merging a PR shall be done with `bors r+`, if possible. If there is more than one reviewer the preferred format is `bors r=@reviewer1, @reviewer2`. You can read more about this [here](https://bors.tech/documentation/).
-* You may only block merging of a PR if the changes in it are relevant to an org team you have joined. This doesn't mean you can't
-make comments, but it does mean that team may ignore your comments if they so choose. Please do not use the "Request Changes" feature if
-the PR is not relevant to your team.
+- Pull Requests shall be approved by at least one trusted contributor or member.
+- Merging a PR shall be done with `bors r+`, if possible. If there is more than one reviewer the preferred format is `bors r=@reviewer1, @reviewer2`. You can read more about this [here](https://bors.tech/documentation/).
+- You may only block merging of a PR if the changes in it are relevant to an org team you have joined. This doesn't mean you can't
+  make comments, but it does mean that team may ignore your comments if they so choose. Please do not use the "Request Changes" feature if
+  the PR is not relevant to your team.
 
 Everyone is welcome to review pull requests that they find interesting. It helps save time and improve the code quality for everyone, as well as gaining experience while doing so.
 
@@ -105,19 +102,19 @@ Note: The author of a PR cannot approve their own PR.
 
 ###### Urgent fixes
 
-* If something went wrong (like a broken version has been released, the website doesn't work at all, ..) no approval is required for merging
-* Merging can be performed instant (but still with bors)
+- If something went wrong (like a broken version has been released, the website doesn't work at all, ..) no approval is required for merging
+- Merging can be performed instant (but still with bors)
 
 ###### Experimental branches
 
-* If there are very experimental branches, there's no need to use bors; in fact, CI may even fail if that makes working on it easier.
-* A review would be good prior to merging, but rules don't need to be strict here
+- If there are very experimental branches, there's no need to use bors; in fact, CI may even fail if that makes working on it easier.
+- A review would be good prior to merging, but rules don't need to be strict here
 
 ###### Architecture changes, API which influences the workflow / general design of the engine
 
-* Should be labeled with `type: RFC`
-* Needs at least three approvals by members only
-* Should be left open for reviews for a couple of days
+- Should be labeled with `type: RFC`
+- Needs at least three approvals by members only
+- Should be left open for reviews for a couple of days
 
 ### Dealing With Upstream Changes
 
@@ -180,9 +177,6 @@ $ git merge --ff-only --no-commit upstream
 Then you can decide to do a FF rebase. This way, our commit logs remain nice
 and clean, and we'll be grateful.
 
-[di]: https://discord.gg/amethyst
-[rb]: https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request#how-do-i-rebase
-
 Thank you so much for your contribution! Now Amethyst will be a little bit
 faster, stronger, and more efficient.
 
@@ -193,39 +187,29 @@ solid documentation to go with it. You can search for documentation-related
 issues on any of our GitHub trackers by filtering by the green [`projects: docs`][pd]
 label.
 
-[pd]: https://github.com/amethyst/amethyst/issues?q=is%3Aopen+is%3Aissue+label%3A"project%3A+docs"
-
 There are two types of documentation in Amethyst you can work on:
 
 1. [API documentation][ad]
-2. [The Amethyst book][ab]
-
-[ad]: https://docs.amethyst.rs/master/amethyst/
-[ab]: https://book.amethyst.rs/master/
+1. [The Amethyst book][ab]
 
 Our Rust API documentation is generated directly from source code comments
 marked with either `///` or `//!` using  a tool called Rustdoc. See
 [the official Rust book's chapter on Rustdoc][rd] for more information on how
 this works.
 
-[rd]: https://doc.rust-lang.org/book/documentation.html
-
 The Amethyst book is generated using a different documentation tool called
 [mdBook][mb]. This tool generates pretty HTML e-books from individual Markdown
 (.md) files. You can find the source files for this book in the [book/src/][bk]
 directory of the Amethyst repository.
 
-[mb]: https://github.com/azerupi/mdBook
-[bk]: ../book/src
-
 Documentation of any kind should adhere to the following standard:
 
 1. Lines must not extend beyond 80 characters in length.
-2. To enhance readability in text editors and terminals, use only *reference
+1. To enhance readability in text editors and terminals, use only *reference
    style* Markdown links, as shown in the example below. However, if the link
    points to an anchor that exists on the same page, the *inline style* should
    be used instead.
-3. Rust code snippets should be compilable whenever reasonably possible.
+1. Rust code snippets should be compilable whenever reasonably possible.
 
 ```markdown
 Here is some [example text][et] with a link in it. While we are at it, here is
@@ -236,10 +220,10 @@ page, we can do this inline.
 [al]: https://another.url/
 ```
 
-Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust,edition2018,no_run,noplaypen`. Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example: 
+Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust,edition2018,no_run,noplaypen`. Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example:
 
 ````
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::ecs::{World};
 
 // A simple struct with no data.
@@ -278,57 +262,73 @@ Examples in the API can be tested with `cargo test`.  Examples in top-level mark
 
 When submitting your pull requests, please follow the same procedures described
 in the [Pull Requests](#pull-requests) section above, in addition to the following commands:
-* `mdbook test book -L target/debug/deps`
+
+- `mdbook test book -L target/debug/deps`
 
 Note that if you do not have mdbook already installed, you may do so with `cargo install mdbook`.
 If you find dependency resolution problems when testing mdbook,
 you may have to run `cargo clean` and `cargo build` again before retrying the `mdbook test` command.
 
 ## Profiling the engine
+
 You can build Amethyst with a `profiler` feature like this:
 
 ```
 cargo build --release --features profiler
 ```
+
 Or if you wanted to run an example with profiler:
+
 ```
 cargo run -p my_example --release --features profiler
 ```
+
 After an Amethyst instance built with `profiler` feature shuts down a
 `thread_profile.json` file is generated. It holds information about engine performance
 (how much time do various bits of code take to run).
-Amethyst uses the same profiling method as [webrender][wr] ([thread_profiler][tp] crate).
+Amethyst uses the same profiling method as [webrender][wr] ([thread\_profiler][tp] crate).
 `thread_profile.json` can be viewed using Chromium tracing utility.
 You can access it by launching Chromium and typing in `about:tracing` in your address bar.
 Then you can hit load button and choose `thread_profile.json` file.
 
 ## Useful Resources
 
-* Amethyst
-  * [Amethyst Discord][di] - The Amethyst project's public chat room.
-* Design Inspiration
-  * [Bitsquid: Behind The Scenes (2013)][bs]
-  * [Flexible Rendering for Multiple Platforms (2012)][fr]
-  * [Mantle Programming Guide and API Reference (2015)][ma]
-  * [Misconceptions of Component-Based Entity Systems (2014)][mo]
-  * [Nitrous & Mantle: Combining Efficient Engine Design with a Modern API (2014)][ni]
-  * [State Pattern - Pushdown Automata (2009)][pa]
-* Rust
-  * [Rust By Example][re] - Get acquainted with Rust through a series of small
+- Amethyst
+  - [Amethyst Discord][di] - The Amethyst project's public chat room.
+- Design Inspiration
+  - [Bitsquid: Behind The Scenes (2013)][bs]
+  - [Flexible Rendering for Multiple Platforms (2012)][fr]
+  - [Mantle Programming Guide and API Reference (2015)][ma]
+  - [Misconceptions of Component-Based Entity Systems (2014)][mo]
+  - [Nitrous & Mantle: Combining Efficient Engine Design with a Modern API (2014)][ni]
+  - [State Pattern - Pushdown Automata (2009)][pa]
+- Rust
+  - [Rust By Example][re] - Get acquainted with Rust through a series of small
     code samples.
-  * [The Rust Programming Language][rl] - The canonical online book about Rust.
-* Git
-  * [How to write a Git commit message](https://chris.beams.io/posts/git-commit/)
+  - [The Rust Programming Language][rl] - The canonical online book about Rust.
+- Git
+  - [How to write a Git commit message](https://chris.beams.io/posts/git-commit/)
 
-[di]: https://discord.gg/amethyst
+[ab]: https://book.amethyst.rs/master/
+[ad]: https://docs.amethyst.rs/master/amethyst/
+[bk]: ../book/src
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
+[di]: https://discord.gg/amethyst
+[et]: https://github.com/amethyst/amethyst/issues
 [fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
+[la]: LICENSE-APACHE
+[lm]: LICENSE-MIT
 [ma]: https://www.yumpu.com/en/document/view/43374261/mantle-programming-guide-and-api-reference
+[mb]: https://github.com/azerupi/mdBook
 [mo]: https://shanee.io/blog/2014/12/27/misconceptions-of-component-based-entity-systems/
 [ni]: http://www.gdcvault.com/play/1020706/Nitrous-Mantle-Combining-Efficient-Engine
 [pa]: http://gameprogrammingpatterns.com/state.html#pushdown-automata
-
+[pd]: https://github.com/amethyst/amethyst/issues?q=is%3Aopen+is%3Aissue+label%3A%22project%3A+docs%22
+[rb]: https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request#how-do-i-rebase
+[rd]: https://doc.rust-lang.org/book/documentation.html
 [re]: http://rustbyexample.com/
 [rl]: https://doc.rust-lang.org/book/
-[wr]: https://github.com/servo/webrender/pull/854
 [tp]: https://crates.io/crates/thread_profiler
+[tt]: https://github.com/amethyst/tools/issues
+[wr]: https://github.com/servo/webrender/pull/854
+[wt]: https://github.com/amethyst/website/issues
