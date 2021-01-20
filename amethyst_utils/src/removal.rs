@@ -11,11 +11,11 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Example
 ///
-/// ```rust
+/// ```
 /// # use amethyst::core::ecs::*;
 /// # use amethyst::utils::removal::*;
-/// # let mut world = World::new();
-/// # world.register::<Removal<RemovalId>>();
+/// let mut world = World::default();
+/// let mut buffer = CommandBuffer::new(&mut world);
 ///
 /// #[derive(Clone, Debug, PartialEq)]
 /// enum RemovalId {
@@ -23,28 +23,19 @@ use serde::{Deserialize, Serialize};
 ///     Something2,
 /// }
 ///
-/// let _entity1 = world
-///     .create_entity()
-///     .with(Removal::new(RemovalId::Something))
-///     .build();
-/// let _entity2 = world
-///     .create_entity()
-///     .with(Removal::new(RemovalId::Something2))
-///     .build();
+/// world.push((Removal::new(RemovalId::Something),));
+/// world.push((Removal::new(RemovalId::Something2),));
 ///
 /// // Remove all entities with the RemovalId value of Something.
-/// exec_removal(
-///     &world.entities(),
-///     &world.read_storage(),
+/// amethyst::utils::removal::exec_removal(
+///     &mut buffer,
+///     &mut (&mut world).into(),
 ///     RemovalId::Something,
 /// );
 ///
 /// // Force the world to be up to date. This is normally called automatically at the end of the
 /// // frame by amethyst.
-/// world.maintain();
-///
-/// // Count entities remaining in the world.
-/// assert_eq!((&*world.entities(),).join().count(), 1);
+/// buffer.flush(&mut world);
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Removal<I>
@@ -65,7 +56,7 @@ where
 }
 
 /// Removes all entities that have the `Removal<I>` component with the specified removal_id.
-pub fn exec_removal<I, D>(commands: &mut CommandBuffer, subworld: &mut SubWorld<'_>, removal_id: I)
+pub fn exec_removal<I>(commands: &mut CommandBuffer, subworld: &mut SubWorld<'_>, removal_id: I)
 where
     I: Debug + Clone + PartialEq + Send + Sync + 'static,
 {

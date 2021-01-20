@@ -113,7 +113,7 @@ impl Error {
     /// through [`ResultExt`](trait.ResultExt.html) using
     /// [`with_context`](trait.ResultExt.html#method.with_context).
     ///
-    /// ```rust
+    /// ```
     /// use std::io;
     ///
     /// use amethyst::error::{Error, ResultExt};
@@ -135,7 +135,7 @@ impl Error {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```
     /// use amethyst::error::{Error, ResultExt};
     ///
     /// fn failing_function() -> Result<(), Error> {
@@ -216,7 +216,7 @@ where
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```
     /// use amethyst::error::{Error, ResultExt};
     ///
     /// fn failing_function() -> Result<(), Error> {
@@ -281,7 +281,7 @@ impl<'a> Iterator for Causes<'a> {
 
 /// Constructs an `Error` using the standard string interpolation syntax.
 ///
-/// ```rust
+/// ```
 /// use amethyst_error::format_err;
 ///
 /// fn main() {

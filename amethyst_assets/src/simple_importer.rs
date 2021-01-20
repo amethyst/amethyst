@@ -108,7 +108,7 @@ pub fn get_source_importers(
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```
 /// use amethyst::assets::Format;
 /// use amethyst::error::Error;
 /// use serde::{Deserialize, Serialize};

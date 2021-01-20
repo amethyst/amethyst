@@ -57,7 +57,7 @@ impl Transform {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```
     /// # use amethyst::core::transform::Transform;
     /// # use amethyst::core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
     /// let position = Translation3::new(0.0, 2.0, 4.0);
@@ -97,7 +97,7 @@ impl Transform {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```
     /// # use amethyst::core::transform::Transform;
     /// # use amethyst::core::math::{UnitQuaternion, Quaternion, Vector3};
     /// let mut t = Transform::default();

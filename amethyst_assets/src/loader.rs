@@ -501,7 +501,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```
 /// use serde::{Deserialize, Serialize};
 /// use amethyst::assets::{register_asset_type, Asset, AssetProcessorSystem, TypeUuid};
 ///

@@ -24,7 +24,7 @@ use legion::{
 /// it may grow indefinitely leaking memory while the system is paused.
 ///
 /// # Examples
-/// ```rust
+/// ```
 /// use amethyst::core::{
 ///     dispatcher::DispatcherBuilder,
 ///     ecs::{ParallelRunnable, System},

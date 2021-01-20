@@ -633,7 +633,7 @@ where
     ///
     /// # Examples
     ///
-    /// ```ignore
+    /// ```no_run
     /// use amethyst::{
     ///     assets::{DefaultLoader, Directory, Handle, Loader},
     ///     prelude::*,

@@ -28,7 +28,7 @@
 //! The following shows a simple example of testing a `State`. More examples are in the
 //! [Examples](#Examples) section.
 //!
-//! ```rust
+//! ```
 //! # use std::marker::PhantomData;
 //! #
 //! # use amethyst_test::prelude::*;
@@ -81,7 +81,7 @@
 //! The Amethyst application is initialized with one of the following functions, each providing a
 //! different set of bundles:
 //!
-//! ```rust, no_run
+//! ```no_run
 //! use amethyst_test::prelude::*;
 //!
 //! #[test]
@@ -117,7 +117,7 @@
 //!
 //! Next, attach the logic you wish to test using the various `.with_*(..)` methods:
 //!
-//! ```rust, no_run
+//! ```no_run
 //! # use amethyst::{
 //! #     core::bundle::SystemBundle,
 //! #     ecs::prelude::*,
@@ -155,7 +155,7 @@
 //! Finally, call `.run()` to run the application. This returns `amethyst::Result<()>`, so you can
 //! wrap it in an `assert!(..);`:
 //!
-//! ```rust, no_run
+//! ```no_run
 //! #[test]
 //! fn test_name() {
 //!     let visibility = false; // Whether the window should be shown
@@ -172,7 +172,7 @@
 //!
 //! Testing a bundle:
 //!
-//! ```rust
+//! ```
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
 //! #     core::bundle::SystemBundle,
@@ -219,7 +219,7 @@
 //!
 //! Testing a system:
 //!
-//! ```rust
+//! ```
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
 //! #     ecs::prelude::*,
@@ -276,7 +276,7 @@
 //! Testing a System in a custom dispatcher. This is useful when your system must run *after* some
 //! setup has been done:
 //!
-//! ```rust
+//! ```
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
 //! #     ecs::prelude::*,

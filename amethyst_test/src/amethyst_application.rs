@@ -946,7 +946,7 @@ mod test {
     /// **Note:** If you simply need an audio file to be loaded, just add a `Processor::<Source>` in
     /// the test setup:
     ///
-    /// ```rust
+    /// ```
     /// use amethyst::{assets::Processor, audio::Source};
     ///
     /// AmethystApplication::blank()

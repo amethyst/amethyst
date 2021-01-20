@@ -63,7 +63,7 @@ pub struct DisplayConfig {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```
     /// use amethyst::window::{DisplayConfig, Icon};
     ///
     /// // First, create your `DisplayConfig` as usual

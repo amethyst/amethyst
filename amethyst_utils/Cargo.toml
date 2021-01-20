@@ -25,9 +25,11 @@ derive-new = "0.5.8"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 dunce = "1"
-
 thread_profiler = { version = "0.3", optional = true }
 derivative = "2.1.3"
+
+[dev-dependencies]
+amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

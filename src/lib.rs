@@ -11,7 +11,7 @@
 //!
 //! # Example
 //!
-//! ```rust, no_run
+//! ```no_run
 //! use amethyst::prelude::*;
 //! use amethyst::winit::event::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 //!

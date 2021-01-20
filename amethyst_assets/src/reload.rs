@@ -46,7 +46,7 @@ impl SystemBundle for HotReloadBundle {
 ///
 /// ## Examples
 ///
-/// ```rust
+/// ```
 /// # use amethyst::assets::HotReloadStrategy;
 /// # use amethyst::core::ecs::{World, WorldExt};
 /// #
