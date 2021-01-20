@@ -65,7 +65,7 @@ done the following things first:
    * `rustup update stable nightly`
    * `cargo +nightly fmt --all`
    * `cargo +nightly clippy --workspace --all-targets --all-features -Z unstable-options`
-   * `cargo test --all-targets --workspace --all-features`
+   * `cargo test --workspace --all-features`
    * `cargo run -p $YOUR_EXAMPLE`
    
     You can copy `script/pre-commit` to `.git/hooks/pre-commit` for a prompt to remind you of these requirements and automatically lint and fix some of them for you when committing.

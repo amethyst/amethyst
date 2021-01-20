@@ -5,7 +5,7 @@ pre-commit = [
     "cargo +nightly clippy -Z unstable-options --workspace --all-features --fix --allow-dirty --allow-staged",
     "cargo +nightly fmt --all",
 ]
-pre-push = ["cargo test --all-targets --workspace --all-features"]
+pre-push = ["cargo test --workspace --all-features"]
 
 [logging]
 verbose = true
