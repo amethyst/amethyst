@@ -48,7 +48,7 @@ pub enum UiImage {
     /// This tuple takes linear RGBA. You can convert rgba to linear rgba like so:
     ///
     /// ```
-    /// use amethyst::{rendy::palette::Srgba, ui::UiImage};
+    /// use amethyst::{renderer::palette::Srgba, ui::UiImage};
     ///
     /// let your_red: f32 = 255.;
     /// let your_green: f32 = 160.;

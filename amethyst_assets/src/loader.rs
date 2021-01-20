@@ -503,29 +503,41 @@ where
 ///
 /// ```
 /// use serde::{Deserialize, Serialize};
-/// use amethyst::assets::{register_asset_type, Asset, AssetProcessorSystem, TypeUuid};
-///
-/// #[derive(TypeUuid)]
-/// #[uuid = "00000000-0000-0000-0000-000000000000"]
-/// pub struct MeshAsset {
-///     buffer: Vec<u8>,
-/// }
-///
-/// impl Asset for MeshAsset {
-///     fn name() -> &'static str {
-///         "Mesh"
-///     }
-///     type Data = VertexData;
-/// }
+/// use amethyst::assets::{register_asset_type, Asset, AssetProcessorSystem, AssetStorage, LoadHandle, ProcessableAsset, ProcessingState, TypeUuid};
+/// use amethyst::error::Error;
 ///
 /// #[derive(Serialize, Deserialize, TypeUuid)]
 /// #[uuid = "00000000-0000-0000-0000-000000000000"]
 /// pub struct VertexData {
+///     buffer: Vec<u8>,
+/// }
+///
+/// impl Asset for Vertex {
+///     fn name() -> &'static str {
+///         "Vertex"
+///     }
+///     type Data = VertexData;
+/// }
+///
+/// #[derive(Default, TypeUuid)]
+/// #[uuid = "00000000-0000-0000-0000-000000000001"]
+/// pub struct Vertex {
 ///     positions: Vec<[f32; 3]>,
 ///     tex_coords: Vec<[f32; 2]>,
 /// }
 ///
-/// register_asset_type!(VertexData => MeshAsset; AssetProcessorSystem<MeshAsset>);
+/// register_asset_type!(VertexData => Vertex; AssetProcessorSystem<Vertex>);
+///
+/// impl ProcessableAsset for Vertex {
+///    fn process(
+///        data: VertexData,
+///        _storage: &mut AssetStorage<Vertex>,
+///        _handle: &LoadHandle,
+///    ) -> Result<ProcessingState<VertexData, Vertex>, Error> {
+///        log::debug!("Loading Vertex");
+///        Ok(ProcessingState::Loaded(Vertex::default()))
+///    }
+/// }
 /// ```
 #[macro_export]
 macro_rules! register_asset_type {

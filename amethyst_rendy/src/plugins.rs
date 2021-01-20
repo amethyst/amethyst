@@ -66,7 +66,7 @@ mod window {
         ///
         /// ```
         /// use amethyst::{
-        ///     rendy::{palette::Srgba, rendy::hal::command::ClearColor, RenderToWindow},
+        ///     renderer::{palette::Srgba, rendy::hal::command::ClearColor, RenderToWindow},
         ///     window::DisplayConfig,
         /// };
         ///

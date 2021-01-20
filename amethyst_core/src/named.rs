@@ -29,9 +29,7 @@ use serde::{Deserialize, Serialize};
 /// use amethyst::{core::Named, ecs::*};
 ///
 /// let mut world = World::default();
-/// let entity: Entity = world.push((Named {
-///     name: "Reginald".into(),
-/// },));
+/// let entity: Entity = world.push((Named("Reginald".into()),));
 /// ```
 ///
 /// Creating a name from a dynamically generated string:
@@ -40,24 +38,22 @@ use serde::{Deserialize, Serialize};
 /// use amethyst::{core::Named, ecs::*};
 ///
 /// let mut world = World::default();
-
 /// for entity_num in 0..10 {
-///     world.push((Named { name: format!("Entity Number {}", entity_num).into() },));
+///     world.push((Named(format!("Entity Number {}", entity_num).into()),));
 /// }
 /// ```
-/// 
+///
 /// Accessing a named entity in a system:
 /// ```
-/// use amethyst::core::Named;
-/// use amethyst::ecs::*;
+/// use amethyst::{core::Named, ecs::*};
 ///
 /// SystemBuilder::new("NamedSystem")
-///   .with_query(<(Entity, Read<Named>)>::query())
-///   .build(move |_commands, world, _resource, query| {
+///     .with_query(<(Entity, Read<Named>)>::query())
+///     .build(move |_commands, world, _resource, query| {
 ///         for (entity, name) in query.iter(world) {
-///             println!("Entity {:?} is named {}", entity, name.name);
+///             println!("Entity {:?} is named {}", entity, name);
 ///         }
-/// });
+///     });
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Named(

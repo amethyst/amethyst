@@ -58,7 +58,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 - New `optional_graphics` example demonstrating running an app with and without graphics ([#2282])
-- Return a standalone `Dispatcher` from `GameDataBuilder::build_dispatcher`
+- Return a standalone `Dispatcher` from `DispatcherBuilder::build_dispatcher`
   instead of using `DataInit` to build a `GameData` ([#2294])
 - Added _User Interface_ chapter to The Book ([#2311], [#2346], [#2347], [#2368], [#2373])
 - Support text alignment in `UiButton` and `UiLabel` ([#2316])
@@ -423,7 +423,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Splitted the `/resources` directory of amethyst projects into `/assets` and `/config`. ([#1806])
 - Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
 - Add Tint component support for sprites. ([#1756])
-- Remove remaining <N: RealField> type parameter on GameDataBuilder, add Debug derive to LoggerConfig ([#1758])
+- Remove remaining <N: RealField> type parameter on DispatcherBuilder, add Debug derive to LoggerConfig ([#1758])
 - Inverted mouse wheel scroll direction event. Now using winit's standard. ([#1767])
 - Add `load_from_data_async` to Asset Loader. ([#1753])
 - Add `SerializableFormat` marker trait which is now needed to be implemented for all the formats that are supposed to be serialized. ([#1720])

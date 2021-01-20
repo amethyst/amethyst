@@ -380,7 +380,7 @@ fn main() -> amethyst::Result<()> {
 #       app_root.join("config/display.ron");
 #
     // ...
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         // ...
 
         // Add the transform bundle which handles tracking entity positions

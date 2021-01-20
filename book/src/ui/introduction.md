@@ -26,7 +26,7 @@ A minimalistic game data would now look like this:
 
 ```rust, edition2018,no_run,noplaypen
 # use amethyst::{
-#     GameDataBuilder,
+#     DispatcherBuilder,
 #     core::transform::TransformBundle,
 #     input::{InputBundle, StringBindings},
 #     renderer::{types::DefaultBackend, RenderingBundle, RenderToWindow},
@@ -35,7 +35,7 @@ A minimalistic game data would now look like this:
 # };
 # 
 # pub fn main() -> Result<()> {
-    let game_data = GameDataBuilder::default()
+    let game_data = DispatcherBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?

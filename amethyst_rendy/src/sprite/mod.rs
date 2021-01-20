@@ -327,9 +327,9 @@ use amethyst_assets::{
 ///
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
 /// ```
-/// # use amethyst::core::ecs::{World};
-/// # use amethyst::assets::{Loader, AssetStorage, DefaultLoader};
-/// # use amethyst::rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
+/// # use amethyst::core::ecs::{World, Resources};
+/// # use amethyst::assets::{Handle, Loader, AssetStorage, DefaultLoader, ProcessingQueue};
+/// # use amethyst::renderer::{sprite::{Sprites, SpriteSheet}, Texture, formats::texture::ImageFormat};
 /// #
 /// # fn load_sprite_sheet(resources: &Resources) {
 /// #   let world = World::default(); // Normally, you would use Amethyst's world
@@ -340,7 +340,8 @@ use amethyst_assets::{
 /// let sprites: Handle<Sprites> = loader.load(
 ///     "my_spritesheet.ron",
 /// );
-/// let spritesheet_handle = loader.load_from_data(SpriteSheet { texture, sprites }, (), &spritesheet_storage)
+/// let spritesheet_storage = resources.get::<ProcessingQueue<SpriteSheet>>().unwrap();
+/// let spritesheet_handle: Handle<SpriteSheet> = loader.load_from_data(SpriteSheet { texture, sprites }, (), &spritesheet_storage);
 /// # }
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, TypeUuid, SerdeImportable)]

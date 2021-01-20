@@ -143,7 +143,7 @@ keep playing after someone scores and log who got the point.
 # let config = DisplayConfig::load(&path)?;
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
 #
-let game_data = GameDataBuilder::default()
+let game_data = DispatcherBuilder::default()
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
@@ -192,7 +192,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 #     ui::RenderUi,
 # };
 # fn main() -> Result<(), amethyst::Error>{
-# let game_data = GameDataBuilder::default()
+# let game_data = DispatcherBuilder::default()
     .with_bundle(RenderingBundle::<DefaultBackend>::new()
         // ...
             .with_plugin(RenderUi::default()),
@@ -212,7 +212,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # fn main() -> Result<(), amethyst::Error>{
 # let display_config_path = "";
 # struct Pong;
-# let game_data = GameDataBuilder::default()
+# let game_data = DispatcherBuilder::default()
 .with_bundle(UiBundle::<StringBindings>::new())?
 # ;
 #

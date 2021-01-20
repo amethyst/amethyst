@@ -71,32 +71,36 @@ pub fn load_material(
 
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.normal = match material.normal_texture() {
-        Some(normal_texture) => Some(
-            load_texture(
-                &normal_texture.texture(),
-                buffers,
-                source.clone(),
-                name,
-                false,
+        Some(normal_texture) => {
+            Some(
+                load_texture(
+                    &normal_texture.texture(),
+                    buffers,
+                    source.clone(),
+                    name,
+                    false,
+                )
+                .map(|data| TexturePrefab::Data(data.into()))?,
             )
-            .map(|data| TexturePrefab::Data(data.into()))?,
-        ),
+        }
 
         None => None,
     };
 
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.ambient_occlusion = match material.occlusion_texture() {
-        Some(occlusion_texture) => Some(
-            load_texture(
-                &occlusion_texture.texture(),
-                buffers,
-                source.clone(),
-                name,
-                false,
+        Some(occlusion_texture) => {
+            Some(
+                load_texture(
+                    &occlusion_texture.texture(),
+                    buffers,
+                    source.clone(),
+                    name,
+                    false,
+                )
+                .map(|data| TexturePrefab::Data(data.into()))?,
             )
-            .map(|data| TexturePrefab::Data(data.into()))?,
-        ),
+        }
 
         None => None,
     };
@@ -124,19 +128,23 @@ fn load_texture_with_factor(
     srgb: bool,
 ) -> Result<(TextureBuilder<'static>, [f32; 4]), Error> {
     match texture {
-        Some(info) => Ok((
-            load_texture(&info.texture(), buffers, source, name, srgb)?
-                .with_mip_levels(MipLevels::GenerateAuto),
-            factor,
-        )),
-        None => Ok((
-            if srgb {
-                load_from_srgba(Srgba::new(factor[0], factor[1], factor[2], factor[3]))
-            } else {
-                load_from_linear_rgba(LinSrgba::new(factor[0], factor[1], factor[2], factor[3]))
-            },
-            [1.0, 1.0, 1.0, 1.0],
-        )),
+        Some(info) => {
+            Ok((
+                load_texture(&info.texture(), buffers, source, name, srgb)?
+                    .with_mip_levels(MipLevels::GenerateAuto),
+                factor,
+            ))
+        }
+        None => {
+            Ok((
+                if srgb {
+                    load_from_srgba(Srgba::new(factor[0], factor[1], factor[2], factor[3]))
+                } else {
+                    load_from_linear_rgba(LinSrgba::new(factor[0], factor[1], factor[2], factor[3]))
+                },
+                [1.0, 1.0, 1.0, 1.0],
+            ))
+        }
     }
 }
 

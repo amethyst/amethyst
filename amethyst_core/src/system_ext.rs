@@ -27,10 +27,9 @@ use legion::{
 /// ```
 /// use amethyst::core::{
 ///     dispatcher::DispatcherBuilder,
-///     ecs::{ParallelRunnable, System},
+///     ecs::{system, ParallelRunnable, Resources, Schedule, System, SystemBuilder, World},
 ///     system_ext::pausable,
 /// };
-/// use legion::{system, Resources, Schedule, SystemBuilder, World};
 ///
 /// #[derive(PartialEq)]
 /// enum CurrentState {
@@ -53,25 +52,25 @@ use legion::{
 ///     }
 /// }
 ///
+/// let mut world = World::default();
+/// let mut resources = Resources::default();
+///
 /// let mut dispatcher = DispatcherBuilder::default()
 ///     .add_system(Box::new(TestSystem))
 ///     .build(&mut world, &mut resources)
 ///     .unwrap();
-///
-/// let mut world = World::default();
-/// let mut resources = Resources::default();
 ///
 /// // we only expect the u32 resource to be modified _if_ the system is enabled,
 /// // the system should only be enabled on CurrentState::Enabled.
 /// resources.insert(0u32);
 /// resources.insert(CurrentState::Disabled);
 /// dispatcher.execute(&mut world, &mut resources);
-/// assert_eq!(1, resources.get::<u32>().unwrap());
+/// assert_eq!(1, resources.get::<u32>().unwrap().deref());
 ///
 /// resources.insert(0u32);
 /// resources.insert(CurrentState::Enabled);
 /// dispatcher.execute(&mut world, &mut resources);
-/// assert_eq!(1 + 2, resources.get::<u32>().unwrap());
+/// assert_eq!(1 + 2, resources.get::<u32>().unwrap().deref());
 /// ```
 pub fn pausable<V>(runnable: impl ParallelRunnable, value: V) -> Pausable<impl ParallelRunnable, V>
 where

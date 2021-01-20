@@ -256,7 +256,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #   let app_root = application_root_dir()?;
     #   let assets_dir = app_root.join("assets");
     #
-    #   let game_data = GameDataBuilder::default();
+    #   let game_data = DispatcherBuilder::default();
     #   let mut game = Application::new(
     #       assets_dir,
     #       LoadingState {

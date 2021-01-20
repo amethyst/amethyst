@@ -31,7 +31,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
         //..
     #   let world = World::new();
-    #   let game_data = GameDataBuilder::default();
+    #   let game_data = DispatcherBuilder::default();
 
         let mut game = Application::new(assets_dir, LoadingState, game_data)?;
     #
@@ -85,7 +85,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     #   let app_root = application_root_dir()?;
     #   let assets_dir = app_root.join("assets");
     #
-    #   let game_data = GameDataBuilder::default();
+    #   let game_data = DispatcherBuilder::default();
     #   let mut game = Application::new(
     #       assets_dir,
     #       LoadingState {
