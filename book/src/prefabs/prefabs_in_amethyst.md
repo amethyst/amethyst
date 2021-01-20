@@ -84,10 +84,10 @@ In the background, the [`PrefabLoaderSystem`] will run, and attach the `Position
 | ------------------------ | --------------------------- | ----------------------- |
 | Entity(0, Generation(1)) | Handle { id: 0 }            | Position(1.0, 2.0, 3.0) |
 
-This can be seen by running the `prefab_basic` example from the Amethyst repository:
+This can be seen by running the `prefab` example from the Amethyst repository:
 
 ```bash
-cargo run -p prefab_basic
+cargo run -p prefab
 ```
 
 ### Multiple Components

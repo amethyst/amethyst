@@ -89,10 +89,10 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     )
     ```
 
-To see this in a complete example, run the [`prefab_basic` example] from the Amethyst repository:
+To see this in a complete example, run the [`prefab` example] from the Amethyst repository:
 
 ```bash
-cargo run -p prefab_basic
+cargo run -p prefab
 ```
 
 [`Component`]: https://docs.rs/specs/~0.16/specs/trait.Component.html
@@ -101,5 +101,5 @@ cargo run -p prefab_basic
 [api_pf_derive]: https://docs.amethyst.rs/master/amethyst_derive/derive.PrefabData.html
 [ser_def]: https://serde.rs/container-attrs.html#default
 [ser_unk]: https://serde.rs/container-attrs.html#deny_unknown_fields
-[`prefab_basic` example]: https://github.com/amethyst/amethyst/tree/master/examples/prefab_basic
+[`prefab` example]: https://github.com/amethyst/amethyst/tree/master/examples/prefab
 [bk_prefab_prelude]: ./how_to_define_prefabs_prelude.html
