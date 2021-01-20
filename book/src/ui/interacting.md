@@ -16,9 +16,7 @@ pub struct SimpleButtonSystem;
 impl<'s> System<'s> for SimpleButtonSystem {
     type SystemData = ();
 
-    fn run(&mut self, data: Self::SystemData) {
-	
-    }
+    fn run(&mut self, data: Self::SystemData) {}
 }
 ```
 
@@ -45,9 +43,7 @@ pub struct SimpleButtonSystem {
 impl<'s> System<'s> for SimpleButtonSystem {
     type SystemData = Read<'s, EventChannel<UiEvent>>;
 
-    fn run(&mut self, events: Self::SystemData) {
-
-    }
+    fn run(&mut self, events: Self::SystemData) {}
 }
 ```
 
@@ -71,9 +67,7 @@ We also need a constructor for our system:
 # }
 impl SimpleButtonSystem {
     pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
-        Self {
-            reader_id,	
-        }
+        Self { reader_id }
     }
 }
 ```
@@ -99,7 +93,7 @@ To add the system to our game data we actually need a `SystemDesc` implementatio
 # impl SimpleButtonSystem {
 #     pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
 #        Self {
-#             reader_id,	
+#             reader_id,
 #       }
 #     }
 # }
@@ -133,7 +127,7 @@ In our systems `run` method we are going to loop through all the events:
 #
 fn run(&mut self, events: Self::SystemData) {
     for event in events.read(&mut self.reader_id) {
-        println!("{:?}", event);	
+        println!("{:?}", event);
     }
 }
 # }
@@ -158,7 +152,7 @@ type SystemData = Read<'s, EventChannel<UiEvent>>;
 #
 # fn run(&mut self, events: Self::SystemData) {
 #     for event in events.read(&mut self.reader_id) {
-#         println!("{:?}", event);	
+#         println!("{:?}", event);
 #     }
 # }
 # }
@@ -188,14 +182,14 @@ fn run(&mut self, (events, transforms, mut texts): Self::SystemData) {
         let button_text = texts.get_mut(event.target).unwrap();
 
         match event.event_type {
-            UiEventType::HoverStart => { 
-                button_text.color = [1.0, 1.0, 1.0, 1.0]; 
-            },
-            UiEventType::HoverStop  => { 
-                button_text.color = [1.0, 1.0, 1.0, 0.5]; 
-            },
-            _ => {},
-        }   
+            UiEventType::HoverStart => {
+                button_text.color = [1.0, 1.0, 1.0, 1.0];
+            }
+            UiEventType::HoverStop => {
+                button_text.color = [1.0, 1.0, 1.0, 0.5];
+            }
+            _ => {}
+        }
     }
 }
 # }

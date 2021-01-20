@@ -17,10 +17,7 @@ effect on the sprite.
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
-    palette::Srgba,
-    resources::Tint,
-    SpriteRender, SpriteSheet,
-    Texture, Transparent
+    palette::Srgba, resources::Tint, SpriteRender, SpriteSheet, Texture, Transparent,
 };
 use amethyst::window::ScreenDimensions;
 
@@ -39,17 +36,17 @@ struct ExampleState;
 
 impl SimpleState for ExampleState {
     fn on_start(&mut self, mut data: StateData<'_, GameData>) {
-#         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
-#
-#         let sprite_sheet = load_sprite_sheet(texture_handle);
-#         let sprite_sheet_handle = {
-#             let loader = data.world.read_resource::<DefaultLoader>();
-#             loader.load_from_data(
-#                 sprite_sheet,
-#                 (),
-#                 &data.world.read_resource::<AssetStorage<SpriteSheet>>(),
-#             )
-#         };
+        #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
+        #
+        #         let sprite_sheet = load_sprite_sheet(texture_handle);
+        #         let sprite_sheet_handle = {
+        #             let loader = data.world.read_resource::<DefaultLoader>();
+        #             loader.load_from_data(
+        #                 sprite_sheet,
+        #                 (),
+        #                 &data.world.read_resource::<AssetStorage<SpriteSheet>>(),
+        #             )
+        #         };
         // ...
 
         self.initialize_sprite(&mut data.world, sprite_sheet_handle);
@@ -57,23 +54,19 @@ impl SimpleState for ExampleState {
 }
 
 impl ExampleState {
-    fn initialize_sprite(
-        &mut self,
-        world: &mut World,
-        sprite_sheet_handle: Handle<SpriteSheet>,
-    ) {
+    fn initialize_sprite(&mut self, world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
         // ..
 
-#         let (width, height) = {
-#             let dim = world.read_resource::<ScreenDimensions>();
-#             (dim.width(), dim.height())
-#         };
-#
-#         // Move the sprite to the middle of the window
-#         let mut sprite_transform = Transform::default();
-#         sprite_transform.set_translation_xyz(width / 2., height / 2., 0.);
-#
-#         let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // First sprite
+        #         let (width, height) = {
+        #             let dim = world.read_resource::<ScreenDimensions>();
+        #             (dim.width(), dim.height())
+        #         };
+        #
+        #         // Move the sprite to the middle of the window
+        #         let mut sprite_transform = Transform::default();
+        #         sprite_transform.set_translation_xyz(width / 2., height / 2., 0.);
+        #
+        #         let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // First sprite
 
         // White shows the sprite as normal.
         // You can change the color at any point to modify the sprite's tint.

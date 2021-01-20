@@ -5,7 +5,7 @@ The first part of loading sprites into Amethyst is to read the image into memory
 The following snippet shows how to load a PNG / JPEG / GIF / ICO image:
 
 ```rust ,edition2018,no_run,noplaypen
-use amethyst::assets::{AssetStorage, Handle,  DefaultLoader, Loader};
+use amethyst::assets::{AssetStorage, DefaultLoader, Handle, Loader};
 use amethyst::prelude::*;
 use amethyst::renderer::{formats::texture::ImageFormat, Texture};
 

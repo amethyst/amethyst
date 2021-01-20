@@ -79,7 +79,7 @@ pub struct CustomState<'a, 'b> {
 impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
     fn on_start(&mut self, mut data: StateData<'_, GameData>) {
         let world = &mut data.world;
-        
+
         // Create the `DispatcherBuilder` and register some `System`s that should only run for this `State`.
         let mut dispatcher_builder = DispatcherBuilder::new();
         dispatcher_builder.add(MoveBallsSystem, "move_balls_system", &[]);
@@ -106,7 +106,7 @@ The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifeti
 #     ecs::prelude::*,
 #     prelude::*,
 # };
-# 
+#
 # #[derive(Default)]
 # pub struct CustomState<'a, 'b> {
 #     /// The `State` specific `Dispatcher`, containing `System`s only relevant for this `State`.
@@ -115,23 +115,23 @@ The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifeti
 # struct MoveBallsSystem; struct MovePaddlesSystem;
 # impl<'a> System<'a> for MoveBallsSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
 # impl<'a> System<'a> for MovePaddlesSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
-# 
+#
 impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
     fn on_start(&mut self, mut data: StateData<'_, GameData>) {
         let world = &mut data.world;
-         
+
         // Create the `DispatcherBuilder` and register some `System`s that should only run for this `State`.
         let mut dispatcher_builder = DispatcherBuilder::new();
         dispatcher_builder.add(MoveBallsSystem, "move_balls_system", &[]);
         dispatcher_builder.add(MovePaddlesSystem, "move_paddles_system", &[]);
- 
+
         // Build and setup the `Dispatcher`.
         let mut dispatcher = dispatcher_builder.build();
         dispatcher.setup(world);
- 
+
         self.dispatcher = Some(dispatcher);
     }
- 
+
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
         if let Some(dispatcher) = self.dispatcher.as_mut() {
             dispatcher.dispatch(&data.world);

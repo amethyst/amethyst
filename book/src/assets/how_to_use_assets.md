@@ -16,7 +16,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    #
    use amethyst::{
        prelude::*,
-   #   ecs::{World, WorldExt},
+       #   ecs::{World, WorldExt},
        utils::application_root_dir,
    };
    #
@@ -30,13 +30,13 @@ This guide covers the basic usage of assets into Amethyst for existing supported
        let assets_dir = app_root.join("assets");
 
        //..
-   #   let world = World::new();
-   #   let game_data = DispatcherBuilder::default();
+       #   let world = World::new();
+       #   let game_data = DispatcherBuilder::default();
 
        let mut game = Application::new(assets_dir, LoadingState, game_data)?;
-   #
-   #   game.run();
-   #   Ok(())
+       #
+       #   game.run();
+       #   Ok(())
    }
    ```
 
@@ -126,18 +126,13 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    # }
    #
    impl SimpleState for LoadingState {
-       fn update(
-           &mut self,
-           _data: &mut StateData<'_, GameData>,
-       ) -> SimpleTrans {
+       fn update(&mut self, _data: &mut StateData<'_, GameData>) -> SimpleTrans {
            if self.progress_counter.is_complete() {
                Trans::Switch(Box::new(GameState {
-                   texture_handle: self.texture_handle
-                       .take()
-                       .expect(
-                           "Expected `texture_handle` to exist when \
-                           `progress_counter` is complete."
-                       ),
+                   texture_handle: self.texture_handle.take().expect(
+                       "Expected `texture_handle` to exist when \
+                           `progress_counter` is complete.",
+                   ),
                }))
            } else {
                Trans::None

@@ -17,7 +17,7 @@ Defining a custom type for the `InputBundle` is done by implementing the `Bindin
 use std::fmt::{self, Display};
 
 use amethyst::input::{BindingTypes, Bindings};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum AxisBinding {
@@ -141,9 +141,12 @@ Now that we have added an `InputBundle` with a custom `BindingTypes`, we can use
 
 ```rust ,edition2018,no_run,noplaypen
 use amethyst::{
-    core::{Transform, SystemDesc},
+    core::{SystemDesc, Transform},
     derive::SystemDesc,
-    ecs::{Component, DenseVecStorage, Join, Read, ReadStorage, System, SystemData, World, WriteStorage},
+    ecs::{
+        Component, DenseVecStorage, Join, Read, ReadStorage, System, SystemData, World,
+        WriteStorage,
+    },
     input::{AxisBinding, InputHandler},
 };
 
@@ -179,14 +182,14 @@ impl<'s> System<'s> for MovementSystem {
             let vertical = input
                 .axis_value(&AxisBinding::Vertical(player.id))
                 .unwrap_or(0.0);
-            
+
             let shoot = input
                 .action_is_down(&ActionBinding::Shoot(player.id))
                 .unwrap_or(false);
-            
+
             transform.move_up(horizontal);
             transform.move_right(vertical);
-            
+
             if shoot {
                 player.shoot();
             }

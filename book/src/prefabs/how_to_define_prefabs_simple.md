@@ -8,7 +8,7 @@ This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. Th
 # use amethyst::ecs::{storage::DenseVecStorage, Component};
 # use serde::{Deserialize, Serialize};
 #
-#[derive(Component, Debug, Deserialize, Serialize /* .. */)]
+#[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Position(pub f32, pub f32, pub f32);
 ```
 

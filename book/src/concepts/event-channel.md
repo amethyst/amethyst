@@ -145,7 +145,7 @@ and you also need to get read access:
 # }
 # struct MySystem;
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
-    type SystemData = Read<'a, EventChannel<MyEvent>>;
+type SystemData = Read<'a, EventChannel<MyEvent>>;
 #   fn run(&mut self, _: Self::SystemData) { }
 # }
 ```

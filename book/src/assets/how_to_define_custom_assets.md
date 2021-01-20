@@ -7,10 +7,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
    ```rust ,edition2018,noplaypen
    # extern crate serde_derive;
    #
-   use amethyst::{
-       assets::Handle,
-       ecs::VecStorage,
-   };
+   use amethyst::{assets::Handle, ecs::VecStorage};
 
    /// Custom asset representing an energy blast.
    #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -145,18 +142,17 @@ This guide explains how to define a new asset type to be used in an Amethyst app
    impl ProcessableAsset for EnergyBlast {
        fn process(energy_blast_data: Self::Data) -> Result<ProcessingState<Self>, Error> {
            match energy_blast_data {
-               EnergyBlastData::Version1 { hp_damage } => {
-                   Ok(ProcessingState::Loaded(Self {
-                       hp_damage,
-                       ..Default::default()
-                   }))
-               }
-               EnergyBlastData::Version2 { hp_damage, mp_damage } => {
-                   Ok(ProcessingState::Loaded(Self {
-                       hp_damage,
-                       mp_damage,
-                   }))
-               }
+               EnergyBlastData::Version1 { hp_damage } => Ok(ProcessingState::Loaded(Self {
+                   hp_damage,
+                   ..Default::default()
+               })),
+               EnergyBlastData::Version2 {
+                   hp_damage,
+                   mp_damage,
+               } => Ok(ProcessingState::Loaded(Self {
+                   hp_damage,
+                   mp_damage,
+               })),
            }
        }
    }

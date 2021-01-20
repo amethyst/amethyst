@@ -231,12 +231,12 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 # }
 #
 use amethyst::{
-    core::{Transform, SystemDesc},
+    core::{SystemDesc, Transform},
     derive::SystemDesc,
     ecs::{Join, ReadStorage, System, SystemData, World, WriteStorage},
 };
 
-use crate::pong::{Ball, Side, Paddle, ARENA_HEIGHT};
+use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
 # #[derive(SystemDesc)]
 pub struct BounceSystem;

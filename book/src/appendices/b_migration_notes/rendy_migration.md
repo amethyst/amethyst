@@ -142,12 +142,8 @@
       }
   }
 
-
   impl<B: Backend> RenderPlugin<B> for RenderCustom {
-      fn on_build<'a, 'b>(
-          &mut self,
-          builder: &mut DispatcherBuilder<'a, 'b>,
-      ) -> Result<(), Error> {
+      fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
           // You can add systems that are needed by your renderpass here
           Ok(())
       }

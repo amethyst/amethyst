@@ -116,11 +116,14 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b
         let core_dispatcher = Some(core_dispatcher);
         let running_dispatcher = Some(running_dispatcher);
 
-        CustomGameData { core_dispatcher, running_dispatcher }
+        CustomGameData {
+            core_dispatcher,
+            running_dispatcher,
+        }
     }
 }
 
-impl<'a,'b> DataDispose for CustomGameData<'a,'b> {
+impl<'a, 'b> DataDispose for CustomGameData<'a, 'b> {
     // We dispose each dispatcher owned by the `CustomGameData` structure.
     fn dispose(&mut self, world: &mut World) {
         if let Some(dispatcher) = self.core_dispatcher.take() {
@@ -192,7 +195,10 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
         }
     }
 
-    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
+    fn update(
+        &mut self,
+        data: StateData<CustomGameData>,
+    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, false); // false to say we should not dispatch running
         Trans::None
     }
@@ -221,7 +227,10 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
         }
     }
 
-    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
+    fn update(
+        &mut self,
+        data: StateData<CustomGameData>,
+    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, true); // true to say we should dispatch running
         Trans::None
     }

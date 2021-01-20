@@ -119,7 +119,7 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 #     pub const PADDLE_HEIGHT: f32 = 16.0;
 # }
 #
-use amethyst::core::{Transform, SystemDesc};
+use amethyst::core::{SystemDesc, Transform};
 use amethyst::derive::SystemDesc;
 use amethyst::ecs::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage};
 use amethyst::input::{InputHandler, StringBindings};

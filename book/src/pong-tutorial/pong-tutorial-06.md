@@ -87,7 +87,7 @@ fn main() -> amethyst::Result<()> {
     ;
 
     // --snip--
-# Ok(())
+    # Ok(())
 }
 ```
 
@@ -119,7 +119,6 @@ pub fn play_bounce_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output
 Then, we'll update the Bounce System to play the sound whenever the ball bounces. Update `systems/bounce.rs`:
 
 ```rust
-
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
@@ -203,12 +202,12 @@ pub fn play_score_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output:
 Then, we'll update our Winner System to play the score sound whenever a player scores. Update `systems/winner.rs`:
 
 ```rust
+use crate::audio::{play_score_sound, Sounds};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
     ecs::Read,
 };
-use crate::audio::{play_score_sound, Sounds};
 
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
@@ -222,8 +221,9 @@ impl<'s> System<'s> for WinnerSystem {
         Option<Read<'s, Output>>,
     );
 
-
-    fn run(&mut self, (
+    fn run(
+        &mut self,
+        (
         mut balls,
         mut locals,
         mut ui_text,
@@ -232,7 +232,8 @@ impl<'s> System<'s> for WinnerSystem {
         storage,
         sounds,
         audio_output,
-    ): Self::SystemData)  {
+    ): Self::SystemData,
+    ) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
             // --snip--
 
@@ -296,8 +297,8 @@ Next, we need to add the Music Resource to our World. Update `initialise_audio`:
 # use std::{iter::Cycle, vec::IntoIter};
 #
 use amethyst::{
-    audio::{AudioSink, SourceHandle},
     assets::Loader,
+    audio::{AudioSink, SourceHandle},
     ecs::{World, WorldExt},
 };
 #
@@ -355,8 +356,8 @@ pub fn initialise_audio(world: &mut World) {
 Finally, let's add a DJ System to our game to play the music. In `main.rs`:
 
 ```rust
-use amethyst::audio::DjSystemDesc;
 use crate::audio::Music;
+use amethyst::audio::DjSystemDesc;
 
 fn main() -> amethyst::Result<()> {
     // --snip--
@@ -372,7 +373,7 @@ fn main() -> amethyst::Result<()> {
         ;
 
     // --snip--
-# Ok(())
+    # Ok(())
 }
 ```
 

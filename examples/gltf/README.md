@@ -6,8 +6,7 @@ This example requires enabling the `animation` and `gltf` features.
 
 Keybindings:
 
-* `space` - Begin the next animation, 8 in total.
-* `mouse` - Mouse movement will rotate the view
-
+- `space` - Begin the next animation, 8 in total.
+- `mouse` - Mouse movement will rotate the view
 
 ![gltf example screenshot](./screenshot.png)

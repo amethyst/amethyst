@@ -37,10 +37,9 @@ A lot of this can be implemented using [`err-derive`], as showcased below.
 ###### Example
 
 ```rust
-/// crate::error
-
-use std::{fmt, error, io};
 use err_derive::Error;
+/// crate::error
+use std::{error, fmt, io};
 
 #[derive(Debug, Error)]
 pub enum Error {

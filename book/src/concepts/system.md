@@ -75,7 +75,10 @@ impl<'a> System<'a> for WalkPlayerUp {
     type SystemData = WriteStorage<'a, Transform>;
 
     fn run(&mut self, mut transforms: Self::SystemData) {
-        transforms.get_mut(self.player).unwrap().prepend_translation_y(0.1);
+        transforms
+            .get_mut(self.player)
+            .unwrap()
+            .prepend_translation_y(0.1);
     }
 }
 ```
@@ -111,10 +114,7 @@ use amethyst::ecs::Join;
 struct MakeObjectsFall;
 
 impl<'a> System<'a> for MakeObjectsFall {
-    type SystemData = (
-        WriteStorage<'a, Transform>,
-        ReadStorage<'a, FallingObject>,
-    );
+    type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (transform, _) in (&mut transforms, &falling).join() {
@@ -148,10 +148,7 @@ use amethyst::ecs::Join;
 struct NotFallingObjects;
 
 impl<'a> System<'a> for NotFallingObjects {
-    type SystemData = (
-        WriteStorage<'a, Transform>,
-        ReadStorage<'a, FallingObject>,
-    );
+    type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (mut transform, _) in (&mut transforms, !&falling).join() {
@@ -193,7 +190,8 @@ impl<'a> System<'a> for SpawnEnemies {
     fn run(&mut self, (mut transforms, mut enemies, entities): Self::SystemData) {
         self.counter += 1;
         if self.counter > 200 {
-            entities.build_entity()
+            entities
+                .build_entity()
                 .with(Transform::default(), &mut transforms)
                 .with(Enemy, &mut enemies)
                 .build();
@@ -379,7 +377,7 @@ impl SimpleState for GameMenuState {
             Some(UserAction::Quit) => {
                 // Note: no need to clean up :)
                 Trans::Quit
-            },
+            }
             _ => Trans::None,
         }
     }
@@ -427,25 +425,20 @@ system:
 # }
 #
 use amethyst::{
-    prelude::*,
-    ecs::{System, prelude::*},
+    ecs::{prelude::*, System},
     input::{InputHandler, StringBindings},
+    prelude::*,
 };
 
 struct MyGameplaySystem;
 
 impl<'s> System<'s> for MyGameplaySystem {
-    type SystemData = (
-        Read<'s, InputHandler<StringBindings>>,
-        Write<'s, Game>,
-    );
+    type SystemData = (Read<'s, InputHandler<StringBindings>>, Write<'s, Game>);
 
     fn run(&mut self, (input, mut game): Self::SystemData) {
         match game.current_state {
             CurrentState::Gameplay => {
-                let open_menu = input
-                    .action_is_down("open_menu")
-                    .unwrap_or(false);
+                let open_menu = input.action_is_down("open_menu").unwrap_or(false);
 
                 // Toggle the `open_menu` variable to signal the state to
                 // transition.

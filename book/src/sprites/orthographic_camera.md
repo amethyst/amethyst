@@ -35,20 +35,9 @@ impl ExampleState {
         let mut transform = Transform::default();
         transform.set_translation_xyz(0., height, 10.);
 
-        let camera = Camera::orthographic(
-            0.0,
-            width,
-            0.0,
-            height,
-            0.0,
-            20.0,
-        );
+        let camera = Camera::orthographic(0.0, width, 0.0, height, 0.0, 20.0);
 
-        let camera = world
-            .create_entity()
-            .with(transform)
-            .with(camera)
-            .build();
+        let camera = world.create_entity().with(transform).with(camera).build();
     }
 }
 ```

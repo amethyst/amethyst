@@ -37,7 +37,6 @@ impl SimpleState for MenuState {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
-#
         /* Create the transform */
         let ui_transform = UiTransform::new(
         // ...
@@ -52,13 +51,13 @@ impl SimpleState for MenuState {
         );
 
         /* Create the text */
-#       let font_handle = world.read_resource::<DefaultLoader>().load(
-#       "font/square.ttf",
-#       TtfFormat,
-#       (),
-#       &world.read_resource(),
-#       );
-#
+        #       let font_handle = world.read_resource::<DefaultLoader>().load(
+        #       "font/square.ttf",
+        #       TtfFormat,
+        #       (),
+        #       &world.read_resource(),
+        #       );
+        #
         let ui_text = UiText::new(
         // ...
 #       font_handle,                      // font
@@ -70,10 +69,11 @@ impl SimpleState for MenuState {
         );
 
         /* Building the entity */
-        let btn = world.create_entity()
+        let btn = world
+            .create_entity()
             .with(ui_transform)
             .with(ui_text)
-            .with(Interactable)   
+            .with(Interactable)
             .build();
 
         /* Saving the button in our state struct */
@@ -99,69 +99,64 @@ method of our state:
 #   button: Option<Entity>,
 # }
 impl SimpleState for MenuState {
-#   fn on_start(&mut self, data: StateData<'_, GameData>) {
+    #   fn on_start(&mut self, data: StateData<'_, GameData>) {
     // ...
-#       let world = data.world;
-#
-#
-#       /* Create the transform */
-#       let ui_transform = UiTransform::new(
-#           String::from("simple_button"), // id
-#           Anchor::Middle,                // anchor
-#           Anchor::Middle,                // pivot
-#           0f32,                          // x
-#           0f32,                          // y
-#           0f32,                          // z
-#           100f32,                        // width
-#           30f32,                         // height
-#       );
-#
-#       /* Create the text */
-#       let font_handle = world.read_resource::<DefaultLoader>().load(
-#          "font/square.ttf",
-#          TtfFormat,
-#          (),
-#          &world.read_resource(),
-#       );
-#
-#       let ui_text = UiText::new(
-#           font_handle,                      // font
-#           String::from("Simple Button"),    // text
-#           [1.0f32, 1.0f32, 1.0f32, 0.5f32], // color
-#           25f32,                            // font_size
-#           LineMode::Single,                 // line_mode
-#           Anchor::Middle,                   // align
-#       );
-#
-#       /* Building the entity */
-#       let btn = world.create_entity()
-#           .with(ui_transform)
-#           .with(ui_text)
-#           .with(Interactable)   
-#           .build();
-#
-#       /* Saving the button in our state struct */
-#       self.button = Some(btn);
-#   }
+    #       let world = data.world;
+    #
+    #
+    #       /* Create the transform */
+    #       let ui_transform = UiTransform::new(
+    #           String::from("simple_button"), // id
+    #           Anchor::Middle,                // anchor
+    #           Anchor::Middle,                // pivot
+    #           0f32,                          // x
+    #           0f32,                          // y
+    #           0f32,                          // z
+    #           100f32,                        // width
+    #           30f32,                         // height
+    #       );
+    #
+    #       /* Create the text */
+    #       let font_handle = world.read_resource::<DefaultLoader>().load(
+    #          "font/square.ttf",
+    #          TtfFormat,
+    #          (),
+    #          &world.read_resource(),
+    #       );
+    #
+    #       let ui_text = UiText::new(
+    #           font_handle,                      // font
+    #           String::from("Simple Button"),    // text
+    #           [1.0f32, 1.0f32, 1.0f32, 0.5f32], // color
+    #           25f32,                            // font_size
+    #           LineMode::Single,                 // line_mode
+    #           Anchor::Middle,                   // align
+    #       );
+    #
+    #       /* Building the entity */
+    #       let btn = world.create_entity()
+    #           .with(ui_transform)
+    #           .with(ui_text)
+    #           .with(Interactable)
+    #           .build();
+    #
+    #       /* Saving the button in our state struct */
+    #       self.button = Some(btn);
+    #   }
 
-    fn handle_event(
-        &mut self,
-    	_data: StateData<'_, GameData>,
-    	event: StateEvent) -> SimpleTrans {
-    	if let StateEvent::Ui(ui_event) = event {
-    		let is_target = ui_event.target == self.button.unwrap();
+    fn handle_event(&mut self, _data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
+        if let StateEvent::Ui(ui_event) = event {
+            let is_target = ui_event.target == self.button.unwrap();
 
-    		match ui_event.event_type {
-    			UiEventType::Click if is_target => {
-    				/* . . . */
-    			},
-    			_ => {
-    				return SimpleTrans::None;
-    			},  
-    		};
-    	}
+            match ui_event.event_type {
+                UiEventType::Click if is_target => { /* . . . */ }
+                _ => {
+                    return SimpleTrans::None;
+                }
+            };
+        }
 
-    	SimpleTrans::None
+        SimpleTrans::None
     }
 }
 ```
@@ -202,69 +197,69 @@ component to our button:
 # }
 impl SimpleState for MenuState {
     // ...
-#   fn on_start(&mut self, data: StateData<'_, GameData>) {
-#       let world = data.world;
-#
-#
-#       /* Create the transform */
-#       let ui_transform = UiTransform::new(
-#           String::from("simple_button"), // id
-#           Anchor::Middle,                // anchor
-#           Anchor::Middle,                // pivot
-#           0f32,                          // x
-#           0f32,                          // y
-#           0f32,                          // z
-#           100f32,                        // width
-#           30f32,                         // height
-#       );
-#
-#       /* Create the text */
-#       let font_handle = world.read_resource::<DefaultLoader>().load(
-#           "font/square.ttf",
-#           TtfFormat,
-#           (),
-#           &world.read_resource(),
-#       );
-#
-#       let ui_text = UiText::new(
-#           font_handle,                      // font
-#           String::from("Simple Button"),    // text
-#           [1.0f32, 1.0f32, 1.0f32, 0.5f32], // color
-#           25f32,                            // font_size
-#           LineMode::Single,                 // line_mode
-#           Anchor::Middle,                   // align
-#       );
-#
-#       /* Building the entity */
-#       let btn = world.create_entity()
-#           .with(ui_transform)
-#           .with(ui_text)
-#           .with(Interactable)   
-#           .build();
-#
-#       /* Saving the button in our state struct */
-#       self.button = Some(btn);
-#   }
-#
-#   fn handle_event(
-#       &mut self,
-#       _data: StateData<'_, GameData>,
-#       event: StateEvent) -> SimpleTrans {
-#       if let StateEvent::Ui(ui_event) = event {
-#           let is_target = ui_event.target == self.button.unwrap();
-#
-#            match ui_event.event_type {
-#               UiEventType::Click if is_target => {
-#               /* . . . */
-#               },
-#               _ => {
-#                   return SimpleTrans::None;
-#               },  
-#           };
-#       }
-#
-#       SimpleTrans::None
-#   }
+    #   fn on_start(&mut self, data: StateData<'_, GameData>) {
+    #       let world = data.world;
+    #
+    #
+    #       /* Create the transform */
+    #       let ui_transform = UiTransform::new(
+    #           String::from("simple_button"), // id
+    #           Anchor::Middle,                // anchor
+    #           Anchor::Middle,                // pivot
+    #           0f32,                          // x
+    #           0f32,                          // y
+    #           0f32,                          // z
+    #           100f32,                        // width
+    #           30f32,                         // height
+    #       );
+    #
+    #       /* Create the text */
+    #       let font_handle = world.read_resource::<DefaultLoader>().load(
+    #           "font/square.ttf",
+    #           TtfFormat,
+    #           (),
+    #           &world.read_resource(),
+    #       );
+    #
+    #       let ui_text = UiText::new(
+    #           font_handle,                      // font
+    #           String::from("Simple Button"),    // text
+    #           [1.0f32, 1.0f32, 1.0f32, 0.5f32], // color
+    #           25f32,                            // font_size
+    #           LineMode::Single,                 // line_mode
+    #           Anchor::Middle,                   // align
+    #       );
+    #
+    #       /* Building the entity */
+    #       let btn = world.create_entity()
+    #           .with(ui_transform)
+    #           .with(ui_text)
+    #           .with(Interactable)
+    #           .build();
+    #
+    #       /* Saving the button in our state struct */
+    #       self.button = Some(btn);
+    #   }
+    #
+    #   fn handle_event(
+    #       &mut self,
+    #       _data: StateData<'_, GameData>,
+    #       event: StateEvent) -> SimpleTrans {
+    #       if let StateEvent::Ui(ui_event) = event {
+    #           let is_target = ui_event.target == self.button.unwrap();
+    #
+    #            match ui_event.event_type {
+    #               UiEventType::Click if is_target => {
+    #               /* . . . */
+    #               },
+    #               _ => {
+    #                   return SimpleTrans::None;
+    #               },
+    #           };
+    #       }
+    #
+    #       SimpleTrans::None
+    #   }
 
     fn on_pause(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
@@ -295,81 +290,81 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 # }
 impl SimpleState for MenuState {
     // ...
-#   fn on_start(&mut self, data: StateData<'_, GameData>) {
-#       let world = data.world;
-#
-#
-#       /* Create the transform */
-#       let ui_transform = UiTransform::new(
-#           String::from("simple_button"), // id
-#           Anchor::Middle,                // anchor
-#           Anchor::Middle,                // pivot
-#           0f32,                          // x
-#           0f32,                          // y
-#           0f32,                          // z
-#           100f32,                        // width
-#           30f32,                         // height
-#       );
-#
-#       /* Create the text */
-#       let font_handle = world.read_resource::<DefaultLoader>().load(
-#           "font/square.ttf",
-#           TtfFormat,
-#           (),
-#           &world.read_resource(),
-#       );
-#
-#       let ui_text = UiText::new(
-#           font_handle,                      // font
-#           String::from("Simple Button"),    // text
-#           [1.0f32, 1.0f32, 1.0f32, 0.5f32], // color
-#           25f32,                            // font_size
-#           LineMode::Single,                 // line_mode
-#           Anchor::Middle,                   // align
-#       );
-#
-#       /* Building the entity */
-#       let btn = world.create_entity()
-#           .with(ui_transform)
-#           .with(ui_text)
-#           .with(Interactable)   
-#           .build();
-#
-#       /* Saving the button in our state struct */
-#           self.button = Some(btn);
-#   }
-#
-#   fn handle_event(
-#   &mut self,
-#   _data: StateData<'_, GameData>,
-#   event: StateEvent) -> SimpleTrans {
-#       if let StateEvent::Ui(ui_event) = event {
-#           let is_target = ui_event.target == self.button.unwrap();
-#
-#           match ui_event.event_type {
-#               UiEventType::Click if is_target => {
-#                   /* . . . */
-#               },
-#               _ => {
-#                   return SimpleTrans::None;
-#               },  
-#           };
-#       }
-#
-#       SimpleTrans::None
-#   }
-#
-#   fn on_pause(&mut self, data: StateData<'_, GameData>) {
-#   let world = data.world;
-#   let mut hiddens = world.write_storage::<Hidden>();
-#
-#   if let Some(btn) = self.button {
-#      let _ = hiddens.insert(btn, Hidden);
-#   }
-# }
+    #   fn on_start(&mut self, data: StateData<'_, GameData>) {
+    #       let world = data.world;
+    #
+    #
+    #       /* Create the transform */
+    #       let ui_transform = UiTransform::new(
+    #           String::from("simple_button"), // id
+    #           Anchor::Middle,                // anchor
+    #           Anchor::Middle,                // pivot
+    #           0f32,                          // x
+    #           0f32,                          // y
+    #           0f32,                          // z
+    #           100f32,                        // width
+    #           30f32,                         // height
+    #       );
+    #
+    #       /* Create the text */
+    #       let font_handle = world.read_resource::<DefaultLoader>().load(
+    #           "font/square.ttf",
+    #           TtfFormat,
+    #           (),
+    #           &world.read_resource(),
+    #       );
+    #
+    #       let ui_text = UiText::new(
+    #           font_handle,                      // font
+    #           String::from("Simple Button"),    // text
+    #           [1.0f32, 1.0f32, 1.0f32, 0.5f32], // color
+    #           25f32,                            // font_size
+    #           LineMode::Single,                 // line_mode
+    #           Anchor::Middle,                   // align
+    #       );
+    #
+    #       /* Building the entity */
+    #       let btn = world.create_entity()
+    #           .with(ui_transform)
+    #           .with(ui_text)
+    #           .with(Interactable)
+    #           .build();
+    #
+    #       /* Saving the button in our state struct */
+    #           self.button = Some(btn);
+    #   }
+    #
+    #   fn handle_event(
+    #   &mut self,
+    #   _data: StateData<'_, GameData>,
+    #   event: StateEvent) -> SimpleTrans {
+    #       if let StateEvent::Ui(ui_event) = event {
+    #           let is_target = ui_event.target == self.button.unwrap();
+    #
+    #           match ui_event.event_type {
+    #               UiEventType::Click if is_target => {
+    #                   /* . . . */
+    #               },
+    #               _ => {
+    #                   return SimpleTrans::None;
+    #               },
+    #           };
+    #       }
+    #
+    #       SimpleTrans::None
+    #   }
+    #
+    #   fn on_pause(&mut self, data: StateData<'_, GameData>) {
+    #   let world = data.world;
+    #   let mut hiddens = world.write_storage::<Hidden>();
+    #
+    #   if let Some(btn) = self.button {
+    #      let _ = hiddens.insert(btn, Hidden);
+    #   }
+    # }
 
     fn on_resume(&mut self, data: StateData<'_, GameData>) {
-        let world = data.world; 	
+        let world = data.world;
         let mut hiddens = world.write_storage::<Hidden>();
 
         if let Some(btn) = self.button {

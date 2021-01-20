@@ -48,16 +48,13 @@ use amethyst::{
     ecs::{Join, System, SystemData, World, WriteStorage},
 };
 
-use crate::pong::{Ball, ARENA_WIDTH, ARENA_HEIGHT};
+use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
 
 #[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {
-    type SystemData = (
-        WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
-    );
+    type SystemData = (WriteStorage<'s, Ball>, WriteStorage<'s, Transform>);
 
     fn run(&mut self, (mut balls, mut locals): Self::SystemData) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
@@ -234,10 +231,7 @@ Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
 ```rust ,edition2018,no_run,noplaypen
-use amethyst::{
-    // --snip--
-    ecs::{Component, DenseVecStorage, Entity},
-};
+use amethyst::ecs::{Component, DenseVecStorage, Entity};
 
 /// ScoreBoard contains the actual score data
 #[derive(Default)]
@@ -263,19 +257,13 @@ rendered to the screen. We'll create those next:
 
 ```rust ,edition2018,no_run,noplaypen
 #
-use amethyst::{
-#     assets::{AssetStorage,  DefaultLoader, Loader},
-#     ecs::Entity,
-#     prelude::*,
-    // ...
-    ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform},
-};
+use amethyst::ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform};
 
 # pub struct Pong;
 #
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-#       let world = data.world;
+        #       let world = data.world;
         // --snip--
 
         initialise_scoreboard(world);
@@ -292,12 +280,24 @@ fn initialise_scoreboard(world: &mut World) {
         &world.read_resource(),
     );
     let p1_transform = UiTransform::new(
-        "P1".to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
-        -50., -50., 1., 200., 50.,
+        "P1".to_string(),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        -50.,
+        -50.,
+        1.,
+        200.,
+        50.,
     );
     let p2_transform = UiTransform::new(
-        "P2".to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
-        50., -50., 1., 200., 50.,
+        "P2".to_string(),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        50.,
+        -50.,
+        1.,
+        200.,
+        50.,
     );
 
     let p1_score = world
@@ -326,7 +326,7 @@ fn initialise_scoreboard(world: &mut World) {
         ))
         .build();
 
-# pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
+    # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
     world.insert(ScoreText { p1_score, p2_score });
 }
 ```
@@ -393,15 +393,15 @@ accordingly:
 # }
 #
 use amethyst::{
-#     core::transform::Transform,
-#     core::SystemDesc,
-#     derive::SystemDesc,
+    #     core::transform::Transform,
+    #     core::SystemDesc,
+    #     derive::SystemDesc,
     // --snip--
     ecs::{Join, ReadExpect, System, SystemData, World, Write, WriteStorage},
     ui::UiText,
 };
 
-use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH, ARENA_HEIGHT};
+use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_HEIGHT, ARENA_WIDTH};
 
 #[derive(SystemDesc)]
 pub struct WinnerSystem;
@@ -415,22 +415,18 @@ impl<'s> System<'s> for WinnerSystem {
         ReadExpect<'s, ScoreText>,
     );
 
-    fn run(&mut self, (
-        mut balls,
-        mut locals,
-        mut ui_text,
-        mut scores,
-        score_text
-    ): Self::SystemData) {
+    fn run(
+        &mut self,
+        (mut balls, mut locals, mut ui_text, mut scores, score_text): Self::SystemData,
+    ) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
-#             let ball_x = transform.translation().x;
+            #             let ball_x = transform.translation().x;
             // --snip--
 
             let did_hit = if ball_x <= ball.radius {
                 // Right player scored on the left side.
                 // We top the score at 999 to avoid text overlap.
-                scores.score_right = (scores.score_right + 1)
-                    .min(999);
+                scores.score_right = (scores.score_right + 1).min(999);
 
                 if let Some(text) = ui_text.get_mut(score_text.p2_score) {
                     text.text = scores.score_right.to_string();
@@ -439,8 +435,7 @@ impl<'s> System<'s> for WinnerSystem {
             } else if ball_x >= ARENA_WIDTH - ball.radius {
                 // Left player scored on the right side.
                 // We top the score at 999 to avoid text overlap.
-                scores.score_left = (scores.score_left + 1)
-                    .min(999);
+                scores.score_left = (scores.score_left + 1).min(999);
                 if let Some(text) = ui_text.get_mut(score_text.p1_score) {
                     text.text = scores.score_left.to_string();
                 }
@@ -450,9 +445,9 @@ impl<'s> System<'s> for WinnerSystem {
             };
 
             if did_hit {
-#                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
-#                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
-#                 transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
+                #                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
+                #                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
+                #                 transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
 
                 // --snip--
 

@@ -106,12 +106,12 @@ fn on_start(&mut self, data: StateData<'_, GameData>) {
 #         100f32,                        // width
 #         30f32,                         // height
     );
-#
-#    let font_handle = {
-#        let loader = world.read_resource::<DefaultLoader>();
-#        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
-#        get_default_font(&loader, &font_storage)
-#    };
+    #
+    #    let font_handle = {
+    #        let loader = world.read_resource::<DefaultLoader>();
+    #        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
+    #        get_default_font(&loader, &font_storage)
+    #    };
 
     /* Create the text */
     let ui_text = UiText::new(
@@ -125,7 +125,8 @@ fn on_start(&mut self, data: StateData<'_, GameData>) {
     );
 
     /* Building the entity */
-    let _ = world.create_entity()
+    let _ = world
+        .create_entity()
         .with(ui_transform)
         .with(ui_text)
         .build();

@@ -82,7 +82,6 @@ if any errors occur during setup.
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 fn main() -> amethyst::Result<()> {
-
     // We'll put the rest of the code here.
 
     Ok(())

@@ -84,7 +84,10 @@ impl<'a> PrefabData<'a> for Transform {
         _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
-        storage.insert(entity, self.clone()).map(|_| ()).map_err(Into::into)
+        storage
+            .insert(entity, self.clone())
+            .map(|_| ())
+            .map_err(Into::into)
     }
 }
 ```
@@ -151,12 +154,11 @@ where
     ) -> Result<Handle<A>, Error> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
-            AssetPrefab::File(ref name, ref format) => system_data.0.load(
-                name.as_str(),
-                format.clone(),
-                (),
-                &system_data.2,
-            ),
+            AssetPrefab::File(ref name, ref format) => {
+                system_data
+                    .0
+                    .load(name.as_str(), format.clone(), (), &system_data.2)
+            }
         };
         Ok(system_data.1.insert(entity, handle.clone())?.unwrap())
     }

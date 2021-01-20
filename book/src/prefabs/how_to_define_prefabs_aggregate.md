@@ -106,7 +106,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
            position: Option<Position>,
        },
    }
-
    ```
 
    **Note:** There is an important limitation when building `PrefabData`s, particularly enum `PrefabData`s. No two fields in the `PrefabData` or in any nested `PrefabData`s under it can access the same `Component` unless all accesses are reads. This is still true even if the fields appear in different variants of an enum. This means that the following `PrefabData` will fail at runtime when loaded:
@@ -143,7 +142,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
            sprite: SpriteScenePrefab,
        },
    }
-
    ```
 
    The problem is that both the `SpriteScenePrefab`s need to write to `Transform` and several other common `Components`. Because Amythest's underlyng ECS system determines what resources are accessed based on static types it can't determine that only one of the `SpriteScenePrefab`s will be accessed at a time and it attempts a double mutable borrow which fails. The solution is to define the `PrefabData` hierarchically so each component only appears once:
@@ -172,11 +170,8 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    #[derive(Debug, Deserialize, Serialize, PrefabData)]
    #[serde(deny_unknown_fields)]
    pub enum CreatureDetailsPrefab {
-       MundaneCreature {
-       },
-       MagicalCreature {
-           special_power: SpecialPower,
-       },
+       MundaneCreature {},
+       MagicalCreature { special_power: SpecialPower },
    }
    #[derive(Debug, Deserialize, Serialize, PrefabData)]
    #[serde(deny_unknown_fields)]
@@ -184,7 +179,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
        sprite: SpriteScenePrefab,
        creature_details: CreatureDetailsPrefab,
    }
-
    ```
 
    The [`PrefabData`][api_pf_derive] derive implements the [`PrefabData`] trait for the type. The generated code will handle invoking the appropriate [`PrefabData`] methods when loading and attaching components to an entity. **Note:** This differs from the simple component [`PrefabData`] derive implementation – there is no `#[prefab(Component)]` attribute.

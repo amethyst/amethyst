@@ -28,7 +28,7 @@ initialization code from the Pong code.
    ```rust ,edition2018,no_run,noplaypen
    #
    use amethyst::{
-       assets::{AssetStorage,  DefaultLoader, Loader, Handle},
+       assets::{AssetStorage, DefaultLoader, Handle, Loader},
        core::transform::Transform,
        ecs::{Component, DenseVecStorage},
        prelude::*,
@@ -56,9 +56,7 @@ This method is called when the State starts. We will leave it empty for now.
 # use amethyst::prelude::*;
 # struct Pong;
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
-
-    }
+    fn on_start(&mut self, data: StateData<'_, GameData>) {}
 }
 ```
 
@@ -374,22 +372,21 @@ use amethyst::core::transform::TransformBundle;
 # impl SimpleState for Pong { }
 #
 fn main() -> amethyst::Result<()> {
-#   amethyst::start_logger(Default::default());
-#
-#   let app_root = application_root_dir()?;
-#   let display_config_path =
-#       app_root.join("config/display.ron");
-#
+    #   amethyst::start_logger(Default::default());
+    #
+    #   let app_root = application_root_dir()?;
+    #   let display_config_path =
+    #       app_root.join("config/display.ron");
+    #
     // ...
     let game_data = DispatcherBuilder::default()
         // ...
-
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?;
 
-#   let assets_dir = "/";
-#   let mut game = Application::new(assets_dir, Pong, game_data)?;
-#   Ok(())
+    #   let assets_dir = "/";
+    #   let mut game = Application::new(assets_dir, Pong, game_data)?;
+    #   Ok(())
 }
 ```
 
@@ -439,7 +436,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     };
 
     //...
-#   unimplemented!()
+    #   unimplemented!()
 }
 ```
 

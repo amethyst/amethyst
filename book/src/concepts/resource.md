@@ -20,11 +20,9 @@ struct MyResource {
 
 fn main() {
     let mut world = World::empty();
-    
-    let my = MyResource {
-        game_score: 0,
-    };
-    
+
+    let my = MyResource { game_score: 0 };
+
     world.insert(my);
 }
 ```

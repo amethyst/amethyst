@@ -36,11 +36,11 @@ If you are defining a new format that may be useful to others, [please send us a
    # extern crate serde;
    #
    use amethyst::{
-       error::Error,
        assets::{Asset, Format},
+       error::Error,
    };
-   use serde::Deserialize;
-   use ron::de::Deserializer; // Replace this in your implementation.
+   use ron::de::Deserializer;
+   use serde::Deserialize; // Replace this in your implementation.
 
    /// Format for loading from `.mylang` files.
    #[derive(Clone, Copy, Debug, Default)]
@@ -151,13 +151,13 @@ If you are defining a new format that may be useful to others, [please send us a
 
            self.energy_blast_handle = Some(energy_blast_handle);
        }
-   #
-   #     fn update(
-   #         &mut self,
-   #         _data: &mut StateData<'_, GameData>,
-   #     ) -> SimpleTrans {
-   #         Trans::Quit
-   #     }
+       #
+       #     fn update(
+       #         &mut self,
+       #         _data: &mut StateData<'_, GameData>,
+       #     ) -> SimpleTrans {
+       #         Trans::Quit
+       #     }
    }
    #
    # fn main() -> amethyst::Result<()> {

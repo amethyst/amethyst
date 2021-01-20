@@ -4,6 +4,6 @@ Demonstrates sprite animation.
 
 Keybindings:
 
-* None
+- None
 
 ![Sprite Animation Screenshot](./screenshot.png)

@@ -108,7 +108,10 @@ pub struct SystemName {
 
 impl SystemName {
     fn new(field_1: String) -> Self {
-        SystemName { field_0: 123, field_1 }
+        SystemName {
+            field_0: 123,
+            field_1,
+        }
     }
 }
 #
@@ -302,9 +305,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
     fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
         <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
 
-        let reader_id = world
-            .fetch_mut::<EventChannel<UiEvent>>()
-            .register_reader();
+        let reader_id = world.fetch_mut::<EventChannel<UiEvent>>().register_reader();
 
         SystemName::new(reader_id)
     }
@@ -384,8 +385,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
     fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
         <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
 
-        let resize_events_id = WriteStorage::<UiResize>::fetch(&world)
-                            .register_reader();
+        let resize_events_id = WriteStorage::<UiResize>::fetch(&world).register_reader();
 
         SystemName::new(resize_events_id)
     }

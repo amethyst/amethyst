@@ -16,10 +16,10 @@ struct MyResource;
 fn main() {
     // We create a new `World` instance.
     let mut world = World::new();
-    
+
     // We create our resource.
     let my = MyResource;
-    
+
     // We add the resource to the world.
     world.insert(my);
 }

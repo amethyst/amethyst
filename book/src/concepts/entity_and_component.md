@@ -30,14 +30,14 @@ We can separate bottle's properties into `PositionComponent` and `BottleComponen
 
 As you could see from the graph, entities do not store data. Nor do they know any information about their components. They serve the purpose of object identification and tracking object existence. The component storage stores all the data and their connection to entities.
 
-If you are familiar with relational databases, this organization looks quite similar to the tables in a database, where entity id serves as the key in each table. In fact, you can even join components or entities like joining tables. For example, to update the position of all the persons, you will need to join the `PersonComponent` and the `PositionComponent`. 
+If you are familiar with relational databases, this organization looks quite similar to the tables in a database, where entity id serves as the key in each table. In fact, you can even join components or entities like joining tables. For example, to update the position of all the persons, you will need to join the `PersonComponent` and the `PositionComponent`.
 
 ## EntitiesRes
 
 Even though the structure of the entity is pretty simple, entity manipulation is very sophisticated and crucial to game performance. This is why entities are handled exclusively by the struct `EntitiesRes`. `EntitiesRes` provides two ways for creating/deleting entities:
 
-* Immediate creation/deletion, used for game setup or clean up.
-* Lazy creation/deletion, used in the game play state. It updates entities in batch at the end of each game loop. This is also referred to as atomic creation/deletion.
+- Immediate creation/deletion, used for game setup or clean up.
+- Lazy creation/deletion, used in the game play state. It updates entities in batch at the end of each game loop. This is also referred to as atomic creation/deletion.
 
 You will see how these methods are used in later chapters.
 
@@ -85,11 +85,12 @@ The storage type will determine how you store the component, but it will not ini
 
 There are a few storage strategies for different usage scenarios. The most commonly used types are `DenseVecStorage`, `VecStorage` and `FlaggedStorage`.
 
-* `DenseVecStorage`: Elements are stored in a contiguous vector. No empty space is left between `Component`s, allowing a lowered memory usage for big components.
-* `VecStorage`: Elements are stored into a sparse array. The entity id is the same as the index of component. If your component is small (<= 16 bytes) or is carried by most entities, this is preferable over `DenseVecStorage`.
-* `FlaggedStorage`: Used to keep track of changes of a component. Useful for caching purposes.
+- `DenseVecStorage`: Elements are stored in a contiguous vector. No empty space is left between `Component`s, allowing a lowered memory usage for big components.
+- `VecStorage`: Elements are stored into a sparse array. The entity id is the same as the index of component. If your component is small (\<= 16 bytes) or is carried by most entities, this is preferable over `DenseVecStorage`.
+- `FlaggedStorage`: Used to keep track of changes of a component. Useful for caching purposes.
 
 <!-- DenseVec Storage Diagram Table -->
+
 <div style="width: 100%">
     <h4 style="text-align: center; font-weight: bold">DenseVecStorage ( <em>entity_id</em> maps to <em>data_id</em> )</h4>
     <div style="display: flex">
@@ -128,6 +129,7 @@ There are a few storage strategies for different usage scenarios. The most commo
 </div>
 
 <!-- VecStorage Diagram Table -->
+
 <div style="width: 100%">
     <h4 style="text-align: center; font-weight: bold">VecStorage ( <em>entity_id</em> = data index, can be empty )</h4>
     <div style="display: flex">
@@ -160,5 +162,5 @@ Null storage means that it is not going to take memory space to store those comp
 
 You will learn how to use those tag components in the System chapter.
 
+["storages" section]: https://specs.amethyst.rs/docs/tutorials/05_storages.html
 [specs storage reference]: https://docs.rs/specs/~0.15/specs/storage/index.html
-["Storages" section]: https://specs.amethyst.rs/docs/tutorials/05_storages.html

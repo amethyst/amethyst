@@ -136,8 +136,8 @@ Those are:
 Let's use handle\_event to go to the `PausedState` and come back by pressing the "Escape" key.
 
 ```rust ,edition2018,no_run,noplaypen
+use amethyst::input::{is_key_down, VirtualKeyCode};
 use amethyst::prelude::*;
-use amethyst::input::{VirtualKeyCode, is_key_down};
 
 struct GameplayState;
 struct PausedState;
@@ -191,8 +191,8 @@ To change the set of events that the state receives, you create a new event enum
 // These imports are required for the #[derive(EventReader)] code to build
 use amethyst::core::{
     ecs::{Read, SystemData, World},
-    shrev::{ReaderId, EventChannel},
-    EventReader
+    shrev::{EventChannel, ReaderId},
+    EventReader,
 };
 
 #[derive(Clone, Debug)]
@@ -213,8 +213,8 @@ struct GameplayState;
 impl State<(), MyEvent> for GameplayState {
     fn handle_event(&mut self, _data: StateData<()>, event: MyEvent) -> Trans<(), MyEvent> {
         match event {
-            MyEvent::Window(_) => {}, // Events related to the window and inputs.
-            MyEvent::Ui(_) => {}, // Ui event. Button presses, mouse hover, etc...
+            MyEvent::Window(_) => {} // Events related to the window and inputs.
+            MyEvent::Ui(_) => {}     // Ui event. Button presses, mouse hover, etc...
             MyEvent::App(ev) => println!("Got an app event: {:?}", ev),
         };
 

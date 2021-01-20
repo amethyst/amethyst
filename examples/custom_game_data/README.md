@@ -4,7 +4,7 @@ Uses `GameData`, with three different states: `Loading`, `Main`, `Paused`.  Unti
 
 Keybindings:
 
-* `Space` - Toggle the `Pause` state
-* `Esc` - Quit
+- `Space` - Toggle the `Pause` state
+- `Esc` - Quit
 
 ![custom game data example screenshot](./screenshot.png)
