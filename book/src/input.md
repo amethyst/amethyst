@@ -4,8 +4,8 @@
 
 In games this data is used to activate certain events, for example:
 
-* Pausing the game when the user presses escape.
-* Moving the player when the user moves the joystick of a controller.
+- Pausing the game when the user presses escape.
+- Moving the player when the user moves the joystick of a controller.
 
 For these events to take place the game needs to check for any buttons that are pressed and take action accordingly.
 

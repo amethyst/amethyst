@@ -7,7 +7,6 @@ In this chapter, we'll fix that by putting the ball back into play after it
 leaves either side of the arena. We'll also add a scoreboard and keep track of
 who's winning and losing.
 
-
 ## Winning and Losing Rounds
 
 So let's fix the big current issue; having a game that only works for one
@@ -16,6 +15,7 @@ reached either edge of the arena and reset its position and velocity. We'll also
 make a note of who got the point for the round.
 
 First, we'll add a new module to `systems/mod.rs`
+
 ```rust
 pub use self::winner::WinnerSystem;
 
@@ -24,7 +24,7 @@ mod winner;
 
 Then, we'll create `systems/winner.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -95,7 +95,7 @@ its direction and put it back in the middle of the screen.
 Now, we just need to add our new system to `main.rs`, and we should be able to
 keep playing after someone scores and log who got the point.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #    core::transform::TransformBundle,
@@ -163,7 +163,6 @@ let game_data = DispatcherBuilder::default()
 # }
 ```
 
-
 ## Adding a Scoreboard
 
 We have a pretty functional Pong game now! At this point, the least fun thing
@@ -175,13 +174,13 @@ to display our players' scores.
 
 First, let's add the UI rendering in `main.rs`. Add the following imports:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::ui::{RenderUi, UiBundle};
 ```
 
 Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
 #     ecs::{World, WorldExt},
 #     prelude::*,
@@ -202,7 +201,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
 Finally, add the `UiBundle` after the `InputBundle`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
 #     ecs::{World, WorldExt},
 #     input::StringBindings,
@@ -226,15 +225,15 @@ rendering UI visuals to our game in addition to the existing background and
 sprites.
 
 > **Note:** We're using a `UiBundle` with type `StringBindings` here because the
-`UiBundle` needs to know what types our `InputHandler` is using to map `actions`
-and `axes`. So just know that your `UiBundle` type should match your
-`InputHandler` type. You can read more about those here: [UiBundle][ui-bundle],
-[InputHandler][input-handler].
+> `UiBundle` needs to know what types our `InputHandler` is using to map `actions`
+> and `axes`. So just know that your `UiBundle` type should match your
+> `InputHandler` type. You can read more about those here: [UiBundle][ui-bundle],
+> [InputHandler][input-handler].
 
 Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::{
     // --snip--
     ecs::{Component, DenseVecStorage, Entity},
@@ -253,6 +252,7 @@ pub struct ScoreText {
     pub p2_score: Entity,
 }
 ```
+
 > Don't glimpse over the `#[derive(Default)]` annotation for the `ScoreBoard` struct!
 
 `ScoreBoard` is just a container that will allow us to keep track of each
@@ -261,7 +261,7 @@ gone ahead and marked it as public (same with `ScoreText`). `ScoreText` is also
 a container, but this one holds handles to the UI `Entity`s that will be
 rendered to the screen. We'll create those next:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 use amethyst::{
 #     assets::{AssetStorage,  DefaultLoader, Loader},
@@ -357,12 +357,6 @@ If we've done everything right so far, we should see `0` `0` at the top of our
 game window. You'll notice that the scores don't update yet when the ball makes
 it to either side, so we'll add that next!
 
-
-[font-download]: https://github.com/amethyst/amethyst/blob/main/examples/pong_tutorial_05/assets/font/square.ttf?raw=true
-[input-handler]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html
-[ui-bundle]: https://docs.amethyst.rs/master/amethyst_ui/struct.UiBundle.html
-
-
 ## Updating the Scoreboard
 
 All that's left for us to do now is update the UI whenever a player scores a
@@ -370,7 +364,7 @@ point. You'll see just how easy this is with our `ECS` design. All we have to do
 is modify our `WinnerSystem` to access the players' scores and update them
 accordingly:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -505,7 +499,6 @@ our scores to overlap each other in the window). Then, we use the `UiText`
 reference to our `UiText` component. Lastly, we set the text of the `UiText`
 component to the player's score, after converting it to a string.
 
-
 ## Summary
 
 And that's it! Our game now keeps track of the score for us and displays it at
@@ -515,3 +508,7 @@ the top of our window.
 
 Now don't go just yet, because, in the next chapter, we'll make our Pong game
 even better by adding sound effects and even some music!
+
+[font-download]: https://github.com/amethyst/amethyst/blob/main/examples/pong_tutorial_05/assets/font/square.ttf?raw=true
+[input-handler]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html
+[ui-bundle]: https://docs.amethyst.rs/master/amethyst_ui/struct.UiBundle.html

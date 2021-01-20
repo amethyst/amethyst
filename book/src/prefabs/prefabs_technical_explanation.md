@@ -3,8 +3,8 @@
 A `Prefab` in Amethyst is at the core a simple list of future entities, where each entry in
 the list consists of two pieces of optional data:
 
-* a parent index that refers to a different entry in the list
-* a data collection implementing the trait `PrefabData`
+- a parent index that refers to a different entry in the list
+- a data collection implementing the trait `PrefabData`
 
 To instantiate a `Prefab`, we put a `Handle<Prefab<T>>` on an `Entity`. The `Entity` we put
 the `Handle` on is referred to as the main `Entity`, and the first entry in the list inside a
@@ -33,9 +33,9 @@ runs `process` on the `AssetStorage`, the system will invoke the `load_sub_asset
 `PrefabData` implementation. If any asset loads are triggered during this, they must adhere to the following
 rules:
 
-* the given `ProgressCounter` must be used as a parameter to the load function on `Loader`, so load tracking
-works correctly
-* the function must return `Ok(true)` (unless an `Error` occurred)
+- the given `ProgressCounter` must be used as a parameter to the load function on `Loader`, so load tracking
+  works correctly
+- the function must return `Ok(true)` (unless an `Error` occurred)
 
 Note that during this phase the `PrefabData` is mutable, which means it can morph inside the `Prefab`. An
 example of this is the `AssetPrefab`, which will morph into `AssetPrefab::Handle`.
@@ -61,7 +61,7 @@ Ok, so what would a simple implementation of `PrefabData` look like?
 
 Let's take a look at the implementation for `Transform`, which is a core concept in Amethyst:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::assets::PrefabData;
 # use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage};
 # use amethyst::Error;
@@ -108,7 +108,7 @@ are no secondary assets to load from `Source` here.
 Let's look at a slightly more complex implementation, the `AssetPrefab`. This `PrefabData` is used to
 load extra `Asset`s as part of a `Prefab`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter};
 # use amethyst::assets::PrefabData;
@@ -194,23 +194,23 @@ it will straight up use the internally stored `Handle`.
 
 There are a few special blanket implementations provided by the asset system:
 
-* `Option<T>` for all `T: PrefabData`.
-* Tuples of types that implemented `PrefabData`, up to a size of 20.
+- `Option<T>` for all `T: PrefabData`.
+- Tuples of types that implemented `PrefabData`, up to a size of 20.
 
 ### Deriving `PrefabData` implementations
 
 Amethyst supplies a derive macro for creating the `PrefabData` implementation for the following scenarios:
 
-* Single `Component`
-* Aggregate `PrefabData` structs or enums which contain other `PrefabData` constructs, and optionally simple data `Component`s
+- Single `Component`
+- Aggregate `PrefabData` structs or enums which contain other `PrefabData` constructs, and optionally simple data `Component`s
 
 In addition, deriving a `Prefab` requires that `amethyst::Error`, `amethyst::ecs::Entity` and
- `amethyst:assets::{PrefabData, ProgressCounter}` are imported
- and visible in the current scope. This is due to how Rust macros work.
+`amethyst:assets::{PrefabData, ProgressCounter}` are imported
+and visible in the current scope. This is due to how Rust macros work.
 
 An example of a single `Component` derive:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # #[macro_use] extern crate serde_derive;
 # use amethyst::{
 #     assets::{
@@ -238,7 +238,7 @@ This will derive a `PrefabData` implementation that inserts `SomeComponent` on a
 
 Lets look at an example of an aggregate struct:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
@@ -257,7 +257,7 @@ This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities
 
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
@@ -294,23 +294,23 @@ So now we know how the `Prefab` system works on the inside, but how do we use it
 
 From the point of the user, there are a few parts to using a `Prefab`:
 
-* Loading it, using `Loader` + `AssetStorage`, or using the helper `PrefabLoader`, which is a
- simple wrapper around the former. For this to work we need a `Format` that returns `Prefab`s.
-* Managing the returned `Handle<Prefab<T>>`.
-* Waiting for the `Prefab` to be fully loaded, using `Progress`.
-* Requesting instantiation by placing the `Handle<Prefab<T>>` on an `Entity` in the `World`.
+- Loading it, using `Loader` + `AssetStorage`, or using the helper `PrefabLoader`, which is a
+  simple wrapper around the former. For this to work we need a `Format` that returns `Prefab`s.
+- Managing the returned `Handle<Prefab<T>>`.
+- Waiting for the `Prefab` to be fully loaded, using `Progress`.
+- Requesting instantiation by placing the `Handle<Prefab<T>>` on an `Entity` in the `World`.
 
 ## `Prefab` formats
 
 There are a few provided formats that create `Prefab`s, some with very specific `PrefabData`, and
- two that are generic:
+two that are generic:
 
-* `RonFormat` - this format can be used to load `Prefab`s in `ron` format with any `PrefabData`
- that also implements `serde::Deserialize`.
-* `JsonFormat` - this format can be used to load `Prefab`s in `Json` format with any `PrefabData`
- that also implements `serde::Deserialize`. It can be enabled with the `json` feature flag.
-* `GltfSceneFormat` - used to load `Gltf` files
-* `UiFormat` - used to load UI components in a specialised DSL format.
+- `RonFormat` - this format can be used to load `Prefab`s in `ron` format with any `PrefabData`
+  that also implements `serde::Deserialize`.
+- `JsonFormat` - this format can be used to load `Prefab`s in `Json` format with any `PrefabData`
+  that also implements `serde::Deserialize`. It can be enabled with the `json` feature flag.
+- `GltfSceneFormat` - used to load `Gltf` files
+- `UiFormat` - used to load UI components in a specialised DSL format.
 
 For an example of a `Prefab` in `ron` format, look at `examples/assets/prefab/example.ron`. The
 `PrefabData` for this is:

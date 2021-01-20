@@ -4,15 +4,15 @@ Instead of using `StringBindings` for an `InputBundle` you probably want to use 
 
 Using a custom type to handle input instead of using `String` has many advantages:
 
-* A `String` uses quite a lot of memory compared to something like an enum.
-* Inputting a `String` when retrieving input data is error-prone if you mistype it or change the name.
-* A custom type can hold additional information.
+- A `String` uses quite a lot of memory compared to something like an enum.
+- Inputting a `String` when retrieving input data is error-prone if you mistype it or change the name.
+- A custom type can hold additional information.
 
 ## Defining Custom Input `BindingTypes`
 
 Defining a custom type for the `InputBundle` is done by implementing the `BindingTypes` trait. This trait contains two types, an `Axis` type and an `Action` type. These types are usually defined as enums.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # extern crate serde;
 use std::fmt::{self, Display};
 
@@ -99,7 +99,7 @@ Here the number after the binding type could be the ID of the player, but you ca
 
 With the config file we can create an `InputBundle` like in the previous section.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::input::StringBindings as MovementBindingTypes;
 use amethyst::input::InputBundle;
 
@@ -117,7 +117,7 @@ let input_bundle =
 
 And add the `InputBundle` to the game data just like before.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::input::{InputBundle, StringBindings};
 #
@@ -139,7 +139,7 @@ let game_data = DispatcherBuilder::default()
 
 Now that we have added an `InputBundle` with a custom `BindingTypes`, we can use the `InputHandler` just like with `StringBindings`, but instead of using `String`s we use our custom enums.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::{
     core::{Transform, SystemDesc},
     derive::SystemDesc,
@@ -197,7 +197,7 @@ impl<'s> System<'s> for MovementSystem {
 
 And don't forget to add the `MovementSystem` to the game data.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::ecs::*;
 # use amethyst::core::SystemDesc;

@@ -9,19 +9,19 @@ Next up in this book we will explain how Amethyst does Math, Input, Assets and s
 ## Other tutorials or examples
 
 #### [Amethyst Quickstarter]
-  
+
 Seed project for 2D games. This project template will get you from 0 to drawing something on the screen in no time.
 
 #### Showcase Game: [Evoli]
-  
+
 An ecosystem-simulation game, 3D
-  
+
 #### Showcase Game: [Space Menace]
-  
+
 An action 2D platformer
-  
+
 #### Showcase Game: [Survivor]
-  
+
 (unannounced, 2D)
 
 For more examples from the community you can check out this list of [Games made with Amethyst][games].
@@ -32,11 +32,11 @@ You can get additional help by leaving a post on [our forum] or on our [Discord 
 
 If you want to extend this tutorial (e.g., add a main menu, add pause/resume functionality, etc.), feel free to ping us on Discord or in a GitHub issue!
 
-[src_code]: https://github.com/amethyst/amethyst/tree/master/examples/pong_tutorial_06
-[Amethyst Quickstarter]: https://github.com/amethyst/amethyst-starter-2d
-[Evoli]: https://github.com/amethyst/evoli
-[Space Menace]: https://github.com/amethyst/space-menace/
-[Survivor]: https://github.com/jaynus/survival
+[amethyst quickstarter]: https://github.com/amethyst/amethyst-starter-2d
+[discord server]: https://discord.gg/amethyst
+[evoli]: https://github.com/amethyst/evoli
 [games]: https://community.amethyst.rs/t/games-made-with-amethyst/134
 [our forum]: https://community.amethyst.rs
-[Discord server]: https://discord.gg/amethyst
+[space menace]: https://github.com/amethyst/space-menace/
+[src_code]: https://github.com/amethyst/amethyst/tree/master/examples/pong_tutorial_06
+[survivor]: https://github.com/jaynus/survival

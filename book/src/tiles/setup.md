@@ -1,4 +1,5 @@
 # Setup
+
 ## Install the tiles feature
 
 In order to use the tiles package you need add the `tiles` feature to your `Cargo.toml`:
@@ -12,7 +13,7 @@ amethyst = { version = "LATEST_CRATES.IO_VERSION", features = ["tiles"] }
 
 Now you can add the render pass to your application:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 use amethyst::{
     core::math::Point3,

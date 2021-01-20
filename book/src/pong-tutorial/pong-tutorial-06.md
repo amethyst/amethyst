@@ -14,7 +14,7 @@ mod audio;
 
 Create a file called `audio.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 use amethyst::{
     assets::Loader,
@@ -72,7 +72,7 @@ impl SimpleState for Pong {
 
 Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::DispatcherBuilder;
 use amethyst::audio::AudioBundle;
@@ -95,7 +95,7 @@ fn main() -> amethyst::Result<()> {
 
 Let's start by creating a function to play the bounce sound. In `audio.rs`, add:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 use amethyst::{
     assets::AssetStorage,
@@ -179,7 +179,7 @@ Now try running your game (`cargo run`). Don't forget to turn up your volume!
 
 Just as we did for the bounce sound, let's create a function to play the score sound. Update `audio.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     audio::{output::Output, Source, SourceHandle},
@@ -260,11 +260,11 @@ Next, let's take our game to the next level by adding some background music.
 
 ## Adding background music
 
-Let's start by downloading [Albatross][albatross] and [Where's My Jetpack?][wheres-my-jetpack] Put these files in the `assets/audio` directory.
+Let's start by downloading [Albatross] and [Where's My Jetpack?][wheres-my-jetpack] Put these files in the `assets/audio` directory.
 
 In `audio.rs`, add the paths to the music tracks below the paths to the sound effects:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 const BOUNCE_SOUND: &str = "audio/bounce.ogg";
 const SCORE_SOUND: &str = "audio/score.ogg";
 
@@ -276,7 +276,7 @@ const MUSIC_TRACKS: &[&str] = &[
 
 Then, create a Music Resource:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 use std::{iter::Cycle, vec::IntoIter};
 #
@@ -291,7 +291,7 @@ Since we only have two music tracks, we use a `Cycle` to infinitely alternate be
 
 Next, we need to add the Music Resource to our World. Update `initialise_audio`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use std::{iter::Cycle, vec::IntoIter};
 #
@@ -378,7 +378,7 @@ fn main() -> amethyst::Result<()> {
 
 Now run your game and enjoy the tunes!
 
+[albatross]: ./audio/Computer_Music_All-Stars_-_Albatross_v2.ogg
 [bounce]: ./audio/bounce.ogg
 [score]: ./audio/score.ogg
-[albatross]: ./audio/Computer_Music_All-Stars_-_Albatross_v2.ogg
 [wheres-my-jetpack]: ./audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg

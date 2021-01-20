@@ -34,9 +34,6 @@ game objects, including the [deadly diamond of death][dd] and [god objects][go].
 The inheritance-based approach was especially common in the game industry during
 the 1990's and early 2000's.
 
-[dd]: https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem
-[go]: https://en.wikipedia.org/wiki/God_object
-
 This alternative model makes use of *composition* (has-a relationship) instead
 of inheritance to represent objects in the game world, flattening the hierarchy
 and eliminating the problems above, while increasing flexibility. The holistic
@@ -46,12 +43,12 @@ ECS approach is broken into three key pieces:
    on its own. The world owns a collection of entities (either in a flat list or
    a hierarchy). Each entity has a unique identifier or name, for the sake of
    ease of use.
-2. *Component*: A plain-old-data structure that describes a certain trait an
+1. *Component*: A plain-old-data structure that describes a certain trait an
    entity can have. Can be "attached" to entities to grant them certain
    abilities, e.g. a `Light` component contains parameters to make an entity
    glow, or a `Collidable` component can grant an entity collision detection
    properties. These components *do not* have any logic. They contain only data.
-3. *System*: This is where the magic happens! Systems are centralized game engine
+1. *System*: This is where the magic happens! Systems are centralized game engine
    subsystems that perform a specific function, such as rendering, physics, audio,
    etc. Every frame, they process each entity in the game world looking for
    components that are relevant to them, reading their contents, and performing
@@ -68,12 +65,13 @@ Another great advantage of the ECS model is the ability to rapidly prototype
 a game simply by describing objects' characteristics in terms of creating
 entities and attaching components to them, with very little game code involved.
 And all of this data can be easily serialized or de-serialized into a
-human-friendly plain text format like [RON][ron] (Json derivative).
-
-[ron]: https://github.com/ron-rs/ron
+human-friendly plain text format like [RON] (Json derivative).
 
 For more detailed explanations of entity-component-system designs, please
 [see this great post on Reddit][p1] and [this Stack Overflow answer][p2].
 
+[dd]: https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem
+[go]: https://en.wikipedia.org/wiki/God_object
 [p1]: https://www.reddit.com/r/rust/comments/43p2fq/this_week_in_amethyst_3/czkc4hj
 [p2]: http://gamedev.stackexchange.com/questions/31473/what-is-the-role-of-systems-in-a-component-based-entity-architecture/31491#31491
+[ron]: https://github.com/ron-rs/ron

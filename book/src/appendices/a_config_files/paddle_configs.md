@@ -1,6 +1,6 @@
 # Adding Paddle Configs
 
-We're finally going to add a configuration struct for our Paddles. Because our Pong clone supports two 
+We're finally going to add a configuration struct for our Paddles. Because our Pong clone supports two
 players, we should let them configure each separately. Add the following to the `config.rs` file:
 
 ```rust
@@ -46,7 +46,7 @@ pub struct PongConfig {
 }
 ```
 
-and modify the `main.rs`'s `run()` function to add our `PaddleConfig`s. 
+and modify the `main.rs`'s `run()` function to add our `PaddleConfig`s.
 
 ```rust
     .with_resource(pong_config.arena)
@@ -62,9 +62,9 @@ resources of the same type, but then the `System`s cannot properly differentiate
 
 ## Replacing Constants with Configs
 
-Replacing all instances of `PADDLE_*` will be similar to the `BallConfig`, as we only use those values for 
+Replacing all instances of `PADDLE_*` will be similar to the `BallConfig`, as we only use those values for
 creating the paddle entities. However, we will need to separate the `PaddlesConfig` into `left` and `right`.
-To avoid issues with the borrow checker, we read the `PaddlesConfig` once and copy all of the values, 
+To avoid issues with the borrow checker, we read the `PaddlesConfig` once and copy all of the values,
 unwrapping them in one big assignment statement.
 In `initialise_paddles()` in `pong.rs`, add this code below reading the `ArenaConfig`.
 
@@ -111,18 +111,18 @@ Now, within this function, replace
 let y = (arena_height - PADDLE_HEIGHT) / 2.0;
 ```
 
-with 
+with
 
 ```rust
 let left_y = (arena_height - left_height) / 2.0;
 let right_y = (arena_height - right_height) / 2.0;
 ```
 
-You will also need to repeat the calls to `create_mesh` and 
+You will also need to repeat the calls to `create_mesh` and
 `create_color_material()` so that you have a left and right mesh and left
 and right color.
 
-Now, use the left- and right-specific values in  the `world.create_entity()` 
+Now, use the left- and right-specific values in  the `world.create_entity()`
 calls.
 
 ## Modifying `config.ron`

@@ -4,7 +4,7 @@ Finally, you need to tell Amethyst to draw in 2D space. This is done by creating
 
 The following snippet demonstrates how to set up a `Camera` that sees entities within screen bounds, where the entities' Z position is between -10.0 and 10.0:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::{
     core::{math::Orthographic3, transform::Transform},
     prelude::*,
@@ -53,7 +53,7 @@ impl ExampleState {
 }
 ```
 
-And you're done! If you would like to see this in practice, check out the [*sprites_ordered*][ex_ordered] example in the [examples][ex_all] directory.
+And you're done! If you would like to see this in practice, check out the [*sprites\_ordered*][ex_ordered] example in the [examples][ex_all] directory.
 
 [ex_all]: https://github.com/amethyst/amethyst/tree/master/examples
 [ex_ordered]: https://github.com/amethyst/amethyst/tree/master/examples/sprites_ordered

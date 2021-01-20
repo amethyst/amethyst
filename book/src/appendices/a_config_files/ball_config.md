@@ -12,7 +12,7 @@ use amethyst::core::math::Vector2;
 
 The `BallConfig` will replace the `BALL_VELOCITY_X`, `BALL_VELOCITY_Y`, `BALL_RADIUS`, and `BALL_COLOR`
 variables. We'll use a [`Vector2`][vec2] to store the velocity for simplicity and to demonstrate how to add
-a non-trivial data type to a RON file. The `BALL_COLOR` was originally an array, but [Serde][serde] and RON
+a non-trivial data type to a RON file. The `BALL_COLOR` was originally an array, but [Serde] and RON
 handle arrays as tuples, so it will read in a tuple and convert the color values to an array if needed by a
 particular function (e.g., in `pong.rs`).
 
@@ -142,5 +142,5 @@ very easy with RON; we just add an additional level of nesting.
 This configuration sets the ball to be orange, while retaining the same size and velocity as the original
 example.
 
-[vec2]: https://nalgebra.org/rustdoc/nalgebra/base/type.Vector2.html
 [serde]: https://docs.serde.rs/serde/index.html
+[vec2]: https://nalgebra.org/rustdoc/nalgebra/base/type.Vector2.html

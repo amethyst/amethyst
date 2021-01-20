@@ -8,7 +8,7 @@ The `amethyst_test` crate provides support to write tests ergonomically and expr
 
 The following shows a simple example of testing a `State`. More examples are in following pages.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use std::marker::PhantomData;
 #
@@ -58,7 +58,7 @@ fn loading_state_adds_load_resource() -> Result<(), Error> {
 
 The Amethyst application is initialized with one of the following functions, each providing a different set of bundles:
 
-```rust, edition2018,no_run,noplaypen
+````rust ,edition2018,no_run,noplaypen
 #
 use amethyst_test::prelude::*;
 
@@ -91,7 +91,7 @@ fn test_name() {
     AmethystApplication::blank()
         .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
 }
-```
+````
 
 Next, attach the logic for your test using the various `.with_*(..)` methods:
 
@@ -118,7 +118,7 @@ fn test_name() {
 
 Finally, call `.run()` to run the application. This returns `amethyst::Result<()>`, so we return that as part of the function:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::Error;
 # use amethyst_test::prelude::*;

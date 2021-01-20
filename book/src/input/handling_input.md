@@ -3,7 +3,7 @@
 Amethyst uses an `InputHandler` to handle user input.
 You initialise this `InputHandler` by creating an `InputBundle` and adding it to the game data.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::{
     prelude::*,
     input::{InputBundle, StringBindings},
@@ -28,7 +28,7 @@ fn main() -> amethyst::Result<()> {
 
 To use the `InputHandler` inside a `System` you have to add it to the `SystemData`. With this you can check for events from input devices.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::{
     prelude::*,
     input::{InputHandler, ControllerButton, VirtualKeyCode, StringBindings},
@@ -69,7 +69,7 @@ You can find all the methods from `InputHandler` [here][input_ha].
 
 Now you have to add the `System` to the game data, just like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::{prelude::*, ecs::*, core::SystemDesc, derive::SystemDesc};
 # #[derive(SystemDesc)]
 # struct ExampleSystem; 
@@ -81,8 +81,6 @@ let game_data = DispatcherBuilder::default()
     //..
 #   ;
 ```
-
-[input_ha]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html#methods
 
 ## Defining Key Bindings in a File
 
@@ -102,22 +100,22 @@ Instead of hard coding in all the key bindings, you can store all the bindings i
 
 The axis values range from `-1.0` to `1.0`. For an `Emulated` axis controller such as keyboard buttons, the values are distinct:
 
-* `0.0` when neither, or both the `neg` or `pos` buttons are pressed.
-* `-1.0` when the `neg` button is pressed.
-* `1.0` when the `pos` button is pressed.
+- `0.0` when neither, or both the `neg` or `pos` buttons are pressed.
+- `-1.0` when the `neg` button is pressed.
+- `1.0` when the `pos` button is pressed.
 
 Values between `0.0` and `1.0` are possible when using a controller such as a joystick. This can be enabled via the `"sdl_controller"` feature.
 
 The action is a boolean, which is set to true when the buttons are pressed. The action binding is defined by a two-level array:
 
-* The inner array specifies the buttons that must be pressed at the same time to send the action.
-* The outer array specifies different combinations of those buttons that send the action.
+- The inner array specifies the buttons that must be pressed at the same time to send the action.
+- The outer array specifies different combinations of those buttons that send the action.
 
 The possible inputs you can specify for axes are listed [here][in_axis]. The possible inputs you can specify for actions are listed [here][button].
 
 To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the `InputBundle`.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::{prelude::*, input::*, utils::*};
 # fn main() -> amethyst::Result::<()> {
 let root = application_root_dir()?;
@@ -132,7 +130,7 @@ let input_bundle = InputBundle::<StringBindings>::new()
 
 And now you can get the [axis][axis_val] and [action][is_down] values from the `InputHandler`.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::{
     prelude::*,
     core::{Transform, SystemDesc},
@@ -183,7 +181,8 @@ impl<'s> System<'s> for MovementSystem {
 }
 ```
 
-[in_axis]: https://docs.amethyst.rs/master/amethyst_input/enum.Axis.html
-[button]: https://docs.amethyst.rs/master/amethyst_input/enum.Button.html
 [axis_val]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html#method.axis_value
+[button]: https://docs.amethyst.rs/master/amethyst_input/enum.Button.html
+[input_ha]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html#methods
+[in_axis]: https://docs.amethyst.rs/master/amethyst_input/enum.Axis.html
 [is_down]: https://docs.amethyst.rs/master/amethyst_input/struct.InputHandler.html#method.action_is_down

@@ -2,7 +2,7 @@
 
 With the `tiles` feature installed and our `RenderTiles2D` render pass setup, we can create a `TileMap` component and add it an entity. We need to have a sprite sheet loaded before the creation so this example assume a handle to a sprite sheet exists.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 use amethyst::{
     core::{
         math::{Point3, Vector3},
@@ -60,5 +60,5 @@ fn init_map(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 
 The tile map component was created and added to the entity we created and thats it! Check out the [*tiles*][ex_tiles] example in the [examples][ex_all] directory.
 
-[ex_tiles]: https://github.com/amethyst/amethyst/tree/master/examples/tiles
 [ex_all]: https://github.com/amethyst/amethyst/tree/master/examples
+[ex_tiles]: https://github.com/amethyst/amethyst/tree/master/examples/tiles

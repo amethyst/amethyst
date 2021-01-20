@@ -24,7 +24,7 @@ Let's get started.
 To capture user input, we'll need to introduce a few more files to our game.
 Let's start by creating a config file under the `config` directory of our
 project, called `bindings.ron`, which will contain a RON representation
-of the [amethyst_input::Bindings][doc_bindings] struct:
+of the [amethyst\_input::Bindings][doc_bindings] struct:
 
 ```ron
 (
@@ -50,7 +50,7 @@ Next, we'll add an `InputBundle` to the game's `Application` object, that
 contains an `InputHandler` system which captures inputs, and maps them to the
 axes we defined. Let's make the following changes to `main.rs`.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst_utils::application_root_dir;
@@ -99,7 +99,7 @@ mod paddle;
 
 We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -203,7 +203,7 @@ Let's add this system to our `DispatcherBuilder` in `main.rs`:
 mod systems; // Import the module
 ```
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::input::StringBindings;
@@ -255,7 +255,7 @@ If we run the game now, we'll see the console print our keypresses.
 Let's make it update the position of the paddle. To do this, we'll modify the y
 component of the transform's translation.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
@@ -310,10 +310,9 @@ Therefore, we will clamp the **y** value of the transform from
 `ARENA_HEIGHT - PADDLE_HEIGHT * 0.5` (the top of the arena minus the offset)
 to `PADDLE_HEIGHT * 0.5` (the bottom of the arena plus the offset).
 
-
 Our run function should now look something like this:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
@@ -370,7 +369,7 @@ Now that we have a system in place that uses the `Paddle` component,
 we no longer need to manually register it with the `world`: the system
 will take care of that for us, as well as set up the storage.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 # use amethyst::assets::Handle;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;
@@ -399,11 +398,12 @@ fn on_start(&mut self, data: StateData<'_, GameData>) {
 ```
 
 ## Summary
+
 In this chapter, we added an input handler to our game, so that we
 could capture keypresses. We then created a system that would interpret these
 keypresses, and move our game's paddles accordingly. In the next chapter, we'll
 explore another key concept in real-time games: time. We'll make our game aware
 of time, and add a ball for our paddles to bounce back and forth.
 
-[doc_time]: https://docs.amethyst.rs/master/amethyst_core/timing/struct.Time.html
 [doc_bindings]: https://docs.amethyst.rs/master/amethyst_input/struct.Bindings.html
+[doc_time]: https://docs.amethyst.rs/master/amethyst_core/timing/struct.Time.html

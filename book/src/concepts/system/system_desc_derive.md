@@ -2,18 +2,18 @@
 
 The `SystemDesc` derive supports the following cases when generating a `SystemDesc` trait implementation:
 
-* Parameters to pass to the system constructor.
-* Fields to skip -- defaulted by the system constructor.
-* Registering a `ReaderId` for an `EventChannel<_>` in the `World`.
-* Registering a `ReaderId` to a component's `FlaggedStorage`.
-* Inserting a resource into the `World`.
+- Parameters to pass to the system constructor.
+- Fields to skip -- defaulted by the system constructor.
+- Registering a `ReaderId` for an `EventChannel<_>` in the `World`.
+- Registering a `ReaderId` to a component's `FlaggedStorage`.
+- Inserting a resource into the `World`.
 
 If your system initialization use case is not covered, please see the
 [Implementing the `SystemDesc` Trait] page.
 
 ## Passing parameters to system constructor
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -42,7 +42,7 @@ impl SystemName {
 <details>
 <summary>Generated code</summary>
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -91,7 +91,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 
 ## Fields to skip -- defaulted by the system constructor
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -121,7 +121,7 @@ impl SystemName {
 <details>
 <summary>Generated code</summary>
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -170,7 +170,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 **Note:** If there are no field parameters, the `SystemDesc` implementation
 will call  `SystemName::default()`:
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -193,7 +193,7 @@ pub struct SystemName {
 <details>
 <summary>Generated code</summary>
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -233,7 +233,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 
 ## Registering a `ReaderId` for an `EventChannel<_>` in the `World`
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -264,7 +264,7 @@ impl SystemName {
 <details>
 <summary>Generated code</summary>
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -315,7 +315,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 
 ## Registering a `ReaderId` to a component's `FlaggedStorage`
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -346,7 +346,7 @@ impl SystemName {
 <details>
 <summary>Generated code</summary>
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -400,7 +400,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 such as a function call, you must surround that expression in quotes, e.g.
 `#[system_desc(insert("MyResource::default()"))]`.
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -422,7 +422,7 @@ impl<'a> System<'a> for SystemName {
 <details>
 <summary>Generated code</summary>
 
-```rust, edition2018,no_run,noplaypen
+```rust ,edition2018,no_run,noplaypen
 #
 # use amethyst::{
 #     derive::SystemDesc,
@@ -460,4 +460,4 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 }
 ```
 
-[Implementing the `SystemDesc` Trait]: ./implementing_the_system_desc_trait.html
+[implementing the `systemdesc` trait]: ./implementing_the_system_desc_trait.html
