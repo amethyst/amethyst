@@ -25,6 +25,8 @@ use legion::{
 ///
 /// # Examples
 /// ```
+/// use std::ops::Deref;
+///
 /// use amethyst::core::{
 ///     dispatcher::DispatcherBuilder,
 ///     ecs::{system, ParallelRunnable, Resources, Schedule, System, SystemBuilder, World},
@@ -62,15 +64,14 @@ use legion::{
 ///
 /// // we only expect the u32 resource to be modified _if_ the system is enabled,
 /// // the system should only be enabled on CurrentState::Enabled.
-/// resources.insert(0u32);
+/// resources.insert(1u32);
 /// resources.insert(CurrentState::Disabled);
 /// dispatcher.execute(&mut world, &mut resources);
-/// assert_eq!(1, resources.get::<u32>().unwrap().deref());
+/// assert_eq!(1, *resources.get::<u32>().unwrap().deref());
 ///
-/// resources.insert(0u32);
 /// resources.insert(CurrentState::Enabled);
 /// dispatcher.execute(&mut world, &mut resources);
-/// assert_eq!(1 + 2, resources.get::<u32>().unwrap().deref());
+/// assert_eq!(2, *resources.get::<u32>().unwrap().deref());
 /// ```
 pub fn pausable<V>(runnable: impl ParallelRunnable, value: V) -> Pausable<impl ParallelRunnable, V>
 where
