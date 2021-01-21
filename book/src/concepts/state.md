@@ -119,7 +119,8 @@ We first declare the `State`'s struct `GameplayState`.
 In this case, we give it some data: `player_count`, a byte.
 
 Then, we implement the `SimpleState` trait for our `GameplayState`.
-`SimpleState` is a shorthand for `State<GameData<'static, 'static>, ()>` where `GameData` is the internal shared data between states.
+`SimpleState` is a shorthand for `State<GameData, StateEvent>` where `GameData` is the shared data between states and `StateEvent` is
+an enum of events that can be received by the `State` on its `handle_event` method.
 
 ### Switching State
 
@@ -133,13 +134,16 @@ Those are:
 - `fixed_update`
 - `update`
 
-Let's use handle\_event to go to the `PausedState` and come back by pressing the "Escape" key.
+Let's use `handle_event` to go to the `PausedState` and come back by pressing the "Escape" key.
 
 ```rust ,edition2018,no_run,noplaypen
-use amethyst::input::{is_key_down, VirtualKeyCode};
-use amethyst::prelude::*;
+use amethyst::{
+    input::{is_key_down, VirtualKeyCode},
+    prelude::*,
+};
 
 struct GameplayState;
+
 struct PausedState;
 
 // This time around, we are using () instead of GameData, because we don't have any `System`s that need to be updated.
@@ -183,16 +187,17 @@ Well, it is simply an enum. It regroups multiple types of events that are emitte
 To change the set of events that the state receives, you create a new event enum and derive `EventReader` for that type.
 
 ```rust ,edition2018,no_run,noplaypen
-# use amethyst::prelude::*;
-# use amethyst::ui::UiEvent;
-# use amethyst::input::{VirtualKeyCode, is_key_down};
-# use amethyst::winit::Event;
-
 // These imports are required for the #[derive(EventReader)] code to build
-use amethyst::core::{
-    ecs::{Read, SystemData, World},
-    shrev::{EventChannel, ReaderId},
-    EventReader,
+use amethyst::{
+    core::{
+        ecs::World,
+        shrev::{EventChannel, ReaderId},
+        EventReader,
+    },
+    input::{is_key_down, VirtualKeyCode},
+    prelude::*,
+    ui::UiEvent,
+    winit::Event,
 };
 
 #[derive(Clone, Debug)]
@@ -221,8 +226,6 @@ impl State<(), MyEvent> for GameplayState {
         Trans::None
     }
 }
-
-# fn main() {}
 ```
 
 To make `Application` aware of the change to which events to send to the state, you also need to supply both the
