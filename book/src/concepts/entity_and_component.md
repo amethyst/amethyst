@@ -38,7 +38,14 @@ Querying is covered in the systems chapter.
 To declare a component, you just declare the relevant underlying data.  Legion ECS will create archetypes that correspond to the different combinations of this data.:
 
 ```rust ,edition2018,no_run,noplaypen
-# use amethyst::core::math::{Isometry3, Vector3};
+# use amethyst::{
+#   core::{
+#       math::{Isometry3, Vector3},
+#       Named,
+#   },
+#   ecs::World,
+# };
+# 
 
 /// This `Component` describes the shape of an `Entity`
 enum Shape {
@@ -48,7 +55,7 @@ enum Shape {
 
 /// This `Component` describes the transform of an `Entity`
 #[derive(Default)]
- struct Transform {
+struct Transform {
     /// Translation + rotation value
     iso: Isometry3<f32>,
     /// Scale vector
@@ -59,10 +66,19 @@ fn main() {
     let world = World::default();
 
     // One archetype of entity
-    world.push((Shape::Sphere(radius: 3.), Transform::default()));
+    world.push((Shape::Sphere { radius: 3. }, Transform::default()));
 
     // Another archetype of entity
-    world.push((Shape::Cuboid(height: 4., width: 4., depth: 4.), Transform::default()));
+    world.push((
+        // some components are provided by amethyst
+        Named("Cubey".into()),
+        Shape::Cuboid {
+            height: 4.,
+            width: 4.,
+            depth: 4.,
+        },
+        Transform::default(),
+    ));
 }
 ```
 
