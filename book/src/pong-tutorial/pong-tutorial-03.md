@@ -121,7 +121,7 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 #
 use amethyst::core::{SystemDesc, Transform};
 use amethyst::derive::SystemDesc;
-use amethyst::ecs::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage};
+use amethyst::ecs::{Join, Read, ReadStorage, System, World, WriteStorage};
 use amethyst::input::{InputHandler, StringBindings};
 
 // You'll have to mark PADDLE_HEIGHT as public in pong.rs
@@ -215,7 +215,7 @@ fn main() -> amethyst::Result<()> {
 # let config = DisplayConfig::load(&path)?;
 # mod systems {
 #
-# use amethyst::core::ecs::{System, SystemData, World};
+# use amethyst::core::ecs::{System, World};
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
 #
@@ -259,7 +259,7 @@ component of the transform's translation.
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
-# use amethyst::ecs::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage};
+# use amethyst::ecs::{Join, Read, ReadStorage, System, World, WriteStorage};
 # use amethyst::input::{InputHandler, StringBindings};
 # enum Side {
 #   Left,
@@ -316,7 +316,7 @@ Our run function should now look something like this:
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
-# use amethyst::ecs::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage};
+# use amethyst::ecs::{Join, Read, ReadStorage, System, World, WriteStorage};
 # use amethyst::input::{InputHandler, StringBindings};
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;

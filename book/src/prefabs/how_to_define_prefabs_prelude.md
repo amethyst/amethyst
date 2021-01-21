@@ -124,10 +124,6 @@ If you are looking for a guide to define prefab data for a `Component`, first we
       pub emission: Handle<Texture>,
       // ..
   }
-
-  impl Component for Material {
-      type Storage = DenseVecStorage<Self>;
-  }
   ```
 
   Applicable guide: [How to Define Prefabs: Multi-Handle][multi-handle].

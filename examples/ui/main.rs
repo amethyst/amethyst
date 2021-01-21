@@ -5,7 +5,7 @@ use amethyst::{
     audio::{output::init_output, Source},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
     derive::SystemDesc,
-    ecs::prelude::{Entity, System, SystemData, WorldExt, Write},
+    ecs::prelude::{Entity, System, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{

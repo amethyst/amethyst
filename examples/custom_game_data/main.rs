@@ -8,7 +8,7 @@ use amethyst::{
     core::transform::TransformBundle,
     ecs::{
         prelude::{Component, Entity},
-        NullStorage, WorldExt,
+        NullStorage,
     },
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
@@ -61,10 +61,6 @@ struct Paused {
 
 #[derive(Default)]
 struct Tag;
-
-impl Component for Tag {
-    type Storage = NullStorage<Self>;
-}
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
     fn on_start(&mut self, data: StateData<'_, CustomGameData>) {

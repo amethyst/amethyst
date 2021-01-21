@@ -15,7 +15,7 @@ use amethyst::{
     },
     ecs::{
         prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage},
-        ReadExpect, SystemData, World,
+        ReadExpect, World,
     },
     input::{
         get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,

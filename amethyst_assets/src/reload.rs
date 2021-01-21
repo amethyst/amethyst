@@ -48,7 +48,7 @@ impl SystemBundle for HotReloadBundle {
 ///
 /// ```
 /// # use amethyst::assets::HotReloadStrategy;
-/// # use amethyst::core::ecs::{World, WorldExt};
+/// # use amethyst::core::ecs::{World};
 /// #
 /// let mut world = World::new();
 /// // Assets will be reloaded every two seconds (in case they changed)

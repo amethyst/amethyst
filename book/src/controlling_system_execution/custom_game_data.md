@@ -56,7 +56,7 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 
 ```rust ,no_run,noplaypen
 #
-# use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt};
+# use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
 # use amethyst::core::SystemBundle;
 # use amethyst::{Error, DataInit, DataDispose};
 #
@@ -244,7 +244,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 #
 # use amethyst::{
 #     core::{transform::TransformBundle, SystemBundle},
-#     ecs::{Dispatcher, DispatcherBuilder, World, WorldExt},
+#     ecs::{Dispatcher, DispatcherBuilder, World},
 #     input::{InputBundle, StringBindings},
 #     prelude::*,
 #     renderer::{

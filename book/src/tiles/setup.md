@@ -17,7 +17,7 @@ Now you can add the render pass to your application:
 #
 use amethyst::{
     core::math::Point3,
-    ecs::{World, WorldExt},
+    ecs::{World},
     prelude::*,
     renderer::{
         plugins::RenderFlat2D,

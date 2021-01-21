@@ -32,6 +32,7 @@ Single:
 #   A,
 #   B,
 # }
+# 
 # fn main() {
 #   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
     channel.single_write(MyEvent::A);
@@ -46,6 +47,7 @@ Multiple:
 #   A,
 #   B,
 # }
+# 
 # fn main() {
 #   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
     channel.iter_write(vec![MyEvent::A, MyEvent::A, MyEvent::B].into_iter());
@@ -64,9 +66,10 @@ To subscribe to events, register a reader against the `EventChannel` to receive 
 #   A,
 #   B,
 # }
+# 
 # fn main() {
 #   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
-let mut reader_id = channel.register_reader();
+    let mut reader_id = channel.register_reader();
 # }
 ```
 
@@ -78,14 +81,15 @@ When reading events, pass the `ReaderId` in:
 #   A,
 #   B,
 # }
+# 
 # fn main() {
 #   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
 #   let mut reader_id = channel.register_reader();
-for event in channel.read(&mut reader_id) {
-    // The type of the event is inferred from the generic type
-    // we assigned to the `EventChannel<MyEvent>` earlier when creating it.
-    println!("Received event value of: {:?}", event);
-}
+    for event in channel.read(&mut reader_id) {
+        // The type of the event is inferred from the generic type
+        // we assigned to the `EventChannel<MyEvent>` earlier when creating it.
+        println!("Received event value of: {:?}", event);
+    }
 # }
 ```
 
@@ -104,17 +108,19 @@ It goes as follow:
 In the **producer** `System`, get a mutable reference to your resource:
 
 ```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::Write;
-# use amethyst::shrev::EventChannel;
+# use amethyst::{ecs::Write, shrev::EventChannel};
+# 
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
 #   B,
 # }
+# 
 # struct MySystem;
+# 
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
-type SystemData = Write<'a, EventChannel<MyEvent>>;
-#   fn run(&mut self, _: Self::SystemData) { }
+    type SystemData = Write<'a, EventChannel<MyEvent>>;
+#   fn run(&mut self, _: Self::SystemData) {}
 # }
 ```
 
@@ -122,11 +128,13 @@ In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
 
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::shrev::ReaderId;
+# 
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
 #   B,
 # }
+# 
 struct ReceiverSystem {
     // The type inside of ReaderId should be the type of the event you are using.
     reader: Option<ReaderId<MyEvent>>,
@@ -136,32 +144,40 @@ struct ReceiverSystem {
 and you also need to get read access:
 
 ```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::Read;
-# use amethyst::shrev::EventChannel;
+# use amethyst::{ecs::Read, shrev::EventChannel};
+# 
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
 #   B,
 # }
+# 
 # struct MySystem;
+# 
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
-type SystemData = Read<'a, EventChannel<MyEvent>>;
-#   fn run(&mut self, _: Self::SystemData) { }
+    type SystemData = Read<'a, EventChannel<MyEvent>>;
+#   fn run(&mut self, _: Self::SystemData) {}
 # }
 ```
 
 Then, in the `System`'s `new` method:
 
 ```rust ,edition2018,no_run,noplaypen
-# use amethyst::shrev::{EventChannel, ReaderId};
-# use amethyst::ecs::{System, SystemData, World};
+# use amethyst::{
+#   ecs::{System, World},
+#   shrev::{EventChannel, ReaderId},
+# };
+# 
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
 #   B,
 # }
-# struct MySystem { reader_id: ReaderId<MyEvent>, }
-#
+# 
+# struct MySystem {
+#   reader_id: ReaderId<MyEvent>,
+# }
+# 
 impl MySystem {
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(world);
@@ -169,26 +185,28 @@ impl MySystem {
         Self { reader_id }
     }
 }
-#
+
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
 #   type SystemData = ();
-#   fn run(&mut self, _: Self::SystemData) { }
+#   fn run(&mut self, _: Self::SystemData) {}
 # }
 ```
 
 Finally, you can read events from your `System`.
 
 ```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::Read;
-# use amethyst::shrev::EventChannel;
+# use amethyst::{ecs::Read, shrev::EventChannel};
+# 
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
 #   B,
 # }
+# 
 # struct MySystem {
 #   reader_id: amethyst::shrev::ReaderId<MyEvent>,
 # }
+# 
 impl<'a> amethyst::ecs::System<'a> for MySystem {
     type SystemData = Read<'a, EventChannel<MyEvent>>;
     fn run(&mut self, my_event_channel: Self::SystemData) {

@@ -6,7 +6,7 @@ To enable this you have to do the following:
 ```rust ,edition2018,no_run,noplaypen
 #
 use amethyst::{
-    ecs::{World, WorldExt},
+    ecs::{World},
     prelude::*,
     renderer::{
         plugins::RenderFlat2D,

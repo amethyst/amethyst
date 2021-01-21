@@ -23,7 +23,7 @@ initialization logic, the `SystemDesc` derive automatically implements the
 use amethyst::{
     core::SystemDesc,
     derive::SystemDesc,
-    ecs::{System, SystemData, World},
+    ecs::{System, World},
 };
 
 #[derive(SystemDesc)]

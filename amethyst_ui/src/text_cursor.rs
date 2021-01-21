@@ -6,10 +6,6 @@
 /// Tag component placed on the cursor of a text field being edited.
 pub struct TextEditingCursor;
 
-impl Component for TextEditingCursor {
-    type Storage = NullStorage<Self>;
-}
-
 /// Manages the text editing cursor create, deletion and position.
 pub struct TextEditingCursorSystem;
 

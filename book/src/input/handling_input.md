@@ -32,7 +32,7 @@ To use the `InputHandler` inside a `System` you have to add it to the `SystemDat
 use amethyst::{
     core::SystemDesc,
     derive::SystemDesc,
-    ecs::{Read, System, SystemData, World},
+    ecs::{Read, System, World},
     input::{ControllerButton, InputHandler, StringBindings, VirtualKeyCode},
     prelude::*,
 };
@@ -135,7 +135,7 @@ use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
     ecs::{
-        Component, DenseVecStorage, Join, Read, ReadStorage, System, SystemData, World,
+        Component, DenseVecStorage, Join, Read, ReadStorage, System, World,
         WriteStorage,
     },
     input::{InputHandler, StringBindings},
@@ -150,10 +150,6 @@ impl Player {
     pub fn shoot(&self) {
         println!("PEW! {}", self.id);
     }
-}
-
-impl Component for Player {
-    type Storage = DenseVecStorage<Self>;
 }
 
 #[derive(SystemDesc)]

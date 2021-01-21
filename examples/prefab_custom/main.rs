@@ -11,7 +11,7 @@ use amethyst::{
     derive::PrefabData,
     ecs::{
         storage::{DenseVecStorage, VecStorage},
-        Component, Entities, Entity, Join, ReadStorage, World, WorldExt, WriteStorage,
+        Component, Entities, Entity, Join, ReadStorage, World, WriteStorage,
     },
     prelude::*,
     utils::application_root_dir,

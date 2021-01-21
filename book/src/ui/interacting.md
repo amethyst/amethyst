@@ -75,7 +75,7 @@ impl SimpleButtonSystem {
 To add the system to our game data we actually need a `SystemDesc` implementation for our system:
 
 ```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{System, World, Read, Write, SystemData};
+# use amethyst::ecs::{System, World, Read, Write};
 # use amethyst::core::SystemDesc;
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;

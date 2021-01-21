@@ -54,7 +54,7 @@ to set the area big enough for the text to fit in!
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
 # use amethyst::ui::{Anchor, FontAsset, get_default_font, LineMode, UiText};
-# use amethyst::prelude::{World, WorldExt};
+# use amethyst::prelude::{World};
 #
 # fn some_function(world: &mut World) {
 #    let font_handle = {
@@ -85,7 +85,7 @@ If you had some state implemented you can create the button on its `on_start` me
 # use amethyst::ui::{
 #     Anchor, FontAsset, get_default_font, LineMode, UiText, UiTransform,
 # };
-# use amethyst::prelude::{Builder, GameData, SimpleState, SimpleTrans, StateData, Trans, World, WorldExt};
+# use amethyst::prelude::{Builder, GameData, SimpleState, SimpleTrans, StateData, Trans, World};
 #
 # pub struct State;
 #
@@ -159,7 +159,7 @@ The code snippet would look like this now:
 # use amethyst::ui::{
 #     Anchor, FontAsset, get_default_font, LineMode, UiText, UiTransform, Interactable,
 # };
-# use amethyst::ecs::{Builder, World, WorldExt};
+# use amethyst::ecs::{Builder, World};
 # use amethyst::prelude::{GameData, SimpleTrans, StateData};
 #
 # fn some_function(world: &mut World) {

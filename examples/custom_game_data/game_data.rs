@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use amethyst::{
     core::{ArcThreadPool, SystemBundle, SystemDesc},
-    ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt},
+    ecs::prelude::{Dispatcher, DispatcherBuilder, System, World},
     error::Error,
     DataDispose, DataInit,
 };

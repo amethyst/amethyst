@@ -69,9 +69,6 @@ Let's take a look at the implementation for `Transform`, which is a core concept
 # // We declare that struct for the sake of automated testing.
 # #[derive(Default, Clone)]
 # struct Transform;
-# impl Component for Transform {
-#   type Storage = NullStorage<Transform>;
-# }
 #
 impl<'a> PrefabData<'a> for Transform {
     type SystemData = WriteStorage<'a, Transform>;
@@ -230,10 +227,6 @@ An example of a single `Component` derive:
 pub struct SomeComponent {
     pub id: u64,
 }
-
-impl Component for SomeComponent {
-    type Storage = DenseVecStorage<Self>;
-}
 ```
 
 This will derive a `PrefabData` implementation that inserts `SomeComponent` on an `Entity` in the `World`.
@@ -279,10 +272,6 @@ pub struct MyScenePrefab {
 #[derive(Clone)]
 pub struct SomeComponent {
     pub id: u64,
-}
-
-impl Component for SomeComponent {
-    type Storage = DenseVecStorage<Self>;
 }
 ```
 

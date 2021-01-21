@@ -3,7 +3,7 @@ use std::time::Duration;
 use amethyst::{
     assets::ProgressCounter,
     core::Stopwatch,
-    ecs::{World, WorldExt},
+    ecs::{World},
     State, StateData, Trans,
 };
 use derivative::Derivative;
@@ -92,7 +92,7 @@ mod tests {
             Asset, AssetStorage, Handle, Loader, ProcessingState, Processor, ProgressCounter,
             RonFormat,
         },
-        ecs::{storage::VecStorage, WorldExt},
+        ecs::{storage::VecStorage},
         Error,
     };
     use serde::{Deserialize, Serialize};

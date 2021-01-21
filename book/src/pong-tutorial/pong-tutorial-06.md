@@ -19,7 +19,7 @@ Create a file called `audio.rs`:
 use amethyst::{
     assets::Loader,
     audio::{OggFormat, SourceHandle},
-    ecs::{World, WorldExt},
+    ecs::{World},
 };
 
 const BOUNCE_SOUND: &str = "audio/bounce.ogg";
@@ -299,7 +299,7 @@ Next, we need to add the Music Resource to our World. Update `initialise_audio`:
 use amethyst::{
     assets::Loader,
     audio::{AudioSink, SourceHandle},
-    ecs::{World, WorldExt},
+    ecs::{World},
 };
 #
 # const BOUNCE_SOUND: &str = "audio/bounce.ogg";

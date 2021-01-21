@@ -73,10 +73,6 @@ fn bundle_registers_system_with_resource() -> Result<(), Error> {
 #
 struct MyComponent(pub i32);
 
-impl Component for MyComponent {
-    type Storage = DenseVecStorage<Self>;
-}
-
 #[derive(Debug, SystemDesc)]
 struct MySystem;
 impl<'s> System<'s> for MySystem {

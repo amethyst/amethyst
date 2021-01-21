@@ -3,7 +3,7 @@
 use std::marker::PhantomData;
 
 use amethyst::{
-    ecs::{Dispatcher, DispatcherBuilder, WorldExt},
+    ecs::{Dispatcher, DispatcherBuilder},
     prelude::*,
     shrev::EventChannel,
     utils::application_root_dir,

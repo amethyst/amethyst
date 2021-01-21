@@ -24,7 +24,7 @@ previous chapters, but here we will save the entity in our struct:
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
 #  assets::{AssetStorage,  DefaultLoader, Loader},
-# 	ecs::{Entity, World, WorldExt},
+# 	ecs::{Entity, World},
 # 	ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiText, UiTransform},
 # 	prelude::{Builder, GameData, SimpleState, StateData},
 # };
@@ -88,7 +88,7 @@ method of our state:
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
-#   ecs::{Entity, World, WorldExt},
+#   ecs::{Entity, World},
 #   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
 #   StateEvent,
@@ -185,7 +185,7 @@ component to our button:
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
-#   ecs::{Entity, World, WorldExt},
+#   ecs::{Entity, World},
 #   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
 #   StateEvent
@@ -278,7 +278,7 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
-#   ecs::{Entity, World, WorldExt},
+#   ecs::{Entity, World},
 #   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
 #   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
 #   StateEvent

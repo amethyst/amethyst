@@ -28,10 +28,6 @@ pub struct Ball {
     pub velocity: [f32; 2],
     pub radius: f32,
 }
-
-impl Component for Ball {
-    type Storage = DenseVecStorage<Self>;
-}
 ```
 
 A ball has a velocity and a radius, so we store that information in the component.
@@ -48,9 +44,6 @@ Then let's add an `initialise_ball` function the same way we wrote the
 # pub struct Ball {
 #    pub velocity: [f32; 2],
 #    pub radius: f32,
-# }
-# impl Component for Ball {
-#    type Storage = DenseVecStorage<Self>;
 # }
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
@@ -94,13 +87,7 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 # use amethyst::renderer::{Texture, SpriteSheet};
 # use amethyst::ecs::{Component, World, VecStorage};
 # struct Paddle;
-# impl Component for Paddle {
-#   type Storage = VecStorage<Self>;
-# }
 # struct Ball;
-# impl Component for Ball {
-#   type Storage = VecStorage<Self>;
-# }
 # fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) { }
 # fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
 # fn initialise_camera(world: &mut World) { }
@@ -142,9 +129,6 @@ We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 #        pub velocity: [f32; 2],
 #        pub radius: f32,
 #     }
-#     impl Component for Ball {
-#        type Storage = DenseVecStorage<Self>;
-#     }
 # }
 #
 use amethyst::{
@@ -152,7 +136,7 @@ use amethyst::{
     core::transform::Transform,
     core::SystemDesc,
     derive::SystemDesc,
-    ecs::{Join, Read, ReadStorage, System, SystemData, World, WriteStorage},
+    ecs::{Join, Read, ReadStorage, System, World, WriteStorage},
 };
 
 use crate::pong::Ball;
@@ -208,9 +192,6 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 #        pub velocity: [f32; 2],
 #        pub radius: f32,
 #     }
-#     impl Component for Ball {
-#        type Storage = DenseVecStorage<Self>;
-#     }
 #
 #     #[derive(PartialEq, Eq)]
 #     pub enum Side {
@@ -233,7 +214,7 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
-    ecs::{Join, ReadStorage, System, SystemData, World, WriteStorage},
+    ecs::{Join, ReadStorage, System, World, WriteStorage},
 };
 
 use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
@@ -319,7 +300,7 @@ as well as adding our new systems to the game data:
 # let config = DisplayConfig::load(&path)?;
 # mod systems {
 # use amethyst;
-# use amethyst::core::ecs::{System, SystemData, World};
+# use amethyst::core::ecs::{System, World};
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
 # #[derive(SystemDesc)]
@@ -421,7 +402,7 @@ default empty state. Now let's use that inside our `Application` creation code i
 
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
-#     ecs::{World, WorldExt},
+#     ecs::{World},
 #     prelude::*,
 # };
 #

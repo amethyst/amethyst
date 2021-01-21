@@ -9,7 +9,7 @@ implemented manually:
 use amethyst::{
     audio::output::Output,
     core::SystemDesc,
-    ecs::{System, SystemData, World},
+    ecs::{System, World},
 };
 
 # /// Syncs 3D transform data with the audio engine to provide 3D audio.

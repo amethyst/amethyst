@@ -191,28 +191,7 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
 
    *"But that just looks like a regular struct!"* you might say.
 
-   And you're right, the special sauce comes next.
-
-1. Implement the `Component` trait for `Paddle`:
-
-   ```rust ,edition2018,no_run,noplaypen
-   #
-   # use amethyst::ecs::{Component, DenseVecStorage};
-   #
-   # struct Paddle;
-   #
-   impl Component for Paddle {
-       type Storage = DenseVecStorage<Self>;
-   }
-   ```
-
-   By implementing `Component` for the `Paddle` struct, it can now be attached
-   to entities in the game.
-
-   When implementing the `Component` trait, we must specify the storage type.
-   Different storage types optimize for faster access, lower memory usage, or a
-   balance between the two. For more information on storage types, check out the
-   [Specs documentation][sb-storage].
+    Legion will take care of creating the archetypes for optimal storage automatically based on the combination of components given to an entity.
 
 ## Initialise some entities
 
@@ -328,7 +307,7 @@ this by adding the following line before `initialise_paddles(world)` in the
 `on_start` method:
 
 ```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{World, WorldExt};
+# use amethyst::ecs::{World};
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;

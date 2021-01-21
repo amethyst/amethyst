@@ -144,7 +144,7 @@ use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
     ecs::{
-        Component, DenseVecStorage, Join, Read, ReadStorage, System, SystemData, World,
+        Component, DenseVecStorage, Join, Read, ReadStorage, System, World,
         WriteStorage,
     },
     input::{AxisBinding, InputHandler},
@@ -158,10 +158,6 @@ impl Player {
     pub fn shoot(&self) {
         println!("PEW! {}", self.id);
     }
-}
-
-impl Component for Player {
-    type Storage = DenseVecStorage<Self>;
 }
 
 #[derive(SystemDesc)]

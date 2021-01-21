@@ -15,7 +15,7 @@ use amethyst::{
     core::{
         ecs::{
             Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
-            ReadStorage, System, SystemData, World, Write, WriteStorage,
+            ReadStorage, System, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -78,10 +78,6 @@ struct Orbit {
     time_scale: f32,
     center: Vector3<f32>,
     radius: f32,
-}
-
-impl Component for Orbit {
-    type Storage = DenseVecStorage<Self>;
 }
 
 struct OrbitSystem;

@@ -471,22 +471,16 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # #[macro_use] extern crate shred_derive;
 #
 # use amethyst::{
-#     ecs::{Component, Join, ReadStorage, System, SystemData, VecStorage, World, WriteStorage},
+#     ecs::{Component, Join, ReadStorage, System, VecStorage, World, WriteStorage},
 #     shred::ResourceId,
 # };
 #
 # struct FooComponent {
 #   stuff: f32,
 # }
-# impl Component for FooComponent {
-#   type Storage = VecStorage<FooComponent>;
-# }
 #
 # struct BarComponent {
 #   stuff: f32,
-# }
-# impl Component for BarComponent {
-#   type Storage = VecStorage<BarComponent>;
 # }
 #
 # #[derive(SystemData)]

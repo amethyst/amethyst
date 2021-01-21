@@ -1,7 +1,7 @@
 use amethyst::{
     audio::output::init_output,
     core::Time,
-    ecs::prelude::{Entity, WorldExt},
+    ecs::prelude::{Entity},
     input::{is_close_requested, is_key_down},
     prelude::*,
     ui::{UiCreator, UiFinder, UiText},

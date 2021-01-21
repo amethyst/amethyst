@@ -16,7 +16,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    #
    use amethyst::{
        prelude::*,
-       #   ecs::{World, WorldExt},
+       #   ecs::{World},
        utils::application_root_dir,
    };
    #
@@ -54,7 +54,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    ```rust ,edition2018,no_run,noplaypen
    # use amethyst::{
    #     assets::{AssetStorage, Handle,  DefaultLoader, Loader, ProgressCounter},
-   #     ecs::{World, WorldExt},
+   #     ecs::{World},
    #     prelude::*,
    #     renderer::{formats::texture::ImageFormat, Texture},
    #     utils::application_root_dir,

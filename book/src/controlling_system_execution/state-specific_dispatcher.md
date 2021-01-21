@@ -38,7 +38,7 @@ Alternatively we can add `Bundle`s of `System`s to our `DispatcherBuilder` direc
 #
 # use amethyst::{
 #     core::bundle::SystemBundle,
-#     ecs::{DispatcherBuilder, World, WorldExt},
+#     ecs::{DispatcherBuilder, World},
 #     prelude::*,
 # };
 # #[derive(Default)] struct PongSystemsBundle;

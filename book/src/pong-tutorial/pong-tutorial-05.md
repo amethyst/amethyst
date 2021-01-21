@@ -33,9 +33,6 @@ Then, we'll create `systems/winner.rs`:
 #         pub radius: f32,
 #         pub velocity: [f32; 2],
 #     }
-#     impl Component for Ball {
-#         type Storage = DenseVecStorage<Self>;
-#     }
 #
 #     pub const ARENA_WIDTH: f32 = 100.0;
 #     pub const ARENA_HEIGHT: f32 = 100.0;
@@ -45,7 +42,7 @@ use amethyst::{
     core::transform::Transform,
     core::SystemDesc,
     derive::SystemDesc,
-    ecs::{Join, System, SystemData, World, WriteStorage},
+    ecs::{Join, System, World, WriteStorage},
 };
 
 use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
@@ -96,7 +93,7 @@ keep playing after someone scores and log who got the point.
 #
 # use amethyst::{
 #    core::transform::TransformBundle,
-#    ecs::{World, WorldExt},
+#    ecs::{World},
 #    prelude::*,
 #    input::StringBindings,
 #    window::DisplayConfig,
@@ -105,7 +102,7 @@ keep playing after someone scores and log who got the point.
 # mod systems {
 #     use amethyst;
 #     use amethyst::core::SystemDesc;
-#     use amethyst::core::ecs::{System, SystemData, World};
+#     use amethyst::core::ecs::{System, World};
 #     use amethyst::derive::SystemDesc;
 #
 #     #[derive(SystemDesc)]
@@ -179,7 +176,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
-#     ecs::{World, WorldExt},
+#     ecs::{World},
 #     prelude::*,
 #     renderer::{
 #         types::DefaultBackend,
@@ -200,7 +197,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::{
-#     ecs::{World, WorldExt},
+#     ecs::{World},
 #     input::StringBindings,
 #     prelude::*,
 # };
@@ -373,9 +370,6 @@ accordingly:
 #         pub radius: f32,
 #         pub velocity: [f32; 2],
 #     }
-#     impl Component for Ball {
-#         type Storage = DenseVecStorage<Self>;
-#     }
 #
 #     #[derive(Default)]
 #     pub struct ScoreBoard {
@@ -397,7 +391,7 @@ use amethyst::{
     #     core::SystemDesc,
     #     derive::SystemDesc,
     // --snip--
-    ecs::{Join, ReadExpect, System, SystemData, World, Write, WriteStorage},
+    ecs::{Join, ReadExpect, System, World, Write, WriteStorage},
     ui::UiText,
 };
 

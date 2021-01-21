@@ -17,7 +17,7 @@ If your system initialization use case is not covered, please see the
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{System, SystemData},
+#     ecs::{System},
 # };
 #
 #[derive(SystemDesc)]
@@ -46,7 +46,7 @@ impl SystemName {
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{System, SystemData},
+#     ecs::{System},
 # };
 #
 # pub struct SystemName {
@@ -95,7 +95,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{System, SystemData},
+#     ecs::{System},
 # };
 #
 #[derive(SystemDesc)]
@@ -128,7 +128,7 @@ impl SystemName {
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{System, SystemData},
+#     ecs::{System},
 # };
 #
 # pub struct SystemName {
@@ -177,7 +177,7 @@ will call  `SystemName::default()`:
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{System, SystemData},
+#     ecs::{System},
 # };
 #
 #[derive(Default, SystemDesc)]
@@ -200,7 +200,7 @@ pub struct SystemName {
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{System, SystemData},
+#     ecs::{System},
 # };
 #
 # #[derive(Default)]
@@ -240,7 +240,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{System, SystemData},
+#     ecs::{System},
 #     shrev::{EventChannel, ReaderId},
 #     ui::UiEvent,
 # };
@@ -271,7 +271,7 @@ impl SystemName {
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{System, SystemData},
+#     ecs::{System},
 #     shrev::{EventChannel, ReaderId},
 #     ui::UiEvent,
 # };
@@ -320,7 +320,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{storage::ComponentEvent, System, SystemData, WriteStorage},
+#     ecs::{storage::ComponentEvent, System, WriteStorage},
 #     shrev::{EventChannel, ReaderId},
 #     ui::UiResize,
 # };
@@ -351,7 +351,7 @@ impl SystemName {
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{storage::ComponentEvent, System, SystemData, WriteStorage},
+#     ecs::{storage::ComponentEvent, System, WriteStorage},
 #     shrev::{EventChannel, ReaderId},
 #     ui::UiResize,
 # };
@@ -404,7 +404,7 @@ such as a function call, you must surround that expression in quotes, e.g.
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{ReadExpect, System, SystemData},
+#     ecs::{ReadExpect, System},
 # };
 #
 pub struct NonDefault;
@@ -426,7 +426,7 @@ impl<'a> System<'a> for SystemName {
 #
 # use amethyst::{
 #     derive::SystemDesc,
-#     ecs::{ReadExpect, System, SystemData},
+#     ecs::{ReadExpect, System},
 # };
 #
 # pub struct NonDefault;

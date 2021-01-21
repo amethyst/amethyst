@@ -62,7 +62,7 @@ Once you have ron file ready, you can load it using the texture handle of the sh
 
 ```rust, edition2018,no_run,noplaypen
 # use amethyst::assets::{Loader, AssetStorage, Handle};
-# use amethyst::ecs::{World, WorldExt};
+# use amethyst::ecs::{World};
 # use amethyst::renderer::{SpriteSheetFormat, SpriteSheet, Texture};
 #
 # fn load_texture() -> Handle<Texture> {
