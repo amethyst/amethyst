@@ -5,7 +5,6 @@ This guide explains how to define a [`PrefabData`] for a [`Component`] using an 
 ```rust ,edition2018,no_run,noplaypen
 # extern crate serde;
 #
-# use amethyst::ecs::{storage::DenseVecStorage, Component};
 # use serde::{Deserialize, Serialize};
 #
 # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
@@ -92,7 +91,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
    #
    # use amethyst::{
    #     assets::{PrefabData, ProgressCounter},
-   #     ecs::{storage::DenseVecStorage, Component, Entity, WriteStorage},
+   #     ecs::{Entity, WriteStorage},
    #     Error,
    # };
    # use serde::{Deserialize, Serialize};

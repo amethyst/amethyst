@@ -23,7 +23,6 @@ If you are looking for a guide to define prefab data for a `Component`, first we
   ```rust, edition2018,no_run,noplaypen
   # extern crate serde;
   #
-  # use amethyst::ecs::{storage::DenseVecStorage, Component};
   # use serde::{Deserialize, Serialize};
   #
   #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
@@ -39,7 +38,6 @@ If you are looking for a guide to define prefab data for a `Component`, first we
   ```rust, edition2018,no_run,noplaypen
   # extern crate serde;
   #
-  # use amethyst::ecs::{storage::DenseVecStorage, Component};
   # use serde::{Deserialize, Serialize};
   #
   # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
@@ -111,7 +109,6 @@ If you are looking for a guide to define prefab data for a `Component`, first we
   #
   # use amethyst::{
   #     assets::Handle,
-  #     ecs::{storage::DenseVecStorage, Component},
   #     renderer::Texture,
   # };
   #

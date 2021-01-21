@@ -144,7 +144,7 @@ use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
     ecs::{
-        Component, DenseVecStorage, Join, Read, ReadStorage, System, World,
+        Component, Read, ReadStorage, System, World,
         WriteStorage,
     },
     input::{AxisBinding, InputHandler},

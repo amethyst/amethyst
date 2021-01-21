@@ -226,9 +226,6 @@ general, as it makes operations like rotation easier.
 #   Right,
 # }
 # struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
 # impl Paddle {
 #   fn new(side: Side) -> Paddle { Paddle }
 # }
@@ -309,9 +306,6 @@ this by adding the following line before `initialise_paddles(world)` in the
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{World};
 # struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
 # fn register() {
 #   let mut world = World::new();
 world.register::<Paddle>();
@@ -584,9 +578,6 @@ all together in the `on_start()` method:
 # use amethyst::renderer::{sprite::SpriteSheet, Texture};
 # use amethyst::ecs::World;
 # struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
 # fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }

@@ -40,7 +40,7 @@ Then let's add an `initialise_ball` function the same way we wrote the
 # use amethyst::assets::{Loader, AssetStorage, Handle};
 # use amethyst::renderer::{Texture, SpriteRender, Sprite, SpriteSheet};
 # use amethyst::core::transform::Transform;
-# use amethyst::ecs::{Component, DenseVecStorage, World};
+# use amethyst::ecs::{World};
 # pub struct Ball {
 #    pub velocity: [f32; 2],
 #    pub radius: f32,
@@ -136,7 +136,7 @@ use amethyst::{
     core::transform::Transform,
     core::SystemDesc,
     derive::SystemDesc,
-    ecs::{Join, Read, ReadStorage, System, World, WriteStorage},
+    ecs::{Read, ReadStorage, System, World, WriteStorage},
 };
 
 use crate::pong::Ball;
@@ -204,9 +204,6 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 #       pub width: f32,
 #       pub height: f32,
 #     }
-#     impl Component for Paddle {
-#       type Storage = VecStorage<Self>;
-#     }
 #
 #     pub const ARENA_HEIGHT: f32 = 100.0;
 # }
@@ -214,7 +211,7 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
-    ecs::{Join, ReadStorage, System, World, WriteStorage},
+    ecs::{ReadStorage, System, World, WriteStorage},
 };
 
 use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
@@ -428,13 +425,7 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 use amethyst::core::timing::Time;
 
 # struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Self>;
-# }
 # struct Ball;
-# impl amethyst::ecs::Component for Ball {
-#   type Storage = amethyst::ecs::VecStorage<Self>;
-# }
 # fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) { }
 # fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
 # fn initialise_camera(world: &mut World) { }

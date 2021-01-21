@@ -69,7 +69,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    #     core::Named,
    #     derive::PrefabData,
    #     ecs::{
-   #         storage::{DenseVecStorage, VecStorage},
    #         Component, Entity, WriteStorage,
    #     },
    #     prelude::*,
@@ -117,7 +116,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    #     core::Named,
    #     derive::PrefabData,
    #     ecs::{
-   #         storage::{DenseVecStorage, VecStorage},
    #         Component, Entity, WriteStorage,
    #     },
    #     prelude::*,
@@ -153,7 +151,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    #     core::Named,
    #     derive::PrefabData,
    #     ecs::{
-   #         storage::{DenseVecStorage, VecStorage},
    #         Component, Entity, WriteStorage,
    #     },
    #     prelude::*,

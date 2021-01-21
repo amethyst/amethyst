@@ -70,9 +70,6 @@ Please note that **in order to use this syntax, you need to import the `amethyst
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{World};
 # struct MyComponent;
-# impl amethyst::ecs::Component for MyComponent {
-#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
-# }
 # fn main() {
 #   let mut world = World::new();
     world.register::<MyComponent>();
@@ -89,9 +86,6 @@ Shorter version:
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{World};
 # struct MyComponent;
-# impl amethyst::ecs::Component for MyComponent {
-#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
-# }
 # fn main() {
 #   let mut world = World::new();
     use amethyst::prelude::Builder;
@@ -110,9 +104,6 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{Builder, World};
 # struct MyComponent;
-# impl amethyst::ecs::Component for MyComponent {
-#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
-# }
 # fn main() {
 #   let mut world = World::new();
     // Create an `Entity` with `MyComponent`.
@@ -134,9 +125,6 @@ This is almost the same as accessing a component:
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{Builder, World};
 # struct MyComponent;
-# impl amethyst::ecs::Component for MyComponent {
-#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
-# }
 # fn main() {
 #   let mut world = World::new();
     let my_entity = world.create_entity().with(MyComponent).build();

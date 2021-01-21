@@ -10,7 +10,7 @@ use amethyst::{
     core::{Named, Parent},
     derive::PrefabData,
     ecs::{
-        storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, World,
+        Entities, Entity, ReadStorage, World,
         WriteStorage,
     },
     prelude::*,

@@ -14,7 +14,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
     },
     ecs::{
-        prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage},
+        prelude::{Entity, Read, ReadStorage, System, Write, WriteStorage},
         ReadExpect, World,
     },
     input::{

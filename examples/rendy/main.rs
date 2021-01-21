@@ -14,7 +14,7 @@ use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
-            Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
+            DispatcherBuilder, Entities, Entity, Read,
             ReadStorage, System, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},

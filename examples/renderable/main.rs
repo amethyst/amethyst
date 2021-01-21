@@ -15,7 +15,7 @@ use amethyst::{
     },
     derive::SystemDesc,
     ecs::prelude::{
-        Entity, Join, Read, ReadStorage, System, Write, WriteStorage,
+        Entity, Read, ReadStorage, System, Write, WriteStorage,
     },
     input::{
         get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,

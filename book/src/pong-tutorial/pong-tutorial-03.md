@@ -111,9 +111,6 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 #     pub struct Paddle {
 #       pub side: Side,
 #     }
-#     impl Component for Paddle {
-#       type Storage = VecStorage<Self>;
-#     }
 #
 #     pub const ARENA_HEIGHT: f32 = 100.0;
 #     pub const PADDLE_HEIGHT: f32 = 16.0;
@@ -121,7 +118,7 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 #
 use amethyst::core::{SystemDesc, Transform};
 use amethyst::derive::SystemDesc;
-use amethyst::ecs::{Join, Read, ReadStorage, System, World, WriteStorage};
+use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
 use amethyst::input::{InputHandler, StringBindings};
 
 // You'll have to mark PADDLE_HEIGHT as public in pong.rs
@@ -259,7 +256,7 @@ component of the transform's translation.
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
-# use amethyst::ecs::{Join, Read, ReadStorage, System, World, WriteStorage};
+# use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
 # use amethyst::input::{InputHandler, StringBindings};
 # enum Side {
 #   Left,
@@ -267,9 +264,6 @@ component of the transform's translation.
 # }
 # pub struct Paddle {
 #   side: Side,
-# }
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # #[derive(SystemDesc)]
 # pub struct PaddleSystem;
@@ -316,7 +310,7 @@ Our run function should now look something like this:
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
-# use amethyst::ecs::{Join, Read, ReadStorage, System, World, WriteStorage};
+# use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
 # use amethyst::input::{InputHandler, StringBindings};
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
@@ -328,9 +322,6 @@ Our run function should now look something like this:
 # }
 # pub struct Paddle {
 #   side: Side,
-# }
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # #[derive(SystemDesc)]
 # pub struct PaddleSystem;
@@ -375,9 +366,6 @@ will take care of that for us, as well as set up the storage.
 # use amethyst::prelude::*;
 # use amethyst::renderer::SpriteSheet;
 # struct Paddle;
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
 # fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }

@@ -106,9 +106,6 @@ Keep in mind that **the `join` method is only available by importing `amethyst::
 # use amethyst::ecs::{System, ReadStorage, WriteStorage};
 # use amethyst::core::Transform;
 # struct FallingObject;
-# impl amethyst::ecs::Component for FallingObject {
-#   type Storage = amethyst::ecs::DenseVecStorage<FallingObject>;
-# }
 use amethyst::ecs::Join;
 
 struct MakeObjectsFall;
@@ -140,9 +137,6 @@ It is used like this:
 # use amethyst::ecs::{System, ReadStorage, WriteStorage};
 # use amethyst::core::Transform;
 # struct FallingObject;
-# impl amethyst::ecs::Component for FallingObject {
-#   type Storage = amethyst::ecs::DenseVecStorage<FallingObject>;
-# }
 use amethyst::ecs::Join;
 
 struct NotFallingObjects;
@@ -173,9 +167,6 @@ Creating an entity while in the context of a system is very similar to the way o
 # use amethyst::ecs::{System, WriteStorage, Entities};
 # use amethyst::core::Transform;
 # struct Enemy;
-# impl amethyst::ecs::Component for Enemy {
-#   type Storage = amethyst::ecs::VecStorage<Enemy>;
-# }
 struct SpawnEnemies {
     counter: u32,
 }
@@ -224,12 +215,9 @@ entities.delete(entity);
 Sometimes, when you iterate over components, you may want to also know what entity you are working with. To do that, you can use the joining operation with `Entities<'a>`.
 
 ```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{Join, System, Entities, WriteStorage, ReadStorage};
+# use amethyst::ecs::{System, Entities, WriteStorage, ReadStorage};
 # use amethyst::core::Transform;
 # struct FallingObject;
-# impl amethyst::ecs::Component for FallingObject {
-#   type Storage = amethyst::ecs::VecStorage<FallingObject>;
-# }
 struct MakeObjectsFall;
 
 impl<'a> System<'a> for MakeObjectsFall {
@@ -261,9 +249,6 @@ To do that, you need to get a mutable storage of the component you want to modif
 ```rust ,edition2018,no_run,noplaypen
 # use amethyst::ecs::{System, Entities, Entity, WriteStorage};
 # struct MyComponent;
-# impl amethyst::ecs::Component for MyComponent {
-#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
-# }
 # struct MySystem { entity: Entity }
 # impl<'a> System<'a> for MySystem {
 #   type SystemData = WriteStorage<'a, MyComponent>;
@@ -471,7 +456,7 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # #[macro_use] extern crate shred_derive;
 #
 # use amethyst::{
-#     ecs::{Component, Join, ReadStorage, System, VecStorage, World, WriteStorage},
+#     ecs::{Component, ReadStorage, System, World, WriteStorage},
 #     shred::ResourceId,
 # };
 #

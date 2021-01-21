@@ -42,7 +42,7 @@ use amethyst::{
     core::transform::Transform,
     core::SystemDesc,
     derive::SystemDesc,
-    ecs::{Join, System, World, WriteStorage},
+    ecs::{System, World, WriteStorage},
 };
 
 use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
@@ -228,8 +228,6 @@ Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
 ```rust ,edition2018,no_run,noplaypen
-use amethyst::ecs::{Component, DenseVecStorage, Entity};
-
 /// ScoreBoard contains the actual score data
 #[derive(Default)]
 pub struct ScoreBoard {
@@ -391,7 +389,7 @@ use amethyst::{
     #     core::SystemDesc,
     #     derive::SystemDesc,
     // --snip--
-    ecs::{Join, ReadExpect, System, World, Write, WriteStorage},
+    ecs::{ReadExpect, System, World, Write, WriteStorage},
     ui::UiText,
 };
 

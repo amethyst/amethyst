@@ -12,6 +12,6 @@ When a system wants to access a component or a resource, they can do so either m
 
 The dispatcher builds execution stages based on which components, resources and queries are specified for a system.
 
-If you want to have the best performance possible, you should prefer immutable over mutable whenever it is possible. (`Read` instead of `Write`, `ReadStorage` instead of `WriteStorage`).
+If you want to have the best performance possible, you should prefer immutable over mutable whenever it is possible. (`Read` instead of `Write`).
 
 __Note: Please however keep in mind that `Write` is still preferable to locks in most cases, such as `Mutex` or `RwLock` for example.__

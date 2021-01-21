@@ -217,7 +217,7 @@ An example of a single `Component` derive:
 #     },
 #     derive::PrefabData,
 #     ecs::{
-#         Component, DenseVecStorage, Entity, Read, ReadExpect, WriteStorage,
+#         Entity, Read, ReadExpect, WriteStorage,
 #     },
 #     Error,
 # };
@@ -237,7 +237,7 @@ Lets look at an example of an aggregate struct:
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
 # use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
 # use amethyst::Error;
 
@@ -256,7 +256,7 @@ One last example that also adds a custom pure data `Component` into the aggregat
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
 # use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
 # use amethyst::Error;
 

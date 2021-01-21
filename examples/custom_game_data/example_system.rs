@@ -5,7 +5,7 @@ use amethyst::{
     },
     derive::SystemDesc,
     ecs::prelude::{
-        Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage,
+        Entity, Read, ReadStorage, System, WriteExpect, WriteStorage,
     },
     renderer::{camera::Camera, light::Light},
     ui::{UiFinder, UiText},

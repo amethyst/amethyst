@@ -103,7 +103,6 @@ If there are multiple components to be attached to the entity, then we need a ty
 #     core::Named,
 #     derive::PrefabData,
 #     ecs::{
-#         storage::{DenseVecStorage, VecStorage},
 #         Component, Entity, WriteStorage,
 #     },
 #     prelude::*,
@@ -195,7 +194,6 @@ Could be implemented using an enum like this:
 #     core::Named,
 #     derive::PrefabData,
 #     ecs::{
-#         storage::{DenseVecStorage, VecStorage},
 #         Component, Entity, WriteStorage,
 #     },
 #     prelude::*,
