@@ -64,21 +64,21 @@ To register the `Resource` or change its value, we can use the following code:
 # use amethyst::prelude::*;
 # #[derive(PartialEq)]
 # pub enum CurrentState {
-#    Running,
-#    Paused,
+#   Running,
+#   Paused,
 # }
-#
+# 
 # impl Default for CurrentState {
-#     fn default() -> Self {
-#         CurrentState::Paused
-#     }
+#   fn default() -> Self {
+#       CurrentState::Paused
+#   }
 # }
-#
+# 
 struct GameplayState;
 
 impl SimpleState for GameplayState {
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        #       let my_condition = true;
+#       let my_condition = true;
         if (my_condition) {
             *data.world.write_resource::<CurrentState>() = CurrentState::Paused;
         }

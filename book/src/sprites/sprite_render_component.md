@@ -26,13 +26,13 @@ use amethyst::renderer::{SpriteSheet, Texture};
 
 # pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
 # where
-#     N: Into<String>,
+#   N: Into<String>,
 # {
-#     unimplemented!();
+#   unimplemented!();
 # }
-#
+# 
 # pub fn load_sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
-#     unimplemented!();
+#   unimplemented!();
 # }
 
 #[derive(Debug)]
@@ -40,7 +40,7 @@ struct ExampleState;
 
 impl SimpleState for ExampleState {
     fn on_start(&mut self, mut data: StateData<'_, GameData>) {
-        #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
+#       let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
         // ...
 
         let sprite_sheet = load_sprite_sheet(texture_handle);
@@ -57,7 +57,6 @@ impl SimpleState for ExampleState {
         };
     }
 }
-#
 # fn main() {}
 ```
 
@@ -72,13 +71,13 @@ use amethyst::window::ScreenDimensions;
 
 # pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
 # where
-#     N: Into<String>,
+#   N: Into<String>,
 # {
-#     unimplemented!();
+#   unimplemented!();
 # }
-#
+# 
 # pub fn load_sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
-#     unimplemented!();
+#   unimplemented!();
 # }
 
 #[derive(Debug)]
@@ -86,17 +85,20 @@ struct ExampleState;
 
 impl SimpleState for ExampleState {
     fn on_start(&mut self, mut data: StateData<'_, GameData>) {
-        #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
-        #
-        #         let sprite_sheet = load_sprite_sheet(texture_handle);
-        #         let sprite_sheet_handle = {
-        #             let loader = data.resources.get::<DefaultLoader>().unwrap();
-        #             loader.load_from_data(
-        #                 sprite_sheet,
-        #                 (),
-        #                 &data.resources.get::<ProcessingQueue<SpriteSheet>>().unwrap(),
-        #             )
-        #         };
+#       let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
+# 
+#       let sprite_sheet = load_sprite_sheet(texture_handle);
+#       let sprite_sheet_handle = {
+#           let loader = data.resources.get::<DefaultLoader>().unwrap();
+#           loader.load_from_data(
+#               sprite_sheet,
+#               (),
+#               &data
+#                   .resources
+#                   .get::<ProcessingQueue<SpriteSheet>>()
+#                   .unwrap(),
+#           )
+#       };
         // ...
 
         self.initialize_sprite(&mut data.world, &data.resources, sprite_sheet_handle);
@@ -125,7 +127,6 @@ impl ExampleState {
         world.push((sprite_render, sprite_transform, Transparent));
     }
 }
-#
 # fn main() {}
 ```
 

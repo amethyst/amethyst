@@ -9,39 +9,35 @@ The `amethyst_test` crate provides support to write tests ergonomically and expr
 The following shows a simple example of testing a `State`. More examples are in following pages.
 
 ```rust
-#
 # use std::marker::PhantomData;
-#
+# 
+# use amethyst::{ecs::prelude::*, prelude::*};
 # use amethyst_test::prelude::*;
-# use amethyst::{
-#     ecs::prelude::*,
-#     prelude::*,
-# };
-#
+# 
 # #[derive(Debug)]
 # struct LoadResource;
-#
+# 
 # #[derive(Debug)]
 # struct LoadingState;
-#
+# 
 # impl LoadingState {
-#     fn new() -> Self {
-#         LoadingState
-#     }
+#   fn new() -> Self {
+#       LoadingState
+#   }
 # }
 
- impl<'a, 'b, E> State<GameData<'a, 'b>, E> for LoadingState
- where
-     E: Send + Sync + 'static,
- {
-     fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData<'a, 'b>, E> {
-         data.data.update(&data.world);
+impl<'a, 'b, E> State<GameData<'a, 'b>, E> for LoadingState
+where
+    E: Send + Sync + 'static,
+{
+    fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData<'a, 'b>, E> {
+        data.data.update(&data.world);
 
-         data.resources.insert(LoadResource);
+        data.resources.insert(LoadResource);
 
-         Trans::Pop
-     }
- }
+        Trans::Pop
+    }
+}
 
 #[test]
 fn loading_state_adds_load_resource() -> Result<(), Error> {
@@ -59,7 +55,6 @@ fn loading_state_adds_load_resource() -> Result<(), Error> {
 The Amethyst application is initialized with one of the following functions, each providing a different set of bundles:
 
 ````rust
-#
 use amethyst_test::prelude::*;
 
 #[test]
@@ -117,10 +112,9 @@ fn test_name() {
 Finally, call `.run()` to run the application. This returns `amethyst::Result<()>`, so we return that as part of the function:
 
 ```rust
-#
 # use amethyst::Error;
 # use amethyst_test::prelude::*;
-#
+# 
 #[test]
 fn test_name() -> Result<(), Error> {
     let visibility = false; // Whether the window should be shown

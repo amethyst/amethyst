@@ -104,34 +104,31 @@ With the config file we can create an `InputBundle` like in the previous section
 use amethyst::input::InputBundle;
 
 # fn main() -> amethyst::Result<()> {
-#
-# let input_config = "input.ron";
-#
-let input_bundle = 
-    InputBundle::<MovementBindingTypes>::new()
-        .with_bindings_from_file(input_config)?;
-#
-# Ok(())
+#   let input_config = "input.ron";
+# 
+    let input_bundle =
+        InputBundle::<MovementBindingTypes>::new().with_bindings_from_file(input_config)?;
+#   Ok(())
 # }
 ```
 
 And add the `InputBundle` to the game data just like before.
 
 ```rust
-# use amethyst::prelude::*;
 # use amethyst::input::{InputBundle, StringBindings};
-#
+# use amethyst::prelude::*;
+# 
 # fn main() -> amethyst::Result<()> {
-# let input_bundle = InputBundle::<StringBindings>::default();
-#
-let mut world = World::new();
-let game_data = DispatcherBuilder::default()
-    //..
-    .with_bundle(input_bundle)?
-    //..
-#   ;
-#
-# Ok(())
+#   let input_bundle = InputBundle::<StringBindings>::default();
+# 
+    let mut world = World::default();
+    let game_data = DispatcherBuilder::default()
+//..
+.with_bundle(input_bundle)?
+//..
+#  ;
+# 
+#   Ok(())
 # }
 ```
 
@@ -143,10 +140,7 @@ Now that we have added an `InputBundle` with a custom `BindingTypes`, we can use
 use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
-    ecs::{
-        Component, Read, ReadStorage, System, World,
-        WriteStorage,
-    },
+    ecs::{Component, Read, ReadStorage, System, World, WriteStorage},
     input::{AxisBinding, InputHandler},
 };
 

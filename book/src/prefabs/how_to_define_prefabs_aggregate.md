@@ -33,18 +33,15 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    ```rust
    # extern crate serde;
    # use amethyst::{
-   #     assets::{PrefabData, ProgressCounter},
-   #     core::Named,
-   #     derive::PrefabData,
-   #     ecs::{
-   #         storage::DenseVecStorage,
-   #         Component, Entity, WriteStorage,
-   #     },
-   #     prelude::*,
-   #     Error,
+   #   assets::{PrefabData, ProgressCounter},
+   #   core::Named,
+   #   derive::PrefabData,
+   #   ecs::{storage::DenseVecStorage, Component, Entity, WriteStorage},
+   #   prelude::*,
+   #   Error,
    # };
    # use serde::{Deserialize, Serialize};
-   #
+   # 
    #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
    #[prefab(Component)]
    #[serde(deny_unknown_fields)]
@@ -65,17 +62,15 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    ```rust
    # extern crate serde;
    # use amethyst::{
-   #     assets::{PrefabData, ProgressCounter},
-   #     core::Named,
-   #     derive::PrefabData,
-   #     ecs::{
-   #         Component, Entity, WriteStorage,
-   #     },
-   #     prelude::*,
-   #     Error,
+   #   assets::{PrefabData, ProgressCounter},
+   #   core::Named,
+   #   derive::PrefabData,
+   #   ecs::{Component, Entity, WriteStorage},
+   #   prelude::*,
+   #   Error,
    # };
    # use serde::{Deserialize, Serialize};
-   #
+   # 
    #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
    #[prefab(Component)]
    #[serde(deny_unknown_fields)]
@@ -112,15 +107,13 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    ```rust
    # extern crate serde;
    # use amethyst::{
-   #     assets::{PrefabData, ProgressCounter},
-   #     core::Named,
-   #     derive::PrefabData,
-   #     ecs::{
-   #         Component, Entity, WriteStorage,
-   #     },
-   #     prelude::*,
-   #     renderer::sprite::prefab::SpriteScenePrefab,
-   #     Error,
+   #   assets::{PrefabData, ProgressCounter},
+   #   core::Named,
+   #   derive::PrefabData,
+   #   ecs::{Component, Entity, WriteStorage},
+   #   prelude::*,
+   #   renderer::sprite::prefab::SpriteScenePrefab,
+   #   Error,
    # };
    # use serde::{Deserialize, Serialize};
 
@@ -147,15 +140,13 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    ```rust
    # extern crate serde;
    # use amethyst::{
-   #     assets::{PrefabData, ProgressCounter},
-   #     core::Named,
-   #     derive::PrefabData,
-   #     ecs::{
-   #         Component, Entity, WriteStorage,
-   #     },
-   #     prelude::*,
-   #     renderer::sprite::prefab::SpriteScenePrefab,
-   #     Error,
+   #   assets::{PrefabData, ProgressCounter},
+   #   core::Named,
+   #   derive::PrefabData,
+   #   ecs::{Component, Entity, WriteStorage},
+   #   prelude::*,
+   #   renderer::sprite::prefab::SpriteScenePrefab,
+   #   Error,
    # };
    # use serde::{Deserialize, Serialize};
 

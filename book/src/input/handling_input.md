@@ -5,8 +5,8 @@ You initialise this `InputHandler` by creating an `InputBundle` and adding it to
 
 ```rust
 use amethyst::{
-    prelude::*,
     input::{InputBundle, StringBindings},
+    prelude::*,
 };
 
 # struct Example;
@@ -15,12 +15,12 @@ fn main() -> amethyst::Result<()> {
     // StringBindings is the default BindingTypes
     let input_bundle = InputBundle::<StringBindings>::new();
 
-    let mut world = World::new();
+    let mut world = World::default();
     let game_data = DispatcherBuilder::default()
-    //..
-    .with_bundle(input_bundle)?
-    //..
-#   ;
+//..
+.with_bundle(input_bundle)?
+//..
+#  ;
 
     Ok(())
 }
@@ -116,16 +116,17 @@ The possible inputs you can specify for axes are listed [here][in_axis]. The pos
 To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the `InputBundle`.
 
 ```rust
-# use amethyst::{prelude::*, input::*, utils::*};
-# fn main() -> amethyst::Result::<()> {
-let root = application_root_dir()?;
-let bindings_config = root.join("config").join("bindings.ron");
+# use amethyst::{input::*, prelude::*, utils::*};
+# fn main() -> amethyst::Result<()> {
+    let root = application_root_dir()?;
+    let bindings_config = root.join("config").join("bindings.ron");
 
-let input_bundle = InputBundle::<StringBindings>::new()
-    .with_bindings_from_file(bindings_config)?;
+    let input_bundle =
+        InputBundle::<StringBindings>::new().with_bindings_from_file(bindings_config)?;
 
-//..
-# Ok(()) }
+    //..
+#   Ok(())
+# }
 ```
 
 And now you can get the [axis][axis_val] and [action][is_down] values from the `InputHandler`.
@@ -134,10 +135,7 @@ And now you can get the [axis][axis_val] and [action][is_down] values from the `
 use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
-    ecs::{
-        Read, ReadStorage, System, World,
-        WriteStorage,
-    },
+    ecs::{Read, ReadStorage, System, World, WriteStorage},
     input::{InputHandler, StringBindings},
     prelude::*,
 };

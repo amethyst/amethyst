@@ -30,7 +30,6 @@ impl SimpleState for ExampleState {
         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
     }
 }
-#
 # fn main() {}
 ```
 

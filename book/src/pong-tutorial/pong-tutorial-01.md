@@ -100,9 +100,8 @@ Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
 so we can see errors, warnings and debug messages while the program is running.
 
 ```rust
-#
 # fn main() {
-amethyst::start_logger(Default::default());
+    amethyst::start_logger(Default::default());
 # }
 ```
 
@@ -147,16 +146,12 @@ In `main()` in `main.rs`, we will prepare the path to a file containing
 the display configuration:
 
 ```rust
-#
-# use amethyst::{
-#     utils::application_root_dir,
-#     Error,
-# };
-#
-# fn main() -> Result<(), Error>{
-let app_root = application_root_dir()?;
-let display_config_path = app_root.join("config").join("display.ron");
-#     Ok(())
+# use amethyst::{utils::application_root_dir, Error};
+# 
+# fn main() -> Result<(), Error> {
+    let app_root = application_root_dir()?;
+    let display_config_path = app_root.join("config").join("display.ron");
+#   Ok(())
 # }
 ```
 
@@ -165,19 +160,17 @@ let display_config_path = app_root.join("config").join("display.ron");
 In `main()` in `main.rs` we are going to add the basic application setup:
 
 ```rust
-# use amethyst::{
-#     prelude::*,
-#     utils::application_root_dir,
-# };
+# use amethyst::{prelude::*, utils::application_root_dir};
 # fn main() -> Result<(), amethyst::Error> {
-# struct Pong; impl SimpleState for Pong {}
-let game_data = DispatcherBuilder::default();
+#   struct Pong;
+#   impl SimpleState for Pong {}
+    let game_data = DispatcherBuilder::default();
 
-# let app_root = application_root_dir()?;
-let assets_dir = app_root.join("assets");
-let mut game = Application::new(assets_dir, Pong, game_data)?;
-game.run();
-#     Ok(())
+#   let app_root = application_root_dir()?;
+    let assets_dir = app_root.join("assets");
+    let mut game = Application::new(assets_dir, Pong, game_data)?;
+    game.run();
+#   Ok(())
 # }
 ```
 
@@ -211,21 +204,20 @@ Last time we left our `DispatcherBuilder` instance empty, now we'll add some sys
 
 ```rust
 # use amethyst::{
-#     prelude::*,
-#     renderer::{
-#         plugins::{RenderFlat2D, RenderToWindow},
-#         types::DefaultBackend,
-#         RenderingBundle,
-#     },
-#     utils::application_root_dir,
+#   prelude::*,
+#   renderer::{
+#       plugins::{RenderFlat2D, RenderToWindow},
+#       types::DefaultBackend,
+#       RenderingBundle,
+#   },
+#   utils::application_root_dir,
 # };
-# fn main() -> Result<(), amethyst::Error>{
-let app_root = application_root_dir()?;
+# fn main() -> Result<(), amethyst::Error> {
+    let app_root = application_root_dir()?;
 
-let display_config_path = app_root.join("config").join("display.ron");
+    let display_config_path = app_root.join("config").join("display.ron");
 
-let game_data = DispatcherBuilder::default()
-    .with_bundle(
+    let game_data = DispatcherBuilder::default().with_bundle(
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
             .with_plugin(
@@ -235,7 +227,8 @@ let game_data = DispatcherBuilder::default()
             // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
             .with_plugin(RenderFlat2D::default()),
     )?;
-# Ok(()) }
+#   Ok(())
+# }
 ```
 
 Here we are adding a `RenderingBundle`. Bundles are essentially sets of systems

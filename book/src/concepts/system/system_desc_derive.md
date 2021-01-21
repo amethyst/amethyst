@@ -14,12 +14,8 @@ If your system initialization use case is not covered, please see the
 ## Passing parameters to system constructor
 
 ```rust
-#
-# use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{System},
-# };
-#
+# use amethyst::{derive::SystemDesc, ecs::System};
+# 
 #[derive(SystemDesc)]
 #[system_desc(name(SystemNameDesc))]
 pub struct SystemName {
@@ -32,10 +28,9 @@ impl SystemName {
         SystemName { field_0, field_1 }
     }
 }
-#
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
 ```
 
@@ -43,28 +38,24 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
-#
-# use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{System},
-# };
-#
+# use amethyst::{derive::SystemDesc, ecs::System};
+# 
 # pub struct SystemName {
-#     field_0: u32,
-#     field_1: String,
+#   field_0: u32,
+#   field_1: String,
 # }
-#
+# 
 # impl SystemName {
-#     fn new(field_0: u32, field_1: String) -> Self {
-#         SystemName { field_0, field_1 }
-#     }
+#   fn new(field_0: u32, field_1: String) -> Self {
+#       SystemName { field_0, field_1 }
+#   }
 # }
-#
+# 
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
-#
+# 
 /// Builds a `SystemName`.
 #[derive(Default, Debug)]
 pub struct SystemNameDesc {
@@ -92,12 +83,8 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 ## Fields to skip -- defaulted by the system constructor
 
 ```rust
-#
-# use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{System},
-# };
-#
+# use amethyst::{derive::SystemDesc, ecs::System};
+# 
 #[derive(SystemDesc)]
 #[system_desc(name(SystemNameDesc))]
 pub struct SystemName {
@@ -114,10 +101,9 @@ impl SystemName {
         }
     }
 }
-#
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
 ```
 
@@ -125,28 +111,27 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
-#
-# use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{System},
-# };
-#
+# use amethyst::{derive::SystemDesc, ecs::System};
+# 
 # pub struct SystemName {
-#     field_0: u32,
-#     field_1: String,
+#   field_0: u32,
+#   field_1: String,
 # }
-#
+# 
 # impl SystemName {
-#     fn new(field_1: String) -> Self {
-#         SystemName { field_0: 123, field_1 }
-#     }
+#   fn new(field_1: String) -> Self {
+#       SystemName {
+#           field_0: 123,
+#           field_1,
+#       }
+#   }
 # }
-#
+# 
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
-#
+# 
 /// Builds a `SystemName`.
 #[derive(Default, Debug)]
 pub struct SystemNameDesc {
@@ -174,22 +159,17 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 will call  `SystemName::default()`:
 
 ```rust
-#
-# use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{System},
-# };
-#
+# use amethyst::{derive::SystemDesc, ecs::System};
+# 
 #[derive(Default, SystemDesc)]
 #[system_desc(name(SystemNameDesc))]
 pub struct SystemName {
     #[system_desc(skip)]
     field_0: u32,
 }
-#
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
 ```
 
@@ -197,22 +177,18 @@ pub struct SystemName {
 <summary>Generated code</summary>
 
 ```rust
-#
-# use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{System},
-# };
-#
+# use amethyst::{derive::SystemDesc, ecs::System};
+# 
 # #[derive(Default)]
 # pub struct SystemName {
-#     field_0: u32,
+#   field_0: u32,
 # }
-#
+# 
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
-#
+# 
 /// Builds a `SystemName`.
 #[derive(Debug)]
 pub struct SystemNameDesc {}
@@ -237,14 +213,13 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 ## Registering a `ReaderId` for an `EventChannel<_>` in the `World`
 
 ```rust
-#
 # use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{System},
-#     shrev::{EventChannel, ReaderId},
-#     ui::UiEvent,
+#   derive::SystemDesc,
+#   ecs::System,
+#   shrev::{EventChannel, ReaderId},
+#   ui::UiEvent,
 # };
-#
+# 
 #[derive(SystemDesc)]
 #[system_desc(name(SystemNameDesc))]
 pub struct SystemName {
@@ -257,10 +232,9 @@ impl SystemName {
         SystemName { reader_id }
     }
 }
-#
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
 ```
 
@@ -268,29 +242,28 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
-#
 # use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{System},
-#     shrev::{EventChannel, ReaderId},
-#     ui::UiEvent,
+#   derive::SystemDesc,
+#   ecs::System,
+#   shrev::{EventChannel, ReaderId},
+#   ui::UiEvent,
 # };
-#
+# 
 # pub struct SystemName {
-#     reader_id: ReaderId<UiEvent>,
+#   reader_id: ReaderId<UiEvent>,
 # }
-#
+# 
 # impl SystemName {
-#     fn new(reader_id: ReaderId<UiEvent>) -> Self {
-#         SystemName { reader_id }
-#     }
+#   fn new(reader_id: ReaderId<UiEvent>) -> Self {
+#       SystemName { reader_id }
+#   }
 # }
-#
+# 
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
-#
+# 
 /// Builds a `SystemName`.
 #[derive(Debug)]
 pub struct SystemNameDesc;
@@ -317,14 +290,13 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 ## Registering a `ReaderId` to a component's `FlaggedStorage`
 
 ```rust
-#
 # use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{storage::ComponentEvent, System, WriteStorage},
-#     shrev::{EventChannel, ReaderId},
-#     ui::UiResize,
+#   derive::SystemDesc,
+#   ecs::{storage::ComponentEvent, System, WriteStorage},
+#   shrev::{EventChannel, ReaderId},
+#   ui::UiResize,
 # };
-#
+# 
 #[derive(SystemDesc)]
 #[system_desc(name(SystemNameDesc))]
 pub struct SystemName {
@@ -337,10 +309,9 @@ impl SystemName {
         SystemName { resize_events_id }
     }
 }
-#
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
 ```
 
@@ -348,29 +319,28 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
-#
 # use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{storage::ComponentEvent, System, WriteStorage},
-#     shrev::{EventChannel, ReaderId},
-#     ui::UiResize,
+#   derive::SystemDesc,
+#   ecs::{storage::ComponentEvent, System, WriteStorage},
+#   shrev::{EventChannel, ReaderId},
+#   ui::UiResize,
 # };
-#
+# 
 # pub struct SystemName {
-#     resize_events_id: ReaderId<ComponentEvent>,
+#   resize_events_id: ReaderId<ComponentEvent>,
 # }
-#
+# 
 # impl SystemName {
-#     fn new(resize_events_id: ReaderId<ComponentEvent>) -> Self {
-#         SystemName { resize_events_id }
-#     }
+#   fn new(resize_events_id: ReaderId<ComponentEvent>) -> Self {
+#       SystemName { resize_events_id }
+#   }
 # }
-#
+# 
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ();
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
-#
+# 
 /// Builds a `SystemName`.
 #[derive(Debug)]
 pub struct SystemNameDesc;
@@ -401,12 +371,11 @@ such as a function call, you must surround that expression in quotes, e.g.
 `#[system_desc(insert("MyResource::default()"))]`.
 
 ```rust
-#
 # use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{ReadExpect, System},
+#   derive::SystemDesc,
+#   ecs::{ReadExpect, System},
 # };
-#
+# 
 pub struct NonDefault;
 
 #[derive(Default, SystemDesc)]
@@ -423,22 +392,21 @@ impl<'a> System<'a> for SystemName {
 <summary>Generated code</summary>
 
 ```rust
-#
 # use amethyst::{
-#     derive::SystemDesc,
-#     ecs::{ReadExpect, System},
+#   derive::SystemDesc,
+#   ecs::{ReadExpect, System},
 # };
-#
+# 
 # pub struct NonDefault;
-#
+# 
 # #[derive(Default)]
 # pub struct SystemName;
-#
+# 
 # impl<'a> System<'a> for SystemName {
-#     type SystemData = ReadExpect<'a, NonDefault>;
-#     fn run(&mut self, data: Self::SystemData) {}
+#   type SystemData = ReadExpect<'a, NonDefault>;
+#   fn run(&mut self, data: Self::SystemData) {}
 # }
-#
+# 
 /// Builds a `SystemName`.
 #[derive(Debug)]
 pub struct SystemNameDesc;

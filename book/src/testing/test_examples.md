@@ -3,30 +3,25 @@
 ## Testing a `Bundle`
 
 ```rust
-#
-# use amethyst_test::prelude::*;
 # use amethyst::{
-#     core::bundle::SystemBundle,
-#     core::SystemDesc,
-#     derive::SystemDesc,
-#     ecs::prelude::*,
-#     prelude::*,
-#     Error,
+#   core::bundle::SystemBundle, core::SystemDesc, derive::SystemDesc, ecs::prelude::*, prelude::*,
+#   Error,
 # };
-#
+# use amethyst_test::prelude::*;
+# 
 # #[derive(Debug)]
 # struct ApplicationResource;
-#
+# 
 # #[derive(Debug, SystemDesc)]
 # #[system_desc(insert(ApplicationResource))]
 # struct MySystem;
-#
+# 
 # impl<'s> System<'s> for MySystem {
-#     type SystemData = ReadExpect<'s, ApplicationResource>;
-#
-#     fn run(&mut self, _: Self::SystemData) {}
+#   type SystemData = ReadExpect<'s, ApplicationResource>;
+# 
+#   fn run(&mut self, _: Self::SystemData) {}
 # }
-#
+# 
 #[derive(Debug)]
 struct MyBundle;
 
@@ -52,25 +47,17 @@ fn bundle_registers_system_with_resource() -> Result<(), Error> {
         })
         .run()
 }
-#
 # fn main() {
-#     bundle_registers_system_with_resource();
+#   bundle_registers_system_with_resource();
 # }
 ```
 
 ## Testing a `System`
 
 ```rust
-#
+# use amethyst::{core::SystemDesc, derive::SystemDesc, ecs::prelude::*, prelude::*, Error};
 # use amethyst_test::prelude::*;
-# use amethyst::{
-#     core::SystemDesc,
-#     derive::SystemDesc,
-#     ecs::prelude::*,
-#     prelude::*,
-#     Error,
-# };
-#
+# 
 struct MyComponent(pub i32);
 
 #[derive(Debug, SystemDesc)]
@@ -105,9 +92,8 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
         })
         .run()
 }
-#
 # fn main() {
-#     system_increases_component_value_by_one();
+#   system_increases_component_value_by_one();
 # }
 ```
 
@@ -116,16 +102,9 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
 This is useful when your system must run *after* some setup has been done, for example adding a resource:
 
 ```rust
-#
+# use amethyst::{core::SystemDesc, derive::SystemDesc, ecs::prelude::*, prelude::*, Error};
 # use amethyst_test::prelude::*;
-# use amethyst::{
-#     core::SystemDesc,
-#     derive::SystemDesc,
-#     ecs::prelude::*,
-#     prelude::*,
-#     Error,
-# };
-#
+# 
 // !Default
 struct MyResource(pub i32);
 
@@ -155,8 +134,7 @@ fn system_increases_resource_value_by_one() -> Result<(), Error> {
         })
         .run()
 }
-#
 # fn main() {
-#     system_increases_resource_value_by_one();
+#   system_increases_resource_value_by_one();
 # }
 ```

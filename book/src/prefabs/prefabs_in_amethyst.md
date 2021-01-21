@@ -22,20 +22,17 @@ In its stored form, a prefab is a serialized list of entities and their componen
 ```rust
 # extern crate derivative;
 # extern crate serde;
-#
+# 
 # use amethyst::{
-#     assets::{Prefab, PrefabData},
-#     derive::PrefabData,
-#     ecs::{
-#         storage::DenseVecStorage,
-#         Component, Entity, WriteStorage,
-#     },
-#     prelude::*,
-#     Error,
+#   assets::{Prefab, PrefabData},
+#   derive::PrefabData,
+#   ecs::{storage::DenseVecStorage, Component, Entity, WriteStorage},
+#   prelude::*,
+#   Error,
 # };
 # use derivative::Derivative;
 # use serde::{Deserialize, Serialize};
-#
+# 
 #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
 #[prefab(Component)]
 # #[serde(deny_unknown_fields)]
@@ -97,25 +94,23 @@ If there are multiple components to be attached to the entity, then we need a ty
 ```rust
 # extern crate derivative;
 # extern crate serde;
-#
+# 
 # use amethyst::{
-#     assets::{Prefab, PrefabData, ProgressCounter},
-#     core::Named,
-#     derive::PrefabData,
-#     ecs::{
-#         Component, Entity, WriteStorage,
-#     },
-#     prelude::*,
-#     Error,
+#   assets::{Prefab, PrefabData, ProgressCounter},
+#   core::Named,
+#   derive::PrefabData,
+#   ecs::{Component, Entity, WriteStorage},
+#   prelude::*,
+#   Error,
 # };
 # use derivative::Derivative;
 # use serde::{Deserialize, Serialize};
-#
+# 
 # #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
 # #[prefab(Component)]
 # #[serde(deny_unknown_fields)]
 # pub struct Position(pub f32, pub f32, pub f32);
-#
+# 
 #[derive(Debug, Deserialize, Serialize, PrefabData)]
 # #[serde(deny_unknown_fields)]
 pub struct Player {
@@ -188,26 +183,24 @@ Could be implemented using an enum like this:
 ```rust
 # extern crate derivative;
 # extern crate serde;
-#
+# 
 # use amethyst::{
-#     assets::{Prefab, PrefabData, ProgressCounter},
-#     core::Named,
-#     derive::PrefabData,
-#     ecs::{
-#         Component, Entity, WriteStorage,
-#     },
-#     prelude::*,
-#     utils::application_root_dir,
-#     Error,
+#   assets::{Prefab, PrefabData, ProgressCounter},
+#   core::Named,
+#   derive::PrefabData,
+#   ecs::{Component, Entity, WriteStorage},
+#   prelude::*,
+#   utils::application_root_dir,
+#   Error,
 # };
 # use derivative::Derivative;
 # use serde::{Deserialize, Serialize};
-#
+# 
 # #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
 # #[prefab(Component)]
 # #[serde(deny_unknown_fields)]
 # pub struct Position(pub f32, pub f32, pub f32);
-#
+# 
 #[derive(Clone, Copy, Component, Debug, Derivative, Deserialize, Serialize, PrefabData)]
 #[derivative(Default)]
 #[prefab(Component)]
@@ -230,7 +223,6 @@ pub enum CustomPrefabData {
         position: Option<Position>,
     },
 }
-
 ```
 
 When we run this, we start off by creating one entity:

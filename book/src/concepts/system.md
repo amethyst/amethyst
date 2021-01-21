@@ -41,8 +41,8 @@ The Amethyst engine provides useful system data types to use in order to access 
 You can then use one, or multiple of them via a tuple.
 
 ```rust
-# use amethyst::ecs::{System, Read};
 # use amethyst::core::timing::Time;
+# use amethyst::ecs::{Read, System};
 struct MyFirstSystem;
 
 impl<'a> System<'a> for MyFirstSystem {
@@ -65,8 +65,8 @@ Once you have access to a storage, you can use them in different ways.
 Sometimes, it can be useful to get a component in the storage for a specific entity. This can easily be done using the `get` or, for mutable storages, `get_mut` methods.
 
 ```rust
-# use amethyst::ecs::{Entity, System, WriteStorage};
 # use amethyst::core::Transform;
+# use amethyst::ecs::{Entity, System, WriteStorage};
 struct WalkPlayerUp {
     player: Entity,
 }
@@ -103,8 +103,8 @@ Needless to say that you can use it with only one storage to iterate over all en
 Keep in mind that **the `join` method is only available by importing `amethyst::ecs::Join`**.
 
 ```rust
-# use amethyst::ecs::{System, ReadStorage, WriteStorage};
 # use amethyst::core::Transform;
+# use amethyst::ecs::{ReadStorage, System, WriteStorage};
 # struct FallingObject;
 use amethyst::ecs::Join;
 
@@ -134,8 +134,8 @@ The not operator (!) turns a Storage into its AntiStorage counterpart, allowing 
 It is used like this:
 
 ```rust
-# use amethyst::ecs::{System, ReadStorage, WriteStorage};
 # use amethyst::core::Transform;
+# use amethyst::ecs::{ReadStorage, System, WriteStorage};
 # struct FallingObject;
 use amethyst::ecs::Join;
 
@@ -164,8 +164,8 @@ It may sometimes be interesting to manipulate the structure of entities in a sys
 Creating an entity while in the context of a system is very similar to the way one would create an entity using the `World` struct. The only difference is that one needs to provide mutable storages of all the components they plan to add to the entity.
 
 ```rust
-# use amethyst::ecs::{System, WriteStorage, Entities};
 # use amethyst::core::Transform;
+# use amethyst::ecs::{Entities, System, WriteStorage};
 # struct Enemy;
 struct SpawnEnemies {
     counter: u32,
@@ -199,13 +199,15 @@ This system will spawn a new enemy every 200 game loop iterations.
 Deleting an entity is very easy using `Entities<'a>`.
 
 ```rust
-# use amethyst::ecs::{System, Entities, Entity};
-# struct MySystem { entity: Entity }
+# use amethyst::ecs::{Entities, Entity, System};
+# struct MySystem {
+#   entity: Entity,
+# }
 # impl<'a> System<'a> for MySystem {
 #   type SystemData = Entities<'a>;
 #   fn run(&mut self, entities: Self::SystemData) {
 #       let entity = self.entity;
-entities.delete(entity);
+        entities.delete(entity);
 #   }
 # }
 ```
@@ -215,8 +217,8 @@ entities.delete(entity);
 Sometimes, when you iterate over components, you may want to also know what entity you are working with. To do that, you can use the joining operation with `Entities<'a>`.
 
 ```rust
-# use amethyst::ecs::{System, Entities, WriteStorage, ReadStorage};
 # use amethyst::core::Transform;
+# use amethyst::ecs::{Entities, ReadStorage, System, WriteStorage};
 # struct FallingObject;
 struct MakeObjectsFall;
 
@@ -247,18 +249,20 @@ You can also insert or remove components from a specific entity.
 To do that, you need to get a mutable storage of the component you want to modify, and simply do:
 
 ```rust
-# use amethyst::ecs::{System, Entities, Entity, WriteStorage};
+# use amethyst::ecs::{Entities, Entity, System, WriteStorage};
 # struct MyComponent;
-# struct MySystem { entity: Entity }
+# struct MySystem {
+#   entity: Entity,
+# }
 # impl<'a> System<'a> for MySystem {
 #   type SystemData = WriteStorage<'a, MyComponent>;
 #   fn run(&mut self, mut write_storage: Self::SystemData) {
 #       let entity = self.entity;
-// Add the component
-write_storage.insert(entity, MyComponent);
+        // Add the component
+        write_storage.insert(entity, MyComponent);
 
-// Remove the component
-write_storage.remove(entity);
+        // Remove the component
+        write_storage.remove(entity);
 #   }
 # }
 ```
@@ -379,36 +383,39 @@ We modify our input handler to map the `open_menu` action to `Esc`, and we write
 system:
 
 ```rust
-#
 # #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 # enum CurrentState {
-#     MainMenu,
-#     Gameplay,
+#   MainMenu,
+#   Gameplay,
 # }
-#
-# impl Default for CurrentState { fn default() -> Self { CurrentState::Gameplay } }
-#
+# 
+# impl Default for CurrentState {
+#   fn default() -> Self {
+#       CurrentState::Gameplay
+#   }
+# }
+# 
 # #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 # enum UserAction {
-#     OpenMenu,
-#     ResumeGame,
-#     Quit,
+#   OpenMenu,
+#   ResumeGame,
+#   Quit,
 # }
-#
+# 
 # struct Game {
-#     user_action: Option<UserAction>,
-#     current_state: CurrentState,
+#   user_action: Option<UserAction>,
+#   current_state: CurrentState,
 # }
-#
+# 
 # impl Default for Game {
-#     fn default() -> Self {
-#         Game {
-#             user_action: None,
-#             current_state: CurrentState::default(),
-#         }
-#     }
+#   fn default() -> Self {
+#       Game {
+#           user_action: None,
+#           current_state: CurrentState::default(),
+#       }
+#   }
 # }
-#
+# 
 use amethyst::{
     ecs::{prelude::*, System},
     input::{InputHandler, StringBindings},
@@ -453,32 +460,33 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 
 ```rust
 # extern crate shred;
-# #[macro_use] extern crate shred_derive;
-#
+# #[macro_use]
+# extern crate shred_derive;
+# 
 # use amethyst::{
-#     ecs::{Component, ReadStorage, System, World, WriteStorage},
-#     shred::ResourceId,
+#   ecs::{Component, ReadStorage, System, World, WriteStorage},
+#   shred::ResourceId,
 # };
-#
+# 
 # struct FooComponent {
 #   stuff: f32,
 # }
-#
+# 
 # struct BarComponent {
 #   stuff: f32,
 # }
-#
+# 
 # #[derive(SystemData)]
 # struct BazSystemData<'a> {
-#  field: ReadStorage<'a, FooComponent>,
+#   field: ReadStorage<'a, FooComponent>,
 # }
-#
+# 
 # impl<'a> BazSystemData<'a> {
 #   fn should_process(&self) -> bool {
 #       true
 #   }
 # }
-#
+# 
 #[derive(SystemData)]
 struct MySystemData<'a> {
     foo: ReadStorage<'a, FooComponent>,

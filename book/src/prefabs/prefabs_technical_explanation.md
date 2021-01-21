@@ -63,13 +63,13 @@ Let's take a look at the implementation for `Transform`, which is a core concept
 
 ```rust
 # use amethyst::assets::PrefabData;
-# use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage};
+# use amethyst::ecs::{Component, Entity, NullStorage, WriteStorage};
 # use amethyst::Error;
-#
+# 
 # // We declare that struct for the sake of automated testing.
 # #[derive(Default, Clone)]
 # struct Transform;
-#
+# 
 impl<'a> PrefabData<'a> for Transform {
     type SystemData = WriteStorage<'a, Transform>;
     type Result = ();
@@ -109,11 +109,13 @@ Let's look at a slightly more complex implementation, the `AssetPrefab`. This `P
 load extra `Asset`s as part of a `Prefab`:
 
 ```rust
-# use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter};
 # use amethyst::assets::PrefabData;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
+# use amethyst::assets::{
+#   Asset, AssetStorage, DefaultLoader, Format, Handle, Loader, ProgressCounter,
+# };
+# use amethyst::ecs::{Entity, Read, ReadExpect, WriteStorage};
 # use amethyst::Error;
-#
+# 
 #[derive(Deserialize, Serialize)]
 pub enum AssetPrefab<A, F>
 where
@@ -210,16 +212,12 @@ An example of a single `Component` derive:
 
 ```rust
 # use amethyst::{
-#     assets::{
-#         Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData
-#     },
-#     derive::PrefabData,
-#     ecs::{
-#         Entity, Read, ReadExpect, WriteStorage,
-#     },
-#     Error,
+#   assets::{Asset, AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter},
+#   derive::PrefabData,
+#   ecs::{Entity, Read, ReadExpect, WriteStorage},
+#   Error,
 # };
-#
+# 
 #[derive(Clone, PrefabData)]
 #[prefab(Component)]
 pub struct SomeComponent {
@@ -232,10 +230,13 @@ This will derive a `PrefabData` implementation that inserts `SomeComponent` on a
 Lets look at an example of an aggregate struct:
 
 ```rust
-# use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
+# use amethyst::assets::{
+#   Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
+#   ProgressCounter,
+# };
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
-# use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
+# use amethyst::ecs::{Entity, Read, ReadExpect, WriteStorage};
+# use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
 # use amethyst::Error;
 
 #[derive(PrefabData)]
@@ -250,10 +251,13 @@ This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
 ```rust
-# use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
+# use amethyst::assets::{
+#   Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
+#   ProgressCounter,
+# };
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
-# use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
+# use amethyst::ecs::{Entity, Read, ReadExpect, WriteStorage};
+# use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
 # use amethyst::Error;
 
 #[derive(PrefabData)]

@@ -15,11 +15,10 @@ mod audio;
 Create a file called `audio.rs`:
 
 ```rust
-#
 use amethyst::{
     assets::Loader,
     audio::{OggFormat, SourceHandle},
-    ecs::{World},
+    ecs::World,
 };
 
 const BOUNCE_SOUND: &str = "audio/bounce.ogg";
@@ -73,7 +72,6 @@ impl SimpleState for Pong {
 Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 
 ```rust
-#
 # use amethyst::DispatcherBuilder;
 use amethyst::audio::AudioBundle;
 
@@ -81,13 +79,13 @@ fn main() -> amethyst::Result<()> {
     // --snip--
 
     let game_data = DispatcherBuilder::default()
-        // ... other bundles
-        .with_bundle(AudioBundle::default())?
-        // ... systems
-    ;
+// ... other bundles
+.with_bundle(AudioBundle::default())?
+// ... systems
+;
 
     // --snip--
-    # Ok(())
+#   Ok(())
 }
 ```
 
@@ -96,17 +94,15 @@ fn main() -> amethyst::Result<()> {
 Let's start by creating a function to play the bounce sound. In `audio.rs`, add:
 
 ```rust
-#
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source, SourceHandle},
 };
-#
 # pub struct Sounds {
-#     pub score_sfx: SourceHandle,
-#     pub bounce_sfx: SourceHandle,
+#   pub score_sfx: SourceHandle,
+#   pub bounce_sfx: SourceHandle,
 # }
-#
+# 
 pub fn play_bounce_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
     if let Some(ref output) = output.as_ref() {
         if let Some(sound) = storage.get(&sounds.bounce_sfx) {
@@ -157,8 +153,8 @@ impl<'s> System<'s> for BounceSystem {
                 // --snip--
 
                 if point_in_rect(
-                    // --snip--
-                ) {
+// --snip--
+) {
                     if (paddle.side == Side::Left && ball.velocity[0] < 0.0)
                         || (paddle.side == Side::Right && ball.velocity[0] > 0.0)
                     {
@@ -179,17 +175,16 @@ Now try running your game (`cargo run`). Don't forget to turn up your volume!
 Just as we did for the bounce sound, let's create a function to play the score sound. Update `audio.rs`:
 
 ```rust
-#
 # use amethyst::{
-#     audio::{output::Output, Source, SourceHandle},
-#     assets::AssetStorage,
+#   assets::AssetStorage,
+#   audio::{output::Output, Source, SourceHandle},
 # };
-#
+# 
 # pub struct Sounds {
-#     pub score_sfx: SourceHandle,
-#     pub bounce_sfx: SourceHandle,
+#   pub score_sfx: SourceHandle,
+#   pub bounce_sfx: SourceHandle,
 # }
-#
+# 
 pub fn play_score_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
     if let Some(ref output) = output.as_ref() {
         if let Some(sound) = storage.get(&sounds.score_sfx) {
@@ -224,15 +219,15 @@ impl<'s> System<'s> for WinnerSystem {
     fn run(
         &mut self,
         (
-        mut balls,
-        mut locals,
-        mut ui_text,
-        mut scores,
-        score_text,
-        storage,
-        sounds,
-        audio_output,
-    ): Self::SystemData,
+mut balls,
+mut locals,
+mut ui_text,
+mut scores,
+score_text,
+storage,
+sounds,
+audio_output,
+): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
             // --snip--
@@ -278,9 +273,7 @@ const MUSIC_TRACKS: &[&str] = &[
 Then, create a Music Resource:
 
 ```rust
-#
 use std::{iter::Cycle, vec::IntoIter};
-#
 # use amethyst::audio::SourceHandle;
 
 pub struct Music {
@@ -293,34 +286,32 @@ Since we only have two music tracks, we use a `Cycle` to infinitely alternate be
 Next, we need to add the Music Resource to our World. Update `initialise_audio`:
 
 ```rust
-#
 # use std::{iter::Cycle, vec::IntoIter};
-#
+# 
 use amethyst::{
     assets::Loader,
     audio::{AudioSink, SourceHandle},
-    ecs::{World},
+    ecs::World,
 };
-#
 # const BOUNCE_SOUND: &str = "audio/bounce.ogg";
 # const SCORE_SOUND: &str = "audio/score.ogg";
-#
+# 
 # const MUSIC_TRACKS: &[&str] = &[
-#     "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
-#     "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
+#   "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
+#   "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
 # ];
-#
+# 
 # fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
-#     unimplemented!()
+#   unimplemented!()
 # }
-#
+# 
 # pub struct Music {
-#     pub music: Cycle<IntoIter<SourceHandle>>,
+#   pub music: Cycle<IntoIter<SourceHandle>>,
 # }
-#
+# 
 # pub struct Sounds {
-#     pub score_sfx: SourceHandle,
-#     pub bounce_sfx: SourceHandle,
+#   pub score_sfx: SourceHandle,
+#   pub bounce_sfx: SourceHandle,
 # }
 
 pub fn initialise_audio(world: &mut World) {
@@ -363,17 +354,17 @@ fn main() -> amethyst::Result<()> {
     // --snip--
 
     let game_data = DispatcherBuilder::default()
-        // ... bundles
-        .with_system_desc(
-            DjSystemDesc::new(|music: &mut Music| music.music.next()),
-            "dj_system",
-            &[],
-        )
-        // ... other systems
-        ;
+// ... bundles
+.with_system_desc(
+DjSystemDesc::new(|music: &mut Music| music.music.next()),
+"dj_system",
+&[],
+)
+// ... other systems
+;
 
     // --snip--
-    # Ok(())
+#   Ok(())
 }
 ```
 

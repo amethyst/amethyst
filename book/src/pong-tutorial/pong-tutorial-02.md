@@ -26,7 +26,6 @@ initialization code from the Pong code.
    following `use` statements. These are needed to make it through this chapter:
 
    ```rust
-   #
    use amethyst::{
        assets::{AssetStorage, DefaultLoader, Handle, Loader},
        core::transform::Transform,
@@ -86,13 +85,12 @@ will.
    In pong, we want the camera to cover the entire arena. Let's do it in a new function `initialise_camera`:
 
    ```rust
-   #
    # const ARENA_HEIGHT: f32 = 100.0;
    # const ARENA_WIDTH: f32 = 100.0;
-   # use amethyst::prelude::*;
-   # use amethyst::ecs::World;
-   # use amethyst::renderer::Camera;
    # use amethyst::core::Transform;
+   # use amethyst::ecs::World;
+   # use amethyst::prelude::*;
+   # use amethyst::renderer::Camera;
    fn initialise_camera(world: &mut World) {
        // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
        let mut transform = Transform::default();
@@ -134,16 +132,16 @@ will.
    Pong state's `on_start` method:
 
    ```rust
-   # use amethyst::prelude::*;
    # use amethyst::ecs::World;
-   # fn initialise_camera(world: &mut World) { }
+   # use amethyst::prelude::*;
+   # fn initialise_camera(world: &mut World) {}
    # struct MyState;
    # impl SimpleState for MyState {
-   fn on_start(&mut self, data: StateData<'_, GameData>) {
-       let world = data.world;
+       fn on_start(&mut self, data: StateData<'_, GameData>) {
+           let world = data.world;
 
-       initialise_camera(world);
-   }
+           initialise_camera(world);
+       }
    # }
    ```
 
@@ -165,7 +163,7 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
    ```rust
    # pub const PADDLE_HEIGHT: f32 = 16.0;
    # pub const PADDLE_WIDTH: f32 = 4.0;
-   #
+   # 
    #[derive(PartialEq, Eq)]
    pub enum Side {
        Left,
@@ -191,7 +189,7 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
 
    *"But that just looks like a regular struct!"* you might say.
 
-    Legion will take care of creating the archetypes for optimal storage automatically based on the combination of components given to an entity.
+   Legion will take care of creating the archetypes for optimal storage automatically based on the combination of components given to an entity.
 
 ## Initialise some entities
 
@@ -218,16 +216,18 @@ image we will want to render on top of them. This is a good rule to follow in
 general, as it makes operations like rotation easier.
 
 ```rust
-# use amethyst::prelude::*;
 # use amethyst::core::Transform;
 # use amethyst::ecs::World;
+# use amethyst::prelude::*;
 # enum Side {
 #   Left,
 #   Right,
 # }
 # struct Paddle;
 # impl Paddle {
-#   fn new(side: Side) -> Paddle { Paddle }
+#   fn new(side: Side) -> Paddle {
+#       Paddle
+#   }
 # }
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
@@ -266,18 +266,18 @@ As a sanity check, let's make sure the code for initialising the paddles
 compiles. Update the `on_start` method to the following:
 
 ```rust
-# use amethyst::prelude::*;
 # use amethyst::ecs::World;
-# fn initialise_paddles(world: &mut World) { }
-# fn initialise_camera(world: &mut World) { }
+# use amethyst::prelude::*;
+# fn initialise_paddles(world: &mut World) {}
+# fn initialise_camera(world: &mut World) {}
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData>) {
-    let world = data.world;
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let world = data.world;
 
-    initialise_paddles(world);
-    initialise_camera(world);
-}
+        initialise_paddles(world);
+        initialise_camera(world);
+    }
 # }
 ```
 
@@ -304,11 +304,11 @@ this by adding the following line before `initialise_paddles(world)` in the
 `on_start` method:
 
 ```rust
-# use amethyst::ecs::{World};
+# use amethyst::ecs::World;
 # struct Paddle;
 # fn register() {
-#   let mut world = World::new();
-world.register::<Paddle>();
+#   let mut world = World::default();
+    world.register::<Paddle>();
 # }
 ```
 
@@ -333,33 +333,27 @@ registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
 
 ```rust
-#
 use amethyst::core::transform::TransformBundle;
-#
-# use amethyst::{
-#     prelude::*,
-#     utils::application_root_dir,
-# };
-#
+# use amethyst::{prelude::*, utils::application_root_dir};
+# 
 # struct Pong;
-# impl SimpleState for Pong { }
-#
+# impl SimpleState for Pong {}
+# 
 fn main() -> amethyst::Result<()> {
-    #   amethyst::start_logger(Default::default());
-    #
-    #   let app_root = application_root_dir()?;
-    #   let display_config_path =
-    #       app_root.join("config/display.ron");
-    #
+#   amethyst::start_logger(Default::default());
+# 
+#   let app_root = application_root_dir()?;
+#   let display_config_path = app_root.join("config/display.ron");
+# 
     // ...
     let game_data = DispatcherBuilder::default()
         // ...
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?;
 
-    #   let assets_dir = "/";
-    #   let mut game = Application::new(assets_dir, Pong, game_data)?;
-    #   Ok(())
+#   let assets_dir = "/";
+#   let mut game = Application::new(assets_dir, Pong, game_data)?;
+#   Ok(())
 }
 ```
 
@@ -379,20 +373,19 @@ function in `pong.rs` called `load_sprite_sheet`.
 First, let's declare the function and load the sprite sheet's image data.
 
 ```rust
-#
 # use amethyst::{
-#     assets::{AssetStorage,  DefaultLoader, Loader, Handle},
-#     core::transform::Transform,
-#     ecs::{Component, DenseVecStorage},
-#     prelude::*,
-#     renderer::{
-#         camera::Camera,
-#         formats::texture::ImageFormat,
-#         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
-#         Texture,
-#     },
+#   assets::{AssetStorage, DefaultLoader, Handle, Loader},
+#   core::transform::Transform,
+#   ecs::{Component, DenseVecStorage},
+#   prelude::*,
+#   renderer::{
+#       camera::Camera,
+#       formats::texture::ImageFormat,
+#       sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
+#       Texture,
+#   },
 # };
-#
+# 
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
@@ -409,7 +402,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     };
 
     //...
-    #   unimplemented!()
+#   unimplemented!()
 }
 ```
 
@@ -466,22 +459,20 @@ List((
 Finally, we load the file containing the position of each sprite on the sheet.
 
 ```rust
-#
 # use amethyst::{
-#     assets::{AssetStorage, Handle,  DefaultLoader, Loader},
-#     core::transform::Transform,
-#     ecs::{Component, DenseVecStorage},
-#     prelude::*,
-#     renderer::{
-#         camera::Camera,
-#         formats::texture::ImageFormat,
-#         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
-#         Texture,
-#     },
+#   assets::{AssetStorage, DefaultLoader, Handle, Loader},
+#   core::transform::Transform,
+#   ecs::{Component, DenseVecStorage},
+#   prelude::*,
+#   renderer::{
+#       camera::Camera,
+#       formats::texture::ImageFormat,
+#       sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
+#       Texture,
+#   },
 # };
-#
+# 
 fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
-#
 #   let texture_handle = {
 #       let loader = world.read_resource::<DefaultLoader>();
 #       let texture_storage = world.read_resource::<AssetStorage<Texture>>();
@@ -492,7 +483,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #           &texture_storage,
 #       )
 #   };
-#
+# 
     // ...
 
     let loader = world.read_resource::<DefaultLoader>();
@@ -524,7 +515,8 @@ signature to:
 # use amethyst::ecs::World;
 # use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
 fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>)
-# { }
+# {
+# }
 ```
 
 Inside `initialise_paddles`, we construct a `SpriteRender` for a paddle. We
@@ -533,10 +525,13 @@ the right one is flipped horizontally.
 
 ```rust
 # use amethyst::ecs::World;
-# use amethyst::{assets::Handle, renderer::{SpriteRender, SpriteSheet}};
+# use amethyst::{
+#   assets::Handle,
+#   renderer::{SpriteRender, SpriteSheet},
+# };
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
-// Assign the sprites for the paddles
-let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // paddle is the first sprite in the sprite_sheet
+    // Assign the sprites for the paddles
+    let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
 # }
 ```
 
@@ -547,25 +542,25 @@ sprite in the sprite sheet, we use `0` for the `sprite_number`.
 Next we simply add the components to the paddle entities:
 
 ```rust
-# use amethyst::ecs::World;
 # use amethyst::assets::Handle;
-# use amethyst::renderer::sprite::{SpriteSheet, SpriteRender};
+# use amethyst::ecs::World;
 # use amethyst::prelude::*;
+# use amethyst::renderer::sprite::{SpriteRender, SpriteSheet};
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
-# let sprite_render = SpriteRender::new(sprite_sheet_handle, 0);  // paddle is the first sprite in the sprite_sheet
-// Create a left plank entity.
-world
-    .create_entity()
-    .with(sprite_render.clone())
-    // ... other components
-    .build();
+#   let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
+                                                                   // Create a left plank entity.
+    world
+        .create_entity()
+        .with(sprite_render.clone())
+        // ... other components
+        .build();
 
-// Create right plank entity.
-world
-    .create_entity()
-    .with(sprite_render)
-    // ... other components
-    .build();
+    // Create right plank entity.
+    world
+        .create_entity()
+        .with(sprite_render)
+        // ... other components
+        .build();
 # }
 ```
 
@@ -574,26 +569,28 @@ all together in the `on_start()` method:
 
 ```rust
 # use amethyst::assets::Handle;
+# use amethyst::ecs::World;
 # use amethyst::prelude::*;
 # use amethyst::renderer::{sprite::SpriteSheet, Texture};
-# use amethyst::ecs::World;
 # struct Paddle;
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
-# fn initialise_camera(world: &mut World) { }
-# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
+# fn initialise_camera(world: &mut World) {}
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
+#   unimplemented!()
+# }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData>) {
-    let world = data.world;
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let world = data.world;
 
-    // Load the spritesheet necessary to render the graphics.
-    let sprite_sheet_handle = load_sprite_sheet(world);
+        // Load the spritesheet necessary to render the graphics.
+        let sprite_sheet_handle = load_sprite_sheet(world);
 
-    world.register::<Paddle>();
+        world.register::<Paddle>();
 
-    initialise_paddles(world, sprite_sheet_handle);
-    initialise_camera(world);
-}
+        initialise_paddles(world, sprite_sheet_handle);
+        initialise_camera(world);
+    }
 # }
 ```
 
@@ -607,5 +604,4 @@ In the next chapter, we'll explore the "S" in ECS and actually get these paddles
 moving!
 
 [sb]: https://specs.amethyst.rs/docs/tutorials/
-[sb-storage]: https://specs.amethyst.rs/docs/tutorials/05_storages.html
 [ss]: ../images/pong_tutorial/pong_spritesheet.png

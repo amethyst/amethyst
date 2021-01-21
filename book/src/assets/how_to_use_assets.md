@@ -13,13 +13,11 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 1. Instantiate the Amethyst application with the assets directory.
 
    ```rust
-   #
    use amethyst::{
-       prelude::*,
-       #   ecs::{World},
+   #   ecs::World,
+   #   prelude::*,
        utils::application_root_dir,
    };
-   #
    # pub struct LoadingState;
    # impl SimpleState for LoadingState {}
 
@@ -30,13 +28,12 @@ This guide covers the basic usage of assets into Amethyst for existing supported
        let assets_dir = app_root.join("assets");
 
        //..
-       #   let world = World::new();
-       #   let game_data = DispatcherBuilder::default();
+   #   let world = World::default();
+   #   let game_data = DispatcherBuilder::default();
 
        let mut game = Application::new(assets_dir, LoadingState, game_data)?;
-       #
-       #   game.run();
-       #   Ok(())
+   #   game.run();
+   #   Ok(())
    }
    ```
 
@@ -53,13 +50,13 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
    ```rust
    # use amethyst::{
-   #     assets::{AssetStorage, Handle,  DefaultLoader, Loader, ProgressCounter},
-   #     ecs::{World},
-   #     prelude::*,
-   #     renderer::{formats::texture::ImageFormat, Texture},
-   #     utils::application_root_dir,
+   #   assets::{AssetStorage, DefaultLoader, Handle, Loader, ProgressCounter},
+   #   ecs::World,
+   #   prelude::*,
+   #   renderer::{formats::texture::ImageFormat, Texture},
+   #   utils::application_root_dir,
    # };
-   #
+   # 
    pub struct LoadingState {
        /// Tracks loaded assets.
        progress_counter: ProgressCounter,
@@ -80,11 +77,10 @@ This guide covers the basic usage of assets into Amethyst for existing supported
            self.texture_handle = Some(texture_handle);
        }
    }
-   #
    # fn main() -> amethyst::Result<()> {
    #   let app_root = application_root_dir()?;
    #   let assets_dir = app_root.join("assets");
-   #
+   # 
    #   let game_data = DispatcherBuilder::default();
    #   let mut game = Application::new(
    #       assets_dir,
@@ -94,7 +90,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    #       },
    #       game_data,
    #   )?;
-   #
+   # 
    #   game.run();
    #   Ok(())
    # }
@@ -106,32 +102,32 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
    ```rust
    # use amethyst::{
-   #     assets::{Handle, ProgressCounter},
-   #     prelude::*,
-   #     renderer::Texture,
+   #   assets::{Handle, ProgressCounter},
+   #   prelude::*,
+   #   renderer::Texture,
    # };
-   #
+   # 
    # pub struct GameState {
-   #     /// Handle to the player texture.
-   #     texture_handle: Handle<Texture>,
+   #   /// Handle to the player texture.
+   #   texture_handle: Handle<Texture>,
    # }
-   #
+   # 
    # impl SimpleState for GameState {}
-   #
+   # 
    # pub struct LoadingState {
-   #     /// Tracks loaded assets.
-   #     progress_counter: ProgressCounter,
-   #     /// Handle to the player texture.
-   #     texture_handle: Option<Handle<Texture>>,
+   #   /// Tracks loaded assets.
+   #   progress_counter: ProgressCounter,
+   #   /// Handle to the player texture.
+   #   texture_handle: Option<Handle<Texture>>,
    # }
-   #
+   # 
    impl SimpleState for LoadingState {
        fn update(&mut self, _data: &mut StateData<'_, GameData>) -> SimpleTrans {
            if self.progress_counter.is_complete() {
                Trans::Switch(Box::new(GameState {
                    texture_handle: self.texture_handle.take().expect(
                        "Expected `texture_handle` to exist when \
-                           `progress_counter` is complete.",
+   `progress_counter` is complete.",
                    ),
                }))
            } else {
@@ -144,25 +140,17 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    The asset handle can now be used:
 
    ```rust
-   # use amethyst::{
-   #     assets::Handle,
-   #     prelude::*,
-   #     renderer::Texture,
-   # };
-   #
+   # use amethyst::{assets::Handle, prelude::*, renderer::Texture};
+   # 
    # pub struct GameState {
-   #     /// Handle to the player texture.
-   #     texture_handle: Handle<Texture>,
+   #   /// Handle to the player texture.
+   #   texture_handle: Handle<Texture>,
    # }
-   #
+   # 
    impl SimpleState for GameState {
        fn on_start(&mut self, data: StateData<'_, GameData>) {
            // Create the player entity.
-           data.world
-               .create_entity()
-               // Use the texture handle as a component
-               .with(self.texture_handle.clone())
-               .build();
+           data.world.push((self.texture_handle.clone(),));
        }
    }
    ```

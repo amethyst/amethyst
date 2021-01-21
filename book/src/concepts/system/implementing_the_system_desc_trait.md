@@ -5,7 +5,6 @@ implementation for system initialization, the `SystemDesc` trait can be
 implemented manually:
 
 ```rust
-#
 use amethyst::{
     audio::output::Output,
     core::SystemDesc,
@@ -16,10 +15,10 @@ use amethyst::{
 # #[derive(Debug, Default)]
 # pub struct AudioSystem(Output);
 # impl<'a> System<'a> for AudioSystem {
-#     type SystemData = ();
-#     fn run(&mut self, _: Self::SystemData) {}
+#   type SystemData = ();
+#   fn run(&mut self, _: Self::SystemData) {}
 # }
-#
+# 
 /// Builds an `AudioSystem`.
 #[derive(Default, Debug)]
 pub struct AudioSystemDesc {

@@ -34,7 +34,7 @@ If you are defining a new format that may be useful to others, [please send us a
    ```rust
    # extern crate ron;
    # extern crate serde;
-   #
+   # 
    use amethyst::{
        assets::{Asset, Format},
        error::Error,
@@ -69,71 +69,70 @@ If you are defining a new format that may be useful to others, [please send us a
    ```rust
    # extern crate ron;
    # extern crate serde;
-   #
+   # 
    # use amethyst::{
-   #     error::Error,
-   #     assets::{
-   #         Asset, AssetStorage, Handle, Loader, Processor, ProgressCounter,
-   #         ProcessingState, Format,
-   #     },
-   #     ecs::{World},
-   #     prelude::*,
-   #     utils::application_root_dir,
+   #   assets::{
+   #       Asset, AssetStorage, Format, Handle, Loader, ProcessingState, Processor, ProgressCounter,
+   #   },
+   #   ecs::World,
+   #   error::Error,
+   #   prelude::*,
+   #   utils::application_root_dir,
    # };
    # use ron::de::Deserializer;
    # use serde::{Deserialize, Serialize};
-   #
+   # 
    # /// Custom asset representing an energy blast.
    # #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
    # pub struct EnergyBlast {
-   #     /// How much HP to subtract.
-   #     pub hp_damage: u32,
-   #     /// How much MP to subtract.
-   #     pub mp_damage: u32,
+   #   /// How much HP to subtract.
+   #   pub hp_damage: u32,
+   #   /// How much MP to subtract.
+   #   pub mp_damage: u32,
    # }
-   #
+   # 
    # impl Asset for EnergyBlast {
-   #     type Data = Self;
-   #     type HandleStorage = VecStorage<EnergyBlastHandle>;
-   #     fn name() -> &'static str {
-   #         "my_crate::EnergyBlast"
-   #     }
+   #   type Data = Self;
+   #   type HandleStorage = VecStorage<EnergyBlastHandle>;
+   #   fn name() -> &'static str {
+   #       "my_crate::EnergyBlast"
+   #   }
    # }
-   #
+   # 
    # impl From<EnergyBlast> for Result<ProcessingState<EnergyBlast>, Error> {
-   #     fn from(energy_blast: EnergyBlast) -> Result<ProcessingState<EnergyBlast>, Error> {
+   #   fn from(energy_blast: EnergyBlast) -> Result<ProcessingState<EnergyBlast>, Error> {
    #       Ok(ProcessingState::Loaded(energy_blast))
-   #     }
+   #   }
    # }
-   #
+   # 
    # pub struct LoadingState {
-   #     /// Tracks loaded assets.
-   #     progress_counter: ProgressCounter,
-   #     /// Handle to the energy blast.
-   #     energy_blast_handle: Option<EnergyBlastHandle>,
+   #   /// Tracks loaded assets.
+   #   progress_counter: ProgressCounter,
+   #   /// Handle to the energy blast.
+   #   energy_blast_handle: Option<EnergyBlastHandle>,
    # }
-   #
+   # 
    # /// Format for loading from `.mylang` files.
-   #  #[derive(Clone, Copy, Debug, Default)]
-   #  pub struct MyLangFormat;
-   #
-   #  impl<D> Format<D> for MyLangFormat
-   #  where
-   #      D: for<'a> DeserializeTrait<'a> + Send + Sync + 'static,
-   #  {
-   #      fn name(&self) -> &'static str {
-   #          "MyLangFormat"
-   #      }
-   #
-   #      fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
-   #          let mut deserializer = Deserializer::from_bytes(&bytes)?;
-   #          let val = D::deserialize(&mut deserializer)?;
-   #          deserializer.end()?;
-   #
-   #          Ok(val)
-   #      }
-   #  }
-   #
+   # #[derive(Clone, Copy, Debug, Default)]
+   # pub struct MyLangFormat;
+   # 
+   # impl<D> Format<D> for MyLangFormat
+   # where
+   #   D: for<'a> DeserializeTrait<'a> + Send + Sync + 'static,
+   # {
+   #   fn name(&self) -> &'static str {
+   #       "MyLangFormat"
+   #   }
+   # 
+   #   fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
+   #       let mut deserializer = Deserializer::from_bytes(&bytes)?;
+   #       let val = D::deserialize(&mut deserializer)?;
+   #       deserializer.end()?;
+   # 
+   #       Ok(val)
+   #   }
+   # }
+   # 
    impl SimpleState for LoadingState {
        fn on_start(&mut self, data: StateData<'_, GameData>) {
            let loader = &data.world.read_resource::<DefaultLoader>();
@@ -147,25 +146,23 @@ If you are defining a new format that may be useful to others, [please send us a
            self.energy_blast_handle = Some(energy_blast_handle);
        }
    }
-   #
    # fn main() -> amethyst::Result<()> {
-   #     amethyst::start_logger(Default::default());
-   #     let app_root = application_root_dir()?;
-   #     let assets_dir = app_root.join("assets");
-   #
-   #     let game_data = DispatcherBuilder::default()
-   #         .with(Processor::<EnergyBlast>::new(), "", &[]);
-   #     let mut game = Application::new(
-   #         assets_dir,
-   #         LoadingState {
-   #             progress_counter: ProgressCounter::new(),
-   #             energy_blast_handle: None,
-   #         },
-   #         game_data,
-   #     )?;
-   #
-   #     game.run();
-   #     Ok(())
+   #   amethyst::start_logger(Default::default());
+   #   let app_root = application_root_dir()?;
+   #   let assets_dir = app_root.join("assets");
+   # 
+   #   let game_data = DispatcherBuilder::default().with(Processor::<EnergyBlast>::new(), "", &[]);
+   #   let mut game = Application::new(
+   #       assets_dir,
+   #       LoadingState {
+   #           progress_counter: ProgressCounter::new(),
+   #           energy_blast_handle: None,
+   #       },
+   #       game_data,
+   #   )?;
+   # 
+   #   game.run();
+   #   Ok(())
    # }
    ```
 

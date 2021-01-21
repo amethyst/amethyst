@@ -4,7 +4,7 @@ Let's declare our state, and call it `MenuState`:
 
 ```rust
 # use amethyst::ecs::Entity;
-#
+# 
 #[derive(Default)]
 pub struct MenuState {
     button: Option<Entity>,

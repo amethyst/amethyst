@@ -67,10 +67,10 @@ This is almost the same as accessing a component:
 Single:
 
 ```rust
-# use amethyst::ecs::{ World};
+# use amethyst::ecs::World;
 # fn main() {
     let mut world = World::default();
-    let my_entity =     world.push((MyComponent,));
+    let my_entity = world.push((MyComponent,));
     assert!(world.remove(my_entity));
 # }
 ```
@@ -78,7 +78,7 @@ Single:
 All:
 
 ```rust
-# use amethyst::ecs::{World};
+# use amethyst::ecs::World;
 # fn main() {
 #   let mut world = World::default();
     world.clear();
@@ -90,10 +90,10 @@ __Note: Entities are lazily deleted, which means that deletion only happens at t
 ## Check if the entity was deleted
 
 ```rust
-# use amethyst::ecs::{ World};
+# use amethyst::ecs::World;
 # fn main() {
 #   let mut world = World::default();
-   let my_entity = world.push((0usize,));
+    let my_entity = world.push((0usize,));
     assert!(world.contains(my_entity));
     assert!(!world.contains(Entity(100)))
 # }

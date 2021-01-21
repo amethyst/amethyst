@@ -25,19 +25,18 @@ mod winner;
 Then, we'll create `systems/winner.rs`:
 
 ```rust
-#
 # mod pong {
-#     use amethyst::ecs::prelude::*;
-#
-#     pub struct Ball {
-#         pub radius: f32,
-#         pub velocity: [f32; 2],
-#     }
-#
-#     pub const ARENA_WIDTH: f32 = 100.0;
-#     pub const ARENA_HEIGHT: f32 = 100.0;
+#   use amethyst::ecs::prelude::*;
+# 
+#   pub struct Ball {
+#       pub radius: f32,
+#       pub velocity: [f32; 2],
+#   }
+# 
+#   pub const ARENA_WIDTH: f32 = 100.0;
+#   pub const ARENA_HEIGHT: f32 = 100.0;
 # }
-#
+# 
 use amethyst::{
     core::transform::Transform,
     core::SystemDesc,
@@ -77,7 +76,6 @@ impl<'s> System<'s> for WinnerSystem {
         }
     }
 }
-#
 # fn main() {}
 ```
 
@@ -90,70 +88,64 @@ Now, we just need to add our new system to `main.rs`, and we should be able to
 keep playing after someone scores and log who got the point.
 
 ```rust
-#
 # use amethyst::{
-#    core::transform::TransformBundle,
-#    ecs::{World},
-#    prelude::*,
-#    input::StringBindings,
-#    window::DisplayConfig,
+#   core::transform::TransformBundle, ecs::World, input::StringBindings, prelude::*,
+#   window::DisplayConfig,
 # };
-#
+# 
 # mod systems {
-#     use amethyst;
-#     use amethyst::core::SystemDesc;
-#     use amethyst::core::ecs::{System, World};
-#     use amethyst::derive::SystemDesc;
-#
-#     #[derive(SystemDesc)]
-#     pub struct PaddleSystem;
-#     impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-#     #[derive(SystemDesc)]
-#     pub struct MoveBallsSystem;
-#     impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-#     #[derive(SystemDesc)]
-#     pub struct BounceSystem;
-#     impl<'a> amethyst::ecs::System<'a> for BounceSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-#     #[derive(SystemDesc)]
-#     pub struct WinnerSystem;
-#     impl<'a> amethyst::ecs::System<'a> for WinnerSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
+#   use amethyst;
+#   use amethyst::core::ecs::{System, World};
+#   use amethyst::core::SystemDesc;
+#   use amethyst::derive::SystemDesc;
+# 
+#   #[derive(SystemDesc)]
+#   pub struct PaddleSystem;
+#   impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
+#       type SystemData = ();
+#       fn run(&mut self, _: Self::SystemData) {}
+#   }
+#   #[derive(SystemDesc)]
+#   pub struct MoveBallsSystem;
+#   impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
+#       type SystemData = ();
+#       fn run(&mut self, _: Self::SystemData) {}
+#   }
+#   #[derive(SystemDesc)]
+#   pub struct BounceSystem;
+#   impl<'a> amethyst::ecs::System<'a> for BounceSystem {
+#       type SystemData = ();
+#       fn run(&mut self, _: Self::SystemData) {}
+#   }
+#   #[derive(SystemDesc)]
+#   pub struct WinnerSystem;
+#   impl<'a> amethyst::ecs::System<'a> for WinnerSystem {
+#       type SystemData = ();
+#       fn run(&mut self, _: Self::SystemData) {}
+#   }
 # }
-#
+# 
 # fn main() -> amethyst::Result<()> {
-#
-# let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path)?;
-# let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-#
-let game_data = DispatcherBuilder::default()
-#    .with_bundle(TransformBundle::new())?
-#    .with_bundle(input_bundle)?
-#    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
-#    .with(systems::MoveBallsSystem, "ball_system", &[])
-#    .with(
-#        systems::BounceSystem,
-#        "collision_system",
-#        &["paddle_system", "ball_system"],
-#    )
-    .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
-#
-# let assets_dir = "/";
-# struct Pong;
-# impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data)?;
-# Ok(())
+#   let path = "./config/display.ron";
+#   let config = DisplayConfig::load(&path)?;
+#   let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+# 
+    let game_data = DispatcherBuilder::default()
+#       .with_bundle(TransformBundle::new())?
+#       .with_bundle(input_bundle)?
+#       .with(systems::PaddleSystem, "paddle_system", &["input_system"])
+#       .with(systems::MoveBallsSystem, "ball_system", &[])
+#       .with(
+#           systems::BounceSystem,
+#           "collision_system",
+#           &["paddle_system", "ball_system"],
+#       )
+        .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
+#   let assets_dir = "/";
+#   struct Pong;
+#   impl SimpleState for Pong {}
+#   let mut game = Application::new(assets_dir, Pong, game_data)?;
+#   Ok(())
 # }
 ```
 
@@ -176,40 +168,35 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
 ```rust
 # use amethyst::{
-#     ecs::{World},
-#     prelude::*,
-#     renderer::{
-#         types::DefaultBackend,
-#         RenderingBundle,
-#     },
-#     ui::RenderUi,
+#   ecs::World,
+#   prelude::*,
+#   renderer::{types::DefaultBackend, RenderingBundle},
+#   ui::RenderUi,
 # };
-# fn main() -> Result<(), amethyst::Error>{
-# let game_data = DispatcherBuilder::default()
-    .with_bundle(RenderingBundle::<DefaultBackend>::new()
-        // ...
-            .with_plugin(RenderUi::default()),
-    )?;
-# Ok(()) }
+# fn main() -> Result<(), amethyst::Error> {
+#   let game_data = DispatcherBuilder::default()
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                // ...
+                .with_plugin(RenderUi::default()),
+        )?;
+#   Ok(())
+# }
 ```
 
 Finally, add the `UiBundle` after the `InputBundle`:
 
 ```rust
-# use amethyst::{
-#     ecs::{World},
-#     input::StringBindings,
-#     prelude::*,
-# };
 # use amethyst::ui::UiBundle;
-# fn main() -> Result<(), amethyst::Error>{
-# let display_config_path = "";
-# struct Pong;
-# let game_data = DispatcherBuilder::default()
+# use amethyst::{ecs::World, input::StringBindings, prelude::*};
+# fn main() -> Result<(), amethyst::Error> {
+#   let display_config_path = "";
+#   struct Pong;
+#   let game_data = DispatcherBuilder::default()
 .with_bundle(UiBundle::<StringBindings>::new())?
-# ;
-#
-# Ok(())
+#;
+# 
+#   Ok(())
 # }
 ```
 
@@ -251,14 +238,13 @@ a container, but this one holds handles to the UI `Entity`s that will be
 rendered to the screen. We'll create those next:
 
 ```rust
-#
 use amethyst::ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform};
 
 # pub struct Pong;
-#
+# 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        #       let world = data.world;
+#       let world = data.world;
         // --snip--
 
         initialise_scoreboard(world);
@@ -321,7 +307,10 @@ fn initialise_scoreboard(world: &mut World) {
         ))
         .build();
 
-    # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
+#   pub struct ScoreText {
+#       pub p1_score: Entity,
+#       pub p2_score: Entity,
+#   }
     world.insert(ScoreText { p1_score, p2_score });
 }
 ```
@@ -360,34 +349,33 @@ is modify our `WinnerSystem` to access the players' scores and update them
 accordingly:
 
 ```rust
-#
 # mod pong {
-#     use amethyst::ecs::prelude::*;
-#
-#     pub struct Ball {
-#         pub radius: f32,
-#         pub velocity: [f32; 2],
-#     }
-#
-#     #[derive(Default)]
-#     pub struct ScoreBoard {
-#         pub score_left: i32,
-#         pub score_right: i32,
-#     }
-#
-#     pub struct ScoreText {
-#         pub p1_score: Entity,
-#         pub p2_score: Entity,
-#     }
-#
-#     pub const ARENA_WIDTH: f32 = 100.0;
-#     pub const ARENA_HEIGHT: f32 = 100.0;
+#   use amethyst::ecs::prelude::*;
+# 
+#   pub struct Ball {
+#       pub radius: f32,
+#       pub velocity: [f32; 2],
+#   }
+# 
+#   #[derive(Default)]
+#   pub struct ScoreBoard {
+#       pub score_left: i32,
+#       pub score_right: i32,
+#   }
+# 
+#   pub struct ScoreText {
+#       pub p1_score: Entity,
+#       pub p2_score: Entity,
+#   }
+# 
+#   pub const ARENA_WIDTH: f32 = 100.0;
+#   pub const ARENA_HEIGHT: f32 = 100.0;
 # }
-#
+# 
 use amethyst::{
-    #     core::transform::Transform,
-    #     core::SystemDesc,
-    #     derive::SystemDesc,
+#   core::transform::Transform,
+#   core::SystemDesc,
+#   derive::SystemDesc,
     // --snip--
     ecs::{ReadExpect, System, World, Write, WriteStorage},
     ui::UiText,
@@ -412,7 +400,7 @@ impl<'s> System<'s> for WinnerSystem {
         (mut balls, mut locals, mut ui_text, mut scores, score_text): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
-            #             let ball_x = transform.translation().x;
+#           let ball_x = transform.translation().x;
             // --snip--
 
             let did_hit = if ball_x <= ball.radius {
@@ -437,9 +425,9 @@ impl<'s> System<'s> for WinnerSystem {
             };
 
             if did_hit {
-                #                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
-                #                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
-                #                 transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
+#               ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
+#               transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
+#               transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
 
                 // --snip--
 
@@ -452,7 +440,6 @@ impl<'s> System<'s> for WinnerSystem {
         }
     }
 }
-#
 # fn main() {}
 ```
 

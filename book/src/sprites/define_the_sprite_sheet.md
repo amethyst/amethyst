@@ -61,25 +61,25 @@ For more information about list and grid based sprite sheets, including the type
 Once you have ron file ready, you can load it using the texture handle of the sheet's image you loaded earlier:
 
 ```rust
-# use amethyst::assets::{Loader, AssetStorage, Handle};
-# use amethyst::ecs::{World};
-# use amethyst::renderer::{SpriteSheetFormat, SpriteSheet, Texture};
-#
+# use amethyst::assets::{AssetStorage, Handle, Loader};
+# use amethyst::ecs::World;
+# use amethyst::renderer::{SpriteSheet, SpriteSheetFormat, Texture};
+# 
 # fn load_texture() -> Handle<Texture> {
-#    unimplemented!()
+#   unimplemented!()
 # }
-#
+# 
 # fn load_sprite_sheet() {
-#   let world = World::new();
+#   let world = World::default();
 #   let loader = world.read_resource::<DefaultLoader>();
 #   let texture_handle = load_texture();
 #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
-let spritesheet_handle = loader.load(
-    "my_spritesheet.ron",
-    SpriteSheetFormat(texture_handle),
-    (),
-    &spritesheet_storage,
-);
+    let spritesheet_handle = loader.load(
+        "my_spritesheet.ron",
+        SpriteSheetFormat(texture_handle),
+        (),
+        &spritesheet_storage,
+    );
 # }
 ```
 
@@ -131,10 +131,7 @@ pub fn load_sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
     );
     sprites.push(sprite);
 
-    SpriteSheet {
-        texture,
-        sprites,
-    }
+    SpriteSheet { texture, sprites }
 }
 ```
 

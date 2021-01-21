@@ -36,14 +36,14 @@ Then let's add an `initialise_ball` function the same way we wrote the
 `initialise_paddles` function.
 
 ```rust
-# use amethyst::prelude::*;
-# use amethyst::assets::{Loader, AssetStorage, Handle};
-# use amethyst::renderer::{Texture, SpriteRender, Sprite, SpriteSheet};
+# use amethyst::assets::{AssetStorage, Handle, Loader};
 # use amethyst::core::transform::Transform;
-# use amethyst::ecs::{World};
+# use amethyst::ecs::World;
+# use amethyst::prelude::*;
+# use amethyst::renderer::{Sprite, SpriteRender, SpriteSheet, Texture};
 # pub struct Ball {
-#    pub velocity: [f32; 2],
-#    pub radius: f32,
+#   pub velocity: [f32; 2],
+#   pub radius: f32,
 # }
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
@@ -82,30 +82,32 @@ second one, whose index is `1`.
 Finally, let's make sure the code is working as intended by updating the `on_start` method:
 
 ```rust
-# use amethyst::prelude::*;
 # use amethyst::assets::Handle;
-# use amethyst::renderer::{Texture, SpriteSheet};
-# use amethyst::ecs::{Component, World, VecStorage};
+# use amethyst::ecs::{Component, VecStorage, World};
+# use amethyst::prelude::*;
+# use amethyst::renderer::{SpriteSheet, Texture};
 # struct Paddle;
 # struct Ball;
-# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) { }
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
-# fn initialise_camera(world: &mut World) { }
-# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
+# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {}
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
+# fn initialise_camera(world: &mut World) {}
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
+#   unimplemented!()
+# }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData>) {
-    let world = data.world;
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let world = data.world;
 
-    // Load the spritesheet necessary to render the graphics.
-    let sprite_sheet_handle = load_sprite_sheet(world);
+        // Load the spritesheet necessary to render the graphics.
+        let sprite_sheet_handle = load_sprite_sheet(world);
 
-    world.register::<Ball>(); // <- add this line temporarily
+        world.register::<Ball>(); // <- add this line temporarily
 
-    initialise_ball(world, sprite_sheet_handle.clone()); // <- add this line
-    initialise_paddles(world, sprite_sheet_handle);
-    initialise_camera(world);
-}
+        initialise_ball(world, sprite_sheet_handle.clone()); // <- add this line
+        initialise_paddles(world, sprite_sheet_handle);
+        initialise_camera(world);
+    }
 # }
 ```
 
@@ -121,16 +123,16 @@ We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 
 ```rust
 # use amethyst::ecs::{Component, DenseVecStorage};
-#
+# 
 # mod pong {
-#     use amethyst::ecs::prelude::*;
-#
-#     pub struct Ball {
-#        pub velocity: [f32; 2],
-#        pub radius: f32,
-#     }
+#   use amethyst::ecs::prelude::*;
+# 
+#   pub struct Ball {
+#       pub velocity: [f32; 2],
+#       pub radius: f32,
+#   }
 # }
-#
+# 
 use amethyst::{
     core::timing::Time,
     core::transform::Transform,
@@ -159,7 +161,6 @@ impl<'s> System<'s> for MoveBallsSystem {
         }
     }
 }
-#
 # fn main() {}
 ```
 
@@ -184,30 +185,30 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 
 ```rust
 # use amethyst::ecs::{Component, DenseVecStorage};
-#
+# 
 # mod pong {
-#     use amethyst::ecs::prelude::*;
-#
-#     pub struct Ball {
-#        pub velocity: [f32; 2],
-#        pub radius: f32,
-#     }
-#
-#     #[derive(PartialEq, Eq)]
-#     pub enum Side {
+#   use amethyst::ecs::prelude::*;
+# 
+#   pub struct Ball {
+#       pub velocity: [f32; 2],
+#       pub radius: f32,
+#   }
+# 
+#   #[derive(PartialEq, Eq)]
+#   pub enum Side {
 #       Left,
 #       Right,
-#     }
-#
-#     pub struct Paddle {
+#   }
+# 
+#   pub struct Paddle {
 #       pub side: Side,
 #       pub width: f32,
 #       pub height: f32,
-#     }
-#
-#     pub const ARENA_HEIGHT: f32 = 100.0;
+#   }
+# 
+#   pub const ARENA_HEIGHT: f32 = 100.0;
 # }
-#
+# 
 use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
@@ -276,7 +277,6 @@ impl<'s> System<'s> for BounceSystem {
 fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -> bool {
     x >= left && x <= right && y >= bottom && y <= top
 }
-#
 # fn main() {}
 ```
 
@@ -288,54 +288,54 @@ Also, don't forget to add `mod move_balls` and `mod bounce` in `systems/mod.rs`
 as well as adding our new systems to the game data:
 
 ```rust
-# use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
-# use amethyst::window::DisplayConfig;
 # use amethyst::input::StringBindings;
+# use amethyst::prelude::*;
+# use amethyst::window::DisplayConfig;
 # fn main() -> amethyst::Result<()> {
-# let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path)?;
-# mod systems {
-# use amethyst;
-# use amethyst::core::ecs::{System, World};
-# use amethyst::core::SystemDesc;
-# use amethyst::derive::SystemDesc;
-# #[derive(SystemDesc)]
-# pub struct PaddleSystem;
-# impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
-# type SystemData = ();
-# fn run(&mut self, _: Self::SystemData) { }
-# }
-# #[derive(SystemDesc)]
-# pub struct MoveBallsSystem;
-# impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
-# type SystemData = ();
-# fn run(&mut self, _: Self::SystemData) { }
-# }
-# #[derive(SystemDesc)]
-# pub struct BounceSystem;
-# impl<'a> amethyst::ecs::System<'a> for BounceSystem {
-# type SystemData = ();
-# fn run(&mut self, _: Self::SystemData) { }
-# }
-# }
-# let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-let game_data = DispatcherBuilder::default()
-#    .with_bundle(TransformBundle::new())?
-#    .with_bundle(input_bundle)?
-#    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
-    // ...other systems...
-    .with(systems::MoveBallsSystem, "ball_system", &[])
-    .with(
-        systems::BounceSystem,
-        "collision_system",
-        &["paddle_system", "ball_system"],
-    );
-# let assets_dir = "/";
-# struct Pong;
-# impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data)?;
-# Ok(())
+#   let path = "./config/display.ron";
+#   let config = DisplayConfig::load(&path)?;
+#   mod systems {
+#       use amethyst;
+#       use amethyst::core::ecs::{System, World};
+#       use amethyst::core::SystemDesc;
+#       use amethyst::derive::SystemDesc;
+#       #[derive(SystemDesc)]
+#       pub struct PaddleSystem;
+#       impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
+#           type SystemData = ();
+#           fn run(&mut self, _: Self::SystemData) {}
+#       }
+#       #[derive(SystemDesc)]
+#       pub struct MoveBallsSystem;
+#       impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
+#           type SystemData = ();
+#           fn run(&mut self, _: Self::SystemData) {}
+#       }
+#       #[derive(SystemDesc)]
+#       pub struct BounceSystem;
+#       impl<'a> amethyst::ecs::System<'a> for BounceSystem {
+#           type SystemData = ();
+#           fn run(&mut self, _: Self::SystemData) {}
+#       }
+#   }
+#   let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+    let game_data = DispatcherBuilder::default()
+#       .with_bundle(TransformBundle::new())?
+#       .with_bundle(input_bundle)?
+#       .with(systems::PaddleSystem, "paddle_system", &["input_system"])
+        // ...other systems...
+        .with(systems::MoveBallsSystem, "ball_system", &[])
+        .with(
+            systems::BounceSystem,
+            "collision_system",
+            &["paddle_system", "ball_system"],
+        );
+#   let assets_dir = "/";
+#   struct Pong;
+#   impl SimpleState for Pong {}
+#   let mut game = Application::new(assets_dir, Pong, game_data)?;
+#   Ok(())
 # }
 ```
 
@@ -365,9 +365,9 @@ Let's add that `update` method just below `on_start`:
 # use amethyst::prelude::*;
 # struct MyState;
 # impl SimpleState for MyState {
-fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-    Trans::None
-}
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+        Trans::None
+    }
 # }
 ```
 
@@ -398,18 +398,16 @@ We've also added `#[derive(Default)]`, which will automatically implement `Defau
 default empty state. Now let's use that inside our `Application` creation code in `main.rs`:
 
 ```rust
-# use amethyst::{
-#     ecs::{World},
-#     prelude::*,
-# };
-#
-# #[derive(Default)] struct Pong;
-# impl SimpleState for Pong { }
+# use amethyst::{ecs::World, prelude::*};
+# 
+# #[derive(Default)]
+# struct Pong;
+# impl SimpleState for Pong {}
 # fn main() -> amethyst::Result<()> {
 #   let game_data = DispatcherBuilder::default();
 #   let assets_dir = "/";
-#   let world = World::new();
-let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
+#   let world = World::default();
+    let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
 #   Ok(())
 # }
 ```
@@ -420,21 +418,24 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 - then we have to `initialise_ball` once after the time has passed inside `update`:
 
 ```rust
-# use amethyst::{assets::Handle, renderer::SpriteSheet};
 # use amethyst::prelude::*;
+# use amethyst::{assets::Handle, renderer::SpriteSheet};
 use amethyst::core::timing::Time;
 
 # struct Paddle;
 # struct Ball;
-# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) { }
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
-# fn initialise_camera(world: &mut World) { }
-# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
-# #[derive(Default)] pub struct Pong {
-#     ball_spawn_timer: Option<f32>,
-#     sprite_sheet_handle: Option<Handle<SpriteSheet>>,
+# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {}
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
+# fn initialise_camera(world: &mut World) {}
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
+#   unimplemented!()
 # }
-#
+# #[derive(Default)]
+# pub struct Pong {
+#   ball_spawn_timer: Option<f32>,
+#   sprite_sheet_handle: Option<Handle<SpriteSheet>>,
+# }
+# 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;

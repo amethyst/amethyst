@@ -4,9 +4,9 @@ This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. Th
 
 ```rust
 # extern crate serde;
-#
+# 
 # use serde::{Deserialize, Serialize};
-#
+# 
 #[derive(Component, Debug, Deserialize, Serialize)]
 pub struct Position(pub f32, pub f32, pub f32);
 ```
@@ -49,20 +49,17 @@ If you are attempting to adapt a more complex type, please choose the appropriat
    ```rust
    # extern crate derivative;
    # extern crate serde;
-   #
+   # 
    # use amethyst::{
-   #     assets::{Prefab, PrefabData},
-   #     derive::PrefabData,
-   #     ecs::{
-   #         storage::DenseVecStorage,
-   #         Component, Entity, WriteStorage,
-   #     },
-   #     prelude::*,
-   #     Error,
+   #   assets::{Prefab, PrefabData},
+   #   derive::PrefabData,
+   #   ecs::{storage::DenseVecStorage, Component, Entity, WriteStorage},
+   #   prelude::*,
+   #   Error,
    # };
    # use derivative::Derivative;
    # use serde::{Deserialize, Serialize};
-   #
+   # 
    #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
    #[prefab(Component)]
    #[serde(deny_unknown_fields)]

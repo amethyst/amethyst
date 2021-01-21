@@ -32,7 +32,7 @@ since the `ReaderId` actually pulls (reads) information  from the `EventChannel`
 Adding it up, it should look like this:
 
 ```rust
-# use amethyst::ecs::{System, Read};
+# use amethyst::ecs::{Read, System};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
 
@@ -50,20 +50,18 @@ impl<'s> System<'s> for SimpleButtonSystem {
 We also need a constructor for our system:
 
 ```rust
-# use amethyst::ecs::{System, Read};
+# use amethyst::ecs::{Read, System};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
-#
+# 
 # pub struct SimpleButtonSystem {
-#    reader_id: ReaderId<UiEvent>,
+#   reader_id: ReaderId<UiEvent>,
 # }
-#
+# 
 # impl<'s> System<'s> for SimpleButtonSystem {
-#     type SystemData = Read<'s, EventChannel<UiEvent>>;
-#
-#     fn run(&mut self, events: Self::SystemData) {
-#
-#     }
+#   type SystemData = Read<'s, EventChannel<UiEvent>>;
+# 
+#   fn run(&mut self, events: Self::SystemData) {}
 # }
 impl SimpleButtonSystem {
     pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
@@ -75,27 +73,23 @@ impl SimpleButtonSystem {
 To add the system to our game data we actually need a `SystemDesc` implementation for our system:
 
 ```rust
-# use amethyst::ecs::{System, World, Read, Write};
 # use amethyst::core::SystemDesc;
+# use amethyst::ecs::{Read, System, World, Write};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
 # pub struct SimpleButtonSystem {
-#    reader_id: ReaderId<UiEvent>,
+#   reader_id: ReaderId<UiEvent>,
 # }
-#
+# 
 # impl<'s> System<'s> for SimpleButtonSystem {
-#     type SystemData = Read<'s, EventChannel<UiEvent>>;
-#
-#     fn run(&mut self, events: Self::SystemData) {
-#
-#     }
+#   type SystemData = Read<'s, EventChannel<UiEvent>>;
+# 
+#   fn run(&mut self, events: Self::SystemData) {}
 # }
 # impl SimpleButtonSystem {
-#     pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
-#        Self {
-#             reader_id,
-#       }
-#     }
+#   pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
+#       Self { reader_id }
+#   }
 # }
 pub struct SimpleButtonSystemDesc;
 
@@ -114,22 +108,22 @@ Now that this is done we can start reading our events!
 In our systems `run` method we are going to loop through all the events:
 
 ```rust
-# use amethyst::ecs::{System, World, Read};
 # use amethyst::core::SystemDesc;
+# use amethyst::ecs::{Read, System, World};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
 # pub struct SimpleButtonSystem {
-#    reader_id: ReaderId<UiEvent>,
+#   reader_id: ReaderId<UiEvent>,
 # }
-#
+# 
 # impl<'s> System<'s> for SimpleButtonSystem {
-#     type SystemData = Read<'s, EventChannel<UiEvent>>;
-#
-fn run(&mut self, events: Self::SystemData) {
-    for event in events.read(&mut self.reader_id) {
-        println!("{:?}", event);
+#   type SystemData = Read<'s, EventChannel<UiEvent>>;
+# 
+    fn run(&mut self, events: Self::SystemData) {
+        for event in events.read(&mut self.reader_id) {
+            println!("{:?}", event);
+        }
     }
-}
 # }
 ```
 
@@ -139,22 +133,21 @@ Firstly we need to fetch two more components that
 we used for our entity - `UiTransform` and `UiText`.
 
 ```rust
-# use amethyst::ecs::{System, World, Read, ReadStorage, WriteStorage};
 # use amethyst::core::SystemDesc;
+# use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
 # use amethyst::shrev::{EventChannel, ReaderId};
-# use amethyst::ui::{UiTransform, UiText, UiEvent};
+# use amethyst::ui::{UiEvent, UiText, UiTransform};
 # pub struct SimpleButtonSystem {
-#    reader_id: ReaderId<UiEvent>,
+#   reader_id: ReaderId<UiEvent>,
 # }
-#
+# 
 # impl<'s> System<'s> for SimpleButtonSystem {
-type SystemData = Read<'s, EventChannel<UiEvent>>;
-#
-# fn run(&mut self, events: Self::SystemData) {
-#     for event in events.read(&mut self.reader_id) {
-#         println!("{:?}", event);
-#     }
-# }
+    type SystemData = Read<'s, EventChannel<UiEvent>>;
+#   fn run(&mut self, events: Self::SystemData) {
+#       for event in events.read(&mut self.reader_id) {
+#           println!("{:?}", event);
+#       }
+#   }
 # }
 ```
 
@@ -162,36 +155,36 @@ Usage of `WriteStorage<'s, UiText>` is needed since we will be changing
 the color that is the property of the `UiText` component.
 
 ```rust
-# use amethyst::ecs::{System, World, Read, ReadStorage, WriteStorage};
 # use amethyst::core::SystemDesc;
+# use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
 # use amethyst::shrev::{EventChannel, ReaderId};
-# use amethyst::ui::{UiTransform, UiText, UiEvent, UiEventType};
+# use amethyst::ui::{UiEvent, UiEventType, UiText, UiTransform};
 # pub struct SimpleButtonSystem {
-#    reader_id: ReaderId<UiEvent>,
+#   reader_id: ReaderId<UiEvent>,
 # }
-#
+# 
 # impl<'s> System<'s> for SimpleButtonSystem {
-# type SystemData = (
-#     Read<'s, EventChannel<UiEvent>>,
-#     ReadStorage<'s, UiTransform>,
-#     WriteStorage<'s, UiText>,
-# );
-#
-fn run(&mut self, (events, transforms, mut texts): Self::SystemData) {
-    for event in events.read(&mut self.reader_id) {
-        let button_text = texts.get_mut(event.target).unwrap();
+#   type SystemData = (
+#       Read<'s, EventChannel<UiEvent>>,
+#       ReadStorage<'s, UiTransform>,
+#       WriteStorage<'s, UiText>,
+#   );
+# 
+    fn run(&mut self, (events, transforms, mut texts): Self::SystemData) {
+        for event in events.read(&mut self.reader_id) {
+            let button_text = texts.get_mut(event.target).unwrap();
 
-        match event.event_type {
-            UiEventType::HoverStart => {
-                button_text.color = [1.0, 1.0, 1.0, 1.0];
+            match event.event_type {
+                UiEventType::HoverStart => {
+                    button_text.color = [1.0, 1.0, 1.0, 1.0];
+                }
+                UiEventType::HoverStop => {
+                    button_text.color = [1.0, 1.0, 1.0, 0.5];
+                }
+                _ => {}
             }
-            UiEventType::HoverStop => {
-                button_text.color = [1.0, 1.0, 1.0, 0.5];
-            }
-            _ => {}
         }
     }
-}
 # }
 ```
 

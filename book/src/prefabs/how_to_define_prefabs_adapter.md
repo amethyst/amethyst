@@ -4,12 +4,12 @@ This guide explains how to define a [`PrefabData`] for a [`Component`] using an 
 
 ```rust
 # extern crate serde;
-#
+# 
 # use serde::{Deserialize, Serialize};
-#
-# #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
+# 
+# #[derive(Component, Debug, Deserialize, Serialize)]
 # pub struct Position(pub f32, pub f32, pub f32);
-#
+# 
 impl From<(i32, i32, i32)> for Position {
     fn from((x, y, z): (i32, i32, i32)) -> Position {
         Position(x as f32, y as f32, z as f32)
@@ -41,7 +41,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
    ```rust
    # extern crate serde;
-   #
+   # 
    use amethyst::{
        assets::{PrefabData, ProgressCounter},
        ecs::{Entity, WriteStorage},
@@ -63,9 +63,9 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
    ```rust
    # extern crate serde;
-   #
+   # 
    # use serde::{Deserialize, Serialize};
-   #
+   # 
    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
    pub enum CameraPrefab {
        Orthographic {
@@ -88,36 +88,36 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
    ```rust
    # extern crate serde;
-   #
+   # 
    # use amethyst::{
-   #     assets::{PrefabData, ProgressCounter},
-   #     ecs::{Entity, WriteStorage},
-   #     Error,
+   #   assets::{PrefabData, ProgressCounter},
+   #   ecs::{Entity, WriteStorage},
+   #   Error,
    # };
    # use serde::{Deserialize, Serialize};
-   #
-   # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
+   # 
+   # #[derive(Component, Debug, Deserialize, Serialize)]
    # pub struct Position(pub f32, pub f32, pub f32);
-   #
+   # 
    # impl From<(i32, i32, i32)> for Position {
-   #     fn from((x, y, z): (i32, i32, i32)) -> Position {
-   #         Position(x as f32, y as f32, z as f32)
-   #     }
+   #   fn from((x, y, z): (i32, i32, i32)) -> Position {
+   #       Position(x as f32, y as f32, z as f32)
+   #   }
    # }
-   #
+   # 
    # impl From<(f32, f32, f32)> for Position {
-   #     fn from((x, y, z): (f32, f32, f32)) -> Position {
-   #         Position(x, y, z)
-   #     }
+   #   fn from((x, y, z): (f32, f32, f32)) -> Position {
+   #       Position(x, y, z)
+   #   }
    # }
-   #
+   # 
    # #[derive(Clone, Copy, Deserialize, PartialEq, Serialize)]
    # #[serde(deny_unknown_fields)]
    # pub enum PositionPrefab {
-   #     Pos3f { x: f32, y: f32, z: f32 },
-   #     Pos3i { x: i32, y: i32, z: i32 },
+   #   Pos3f { x: f32, y: f32, z: f32 },
+   #   Pos3i { x: i32, y: i32, z: i32 },
    # }
-   #
+   # 
    impl<'a> PrefabData<'a> for PositionPrefab {
        // To attach the `Position` to the constructed entity,
        // we write to the `Position` component storage.

@@ -17,7 +17,7 @@ Let's start by creating the `GameData` structure:
 
 ```rust
 # use amethyst::ecs::prelude::Dispatcher;
-#
+# 
 pub struct CustomGameData<'a, 'b> {
     core_dispatcher: Option<Dispatcher<'a, 'b>>,
     running_dispatcher: Option<Dispatcher<'a, 'b>>,
@@ -28,12 +28,12 @@ We also add a utility function for performing dispatch:
 
 ```rust
 # use amethyst::ecs::prelude::{Dispatcher, World};
-#
+# 
 # pub struct CustomGameData<'a, 'b> {
-#     core_dispatcher: Option<Dispatcher<'a, 'b>>,
-#     running_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   core_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
-#
+# 
 impl<'a, 'b> CustomGameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World, running: bool) {
@@ -55,16 +55,15 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 `GameData` structure.
 
 ```rust
-#
-# use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
 # use amethyst::core::SystemBundle;
-# use amethyst::{Error, DataInit, DataDispose};
-#
+# use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
+# use amethyst::{DataDispose, DataInit, Error};
+# 
 # pub struct CustomGameData<'a, 'b> {
-#     core_dispatcher: Option<Dispatcher<'a, 'b>>,
-#     running_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   core_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
-#
+# 
 use amethyst::core::ArcThreadPool;
 
 pub struct CustomDispatcherBuilder<'a, 'b> {
@@ -140,34 +139,33 @@ We can now use `CustomGameData` in place of the provided `GameData` when buildin
 our `Application`, but first we should create some `State`s.
 
 ```rust
-#
 # use amethyst::ecs::prelude::{Dispatcher, World};
-# use amethyst::prelude::{State, StateData, StateEvent, Trans};
 # use amethyst::input::{is_close_requested, is_key_down, VirtualKeyCode};
-#
+# use amethyst::prelude::{State, StateData, StateEvent, Trans};
+# 
 # pub struct CustomGameData<'a, 'b> {
-#     core_dispatcher: Option<Dispatcher<'a, 'b>>,
-#     running_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   core_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
-#
+# 
 # impl<'a, 'b> CustomGameData<'a, 'b> {
-#     /// Update game data
-#     pub fn update(&mut self, world: &World, running: bool) {
-#         if running {
-#             if let Some(dispatcher) = self.running_dispatcher.as_mut() {
-#                   dispatcher.dispatch(&world);
-#             }
-#         }
-#         if let Some(dispatcher) = self.core_dispatcher.as_mut() {
+#   /// Update game data
+#   pub fn update(&mut self, world: &World, running: bool) {
+#       if running {
+#           if let Some(dispatcher) = self.running_dispatcher.as_mut() {
 #               dispatcher.dispatch(&world);
-#         }
-#     }
+#           }
+#       }
+#       if let Some(dispatcher) = self.core_dispatcher.as_mut() {
+#           dispatcher.dispatch(&world);
+#       }
+#   }
 # }
-#
+# 
 # fn initialise(world: &World) {}
 # fn create_paused_ui(world: &World) {}
 # fn delete_paused_ui(world: &World) {}
-#
+# 
 struct Main;
 struct Paused;
 
@@ -241,88 +239,93 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 `Application`.
 
 ```rust
-#
 # use amethyst::{
-#     core::{transform::TransformBundle, SystemBundle},
-#     ecs::{Dispatcher, DispatcherBuilder, World},
-#     input::{InputBundle, StringBindings},
-#     prelude::*,
-#     renderer::{
-#         plugins::{RenderFlat2D, RenderToWindow},
-#         types::DefaultBackend,
-#         RenderingBundle,
-#     },
-#     ui::{RenderUi, UiBundle},
-#     utils::application_root_dir,
-#     DataInit, Error, DataDispose,
+#   core::{transform::TransformBundle, SystemBundle},
+#   ecs::{Dispatcher, DispatcherBuilder, World},
+#   input::{InputBundle, StringBindings},
+#   prelude::*,
+#   renderer::{
+#       plugins::{RenderFlat2D, RenderToWindow},
+#       types::DefaultBackend,
+#       RenderingBundle,
+#   },
+#   ui::{RenderUi, UiBundle},
+#   utils::application_root_dir,
+#   DataDispose, DataInit, Error,
 # };
-#
+# 
 # pub struct CustomGameData<'a, 'b> {
-#     core_dispatcher: Option<Dispatcher<'a, 'b>>,
-#     running_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   core_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
-#
+# 
 # pub struct CustomDispatcherBuilder<'a, 'b> {
-#     pub core: DispatcherBuilder<'a, 'b>,
-#     pub running: DispatcherBuilder<'a, 'b>,
+#   pub core: DispatcherBuilder<'a, 'b>,
+#   pub running: DispatcherBuilder<'a, 'b>,
 # }
-#
+# 
 # impl<'a, 'b> Default for CustomDispatcherBuilder<'a, 'b> {
-#     fn default() -> Self { unimplemented!() }
+#   fn default() -> Self {
+#       unimplemented!()
+#   }
 # }
-#
+# 
 # impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
-#     pub fn new() -> Self { unimplemented!() }
-#     pub fn with_base_bundle<B>(mut self, world: &mut World, bundle: B) -> Result<Self, Error>
-#     where
-#         B: SystemBundle<'a, 'b>,
-#     {
-#         unimplemented!()
-#     }
-#
-#     pub fn with_running<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
-#     where
-#         for<'c> S: System<'c> + Send + 'a,
-#     {
-#         unimplemented!()
-#     }
+#   pub fn new() -> Self {
+#       unimplemented!()
+#   }
+#   pub fn with_base_bundle<B>(mut self, world: &mut World, bundle: B) -> Result<Self, Error>
+#   where
+#       B: SystemBundle<'a, 'b>,
+#   {
+#       unimplemented!()
+#   }
+# 
+#   pub fn with_running<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
+#   where
+#       for<'c> S: System<'c> + Send + 'a,
+#   {
+#       unimplemented!()
+#   }
 # }
-#
+# 
 # impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b> {
-#     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> { unimplemented!() }
+#   fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
+#       unimplemented!()
+#   }
 # }
-#
+# 
 # impl<'a, 'b> DataDispose for CustomDispatcherBuilder<'a, 'b> {
-#     fn dispose(&mut self, world: &mut World) { unimplemented!() }
+#   fn dispose(&mut self, world: &mut World) {
+#       unimplemented!()
+#   }
 # }
-#
+# 
 # fn main() -> amethyst::Result<()> {
-#
-let mut app_builder = Application::build(assets_directory, Main)?;
-let game_data = CustomDispatcherBuilder::default()
-    .with_running(ExampleSystem, "example_system", &[])
-    .with_base_bundle(
-        &mut app_builder.world,
-        RenderingBundle::<DefaultBackend>::new()
-            // The RenderToWindow plugin provides all the scaffolding for opening a window and
-            // drawing on it
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)
-                    .with_clear([0.34, 0.36, 0.52, 1.0]),
-            )
-            .with_plugin(RenderFlat2D::default())
-            .with_plugin(RenderUi::default()),
-    )?
-    .with_base_bundle(&mut app_builder.world, TransformBundle::new())?
-    .with_base_bundle(&mut app_builder.world, UiBundle::<StringBindings>::new())?
-    .with_base_bundle(
-        &mut app_builder.world,
-        InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
-    )?;
+    let mut app_builder = Application::build(assets_directory, Main)?;
+    let game_data = CustomDispatcherBuilder::default()
+        .with_running(ExampleSystem, "example_system", &[])
+        .with_base_bundle(
+            &mut app_builder.world,
+            RenderingBundle::<DefaultBackend>::new()
+                // The RenderToWindow plugin provides all the scaffolding for opening a window and
+                // drawing on it
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                .with_plugin(RenderFlat2D::default())
+                .with_plugin(RenderUi::default()),
+        )?
+        .with_base_bundle(&mut app_builder.world, TransformBundle::new())?
+        .with_base_bundle(&mut app_builder.world, UiBundle::<StringBindings>::new())?
+        .with_base_bundle(
+            &mut app_builder.world,
+            InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
+        )?;
 
-let mut game = app_builder.build(game_data)?;
-game.run();
-#
+    let mut game = app_builder.build(game_data)?;
+    game.run();
 # }
 ```
 

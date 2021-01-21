@@ -39,17 +39,15 @@ Fetching a resource can be done like this:
 # }
 # fn main() {
 #   let mut resources = Resources::default();
-#   let my = MyResource{
-#     game_score: 0,
-#   };
-   resources.insert(my);
-  let fetched = resources.get::<MyResource>();  // returns Option<Fetch<T>>
-  if let Some(fetched_resource) = fetched {
-      // dereference Fetch<MyResource> to access data
-      assert_eq!(*fetched_resource, MyResource{ game_score: 0, });
-  } else {
-      println!("No MyResource present in `Resources`");
-  }
+#   let my = MyResource { game_score: 0 };
+    resources.insert(my);
+    let fetched = resources.get::<MyResource>(); // returns Option<Fetch<T>>
+    if let Some(fetched_resource) = fetched {
+        // dereference Fetch<MyResource> to access data
+        assert_eq!(*fetched_resource, MyResource { game_score: 0 });
+    } else {
+        println!("No MyResource present in `Resources`");
+    }
 # }
 ```
 
@@ -60,11 +58,11 @@ If you want to get a resource and create it if it doesn't exist:
 # struct MyResource;
 # fn main() {
 #   let mut resources = Resources::default();
-  // If the resource isn't inside `Resources`, 
-  // it will insert the instance we created earlier.
-let fetched = resources.get_or_insert_with(|| MyResource);
-// or
-let fetched = resources.get_or_default::<MyResource>();
+    // If the resource isn't inside `Resources`,
+    // it will insert the instance we created earlier.
+    let fetched = resources.get_or_insert_with(|| MyResource);
+    // or
+    let fetched = resources.get_or_default::<MyResource>();
 # }
 ```
 
@@ -77,19 +75,17 @@ If you want to change a resource that is already inside of `Resources`:
 # }
 # fn main() {
 #   let mut resources = Resources::empty();
-#   let my = MyResource{
-#     game_score: 0,
-#   };
+#   let my = MyResource { game_score: 0 };
 #   resources.insert(my);
-  // get_mut returns a Option<FetchMut<MyResource>>
-  let fetched = resources.get_mut::<MyResource>();
-  if let Some(mut fetched_resource) = fetched {
-    assert_eq!(fetched_resource.game_score, 0);
-    fetched_resource.game_score = 10;
-    assert_eq!(fetched_resource.game_score, 10);
-  } else {
-    println!("No MyResource present in `Resources`");
-  }
+    // get_mut returns a Option<FetchMut<MyResource>>
+    let fetched = resources.get_mut::<MyResource>();
+    if let Some(mut fetched_resource) = fetched {
+        assert_eq!(fetched_resource.game_score, 0);
+        fetched_resource.game_score = 10;
+        assert_eq!(fetched_resource.game_score, 10);
+    } else {
+        println!("No MyResource present in `Resources`");
+    }
 # }
 ```
 
@@ -104,11 +100,9 @@ Other ways of fetching a resource will be covered in the system section of the b
 # }
 # fn main() {
 #   let mut resources = Resources::empty();
-#   let my = MyResource{
-#     game_score: 0,
-#   };
+#   let my = MyResource { game_score: 0 };
 #   resources.insert(my);
-resources.remove::<MyResource>();
+    resources.remove::<MyResource>();
 # }
 ```
 
