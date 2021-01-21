@@ -43,6 +43,8 @@ where
                 .write_resource::<ProcessingQueue<A::Data>>()
                 .write_resource::<AssetStorage<A>>()
                 .build(|_, _, (queue, storage), _| {
+                    // drain the changed queue
+                    while let Some(_) = queue.changed.pop() {}
                     queue.process(storage, ProcessableAsset::process);
                     storage.process_custom_drop(|_| {});
                 }),
