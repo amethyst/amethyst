@@ -146,13 +146,6 @@ If you are defining a new format that may be useful to others, [please send us a
 
            self.energy_blast_handle = Some(energy_blast_handle);
        }
-       #
-       #     fn update(
-       #         &mut self,
-       #         _data: &mut StateData<'_, GameData>,
-       #     ) -> SimpleTrans {
-       #         Trans::Quit
-       #     }
    }
    #
    # fn main() -> amethyst::Result<()> {
