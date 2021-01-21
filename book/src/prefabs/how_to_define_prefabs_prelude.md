@@ -20,7 +20,7 @@ If you are looking for a guide to define prefab data for a `Component`, first we
 
   This is where the `Component` type itself is completely serializable – the data is self-contained.
 
-  ```rust, edition2018,no_run,noplaypen
+  ```rust
   # extern crate serde;
   #
   # use serde::{Deserialize, Serialize};
@@ -35,7 +35,7 @@ If you are looking for a guide to define prefab data for a `Component`, first we
 
   This is where are multiple ways to construct the component, and a user should be able to choose which one to use.
 
-  ```rust, edition2018,no_run,noplaypen
+  ```rust
   # extern crate serde;
   #
   # use serde::{Deserialize, Serialize};
@@ -70,7 +70,7 @@ If you are looking for a guide to define prefab data for a `Component`, first we
 
   This is where most of the component is serializable, but there is also data that is only accessible at runtime, such as a device ID or an asset handle.
 
-  ```rust, edition2018,no_run,noplaypen
+  ```rust
   #
   # use amethyst_audio::output::Output;
   # use amethyst_core::{
@@ -105,7 +105,7 @@ If you are looking for a guide to define prefab data for a `Component`, first we
 
   This is where the `Component` itself stores `Handle<_>`s.
 
-  ```rust, edition2018,no_run,noplaypen
+  ```rust
   #
   # use amethyst::{
   #     assets::Handle,

@@ -37,7 +37,7 @@ Querying is covered in the systems chapter.
 
 To declare a component, you just declare the relevant underlying data.  Legion ECS will create archetypes that correspond to the different combinations of this data.:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{
 #   core::{
 #       math::{Isometry3, Vector3},

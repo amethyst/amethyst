@@ -61,7 +61,7 @@ Ok, so what would a simple implementation of `PrefabData` look like?
 
 Let's take a look at the implementation for `Transform`, which is a core concept in Amethyst:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::assets::PrefabData;
 # use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage};
 # use amethyst::Error;
@@ -108,8 +108,7 @@ are no secondary assets to load from `Source` here.
 Let's look at a slightly more complex implementation, the `AssetPrefab`. This `PrefabData` is used to
 load extra `Asset`s as part of a `Prefab`:
 
-```rust ,edition2018,no_run,noplaypen
-# #[macro_use] extern crate serde_derive;
+```rust
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter};
 # use amethyst::assets::PrefabData;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
@@ -209,8 +208,7 @@ and visible in the current scope. This is due to how Rust macros work.
 
 An example of a single `Component` derive:
 
-```rust ,edition2018,no_run,noplaypen
-# #[macro_use] extern crate serde_derive;
+```rust
 # use amethyst::{
 #     assets::{
 #         Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData
@@ -233,8 +231,7 @@ This will derive a `PrefabData` implementation that inserts `SomeComponent` on a
 
 Lets look at an example of an aggregate struct:
 
-```rust ,edition2018,no_run,noplaypen
-# #[macro_use] extern crate serde_derive;
+```rust
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
@@ -252,8 +249,7 @@ This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities
 
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
-```rust ,edition2018,no_run,noplaypen
-# #[macro_use] extern crate serde_derive;
+```rust
 # use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};

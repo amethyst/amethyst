@@ -8,7 +8,7 @@ and bounces around!
 
 First, let's define some other useful constants for this chapter in `pong.rs`:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 pub const BALL_VELOCITY_X: f32 = 75.0;
 pub const BALL_VELOCITY_Y: f32 = 50.0;
 pub const BALL_RADIUS: f32 = 2.0;
@@ -22,7 +22,7 @@ keeping it simple.
 
 In `pong.rs`, let's create the `Ball` Component.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::ecs::{Component, DenseVecStorage};
 pub struct Ball {
     pub velocity: [f32; 2],
@@ -35,7 +35,7 @@ A ball has a velocity and a radius, so we store that information in the componen
 Then let's add an `initialise_ball` function the same way we wrote the
 `initialise_paddles` function.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage, Handle};
 # use amethyst::renderer::{Texture, SpriteRender, Sprite, SpriteSheet};
@@ -81,7 +81,7 @@ second one, whose index is `1`.
 
 Finally, let's make sure the code is working as intended by updating the `on_start` method:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::prelude::*;
 # use amethyst::assets::Handle;
 # use amethyst::renderer::{Texture, SpriteSheet};
@@ -119,7 +119,7 @@ in the center. In the next section, we're going to make this ball actually move!
 
 We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::ecs::{Component, DenseVecStorage};
 #
 # mod pong {
@@ -182,7 +182,7 @@ paddles, as well as balls and the top and bottom edges of the arena.
 If a collision is detected, the ball bounces off. This is done
 by negating the velocity of the `Ball` component on the `x` or `y` axis.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::ecs::{Component, DenseVecStorage};
 #
 # mod pong {
@@ -287,7 +287,7 @@ The following image illustrates how collisions with paddles are checked.
 Also, don't forget to add `mod move_balls` and `mod bounce` in `systems/mod.rs`
 as well as adding our new systems to the game data:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::window::DisplayConfig;
@@ -361,7 +361,7 @@ struct to actually hold some data.
 First, let's add a new method to our state: `update`.
 Let's add that `update` method just below `on_start`:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::prelude::*;
 # struct MyState;
 # impl SimpleState for MyState {
@@ -381,7 +381,7 @@ as a local variable inside `on_start`. For that reason, we have to make it a par
 
 Let's add some fields to our `Pong` struct:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::assets::Handle;
 #[derive(Default)]
 pub struct Pong {
@@ -397,7 +397,7 @@ It will be created inside the `on_start` method instead.
 We've also added `#[derive(Default)]`, which will automatically implement `Default` trait for us, which allows to create
 default empty state. Now let's use that inside our `Application` creation code in `main.rs`:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{
 #     ecs::{World},
 #     prelude::*,
@@ -419,7 +419,7 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 - First, we have to initialize our state and remove `initialise_ball` from `on_start`,
 - then we have to `initialise_ball` once after the time has passed inside `update`:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{assets::Handle, renderer::SpriteSheet};
 # use amethyst::prelude::*;
 use amethyst::core::timing::Time;

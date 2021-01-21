@@ -2,7 +2,7 @@
 
 After loading the `SpriteSheet`, you need to attach it to an entity using the `SpriteRender` component and indicate which sprite to draw. The `SpriteRender` component looks like this:
 
-```rust ,edition2018
+```rust
 use amethyst::assets::Handle;
 use amethyst::renderer::SpriteSheet;
 
@@ -19,7 +19,7 @@ The sprite number is the index of the sprite loaded in the sprite sheet. What's 
 
 In the previous section you wrote a function that returns a `SpriteSheet`. This can be turned into a `Handle<SpriteSheet>` using the `Loader` resource as follows:
 
-```rust ,edition2018
+```rust
 use amethyst::assets::{AssetStorage, DefaultLoader, Handle, Loader, ProcessingQueue};
 use amethyst::prelude::*;
 use amethyst::renderer::{SpriteSheet, Texture};
@@ -63,7 +63,7 @@ impl SimpleState for ExampleState {
 
 Cool, finally we have all the parts, let's build a `SpriteRender` and attach it to an entity:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 use amethyst::assets::{AssetStorage, DefaultLoader, Handle, Loader, ProcessingQueue};
 use amethyst::core::transform::Transform;
 use amethyst::prelude::*;

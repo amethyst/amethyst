@@ -50,7 +50,7 @@ Next, we'll add an `InputBundle` to the game's `Application` object, that
 contains an `InputHandler` system which captures inputs, and maps them to the
 axes we defined. Let's make the following changes to `main.rs`.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst_utils::application_root_dir;
@@ -99,7 +99,7 @@ mod paddle;
 
 We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 #
 # mod pong {
 #     use amethyst::ecs::prelude::*;
@@ -200,7 +200,7 @@ Let's add this system to our `DispatcherBuilder` in `main.rs`:
 mod systems; // Import the module
 ```
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::input::StringBindings;
@@ -252,7 +252,7 @@ If we run the game now, we'll see the console print our keypresses.
 Let's make it update the position of the paddle. To do this, we'll modify the y
 component of the transform's translation.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
@@ -306,7 +306,7 @@ to `PADDLE_HEIGHT * 0.5` (the bottom of the arena plus the offset).
 
 Our run function should now look something like this:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::core::Transform;
 # use amethyst::core::SystemDesc;
 # use amethyst::derive::SystemDesc;
@@ -360,7 +360,7 @@ Now that we have a system in place that uses the `Paddle` component,
 we no longer need to manually register it with the `world`: the system
 will take care of that for us, as well as set up the storage.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::assets::Handle;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;

@@ -2,7 +2,7 @@
 
 This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. This can be applied where the [`Component`] type itself is completely serializable – the data is self-contained:
 
-```rust ,no_run,noplaypen
+```rust
 # extern crate serde;
 #
 # use serde::{Deserialize, Serialize};
@@ -46,7 +46,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
    Example:
 
-   ```rust ,edition2018,no_run,noplaypen
+   ```rust
    # extern crate derivative;
    # extern crate serde;
    #

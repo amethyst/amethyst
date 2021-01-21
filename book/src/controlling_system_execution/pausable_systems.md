@@ -6,7 +6,7 @@ Pausable `System`s can be enabled or disabled depending on the value of a`Resour
 
 Let's get started by creating a new `Resource` that represents the state of our game.
 
-```rust ,no_run,noplaypen
+```rust
 #[derive(PartialEq)]
 pub enum CurrentState {
     Running,
@@ -22,7 +22,7 @@ impl Default for CurrentState {
 
 We'll use this `enum` `Resource` to control whether or not our `System` is running. Next we'll register our `System` and set it as pausable.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 #
 # use amethyst::{
 #     ecs::prelude::*,
@@ -60,7 +60,7 @@ dispatcher.add(
 
 To register the `Resource` or change its value, we can use the following code:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::prelude::*;
 # #[derive(PartialEq)]
 # pub enum CurrentState {

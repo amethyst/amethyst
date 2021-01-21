@@ -60,7 +60,7 @@ For more information about list and grid based sprite sheets, including the type
 
 Once you have ron file ready, you can load it using the texture handle of the sheet's image you loaded earlier:
 
-```rust, edition2018,no_run,noplaypen
+```rust
 # use amethyst::assets::{Loader, AssetStorage, Handle};
 # use amethyst::ecs::{World};
 # use amethyst::renderer::{SpriteSheetFormat, SpriteSheet, Texture};
@@ -103,7 +103,7 @@ In Amethyst, pixel dimensions and texture coordinates are stored in the `Sprite`
 
 The following snippet shows you how to naively define a `SpriteSheet`. In a real application, you would typically use the sprite sheet from file feature, which is much more convenient.
 
-```rust, edition2018,no_run,noplaypen
+```rust
 use amethyst::assets::Handle;
 use amethyst::renderer::{sprite::TextureCoordinates, Sprite, SpriteSheet, Texture};
 

@@ -21,7 +21,7 @@ You don't have to use all three at the same time of course but variations of two
 
 One way of defining a `UiTransform` is like so:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::ui::{Anchor, UiTransform};
 
 let ui_transform = UiTransform::new(
@@ -51,7 +51,7 @@ to set the area big enough for the text to fit in!
 
 ### Creating the `UiText`
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
 # use amethyst::ui::{Anchor, FontAsset, get_default_font, LineMode, UiText};
 # use amethyst::prelude::{World};
@@ -80,7 +80,7 @@ You also need to load a specific font handle and provide it for the text.
 
 If you had some state implemented you can create the button on its `on_start` method:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
 # use amethyst::ui::{
 #     Anchor, FontAsset, get_default_font, LineMode, UiText, UiTransform,
@@ -154,7 +154,7 @@ have a `UiTransform` component!
 
 The code snippet would look like this now:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
 # use amethyst::ui::{
 #     Anchor, FontAsset, get_default_font, LineMode, UiText, UiTransform, Interactable,

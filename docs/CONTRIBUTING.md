@@ -220,10 +220,10 @@ page, we can do this inline.
 [al]: https://another.url/
 ```
 
-Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust ,edition2018,no_run,noplaypen`. Note the space after `rust` to enable syntax support in editors.  Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example:
+Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust`. Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example:
 
 ````markdown
-```rust ,edition2018,no_run,noplaypen
+```rust
 use amethyst::ecs::{World};
 
 // A simple struct with no data.

@@ -4,7 +4,7 @@ If the `SystemDesc` derive is unable to generate a `SystemDesc` trait
 implementation for system initialization, the `SystemDesc` trait can be
 implemented manually:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 #
 use amethyst::{
     audio::output::Output,

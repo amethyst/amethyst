@@ -10,7 +10,7 @@ Typically, `EventChannel`s are inserted as resources in the `World`.
 
 ### Creating an event channel
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::shrev::EventChannel;
 // In the following examples, `MyEvent` is the event type of the channel.
 #[derive(Debug)]
@@ -26,7 +26,7 @@ let mut channel = EventChannel::<MyEvent>::new();
 
 Single:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -41,7 +41,7 @@ Single:
 
 Multiple:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -60,7 +60,7 @@ Multiple:
 
 To subscribe to events, register a reader against the `EventChannel` to receive a `ReaderId`:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -75,7 +75,7 @@ To subscribe to events, register a reader against the `EventChannel` to receive 
 
 When reading events, pass the `ReaderId` in:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -107,7 +107,7 @@ It goes as follow:
 
 In the **producer** `System`, get a mutable reference to your resource:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{ecs::Write, shrev::EventChannel};
 # 
 # #[derive(Debug)]
@@ -126,7 +126,7 @@ In the **producer** `System`, get a mutable reference to your resource:
 
 In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::shrev::ReaderId;
 # 
 # #[derive(Debug)]
@@ -143,7 +143,7 @@ struct ReceiverSystem {
 
 and you also need to get read access:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{ecs::Read, shrev::EventChannel};
 # 
 # #[derive(Debug)]
@@ -162,7 +162,7 @@ and you also need to get read access:
 
 Then, in the `System`'s `new` method:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{
 #   ecs::{System, World},
 #   shrev::{EventChannel, ReaderId},
@@ -194,7 +194,7 @@ impl MySystem {
 
 Finally, you can read events from your `System`.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{ecs::Read, shrev::EventChannel};
 # 
 # #[derive(Debug)]

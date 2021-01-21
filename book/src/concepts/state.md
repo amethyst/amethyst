@@ -96,7 +96,7 @@ For more advanced examples, see the following pong tutorial.
 
 ### Creating a State
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 use amethyst::prelude::*;
 
 struct GameplayState {
@@ -136,7 +136,7 @@ Those are:
 
 Let's use `handle_event` to go to the `PausedState` and come back by pressing the "Escape" key.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 use amethyst::{
     input::{is_key_down, VirtualKeyCode},
     prelude::*,
@@ -186,7 +186,7 @@ But what is this weird `StateEvent` all about?
 Well, it is simply an enum. It regroups multiple types of events that are emitted throughout the engine by default.
 To change the set of events that the state receives, you create a new event enum and derive `EventReader` for that type.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 // These imports are required for the #[derive(EventReader)] code to build
 use amethyst::{
     core::{

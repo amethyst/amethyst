@@ -17,7 +17,7 @@ If you are defining a new format that may be useful to others, [please send us a
 
    In most cases a unit struct is sufficient. When possible, this should implement `Clone` and `Copy` for ergonomic usage.
 
-   ```rust ,edition2018,no_run,noplaypen
+   ```rust
    /// Format for loading from `.mylang` files.
    #[derive(Clone, Copy, Debug, Default)]
    pub struct MyLangFormat;
@@ -31,7 +31,7 @@ If you are defining a new format that may be useful to others, [please send us a
 
    In this example the RON deserializer is used, though it is [already a supported format][doc_ron_format].
 
-   ```rust ,edition2018,no_run,noplaypen
+   ```rust
    # extern crate ron;
    # extern crate serde;
    #
@@ -66,10 +66,9 @@ If you are defining a new format that may be useful to others, [please send us a
 
    The custom format can now be used:
 
-   ```rust ,edition2018,no_run,noplaypen
+   ```rust
    # extern crate ron;
    # extern crate serde;
-   # extern crate serde_derive;
    #
    # use amethyst::{
    #     error::Error,
@@ -82,8 +81,7 @@ If you are defining a new format that may be useful to others, [please send us a
    #     utils::application_root_dir,
    # };
    # use ron::de::Deserializer;
-   # use serde::Deserialize as DeserializeTrait;
-   # use serde_derive::{Deserialize, Serialize};
+   # use serde::{Deserialize, Serialize};
    #
    # /// Custom asset representing an energy blast.
    # #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
@@ -93,9 +91,6 @@ If you are defining a new format that may be useful to others, [please send us a
    #     /// How much MP to subtract.
    #     pub mp_damage: u32,
    # }
-   #
-   # /// A handle to a `EnergyBlast` asset.
-   # pub type EnergyBlastHandle = Handle<EnergyBlast>;
    #
    # impl Asset for EnergyBlast {
    #     type Data = Self;

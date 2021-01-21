@@ -101,7 +101,7 @@ First, let's change our initialisation steps in `pong.rs`.
 
 Add the following line to the top of `pong.rs`:
 
-```rust ,ignore
+```rust
 use crate::config::ArenaConfig;
 ```
 

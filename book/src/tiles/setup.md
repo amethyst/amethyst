@@ -13,7 +13,7 @@ amethyst = { version = "LATEST_CRATES.IO_VERSION", features = ["tiles"] }
 
 Now you can add the render pass to your application:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 #
 use amethyst::{
     core::math::Point3,

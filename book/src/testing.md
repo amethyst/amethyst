@@ -8,7 +8,7 @@ The `amethyst_test` crate provides support to write tests ergonomically and expr
 
 The following shows a simple example of testing a `State`. More examples are in following pages.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 #
 # use std::marker::PhantomData;
 #
@@ -29,20 +29,20 @@ The following shows a simple example of testing a `State`. More examples are in 
 #         LoadingState
 #     }
 # }
-#
-# impl<'a, 'b, E> State<GameData<'a, 'b>, E> for LoadingState
-# where
-#     E: Send + Sync + 'static,
-# {
-#     fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData<'a, 'b>, E> {
-#         data.data.update(&data.world);
-#
-#         data.world.insert(LoadResource);
-#
-#         Trans::Pop
-#     }
-# }
-#
+
+ impl<'a, 'b, E> State<GameData<'a, 'b>, E> for LoadingState
+ where
+     E: Send + Sync + 'static,
+ {
+     fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData<'a, 'b>, E> {
+         data.data.update(&data.world);
+
+         data.resources.insert(LoadResource);
+
+         Trans::Pop
+     }
+ }
+
 #[test]
 fn loading_state_adds_load_resource() -> Result<(), Error> {
     AmethystApplication::blank()
@@ -58,7 +58,7 @@ fn loading_state_adds_load_resource() -> Result<(), Error> {
 
 The Amethyst application is initialized with one of the following functions, each providing a different set of bundles:
 
-````rust ,edition2018,no_run,noplaypen
+````rust
 #
 use amethyst_test::prelude::*;
 
@@ -116,7 +116,7 @@ fn test_name() {
 
 Finally, call `.run()` to run the application. This returns `amethyst::Result<()>`, so we return that as part of the function:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 #
 # use amethyst::Error;
 # use amethyst_test::prelude::*;
