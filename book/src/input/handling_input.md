@@ -4,10 +4,7 @@ Amethyst uses an `InputHandler` to handle user input.
 You initialise this `InputHandler` by creating an `InputBundle` and adding it to the game data.
 
 ```rust
-use amethyst::{
-    input::{InputBundle},
-    prelude::*,
-};
+use amethyst::{input::InputBundle, prelude::*};
 
 # struct Example;
 # impl SimpleState for Example {}
@@ -121,8 +118,7 @@ To add these bindings to the `InputBundle` you simply need to call the `with_bin
     let root = application_root_dir()?;
     let bindings_config = root.join("config").join("bindings.ron");
 
-    let input_bundle =
-        InputBundle::new().with_bindings_from_file(bindings_config)?;
+    let input_bundle = InputBundle::new().with_bindings_from_file(bindings_config)?;
 
     //..
 #   Ok(())
@@ -136,7 +132,7 @@ use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
     ecs::{Read, ReadStorage, System, World, WriteStorage},
-    input::{InputHandler},
+    input::InputHandler,
     prelude::*,
 };
 

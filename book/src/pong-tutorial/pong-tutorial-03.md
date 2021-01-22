@@ -61,13 +61,12 @@ axes we defined. Let's make the following changes to `main.rs`.
 #   };
 # }
 # fn main() -> amethyst::Result<()> {
-    use amethyst::input::{InputBundle};
+    use amethyst::input::InputBundle;
 
 #   let app_root = application_root_dir()?;
     let binding_path = app_root.join("config").join("bindings.ron");
 
-    let input_bundle =
-        InputBundle::new().with_bindings_from_file(binding_path)?;
+    let input_bundle = InputBundle::new().with_bindings_from_file(binding_path)?;
 
 #   let path = "./config/display.ron";
 #   let config = DisplayConfig::load(&path)?;
@@ -122,7 +121,7 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 use amethyst::core::{SystemDesc, Transform};
 use amethyst::derive::SystemDesc;
 use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
-use amethyst::input::{InputHandler};
+use amethyst::input::InputHandler;
 
 // You'll have to mark PADDLE_HEIGHT as public in pong.rs
 use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
@@ -259,7 +258,7 @@ component of the transform's translation.
 # use amethyst::core::Transform;
 # use amethyst::derive::SystemDesc;
 # use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
-# use amethyst::input::{InputHandler};
+# use amethyst::input::InputHandler;
 # enum Side {
 #   Left,
 #   Right,
@@ -313,7 +312,7 @@ Our run function should now look something like this:
 # use amethyst::core::Transform;
 # use amethyst::derive::SystemDesc;
 # use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
-# use amethyst::input::{InputHandler};
+# use amethyst::input::InputHandler;
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
 # const ARENA_HEIGHT: f32 = 100.0;

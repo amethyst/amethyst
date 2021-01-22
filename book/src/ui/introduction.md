@@ -27,7 +27,7 @@ A minimalistic game data would now look like this:
 ```rust
 # use amethyst::{
 #   core::transform::TransformBundle,
-#   input::{InputBundle},
+#   input::InputBundle,
 #   renderer::{types::DefaultBackend, RenderToWindow, RenderingBundle},
 #   ui::{RenderUi, UiBundle},
 #   DispatcherBuilder, Result,

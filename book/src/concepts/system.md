@@ -418,7 +418,7 @@ system:
 # 
 use amethyst::{
     ecs::{prelude::*, System},
-    input::{InputHandler},
+    input::InputHandler,
     prelude::*,
 };
 

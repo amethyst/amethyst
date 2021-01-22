@@ -242,7 +242,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 # use amethyst::{
 #   core::{transform::TransformBundle, SystemBundle},
 #   ecs::{Dispatcher, DispatcherBuilder, World},
-#   input::{InputBundle},
+#   input::InputBundle,
 #   prelude::*,
 #   renderer::{
 #       plugins::{RenderFlat2D, RenderToWindow},
