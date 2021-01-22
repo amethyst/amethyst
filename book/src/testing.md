@@ -70,8 +70,7 @@ fn test_name() {
     //
     // The type parameters here are the Axis and Action types for the
     // `InputBundle` and `UiBundle`.
-    use amethyst::input::StringBindings;
-    AmethystApplication::ui_base::<StringBindings>();
+    AmethystApplication::ui_base();
 
     // If you need types from the rendering bundle, make sure you have
     // the `"test-support"` feature enabled:
@@ -83,7 +82,7 @@ fn test_name() {
     //
     // Then you can include the `RenderEmptyBundle`:
     use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
-    AmethystApplication::blank().with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
+    AmethystApplication::blank().add_bundle(RenderEmptyBundle::<DefaultBackend>::new());
 }
 ````
 
@@ -94,8 +93,8 @@ Next, attach the logic for your test using the various `.with_*(..)` methods:
 fn test_name() {
     let visibility = false; // Whether the window should be shown
     AmethystApplication::render_base::<String, String, _>("test_name", visibility)
-        .with_bundle(MyBundle::new()) // Registers a bundle.
-        .with_bundle_fn(|| MyNonSendBundle::new()) // Registers a `!Send` bundle.
+        .add_bundle(MyBundle::new()) // Registers a bundle.
+        .add_bundle_fn(|| MyNonSendBundle::new()) // Registers a `!Send` bundle.
         .with_resource(MyResource::new()) // Adds a resource to the world.
         .with_system(|_| MySystem::new(), "my_sys", &[]) // Registers a system
         // with the main dispatcher

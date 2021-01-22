@@ -14,8 +14,8 @@ use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
-            DispatcherBuilder, Entities, Entity, Read,
-            ReadStorage, System, World, Write, WriteStorage,
+            DispatcherBuilder, Entities, Entity, Read, ReadStorage, System, World, Write,
+            WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -614,9 +614,9 @@ fn main() -> amethyst::Result<()> {
             )
             .with_dep(&["gltf_loader"]),
         )?
-        .add_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))?
+        .add_bundle(InputBundle::new().with_bindings(bindings))?
         .add_bundle(
-            FlyControlBundle::<StringBindings>::new(
+            FlyControlBundle::new(
                 Some("horizontal".into()),
                 None,
                 Some("vertical".into()),

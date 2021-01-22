@@ -10,7 +10,7 @@ use amethyst::{
         prelude::{Component, Entity},
         NullStorage,
     },
-    input::{is_close_requested, is_key_down, InputBundle, StringBindings},
+    input::{is_close_requested, is_key_down, InputBundle},
     prelude::*,
     renderer::{
         palette::Srgb,
@@ -208,8 +208,8 @@ fn main() -> Result<(), Error> {
         .with_running(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(TransformBundle::new())
         .with_base_bundle(FpsCounterBundle::default())
-        .with_base_bundle(InputBundle::<StringBindings>::new())
-        .with_base_bundle(UiBundle::<StringBindings>::new())
+        .with_base_bundle(InputBundle::new())
+        .with_base_bundle(UiBundle::new())
         .with_base_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

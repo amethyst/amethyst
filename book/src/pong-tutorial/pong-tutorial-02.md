@@ -327,7 +327,7 @@ Let's run the game again.
 Amethyst has a lot of internal systems it uses to keep things running we need
 to bring into the context of the `World`. For simplicity, these have been
 grouped into "Bundles" which include related systems and resources. We can
-add these to our Application's `GameData` using the `with_bundle` method,
+add these to our Application's `GameData` using the `add_bundle` method,
 similarly to how you would register a system. We already have `RenderBundle` in place,
 registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
@@ -349,7 +349,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = DispatcherBuilder::default()
         // ...
         // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?;
+        .add_bundle(TransformBundle::new())?;
 
 #   let assets_dir = "/";
 #   let mut game = Application::new(assets_dir, Pong, game_data)?;

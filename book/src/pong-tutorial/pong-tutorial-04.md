@@ -319,10 +319,10 @@ as well as adding our new systems to the game data:
 #           fn run(&mut self, _: Self::SystemData) {}
 #       }
 #   }
-#   let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+#   let input_bundle = amethyst::input::InputBundle::new();
     let game_data = DispatcherBuilder::default()
-#       .with_bundle(TransformBundle::new())?
-#       .with_bundle(input_bundle)?
+#       .add_bundle(TransformBundle::new())?
+#       .add_bundle(input_bundle)?
 #       .with(systems::PaddleSystem, "paddle_system", &["input_system"])
         // ...other systems...
         .with(systems::MoveBallsSystem, "ball_system", &[])

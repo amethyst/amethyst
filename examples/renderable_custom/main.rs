@@ -17,10 +17,7 @@ use amethyst::{
         prelude::{Entity, Read, ReadStorage, System, Write, WriteStorage},
         ReadExpect, World,
     },
-    input::{
-        get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
-        VirtualKeyCode,
-    },
+    input::{get_key, is_close_requested, is_key_down, ElementState, InputBundle, VirtualKeyCode},
     prelude::*,
     renderer::{
         light::Light,
@@ -198,8 +195,8 @@ fn main() -> Result<(), Error> {
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
         .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .add_bundle(InputBundle::<StringBindings>::new())?
-        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(InputBundle::new())?
+        .add_bundle(UiBundle::new())?
         .add_bundle(HotReloadBundle::default())?
         .add_bundle(FpsCounterBundle::default())?
         // The below Systems, are used to handle some rendering resources.

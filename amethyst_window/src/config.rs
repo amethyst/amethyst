@@ -80,7 +80,7 @@ pub struct DisplayConfig {
     /// config.loaded_icon = Some(Icon::from_rgba(icon, 128, 128).unwrap());
     ///
     /// // Now, feed this into the `DispatcherBuilder` using
-    /// // `.with_bundle(WindowBundle::from_config(config))`
+    /// // `.add_bundle(WindowBundle::from_config(config))`
     /// ```
     #[serde(skip)]
     pub loaded_icon: Option<Icon>,

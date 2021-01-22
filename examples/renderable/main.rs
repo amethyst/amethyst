@@ -14,13 +14,8 @@ use amethyst::{
         transform::{Transform, TransformBundle},
     },
     derive::SystemDesc,
-    ecs::prelude::{
-        Entity, Read, ReadStorage, System, Write, WriteStorage,
-    },
-    input::{
-        get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
-        VirtualKeyCode,
-    },
+    ecs::prelude::{Entity, Read, ReadStorage, System, Write, WriteStorage},
+    input::{get_key, is_close_requested, is_key_down, ElementState, InputBundle, VirtualKeyCode},
     prelude::*,
     renderer::{
         light::Light,
@@ -195,14 +190,14 @@ fn main() -> Result<(), Error> {
 
     let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(InputBundle::new())?
         .with(
             ExampleSystem::default(),
             "example_system",
             &["input_system"],
         )
         .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(UiBundle::new())?
         .add_bundle(HotReloadBundle::default())?
         .add_bundle(FpsCounterBundle::default())?
         .add_bundle(

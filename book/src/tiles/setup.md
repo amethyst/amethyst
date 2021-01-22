@@ -31,10 +31,9 @@ impl Tile for SimpleTile {
 }
 
 # fn main() -> Result<(), amethyst::Error> {
-#   let game_data = DispatcherBuilder::default().with_bundle(
+#   let game_data = DispatcherBuilder::default().add_bundle(
         // inside your rendering bundle setup
-        RenderingBundle::<DefaultBackend>::new()
-            .with_plugin(RenderFlat2D::default())
+        RenderingBundle::<DefaultBackend>::new().with_plugin(RenderFlat2D::default()),
 #   )?;
 #   Ok(())
 # }

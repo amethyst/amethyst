@@ -10,9 +10,9 @@ use amethyst::{
     renderer::{plugins::RenderFlat2D, types::DefaultBackend, RenderingBundle},
 };
 # fn main() -> Result<(), amethyst::Error> {
-#   let game_data = DispatcherBuilder::default().with_bundle(
-        // inside your rendering bundle setup
-#   )?;
+#   let game_data = DispatcherBuilder::default().add_bundle(
+// inside your rendering bundle setup
+#)?;
 #   Ok(())
 # }
 ```

@@ -115,7 +115,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     pub fn ui_base<B: BindingTypes>(
     ) -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
         AmethystApplication::blank()
-            .with_bundle(TransformBundle::new())
+            .add_bundle(TransformBundle::new())
             .with_ui_bundles::<B>()
             .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT))
     }
@@ -319,7 +319,7 @@ where
     /// # Parameters
     ///
     /// * `bundle`: Bundle to add.
-    pub fn with_bundle<B>(mut self, bundle: B) -> Self
+    pub fn add_bundle<B>(mut self, bundle: B) -> Self
     where
         B: SystemBundle<'static, 'static> + Send + 'static,
     {
@@ -341,27 +341,27 @@ where
         //
         // See <https://users.rust-lang.org/t/move-a-boxed-function-inside-a-closure/18199>
         self.bundle_add_fns.push(Box::new(
-            |game_data: DispatcherBuilder<'static, 'static>| game_data.with_bundle(bundle),
+            |game_data: DispatcherBuilder<'static, 'static>| game_data.add_bundle(bundle),
         ));
         self
     }
 
     /// Adds a bundle to the list of bundles.
     ///
-    /// This provides an alternative to `.with_bundle(B)` where `B` is `!Send`. The function that
+    /// This provides an alternative to `.add_bundle(B)` where `B` is `!Send`. The function that
     /// instantiates the bundle must be `Send`.
     ///
     /// # Parameters
     ///
     /// * `bundle_function`: Function to instantiate the Bundle.
-    pub fn with_bundle_fn<FnBundle, B>(mut self, bundle_function: FnBundle) -> Self
+    pub fn add_bundle_fn<FnBundle, B>(mut self, bundle_function: FnBundle) -> Self
     where
         FnBundle: FnOnce() -> B + Send + 'static,
         B: SystemBundle<'static, 'static> + 'static,
     {
         self.bundle_add_fns.push(Box::new(
             move |game_data: DispatcherBuilder<'static, 'static>| {
-                game_data.with_bundle(bundle_function())
+                game_data.add_bundle(bundle_function())
             },
         ));
         self
@@ -369,15 +369,12 @@ where
 
     /// Registers `InputBundle` and `UiBundle` with this application.
     ///
-    /// This method is provided to avoid [stringly-typed][stringly] parameters for the Input and UI
-    /// bundles. We recommended that you use strong types instead of `<StringBindings>`.
-    ///
     /// # Type Parameters
     ///
     /// * `B`: Type representing the input binding types.
-    pub fn with_ui_bundles<B: BindingTypes>(self) -> Self {
-        self.with_bundle(InputBundle::<B>::new())
-            .with_bundle(UiBundle::<B>::new())
+    pub fn with_ui_bundles(self) -> Self {
+        self.add_bundle(InputBundle::new())
+            .add_bundle(UiBundle::new())
     }
 
     /// Adds a resource to the `World`.
@@ -434,7 +431,7 @@ where
             .map(Clone::clone)
             .map(Into::<String>::into)
             .collect::<Vec<String>>();
-        self.with_bundle_fn(move || SystemInjectionBundle::new(system, name, deps))
+        self.add_bundle_fn(move || SystemInjectionBundle::new(system, name, deps))
     }
 
     /// Registers a `System` into this application's `GameData`.
@@ -456,7 +453,7 @@ where
             .map(Clone::clone)
             .map(Into::<String>::into)
             .collect::<Vec<String>>();
-        self.with_bundle_fn(move || SystemDescInjectionBundle::new(system_desc, name, deps))
+        self.add_bundle_fn(move || SystemDescInjectionBundle::new(system_desc, name, deps))
     }
 
     /// Registers a thread local `System` into this application's `GameData`.
@@ -469,7 +466,7 @@ where
         RNDesc: RunNowDesc<'static, 'static, RN> + Send + Sync + 'static,
         RN: for<'sys_local> RunNow<'sys_local> + Send + 'static,
     {
-        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(run_now_desc))
+        self.add_bundle_fn(move || ThreadLocalInjectionBundle::new(run_now_desc))
     }
 
     /// Registers a `System` to run in a `CustomDispatcherState`.
@@ -605,14 +602,14 @@ mod test {
 
     #[test]
     fn bundle_build_is_ok() -> Result<(), Error> {
-        AmethystApplication::blank().with_bundle(BundleZero).run()
+        AmethystApplication::blank().add_bundle(BundleZero).run()
     }
 
     #[test]
     fn load_multiple_bundles() -> Result<(), Error> {
         AmethystApplication::blank()
-            .with_bundle(BundleZero)
-            .with_bundle(BundleOne)
+            .add_bundle(BundleZero)
+            .add_bundle(BundleOne)
             .run()
     }
 
@@ -624,8 +621,8 @@ mod test {
         };
 
         AmethystApplication::blank()
-            .with_bundle(BundleZero)
-            .with_bundle(BundleOne)
+            .add_bundle(BundleZero)
+            .add_bundle(BundleOne)
             .with_assertion(assertion_fn)
             .run()
     }
@@ -734,7 +731,7 @@ mod test {
         };
 
         AmethystApplication::blank()
-            .with_bundle(BundleAsset)
+            .add_bundle(BundleAsset)
             .with_effect(effect_fn)
             .with_assertion(assertion_fn)
             .run()
@@ -768,7 +765,7 @@ mod test {
         };
 
         AmethystApplication::blank()
-            .with_bundle(BundleAsset)
+            .add_bundle(BundleAsset)
             .with_setup(setup_fns)
             .with_state(state_fns)
             .with_effect(effect_fn)
@@ -786,7 +783,7 @@ mod test {
             world.read_resource::<ScreenDimensions>();
         };
 
-        AmethystApplication::ui_base::<amethyst::input::StringBindings>()
+        AmethystApplication::ui_base()
             .with_assertion(assertion_fn)
             .run()
     }
@@ -966,7 +963,7 @@ mod test {
         #[test]
         fn audio_zero() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle(AudioBundle::default())
+                .add_bundle(AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })
@@ -976,7 +973,7 @@ mod test {
         #[test]
         fn audio_one() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle(AudioBundle::default())
+                .add_bundle(AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })
@@ -986,7 +983,7 @@ mod test {
         #[test]
         fn audio_two() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle_fn(|| AudioBundle::default())
+                .add_bundle_fn(|| AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })
@@ -996,7 +993,7 @@ mod test {
         #[test]
         fn audio_three() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle_fn(|| AudioBundle::default())
+                .add_bundle_fn(|| AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })

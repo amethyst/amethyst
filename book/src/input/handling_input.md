@@ -5,25 +5,23 @@ You initialise this `InputHandler` by creating an `InputBundle` and adding it to
 
 ```rust
 use amethyst::{
-    input::{InputBundle, StringBindings},
+    input::{InputBundle},
     prelude::*,
 };
 
 # struct Example;
 # impl SimpleState for Example {}
-fn main() -> amethyst::Result<()> {
-    // StringBindings is the default BindingTypes
-    let input_bundle = InputBundle::<StringBindings>::new();
+# fn main() -> amethyst::Result<()> {
+
+    let input_bundle = InputBundle::new();
 
     let mut world = World::default();
     let game_data = DispatcherBuilder::default()
-//..
-.with_bundle(input_bundle)?
-//..
-#  ;
+        //..
+        .add_bundle(input_bundle)?;
 
-    Ok(())
-}
+#   Ok(())
+# }
 ```
 
 To use the `InputHandler` inside a `System` you have to add it to the `SystemData`. With this you can check for events from input devices.
@@ -33,7 +31,7 @@ use amethyst::{
     core::SystemDesc,
     derive::SystemDesc,
     ecs::{Read, System, World},
-    input::{ControllerButton, InputHandler, StringBindings, VirtualKeyCode},
+    input::{ControllerButton, InputHandler, VirtualKeyCode},
     prelude::*,
 };
 
@@ -41,8 +39,7 @@ use amethyst::{
 struct ExampleSystem;
 
 impl<'s> System<'s> for ExampleSystem {
-    // The same BindingTypes from the InputBundle needs to be inside the InputHandler
-    type SystemData = Read<'s, InputHandler<StringBindings>>;
+    type SystemData = Read<'s, InputHandler>;
 
     fn run(&mut self, input: Self::SystemData) {
         // Gets mouse coordinates
@@ -70,16 +67,19 @@ You can find all the methods from `InputHandler` [here][input_ha].
 Now you have to add the `System` to the game data, just like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
 
 ```rust
-# use amethyst::{prelude::*, ecs::*, core::SystemDesc, derive::SystemDesc};
+# use amethyst::{core::SystemDesc, derive::SystemDesc, ecs::*, prelude::*};
 # #[derive(SystemDesc)]
-# struct ExampleSystem; 
-# impl<'a> System<'a> for ExampleSystem { type SystemData = (); fn run(&mut self, _: ()) {}}
-#
-let game_data = DispatcherBuilder::default()
+# struct ExampleSystem;
+# impl<'a> System<'a> for ExampleSystem {
+#   type SystemData = ();
+#   fn run(&mut self, _: ()) {}
+# }
+# fn main() {
+    let game_data = DispatcherBuilder::default()
+        //..
+        .with(ExampleSystem, "example_system", &["input_system"]);
     //..
-    .with(ExampleSystem, "example_system", &["input_system"])
-    //..
-#   ;
+# }
 ```
 
 ## Defining Key Bindings in a File
@@ -122,7 +122,7 @@ To add these bindings to the `InputBundle` you simply need to call the `with_bin
     let bindings_config = root.join("config").join("bindings.ron");
 
     let input_bundle =
-        InputBundle::<StringBindings>::new().with_bindings_from_file(bindings_config)?;
+        InputBundle::new().with_bindings_from_file(bindings_config)?;
 
     //..
 #   Ok(())
@@ -136,7 +136,7 @@ use amethyst::{
     core::{SystemDesc, Transform},
     derive::SystemDesc,
     ecs::{Read, ReadStorage, System, World, WriteStorage},
-    input::{InputHandler, StringBindings},
+    input::{InputHandler},
     prelude::*,
 };
 
@@ -157,7 +157,7 @@ impl<'s> System<'s> for MovementSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Player>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler>,
     );
 
     fn run(&mut self, (mut transforms, players, input): Self::SystemData) {

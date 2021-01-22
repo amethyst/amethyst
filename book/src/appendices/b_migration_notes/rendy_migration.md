@@ -39,7 +39,7 @@
 
   ```patch
   -InputBundle::<String, String>::new()
-  +InputBundle::<StringBindings>::new()
+  +InputBundle::new()
   ```
 
 - `UiBundle` type parameters:
@@ -48,7 +48,7 @@
   +use amethyst::renderer::types::DefaultBackend;
 
   -UiBundle::<String, String>::new()
-  +UiBundle::<DefaultBackend, StringBindings>::new()
+  +UiBundle::<DefaultBackend>::new()
   ```
 
 ## Window
@@ -60,7 +60,7 @@
   ```rust
   use amethyst::window::WindowBundle;
 
-  game_data.with_bundle(WindowBundle::from_config_file(display_config_path))?;
+  game_data.add_bundle(WindowBundle::from_config_file(display_config_path))?;
   ```
 
   This system is loaded automatically by the `RenderToWindow` render plugin.
@@ -112,7 +112,7 @@
   use amethyst::renderer::{types::DefaultBackend, RenderingSystem};
 
   let game_data = DispatcherBuilder::default()
-      .with_bundle(
+      .add_bundle(
           RenderingBundle::<DefaultBackend>::new()
               .with_plugin(
                   RenderToWindow::from_config_path(display_config)
@@ -224,7 +224,7 @@ Z-axis direction clarifications:
   -AmethystApplication::render_base("test_name", visibility);
   +use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
   +AmethystApplication::blank()
-  +    .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
+  +    .add_bundle(RenderEmptyBundle::<DefaultBackend>::new());
   ```
 
 - The `mark_render()` and `.run()` chained call is replaced by a single `run_isolated()` call.

@@ -14,7 +14,7 @@ use amethyst::{
     derive::PrefabData,
     ecs::{Entity, ReadStorage, Write, WriteStorage},
     gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystemDesc},
-    input::{is_close_requested, is_key_down, StringBindings, VirtualKeyCode},
+    input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
     renderer::{
         camera::CameraPrefab,
@@ -194,7 +194,7 @@ fn main() -> Result<(), amethyst::Error> {
                 .with_dep(&["gltf_loader"]),
         )?
         .add_bundle(
-            FlyControlBundle::<StringBindings>::new(None, None, None)
+            FlyControlBundle::new(None, None, None)
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
         )?

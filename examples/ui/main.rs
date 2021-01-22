@@ -6,7 +6,7 @@ use amethyst::{
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
     derive::SystemDesc,
     ecs::prelude::{Entity, System, Write},
-    input::{is_close_requested, is_key_down, InputBundle, StringBindings},
+    input::{is_close_requested, is_key_down, InputBundle},
     prelude::*,
     renderer::{
         plugins::RenderToWindow,
@@ -144,8 +144,8 @@ fn main() -> amethyst::Result<()> {
     let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .add_bundle(TransformBundle::new())?
-        .add_bundle(InputBundle::<StringBindings>::new())?
-        .add_bundle(UiBundle::<StringBindings>::new())?
+        .add_bundle(InputBundle::new())?
+        .add_bundle(UiBundle::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
         .with_system_desc(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
         .add_bundle(FpsCounterBundle::default())?

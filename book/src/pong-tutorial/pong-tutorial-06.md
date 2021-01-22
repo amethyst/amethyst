@@ -80,7 +80,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = DispatcherBuilder::default()
 // ... other bundles
-.with_bundle(AudioBundle::default())?
+.add_bundle(AudioBundle::default())?
 // ... systems
 ;
 

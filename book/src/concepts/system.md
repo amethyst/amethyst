@@ -418,14 +418,14 @@ system:
 # 
 use amethyst::{
     ecs::{prelude::*, System},
-    input::{InputHandler, StringBindings},
+    input::{InputHandler},
     prelude::*,
 };
 
 struct MyGameplaySystem;
 
 impl<'s> System<'s> for MyGameplaySystem {
-    type SystemData = (Read<'s, InputHandler<StringBindings>>, Write<'s, Game>);
+    type SystemData = (Read<'s, InputHandler>, Write<'s, Game>);
 
     fn run(&mut self, (input, mut game): Self::SystemData) {
         match game.current_state {

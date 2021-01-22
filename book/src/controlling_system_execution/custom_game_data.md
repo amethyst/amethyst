@@ -242,7 +242,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 # use amethyst::{
 #   core::{transform::TransformBundle, SystemBundle},
 #   ecs::{Dispatcher, DispatcherBuilder, World},
-#   input::{InputBundle, StringBindings},
+#   input::{InputBundle},
 #   prelude::*,
 #   renderer::{
 #       plugins::{RenderFlat2D, RenderToWindow},
@@ -318,10 +318,10 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
                 .with_plugin(RenderUi::default()),
         )?
         .with_base_bundle(&mut app_builder.world, TransformBundle::new())?
-        .with_base_bundle(&mut app_builder.world, UiBundle::<StringBindings>::new())?
+        .with_base_bundle(&mut app_builder.world, UiBundle::new())?
         .with_base_bundle(
             &mut app_builder.world,
-            InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
+            InputBundle::new().with_bindings_from_file(key_bindings_path)?,
         )?;
 
     let mut game = app_builder.build(game_data)?;

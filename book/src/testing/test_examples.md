@@ -40,7 +40,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
 // #[test]
 fn bundle_registers_system_with_resource() -> Result<(), Error> {
     AmethystApplication::blank()
-        .with_bundle(MyBundle)
+        .add_bundle(MyBundle)
         .with_assertion(|world| {
             // The next line would panic if the resource wasn't added.
             world.read_resource::<ApplicationResource>();

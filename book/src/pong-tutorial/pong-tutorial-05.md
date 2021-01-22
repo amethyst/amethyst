@@ -128,11 +128,11 @@ keep playing after someone scores and log who got the point.
 # fn main() -> amethyst::Result<()> {
 #   let path = "./config/display.ron";
 #   let config = DisplayConfig::load(&path)?;
-#   let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+#   let input_bundle = amethyst::input::InputBundle::new();
 # 
     let game_data = DispatcherBuilder::default()
-#       .with_bundle(TransformBundle::new())?
-#       .with_bundle(input_bundle)?
+#       .add_bundle(TransformBundle::new())?
+#       .add_bundle(input_bundle)?
 #       .with(systems::PaddleSystem, "paddle_system", &["input_system"])
 #       .with(systems::MoveBallsSystem, "ball_system", &[])
 #       .with(
@@ -175,7 +175,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 # };
 # fn main() -> Result<(), amethyst::Error> {
 #   let game_data = DispatcherBuilder::default()
-        .with_bundle(
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // ...
                 .with_plugin(RenderUi::default()),
@@ -193,7 +193,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 #   let display_config_path = "";
 #   struct Pong;
 #   let game_data = DispatcherBuilder::default()
-.with_bundle(UiBundle::<StringBindings>::new())?
+.add_bundle(UiBundle::new())?
 #;
 # 
 #   Ok(())

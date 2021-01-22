@@ -61,13 +61,13 @@ axes we defined. Let's make the following changes to `main.rs`.
 #   };
 # }
 # fn main() -> amethyst::Result<()> {
-    use amethyst::input::{InputBundle, StringBindings};
+    use amethyst::input::{InputBundle};
 
 #   let app_root = application_root_dir()?;
     let binding_path = app_root.join("config").join("bindings.ron");
 
     let input_bundle =
-        InputBundle::<StringBindings>::new().with_bindings_from_file(binding_path)?;
+        InputBundle::new().with_bindings_from_file(binding_path)?;
 
 #   let path = "./config/display.ron";
 #   let config = DisplayConfig::load(&path)?;
@@ -75,8 +75,8 @@ axes we defined. Let's make the following changes to `main.rs`.
 #   struct Pong;
 #   impl SimpleState for Pong {}
     let game_data = DispatcherBuilder::default()
-.with_bundle(TransformBundle::new())?
-.with_bundle(input_bundle)?
+.add_bundle(TransformBundle::new())?
+.add_bundle(input_bundle)?
 // ..
 ;
     let mut game = Application::new(assets_dir, Pong, game_data)?;
@@ -85,7 +85,7 @@ axes we defined. Let's make the following changes to `main.rs`.
 # }
 ```
 
-For `InputBundle<StringBindings>`, the parameter type determines how `axes` and `actions`
+For `InputBundle`, the parameter type determines how `axes` and `actions`
 are identified in the `bindings.ron` file
 (in this example, `String`s are used; e.g. `"left_paddle"`).
 
@@ -122,7 +122,7 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 use amethyst::core::{SystemDesc, Transform};
 use amethyst::derive::SystemDesc;
 use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
-use amethyst::input::{InputHandler, StringBindings};
+use amethyst::input::{InputHandler};
 
 // You'll have to mark PADDLE_HEIGHT as public in pong.rs
 use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
@@ -134,7 +134,7 @@ impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Paddle>,
-        Read<'s, InputHandler<StringBindings>>,
+        Read<'s, InputHandler>,
     );
 
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
@@ -174,10 +174,10 @@ operates on in the `SystemData` tuple: `WriteStorage`, `ReadStorage`, and
 `Read`. More specifically, the generic types we've used here tell us that the
 `PaddleSystem` mutates `Transform` components, `WriteStorage<'s, Transform>`, it
 reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
-`InputHandler<StringBindings>` resource we created earlier, using the `Read`
+`InputHandler` resource we created earlier, using the `Read`
 structure.
 
-> For `InputHandler<StringBindings>`, make sure the parameter type is the same
+> For `InputHandler`, make sure the parameter type is the same
 > as the one used to create the `InputBundle` earlier.
 
 Now that we have access to the storages of the components we want, we can iterate
@@ -226,14 +226,14 @@ fn main() -> amethyst::Result<()> {
 #           fn run(&mut self, _: Self::SystemData) {}
 #       }
 #   }
-#   let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+#   let input_bundle = amethyst::input::InputBundle::new();
     let game_data = DispatcherBuilder::default()
 // ...
-.with_bundle(TransformBundle::new())?
-.with_bundle(input_bundle)?
+.add_bundle(TransformBundle::new())?
+.add_bundle(input_bundle)?
 .with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
 // ...
-#  ;
+#;
 #   let assets_dir = "/";
 #   struct Pong;
 #   impl SimpleState for Pong {}
@@ -259,7 +259,7 @@ component of the transform's translation.
 # use amethyst::core::Transform;
 # use amethyst::derive::SystemDesc;
 # use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
-# use amethyst::input::{InputHandler, StringBindings};
+# use amethyst::input::{InputHandler};
 # enum Side {
 #   Left,
 #   Right,
@@ -273,7 +273,7 @@ component of the transform's translation.
 #   type SystemData = (
 #       WriteStorage<'s, Transform>,
 #       ReadStorage<'s, Paddle>,
-#       Read<'s, InputHandler<StringBindings>>,
+#       Read<'s, InputHandler>,
 #   );
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
         for (paddle, transform) in (&paddles, &mut transforms).join() {
@@ -313,7 +313,7 @@ Our run function should now look something like this:
 # use amethyst::core::Transform;
 # use amethyst::derive::SystemDesc;
 # use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
-# use amethyst::input::{InputHandler, StringBindings};
+# use amethyst::input::{InputHandler};
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
 # const ARENA_HEIGHT: f32 = 100.0;
@@ -331,7 +331,7 @@ Our run function should now look something like this:
 #   type SystemData = (
 #       WriteStorage<'s, Transform>,
 #       ReadStorage<'s, Paddle>,
-#       Read<'s, InputHandler<StringBindings>>,
+#       Read<'s, InputHandler>,
 #   );
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
         for (paddle, transform) in (&paddles, &mut transforms).join() {
