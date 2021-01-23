@@ -1,5 +1,5 @@
 use gltf::Document;
-use amethyst_assets::error::Error;
+use atelier_assets::importer::Error;
 
 pub fn convert_bytes(bytes: &Vec<u8>) -> Result<(Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>), Error> {
     log::debug!("Starting Gltf import");

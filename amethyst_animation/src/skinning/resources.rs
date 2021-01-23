@@ -1,4 +1,5 @@
 use amethyst_core::{ecs::*, math::Matrix4};
+use serde::Serialize;
 
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
@@ -8,7 +9,7 @@ pub struct Joint {
 }
 
 /// Skin, attach to the root entity in the mesh hierarchy
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Skin {
     /// Joint entities for the skin
     pub joints: Vec<Entity>,

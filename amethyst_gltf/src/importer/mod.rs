@@ -8,13 +8,15 @@ use atelier_assets::core::AssetUuid;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 use amethyst_assets::atelier_importer;
-use crate::importer::images::{build_image_color_space_assignments_from_materials, extract_images_to_import, ImageAsset};
 use atelier_assets::make_handle;
 use atelier_assets::loader::handle::Handle;
 use crate::importer::gltf_bytes_converter::convert_bytes;
 use amethyst_core::transform::Transform;
 use amethyst_core::math::{convert, Vector3, Unit, Quaternion, Vector4};
 use amethyst_core::Named;
+use amethyst_rendy::Camera;
+use amethyst_rendy::light::Light;
+use gltf::khr_lights_punctual::Kind;
 
 mod gltf_bytes_converter;
 
@@ -92,7 +94,9 @@ fn load_node(node: &Node, op: &mut ImportOp) -> Option<ImportedAsset> {
         search_tags.push(("node_name".to_string(), Some(name.to_string())));
     }
     node_asset.transform = Some(load_transform(node));
-    //TODO: Load camera
+    node_asset.camera = load_camera(node);
+    node_asset.light = load_light(node);
+    println!("maybe_light ? {:?}" , node_asset.light);
 
     Some(ImportedAsset {
         id: op.new_asset_uuid(),
@@ -104,7 +108,38 @@ fn load_node(node: &Node, op: &mut ImportOp) -> Option<ImportedAsset> {
     })
 }
 
-fn load_transform(node: &Node) -> Transform{
+fn load_light(node: &Node) -> Option<Light> {
+    println!("light ? {:?}", node.extras());
+    if let Some(light) = node.light() {
+        Light::from(light);
+    }
+    None
+}
+
+fn load_camera(node: &Node) -> Option<Camera> {
+    if let Some(camera) = node.camera() {
+        return Some(
+            match camera.projection() {
+                gltf::camera::Projection::Orthographic(proj) => Camera::orthographic(
+                    -proj.xmag(),
+                    proj.xmag(),
+                    -proj.ymag(),
+                    proj.ymag(),
+                    proj.znear(),
+                    proj.zfar(),
+                ),
+                gltf::camera::Projection::Perspective(proj) => Camera::perspective(
+                    proj.aspect_ratio().expect("Camera {} failed to load"),
+                    proj.yfov(),
+                    proj.znear(),
+                ),
+            }
+        );
+    }
+    None
+}
+
+fn load_transform(node: &Node) -> Transform {
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::default();
@@ -121,11 +156,11 @@ fn get_scene_index(document: &Document, options: &GltfSceneOptions) -> Result<us
     let num_scenes = document.scenes().len();
     match (options.scene_index, document.default_scene()) {
         (Some(index), _) if index >= num_scenes => {
-            Err(error::Error::InvalidSceneGltf(num_scenes).into())
+            Err(Error::Custom(format!("Invalid Scene Gltf {}", num_scenes)))
         }
         (Some(index), _) => Ok(index),
         (None, Some(scene)) => Ok(scene.index()),
-        (None, _) if num_scenes > 1 => Err(error::Error::InvalidSceneGltf(num_scenes).into()),
+        (None, _) if num_scenes > 1 => Err(Error::Custom(format!("Invalid Scene Gltf {}", num_scenes))),
         (None, _) => Ok(0),
     }
 }
@@ -142,18 +177,17 @@ mod test {
 
     #[test]
     fn importer_basic_test() {
-        let mut f = File::open("test/suzanne.glb").expect("suzanne.glb not found");
+        let mut f = File::open("test/light.gltf").expect("suzanne.glb not found");
         let mut buffer = Vec::new();
         // read the whole file
         f.read_to_end(&mut buffer).expect("read_to_end did not work");
         let mut buffer_slice = buffer.as_slice();
         let importer: Box<dyn BoxedImporter> = Box::new(GltfImporter::default());
         let mut import_op = ImportOp::default();
-        let res = futures::executor::block_on(importer.import_boxed(&mut import_op, &mut buffer_slice, Box::new(GltfSceneOptions::default()), Box::new(GltfImporterState{ id: None })  ));
+        let res = futures::executor::block_on(importer.import_boxed(&mut import_op, &mut buffer_slice, Box::new(GltfSceneOptions::default()), Box::new(GltfImporterState { id: None })));
         match res {
-            Ok(r) => {println!("res : {:?}", r.value.assets.len());}
-            Err(e)=> {println!("error e {:?}", e);}
+            Ok(r) => { println!("res : {:?}", r.value.assets.len()); }
+            Err(e) => { println!("error e {:?}", e); }
         };
     }
-
 }

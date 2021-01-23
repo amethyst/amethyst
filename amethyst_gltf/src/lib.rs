@@ -29,12 +29,13 @@ use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 use amethyst_rendy::light::Light;
+use amethyst_animation::Skin;
 
 mod error;
 mod importer;
 
 /// A GLTF node extent
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct GltfNodeExtent {
     /// The beginning of this extent
     pub start: Point3<f32>,
@@ -116,7 +117,7 @@ impl From<Range<[f32; 3]>> for GltfNodeExtent {
 }
 
 /// Used during gltf loading to contain the materials used from scenes in the file
-#[derive(Derivative)]
+#[derive(Derivative, Serialize)]
 #[derivative(Default(bound = ""))]
 pub struct GltfMaterialSet {
     pub(crate) materials: HashMap<usize, Prefab>,
@@ -156,7 +157,8 @@ pub struct GltfSceneOptions {
 }
 
 /// `AssetData` for gltf objects.
-#[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
+#[derive(Default, TypeUuid, Serialize)]
+#[uuid = "8a7b7733-d770-4400-8ea8-b82dbc10aae2"]
 pub struct GltfAsset {
     /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
     /// certain scenarios (based on the data in the Gltf file)
@@ -172,10 +174,10 @@ pub struct GltfAsset {
     /// `Material` is placed on all `Entity`s with graphics primitives with material
     pub material: Option<Material>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
-    pub animatable: Option<Animatable<usize, Transform>>,
+  // pub animatable: Option<Animatable<usize, Transform>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
     /// using the skin
-    pub skinnable: Option<Skinnable>,
+    pub skinnable: Option<Skin>,
     /// Node extent
     pub extent: Option<GltfNodeExtent>,
     /// Node name
