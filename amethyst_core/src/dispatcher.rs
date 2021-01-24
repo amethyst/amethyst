@@ -29,10 +29,30 @@ pub trait System<'a> {
     fn build(self) -> Box<dyn ParallelRunnable + 'static>;
 }
 
+impl<'a, T, R> System<'a> for T
+where
+    T: FnOnce() -> R,
+    R: ParallelRunnable + 'static,
+{
+    fn build(self) -> Box<dyn ParallelRunnable + 'static> {
+        Box::new(self())
+    }
+}
+
 /// A System builds a Runnable for the Dispatcher
 pub trait ThreadLocalSystem<'a> {
     /// builds the Runnable part of System
     fn build(self) -> Box<dyn Runnable + 'static>;
+}
+
+impl<'a, T, R> ThreadLocalSystem<'a> for T
+where
+    T: FnOnce() -> R,
+    R: Runnable + 'static,
+{
+    fn build(self) -> Box<dyn Runnable + 'static> {
+        Box::new(self())
+    }
 }
 
 /// This structure is an intermediate step for building [Dispatcher]. When [DispatcherBuilder::build] is called,
