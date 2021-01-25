@@ -10,7 +10,7 @@ use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 pub struct PaddleSystem;
 
 impl System<'_> for PaddleSystem {
-    fn build(&'_ mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("PaddleSystem")
                 .with_query(<(&mut Paddle, &mut Transform)>::query())

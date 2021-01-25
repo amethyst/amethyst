@@ -26,13 +26,13 @@ pub trait SystemBundle {
 /// A System builds a ParallelRunnable for the Dispatcher
 pub trait System<'a> {
     /// builds the Runnable part of System
-    fn build(&'a mut self) -> Box<dyn ParallelRunnable + 'static>;
+    fn build(self) -> Box<dyn ParallelRunnable + 'static>;
 }
 
 /// A System builds a Runnable for the Dispatcher
 pub trait ThreadLocalSystem<'a> {
     /// builds the Runnable part of System
-    fn build(&'a mut self) -> Box<dyn Runnable + 'static>;
+    fn build(self) -> Box<dyn Runnable + 'static>;
 }
 
 /// This structure is an intermediate step for building [Dispatcher]. When [DispatcherBuilder::build] is called,
@@ -70,7 +70,7 @@ pub struct DispatcherBuilder {
 impl<'a> DispatcherBuilder {
     /// Adds a system to the schedule.
     pub fn add_system<S: System<'a> + 'a>(&mut self, system: Box<S>) -> &mut Self {
-        let s: &'a mut S = Box::leak(system);
+        let s = *system;
         log::debug!("Building system");
         self.items.push(DispatcherItem::System(s.build()));
         self
@@ -78,7 +78,7 @@ impl<'a> DispatcherBuilder {
 
     /// Adds a thread local system to the schedule. This system will be executed on the main thread.
     pub fn add_thread_local<T: ThreadLocalSystem<'a> + 'a>(&mut self, system: Box<T>) -> &mut Self {
-        let s: &'a mut T = Box::leak(system);
+        let s = *system;
         self.items
             .push(DispatcherItem::ThreadLocalSystem(s.build()));
         self
@@ -213,7 +213,7 @@ pub mod tests {
     struct MySystem;
 
     impl System<'_> for MySystem {
-        fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        fn build(self) -> Box<dyn ParallelRunnable> {
             Box::new(
                 SystemBuilder::new("test")
                     .write_resource::<MyResource>()

@@ -12,7 +12,7 @@ use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
 pub struct WinnerSystem;
 
 impl System<'_> for WinnerSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("WinnerSystem")
                 .with_query(<(&mut Ball, &mut Transform)>::query())

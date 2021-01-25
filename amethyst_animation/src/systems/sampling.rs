@@ -38,7 +38,7 @@ impl<T> System<'_> for SamplerInterpolationSystem<T>
 where
     T: AnimationSampling + std::fmt::Debug,
 {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         let mut inner = Vec::default();
         let mut channels = Vec::default();
 

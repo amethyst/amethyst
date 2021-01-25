@@ -67,7 +67,7 @@ struct SpamSystem {
 }
 
 impl System<'static> for SpamSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TransformSystem")
                 .read_resource::<NetworkSimulationTime>()

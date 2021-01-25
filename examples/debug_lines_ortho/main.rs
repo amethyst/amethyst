@@ -23,7 +23,7 @@ use amethyst::{
 struct ExampleLinesSystem;
 
 impl System<'_> for ExampleLinesSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ExampleLinesSystem")
                 .read_resource::<ScreenDimensions>()

@@ -149,7 +149,7 @@ impl UiTransformSystem {
 }
 
 impl System<'static> for UiTransformSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UiTransformSystem")
                 .read_resource::<ScreenDimensions>()

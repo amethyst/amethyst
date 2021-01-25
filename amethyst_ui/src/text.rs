@@ -169,7 +169,7 @@ impl TextEditingMouseSystem {
 }
 
 impl System<'static> for TextEditingMouseSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TextEditingMouseSystem")
                 .read_resource::<Time>()

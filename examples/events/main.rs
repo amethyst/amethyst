@@ -49,7 +49,7 @@ struct GameplayState;
 struct SpammingSystem;
 
 impl System<'_> for SpammingSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("SpamSystem")
                 .write_resource::<EventChannel<MyEvent>>()
@@ -70,7 +70,7 @@ struct SpamReceiverSystem {
 }
 
 impl System<'static> for SpamReceiverSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("SpamSystem")
                 .read_resource::<EventChannel<MyEvent>>()

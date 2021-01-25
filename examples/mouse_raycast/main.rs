@@ -32,7 +32,7 @@ use amethyst::{
 struct MouseRaycastSystem;
 
 impl System<'_> for MouseRaycastSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MouseRaycastSystem")
                 .with_query(<(&Camera, &Transform)>::query())

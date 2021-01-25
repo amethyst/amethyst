@@ -29,7 +29,7 @@ pub struct AudioSystem;
 pub struct SelectedListener(pub Option<Entity>);
 
 impl System<'_> for AudioSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("AudioSystem")
                 .read_resource::<OutputWrapper>()
