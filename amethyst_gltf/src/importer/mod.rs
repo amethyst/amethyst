@@ -1,9 +1,9 @@
-use gltf::{Gltf, Document, buffer, Node};
+use gltf::{Gltf, Document, buffer, Node, Mesh};
 use gltf::buffer::Data;
 use gltf::iter::Buffers;
 use atelier_assets::importer::{Importer, ImportOp, ImporterValue, Error, ImportedAsset};
 use std::io::Read;
-use crate::{GltfSceneOptions, error, GltfAsset};
+use crate::{GltfSceneOptions, error, GltfAsset, GltfNodeExtent};
 use atelier_assets::core::AssetUuid;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -17,8 +17,19 @@ use amethyst_core::Named;
 use amethyst_rendy::Camera;
 use amethyst_rendy::light::Light;
 use gltf::khr_lights_punctual::Kind;
+use amethyst_animation::Skin;
+use crate::importer::mesh::load_mesh;
+use std::cmp::Ordering;
 
 mod gltf_bytes_converter;
+mod mesh;
+
+#[derive(Debug)]
+struct SkinInfo {
+    skin_index: usize,
+    mesh_indices: Vec<usize>,
+}
+
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum GltfObjectId {
@@ -74,7 +85,7 @@ impl Importer for GltfImporter {
             .expect("Tried to load a scene which does not exist");
 
         scene.nodes().into_iter().for_each(|node| {
-            if let Some(asset) = load_node(&node, op) {
+            if let Some(asset) = load_node(&node, op, &options, &buffers) {
                 asset_accumulator.push(asset);
             }
         });
@@ -85,7 +96,7 @@ impl Importer for GltfImporter {
     }
 }
 
-fn load_node(node: &Node, op: &mut ImportOp) -> Option<ImportedAsset> {
+fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers: &Vec<Data>) -> Option<ImportedAsset> {
     let mut node_asset = GltfAsset::default();
     let mut search_tags: Vec<(String, Option<String>)> = vec![];
 
@@ -96,7 +107,36 @@ fn load_node(node: &Node, op: &mut ImportOp) -> Option<ImportedAsset> {
     node_asset.transform = Some(load_transform(node));
     node_asset.camera = load_camera(node);
     node_asset.light = load_light(node);
-    println!("maybe_light ? {:?}" , node_asset.light);
+
+    let mut skin = node.skin().map(|skin| SkinInfo {
+        skin_index: skin.index(),
+        mesh_indices: Vec::default(),
+    });
+
+    let mut bounding_box = GltfNodeExtent::default();
+
+    // load graphics
+    if let Some(mesh) = node.mesh() {
+        let mut loaded_mesh = load_mesh(&mesh, buffers, options).expect("It should work");
+        match loaded_mesh.len().cmp(&1) {
+            Ordering::Equal => {
+                // single primitive can be loaded directly onto the node
+            }
+            Ordering::Greater => {
+                // if we have multiple primitives,
+                // we need to add each primitive as a child entity to the node
+            }
+            Ordering::Less => {
+                // Nothing to do here
+            }
+        }
+    }
+
+    // load childs
+    for child in node.children() {
+       let n = load_node(&child, op, options, buffers);
+    }
+
 
     Some(ImportedAsset {
         id: op.new_asset_uuid(),
@@ -108,10 +148,10 @@ fn load_node(node: &Node, op: &mut ImportOp) -> Option<ImportedAsset> {
     })
 }
 
+// TODO:  Experimental, can't test with blender export for now
 fn load_light(node: &Node) -> Option<Light> {
-    println!("light ? {:?}", node.extras());
     if let Some(light) = node.light() {
-        Light::from(light);
+        return Some(Light::from(light));
     }
     None
 }
@@ -177,7 +217,7 @@ mod test {
 
     #[test]
     fn importer_basic_test() {
-        let mut f = File::open("test/light.gltf").expect("suzanne.glb not found");
+        let mut f = File::open("test/sample.gltf").expect("suzanne.glb not found");
         let mut buffer = Vec::new();
         // read the whole file
         f.read_to_end(&mut buffer).expect("read_to_end did not work");

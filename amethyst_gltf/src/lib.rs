@@ -177,7 +177,7 @@ pub struct GltfAsset {
   // pub animatable: Option<Animatable<usize, Transform>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
     /// using the skin
-    pub skinnable: Option<Skin>,
+    pub skin: Option<Skin>,
     /// Node extent
     pub extent: Option<GltfNodeExtent>,
     /// Node name
