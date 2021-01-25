@@ -42,7 +42,7 @@ use legion::{
 /// struct TestSystem;
 ///
 /// impl System<'_> for TestSystem {
-///     fn build(&mut self) -> Box<dyn ParallelRunnable> {
+///     fn build(self) -> Box<dyn ParallelRunnable> {
 ///         Box::new(pausable(
 ///             SystemBuilder::new("TestSystem")
 ///                 .write_resource::<u32>()
