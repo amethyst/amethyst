@@ -72,7 +72,7 @@ struct SpamReceiveSystem {
 }
 
 impl System<'static> for SpamReceiveSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("SpamReceiveSystem")
                 .read_resource::<EventChannel<NetworkSimulationEvent>>()

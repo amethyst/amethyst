@@ -22,7 +22,7 @@ struct Player;
 struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {
-    fn build(&'s mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MovementSystem")
                 .read_resource::<InputHandler>()

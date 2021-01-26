@@ -19,7 +19,7 @@ pub struct WindowSystem;
 
 /// Builds window system that updates `ScreenDimensions` resource from a provided `Window`.
 impl System<'_> for WindowSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("WindowSystem")
                 .write_resource::<ScreenDimensions>()
@@ -58,7 +58,7 @@ pub struct EventLoopSystem {
 }
 
 impl ThreadLocalSystem<'static> for EventLoopSystem {
-    fn build(&'static mut self) -> Box<dyn Runnable> {
+    fn build(mut self) -> Box<dyn Runnable> {
         let mut events = Vec::with_capacity(128);
 
         Box::new(

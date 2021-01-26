@@ -68,7 +68,7 @@ impl Prefab {
 struct PrefabProcessorSystem;
 
 impl System<'static> for PrefabProcessorSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("PrefabProcessorSystem")
                 .read_resource::<ComponentRegistry>()

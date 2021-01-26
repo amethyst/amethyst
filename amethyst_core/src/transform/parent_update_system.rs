@@ -12,7 +12,7 @@ use crate::ecs::*;
 pub struct ParentUpdateSystem;
 
 impl System<'_> for ParentUpdateSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ParentUpdateSystem")
                 // Entities with a removed `Parent`

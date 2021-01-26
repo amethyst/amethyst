@@ -37,7 +37,7 @@ impl<A> System<'_> for AssetProcessorSystem<A>
 where
     A: Asset + ProcessableAsset,
 {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new(format!("Asset Processor: {}", A::name()))
                 .write_resource::<ProcessingQueue<A::Data>>()

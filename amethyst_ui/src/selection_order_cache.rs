@@ -60,7 +60,7 @@ impl<G> System<'_> for CacheSelectionSystem<G>
 where
     G: Send + Sync + 'static + PartialEq,
 {
-    fn build(&'_ mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("CacheSelectionOrderSystem")
                 .write_resource::<CachedSelectionOrderResource>()

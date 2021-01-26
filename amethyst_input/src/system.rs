@@ -18,7 +18,7 @@ pub struct InputSystem {
 }
 
 impl System<'static> for InputSystem {
-    fn build(&'static mut self) -> Box<dyn systems::ParallelRunnable> {
+    fn build(mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("InputSystem")
                 .read_resource::<EventChannel<Event<'static, ()>>>()

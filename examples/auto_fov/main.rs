@@ -248,7 +248,7 @@ impl SimpleState for Example {
 struct ShowFovSystem;
 
 impl System<'_> for ShowFovSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ShowFovSystem")
                 .read_resource::<ScreenDimensions>()

@@ -31,7 +31,7 @@ pub struct FlyMovementSystem {
 }
 
 impl System<'static> for FlyMovementSystem {
-    fn build(&'static mut self) -> Box<dyn systems::ParallelRunnable> {
+    fn build(self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("FlyMovementSystem")
                 .read_resource::<Time>()
@@ -66,7 +66,7 @@ impl System<'static> for FlyMovementSystem {
 pub struct ArcBallRotationSystem;
 
 impl System<'_> for ArcBallRotationSystem {
-    fn build(&mut self) -> Box<dyn systems::ParallelRunnable> {
+    fn build(self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ArcBallRotationSystem")
                 .with_query(<&ArcBallControl>::query())
@@ -122,7 +122,7 @@ pub struct FreeRotationSystem {
 }
 
 impl System<'static> for FreeRotationSystem {
-    fn build(&'static mut self) -> Box<dyn systems::ParallelRunnable> {
+    fn build(mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("FreeRotationSystem")
                 .read_resource::<EventChannel<Event<'static, ()>>>()
@@ -166,7 +166,7 @@ pub struct MouseFocusUpdateSystem {
 }
 
 impl System<'static> for MouseFocusUpdateSystem {
-    fn build(&'static mut self) -> Box<dyn systems::ParallelRunnable> {
+    fn build(mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MouseFocusUpdateSystem")
                 .read_resource::<EventChannel<Event<'static, ()>>>()
@@ -194,7 +194,7 @@ impl System<'static> for MouseFocusUpdateSystem {
 pub struct CursorHideSystem;
 
 impl ThreadLocalSystem<'_> for CursorHideSystem {
-    fn build(&mut self) -> Box<dyn systems::Runnable> {
+    fn build(self) -> Box<dyn systems::Runnable> {
         let mut is_hidden = false;
 
         Box::new(

@@ -28,7 +28,7 @@ impl<'a, 'b> SystemBundle for MyBundle {
 struct DifficultySystem;
 
 impl System<'_> for DifficultySystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("DifficultySystem")
                 .write_resource::<EventChannel<GameEvent>>()

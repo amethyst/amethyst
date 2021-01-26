@@ -12,7 +12,7 @@ const DEFAULT_SIM_FRAME_RATE: u32 = 30;
 pub struct NetworkSimulationTimeSystem;
 
 impl System<'_> for NetworkSimulationTimeSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("NetworkSimulationTimeSystem")
                 .write_resource::<NetworkSimulationTime>()

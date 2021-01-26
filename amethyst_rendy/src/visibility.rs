@@ -80,7 +80,7 @@ pub struct VisibilitySortingSystem {
 }
 
 impl System<'static> for VisibilitySortingSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("VisibilitySortingSystem")
                 .read_resource::<ActiveCamera>()

@@ -45,7 +45,7 @@ impl ResizeSystem {
 }
 
 impl System<'static> for ResizeSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ResizeSystem")
                 .read_resource::<ScreenDimensions>()

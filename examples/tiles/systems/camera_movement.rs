@@ -8,7 +8,7 @@ use amethyst::{
 pub(crate) struct CameraMovementSystem;
 
 impl System<'static> for CameraMovementSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("CameraMovementSystem")
                 .read_resource::<ActiveCamera>()

@@ -16,7 +16,7 @@ use crate::{
 pub struct HideHierarchySystem;
 
 impl System<'_> for HideHierarchySystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("HideHierarchySystem")
                 .with_query(<(&Children, Option<&HiddenPropagate>)>::query())

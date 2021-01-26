@@ -139,7 +139,7 @@ enum HotReloadStrategyInner {
 pub struct HotReloadSystem;
 
 impl System<'_> for HotReloadSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("HotReloadSystem")
                 .write_resource::<HotReloadStrategy>()
