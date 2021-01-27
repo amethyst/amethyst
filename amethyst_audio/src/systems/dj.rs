@@ -49,10 +49,12 @@ where
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         init_output(resources);
-        builder.add_system(Box::new(DjSystem {
-            f: self.f,
-            _phantom: PhantomData,
-        }));
+        builder.add_system(
+            DjSystem {
+                f: self.f,
+                _phantom: PhantomData,
+            },
+        );
         Ok(())
     }
 }

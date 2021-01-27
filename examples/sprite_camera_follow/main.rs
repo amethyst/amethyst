@@ -167,7 +167,7 @@ fn main() -> amethyst::Result<()> {
         .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
         .add_bundle(InputBundle::new().with_bindings_from_file(app_root.join("config/input.ron"))?)
-        .add_system(Box::new(MovementSystem))
+        .add_system(MovementSystem)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

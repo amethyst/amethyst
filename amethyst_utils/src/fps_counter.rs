@@ -115,7 +115,7 @@ impl SystemBundle for FpsCounterBundle {
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Box::new(FpsCounterSystem));
+        builder.add_system(FpsCounterSystem);
         Ok(())
     }
 }

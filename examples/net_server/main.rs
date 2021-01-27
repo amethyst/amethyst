@@ -60,7 +60,7 @@ impl SystemBundle for SpamReceiveBundle {
         resources.insert(TransportResource::default());
         resources.insert(NetworkSimulationTime::default());
 
-        builder.add_system(Box::new(SpamReceiveSystem { reader }));
+        builder.add_system(SpamReceiveSystem { reader });
         Ok(())
     }
 }

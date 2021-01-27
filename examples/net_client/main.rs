@@ -54,7 +54,7 @@ impl SystemBundle for SpamBundle {
         resources.insert(TransportResource::default());
         resources.insert(NetworkSimulationTime::default());
 
-        builder.add_system(Box::new(SpamSystem { reader }));
+        builder.add_system(SpamSystem { reader });
 
         Ok(())
     }

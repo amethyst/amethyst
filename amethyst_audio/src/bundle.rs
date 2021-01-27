@@ -24,7 +24,7 @@ impl SystemBundle for AudioBundle {
         resources.get_or_default::<OutputWrapper>();
         resources.get_or_default::<SelectedListener>();
 
-        builder.add_system(Box::new(AudioSystem));
+        builder.add_system(AudioSystem);
         Ok(())
     }
 }

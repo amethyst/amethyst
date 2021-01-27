@@ -58,7 +58,7 @@ use legion::{
 /// let mut resources = Resources::default();
 ///
 /// let mut dispatcher = DispatcherBuilder::default()
-///     .add_system(Box::new(TestSystem))
+///     .add_system(TestSystem)
 ///     .build(&mut world, &mut resources)
 ///     .unwrap();
 ///
@@ -185,7 +185,7 @@ mod test {
         resources.insert(CurrentState::Enabled);
 
         let mut dispatcher = DispatcherBuilder::default()
-            .add_system(Box::new(TestSystem))
+            .add_system(TestSystem)
             .build(&mut world, &mut resources)
             .unwrap();
 
@@ -204,7 +204,7 @@ mod test {
         resources.insert(CurrentState::Enabled);
 
         let mut dispatcher = DispatcherBuilder::default()
-            .add_system(Box::new(TestSystem))
+            .add_system(TestSystem)
             .build(&mut world, &mut resources)
             .unwrap();
 
