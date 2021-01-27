@@ -1,5 +1,5 @@
 [package]
-name = "gltf"
+name = "gltf_scene"
 version = "0.0.1"
 authors = ["Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"

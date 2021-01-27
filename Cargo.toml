@@ -90,7 +90,6 @@ exclude = [
     "examples/ui",
     "examples/custom_ui",
     "examples/custom_game_data",
-    "examples/gltf",
 ]
 
 [dependencies]

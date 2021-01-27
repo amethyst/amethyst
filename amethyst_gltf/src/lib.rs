@@ -15,7 +15,7 @@ rust_2018_compatibility
 
 use std::{collections::HashMap, ops::Range};
 
-use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter, prefab::Prefab, inventory};
+use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter, prefab::Prefab, inventory, Asset, AssetProcessorSystem};
 use amethyst_core::{
     ecs::{Entity, Read, ReadExpect, Write, WriteStorage},
     ecs::*,
@@ -39,6 +39,13 @@ pub use importer::GltfImporter;
 inventory::submit!{
     amethyst_assets::SourceFileImporter {
         extension: "gltf",
+        instantiator: || Box::new(GltfImporter::default()),
+    }
+}
+
+inventory::submit!{
+    amethyst_assets::SourceFileImporter {
+        extension: "glb",
         instantiator: || Box::new(GltfImporter::default()),
     }
 }
@@ -195,4 +202,11 @@ pub struct GltfAsset {
     pub index: usize,
     pub(crate) materials: Option<GltfMaterialSet>,
     pub(crate) material_id: Option<usize>,
+}
+
+impl Asset for GltfAsset {
+    fn name() -> &'static str {
+        "Texture"
+    }
+    type Data = ();
 }
