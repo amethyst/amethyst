@@ -97,7 +97,9 @@ where
             .add_system(UiTransformSystem::new())
             .add_system(UiMouseSystem::new())
             .add_system(UiButtonSystem::new(ui_btn_reader))
-            .add_system(ui_button_action_retrigger_event_system(ui_btn_action_retrigger_reader))
+            .add_system(ui_button_action_retrigger_event_system(
+                ui_btn_action_retrigger_reader,
+            ))
             .add_system(CacheSelectionSystem::<G>::new())
             .add_system(TextEditingMouseSystem::new(text_editing_mouse_reader))
             .add_system(SelectionMouseSystem::<G>::new(selection_mouse_reader))
@@ -135,22 +137,18 @@ impl SystemBundle for AudioUiBundle {
         resources.insert(EventChannel::<UiPlaySoundAction>::new());
 
         builder
-            .add_system(
-                UiSoundSystem::new(
-                    resources
-                        .get_mut::<EventChannel<UiPlaySoundAction>>()
-                        .unwrap()
-                        .register_reader(),
-                ),
-            )
-            .add_system(
-                ui_sound_event_retrigger_system(
-                    resources
-                        .get_mut::<EventChannel<UiEvent>>()
-                        .unwrap()
-                        .register_reader(),
-                ),
-            );
+            .add_system(UiSoundSystem::new(
+                resources
+                    .get_mut::<EventChannel<UiPlaySoundAction>>()
+                    .unwrap()
+                    .register_reader(),
+            ))
+            .add_system(ui_sound_event_retrigger_system(
+                resources
+                    .get_mut::<EventChannel<UiEvent>>()
+                    .unwrap()
+                    .register_reader(),
+            ));
         Ok(())
     }
 
