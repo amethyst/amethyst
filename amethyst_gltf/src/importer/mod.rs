@@ -7,7 +7,7 @@ use crate::{GltfSceneOptions, error, GltfAsset, GltfNodeExtent};
 use atelier_assets::core::AssetUuid;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
-use amethyst_assets::atelier_importer;
+use amethyst_assets::{atelier_importer, inventory};
 use atelier_assets::make_handle;
 use atelier_assets::loader::handle::Handle;
 use crate::importer::gltf_bytes_converter::convert_bytes;
@@ -78,16 +78,20 @@ impl Importer for GltfImporter {
 
         let (doc, buffers, images) = result.unwrap();
 
+        // TODO : load images
+        // TODO : load materials (with / without images)
+
         let scene_index = get_scene_index(&doc, options).expect("No scene has been found !");
         let scene = doc
             .scenes()
             .nth(scene_index)
             .expect("Tried to load a scene which does not exist");
 
+        let mut node_index: usize = 0;
+
         scene.nodes().into_iter().for_each(|node| {
-            if let Some(asset) = load_node(&node, op, &options, &buffers) {
-                asset_accumulator.push(asset);
-            }
+            let mut node_assets = load_node(&node, op, &options, &buffers, &mut node_index);
+            asset_accumulator.append(&mut node_assets);
         });
 
         Ok(ImporterValue {
@@ -96,15 +100,21 @@ impl Importer for GltfImporter {
     }
 }
 
-fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers: &Vec<Data>) -> Option<ImportedAsset> {
+fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers: &Vec<Data>, node_index: &mut usize) -> Vec<ImportedAsset> {
+    let mut imported_assets = Vec::new();
     let mut node_asset = GltfAsset::default();
+
+    node_asset.index = *node_index;
+    *node_index += 1;
+
     let mut search_tags: Vec<(String, Option<String>)> = vec![];
 
     if let Some(name) = node.name() {
         node_asset.name = Some(Named::new(name.to_string()));
         search_tags.push(("node_name".to_string(), Some(name.to_string())));
+        search_tags.push(("node_index".to_string(), Some(node_asset.index.to_string())));
     }
-    node_asset.transform = Some(load_transform(node));
+    node_asset.transform = load_transform(node);
     node_asset.camera = load_camera(node);
     node_asset.light = load_light(node);
 
@@ -121,6 +131,28 @@ fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers
         match loaded_mesh.len().cmp(&1) {
             Ordering::Equal => {
                 // single primitive can be loaded directly onto the node
+                let (mesh, material_index, bounds) = loaded_mesh.remove(0);
+                let mut mesh_search_tags: Vec<(String, Option<String>)> = vec![];
+                bounding_box.extend_range(&bounds);
+                let mut mesh_asset = GltfAsset::default();
+                mesh_asset.mesh = Some(mesh);
+                mesh_asset.index = *node_index;
+                mesh_search_tags.push(("node_index".to_string(), Some(mesh_asset.index.to_string())));
+                *node_index += 1;
+                //TODO: material
+
+                // if we have a skin we need to track the mesh entities
+                if let Some(ref mut skin) = skin {
+                    skin.mesh_indices.push(mesh_asset.index);
+                }
+                imported_assets.push(ImportedAsset {
+                    id: op.new_asset_uuid(),
+                    search_tags: mesh_search_tags,
+                    build_deps: vec![],
+                    load_deps: vec![],
+                    build_pipeline: None,
+                    asset_data: Box::new(mesh_asset),
+                });
             }
             Ordering::Greater => {
                 // if we have multiple primitives,
@@ -134,21 +166,22 @@ fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers
 
     // load childs
     for child in node.children() {
-       let n = load_node(&child, op, options, buffers);
+        let mut child_assets = load_node(&child, op, options, buffers, node_index);
+        imported_assets.append(&mut child_assets);
     }
 
 
-    Some(ImportedAsset {
+    imported_assets.push(ImportedAsset {
         id: op.new_asset_uuid(),
         search_tags,
         build_deps: vec![],
         load_deps: vec![],
         build_pipeline: None,
         asset_data: Box::new(node_asset),
-    })
+    });
+    imported_assets
 }
 
-// TODO:  Experimental, can't test with blender export for now
 fn load_light(node: &Node) -> Option<Light> {
     if let Some(light) = node.light() {
         return Some(Light::from(light));
@@ -179,7 +212,7 @@ fn load_camera(node: &Node) -> Option<Camera> {
     None
 }
 
-fn load_transform(node: &Node) -> Transform {
+fn load_transform(node: &Node) -> Option<Transform> {
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::default();
@@ -189,7 +222,7 @@ fn load_transform(node: &Node) -> Transform {
         Quaternion::from(Vector4::from(rotation)),
     ));
     *local_transform.scale_mut() = convert::<_, Vector3<f32>>(Vector3::from(scale));
-    local_transform
+    Some(local_transform)
 }
 
 fn get_scene_index(document: &Document, options: &GltfSceneOptions) -> Result<usize, Error> {

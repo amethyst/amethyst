@@ -6,7 +6,6 @@ use crate::{GltfSceneOptions, error};
 use amethyst_assets::error::Error;
 use std::ops::Range;
 use log::{trace, warn};
-use futures::SinkExt;
 use std::iter::repeat;
 use amethyst_rendy::skinning::JointCombined;
 

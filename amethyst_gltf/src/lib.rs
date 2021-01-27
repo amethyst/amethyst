@@ -15,7 +15,7 @@ rust_2018_compatibility
 
 use std::{collections::HashMap, ops::Range};
 
-use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter, prefab::Prefab};
+use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter, prefab::Prefab, inventory};
 use amethyst_core::{
     ecs::{Entity, Read, ReadExpect, Write, WriteStorage},
     ecs::*,
@@ -33,6 +33,15 @@ use amethyst_animation::Skin;
 
 mod error;
 mod importer;
+
+pub use importer::GltfImporter;
+
+inventory::submit!{
+    amethyst_assets::SourceFileImporter {
+        extension: "gltf",
+        instantiator: || Box::new(GltfImporter::default()),
+    }
+}
 
 /// A GLTF node extent
 #[derive(Clone, Debug, Serialize)]
@@ -182,6 +191,8 @@ pub struct GltfAsset {
     pub extent: Option<GltfNodeExtent>,
     /// Node name
     pub name: Option<Named>,
+    /// Node index when loading a full scene
+    pub index: usize,
     pub(crate) materials: Option<GltfMaterialSet>,
     pub(crate) material_id: Option<usize>,
 }
