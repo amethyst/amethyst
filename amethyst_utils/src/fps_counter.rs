@@ -128,7 +128,7 @@ impl SystemBundle for FpsCounterBundle {
     ) -> Result<(), Error> {
         resources.insert(
             self.samplesize
-                .map_or_else(|| FpsCounter::default(), |s| FpsCounter::new(s)),
+                .map_or_else(FpsCounter::default, FpsCounter::new),
         );
         builder.add_system(Box::new(FpsCounterSystem));
         Ok(())
