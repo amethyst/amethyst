@@ -106,15 +106,30 @@ impl System<'_> for FpsCounterSystem {
 
 ///Automatically adds a FpsCounterSystem and a FpsCounter resource with the specified sample size.
 #[derive(Default, Debug)]
-pub struct FpsCounterBundle;
+pub struct FpsCounterBundle {
+    samplesize: Option<usize>,
+}
+
+impl FpsCounterBundle {
+    /// Create a new `FpsCounterBundle` with the specified sample size.
+    pub fn new(samplesize: usize) -> Self {
+        Self {
+            samplesize: Some(samplesize),
+        }
+    }
+}
 
 impl SystemBundle for FpsCounterBundle {
     fn load(
         &mut self,
         _world: &mut World,
-        _resources: &mut Resources,
+        resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
+        resources.insert(
+            self.samplesize
+                .map_or_else(|| FpsCounter::default(), |s| FpsCounter::new(s)),
+        );
         builder.add_system(Box::new(FpsCounterSystem));
         Ok(())
     }
