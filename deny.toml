@@ -43,6 +43,7 @@ skip = [
     { name = "rand_core", version = "0.5.1" }, # upgrade nalgebra,glyph_brush
     { name = "rand_chacha", version = "0.2.2" }, # upgrade nalgebra,glyph_brush
     { name = "rand", version = "0.7.3" }, # upgrade nalgebra,glyph_brush
+    { name = "itertools", version = "0.9.0" }, # duplicates in rendy tree
 ]
 skip-tree = [{ name = "rendy" }, { name = "atelier-assets" }]
 deny = []
