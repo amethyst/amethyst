@@ -104,14 +104,14 @@ impl System<'_> for FpsCounterSystem {
     }
 }
 
-///Automatically adds a FpsCounterSystem and a FpsCounter resource with the specified sample size.
+///Automatically adds a `FpsCounterSystem` and a [`FpsCounter`] resource with the specified sample size.
 #[derive(Default, Debug)]
 pub struct FpsCounterBundle {
     samplesize: Option<usize>,
 }
 
 impl FpsCounterBundle {
-    /// Create a new `FpsCounterBundle` with the specified sample size.
+    /// Create a new [`FpsCounterBundle`] with the specified sample size. The default is 20, see [`FpsCounter`].
     pub fn new(samplesize: usize) -> Self {
         Self {
             samplesize: Some(samplesize),
