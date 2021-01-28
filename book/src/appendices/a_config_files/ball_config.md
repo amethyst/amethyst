@@ -143,4 +143,4 @@ This configuration sets the ball to be orange, while retaining the same size and
 example.
 
 [serde]: https://docs.serde.rs/serde/index.html
-[vec2]: https://nalgebra.org/rustdoc/nalgebra/base/type.Vector2.html
+[vec2]: https://docs.rs/nalgebra/0.24.0/nalgebra/base/type.Vector2.html
