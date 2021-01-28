@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Default)]
 struct Example {
     entity: Option<Entity>,
-    initialised: bool,
+    initialized: bool,
     progress: Option<ProgressCounter>,
 }
 
@@ -99,7 +99,7 @@ impl SimpleState for Example {
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        if !self.initialised {
+        if !self.initialized {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
 
@@ -131,7 +131,7 @@ impl SimpleState for Example {
                     .exec(|finder: TagFinder<'_, AnimationMarker>| finder.find())
                 {
                     self.entity = Some(entity);
-                    self.initialised = true;
+                    self.initialized = true;
                 }
             }
         }

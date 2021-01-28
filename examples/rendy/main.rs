@@ -57,7 +57,7 @@ use thread_profiler::profile_scope;
 
 struct Example {
     entity: Option<Entity>,
-    initialised: bool,
+    initialized: bool,
     progress: Option<ProgressCounter>,
     bullet_time: bool,
 }
@@ -66,7 +66,7 @@ impl Example {
     pub fn new() -> Self {
         Self {
             entity: None,
-            initialised: false,
+            initialized: false,
             progress: None,
             bullet_time: false,
         }
@@ -368,7 +368,7 @@ impl SimpleState for Example {
             time.set_time_scale(if self.bullet_time { 0.2 } else { 1.0 });
         }
 
-        if !self.initialised {
+        if !self.initialized {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
 
@@ -399,7 +399,7 @@ impl SimpleState for Example {
                     .exec(|finder: TagFinder<'_, AnimationMarker>| finder.find())
                 {
                     self.entity = Some(entity);
-                    self.initialised = true;
+                    self.initialized = true;
                 }
             }
 

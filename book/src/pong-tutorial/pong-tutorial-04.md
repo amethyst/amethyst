@@ -32,8 +32,8 @@ pub struct Ball {
 
 A ball has a velocity and a radius, so we store that information in the component.
 
-Then let's add an `initialise_ball` function the same way we wrote the
-`initialise_paddles` function.
+Then let's add an `initialize_ball` function the same way we wrote the
+`initialize_paddles` function.
 
 ```rust
 # use amethyst::assets::{AssetStorage, Handle, Loader};
@@ -53,8 +53,8 @@ Then let's add an `initialise_ball` function the same way we wrote the
 # const BALL_VELOCITY_Y: f32 = 50.0;
 # const ARENA_HEIGHT: f32 = 100.0;
 # const ARENA_WIDTH: f32 = 100.0;
-/// Initialises one ball in the middle-ish of the arena.
-fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+/// initializes one ball in the middle-ish of the arena.
+fn initialize_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     // Create the translation.
     let mut local_transform = Transform::default();
     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
@@ -88,9 +88,9 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 # use amethyst::renderer::{SpriteSheet, Texture};
 # struct Paddle;
 # struct Ball;
-# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {}
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
-# fn initialise_camera(world: &mut World) {}
+# fn initialize_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {}
+# fn initialize_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
+# fn initialize_camera(world: &mut World) {}
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #   unimplemented!()
 # }
@@ -104,15 +104,15 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 
         world.register::<Ball>(); // <- add this line temporarily
 
-        initialise_ball(world, sprite_sheet_handle.clone()); // <- add this line
-        initialise_paddles(world, sprite_sheet_handle);
-        initialise_camera(world);
+        initialize_ball(world, sprite_sheet_handle.clone()); // <- add this line
+        initialize_paddles(world, sprite_sheet_handle);
+        initialize_camera(world);
     }
 # }
 ```
 
-Don't forget to call `clone` on `sprite_sheet_handle` because `initialise_paddles` and
-`initialise_ball` *consume* the handle.
+Don't forget to call `clone` on `sprite_sheet_handle` because `initialize_paddles` and
+`initialize_ball` *consume* the handle.
 
 By running the game now, you should be able to see the two paddles and the ball
 in the center. In the next section, we're going to make this ball actually move!
@@ -376,7 +376,7 @@ Here, we do not want to change any state, so we return `Trans::None`.
 
 Now we have to move paddle creation to that method and add some delay to it. Our `update` runs every frame,
 so in order to do something only once after a given time, we have to use our local state.
-Additionally, notice that `initialise_paddles` requires us to provide the `sprite_sheet_handle`, but it was created
+Additionally, notice that `initialize_paddles` requires us to provide the `sprite_sheet_handle`, but it was created
 as a local variable inside `on_start`. For that reason, we have to make it a part of the state too.
 
 Let's add some fields to our `Pong` struct:
@@ -414,8 +414,8 @@ default empty state. Now let's use that inside our `Application` creation code i
 
 Now let's finish our timer and ball spawning code. We have to do two things:
 
-- First, we have to initialize our state and remove `initialise_ball` from `on_start`,
-- then we have to `initialise_ball` once after the time has passed inside `update`:
+- First, we have to initialize our state and remove `initialize_ball` from `on_start`,
+- then we have to `initialize_ball` once after the time has passed inside `update`:
 
 ```rust
 # use amethyst::prelude::*;
@@ -424,9 +424,9 @@ use amethyst::core::timing::Time;
 
 # struct Paddle;
 # struct Ball;
-# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {}
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
-# fn initialise_camera(world: &mut World) {}
+# fn initialize_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {}
+# fn initialize_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
+# fn initialize_camera(world: &mut World) {}
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #   unimplemented!()
 # }
@@ -447,8 +447,8 @@ impl SimpleState for Pong {
         // `spritesheet` is the layout of the sprites on the image;
         // `texture` is the pixel data.
         self.sprite_sheet_handle.replace(load_sprite_sheet(world));
-        initialise_paddles(world, self.sprite_sheet_handle.clone().unwrap());
-        initialise_camera(world);
+        initialize_paddles(world, self.sprite_sheet_handle.clone().unwrap());
+        initialize_camera(world);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
@@ -460,7 +460,7 @@ impl SimpleState for Pong {
             }
             if timer <= 0.0 {
                 // When timer expire, spawn the ball
-                initialise_ball(data.world, self.sprite_sheet_handle.clone().unwrap());
+                initialize_ball(data.world, self.sprite_sheet_handle.clone().unwrap());
             } else {
                 // If timer is not expired yet, put it back onto the state.
                 self.ball_spawn_timer.replace(timer);

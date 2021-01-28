@@ -53,7 +53,7 @@ impl SimpleState for Example {
                 .with_hover_image(UiImage::SolidColor([0.1, 0.1, 0.1, 0.5]))
                 .build_from_world(&world);
 
-        // Initialise the scene with an object, a light and a camera.
+        // initialize the scene with an object, a light and a camera.
         let handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, ())
         });

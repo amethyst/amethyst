@@ -162,7 +162,7 @@ our `Application`, but first we should create some `State`s.
 #   }
 # }
 # 
-# fn initialise(world: &World) {}
+# fn initialize(world: &World) {}
 # fn create_paused_ui(world: &World) {}
 # fn delete_paused_ui(world: &World) {}
 # 
@@ -204,7 +204,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
-        initialise(data.world);
+        initialize(data.world);
     }
 
     fn handle_event(

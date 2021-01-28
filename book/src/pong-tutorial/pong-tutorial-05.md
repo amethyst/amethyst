@@ -247,13 +247,13 @@ impl SimpleState for Pong {
 #       let world = data.world;
         // --snip--
 
-        initialise_scoreboard(world);
+        initialize_scoreboard(world);
     }
 }
 // ...
 
-/// Initialises a ui scoreboard
-fn initialise_scoreboard(world: &mut World) {
+/// initializes a ui scoreboard
+fn initialize_scoreboard(world: &mut World) {
     let font = world.read_resource::<DefaultLoader>().load(
         "font/square.ttf",
         TtfFormat,
@@ -315,10 +315,10 @@ fn initialise_scoreboard(world: &mut World) {
 }
 ```
 
-Here, we add some UI imports and create a new `initialise_scoreboard` function,
+Here, we add some UI imports and create a new `initialize_scoreboard` function,
 which we'll call in the `on_start` method of the `Pong` game state.
 
-Inside `initialise_scoreboard`, we're first going to load up a font which we've
+Inside `initialize_scoreboard`, we're first going to load up a font which we've
 saved to `assets/font/square.ttf` ([download][font-download]). We pull
 in the `TtfFormat` to match this font type, load the font as a resource in the
 world, and then save the handle to a `font` variable (which we'll use to create
@@ -461,7 +461,7 @@ We also use `ReadExpect` to access the `ScoreText` resource immutably. Again,
 With `ReadExpect`, we are asserting that `ScoreText` must already exist and will
 panic if it does not. We do this instead of just using `Read` because we are
 manually adding the `ScoreText` resource to the game in
-`pong.rs > initialise_scoreboard` instead of having the system create this
+`pong.rs > initialize_scoreboard` instead of having the system create this
 resource for us automatically.
 
 Inside our `run` method (after updating the signature to match our `SystemData`

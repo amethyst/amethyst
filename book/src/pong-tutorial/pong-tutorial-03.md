@@ -367,8 +367,8 @@ will take care of that for us, as well as set up the storage.
 # use amethyst::prelude::*;
 # use amethyst::renderer::SpriteSheet;
 # struct Paddle;
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
-# fn initialise_camera(world: &mut World) {}
+# fn initialize_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
+# fn initialize_camera(world: &mut World) {}
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #   unimplemented!()
 # }
@@ -382,8 +382,8 @@ will take care of that for us, as well as set up the storage.
 
         world.register::<Paddle>(); // <<-- No longer needed
 
-        initialise_paddles(world, sprite_sheet_handle);
-        initialise_camera(world);
+        initialize_paddles(world, sprite_sheet_handle);
+        initialize_camera(world);
     }
 # }
 ```

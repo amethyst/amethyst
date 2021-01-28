@@ -66,7 +66,7 @@ Replacing all instances of `PADDLE_*` will be similar to the `BallConfig`, as we
 creating the paddle entities. However, we will need to separate the `PaddlesConfig` into `left` and `right`.
 To avoid issues with the borrow checker, we read the `PaddlesConfig` once and copy all of the values,
 unwrapping them in one big assignment statement.
-In `initialise_paddles()` in `pong.rs`, add this code below reading the `ArenaConfig`.
+In `initialize_paddles()` in `pong.rs`, add this code below reading the `ArenaConfig`.
 
 ```rust
 let (

@@ -82,7 +82,7 @@ will.
 
 1. Create the camera entity.
 
-   In pong, we want the camera to cover the entire arena. Let's do it in a new function `initialise_camera`:
+   In pong, we want the camera to cover the entire arena. Let's do it in a new function `initialize_camera`:
 
    ```rust
    # const ARENA_HEIGHT: f32 = 100.0;
@@ -91,7 +91,7 @@ will.
    # use amethyst::ecs::World;
    # use amethyst::prelude::*;
    # use amethyst::renderer::Camera;
-   fn initialise_camera(world: &mut World) {
+   fn initialize_camera(world: &mut World) {
        // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
        let mut transform = Transform::default();
        transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
@@ -128,19 +128,19 @@ will.
    > useful in games without actual 3D, like our pong example. Perspective projections
    > are another way of displaying graphics, more useful in 3D scenes.
 
-1. To finish setting up the camera, we need to call `initialise_camera` from the
+1. To finish setting up the camera, we need to call `initialize_camera` from the
    Pong state's `on_start` method:
 
    ```rust
    # use amethyst::ecs::World;
    # use amethyst::prelude::*;
-   # fn initialise_camera(world: &mut World) {}
+   # fn initialize_camera(world: &mut World) {}
    # struct MyState;
    # impl SimpleState for MyState {
        fn on_start(&mut self, data: StateData<'_, GameData>) {
            let world = data.world;
 
-           initialise_camera(world);
+           initialize_camera(world);
        }
    # }
    ```
@@ -191,7 +191,7 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
 
    Legion will take care of creating the archetypes for optimal storage automatically based on the combination of components given to an entity.
 
-## Initialise some entities
+## initialize some entities
 
 Now that we have a `Paddle` component, let's define some paddle entities that
 include that component and add them to our `World`.
@@ -206,7 +206,7 @@ use amethyst::core::transform::Transform;
 position and orientation information. It is relative
 to a parent, if one exists.
 
-Okay, let's make some entities! We'll define an `initialise_paddles` function
+Okay, let's make some entities! We'll define an `initialize_paddles` function
 which will create left and right paddle entities and attach a `Transform`
 component to each to position them in our world. As we defined earlier,
 our canvas is from `0.0` to `ARENA_WIDTH` in the horizontal dimension and
@@ -233,8 +233,8 @@ general, as it makes operations like rotation easier.
 # const PADDLE_WIDTH: f32 = 4.0;
 # const ARENA_HEIGHT: f32 = 100.0;
 # const ARENA_WIDTH: f32 = 100.0;
-/// Initialises one paddle on the left, and one paddle on the right.
-fn initialise_paddles(world: &mut World) {
+/// initializes one paddle on the left, and one paddle on the right.
+fn initialize_paddles(world: &mut World) {
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
 
@@ -262,21 +262,21 @@ fn initialise_paddles(world: &mut World) {
 This is all the information Amethyst needs to track and move the paddles in our
 virtual world, but we'll need to do some more work to actually *draw* them.
 
-As a sanity check, let's make sure the code for initialising the paddles
+As a sanity check, let's make sure the code for initializing the paddles
 compiles. Update the `on_start` method to the following:
 
 ```rust
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;
-# fn initialise_paddles(world: &mut World) {}
-# fn initialise_camera(world: &mut World) {}
+# fn initialize_paddles(world: &mut World) {}
+# fn initialize_camera(world: &mut World) {}
 # struct MyState;
 # impl SimpleState for MyState {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
 
-        initialise_paddles(world);
-        initialise_camera(world);
+        initialize_paddles(world);
+        initialize_camera(world);
     }
 # }
 ```
@@ -300,7 +300,7 @@ Uh oh, what's wrong?
 For a `Component` to be used, there must be a `Storage<ComponentType>` resource
 set up in the `World`. The error message above means we have registered the
 `Paddle` component on an entity, but have not set up the `Storage`. We can fix
-this by adding the following line before `initialise_paddles(world)` in the
+this by adding the following line before `initialize_paddles(world)` in the
 `on_start` method:
 
 ```rust
@@ -508,18 +508,18 @@ the vector. If you're wondering about the ball sprite, it does exist on the
 image, but we will get to it in a later part of the tutorial.
 
 So far, so good. We have a sprite sheet loaded, now we need to link the sprites
-to the paddles. We update the `initialise_paddles` function by changing its
+to the paddles. We update the `initialize_paddles` function by changing its
 signature to:
 
 ```rust
 # use amethyst::ecs::World;
 # use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
-fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>)
+fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>)
 # {
 # }
 ```
 
-Inside `initialise_paddles`, we construct a `SpriteRender` for a paddle. We
+Inside `initialize_paddles`, we construct a `SpriteRender` for a paddle. We
 only need one here, since the only difference between the two paddles is that
 the right one is flipped horizontally.
 
@@ -529,7 +529,7 @@ the right one is flipped horizontally.
 #   assets::Handle,
 #   renderer::{SpriteRender, SpriteSheet},
 # };
-# fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+# fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     // Assign the sprites for the paddles
     let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
 # }
@@ -546,7 +546,7 @@ Next we simply add the components to the paddle entities:
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;
 # use amethyst::renderer::sprite::{SpriteRender, SpriteSheet};
-# fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+# fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 #   let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
                                                                    // Create a left plank entity.
     world
@@ -573,8 +573,8 @@ all together in the `on_start()` method:
 # use amethyst::prelude::*;
 # use amethyst::renderer::{sprite::SpriteSheet, Texture};
 # struct Paddle;
-# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
-# fn initialise_camera(world: &mut World) {}
+# fn initialize_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
+# fn initialize_camera(world: &mut World) {}
 # fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #   unimplemented!()
 # }
@@ -588,8 +588,8 @@ all together in the `on_start()` method:
 
         world.register::<Paddle>();
 
-        initialise_paddles(world, sprite_sheet_handle);
-        initialise_camera(world);
+        initialize_paddles(world, sprite_sheet_handle);
+        initialize_camera(world);
     }
 # }
 ```

@@ -34,10 +34,10 @@ fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle 
     loader.load(file, OggFormat, (), &world.read_resource())
 }
 
-/// Initialise audio in the world. This will eventually include
+/// initialize audio in the world. This will eventually include
 /// the background tracks as well as the sound effects, but for now
 /// we'll just work on sound effects.
-pub fn initialise_audio(world: &mut World) {
+pub fn initialize_audio(world: &mut World) {
     let sound_effects = {
         let loader = world.read_resource::<DefaultLoader>();
 
@@ -58,13 +58,13 @@ pub fn initialise_audio(world: &mut World) {
 Then, we'll need to add the Sounds Resource to our World. Update `pong.rs`:
 
 ```rust
-use crate::audio::initialise_audio;
+use crate::audio::initialize_audio;
 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         // --snip--
 
-        initialise_audio(world);
+        initialize_audio(world);
     }
 }
 ```
@@ -283,7 +283,7 @@ pub struct Music {
 
 Since we only have two music tracks, we use a `Cycle` to infinitely alternate between the two.
 
-Next, we need to add the Music Resource to our World. Update `initialise_audio`:
+Next, we need to add the Music Resource to our World. Update `initialize_audio`:
 
 ```rust
 # use std::{iter::Cycle, vec::IntoIter};
@@ -314,7 +314,7 @@ use amethyst::{
 #   pub bounce_sfx: SourceHandle,
 # }
 
-pub fn initialise_audio(world: &mut World) {
+pub fn initialize_audio(world: &mut World) {
     let (sound_effects, music) = {
         let loader = world.read_resource::<DefaultLoader>();
 

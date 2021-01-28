@@ -54,7 +54,7 @@ pub struct PongConfig {
 
 Now we need to replace our usage of the `BALL_*` constants with our new `BallConfig`.
 
-We use these values in `pong.rs` in the `initialise_ball()` function, so the substitution is even simpler than
+We use these values in `pong.rs` in the `initialize_ball()` function, so the substitution is even simpler than
 the `ArenaConfig`.
 
 In `pong.rs`, underneath our loading of the `ArenaConfig`, add the following lines
@@ -76,12 +76,12 @@ Our functions expect a `[f32; 4]` array, so we had to convert the tuple to an ar
 simple to do, but for more complex arrays it might be worth it to add a function to the `impl BallConfig` to
 avoid duplicating this effort.
 
-Now, within the `initialise_ball` function, replace `BALL_VELOCITY_X` with `velocity_x`, `BALL_VELOCITY_Y`
+Now, within the `initialize_ball` function, replace `BALL_VELOCITY_X` with `velocity_x`, `BALL_VELOCITY_Y`
 with `velocity_y`, `BALL_RADIUS` with `radius`, and `BALL_COLOR` with `color`.
 
-## Modifying the initialisation
+## Modifying the initialization
 
-Now we will modify our application initialisation. We don't want everyone to always access all the config files, so we need to
+Now we will modify our application initialization. We don't want everyone to always access all the config files, so we need to
 add each resource separately so systems can use only what they want.
 
 First, we need to change what `main.rs` is using. Change

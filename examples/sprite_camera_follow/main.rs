@@ -92,7 +92,7 @@ fn init_player(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity 
     ))
 }
 
-fn initialise_camera(world: &mut World, resources: &Resources, parent: Entity) -> Entity {
+fn initialize_camera(world: &mut World, resources: &Resources, parent: Entity) -> Entity {
     let (width, height) = {
         let dim = resources.get::<ScreenDimensions>().unwrap();
         (dim.width(), dim.height())
@@ -129,7 +129,7 @@ impl SimpleState for Example {
         init_background_sprite(world, &background_sprite_sheet_handle);
         init_reference_sprite(world, &circle_sprite_sheet_handle);
         let player = init_player(world, &circle_sprite_sheet_handle);
-        initialise_camera(world, data.resources, player);
+        initialize_camera(world, data.resources, player);
         init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
     }
 

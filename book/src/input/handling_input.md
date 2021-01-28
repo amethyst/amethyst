@@ -1,7 +1,7 @@
 # Handling Input
 
 Amethyst uses an `InputHandler` to handle user input.
-You initialise this `InputHandler` by creating an `InputBundle` and adding it to the game data.
+You initialize this `InputHandler` by creating an `InputBundle` and adding it to the game data.
 
 ```rust
 use amethyst::{input::InputBundle, prelude::*};

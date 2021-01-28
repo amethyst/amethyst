@@ -86,7 +86,7 @@ impl SimpleState for Example {
 
         self.loaded_sprite_sheet = Some(load_sprite_sheet(resources));
 
-        self.initialise_camera();
+        self.initialize_camera();
         self.adjust_camera(world, resources);
         self.redraw_sprites(world);
     }
@@ -176,8 +176,8 @@ impl SimpleState for Example {
 }
 
 impl Example {
-    /// This method initialises a camera which will view our sprite.
-    fn initialise_camera(&mut self) {
+    /// This method initializes a camera which will view our sprite.
+    fn initialize_camera(&mut self) {
         // Position the camera. Here we translate it forward (out of the screen) far enough to view
         // all of the sprites. Note that camera_z is 1.0, whereas the furthest sprite is -11.0.
         //
