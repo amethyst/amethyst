@@ -184,7 +184,7 @@ fn main() -> amethyst::Result<()> {
     game_data
         .add_bundle(LoaderBundle)
         .add_bundle(InputBundle::new().with_bindings_from_file(&key_bindings_path)?)
-        .add_system(Box::new(ExampleLinesSystem))
+        .add_system(ExampleLinesSystem)
         .add_bundle(
             FlyControlBundle::new(
                 Some("move_x".into()),

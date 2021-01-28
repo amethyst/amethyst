@@ -158,10 +158,10 @@ fn main() -> amethyst::Result<()> {
     dispatcher
         .add_bundle(InputBundle::new().with_bindings_from_file("examples/tiles/config/input.ron")?);
 
-    dispatcher.add_system(Box::new(systems::MapMovementSystem::default()));
-    dispatcher.add_system(Box::new(systems::CameraSwitchSystem::default()));
-    dispatcher.add_system(Box::new(systems::CameraMovementSystem));
-    dispatcher.add_system(Box::new(systems::DrawSelectionSystem::default()));
+    dispatcher.add_system(systems::MapMovementSystem::default());
+    dispatcher.add_system(systems::CameraSwitchSystem::default());
+    dispatcher.add_system(systems::CameraMovementSystem);
+    dispatcher.add_system(systems::DrawSelectionSystem::default());
     dispatcher.add_bundle(
         RenderingBundle::<DefaultBackend>::new()
             .with_plugin(

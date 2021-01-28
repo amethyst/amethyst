@@ -37,10 +37,10 @@ impl SystemBundle for LaminarNetworkBundle {
         resources.insert(LaminarSocketResource::new(self.socket.take()));
 
         builder
-            .add_system(Box::new(NetworkSimulationTimeSystem))
-            .add_system(Box::new(LaminarNetworkSendSystem))
-            .add_system(Box::new(LaminarNetworkPollSystem))
-            .add_system(Box::new(LaminarNetworkRecvSystem));
+            .add_system(NetworkSimulationTimeSystem)
+            .add_system(LaminarNetworkSendSystem)
+            .add_system(LaminarNetworkPollSystem)
+            .add_system(LaminarNetworkRecvSystem);
 
         Ok(())
     }

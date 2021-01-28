@@ -33,9 +33,9 @@ impl SystemBundle for UdpNetworkBundle {
         ));
 
         builder
-            .add_system(Box::new(NetworkSimulationTimeSystem))
-            .add_system(Box::new(UdpNetworkReceiveSystem))
-            .add_system(Box::new(UdpNetworkSendSystem));
+            .add_system(NetworkSimulationTimeSystem)
+            .add_system(UdpNetworkReceiveSystem)
+            .add_system(UdpNetworkSendSystem);
 
         Ok(())
     }

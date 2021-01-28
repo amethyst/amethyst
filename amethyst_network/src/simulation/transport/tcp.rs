@@ -51,11 +51,11 @@ impl SystemBundle for TcpNetworkBundle {
         // followed by TcpConnectionListenerSystem and TcpStreamManagementSystem
         // then TcpNetworkSendSystem and TcpNetworkRecvSystem
         builder
-            .add_system(Box::new(NetworkSimulationTimeSystem))
-            .add_system(Box::new(TcpConnectionListenerSystem))
-            .add_system(Box::new(TcpStreamManagementSystem))
-            .add_system(Box::new(TcpNetworkSendSystem))
-            .add_system(Box::new(TcpNetworkRecvSystem));
+            .add_system(NetworkSimulationTimeSystem)
+            .add_system(TcpConnectionListenerSystem)
+            .add_system(TcpStreamManagementSystem)
+            .add_system(TcpNetworkSendSystem)
+            .add_system(TcpNetworkRecvSystem);
 
         Ok(())
     }

@@ -60,8 +60,8 @@ fn main() -> Result<(), Error> {
     game_data
         .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
-        .add_system(Box::new(AutoFovSystem))
-        .add_system(Box::new(ShowFovSystem))
+        .add_system(AutoFovSystem)
+        .add_system(ShowFovSystem)
         .add_bundle(InputBundle::new())
         .add_bundle(UiBundle::<u32>::new())
         .add_bundle(

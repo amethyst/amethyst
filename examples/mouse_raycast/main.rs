@@ -302,7 +302,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default())
                 .with_plugin(RenderFlat2D::default()),
         )
-        .add_system(Box::new(MouseRaycastSystem));
+        .add_system(MouseRaycastSystem);
 
     let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();

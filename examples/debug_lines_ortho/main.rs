@@ -108,7 +108,7 @@ fn main() -> amethyst::Result<()> {
 
     let mut game_data = DispatcherBuilder::default();
     game_data
-        .add_system(Box::new(ExampleLinesSystem))
+        .add_system(ExampleLinesSystem)
         .add_bundle(TransformBundle::default())
         .add_bundle(LoaderBundle)
         .add_bundle(

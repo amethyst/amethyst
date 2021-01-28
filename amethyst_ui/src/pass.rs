@@ -67,7 +67,7 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
     ) -> Result<(), Error> {
         resources.insert(UiGlyphsResource::new(resources));
 
-        builder.add_system(Box::new(crate::glyphs::UiGlyphsSystem::<B>::default()));
+        builder.add_system(crate::glyphs::UiGlyphsSystem::<B>::default());
         Ok(())
     }
 
