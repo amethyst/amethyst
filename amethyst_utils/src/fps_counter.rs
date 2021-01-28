@@ -111,10 +111,16 @@ pub struct FpsCounterBundle {
 }
 
 impl FpsCounterBundle {
-    /// Create a new [`FpsCounterBundle`] with the specified sample size. The default is 20, see [`FpsCounter`].
-    pub fn new(samplesize: usize) -> Self {
+    /// Create a new [`FpsCounterBundle`].
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the sample size the [`FpsCounter`] uses. The default is 20.
+    pub fn sample_size(self, samplesize: usize) -> Self {
         Self {
             samplesize: Some(samplesize),
+            ..self
         }
     }
 }
