@@ -26,8 +26,8 @@ impl<'a, 'b> SystemBundle for MyBundle {
         let reader = chan.register_reader();
         resources.insert(chan);
 
-        builder.add_system(Box::new(SpammingSystem));
-        builder.add_system(Box::new(SpamReceiverSystem { reader }));
+        builder.add_system(SpammingSystem);
+        builder.add_system(SpamReceiverSystem { reader });
         Ok(())
     }
 }

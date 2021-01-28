@@ -19,7 +19,7 @@ impl<'a, 'b> SystemBundle for MyBundle {
         let chan = EventChannel::<GameEvent>::default();
         resources.insert(chan);
 
-        builder.add_system(Box::new(DifficultySystem));
+        builder.add_system(DifficultySystem);
         Ok(())
     }
 }

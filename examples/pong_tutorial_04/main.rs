@@ -39,9 +39,9 @@ fn main() -> amethyst::Result<()> {
             InputBundle::new().with_bindings_from_file(app_root.join("config/bindings.ron"))?,
         )
         // We have now added our own systems, defined in the systems module
-        .add_system(Box::new(PaddleSystem))
-        .add_system(Box::new(BallSystem))
-        .add_system(Box::new(BounceSystem))
+        .add_system(PaddleSystem)
+        .add_system(BallSystem)
+        .add_system(BounceSystem)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and

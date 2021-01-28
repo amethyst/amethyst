@@ -89,18 +89,16 @@ pub struct DispatcherBuilder {
 
 impl<'a> DispatcherBuilder {
     /// Adds a system to the schedule.
-    pub fn add_system<S: System<'a> + 'a>(&mut self, system: Box<S>) -> &mut Self {
-        let s = *system;
+    pub fn add_system<S: System<'a> + 'a>(&mut self, system: S) -> &mut Self {
         log::debug!("Building system");
-        self.items.push(DispatcherItem::System(s.build()));
+        self.items.push(DispatcherItem::System(system.build()));
         self
     }
 
     /// Adds a thread local system to the schedule. This system will be executed on the main thread.
-    pub fn add_thread_local<T: ThreadLocalSystem<'a> + 'a>(&mut self, system: Box<T>) -> &mut Self {
-        let s = *system;
+    pub fn add_thread_local<T: ThreadLocalSystem<'a> + 'a>(&mut self, system: T) -> &mut Self {
         self.items
-            .push(DispatcherItem::ThreadLocalSystem(s.build()));
+            .push(DispatcherItem::ThreadLocalSystem(system.build()));
         self
     }
 
@@ -296,7 +294,7 @@ pub mod tests {
         resources.insert(MyResource(false));
 
         let mut dispatcher = DispatcherBuilder::default()
-            .add_system(Box::new(MySystem))
+            .add_system(MySystem)
             .build(&mut world, &mut resources)
             .unwrap();
 

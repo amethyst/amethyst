@@ -44,7 +44,7 @@ where
                 .write_resource::<AssetStorage<A>>()
                 .build(|_, _, (queue, storage), _| {
                     // drain the changed queue
-                    while let Some(_) = queue.changed.pop() {}
+                    while queue.changed.pop().is_some() {}
                     queue.process(storage, ProcessableAsset::process);
                     storage.process_custom_drop(|_| {});
                 }),
