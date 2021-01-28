@@ -49,8 +49,8 @@ use std::path::Path;
 
 use glob::glob;
 use quote::quote;
-use regex::Regex;
 
+/// creates test out of every *.md file in the repo
 #[proc_macro]
 pub fn make_doc_tests(_: TokenStream) -> TokenStream {
     let doc_paths: Vec<String> = glob("**/*.md")
