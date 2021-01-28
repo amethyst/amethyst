@@ -32,7 +32,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    #   let game_data = DispatcherBuilder::default();
 
        let mut game = Application::new(assets_dir, LoadingState, game_data)?;
-   #   game.run();
+   #   //game.run();
    #   Ok(())
    }
    ```
@@ -91,7 +91,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    #       game_data,
    #   )?;
    # 
-   #   game.run();
+   #   //game.run();
    #   Ok(())
    # }
    ```

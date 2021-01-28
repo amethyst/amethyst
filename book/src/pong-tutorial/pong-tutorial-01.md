@@ -169,7 +169,7 @@ In `main()` in `main.rs` we are going to add the basic application setup:
 #   let app_root = application_root_dir()?;
     let assets_dir = app_root.join("assets");
     let mut game = Application::new(assets_dir, Pong, game_data)?;
-    game.run();
+    //game.run();
 #   Ok(())
 # }
 ```

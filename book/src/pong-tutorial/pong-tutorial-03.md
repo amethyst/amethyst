@@ -74,12 +74,12 @@ axes we defined. Let's make the following changes to `main.rs`.
 #   struct Pong;
 #   impl SimpleState for Pong {}
     let game_data = DispatcherBuilder::default()
-.add_bundle(TransformBundle::new())?
-.add_bundle(input_bundle)?
-// ..
-;
+        .add_bundle(TransformBundle::new())
+        .add_bundle(input_bundle);
+    // ..
+
     let mut game = Application::new(assets_dir, Pong, game_data)?;
-    game.run();
+    //game.run();
 #   Ok(())
 # }
 ```

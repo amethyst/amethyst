@@ -161,7 +161,7 @@ If you are defining a new format that may be useful to others, [please send us a
    #       game_data,
    #   )?;
    # 
-   #   game.run();
+   #   //game.run();
    #   Ok(())
    # }
    ```

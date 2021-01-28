@@ -325,7 +325,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
         )?;
 
     let mut game = app_builder.build(game_data)?;
-    game.run();
+    //game.run();
 # }
 ```
 

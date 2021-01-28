@@ -51,7 +51,7 @@ Those principles are:
 
 1. ### Data-oriented/Data-driven.
 
-   Building your game around the data makes it easy to prototype and build a game by reducing iteration cycle times.  
+   Building your game around the data makes it easy to prototype and build a game by reducing iteration cycle times.
    Complex processes like swapping assets during gameplay become a breeze, making testing, balancing, and refining a game a lot faster.
 
 ## Why use Amethyst?
@@ -109,13 +109,13 @@ If you want to contribute, or have questions, let us know either on [GitHub][db]
 [gl]: ./glossary.html
 [gs]: ./getting-started.html
 [jme]: http://jmonkeyengine.org/
+[legion]: https://github.com/amethyst/legion
 [math]: ./math.html
 [ml]: https://github.com/amethyst/amethyst/blob/master/docs/LICENSE-MIT
 [pt]: ./pong-tutorial.html
+[rodio]: https://github.com/RustAudio/rodio
 [rs]: https://www.rust-lang.org/
-[legion]: https://github.com/amethyst/legion
 [ud]: https://www.unrealengine.com/
 [un]: http://unity3d.com/
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
-[rodio]: https://github.com/RustAudio/rodio
 [winit]: https://github.com/rust-windowing/winit
