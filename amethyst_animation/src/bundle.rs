@@ -27,7 +27,7 @@ impl SystemBundle for VertexSkinningBundle {
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> amethyst_core::Result<()> {
-        builder.add_system(Box::new(VertexSkinningSystem::default()));
+        builder.add_system(VertexSkinningSystem::default());
         Ok(())
     }
 }
@@ -55,9 +55,7 @@ where
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> amethyst_core::Result<()> {
-        builder.add_system(Box::new(
-            crate::systems::sampling::SamplerInterpolationSystem::<T>::default(),
-        ));
+        builder.add_system(crate::systems::sampling::SamplerInterpolationSystem::<T>::default());
 
         Ok(())
     }
@@ -93,10 +91,7 @@ where
         builder: &mut DispatcherBuilder,
     ) -> amethyst_core::Result<()> {
         builder.add_bundle(SamplingBundle::<T> { m: PhantomData });
-        builder.add_system(Box::new(crate::systems::control::AnimationControlSystem::<
-            I,
-            T,
-        >::default()));
+        builder.add_system(crate::systems::control::AnimationControlSystem::<I, T>::default());
 
         Ok(())
     }

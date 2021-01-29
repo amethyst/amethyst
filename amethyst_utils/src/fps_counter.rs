@@ -83,7 +83,7 @@ impl FpsCounter {
 struct FpsCounterSystem;
 
 impl System<'_> for FpsCounterSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("fps_counter_system")
                 .read_resource::<Time>()
@@ -115,7 +115,7 @@ impl SystemBundle for FpsCounterBundle {
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Box::new(FpsCounterSystem));
+        builder.add_system(FpsCounterSystem);
         Ok(())
     }
 }

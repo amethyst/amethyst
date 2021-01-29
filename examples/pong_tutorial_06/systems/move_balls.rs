@@ -9,7 +9,7 @@ use crate::pong::Ball;
 pub struct BallSystem;
 
 impl System<'_> for BallSystem {
-    fn build(&'_ mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MoveBallsSystem")
                 .with_query(<(&Ball, &mut Transform)>::query())

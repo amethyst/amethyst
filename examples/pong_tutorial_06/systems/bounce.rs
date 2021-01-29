@@ -14,7 +14,7 @@ use crate::{
 pub struct BounceSystem;
 
 impl System<'_> for BounceSystem {
-    fn build(&'_ mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("BounceSystem")
                 .read_resource::<Sounds>()

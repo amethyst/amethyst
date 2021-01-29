@@ -31,7 +31,7 @@ impl TextEditingInputSystem {
 }
 
 impl System<'static> for TextEditingInputSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TextEditingInputSystem")
                 .read_resource::<EventChannel<Event<'static, ()>>>()

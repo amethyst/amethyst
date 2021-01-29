@@ -60,7 +60,7 @@ impl SystemBundle for SpamReceiveBundle {
         resources.insert(TransportResource::default());
         resources.insert(NetworkSimulationTime::default());
 
-        builder.add_system(Box::new(SpamReceiveSystem { reader }));
+        builder.add_system(SpamReceiveSystem { reader });
         Ok(())
     }
 }
@@ -72,7 +72,7 @@ struct SpamReceiveSystem {
 }
 
 impl System<'static> for SpamReceiveSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("SpamReceiveSystem")
                 .read_resource::<EventChannel<NetworkSimulationEvent>>()

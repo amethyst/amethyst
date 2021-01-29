@@ -51,11 +51,11 @@ impl SystemBundle for TcpNetworkBundle {
         // followed by TcpConnectionListenerSystem and TcpStreamManagementSystem
         // then TcpNetworkSendSystem and TcpNetworkRecvSystem
         builder
-            .add_system(Box::new(NetworkSimulationTimeSystem))
-            .add_system(Box::new(TcpConnectionListenerSystem))
-            .add_system(Box::new(TcpStreamManagementSystem))
-            .add_system(Box::new(TcpNetworkSendSystem))
-            .add_system(Box::new(TcpNetworkRecvSystem));
+            .add_system(NetworkSimulationTimeSystem)
+            .add_system(TcpConnectionListenerSystem)
+            .add_system(TcpStreamManagementSystem)
+            .add_system(TcpNetworkSendSystem)
+            .add_system(TcpNetworkRecvSystem);
 
         Ok(())
     }
@@ -68,7 +68,7 @@ pub struct TcpStreamManagementSystem;
 
 #[allow(clippy::map_entry)]
 impl System<'_> for TcpStreamManagementSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TcpStreamManagementSystem")
                 .write_resource::<TcpNetworkResource>()
@@ -115,7 +115,7 @@ impl System<'_> for TcpStreamManagementSystem {
 pub struct TcpConnectionListenerSystem;
 
 impl System<'_> for TcpConnectionListenerSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TcpConnectionListenerSystem")
                 .write_resource::<TcpNetworkResource>()
@@ -155,7 +155,7 @@ impl System<'_> for TcpConnectionListenerSystem {
 pub struct TcpNetworkSendSystem;
 
 impl System<'_> for TcpNetworkSendSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TcpNetworkSendSystem")
                 .write_resource::<TransportResource>()
@@ -206,7 +206,7 @@ fn write_message(
 pub struct TcpNetworkRecvSystem;
 
 impl System<'_> for TcpNetworkRecvSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TcpNetworkRecvSystem")
                 .write_resource::<TcpNetworkResource>()

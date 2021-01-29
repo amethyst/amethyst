@@ -56,7 +56,7 @@ impl Default for AutoFov {
 pub struct AutoFovSystem;
 
 impl System<'_> for AutoFovSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         let mut last_dimensions = ScreenDimensions::new(0, 0);
 
         Box::new(

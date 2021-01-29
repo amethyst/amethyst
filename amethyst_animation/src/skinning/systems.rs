@@ -19,7 +19,7 @@ use super::resources::*;
 pub struct VertexSkinningSystem;
 
 impl System<'_> for VertexSkinningSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         let mut updated = HashSet::new();
         let mut updated_skins = HashSet::new();
 

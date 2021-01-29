@@ -60,8 +60,8 @@ fn main() -> Result<(), Error> {
     game_data
         .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
-        .add_system(Box::new(AutoFovSystem))
-        .add_system(Box::new(ShowFovSystem))
+        .add_system(AutoFovSystem)
+        .add_system(ShowFovSystem)
         .add_bundle(InputBundle::new())
         .add_bundle(UiBundle::<u32>::new())
         .add_bundle(
@@ -248,7 +248,7 @@ impl SimpleState for Example {
 struct ShowFovSystem;
 
 impl System<'_> for ShowFovSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ShowFovSystem")
                 .read_resource::<ScreenDimensions>()

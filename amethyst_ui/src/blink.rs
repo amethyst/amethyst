@@ -28,7 +28,7 @@ pub struct Blink {
 pub struct BlinkSystem;
 
 impl System<'_> for BlinkSystem {
-    fn build(&'_ mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("BlinkSystem")
                 .read_resource::<Time>()

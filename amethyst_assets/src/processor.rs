@@ -37,12 +37,14 @@ impl<A> System<'_> for AssetProcessorSystem<A>
 where
     A: Asset + ProcessableAsset,
 {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new(format!("Asset Processor: {}", A::name()))
                 .write_resource::<ProcessingQueue<A::Data>>()
                 .write_resource::<AssetStorage<A>>()
                 .build(|_, _, (queue, storage), _| {
+                    // drain the changed queue
+                    while queue.changed.pop().is_some() {}
                     queue.process(storage, ProcessableAsset::process);
                     storage.process_custom_drop(|_| {});
                 }),

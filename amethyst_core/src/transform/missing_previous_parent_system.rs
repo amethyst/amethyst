@@ -8,7 +8,7 @@ use crate::ecs::*;
 pub struct MissingPreviousParentSystem;
 
 impl System<'_> for MissingPreviousParentSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MissingPreviousParentSystem")
                 // Entities with missing `PreviousParent`

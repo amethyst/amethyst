@@ -23,7 +23,7 @@ use amethyst::{
 struct ExampleLinesSystem;
 
 impl System<'_> for ExampleLinesSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ExampleLinesSystem")
                 .read_resource::<ScreenDimensions>()
@@ -108,7 +108,7 @@ fn main() -> amethyst::Result<()> {
 
     let mut game_data = DispatcherBuilder::default();
     game_data
-        .add_system(Box::new(ExampleLinesSystem))
+        .add_system(ExampleLinesSystem)
         .add_bundle(TransformBundle::default())
         .add_bundle(LoaderBundle)
         .add_bundle(

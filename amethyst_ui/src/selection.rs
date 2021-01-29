@@ -70,7 +70,7 @@ impl<G> System<'static> for SelectionKeyboardSystem<G>
 where
     G: Send + Sync + 'static + PartialEq,
 {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(SystemBuilder::new("SelectionKeyboardSystem")
             .read_resource::<EventChannel<Event<'static, ()>    >>()
             .read_resource::<CachedSelectionOrderResource>()
@@ -181,7 +181,7 @@ impl<G> System<'static> for SelectionMouseSystem<G>
 where
     G: Send + Sync + 'static + PartialEq,
 {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("SelectionMouseSystem")
                 .read_resource::<CachedSelectionOrderResource>()

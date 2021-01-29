@@ -37,10 +37,10 @@ impl SystemBundle for LaminarNetworkBundle {
         resources.insert(LaminarSocketResource::new(self.socket.take()));
 
         builder
-            .add_system(Box::new(NetworkSimulationTimeSystem))
-            .add_system(Box::new(LaminarNetworkSendSystem))
-            .add_system(Box::new(LaminarNetworkPollSystem))
-            .add_system(Box::new(LaminarNetworkRecvSystem));
+            .add_system(NetworkSimulationTimeSystem)
+            .add_system(LaminarNetworkSendSystem)
+            .add_system(LaminarNetworkPollSystem)
+            .add_system(LaminarNetworkRecvSystem);
 
         Ok(())
     }
@@ -50,7 +50,7 @@ impl SystemBundle for LaminarNetworkBundle {
 pub struct LaminarNetworkSendSystem;
 
 impl System<'_> for LaminarNetworkSendSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("LaminarNetworkSendSystem")
                 .write_resource::<TransportResource>()
@@ -130,7 +130,7 @@ impl System<'_> for LaminarNetworkSendSystem {
 pub struct LaminarNetworkPollSystem;
 
 impl System<'_> for LaminarNetworkPollSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("LaminarNetworkPollSystem")
                 .write_resource::<LaminarSocketResource>()
@@ -147,7 +147,7 @@ impl System<'_> for LaminarNetworkPollSystem {
 pub struct LaminarNetworkRecvSystem;
 
 impl System<'_> for LaminarNetworkRecvSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("LaminarNetworkRecvSystem")
                 .write_resource::<LaminarSocketResource>()

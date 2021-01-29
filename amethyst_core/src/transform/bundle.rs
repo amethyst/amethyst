@@ -17,9 +17,9 @@ impl SystemBundle for TransformBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         builder
-            .add_system(Box::new(MissingPreviousParentSystem))
-            .add_system(Box::new(ParentUpdateSystem))
-            .add_system(Box::new(TransformSystem));
+            .add_system(MissingPreviousParentSystem)
+            .add_system(ParentUpdateSystem)
+            .add_system(TransformSystem);
 
         Ok(())
     }

@@ -42,7 +42,7 @@ where
     I: std::fmt::Debug + PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Clone + std::fmt::Debug,
 {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         self.next_id = 1;
         let mut remove_sets = Vec::default();
         let mut remove_ids = Vec::default();

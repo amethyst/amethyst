@@ -8,7 +8,7 @@ use crate::ecs::*;
 pub struct TransformSystem;
 
 impl System<'_> for TransformSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TransformSystem")
                 // Entities at the hierarchy root (no parent component)

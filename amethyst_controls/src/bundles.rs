@@ -71,23 +71,23 @@ impl SystemBundle for FlyControlBundle {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        builder.add_system(Box::new(FlyMovementSystem {
+        builder.add_system(FlyMovementSystem {
             speed: self.speed,
             horizontal_axis: self.horizontal_axis.clone(),
             vertical_axis: self.vertical_axis.clone(),
             longitudinal_axis: self.longitudinal_axis.clone(),
-        }));
+        });
 
         let reader = resources
             .get_mut::<EventChannel<Event<'static, ()>>>()
             .expect("Window event channel not found in resources")
             .register_reader();
 
-        builder.add_system(Box::new(FreeRotationSystem {
+        builder.add_system(FreeRotationSystem {
             sensitivity_x: self.sensitivity_x,
             sensitivity_y: self.sensitivity_y,
             reader,
-        }));
+        });
 
         resources.insert(WindowFocus::new());
 
@@ -96,10 +96,10 @@ impl SystemBundle for FlyControlBundle {
             .expect("Window event channel not found in resources")
             .register_reader();
 
-        builder.add_system(Box::new(MouseFocusUpdateSystem { reader }));
+        builder.add_system(MouseFocusUpdateSystem { reader });
 
         resources.insert(HideCursor::default());
-        builder.add_thread_local(Box::new(CursorHideSystem));
+        builder.add_thread_local(CursorHideSystem);
 
         Ok(())
     }
@@ -153,13 +153,13 @@ impl SystemBundle for ArcBallControlBundle {
             .expect("Window event channel not found in resources")
             .register_reader();
 
-        builder.add_system(Box::new(FreeRotationSystem {
+        builder.add_system(FreeRotationSystem {
             sensitivity_x: self.sensitivity_x,
             sensitivity_y: self.sensitivity_y,
             reader,
-        }));
+        });
 
-        builder.add_system(Box::new(ArcBallRotationSystem));
+        builder.add_system(ArcBallRotationSystem);
 
         resources.insert(WindowFocus::new());
 
@@ -168,10 +168,10 @@ impl SystemBundle for ArcBallControlBundle {
             .expect("Window event channel not found in resources")
             .register_reader();
 
-        builder.add_system(Box::new(MouseFocusUpdateSystem { reader }));
+        builder.add_system(MouseFocusUpdateSystem { reader });
 
         resources.insert(HideCursor::default());
-        builder.add_thread_local(Box::new(CursorHideSystem));
+        builder.add_thread_local(CursorHideSystem);
 
         Ok(())
     }

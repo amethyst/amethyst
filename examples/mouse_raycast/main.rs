@@ -32,7 +32,7 @@ use amethyst::{
 struct MouseRaycastSystem;
 
 impl System<'_> for MouseRaycastSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MouseRaycastSystem")
                 .with_query(<(&Camera, &Transform)>::query())
@@ -302,7 +302,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default())
                 .with_plugin(RenderFlat2D::default()),
         )
-        .add_system(Box::new(MouseRaycastSystem));
+        .add_system(MouseRaycastSystem);
 
     let game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();

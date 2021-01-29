@@ -20,11 +20,11 @@ impl SystemBundle for PongBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         builder
-            .add_system(Box::new(PaddleSystem))
-            .add_system(Box::new(BallSystem))
+            .add_system(PaddleSystem)
+            .add_system(BallSystem)
             .flush()
-            .add_system(Box::new(BounceSystem))
-            .add_system(Box::new(WinnerSystem));
+            .add_system(BounceSystem)
+            .add_system(WinnerSystem);
         Ok(())
     }
 }

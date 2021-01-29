@@ -19,7 +19,7 @@ impl<'a, 'b> SystemBundle for MyBundle {
         let chan = EventChannel::<GameEvent>::default();
         resources.insert(chan);
 
-        builder.add_system(Box::new(DifficultySystem));
+        builder.add_system(DifficultySystem);
         Ok(())
     }
 }
@@ -28,7 +28,7 @@ impl<'a, 'b> SystemBundle for MyBundle {
 struct DifficultySystem;
 
 impl System<'_> for DifficultySystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("DifficultySystem")
                 .write_resource::<EventChannel<GameEvent>>()

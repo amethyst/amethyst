@@ -49,10 +49,10 @@ where
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         init_output(resources);
-        builder.add_system(Box::new(DjSystem {
+        builder.add_system(DjSystem {
             f: self.f,
             _phantom: PhantomData,
-        }));
+        });
         Ok(())
     }
 }
@@ -70,10 +70,10 @@ where
 
 impl<F, R> System<'static> for DjSystem<F, R>
 where
-    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync,
-    R: Send + Sync,
+    F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
+    R: Send + Sync + 'static,
 {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable + 'static> {
         Box::new(
             SystemBuilder::new("DjSystem")
                 .read_resource::<AssetStorage<Source>>()

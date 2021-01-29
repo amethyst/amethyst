@@ -141,7 +141,7 @@ pub struct MeshProcessorSystem<B: Backend> {
 }
 
 impl<B: Backend> System<'_> for MeshProcessorSystem<B> {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MeshProcessorSystem")
                 .write_resource::<ProcessingQueue<MeshData>>()
@@ -187,7 +187,7 @@ pub struct TextureProcessorSystem<B> {
 }
 
 impl<B: Backend> System<'_> for TextureProcessorSystem<B> {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TextureProcessorSystem")
                 .write_resource::<ProcessingQueue<TextureData>>()

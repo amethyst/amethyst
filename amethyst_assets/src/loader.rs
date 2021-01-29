@@ -483,7 +483,7 @@ where
             res.get_or_insert_with(ProcessingQueue::<Intermediate>::default);
         },
         register_system: |builder| {
-            builder.add_system(Box::new(ProcessorSystem::default()));
+            builder.add_system(ProcessorSystem::default());
         },
         with_storage: |res, func| {
             func(&mut (

@@ -29,7 +29,7 @@ use amethyst::{
 struct ExampleLinesSystem;
 
 impl System<'_> for ExampleLinesSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ExampleLinesSystem")
                 .read_resource::<Time>()
@@ -184,7 +184,7 @@ fn main() -> amethyst::Result<()> {
     game_data
         .add_bundle(LoaderBundle)
         .add_bundle(InputBundle::new().with_bindings_from_file(&key_bindings_path)?)
-        .add_system(Box::new(ExampleLinesSystem))
+        .add_system(ExampleLinesSystem)
         .add_bundle(
             FlyControlBundle::new(
                 Some("move_x".into()),

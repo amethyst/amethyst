@@ -110,7 +110,7 @@ impl SystemBundle for InputBundle {
 
         resources.insert(handler);
 
-        builder.add_system(Box::new(InputSystem { reader }));
+        builder.add_system(InputSystem { reader });
 
         Ok(())
     }

@@ -137,7 +137,7 @@ pub(crate) struct GlyphTextureProcessorSystem<B> {
 }
 
 impl<B: Backend> System<'static> for GlyphTextureProcessorSystem<B> {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         use hal::format::{Component as C, Swizzle};
 
         Box::new(
@@ -182,7 +182,7 @@ impl<B: Backend> System<'static> for GlyphTextureProcessorSystem<B> {
 }
 
 impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UiGlyphsSystem")
                 .write_resource::<Factory<B>>()

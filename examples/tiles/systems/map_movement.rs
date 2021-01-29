@@ -22,7 +22,7 @@ impl Default for MapMovementSystem {
     }
 }
 impl System<'static> for MapMovementSystem {
-    fn build(&'static mut self) -> Box<dyn ParallelRunnable> {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MapMovementSystem")
                 .read_resource::<Time>()

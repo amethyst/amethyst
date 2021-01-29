@@ -42,7 +42,7 @@ use legion::{
 /// struct TestSystem;
 ///
 /// impl System<'_> for TestSystem {
-///     fn build(&mut self) -> Box<dyn ParallelRunnable> {
+///     fn build(self) -> Box<dyn ParallelRunnable> {
 ///         Box::new(pausable(
 ///             SystemBuilder::new("TestSystem")
 ///                 .write_resource::<u32>()
@@ -58,7 +58,7 @@ use legion::{
 /// let mut resources = Resources::default();
 ///
 /// let mut dispatcher = DispatcherBuilder::default()
-///     .add_system(Box::new(TestSystem))
+///     .add_system(TestSystem)
 ///     .build(&mut world, &mut resources)
 ///     .unwrap();
 ///
@@ -165,7 +165,7 @@ mod test {
     struct TestSystem;
 
     impl System<'_> for TestSystem {
-        fn build(&mut self) -> Box<dyn ParallelRunnable> {
+        fn build(self) -> Box<dyn ParallelRunnable> {
             Box::new(pausable(
                 SystemBuilder::new("TestSystem")
                     .write_resource::<u32>()
@@ -185,7 +185,7 @@ mod test {
         resources.insert(CurrentState::Enabled);
 
         let mut dispatcher = DispatcherBuilder::default()
-            .add_system(Box::new(TestSystem))
+            .add_system(TestSystem)
             .build(&mut world, &mut resources)
             .unwrap();
 
@@ -204,7 +204,7 @@ mod test {
         resources.insert(CurrentState::Enabled);
 
         let mut dispatcher = DispatcherBuilder::default()
-            .add_system(Box::new(TestSystem))
+            .add_system(TestSystem)
             .build(&mut world, &mut resources)
             .unwrap();
 

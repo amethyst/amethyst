@@ -33,9 +33,9 @@ impl SystemBundle for UdpNetworkBundle {
         ));
 
         builder
-            .add_system(Box::new(NetworkSimulationTimeSystem))
-            .add_system(Box::new(UdpNetworkReceiveSystem))
-            .add_system(Box::new(UdpNetworkSendSystem));
+            .add_system(NetworkSimulationTimeSystem)
+            .add_system(UdpNetworkReceiveSystem)
+            .add_system(UdpNetworkSendSystem);
 
         Ok(())
     }
@@ -45,7 +45,7 @@ impl SystemBundle for UdpNetworkBundle {
 pub struct UdpNetworkSendSystem;
 
 impl System<'_> for UdpNetworkSendSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UdpNetworkSendSystem")
                 .write_resource::<TransportResource>()
@@ -88,7 +88,7 @@ impl System<'_> for UdpNetworkSendSystem {
 pub struct UdpNetworkReceiveSystem;
 
 impl System<'_> for UdpNetworkReceiveSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UdpNetworkReceiveSystem")
                 .write_resource::<UdpSocketResource>()

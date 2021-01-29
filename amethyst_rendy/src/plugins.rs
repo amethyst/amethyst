@@ -205,7 +205,7 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(Visibility::default());
-        builder.add_system(Box::new(VisibilitySortingSystem::default()));
+        builder.add_system(VisibilitySortingSystem::default());
         Ok(())
     }
 
@@ -259,7 +259,7 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         resources.insert(SpriteVisibility::default());
-        builder.add_system(Box::new(SpriteVisibilitySortingSystem));
+        builder.add_system(SpriteVisibilitySortingSystem);
         Ok(())
     }
 

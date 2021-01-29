@@ -46,7 +46,7 @@ struct Internals {
 pub struct SpriteVisibilitySortingSystem;
 
 impl System<'_> for SpriteVisibilitySortingSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         let mut transparent_centroids: Vec<Internals> = Vec::default();
 
         Box::new(

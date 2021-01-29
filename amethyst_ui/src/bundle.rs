@@ -56,9 +56,7 @@ where
         resources.insert(CachedSelectionOrderResource::default());
 
         resources.insert(ProcessingQueue::<GlyphTextureData>::default());
-        builder.add_system(Box::new(
-            GlyphTextureProcessorSystem::<DefaultBackend>::default(),
-        ));
+        builder.add_system(GlyphTextureProcessorSystem::<DefaultBackend>::default());
 
         log::debug!("Creating UI EventChannel Readers");
         let ui_btn_reader = resources
@@ -96,28 +94,20 @@ where
 
         log::debug!("Adding UI Systems to Dispatcher");
         builder
-            .add_system(Box::new(UiTransformSystem::new()))
-            .add_system(Box::new(UiMouseSystem::new()))
-            .add_system(Box::new(UiButtonSystem::new(ui_btn_reader)))
-            .add_system(Box::new(ui_button_action_retrigger_event_system(
+            .add_system(UiTransformSystem::new())
+            .add_system(UiMouseSystem::new())
+            .add_system(UiButtonSystem::new(ui_btn_reader))
+            .add_system(ui_button_action_retrigger_event_system(
                 ui_btn_action_retrigger_reader,
-            )))
-            .add_system(Box::new(CacheSelectionSystem::<G>::new()))
-            .add_system(Box::new(TextEditingMouseSystem::new(
-                text_editing_mouse_reader,
-            )))
-            .add_system(Box::new(SelectionMouseSystem::<G>::new(
-                selection_mouse_reader,
-            )))
-            .add_system(Box::new(SelectionKeyboardSystem::<G>::new(
-                selection_keyboard_reader,
-            )))
-            .add_system(Box::new(TextEditingInputSystem::new(
-                text_editing_input_reader,
-            )))
-            .add_system(Box::new(ResizeSystem::new()))
-            .add_system(Box::new(DragWidgetSystem::new(drag_widget_reader)))
-            .add_system(Box::new(BlinkSystem));
+            ))
+            .add_system(CacheSelectionSystem::<G>::new())
+            .add_system(TextEditingMouseSystem::new(text_editing_mouse_reader))
+            .add_system(SelectionMouseSystem::<G>::new(selection_mouse_reader))
+            .add_system(SelectionKeyboardSystem::<G>::new(selection_keyboard_reader))
+            .add_system(TextEditingInputSystem::new(text_editing_input_reader))
+            .add_system(ResizeSystem::new())
+            .add_system(DragWidgetSystem::new(drag_widget_reader))
+            .add_system(BlinkSystem);
 
         Ok(())
     }
@@ -147,18 +137,18 @@ impl SystemBundle for AudioUiBundle {
         resources.insert(EventChannel::<UiPlaySoundAction>::new());
 
         builder
-            .add_system(Box::new(UiSoundSystem::new(
+            .add_system(UiSoundSystem::new(
                 resources
                     .get_mut::<EventChannel<UiPlaySoundAction>>()
                     .unwrap()
                     .register_reader(),
-            )))
-            .add_system(Box::new(ui_sound_event_retrigger_system(
+            ))
+            .add_system(ui_sound_event_retrigger_system(
                 resources
                     .get_mut::<EventChannel<UiEvent>>()
                     .unwrap()
                     .register_reader(),
-            )));
+            ));
         Ok(())
     }
 

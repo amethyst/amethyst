@@ -22,7 +22,7 @@ struct Player;
 struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {
-    fn build(&'s mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MovementSystem")
                 .read_resource::<InputHandler>()
@@ -167,7 +167,7 @@ fn main() -> amethyst::Result<()> {
         .add_bundle(LoaderBundle)
         .add_bundle(TransformBundle)
         .add_bundle(InputBundle::new().with_bindings_from_file(app_root.join("config/input.ron"))?)
-        .add_system(Box::new(MovementSystem))
+        .add_system(MovementSystem)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

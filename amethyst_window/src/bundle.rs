@@ -74,8 +74,8 @@ impl SystemBundle for WindowBundle {
         resources.insert(window);
 
         builder
-            .add_system(Box::new(WindowSystem))
-            .add_thread_local(Box::new(EventLoopSystem { event_loop }));
+            .add_system(WindowSystem)
+            .add_thread_local(EventLoopSystem { event_loop });
 
         Ok(())
     }

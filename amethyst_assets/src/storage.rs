@@ -1,7 +1,6 @@
-use std::collections::HashMap;
-
 use atelier_assets::loader::{handle::AssetHandle, storage::IndirectionTable, LoadHandle};
 use crossbeam_queue::SegQueue;
+use fnv::FnvHashMap;
 
 struct AssetState<A> {
     version: u32,
@@ -14,8 +13,8 @@ struct AssetState<A> {
 ///
 /// * `A`: Asset Rust type.
 pub struct AssetStorage<A> {
-    assets: HashMap<LoadHandle, AssetState<A>>,
-    uncommitted: HashMap<LoadHandle, AssetState<A>>,
+    assets: FnvHashMap<LoadHandle, AssetState<A>>,
+    uncommitted: FnvHashMap<LoadHandle, AssetState<A>>,
     to_drop: SegQueue<A>,
     indirection_table: IndirectionTable,
 }
@@ -33,8 +32,12 @@ impl<A> AssetStorage<A> {
 
     /// Added to make api compatible with previous storage
     pub fn unload_all(&mut self) {
-        // FIXME do the unload correctly
-        self.assets.clear();
+        for (_, data) in self.uncommitted.drain() {
+            self.to_drop.push(data.asset);
+        }
+        for (_, data) in self.assets.drain() {
+            self.to_drop.push(data.asset);
+        }
     }
 
     pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
