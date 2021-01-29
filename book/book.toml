@@ -10,7 +10,7 @@ additional-js = ["style/book.js"]
 
 [output.linkcheck]
 follow-web-links = true
-warning-policy = "error"
+warning-policy = "warn"
 
 [output.linkcheck.http-headers]
 'crates\.io' = ["Accept: text/html"]
