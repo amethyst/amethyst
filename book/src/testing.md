@@ -44,7 +44,7 @@ fn loading_state_adds_load_resource() -> Result<(), Error> {
     AmethystApplication::blank()
         .with_state(|| LoadingState::new())
         .with_assertion(|world| {
-            world.read_resource::<LoadResource>();
+            resources.get::<LoadResource>();
         })
         .run()
 }

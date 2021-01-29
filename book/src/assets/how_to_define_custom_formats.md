@@ -135,12 +135,12 @@ If you are defining a new format that may be useful to others, [please send us a
    # 
    impl SimpleState for LoadingState {
        fn on_start(&mut self, data: StateData<'_, GameData>) {
-           let loader = &data.world.read_resource::<DefaultLoader>();
+           let loader = data.resources.get::<DefaultLoader>();
            let energy_blast_handle = loader.load(
                "energy_blast.mylang",
                MyLangFormat,
                &mut self.progress_counter,
-               &data.world.read_resource::<AssetStorage<EnergyBlast>>(),
+               data.resources.get::<AssetStorage<EnergyBlast>>(),
            );
 
            self.energy_blast_handle = Some(energy_blast_handle);

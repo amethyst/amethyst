@@ -13,12 +13,12 @@ pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
 where
     N: Into<String>,
 {
-    let loader = world.read_resource::<DefaultLoader>();
+    let loader = resources.get::<DefaultLoader>();
     loader.load(
         name,
         ImageFormat::default(),
         (),
-        &world.read_resource::<AssetStorage<Texture>>(),
+        resources.get::<AssetStorage<Texture>>(),
     )
 }
 
@@ -38,7 +38,7 @@ There is one thing that may surprise you.
 - You don't get back the [`Texture`][doc_tex], but a [`Handle<Texture>`][doc_tex_hd], which is a
   cloneable reference to the texture.
 
-  When you use [`loader.load(..)`][doc_load] to load an [`Asset`][doc_asset], the method returns immediately with a unique handle for your texture. The actual asset loading is handled asynchronously, so if you attempt to use the texture handle to retrieve the texture, such as with [`world.read_resource::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], you will get a `None` until the `Texture` has finished loading.
+  When you use [`loader.load(..)`][doc_load] to load an [`Asset`][doc_asset], the method returns immediately with a unique handle for your texture. The actual asset loading is handled asynchronously, so if you attempt to use the texture handle to retrieve the texture, such as with [`resources.get::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], you will get a `None` until the `Texture` has finished loading.
 
 The loaded texture will use nearest filtering, i.e. the pixels won't be interpolated.
 If you want to tweak the sampling, you can change `ImageFormat::default()` to

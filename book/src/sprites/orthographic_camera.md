@@ -26,7 +26,7 @@ impl SimpleState for ExampleState {
 impl ExampleState {
     fn initialize_camera(&mut self, world: &mut World) {
         let (width, height) = {
-            let dim = world.read_resource::<ScreenDimensions>();
+            let dim = resources.get::<ScreenDimensions>();
             (dim.width(), dim.height())
         };
 

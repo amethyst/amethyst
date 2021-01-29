@@ -101,7 +101,7 @@ impl SimpleState for ExampleState {
 #       };
         // ...
 
-        self.initialize_sprite(&mut data.world, &data.resources, sprite_sheet_handle);
+        self.initialize_sprite(&mut data.world, data.resources, sprite_sheet_handle);
     }
 }
 

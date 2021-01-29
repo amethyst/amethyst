@@ -89,7 +89,7 @@ impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
 
         // Build and setup the `Dispatcher`.
         let mut dispatcher = dispatcher_builder
-            .with_pool((*world.read_resource::<ArcThreadPool>()).clone())
+            .with_pool((*resources.get::<ArcThreadPool>()).clone())
             .build();
         dispatcher.setup(world);
 

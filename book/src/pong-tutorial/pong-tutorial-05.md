@@ -254,11 +254,11 @@ impl SimpleState for Pong {
 
 /// initializes a ui scoreboard
 fn initialize_scoreboard(world: &mut World) {
-    let font = world.read_resource::<DefaultLoader>().load(
+    let font = resources.get::<DefaultLoader>().load(
         "font/square.ttf",
         TtfFormat,
         (),
-        &world.read_resource(),
+        resources.get().unwrap(),
     );
     let p1_transform = UiTransform::new(
         "P1".to_string(),

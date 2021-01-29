@@ -51,11 +51,11 @@ impl SimpleState for MenuState {
         );
 
         /* Create the text */
-        #       let font_handle = world.read_resource::<DefaultLoader>().load(
+        #       let font_handle = resources.get::<DefaultLoader>().load(
         #       "font/square.ttf",
         #       TtfFormat,
         #       (),
-        #       &world.read_resource(),
+        #       resources.get().unwrap(),
         #       );
         #
         let ui_text = UiText::new(
@@ -117,11 +117,11 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Create the text */
-    #       let font_handle = world.read_resource::<DefaultLoader>().load(
+    #       let font_handle = resources.get::<DefaultLoader>().load(
     #          "font/square.ttf",
     #          TtfFormat,
     #          (),
-    #          &world.read_resource(),
+    #          resources.get().unwrap(),
     #       );
     #
     #       let ui_text = UiText::new(
@@ -214,11 +214,11 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Create the text */
-    #       let font_handle = world.read_resource::<DefaultLoader>().load(
+    #       let font_handle = resources.get::<DefaultLoader>().load(
     #           "font/square.ttf",
     #           TtfFormat,
     #           (),
-    #           &world.read_resource(),
+    #           resources.get().unwrap(),
     #       );
     #
     #       let ui_text = UiText::new(
@@ -307,11 +307,11 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Create the text */
-    #       let font_handle = world.read_resource::<DefaultLoader>().load(
+    #       let font_handle = resources.get::<DefaultLoader>().load(
     #           "font/square.ttf",
     #           TtfFormat,
     #           (),
-    #           &world.read_resource(),
+    #           resources.get().unwrap(),
     #       );
     #
     #       let ui_text = UiText::new(

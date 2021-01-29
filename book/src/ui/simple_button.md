@@ -58,8 +58,8 @@ to set the area big enough for the text to fit in!
 # 
 # fn some_function(world: &mut World) {
 #   let font_handle = {
-#       let loader = world.read_resource::<DefaultLoader>();
-#       let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
+#       let loader = resources.get::<DefaultLoader>();
+#       let font_storage = resources.get::<AssetStorage<FontAsset>>();
 #       get_default_font(&loader, &font_storage)
 #   };
     let ui_text = UiText::new(
@@ -104,8 +104,8 @@ If you had some state implemented you can create the button on its `on_start` me
 #           30f32,                         // height
         );
 #       let font_handle = {
-#           let loader = world.read_resource::<DefaultLoader>();
-#           let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
+#           let loader = resources.get::<DefaultLoader>();
+#           let font_storage = resources.get::<AssetStorage<FontAsset>>();
 #           get_default_font(&loader, &font_storage)
 #       };
 
@@ -170,8 +170,8 @@ The code snippet would look like this now:
 #   );
 # 
 #   let font_handle = {
-#       let loader = world.read_resource::<DefaultLoader>();
-#       let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
+#       let loader = resources.get::<DefaultLoader>();
+#       let font_storage = resources.get::<AssetStorage<FontAsset>>();
 #       get_default_font(&loader, &font_storage)
 #   };
 #   /* Create the text */

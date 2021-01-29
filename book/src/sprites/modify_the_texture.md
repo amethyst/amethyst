@@ -40,11 +40,11 @@ impl SimpleState for ExampleState {
 # 
 #       let sprite_sheet = load_sprite_sheet(texture_handle);
 #       let sprite_sheet_handle = {
-#           let loader = data.world.read_resource::<DefaultLoader>();
+#           let loader = data.resources.get::<DefaultLoader>();
 #           loader.load_from_data(
 #               sprite_sheet,
 #               (),
-#               &data.world.read_resource::<AssetStorage<SpriteSheet>>(),
+#               data.resources.get::<AssetStorage<SpriteSheet>>(),
 #           )
 #       };
         // ...
@@ -58,7 +58,7 @@ impl ExampleState {
         // ..
 
 #       let (width, height) = {
-#           let dim = world.read_resource::<ScreenDimensions>();
+#           let dim = resources.get::<ScreenDimensions>();
 #           (dim.width(), dim.height())
 #       };
 # 

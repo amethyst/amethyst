@@ -105,7 +105,7 @@ impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
 impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         // Get a handle to the `ThreadPool`.
-        let pool = (*world.read_resource::<ArcThreadPool>()).clone();
+        let pool = (*resources.get::<ArcThreadPool>()).clone();
 
         let mut core_dispatcher = self.core.with_pool(pool.clone()).build();
         let mut running_dispatcher = self.running.with_pool(pool.clone()).build();

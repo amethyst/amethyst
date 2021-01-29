@@ -43,7 +43,7 @@ fn bundle_registers_system_with_resource() -> Result<(), Error> {
         .add_bundle(MyBundle)
         .with_assertion(|world| {
             // The next line would panic if the resource wasn't added.
-            world.read_resource::<ApplicationResource>();
+            resources.get::<ApplicationResource>();
         })
         .run()
 }
@@ -80,7 +80,7 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
             world.insert(EffectReturn(entity));
         })
         .with_assertion(|world| {
-            let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
+            let entity = resources.get::<EffectReturn<Entity>>().0.clone();
 
             let my_component_storage = world.read_storage::<MyComponent>();
             let my_component = my_component_storage
@@ -127,7 +127,7 @@ fn system_increases_resource_value_by_one() -> Result<(), Error> {
         })
         .with_system_single(MySystem, "my_system", &[])
         .with_assertion(|world| {
-            let my_resource = world.read_resource::<MyResource>();
+            let my_resource = resources.get::<MyResource>();
 
             // If the system ran, the value in the `MyResource` should be 1.
             assert_eq!(1, my_resource.0);

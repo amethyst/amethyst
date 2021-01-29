@@ -66,12 +66,12 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
    impl SimpleState for LoadingState {
        fn on_start(&mut self, data: StateData<'_, GameData>) {
-           let loader = &data.world.read_resource::<DefaultLoader>();
+           let loader = data.resources.get::<DefaultLoader>();
            let texture_handle = loader.load(
                "player.png",
                ImageFormat::default(),
                &mut self.progress_counter,
-               &data.world.read_resource::<AssetStorage<Texture>>(),
+               data.resources.get::<AssetStorage<Texture>>(),
            );
 
            self.texture_handle = Some(texture_handle);
@@ -98,7 +98,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
 1. Wait for the asset to be loaded.
 
-   When [`loader.load(..)`][doc_load] is used to load an [`Asset`][doc_asset], the method returns immediately with a handle for the asset. The asset loading is handled asynchronously in the background, so if the handle is used to retrieve the asset, such as with [`world.read_resource::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], it will return `None` until the `Texture` has finished loading.
+   When [`loader.load(..)`][doc_load] is used to load an [`Asset`][doc_asset], the method returns immediately with a handle for the asset. The asset loading is handled asynchronously in the background, so if the handle is used to retrieve the asset, such as with [`resources.get::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], it will return `None` until the `Texture` has finished loading.
 
    ```rust
    # use amethyst::{
