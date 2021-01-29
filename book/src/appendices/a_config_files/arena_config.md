@@ -66,6 +66,7 @@ it. We do this by adding the config as a resource during `Application` creation:
 ```rust
 use amethyst::{
     assets::LoaderBundle,
+    config::Config,
     ecs::{DispatcherBuilder, ParallelRunnable},
     Application, EmptyState,
 };
@@ -94,7 +95,7 @@ struct NullState;
 impl EmptyState for NullState {}
 
 fn main() -> amethyst::Result<()> {
-    let arena_config = crate::config::ArenaConfig::default();
+    let arena_config = crate::config::ArenaConfig::load("config.ron");
 
     let mut builder = DispatcherBuilder::default().add_bundle(LoaderBundle);
 
@@ -140,13 +141,14 @@ Now, in the `initialize_paddles()` function, add the following lines after the i
 # 
 # use amethyst::{ecs::Resources, ecs::World, StateData};
 # 
-# fn main() {
+# fn main() -> amethyst::Result<()> {
 #   let mut resources = Resources::default();
 #   resources.insert(ArenaConfig::default());
     let (arena_height, arena_width) = {
         let config = resources.get::<ArenaConfig>().unwrap();
         (config.height, config.width)
     };
+#   Ok(())
 # }
 ```
 
