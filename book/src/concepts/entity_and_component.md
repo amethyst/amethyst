@@ -7,7 +7,7 @@ An `Entity` represents a single object in your world. `Component` represents one
 ## Entity and Component in Amethyst
 
 In an inheritance design, an entity usually contains components. All the data and methods related to an entity are stored within.
-However, in ECS design, an entity is just a general purpose identifier. In fact, the implementation of `Entity` in Amethyst is simply:
+However, in ECS design, an entity is a general purpose identifier. In fact, the implementation of `Entity` in Amethyst is simply:
 
 ```rust
 struct Entity(u64);
@@ -35,7 +35,7 @@ Querying is covered in the systems chapter.
 
 ## Declaring a component and creating an Archetype
 
-To declare a component, you just declare the relevant underlying data.  Legion ECS will create archetypes that correspond to the different combinations of this data.:
+To declare a component, you declare the relevant underlying data.  Legion ECS will create archetypes that correspond to the different combinations of this data.:
 
 ```rust
 # use amethyst::{

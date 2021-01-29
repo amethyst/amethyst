@@ -36,7 +36,7 @@ fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle 
 
 /// initialize audio in the world. This will eventually include
 /// the background tracks as well as the sound effects, but for now
-/// we'll just work on sound effects.
+/// we'll work on sound effects.
 pub fn initialize_audio(world: &mut World) {
     let sound_effects = {
         let loader = resources.get::<DefaultLoader>();

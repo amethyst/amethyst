@@ -8,8 +8,8 @@ as to attract more developers to it and to promote collaboration
 ## Contribution
 
 Contribution is highly welcome! If you'd like another
-feature, just create an issue. You can also help
-out if you want to; just pick a "help wanted" issue.
+feature, create an issue. You can also help
+out if you want to; pick a "help wanted" issue.
 If you need any help, feel free to ask!
 
 All contributions are assumed to be dual-licensed under

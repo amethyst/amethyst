@@ -61,7 +61,7 @@ impl<'s> System<'s> for ExampleSystem {
 
 You can find all the methods from `InputHandler` [here][input_ha].
 
-Now you have to add the `System` to the game data, just like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
+Now you have to add the `System` to the game data, like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
 
 ```rust
 # use amethyst::{core::SystemDesc, derive::SystemDesc, ecs::*, prelude::*};

@@ -91,8 +91,8 @@ fn main() -> amethyst::Result<()> {
 > **Note:** The [SimpleState] is just a simplified version of [State] trait.
 > It already implements a bunch of stuff for us, like the `State`'s `update`
 > and `handle_event` methods that you would have to implement yourself were you
-> using just a regular `State`. Its behavior mostly cares about handling the exit signal cleanly,
-> by just quitting the application directly from the current state.
+> using a regular `State`. Its behavior mostly cares about handling the exit signal cleanly,
+> by quitting the application directly from the current state.
 
 ## Setting up the logger
 

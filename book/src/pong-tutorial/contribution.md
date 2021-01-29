@@ -4,7 +4,7 @@ And... that's where the pong chapter ends. We hope you found it useful!
 
 You can find the entire code with balls, score and music on the example pages available [here][src_code].
 
-Next up in this book we will explain how Amethyst does Math, Input, Assets and so on. Whenever you have a need for more learning-by-example materials just come back to this page for an overview of available resources.
+Next up in this book we will explain how Amethyst does Math, Input, Assets and so on. Whenever you have a need for more learning-by-example materials come back to this page for an overview of available resources.
 
 ## Other tutorials or examples
 

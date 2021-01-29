@@ -84,7 +84,7 @@ and a `Transform` component, and then checking each ball to see if it has
 reached either the left or right boundary of the arena. If so, we reverse
 its direction and put it back in the middle of the screen.
 
-Now, we just need to add our new system to `main.rs`, and we should be able to
+Now, we need to add our new system to `main.rs`, and we should be able to
 keep playing after someone scores and log who got the point.
 
 ```rust
@@ -152,7 +152,7 @@ keep playing after someone scores and log who got the point.
 ## Adding a Scoreboard
 
 We have a pretty functional Pong game now! At this point, the least fun thing
-about the game is just that players have to keep track of the score themselves.
+about the game is that players have to keep track of the score themselves.
 Our game should be able to do that for us.
 
 In this section, we'll set up UI rendering for our game and create a scoreboard
@@ -207,7 +207,7 @@ sprites.
 
 > **Note:** We're using a `UiBundle` with type `StringBindings` here because the
 > `UiBundle` needs to know what types our `InputHandler` is using to map `actions`
-> and `axes`. So just know that your `UiBundle` type should match your
+> and `axes`. So know that your `UiBundle` type should match your
 > `InputHandler` type. You can read more about those here: [UiBundle][ui-bundle],
 > [InputHandler][input-handler].
 
@@ -231,7 +231,7 @@ pub struct ScoreText {
 
 > Don't glimpse over the `#[derive(Default)]` annotation for the `ScoreBoard` struct!
 
-`ScoreBoard` is just a container that will allow us to keep track of each
+`ScoreBoard` is a container that will allow us to keep track of each
 player's score. We'll use this in another module later in this chapter, so we've
 gone ahead and marked it as public (same with `ScoreText`). `ScoreText` is also
 a container, but this one holds handles to the UI `Entity`s that will be
@@ -459,7 +459,7 @@ use `Option<Write<'s, ScoreBoard>>` instead.
 We also use `ReadExpect` to access the `ScoreText` resource immutably. Again,
 `ScoreText` is a single resource item rather than a collection of components.
 With `ReadExpect`, we are asserting that `ScoreText` must already exist and will
-panic if it does not. We do this instead of just using `Read` because we are
+panic if it does not. We do this instead of using `Read` because we are
 manually adding the `ScoreText` resource to the game in
 `pong.rs > initialize_scoreboard` instead of having the system create this
 resource for us automatically.

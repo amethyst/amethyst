@@ -280,7 +280,7 @@ to push a state that shows a "You Died" screen.
 So how can we affect states from systems?
 There are a couple of ways, but this section will detail the easiest one: using a [`Resource`][r].
 
-Before that, let's just quickly remind ourselves what a resource is:
+Before that, let's quickly remind ourselves what a resource is:
 
 > A [`Resource`][r] is any type that stores data that you might need for your game AND that is not
 > specific to an entity.

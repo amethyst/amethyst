@@ -1,6 +1,6 @@
 # How to Define Custom Assets
 
-This guide explains how to define a new asset type to be used in an Amethyst application. If you are defining a new asset type that may be useful to others, [please send us a PR!][gh_contributing]
+This guide explains how to define a new asset type to use in an Amethyst application. If you are defining a new asset type that may be useful to others, [please send us a PR!][gh_contributing]
 
 1. Define the type and handle for your asset.
 
@@ -17,7 +17,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 
    The serialized type can be one of:
 
-   - The asset type itself, in which case you simply derive `Serialize` and `Deserialize` on the type:
+   - The asset type itself, in which case you derive `Serialize` and `Deserialize` on the type:
 
      ```rust
      use serde::{Deserialize, Serialize};

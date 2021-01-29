@@ -286,7 +286,7 @@ to
 ## Adding the BallConfig to `config.ron`
 
 Now we need to modify our configuration file to allow multiple structures to be included. This is
-easy with RON; we just add an additional level of nesting.
+easy with RON; we add an additional level of nesting.
 
 ```ron
 (

@@ -67,7 +67,7 @@ The `World` structure stores all of the game's runtime data -- entities and comp
 ## Rendering the game using the Camera
 
 The first thing we will need in our game is a `Camera`. This is the component that
-will determine what is rendered on screen. It behaves just like a real-life
+will determine what is rendered on screen. It behaves like a real-life
 camera: it looks at a specific part of the world and can be moved around at
 will.
 
@@ -564,7 +564,7 @@ Next we simply add the components to the paddle entities:
 # }
 ```
 
-We're nearly there, we just have to wire up the sprite to the paddles. We put it
+We're nearly there, we have to wire up the sprite to the paddles. We put it
 all together in the `on_start()` method:
 
 ```rust
