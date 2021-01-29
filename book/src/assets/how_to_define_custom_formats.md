@@ -36,7 +36,7 @@ If you are defining a new format that may be useful to others, [please send us a
    # use amethyst::assets::{Asset, Handle};
    # use serde::{Deserialize, Serialize};
    # use type_uuid::TypeUuid;
-   #
+   # 
    # /// Custom asset representing an energy blast.
    # #[derive(Clone, Debug, Default, Serialize, Deserialize, TypeUuid)]
    # #[uuid = "00000000-0000-0000-0000-000000000001"]
