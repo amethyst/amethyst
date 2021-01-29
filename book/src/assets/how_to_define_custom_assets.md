@@ -17,12 +17,14 @@ This guide explains how to define a new asset type to use in an Amethyst applica
 
    The serialized type can be one of:
 
-   - The asset type itself, in which case you derive `Serialize` and `Deserialize` on the type:
+   - The asset type itself, in which case you derive `Serialize`, `Deserialize` and `TypeUuid` on the type:
 
      ```rust
      use serde::{Deserialize, Serialize};
+     use type_uuid::TypeUuid;
 
-     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+     #[derive(Clone, Debug, Default, Serialize, Deserialize, TypeUuid)]
+     #[uuid = "00000000-0000-0000-0000-000000000001"] // generate this uuid yourself
      pub struct EnergyBlast {
          pub hp_damage: u32,
          pub mp_damage: u32,
@@ -50,9 +52,10 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    ```rust
    # use amethyst::assets::{Asset, Handle};
    # use serde::{Deserialize, Serialize};
-   # 
+   # use type_uuid::TypeUuid;
    # /// Custom asset representing an energy blast.
-   # #[derive(Clone, Debug, Default, PartialEq, Eq)]
+   # #[derive(Clone, Debug, Default, Serialize, Deserialize, TypeUuid)]
+   # #[uuid = "00000000-0000-0000-0000-000000000001"]
    # pub struct EnergyBlast {
    #   pub hp_damage: u32,
    #   pub mp_damage: u32,
@@ -70,7 +73,7 @@ This guide explains how to define a new asset type to use in an Amethyst applica
 
    impl Asset for EnergyBlast {
        // use `Self` if the type is directly serialized.
-       type Data = EnregyBlastData;
+       type Data = EnergyBlastData;
 
        fn name() -> &'static str {
            "EnergyBlast"
@@ -85,9 +88,11 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    ```rust
    # use amethyst::assets::{Asset, Handle};
    # use serde::{Deserialize, Serialize};
+   # use type_uuid::TypeUuid;
    # 
    # /// Custom asset representing an energy blast.
-   # #[derive(Clone, Debug, Default, PartialEq, Eq)]
+   # #[derive(Clone, Debug, Default, Serialize, Deserialize, TypeUuid)]
+   # #[uuid = "00000000-0000-0000-0000-000000000001"]
    # pub struct EnergyBlast {
    #   pub hp_damage: u32,
    #   pub mp_damage: u32,
@@ -105,15 +110,21 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    # 
    # impl Asset for EnergyBlast {
    #   // use `Self` if the type is directly serialized.
-   #   type Data = EnregyBlastData;
+   #   type Data = EnergyBlastData;
    # 
    #   fn name() -> &'static str {
    #       "EnergyBlast"
    #   }
    # }
 
+   use amethyst::assets::{AssetStorage, LoadHandle, ProcessableAsset, ProcessingState};
+
    impl ProcessableAsset for EnergyBlast {
-       fn process(energy_blast_data: Self::Data) -> Result<ProcessingState<Self::Data, Self>, Error> {
+       fn process(
+           energy_blast_data: Self::Data,
+           _storage: &mut AssetStorage<Self>,
+           _handle: &LoadHandle,
+       ) -> amethyst::Result<ProcessingState<Self::Data, Self>> {
            match energy_blast_data {
                EnergyBlastData::Version1 { hp_damage } => Ok(ProcessingState::Loaded(Self {
                    hp_damage,
@@ -136,9 +147,11 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    ```rust
    # use amethyst::assets::{Asset, Handle};
    # use serde::{Deserialize, Serialize};
+   # use type_uuid::TypeUuid;
    # 
    # /// Custom asset representing an energy blast.
-   # #[derive(Clone, Debug, Default, PartialEq, Eq)]
+   # #[derive(Clone, Debug, Default, Serialize, Deserialize, TypeUuid)]
+   # #[uuid = "00000000-0000-0000-0000-000000000001"]
    # pub struct EnergyBlast {
    #   pub hp_damage: u32,
    #   pub mp_damage: u32,
@@ -156,15 +169,21 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    # 
    # impl Asset for EnergyBlast {
    #   // use `Self` if the type is directly serialized.
-   #   type Data = EnregyBlastData;
+   #   type Data = EnergyBlastData;
    # 
    #   fn name() -> &'static str {
    #       "EnergyBlast"
    #   }
    # }
    # 
+   # use amethyst::assets::{AssetStorage, LoadHandle, ProcessableAsset, ProcessingState};
+   # 
    # impl ProcessableAsset for EnergyBlast {
-   #   fn process(energy_blast_data: Self::Data) -> Result<ProcessingState<Self>, Error> {
+   #   fn process(
+   #       energy_blast_data: Self::Data,
+   #       _storage: &mut AssetStorage<Self>,
+   #       _handle: &LoadHandle,
+   #   ) -> amethyst::Result<ProcessingState<Self::Data, Self>> {
    #       match energy_blast_data {
    #           EnergyBlastData::Version1 { hp_damage } => Ok(ProcessingState::Loaded(Self {
    #               hp_damage,
@@ -185,6 +204,12 @@ This guide explains how to define a new asset type to use in an Amethyst applica
        /// Handle to the energy blast.
        energy_blast_handle: Option<Handle<EnergyBlast>>,
    }
+
+   use amethyst::assets::{DefaultLoader, Loader};
+   use amethyst::{
+       ecs::DispatcherBuilder, utils::application_root_dir, Application, GameData, SimpleState,
+       SimpleTrans, StateData, Trans,
+   };
 
    impl SimpleState for LoadingState {
        fn on_start(&mut self, data: StateData<'_, GameData>) {
@@ -215,7 +240,6 @@ This guide explains how to define a new asset type to use in an Amethyst applica
        let mut game = Application::new(
            assets_dir,
            LoadingState {
-               progress_counter: ProgressCounter::new(),
                energy_blast_handle: None,
            },
            game_data,

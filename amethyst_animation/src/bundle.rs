@@ -1,7 +1,6 @@
 use std::{hash::Hash, marker};
 
 use amethyst_core::ecs::*;
-use amethyst_error::Error;
 use derivative::Derivative;
 use marker::PhantomData;
 
@@ -27,7 +26,7 @@ impl SystemBundle for VertexSkinningBundle {
         _world: &mut World,
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
-    ) -> Result<(), Error> {
+    ) -> amethyst_core::Result<()> {
         builder.add_system(Box::new(VertexSkinningSystem::default()));
         Ok(())
     }
@@ -55,7 +54,7 @@ where
         _world: &mut World,
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
-    ) -> Result<(), Error> {
+    ) -> amethyst_core::Result<()> {
         builder.add_system(Box::new(
             crate::systems::sampling::SamplerInterpolationSystem::<T>::default(),
         ));
@@ -92,7 +91,7 @@ where
         _world: &mut World,
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
-    ) -> Result<(), Error> {
+    ) -> amethyst_core::Result<()> {
         builder.add_bundle(SamplingBundle::<T> { m: PhantomData });
         builder.add_system(Box::new(crate::systems::control::AnimationControlSystem::<
             I,

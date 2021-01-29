@@ -25,9 +25,10 @@ use atelier_loader::{
 pub use atelier_loader::{storage::LoadStatus, AssetUuid};
 use log::debug;
 use serde::de::Deserialize;
-pub use type_uuid::TypeUuid;
 
-use crate::{processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset};
+use crate::{
+    processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset, TypeUuid,
+};
 
 /// Manages asset loading and storage for an application.
 pub trait Loader: Send + Sync {

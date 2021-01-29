@@ -1,5 +1,4 @@
 use amethyst::{
-    assets::HotReloadBundle,
     audio::AudioBundle,
     core::transform::TransformBundle,
     input::InputBundle,
@@ -49,8 +48,6 @@ pub fn main() -> amethyst::Result<()> {
         .add_bundle(InputBundle::new())?
         // this bundle allows us to 'find' the Buttons and other UI elements later on
         .add_bundle(UiBundle::new())?
-        // this allows us to reload '*.ron' files during execution
-        .add_bundle(HotReloadBundle::default())?
         // without this Bundle, our Program will silently (!) fail when trying to start the 'Game'.
         // (try it!)
         // It takes care of Audio (in this case, the Button audio for hovering/clicking)

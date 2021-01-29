@@ -138,6 +138,8 @@ vergen = "3.1.0"
 doc-comment = "0.3.3"
 env_logger = "0.8.2"
 glob = "0.3.0"
+ron = "0.6.4"
+type-uuid = "0.1.2"
 
 [package.metadata.docs.rs]
 features = [

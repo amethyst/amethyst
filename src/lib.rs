@@ -105,7 +105,11 @@ pub use winit;
 
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
-    core::logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
+    core::{
+        ecs,
+        logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
+        shrev, Result,
+    },
     error::Error,
     game_data::{DataDispose, DataInit, GameData},
     state::{
@@ -114,12 +118,8 @@ pub use self::{
     },
     state_event::{StateEvent, StateEventReader},
 };
-pub use crate::core::{ecs, shrev};
 #[doc(hidden)]
 pub use crate::derive::*;
-
-/// Convenience alias for use in main functions that uses Amethyst.
-pub type Result<T> = std::result::Result<T, error::Error>;
 
 pub mod prelude;
 

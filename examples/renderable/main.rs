@@ -5,8 +5,8 @@
 
 use amethyst::{
     assets::{
-        Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystemDesc,
-        ProgressCounter, RonFormat,
+        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystemDesc, ProgressCounter,
+        RonFormat,
     },
     core::{
         math::{UnitQuaternion, Vector3},
@@ -198,7 +198,6 @@ fn main() -> Result<(), Error> {
         )
         .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .add_bundle(UiBundle::new())?
-        .add_bundle(HotReloadBundle::default())?
         .add_bundle(FpsCounterBundle::default())?
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()

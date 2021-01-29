@@ -5,8 +5,8 @@
 
 use amethyst::{
     assets::{
-        Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystemDesc,
-        Processor, ProgressCounter, RonFormat,
+        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystemDesc, Processor,
+        ProgressCounter, RonFormat,
     },
     core::{
         math::{UnitQuaternion, Vector3},
@@ -197,7 +197,6 @@ fn main() -> Result<(), Error> {
         .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .add_bundle(InputBundle::new())?
         .add_bundle(UiBundle::new())?
-        .add_bundle(HotReloadBundle::default())?
         .add_bundle(FpsCounterBundle::default())?
         // The below Systems, are used to handle some rendering resources.
         // Most likely these must be always called as last thing.
