@@ -2,7 +2,7 @@
 
 Sends and recieves the events `A, B, C`.
 
-```
+```log
 Sending A
 Sending B
 Sending C
