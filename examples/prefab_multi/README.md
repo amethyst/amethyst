@@ -4,7 +4,7 @@ Creates a `PrefabData` and instantiates an entity with multiple components using
 
 No window is created for this demo, instead you should see debugging information printed to the console similar to:
 
-```
+```log
 [INFO][amethyst::app] Initializing Amethyst...
 [INFO][amethyst::app] Version: 0.15.0
 [INFO][amethyst::app] Platform: x86_64-apple-darwin
