@@ -63,7 +63,10 @@ jobs:
         run: rm -rf ./target/debug/deps/libamethyst*
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
 
-      - run: cargo test --workspace --all-features
+      - run: cargo test --workspace --all-features --all-targets
+
+      - run: cargo test --workspace --all-features --doc
+        continue-on-error: true
 
       - uses: peaceiris/actions-mdbook@v1
         with:
