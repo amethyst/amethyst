@@ -111,7 +111,7 @@ The names of several `Transform` methods have been changed in order to better re
 
 - Set Rotation
 
-  ```rust
+  ```rust ,ignore
   transform.set_rotation(UnitQuaternion::identity());
   transform.set_rotation_x_axis(0.4);
   transform.set_rotation_y_axis(2.3);
@@ -123,13 +123,13 @@ The names of several `Transform` methods have been changed in order to better re
 
   - `rotate_2d`, an alias for `prepend_rotation_z_axis`
 
-    ```rust
+    ```rust ,ignore
     transform.rotate_2d(5.0);
     ```
 
   - `set_rotation_2d`, an alias for `set_rotation_z_axis`
 
-    ```rust
+    ```rust ,ignore
     transform.set_rotation_2d(4.7);
     ```
 
@@ -137,6 +137,6 @@ The names of several `Transform` methods have been changed in order to better re
 
   - Get the Euler angles of a transform's rotation.
 
-    ```rust
+    ```rust ,ignore
     let (x, y, z) = transform.euler_angles();
     ```

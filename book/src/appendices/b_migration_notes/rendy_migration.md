@@ -19,7 +19,7 @@
 
 - `Bindings<AX, AC>` is now `Bindings<T>`, where `T` is a new type you must implement:
 
-  ```rust
+  ```rust ,ignore
   pub struct ControlBindings;
 
   impl BindingTypes for ControlBindings {
@@ -57,7 +57,7 @@
 
 - `WindowBundle` is now separate from `amethyst_renderer`.
 
-  ```rust
+  ```rust ,ignore
   use amethyst::window::WindowBundle;
 
   game_data.add_bundle(WindowBundle::from_config_file(display_config_path))?;
@@ -85,7 +85,7 @@
 
 - To load a texture in memory, you can't use `[0.; 4].into()` as the `TextureData` anymore. Use:
 
-  ```rust
+  ```rust ,ignore
   use amethyst::{
       assets::{AssetStorage, Handle,  DefaultLoader, Loader, Prefab, PrefabLoader},
       ecs::World,
@@ -108,7 +108,7 @@
 
   In `main.rs`:
 
-  ```rust
+  ```rust ,ignore
   use amethyst::renderer::{types::DefaultBackend, RenderingSystem};
 
   let game_data = DispatcherBuilder::default()
@@ -129,7 +129,7 @@
 
 - Render passes can be integrated into amethyst by using the newly introduced `RenderPlugin` trait, for example:
 
-  ```rust
+  ```rust ,ignore
   pub struct RenderCustom {
       target: Target,
   }
@@ -165,7 +165,7 @@
 
 - `RenderBundle::with_sprite_sheet_processor()` is replaced by:
 
-  ```rust
+  ```rust ,ignore
   game_data.with(
       Processor::<SpriteSheet>::new(),
       "sprite_sheet_processor",
@@ -177,7 +177,7 @@
 
 - `RenderBundle::with_sprite_visibility_sorting()` is replaced by:
 
-  ```rust
+  ```rust ,ignore
   use amethyst::rendy::sprite_visibility::SpriteVisibilitySortingSystem;
 
   game_data.with(

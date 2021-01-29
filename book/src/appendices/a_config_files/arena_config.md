@@ -186,7 +186,7 @@ use amethyst::ecs::{ParallelRunnable, Resources, System, SystemBuilder};
 struct ArenaSystem;
 
 impl System<'_> for ArenaSystem {
-    fn build(&mut self) -> Box<dyn ParallelRunnable> {
+    fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ArenaSystem")
                 .read_resource::<ArenaConfig>()
