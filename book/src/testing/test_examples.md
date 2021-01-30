@@ -3,17 +3,13 @@
 ## Testing a `Bundle`
 
 ```rust
-# use amethyst::{
-#   core::bundle::SystemBundle, prelude::*,
-#   Error,
-# };
+# use amethyst::{core::bundle::SystemBundle, prelude::*, Error};
 # use amethyst_test::prelude::*;
 # 
 # #[derive(Debug)]
 # struct ApplicationResource;
 # 
 # #[derive(Debug)]
-# #[system_desc(insert(ApplicationResource))]
 # struct MySystem;
 # 
 # impl System for MySystem {
@@ -26,11 +22,7 @@
 struct MyBundle;
 
 impl SystemBundle<'a, 'b> for MyBundle {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder,
-    ) -> Result<(), Error> {
+    fn build(self, world: &mut World, builder: &mut DispatcherBuilder) -> Result<(), Error> {
         // System that adds `ApplicationResource` to the `World`
         builder.add(MySystem.build(world), "my_system", &[]);
         Ok(())
@@ -63,7 +55,7 @@ struct MyComponent(pub i32);
 #[derive(Debug)]
 struct MySystem;
 impl System for MySystem {
-    type SystemData = WriteStorage<'s, MyComponent>;
+.write_component::<MyComponent>()
     fn run(&mut self, mut my_component_storage: Self::SystemData) {
         for mut my_component in (&mut my_component_storage).join() {
             my_component.0 += 1

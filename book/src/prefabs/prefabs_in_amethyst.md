@@ -26,7 +26,7 @@ In its stored form, a prefab is a serialized list of entities and their componen
 # use amethyst::{
 #   assets::{Prefab, PrefabData},
 #   derive::PrefabData,
-#   ecs::{Entity},
+#   ecs::Entity,
 #   prelude::*,
 #   Error,
 # };
@@ -99,7 +99,7 @@ If there are multiple components to be attached to the entity, then we need a ty
 #   assets::{Prefab, PrefabData, ProgressCounter},
 #   core::Named,
 #   derive::PrefabData,
-#   ecs::{Component, Entity, WriteStorage},
+#   ecs::Entity,
 #   prelude::*,
 #   Error,
 # };
@@ -188,7 +188,7 @@ Could be implemented using an enum like this:
 #   assets::{Prefab, PrefabData, ProgressCounter},
 #   core::Named,
 #   derive::PrefabData,
-#   ecs::{Component, Entity, WriteStorage},
+#   ecs::Entity,
 #   prelude::*,
 #   utils::application_root_dir,
 #   Error,

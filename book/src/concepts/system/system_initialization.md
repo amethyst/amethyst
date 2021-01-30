@@ -20,14 +20,11 @@ initialization logic, the `SystemDesc` derive automatically implements the
 `SystemDesc` trait on the system type itself:
 
 ```rust
-use amethyst::{
-    ecs::{System, World},
-};
+use amethyst::ecs::{System, World};
 
 struct SystemName;
 
 impl System for SystemName {
-
     fn run(&mut self, data: Self::SystemData) {
         println!("Hello!");
     }

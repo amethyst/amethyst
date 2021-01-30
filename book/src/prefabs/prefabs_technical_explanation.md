@@ -71,7 +71,7 @@ Let's take a look at the implementation for `Transform`, which is a core concept
 # struct Transform;
 # 
 impl<'a> PrefabData<'a> for Transform {
-    type SystemData = WriteStorage<'a, Transform>;
+.write_component::<Transform>()
     type Result = ();
 
     fn add_to_entity(
@@ -137,7 +137,7 @@ where
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
-        WriteStorage<'a, Handle<A>>,
+        .write_component::<Handle<A>>()
         Read<'a, AssetStorage<A>>,
     );
 
@@ -214,7 +214,7 @@ An example of a single `Component` derive:
 # use amethyst::{
 #   assets::{Asset, AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter},
 #   derive::PrefabData,
-#   ecs::{Entity, Read, ReadExpect, WriteStorage},
+#   ecs::Entity,
 #   Error,
 # };
 # 
@@ -235,7 +235,7 @@ Lets look at an example of an aggregate struct:
 #   ProgressCounter,
 # };
 # use amethyst::core::Transform;
-# use amethyst::ecs::{Entity};
+# use amethyst::ecs::Entity;
 # use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
 # use amethyst::Error;
 
@@ -256,7 +256,7 @@ One last example that also adds a custom pure data `Component` into the aggregat
 #   ProgressCounter,
 # };
 # use amethyst::core::Transform;
-# use amethyst::ecs::{Entity};
+# use amethyst::ecs::Entity;
 # use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
 # use amethyst::Error;
 

@@ -14,7 +14,6 @@ Let's start of with some boilerplate code:
 pub struct SimpleButtonSystem;
 
 impl System for SimpleButtonSystem {
-
     fn run(&mut self, data: Self::SystemData) {}
 }
 ```
@@ -148,7 +147,7 @@ we used for our entity - `UiTransform` and `UiText`.
 # }
 ```
 
-Usage of `WriteStorage<'s, UiText>` is needed since we will be changing
+Usage of `.write_component::<UiText>` is needed since we will be changing
 the color that is the property of the `UiText` component.
 
 ```rust
@@ -162,8 +161,8 @@ the color that is the property of the `UiText` component.
 # impl System for SimpleButtonSystem {
 #   type SystemData = (
 #       Read<'s, EventChannel<UiEvent>>,
-#       ReadStorage<'s, UiTransform>,
-#       WriteStorage<'s, UiText>,
+#     .read_component::<UiTransform>(),
+#       .write_component::<UiText>()
 #   );
 # 
     fn run(&mut self, (events, transforms, mut texts): Self::SystemData) {

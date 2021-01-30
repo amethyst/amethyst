@@ -14,7 +14,7 @@ If your system initialization use case is not covered, please see the
 ## Passing parameters to system constructor
 
 ```rust
-# use amethyst::{ecs::System};
+# use amethyst::ecs::System;
 pub struct SystemName {
     field_0: u32,
     field_1: String,
@@ -25,15 +25,14 @@ impl SystemName {
         SystemName { field_0, field_1 }
     }
 }
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 ```
 
 <details>
 <summary>Generated code</summary>
 
 ```rust
-# use amethyst::{ecs::System};
+# use amethyst::ecs::System;
 # 
 # pub struct SystemName {
 #   field_0: u32,
@@ -46,8 +45,7 @@ impl SystemName {
 #   }
 # }
 # 
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 # 
 /// Builds a `SystemName`.
 #[derive(Default, Debug)]
@@ -76,10 +74,9 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 ## Fields to skip -- defaulted by the system constructor
 
 ```rust
-# use amethyst::{ecs::System};
+# use amethyst::ecs::System;
 # 
 pub struct SystemName {
-    #[system_desc(skip)]
     field_0: u32,
     field_1: String,
 }
@@ -92,15 +89,14 @@ impl SystemName {
         }
     }
 }
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 ```
 
 <details>
 <summary>Generated code</summary>
 
 ```rust
-# use amethyst::{ ecs::System};
+# use amethyst::ecs::System;
 # 
 # pub struct SystemName {
 #   field_0: u32,
@@ -116,8 +112,7 @@ impl SystemName {
 #   }
 # }
 # 
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 # 
 /// Builds a `SystemName`.
 #[derive(Default, Debug)]
@@ -146,29 +141,27 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 will call  `SystemName::default()`:
 
 ```rust
-# use amethyst::{ecs::System};
+# use amethyst::ecs::System;
 # 
 #[derive(Default)]
 pub struct SystemName {
     field_0: u32,
 }
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 ```
 
 <details>
 <summary>Generated code</summary>
 
 ```rust
-# use amethyst::{ecs::System};
+# use amethyst::ecs::System;
 # 
 # #[derive(Default)]
 # pub struct SystemName {
 #   field_0: u32,
 # }
 # 
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 # 
 /// Builds a `SystemName`.
 #[derive(Debug)]
@@ -209,8 +202,7 @@ impl SystemName {
         SystemName { reader_id }
     }
 }
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 ```
 
 <details>
@@ -233,8 +225,7 @@ impl SystemName {
 #   }
 # }
 # 
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 # 
 /// Builds a `SystemName`.
 #[derive(Debug)]
@@ -263,13 +254,12 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 
 ```rust
 # use amethyst::{
-#   ecs::{System},
+#   ecs::System,
 #   shrev::{EventChannel, ReaderId},
 #   ui::UiResize,
 # };
 # 
 pub struct SystemName {
-    #[system_desc(flagged_storage_reader(UiResize))]
     resize_events_id: ReaderId<ComponentEvent>,
 }
 
@@ -278,8 +268,7 @@ impl SystemName {
         SystemName { resize_events_id }
     }
 }
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 ```
 
 <details>
@@ -287,7 +276,7 @@ impl SystemName {
 
 ```rust
 # use amethyst::{
-#   ecs::{System},
+#   ecs::System,
 #   shrev::{EventChannel, ReaderId},
 #   ui::UiResize,
 # };
@@ -302,8 +291,7 @@ impl SystemName {
 #   }
 # }
 # 
-# impl System for SystemName {
-# }
+# impl System for SystemName {}
 # 
 /// Builds a `SystemName`.
 #[derive(Debug)]
@@ -330,19 +318,12 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 
 ## Inserting a resource into the `World`
 
-**Note:** If the resource you wish to insert is the result of an expression,
-such as a function call, you must surround that expression in quotes, e.g.
-`#[system_desc(insert("MyResource::default()"))]`.
-
 ```rust
-# use amethyst::{
-#   ecs::{System},
-# };
+# use amethyst::ecs::System;
 # 
 pub struct NonDefault;
 
 #[derive(Default)]
-#[system_desc(insert(NonDefault))]
 pub struct SystemName;
 
 impl System for SystemName {
@@ -354,9 +335,7 @@ impl System for SystemName {
 <summary>Generated code</summary>
 
 ```rust
-# use amethyst::{
-#   ecs::{System},
-# };
+# use amethyst::ecs::System;
 # 
 # pub struct NonDefault;
 # 

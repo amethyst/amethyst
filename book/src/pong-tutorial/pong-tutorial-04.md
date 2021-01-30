@@ -78,7 +78,7 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 
 ```rust
 # use amethyst::assets::Handle;
-# use amethyst::ecs::{World};
+# use amethyst::ecs::World;
 # use amethyst::prelude::*;
 # use amethyst::renderer::{SpriteSheet, Texture};
 # struct Paddle;
@@ -136,8 +136,8 @@ pub struct MoveBallsSystem;
 
 impl System for MoveBallsSystem {
     type SystemData = (
-        ReadStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+      .read_component::<Ball>(),
+        .write_component::<Transform>()
         Read<'s, Time>,
     );
 
@@ -204,9 +204,9 @@ pub struct BounceSystem;
 
 impl System for BounceSystem {
     type SystemData = (
-        WriteStorage<'s, Ball>,
-        ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform>,
+        .write_component::<Ball>()
+      .read_component::<Paddle>(),
+      .read_component::<Transform>(),
     );
 
     fn run(&mut self, (mut balls, paddles, transforms): Self::SystemData) {

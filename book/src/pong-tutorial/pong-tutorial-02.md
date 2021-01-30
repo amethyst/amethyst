@@ -29,7 +29,7 @@ initialization code from the Pong code.
    use amethyst::{
        assets::{AssetStorage, DefaultLoader, Handle, Loader},
        core::transform::Transform,
-       ecs::{Component},
+       ecs::Component,
        prelude::*,
        renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
    };

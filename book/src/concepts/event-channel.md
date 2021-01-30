@@ -108,7 +108,7 @@ It goes as follow:
 In the **producer** `System`, get a mutable reference to your resource:
 
 ```rust
-# use amethyst::{shrev::EventChannel};
+# use amethyst::shrev::EventChannel;
 # 
 # #[derive(Debug)]
 # pub enum MyEvent {

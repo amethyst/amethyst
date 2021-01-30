@@ -144,8 +144,7 @@ struct MovementSystem;
 
 impl System for MovementSystem {
     type SystemData = (
-        WriteStorage<'s, Transform>,
-        ReadStorage<'s, Player>,
+        .write_component::<Transform>().read_component::<Player>(),
         Read<'s, InputHandler>,
     );
 

@@ -127,8 +127,8 @@ pub struct PaddleSystem;
 
 impl System for PaddleSystem {
     type SystemData = (
-        WriteStorage<'s, Transform>,
-        ReadStorage<'s, Paddle>,
+        .write_component::<Transform>()
+       .read_component::<Paddle>(),
         Read<'s, InputHandler>,
     );
 
@@ -167,9 +167,8 @@ Next, we implement the `System` trait for it with the lifetime of the components
 on which it operates. Inside the implementation, we define the data the system
 operates on in the `SystemData` tuple: `WriteStorage`, `ReadStorage`, and
 `Read`. More specifically, the generic types we've used here tell us that the
-`PaddleSystem` mutates `Transform` components, `WriteStorage<'s, Transform>`, it
-reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
-`InputHandler` resource we created earlier, using the `Read`
+`PaddleSystem` mutates `Transform` components, `.write_component::<Transform>`, it
+reads `Paddle` components,.read\_component::<Paddle>()`, and also accesses the `InputHandler`resource we created earlier, using the`Read\`
 structure.
 
 > For `InputHandler`, make sure the parameter type is the same
@@ -260,8 +259,8 @@ component of the transform's translation.
 #
 # impl System for PaddleSystem {
 #   type SystemData = (
-#       WriteStorage<'s, Transform>,
-#       ReadStorage<'s, Paddle>,
+#       .write_component::<Transform>()
+#     .read_component::<Paddle>(),
 #       Read<'s, InputHandler>,
 #   );
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
@@ -316,8 +315,8 @@ Our run function should now look something like this:
 # pub struct PaddleSystem;
 # impl System for PaddleSystem {
 #   type SystemData = (
-#       WriteStorage<'s, Transform>,
-#       ReadStorage<'s, Paddle>,
+#       .write_component::<Transform>()
+#     .read_component::<Paddle>(),
 #       Read<'s, InputHandler>,
 #   );
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {

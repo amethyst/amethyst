@@ -24,8 +24,8 @@ To add `System`s to the `DispatcherBuilder` we use a similar syntax to the one w
 # };
 #
 # struct MoveBallsSystem; struct MovePaddlesSystem;
-# impl System for MoveBallsSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
-# impl System for MovePaddlesSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
+# impl System for MoveBallsSystem { fn run(&mut self, _: ()) {} }
+# impl System for MovePaddlesSystem { fn run(&mut self, _: ()) {} }
 let mut dispatcher_builder = DispatcherBuilder::new();
 
 dispatcher_builder.add(MoveBallsSystem, "move_balls_system", &[]);

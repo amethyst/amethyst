@@ -37,7 +37,7 @@ Then, we'll create `systems/winner.rs`:
 # 
 use amethyst::{
     core::transform::Transform,
-    ecs::{System, World, WriteStorage},
+    ecs::{System, World},
 };
 
 use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
@@ -45,7 +45,7 @@ use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
 pub struct WinnerSystem;
 
 impl System for WinnerSystem {
-    type SystemData = (WriteStorage<'s, Ball>, WriteStorage<'s, Transform>);
+    type SystemData = (.write_component::<Ball>() .write_component::<Transform>);
 
     fn run(&mut self, (mut balls, mut locals): Self::SystemData) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
@@ -361,9 +361,9 @@ pub struct WinnerSystem;
 
 impl System for WinnerSystem {
     type SystemData = (
-        WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
-        WriteStorage<'s, UiText>,
+        .write_component::<Ball>()
+        .write_component::<Transform>()
+        .write_component::<UiText>()
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,
     );

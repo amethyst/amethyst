@@ -44,7 +44,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
    # 
    use amethyst::{
        assets::{PrefabData, ProgressCounter},
-       ecs::{Entity, WriteStorage},
+       ecs::Entity,
        Error,
    };
    use serde::{Deserialize, Serialize};
@@ -91,7 +91,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
    # 
    # use amethyst::{
    #   assets::{PrefabData, ProgressCounter},
-   #   ecs::{Entity, WriteStorage},
+   #   ecs::{Entity},
    #   Error,
    # };
    # use serde::{Deserialize, Serialize};
@@ -121,44 +121,50 @@ If you are attempting to adapt a more complex type, please choose the appropriat
    impl<'a> PrefabData<'a> for PositionPrefab {
        // To attach the `Position` to the constructed entity,
        // we write to the `Position` component storage.
-       type SystemData = WriteStorage<'a, Position>;
-
-       // This associated type is not used in this pattern,
-       // so the empty tuple is specified.
-       type Result = ();
-
-       fn add_to_entity(
-           &self,
-           entity: Entity,
-           positions: &mut Self::SystemData,
-           _entities: &[Entity],
-           _children: &[Entity],
-       ) -> Result<(), Error> {
-           let position = match *self {
-               PositionPrefab::Pos3f { x, y, z } => (x, y, z).into(),
-               PositionPrefab::Pos3i { x, y, z } => (x, y, z).into(),
-           };
-           positions.insert(entity, position).map(|_| ())?;
-           Ok(())
-       }
-   }
    ```
+
+.write\_component::<Position>()
+
+```
+   // This associated type is not used in this pattern,
+   // so the empty tuple is specified.
+   type Result = ();
+
+   fn add_to_entity(
+       &self,
+       entity: Entity,
+       positions: &mut Self::SystemData,
+       _entities: &[Entity],
+       _children: &[Entity],
+   ) -> Result<(), Error> {
+       let position = match *self {
+           PositionPrefab::Pos3f { x, y, z } => (x, y, z).into(),
+           PositionPrefab::Pos3i { x, y, z } => (x, y, z).into(),
+       };
+       positions.insert(entity, position).map(|_| ())?;
+       Ok(())
+   }
+```
+
+}
+
+````
 
 1. Now the adapter type can be used in a prefab to attach the component to the entity.
 
-   ```rust
-   #![enable(implicit_some)]
-   Prefab(
-       entities: [
-           PrefabEntity(
-               data: Pos3f(x: 1.0, y: 2.0, z: 3.0),
-           ),
-           PrefabEntity(
-               data: Pos3i(x: 4, y: 5, z: 6),
-           ),
-       ],
-   )
-   ```
+```rust
+#![enable(implicit_some)]
+Prefab(
+    entities: [
+        PrefabEntity(
+            data: Pos3f(x: 1.0, y: 2.0, z: 3.0),
+        ),
+        PrefabEntity(
+            data: Pos3i(x: 4, y: 5, z: 6),
+        ),
+    ],
+)
+````
 
 To see this in a complete example, run the [`prefab_adapter` example][repo_prefab_adapter] from the Amethyst repository:
 

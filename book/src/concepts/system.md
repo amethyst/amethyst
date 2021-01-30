@@ -13,18 +13,13 @@ A system struct is a structure implementing the trait `amethyst::ecs::System`.
 Here is a simple example implementation:
 
 ```rust
-use amethyst::ecs::{System, ParallelRunnable};
+use amethyst::ecs::{ParallelRunnable, System};
 
 struct MyFirstSystem;
 
 impl System for MyFirstSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
-        Box::new(
-            SystemBuilder::new("MyFirstSystem")
-                 .build(|_, _, _, _| {
-                    println!("Hello!")
-                }),
-        )
+        Box::new(SystemBuilder::new("MyFirstSystem").build(|_, _, _, _| println!("Hello!")))
     }
 }
 ```
@@ -37,7 +32,7 @@ Using `SystemBuilder` requires you to specify the resource and component access 
 
 ```rust
 use amethyst::core::timing::Time;
-use amethyst::ecs::{System, ParallelRunnable};
+use amethyst::ecs::{ParallelRunnable, System};
 
 struct TimeSystem;
 
@@ -46,7 +41,7 @@ impl System for TimeSystem {
         Box::new(
             SystemBuilder::new("TimeSystem")
                 .read_resource::<Time>()
-                 .build(|_, _, time, _| {
+                .build(|_, _, time, _| {
                     println!("{}", data.delta_seconds());
                 }),
         )
@@ -73,7 +68,7 @@ struct WalkPlayerUp {
 }
 
 impl System for WalkPlayerUp {
-    type SystemData = WriteStorage<'a, Transform>;
+.write_component::<Transform>()
 
     fn run(&mut self, mut transforms: Self::SystemData) {
         transforms
@@ -112,7 +107,7 @@ use amethyst::ecs::Join;
 struct MakeObjectsFall;
 
 impl System for MakeObjectsFall {
-    type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
+    type SystemData = (.write_component::<Transform>().read_component::<FallingObject>());
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (transform, _) in (&mut transforms, &falling).join() {
@@ -143,7 +138,7 @@ use amethyst::ecs::Join;
 struct NotFallingObjects;
 
 impl System for NotFallingObjects {
-    type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
+    type SystemData = (.write_component::<Transform>().read_component::<FallingObject>());
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (mut transform, _) in (&mut transforms, !&falling).join() {
@@ -174,8 +169,8 @@ struct SpawnEnemies {
 
 impl System for SpawnEnemies {
     type SystemData = (
-        WriteStorage<'a, Transform>,
-        WriteStorage<'a, Enemy>,
+        .write_component::<Transform>()
+        .write_component::<Enemy>()
         Entities<'a>,
     );
 
@@ -226,8 +221,8 @@ struct MakeObjectsFall;
 impl System for MakeObjectsFall {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, Transform>,
-        ReadStorage<'a, FallingObject>,
+        .write_component::<Transform>()
+      .read_component::<FallingObject>(),
     );
 
     fn run(&mut self, (entities, mut transforms, falling): Self::SystemData) {
@@ -256,7 +251,7 @@ To do that, you need to get a mutable storage of the component you want to modif
 #   entity: Entity,
 # }
 # impl System for MySystem {
-#   type SystemData = WriteStorage<'a, MyComponent>;
+.write_component::<MyComponent>()
 #   fn run(&mut self, mut write_storage: Self::SystemData) {
 #       let entity = self.entity;
         // Add the component
@@ -479,7 +474,7 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # 
 # #[derive(SystemData)]
 # struct BazSystemData<'a> {
-#   field: ReadStorage<'a, FooComponent>,
+#   field:().read_component::<FooComponent>(),
 # }
 # 
 # impl<'a> BazSystemData<'a> {
@@ -490,8 +485,8 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # 
 #[derive(SystemData)]
 struct MySystemData<'a> {
-    foo: ReadStorage<'a, FooComponent>,
-    bar: WriteStorage<'a, BarComponent>,
+    foo:().read_component::<FooComponent>(),
+    bar: .write_component::<BarComponent>()
     baz: BazSystemData<'a>,
 }
 

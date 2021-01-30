@@ -125,9 +125,9 @@ use crate::audio::{play_bounce_sound, Sounds};
 
 impl System for BounceSystem {
     type SystemData = (
-        WriteStorage<'s, Ball>,
-        ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform>,
+        .write_component::<Ball>()
+      .read_component::<Paddle>(),
+      .read_component::<Transform>(),
         Read<'s, AssetStorage<Source>>,
         ReadExpect<'s, Sounds>,
         Option<Read<'s, Output>>,
@@ -206,9 +206,9 @@ use amethyst::{
 
 impl System for WinnerSystem {
     type SystemData = (
-        WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
-        WriteStorage<'s, UiText>,
+        .write_component::<Ball>()
+        .write_component::<Transform>()
+        .write_component::<UiText>()
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,
         Read<'s, AssetStorage<Source>>,
