@@ -26,7 +26,7 @@ use amethyst::{
 
 struct SystemName;
 
-impl<'a> System<'a> for SystemName {
+impl<'a> System for SystemName {
     type SystemData = ();
 
     fn run(&mut self, data: Self::SystemData) {

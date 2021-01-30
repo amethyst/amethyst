@@ -13,7 +13,7 @@ pub struct DrawSelectionSystem {
     start_coordinate: Option<Point3<f32>>,
 }
 
-impl System<'static> for DrawSelectionSystem {
+impl System for DrawSelectionSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("DrawSelectionSystem")

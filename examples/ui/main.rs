@@ -177,7 +177,7 @@ impl UiEventHandlerSystem {
     }
 }
 
-impl<'a> System<'a> for UiEventHandlerSystem {
+impl<'a> System for UiEventHandlerSystem {
     type SystemData = Write<'a, EventChannel<UiEvent>>;
 
     fn run(&mut self, events: Self::SystemData) {

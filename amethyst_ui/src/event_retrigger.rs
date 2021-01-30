@@ -66,7 +66,7 @@ where
     }
 }
 
-impl<T: EventRetrigger + 'static> System<'static> for EventRetriggerSystem<T> {
+impl<T: EventRetrigger + 'static> System for EventRetriggerSystem<T> {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         let system_name = format!("{}System", std::any::type_name::<T>());
         Box::new(

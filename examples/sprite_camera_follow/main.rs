@@ -21,7 +21,7 @@ struct Player;
 
 struct MovementSystem;
 
-impl<'s> System<'s> for MovementSystem {
+impl<'s> System for MovementSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MovementSystem")

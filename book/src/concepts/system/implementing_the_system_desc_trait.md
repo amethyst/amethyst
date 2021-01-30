@@ -13,7 +13,7 @@ use amethyst::{
 # /// Syncs 3D transform data with the audio engine to provide 3D audio.
 # #[derive(Debug, Default)]
 # pub struct AudioSystem(Output);
-# impl<'a> System<'a> for AudioSystem {
+# impl<'a> System for AudioSystem {
 #   type SystemData = ();
 #   fn run(&mut self, _: Self::SystemData) {}
 # }
@@ -27,7 +27,7 @@ pub struct AudioSystemDesc {
 
 impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
     fn build(self, world: &mut World) -> AudioSystem {
-        <AudioSystem as System<'_>>::SystemData::setup(world);
+        <AudioSystem as System>::SystemData::setup(world);
 
         world.insert(self.output.clone());
 
@@ -49,7 +49,7 @@ pub struct SystemNameDesc;
 
 impl<'a, 'b> SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
     fn build(self, world: &mut World) -> SystemName {
-        <SystemName as System<'_>>::SystemData::setup(world);
+        <SystemName as System>::SystemData::setup(world);
 
         let arg = unimplemented!("Replace code here");
 
@@ -78,7 +78,7 @@ where
     T: unimplemented!("Replace me."),
 {
     fn build(self, world: &mut World) -> SystemName<T> {
-        <SystemName<T> as System<'_>>::SystemData::setup(world);
+        <SystemName<T> as System>::SystemData::setup(world);
 
         let arg = unimplemented!("Replace code here");
 

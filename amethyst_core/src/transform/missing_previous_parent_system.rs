@@ -7,7 +7,7 @@ use crate::ecs::*;
 #[derive(Debug)]
 pub struct MissingPreviousParentSystem;
 
-impl System<'_> for MissingPreviousParentSystem {
+impl System for MissingPreviousParentSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MissingPreviousParentSystem")

@@ -69,7 +69,7 @@ impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
     ) -> Self
     where
         SD: SystemDesc<'a, 'b, S> + 'static,
-        S: for<'c> System<'c> + 'static + Send,
+        S: for<'c> System + 'static + Send,
     {
         let dispatcher_operation = Box::new(AddSystem {
             system_desc,
@@ -98,7 +98,7 @@ impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
     ) -> Self
     where
         SD: SystemDesc<'a, 'b, S> + 'static,
-        S: for<'c> System<'c> + 'static + Send,
+        S: for<'c> System + 'static + Send,
     {
         let dispatcher_operation = Box::new(AddSystem {
             system_desc,
@@ -168,7 +168,7 @@ struct AddSystem<SD, S> {
 impl<'a, 'b, SD, S> DispatcherOperation<'a, 'b> for AddSystem<SD, S>
 where
     SD: SystemDesc<'a, 'b, S>,
-    S: for<'s> System<'s> + Send + 'a,
+    S: for<'s> System + Send + 'a,
 {
     fn exec(
         self: Box<Self>,

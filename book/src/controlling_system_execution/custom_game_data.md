@@ -95,7 +95,7 @@ impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
 
     pub fn with_running<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
     where
-        for<'c> S: System<'c> + Send + 'a,
+        for<'c> S: System + Send + 'a,
     {
         self.running.add(system, name, dependencies);
         self
@@ -283,7 +283,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 # 
 #   pub fn with_running<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
 #   where
-#       for<'c> S: System<'c> + Send + 'a,
+#       for<'c> S: System + Send + 'a,
 #   {
 #       unimplemented!()
 #   }

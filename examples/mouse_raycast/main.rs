@@ -31,7 +31,7 @@ use amethyst::{
 
 struct MouseRaycastSystem;
 
-impl System<'_> for MouseRaycastSystem {
+impl System for MouseRaycastSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MouseRaycastSystem")

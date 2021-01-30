@@ -44,7 +44,7 @@ impl ResizeSystem {
     }
 }
 
-impl System<'static> for ResizeSystem {
+impl System for ResizeSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ResizeSystem")

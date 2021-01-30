@@ -24,8 +24,8 @@ To add `System`s to the `DispatcherBuilder` we use a similar syntax to the one w
 # };
 #
 # struct MoveBallsSystem; struct MovePaddlesSystem;
-# impl<'a> System<'a> for MoveBallsSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
-# impl<'a> System<'a> for MovePaddlesSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
+# impl<'a> System for MoveBallsSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
+# impl<'a> System for MovePaddlesSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
 let mut dispatcher_builder = DispatcherBuilder::new();
 
 dispatcher_builder.add(MoveBallsSystem, "move_balls_system", &[]);
@@ -63,11 +63,11 @@ The `DispatcherBuilder` can be initialized and populated wherever desired, be it
 # 
 # struct MoveBallsSystem;
 # struct MovePaddlesSystem;
-# impl<'a> System<'a> for MoveBallsSystem {
+# impl<'a> System for MoveBallsSystem {
 #   type SystemData = ();
 #   fn run(&mut self, _: ()) {}
 # }
-# impl<'a> System<'a> for MovePaddlesSystem {
+# impl<'a> System for MovePaddlesSystem {
 #   type SystemData = ();
 #   fn run(&mut self, _: ()) {}
 # }
@@ -112,11 +112,11 @@ The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifeti
 # }
 # struct MoveBallsSystem;
 # struct MovePaddlesSystem;
-# impl<'a> System<'a> for MoveBallsSystem {
+# impl<'a> System for MoveBallsSystem {
 #   type SystemData = ();
 #   fn run(&mut self, _: ()) {}
 # }
-# impl<'a> System<'a> for MovePaddlesSystem {
+# impl<'a> System for MovePaddlesSystem {
 #   type SystemData = ();
 #   fn run(&mut self, _: ()) {}
 # }

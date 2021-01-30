@@ -78,7 +78,7 @@ impl UiSoundSystem {
     }
 }
 
-impl System<'static> for UiSoundSystem {
+impl System for UiSoundSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UiSoundSystem")

@@ -33,7 +33,7 @@ pub struct AssetProcessorSystem<A> {
     _marker: PhantomData<A>,
 }
 
-impl<A> System<'_> for AssetProcessorSystem<A>
+impl<A> System for AssetProcessorSystem<A>
 where
     A: Asset + ProcessableAsset,
 {

@@ -7,7 +7,7 @@ use amethyst::{
 };
 pub(crate) struct CameraMovementSystem;
 
-impl System<'static> for CameraMovementSystem {
+impl System for CameraMovementSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("CameraMovementSystem")

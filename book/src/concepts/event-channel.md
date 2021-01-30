@@ -180,7 +180,7 @@ Then, in the `System`'s `new` method:
 # 
 impl MySystem {
     pub fn new(world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(world);
+        <Self as System>::SystemData::setup(world);
         let reader_id = world.fetch_mut::<EventChannel<MyEvent>>().register_reader();
         Self { reader_id }
     }

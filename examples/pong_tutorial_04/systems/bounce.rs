@@ -4,7 +4,7 @@ use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
 pub struct BounceSystem;
 
-impl System<'_> for BounceSystem {
+impl System for BounceSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("BounceSystem")

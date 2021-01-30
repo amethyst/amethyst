@@ -66,7 +66,7 @@ struct SpamSystem {
     reader: ReaderId<NetworkSimulationEvent>,
 }
 
-impl System<'static> for SpamSystem {
+impl System for SpamSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TransformSystem")

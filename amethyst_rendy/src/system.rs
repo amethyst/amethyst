@@ -140,7 +140,7 @@ pub struct MeshProcessorSystem<B: Backend> {
     pub(crate) _marker: std::marker::PhantomData<B>,
 }
 
-impl<B: Backend> System<'_> for MeshProcessorSystem<B> {
+impl<B: Backend> System for MeshProcessorSystem<B> {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MeshProcessorSystem")
@@ -186,7 +186,7 @@ pub struct TextureProcessorSystem<B> {
     pub(crate) _marker: std::marker::PhantomData<B>,
 }
 
-impl<B: Backend> System<'_> for TextureProcessorSystem<B> {
+impl<B: Backend> System for TextureProcessorSystem<B> {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TextureProcessorSystem")

@@ -125,7 +125,7 @@ use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
 pub struct PaddleSystem;
 
-impl<'s> System<'s> for PaddleSystem {
+impl<'s> System for PaddleSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Paddle>,
@@ -259,7 +259,7 @@ component of the transform's translation.
 #
 # pub struct PaddleSystem;
 #
-# impl<'s> System<'s> for PaddleSystem {
+# impl<'s> System for PaddleSystem {
 #   type SystemData = (
 #       WriteStorage<'s, Transform>,
 #       ReadStorage<'s, Paddle>,
@@ -315,7 +315,7 @@ Our run function should now look something like this:
 # }
 #
 # pub struct PaddleSystem;
-# impl<'s> System<'s> for PaddleSystem {
+# impl<'s> System for PaddleSystem {
 #   type SystemData = (
 #       WriteStorage<'s, Transform>,
 #       ReadStorage<'s, Paddle>,

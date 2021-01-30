@@ -82,7 +82,7 @@ struct Orbit {
 
 struct OrbitSystem;
 
-impl<'a> System<'a> for OrbitSystem {
+impl<'a> System for OrbitSystem {
     type SystemData = (
         Read<'a, Time>,
         ReadStorage<'a, Orbit>,

@@ -16,7 +16,7 @@
 # #[system_desc(insert(ApplicationResource))]
 # struct MySystem;
 # 
-# impl<'s> System<'s> for MySystem {
+# impl<'s> System for MySystem {
 #   type SystemData = ReadExpect<'s, ApplicationResource>;
 # 
 #   fn run(&mut self, _: Self::SystemData) {}
@@ -62,7 +62,7 @@ struct MyComponent(pub i32);
 
 #[derive(Debug)]
 struct MySystem;
-impl<'s> System<'s> for MySystem {
+impl<'s> System for MySystem {
     type SystemData = WriteStorage<'s, MyComponent>;
     fn run(&mut self, mut my_component_storage: Self::SystemData) {
         for mut my_component in (&mut my_component_storage).join() {
@@ -111,7 +111,7 @@ struct MyResource(pub i32);
 #[derive(Debug)]
 struct MySystem;
 
-impl<'s> System<'s> for MySystem {
+impl<'s> System for MySystem {
     type SystemData = WriteExpect<'s, MyResource>;
 
     fn run(&mut self, mut my_resource: Self::SystemData) {

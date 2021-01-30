@@ -470,7 +470,7 @@ pub fn create_asset_type<Intermediate, Asset, ProcessorSystem>() -> AssetType
 where
     Asset: 'static + TypeUuid + Send + Sync,
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
-    ProcessorSystem: System<'static> + Default + 'static,
+    ProcessorSystem: System + Default + 'static,
 {
     log::debug!("Creating asset type: {:x?}", Asset::UUID);
     AssetType {

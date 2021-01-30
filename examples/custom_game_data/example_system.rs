@@ -17,7 +17,7 @@ pub struct ExampleSystem {
     fps_display: Option<Entity>,
 }
 
-impl<'a> System<'a> for ExampleSystem {
+impl<'a> System for ExampleSystem {
     type SystemData = (
         WriteStorage<'a, Light>,
         Read<'a, Time>,

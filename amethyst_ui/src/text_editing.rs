@@ -30,7 +30,7 @@ impl TextEditingInputSystem {
     }
 }
 
-impl System<'static> for TextEditingInputSystem {
+impl System for TextEditingInputSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TextEditingInputSystem")

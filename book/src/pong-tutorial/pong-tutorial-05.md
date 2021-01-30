@@ -44,7 +44,7 @@ use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
-impl<'s> System<'s> for WinnerSystem {
+impl<'s> System for WinnerSystem {
     type SystemData = (WriteStorage<'s, Ball>, WriteStorage<'s, Transform>);
 
     fn run(&mut self, (mut balls, mut locals): Self::SystemData) {
@@ -363,7 +363,7 @@ use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_HEIGHT, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
-impl<'s> System<'s> for WinnerSystem {
+impl<'s> System for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         WriteStorage<'s, Transform>,

@@ -13,10 +13,11 @@ A system struct is a structure implementing the trait `amethyst::ecs::System`.
 Here is a very simple example implementation:
 
 ```rust
-# use amethyst::ecs::System;
+use amethyst::ecs::System;
+
 struct MyFirstSystem;
 
-impl<'a> System<'a> for MyFirstSystem {
+impl<'a> System for MyFirstSystem {
     type SystemData = ();
 
     fn run(&mut self, data: Self::SystemData) {
@@ -45,7 +46,7 @@ You can then use one, or multiple of them via a tuple.
 # use amethyst::ecs::{Read, System};
 struct MyFirstSystem;
 
-impl<'a> System<'a> for MyFirstSystem {
+impl<'a> System for MyFirstSystem {
     type SystemData = Read<'a, Time>;
 
     fn run(&mut self, data: Self::SystemData) {
@@ -71,7 +72,7 @@ struct WalkPlayerUp {
     player: Entity,
 }
 
-impl<'a> System<'a> for WalkPlayerUp {
+impl<'a> System for WalkPlayerUp {
     type SystemData = WriteStorage<'a, Transform>;
 
     fn run(&mut self, mut transforms: Self::SystemData) {
@@ -110,7 +111,7 @@ use amethyst::ecs::Join;
 
 struct MakeObjectsFall;
 
-impl<'a> System<'a> for MakeObjectsFall {
+impl<'a> System for MakeObjectsFall {
     type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
@@ -141,7 +142,7 @@ use amethyst::ecs::Join;
 
 struct NotFallingObjects;
 
-impl<'a> System<'a> for NotFallingObjects {
+impl<'a> System for NotFallingObjects {
     type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
@@ -171,7 +172,7 @@ struct SpawnEnemies {
     counter: u32,
 }
 
-impl<'a> System<'a> for SpawnEnemies {
+impl<'a> System for SpawnEnemies {
     type SystemData = (
         WriteStorage<'a, Transform>,
         WriteStorage<'a, Enemy>,
@@ -203,7 +204,7 @@ Deleting an entity is very easy using `Entities<'a>`.
 # struct MySystem {
 #   entity: Entity,
 # }
-# impl<'a> System<'a> for MySystem {
+# impl<'a> System for MySystem {
 #   type SystemData = Entities<'a>;
 #   fn run(&mut self, entities: Self::SystemData) {
 #       let entity = self.entity;
@@ -222,7 +223,7 @@ Sometimes, when you iterate over components, you may want to also know what enti
 # struct FallingObject;
 struct MakeObjectsFall;
 
-impl<'a> System<'a> for MakeObjectsFall {
+impl<'a> System for MakeObjectsFall {
     type SystemData = (
         Entities<'a>,
         WriteStorage<'a, Transform>,
@@ -254,7 +255,7 @@ To do that, you need to get a mutable storage of the component you want to modif
 # struct MySystem {
 #   entity: Entity,
 # }
-# impl<'a> System<'a> for MySystem {
+# impl<'a> System for MySystem {
 #   type SystemData = WriteStorage<'a, MyComponent>;
 #   fn run(&mut self, mut write_storage: Self::SystemData) {
 #       let entity = self.entity;
@@ -424,7 +425,7 @@ use amethyst::{
 
 struct MyGameplaySystem;
 
-impl<'s> System<'s> for MyGameplaySystem {
+impl<'s> System for MyGameplaySystem {
     type SystemData = (Read<'s, InputHandler>, Write<'s, Game>);
 
     fn run(&mut self, (input, mut game): Self::SystemData) {
@@ -496,7 +497,7 @@ struct MySystemData<'a> {
 
 struct MyFirstSystem;
 
-impl<'a> System<'a> for MyFirstSystem {
+impl<'a> System for MyFirstSystem {
     type SystemData = MySystemData<'a>;
 
     fn run(&mut self, mut data: Self::SystemData) {

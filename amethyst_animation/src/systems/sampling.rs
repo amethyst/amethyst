@@ -34,7 +34,7 @@ pub(crate) struct SamplerInterpolationSystem<T: AnimationSampling> {
     _marker: PhantomData<T>,
 }
 
-impl<T> System<'_> for SamplerInterpolationSystem<T>
+impl<T> System for SamplerInterpolationSystem<T>
 where
     T: AnimationSampling + std::fmt::Debug,
 {

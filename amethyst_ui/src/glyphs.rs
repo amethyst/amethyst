@@ -136,7 +136,7 @@ pub(crate) struct GlyphTextureProcessorSystem<B> {
     pub(crate) _marker: std::marker::PhantomData<B>,
 }
 
-impl<B: Backend> System<'static> for GlyphTextureProcessorSystem<B> {
+impl<B: Backend> System for GlyphTextureProcessorSystem<B> {
     fn build(self) -> Box<dyn ParallelRunnable> {
         use hal::format::{Component as C, Swizzle};
 
@@ -181,7 +181,7 @@ impl<B: Backend> System<'static> for GlyphTextureProcessorSystem<B> {
     }
 }
 
-impl<B: Backend> System<'static> for UiGlyphsSystem<B> {
+impl<B: Backend> System for UiGlyphsSystem<B> {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UiGlyphsSystem")

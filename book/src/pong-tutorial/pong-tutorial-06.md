@@ -123,7 +123,7 @@ use amethyst::{
 
 use crate::audio::{play_bounce_sound, Sounds};
 
-impl<'s> System<'s> for BounceSystem {
+impl<'s> System for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
@@ -204,7 +204,7 @@ use amethyst::{
     ecs::Read,
 };
 
-impl<'s> System<'s> for WinnerSystem {
+impl<'s> System for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         WriteStorage<'s, Transform>,

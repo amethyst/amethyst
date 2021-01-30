@@ -67,7 +67,7 @@ impl Prefab {
 #[derive(Default)]
 struct PrefabProcessorSystem;
 
-impl System<'static> for PrefabProcessorSystem {
+impl System for PrefabProcessorSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("PrefabProcessorSystem")

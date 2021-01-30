@@ -134,7 +134,7 @@ use crate::pong::Ball;
 
 pub struct MoveBallsSystem;
 
-impl<'s> System<'s> for MoveBallsSystem {
+impl<'s> System for MoveBallsSystem {
     type SystemData = (
         ReadStorage<'s, Ball>,
         WriteStorage<'s, Transform>,
@@ -202,7 +202,7 @@ use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
 pub struct BounceSystem;
 
-impl<'s> System<'s> for BounceSystem {
+impl<'s> System for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
