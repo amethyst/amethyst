@@ -428,4 +428,6 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 }
 ```
 
+</details>
+
 [implementing the `systemdesc` trait]: ./implementing_the_system_desc_trait.html

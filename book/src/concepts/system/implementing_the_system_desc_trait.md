@@ -41,8 +41,6 @@ impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
 //     .with_system_desc(AudioSystemDesc::default(), "", &[]);
 ```
 
-</details>
-
 ## Templates
 
 ```rust
