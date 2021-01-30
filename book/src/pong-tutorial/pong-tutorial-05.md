@@ -282,30 +282,24 @@ fn initialize_scoreboard(world: &mut World) {
     );
 
     let p1_score = world
-        .create_entity()
-        .with(p1_transform)
-        .with(UiText::new(
+        .push((p1_transform,UiText::new(
             font.clone(),
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
             LineMode::Single,
             Anchor::Middle,
-        ))
-        .build();
+        ));
 
     let p2_score = world
-        .create_entity()
-        .with(p2_transform)
-        .with(UiText::new(
+        .push((p2_transform,UiText::new(
             font,
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
             LineMode::Single,
             Anchor::Middle,
-        ))
-        .build();
+        ));
 
 #   pub struct ScoreText {
 #       pub p1_score: Entity,

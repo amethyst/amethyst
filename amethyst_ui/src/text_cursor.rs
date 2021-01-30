@@ -41,7 +41,7 @@ impl<'a> System<'a> for TextEditingCursorSystem {
                 }
             } else if selected {
                 // TODO: Should have a cursor.
-                let cursor_entity = entities.create_entity();
+                let cursor_entity = entities.push();
                 cursors.insert(cursor_entity, Cursor).expect("Unreachable: Entity just created.");
                 parents.insert(cursor_entity, Parent{parent: entity.clone()}).expect("Unreachable: Entity just created.");
                 transforms.insert(cursor_entity, UiTransform::new()).expect("Unreachable: Entity just created.");

@@ -53,7 +53,7 @@ use quote::quote;
 /// creates test out of every *.md file in the repo
 #[proc_macro]
 pub fn make_doc_tests(_: TokenStream) -> TokenStream {
-    let doc_paths: Vec<String> = glob("**/assets/**/*.md")
+    let doc_paths: Vec<String> = glob("**/*.md")
         .expect("bad glob")
         .map(|entry| "../".to_string() + &entry.unwrap().to_string_lossy())
         .collect();

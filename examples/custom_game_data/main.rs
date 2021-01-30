@@ -152,7 +152,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
     fn on_start(&mut self, data: StateData<'_, CustomGameData>) {
-        data.world.create_entity().with(self.scene.clone()).build();
+        data.world.push((self.scene.clone(),);
     }
 
     fn handle_event(
@@ -167,9 +167,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
                 Trans::Push(Box::new(Paused {
                     ui: data
                         .world
-                        .create_entity()
-                        .with(self.paused_ui.clone())
-                        .build(),
+                        .push((self.paused_ui.clone(),)),
                 }))
             } else {
                 Trans::None

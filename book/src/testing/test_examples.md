@@ -76,7 +76,7 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
     AmethystApplication::blank()
         .with_system(MySystem, "my_system", &[])
         .with_effect(|world| {
-            let entity = world.create_entity().with(MyComponent(0)).build();
+            let entity = world.push((MyComponent(0),));
             world.insert(EffectReturn(entity));
         })
         .with_assertion(|world| {

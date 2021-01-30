@@ -63,14 +63,10 @@ fn initialize_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
     let sprite_render = SpriteRender::new(sprite_sheet_handle, 1);
 
     world
-        .create_entity()
-        .with(sprite_render)
-        .with(Ball {
+        .push((sprite_render),Ball {
             radius: BALL_RADIUS,
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
-        })
-        .with(local_transform)
-        .build();
+        },local_transform));
 }
 ```
 

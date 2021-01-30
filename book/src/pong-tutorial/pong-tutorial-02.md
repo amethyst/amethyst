@@ -96,11 +96,7 @@ will.
        let mut transform = Transform::default();
        transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
 
-       world
-           .create_entity()
-           .with(Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT))
-           .with(transform)
-           .build();
+       world.push((Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT), transform));
    }
    ```
 
@@ -244,18 +240,10 @@ fn initialize_paddles(world: &mut World) {
     right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Create a left plank entity.
-    world
-        .create_entity()
-        .with(Paddle::new(Side::Left))
-        .with(left_transform)
-        .build();
+    world.push((Paddle::new(Side::Left), left_transform));
 
     // Create right plank entity.
-    world
-        .create_entity()
-        .with(Paddle::new(Side::Right))
-        .with(right_transform)
-        .build();
+    world.push((Paddle::new(Side::Right), right_transform));
 }
 ```
 
@@ -549,18 +537,11 @@ Next we simply add the components to the paddle entities:
 # fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 #   let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
                                                                    // Create a left plank entity.
-    world
-        .create_entity()
-        .with(sprite_render.clone())
-        // ... other components
-        .build();
+    world.push((sprite_render.clone() /* ... other components */,));
 
     // Create right plank entity.
-    world
-        .create_entity()
-        .with(sprite_render)
-        // ... other components
-        .build();
+    world.push((sprite_render /* ... other components */,));
+
 # }
 ```
 

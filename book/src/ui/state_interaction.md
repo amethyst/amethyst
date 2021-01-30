@@ -70,11 +70,7 @@ impl SimpleState for MenuState {
 
         /* Building the entity */
         let btn = world
-            .create_entity()
-            .with(ui_transform)
-            .with(ui_text)
-            .with(Interactable)
-            .build();
+            .push((ui_transform,ui_text,Interactable));
 
         /* Saving the button in our state struct */
         self.button = Some(btn);
@@ -134,11 +130,8 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Building the entity */
-    #       let btn = world.create_entity()
-    #           .with(ui_transform)
-    #           .with(ui_text)
-    #           .with(Interactable)
-    #           .build();
+    #       let btn = world
+    #        .push((ui_transform,ui_text,Interactable));
     #
     #       /* Saving the button in our state struct */
     #       self.button = Some(btn);
@@ -231,11 +224,8 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Building the entity */
-    #       let btn = world.create_entity()
-    #           .with(ui_transform)
-    #           .with(ui_text)
-    #           .with(Interactable)
-    #           .build();
+    #       let btn = world
+    #        .push((ui_transform,ui_text,Interactable));
     #
     #       /* Saving the button in our state struct */
     #       self.button = Some(btn);
@@ -324,11 +314,8 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Building the entity */
-    #       let btn = world.create_entity()
-    #           .with(ui_transform)
-    #           .with(ui_text)
-    #           .with(Interactable)
-    #           .build();
+    #       let btn = world
+    #        .push((ui_transform,ui_text,Interactable));
     #
     #       /* Saving the button in our state struct */
     #           self.button = Some(btn);

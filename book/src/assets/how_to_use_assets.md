@@ -44,7 +44,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 1. Use the [`Loader`][doc_loader] resource to load the asset.
 
    ```rust
-   #   use amethyst::prelude::*;
+   # use amethyst::prelude::*;
    # use amethyst::utils::application_root_dir;
    # use amethyst::{
    #   assets::{AssetStorage, DefaultLoader, Handle, Loader, ProgressCounter},
@@ -87,7 +87,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    When [`loader.load(..)`][doc_load] is used to load an [`Asset`][doc_asset], the method returns immediately with a handle for the asset. The asset loading is handled asynchronously in the background, so if the handle is used to retrieve the asset, such as with [`resources.get::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], it will return `None` until the `Texture` has finished loading.
 
    ```rust
-   #   use amethyst::prelude::*;
+   # use amethyst::prelude::*;
    # use amethyst::utils::application_root_dir;
    # use amethyst::{
    #   assets::{AssetStorage, DefaultLoader, Handle, Loader, ProgressCounter},
@@ -150,7 +150,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    The asset handle can now be used:
 
    ```rust
-   #   use amethyst::prelude::*;
+   # use amethyst::prelude::*;
    # use amethyst::utils::application_root_dir;
    # use amethyst::{
    #   assets::{AssetStorage, DefaultLoader, Handle, Loader, ProgressCounter},

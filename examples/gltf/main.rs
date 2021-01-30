@@ -112,7 +112,7 @@ impl SimpleState for Example {
                         .unwrap()
                         .clone();
 
-                    data.world.create_entity().with(scene_handle).build();
+                    data.world.push((scene_handle,));
 
                     true
                 }

@@ -44,7 +44,7 @@ fn init_map(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     );
     let transform = Transform::default();
 
-    world.create_entity().with(map).with(transform).build();
+    world.push((map, transform));
 }
 # fn main() {}
 ```

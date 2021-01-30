@@ -72,12 +72,7 @@ impl ExampleState {
         // You can change the color at any point to modify the sprite's tint.
         let tint = Tint(Srgba::new(1.0, 1.0, 1.0, 1.0));
 
-        world
-            .create_entity()
-            .with(sprite_render)
-            .with(sprite_transform)
-            .with(tint)
-            .build();
+        world.push((sprite_render, sprite_transform, tint));
     }
 }
 # fn main() {}

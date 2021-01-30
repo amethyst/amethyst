@@ -89,7 +89,7 @@ impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
 
-        world.create_entity().with(self.scene.clone()).build();
+        world.push((self.scene.clone(),));
     }
 
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {

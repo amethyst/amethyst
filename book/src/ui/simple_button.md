@@ -121,11 +121,7 @@ If you had some state implemented you can create the button on its `on_start` me
         );
 
         /* Building the entity */
-        let _ = world
-            .create_entity()
-            .with(ui_transform)
-            .with(ui_text)
-            .build();
+        let _ = world.push((ui_transform, ui_text));
     }
 #   fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
 #       Trans::None
@@ -184,11 +180,6 @@ The code snippet would look like this now:
 #       Anchor::Middle,
 #   );
 
-    let _ = world
-        .create_entity()
-        .with(ui_transform)
-        .with(ui_text)
-        .with(Interactable)
-        .build();
+    let _ = world.push((ui_transform, ui_text, Interactable));
 # }
 ```

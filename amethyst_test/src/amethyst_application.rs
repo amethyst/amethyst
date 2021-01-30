@@ -791,7 +791,7 @@ mod test {
     #[test]
     fn with_system_runs_system_every_tick() -> Result<(), Error> {
         let effect_fn = |world: &mut World| {
-            let entity = world.create_entity().with(ComponentZero(0)).build();
+            let entity = world.push((ComponentZero(0),));
 
             world.insert(EffectReturn(entity));
         };
@@ -840,7 +840,7 @@ mod test {
             .with_setup(|world| {
                 world.register::<ComponentZero>();
 
-                let entity = world.create_entity().with(ComponentZero(0)).build();
+                let entity = world.push((ComponentZero(0),));
                 world.insert(EffectReturn(entity));
             })
             .with_system_single(SystemEffect, "system_effect", &[])

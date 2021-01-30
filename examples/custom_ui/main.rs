@@ -83,7 +83,7 @@ impl SimpleState for Example {
         let handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, ())
         });
-        world.create_entity().with(handle).build();
+        world.push((handle,));
 
         // Load custom UI prefab
         world.exec(|mut creator: UiCreator<'_, CustomUi>| {
