@@ -4,7 +4,7 @@
 
 ```rust
 # use amethyst::{
-#   core::bundle::SystemBundle, core::SystemDesc, derive::SystemDesc, prelude::*,
+#   core::bundle::SystemBundle, prelude::*,
 #   Error,
 # };
 # use amethyst_test::prelude::*;
@@ -12,7 +12,7 @@
 # #[derive(Debug)]
 # struct ApplicationResource;
 # 
-# #[derive(Debug, SystemDesc)]
+# #[derive(Debug)]
 # #[system_desc(insert(ApplicationResource))]
 # struct MySystem;
 # 
@@ -60,7 +60,7 @@ fn bundle_registers_system_with_resource() -> Result<(), Error> {
 # 
 struct MyComponent(pub i32);
 
-#[derive(Debug, SystemDesc)]
+#[derive(Debug)]
 struct MySystem;
 impl<'s> System<'s> for MySystem {
     type SystemData = WriteStorage<'s, MyComponent>;
@@ -108,7 +108,7 @@ This is useful when your system must run *after* some setup has been done, for e
 // !Default
 struct MyResource(pub i32);
 
-#[derive(Debug, SystemDesc)]
+#[derive(Debug)]
 struct MySystem;
 
 impl<'s> System<'s> for MySystem {

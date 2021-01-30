@@ -4,7 +4,6 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystemDesc, Processor, RonFormat},
     audio::{output::init_output, Source},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
-    derive::SystemDesc,
     ecs::{Entity, System, Write},
     input::{is_close_requested, is_key_down, InputBundle},
     prelude::*,
@@ -168,10 +167,7 @@ fn main() -> amethyst::Result<()> {
 }
 
 /// This shows how to handle UI events.
-#[derive(SystemDesc)]
-#[system_desc(name(UiEventHandlerSystemDesc))]
 pub struct UiEventHandlerSystem {
-    #[system_desc(event_channel_reader)]
     reader_id: ReaderId<UiEvent>,
 }
 

@@ -13,7 +13,6 @@ use amethyst::{
         timing::Time,
         transform::{Transform, TransformBundle},
     },
-    derive::SystemDesc,
     ecs::{Entity, System},
     input::{get_key, is_close_requested, is_key_down, ElementState, InputBundle, VirtualKeyCode},
     prelude::*,
@@ -236,7 +235,7 @@ impl Default for DemoState {
     }
 }
 
-#[derive(Default, SystemDesc)]
+#[derive(Default)]
 struct ExampleSystem {
     fps_display: Option<Entity>,
 }

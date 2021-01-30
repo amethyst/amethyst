@@ -7,7 +7,6 @@ implemented manually:
 ```rust
 use amethyst::{
     audio::output::Output,
-    core::SystemDesc,
     ecs::{System, World},
 };
 
@@ -44,8 +43,6 @@ impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
 ## Templates
 
 ```rust
-use amethyst_core::SystemDesc;
-
 /// Builds a `SystemName`.
 #[derive(Default, Debug)]
 pub struct SystemNameDesc;
@@ -67,9 +64,6 @@ With type parameters:
 use std::marker::PhantomData;
 
 use derivative::Derivative;
-
-use amethyst_core::ecs::SystemData;
-use amethyst_core::SystemDesc;
 
 /// Builds a `SystemName`.
 #[derive(Derivative, Debug)]

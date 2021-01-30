@@ -1,15 +1,11 @@
 use amethyst::{
-    derive::SystemDesc,
-    ecs::{System, Write},
+    ecs::System,
     shrev::{EventChannel, ReaderId},
     ui::UiEvent,
 };
 
 /// This shows how to handle UI events. This is the same as in the 'ui' example.
-#[derive(SystemDesc)]
-#[system_desc(name(UiEventHandlerSystemDesc))]
 pub struct UiEventHandlerSystem {
-    #[system_desc(event_channel_reader)]
     reader_id: ReaderId<UiEvent>,
 }
 

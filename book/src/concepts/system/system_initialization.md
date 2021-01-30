@@ -21,12 +21,9 @@ initialization logic, the `SystemDesc` derive automatically implements the
 
 ```rust
 use amethyst::{
-    core::SystemDesc,
-    derive::SystemDesc,
     ecs::{System, World},
 };
 
-#[derive(SystemDesc)]
 struct SystemName;
 
 impl<'a> System<'a> for SystemName {

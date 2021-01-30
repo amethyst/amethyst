@@ -25,14 +25,11 @@ To use the `InputHandler` inside a `System` you have to add it to the `SystemDat
 
 ```rust
 use amethyst::{
-    core::SystemDesc,
-    derive::SystemDesc,
     ecs::{Read, System, World},
     input::{ControllerButton, InputHandler, VirtualKeyCode},
     prelude::*,
 };
 
-#[derive(SystemDesc)]
 struct ExampleSystem;
 
 impl<'s> System<'s> for ExampleSystem {
@@ -64,8 +61,7 @@ You can find all the methods from `InputHandler` [here][input_ha].
 Now you have to add the `System` to the game data, like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
 
 ```rust
-# use amethyst::{core::SystemDesc, derive::SystemDesc, ecs::*, prelude::*};
-# #[derive(SystemDesc)]
+# use amethyst::{ecs::*, prelude::*};
 # struct ExampleSystem;
 # impl<'a> System<'a> for ExampleSystem {
 #   type SystemData = ();
@@ -145,7 +141,6 @@ impl Player {
     }
 }
 
-#[derive(SystemDesc)]
 struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {

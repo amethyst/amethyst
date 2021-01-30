@@ -14,10 +14,7 @@ If your system initialization use case is not covered, please see the
 ## Passing parameters to system constructor
 
 ```rust
-# use amethyst::{derive::SystemDesc, ecs::System};
-# 
-#[derive(SystemDesc)]
-#[system_desc(name(SystemNameDesc))]
+# use amethyst::{ecs::System};
 pub struct SystemName {
     field_0: u32,
     field_1: String,
@@ -38,7 +35,7 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
-# use amethyst::{derive::SystemDesc, ecs::System};
+# use amethyst::{ecs::System};
 # 
 # pub struct SystemName {
 #   field_0: u32,
@@ -83,10 +80,8 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 ## Fields to skip -- defaulted by the system constructor
 
 ```rust
-# use amethyst::{derive::SystemDesc, ecs::System};
+# use amethyst::{ecs::System};
 # 
-#[derive(SystemDesc)]
-#[system_desc(name(SystemNameDesc))]
 pub struct SystemName {
     #[system_desc(skip)]
     field_0: u32,
@@ -111,7 +106,7 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
-# use amethyst::{derive::SystemDesc, ecs::System};
+# use amethyst::{ ecs::System};
 # 
 # pub struct SystemName {
 #   field_0: u32,
@@ -159,12 +154,10 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 will call  `SystemName::default()`:
 
 ```rust
-# use amethyst::{derive::SystemDesc, ecs::System};
+# use amethyst::{ecs::System};
 # 
-#[derive(Default, SystemDesc)]
-#[system_desc(name(SystemNameDesc))]
+#[derive(Default)]
 pub struct SystemName {
-    #[system_desc(skip)]
     field_0: u32,
 }
 # impl<'a> System<'a> for SystemName {
@@ -177,7 +170,7 @@ pub struct SystemName {
 <summary>Generated code</summary>
 
 ```rust
-# use amethyst::{derive::SystemDesc, ecs::System};
+# use amethyst::{ecs::System};
 # 
 # #[derive(Default)]
 # pub struct SystemName {
@@ -214,16 +207,12 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 
 ```rust
 # use amethyst::{
-#   derive::SystemDesc,
 #   ecs::System,
 #   shrev::{EventChannel, ReaderId},
 #   ui::UiEvent,
 # };
 # 
-#[derive(SystemDesc)]
-#[system_desc(name(SystemNameDesc))]
 pub struct SystemName {
-    #[system_desc(event_channel_reader)]
     reader_id: ReaderId<UiEvent>,
 }
 
@@ -243,7 +232,6 @@ impl SystemName {
 
 ```rust
 # use amethyst::{
-#   derive::SystemDesc,
 #   ecs::System,
 #   shrev::{EventChannel, ReaderId},
 #   ui::UiEvent,
@@ -291,14 +279,11 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 
 ```rust
 # use amethyst::{
-#   derive::SystemDesc,
-#   ecs::{storage::ComponentEvent, System, WriteStorage},
+#   ecs::{System},
 #   shrev::{EventChannel, ReaderId},
 #   ui::UiResize,
 # };
 # 
-#[derive(SystemDesc)]
-#[system_desc(name(SystemNameDesc))]
 pub struct SystemName {
     #[system_desc(flagged_storage_reader(UiResize))]
     resize_events_id: ReaderId<ComponentEvent>,
@@ -320,8 +305,7 @@ impl SystemName {
 
 ```rust
 # use amethyst::{
-#   derive::SystemDesc,
-#   ecs::{storage::ComponentEvent, System, WriteStorage},
+#   ecs::{System},
 #   shrev::{EventChannel, ReaderId},
 #   ui::UiResize,
 # };
@@ -372,13 +356,12 @@ such as a function call, you must surround that expression in quotes, e.g.
 
 ```rust
 # use amethyst::{
-#   derive::SystemDesc,
-#   ecs::{ReadExpect, System},
+#   ecs::{System},
 # };
 # 
 pub struct NonDefault;
 
-#[derive(Default, SystemDesc)]
+#[derive(Default)]
 #[system_desc(insert(NonDefault))]
 pub struct SystemName;
 
@@ -393,8 +376,7 @@ impl<'a> System<'a> for SystemName {
 
 ```rust
 # use amethyst::{
-#   derive::SystemDesc,
-#   ecs::{ReadExpect, System},
+#   ecs::{System},
 # };
 # 
 # pub struct NonDefault;
