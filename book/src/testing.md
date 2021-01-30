@@ -11,7 +11,7 @@ The following shows a simple example of testing a `State`. More examples are in 
 ```rust
 # use std::marker::PhantomData;
 # 
-# use amethyst::{ecs::prelude::*, prelude::*};
+# use amethyst::{prelude::*};
 # use amethyst_test::prelude::*;
 # 
 # #[derive(Debug)]

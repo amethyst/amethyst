@@ -53,7 +53,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
    # use amethyst::{
    #   assets::{Prefab, PrefabData},
    #   derive::PrefabData,
-   #   ecs::{storage::DenseVecStorage, Component, Entity, WriteStorage},
+   #   ecs::{Entity},
    #   prelude::*,
    #   Error,
    # };

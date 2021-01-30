@@ -66,7 +66,7 @@ Sometimes, it can be useful to get a component in the storage for a specific ent
 
 ```rust
 # use amethyst::core::Transform;
-# use amethyst::ecs::{Entity, System, WriteStorage};
+# use amethyst::ecs::{Entity, System};
 struct WalkPlayerUp {
     player: Entity,
 }
@@ -104,7 +104,7 @@ Keep in mind that **the `join` method is only available by importing `amethyst::
 
 ```rust
 # use amethyst::core::Transform;
-# use amethyst::ecs::{ReadStorage, System, WriteStorage};
+# use amethyst::ecs::{System};
 # struct FallingObject;
 use amethyst::ecs::Join;
 
@@ -135,7 +135,7 @@ It is used like this:
 
 ```rust
 # use amethyst::core::Transform;
-# use amethyst::ecs::{ReadStorage, System, WriteStorage};
+# use amethyst::ecs::{System};
 # struct FallingObject;
 use amethyst::ecs::Join;
 
@@ -165,7 +165,7 @@ Creating an entity while in the context of a system is very similar to the way o
 
 ```rust
 # use amethyst::core::Transform;
-# use amethyst::ecs::{Entities, System, WriteStorage};
+# use amethyst::ecs::{Entities, System};
 # struct Enemy;
 struct SpawnEnemies {
     counter: u32,
@@ -218,7 +218,7 @@ Sometimes, when you iterate over components, you may want to also know what enti
 
 ```rust
 # use amethyst::core::Transform;
-# use amethyst::ecs::{Entities, ReadStorage, System, WriteStorage};
+# use amethyst::ecs::{Entities, System};
 # struct FallingObject;
 struct MakeObjectsFall;
 
@@ -249,7 +249,7 @@ You can also insert or remove components from a specific entity.
 To do that, you need to get a mutable storage of the component you want to modify, and simply do:
 
 ```rust
-# use amethyst::ecs::{Entities, Entity, System, WriteStorage};
+# use amethyst::ecs::{Entity, System};
 # struct MyComponent;
 # struct MySystem {
 #   entity: Entity,
@@ -464,7 +464,7 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # extern crate shred_derive;
 # 
 # use amethyst::{
-#   ecs::{Component, ReadStorage, System, World, WriteStorage},
+#   ecs::{System, World},
 #   shred::ResourceId,
 # };
 # 

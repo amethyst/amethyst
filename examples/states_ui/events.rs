@@ -1,6 +1,6 @@
 use amethyst::{
     derive::SystemDesc,
-    ecs::prelude::{System, Write},
+    ecs::{System, Write},
     shrev::{EventChannel, ReaderId},
     ui::UiEvent,
 };

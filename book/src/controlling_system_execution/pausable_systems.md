@@ -25,7 +25,7 @@ We'll use this `enum` `Resource` to control whether or not our `System` is runni
 ```rust
 #
 # use amethyst::{
-#     ecs::prelude::*,
+#     ecs::*,
 #     prelude::*,
 # };
 # 

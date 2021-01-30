@@ -104,8 +104,6 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
 ```rust
 # mod pong {
-#   use amethyst::ecs::prelude::*;
-# 
 #   pub enum Side {
 #       Left,
 #       Right,
@@ -118,15 +116,13 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 #   pub const PADDLE_HEIGHT: f32 = 16.0;
 # }
 # 
-use amethyst::core::{SystemDesc, Transform};
-use amethyst::derive::SystemDesc;
-use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
+use amethyst::core::{Transform};
+use amethyst::ecs::{System, World};
 use amethyst::input::InputHandler;
 
 // You'll have to mark PADDLE_HEIGHT as public in pong.rs
 use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
-#[derive(SystemDesc)]
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
@@ -214,11 +210,7 @@ fn main() -> amethyst::Result<()> {
 #   mod systems {
 # 
 #       use amethyst::core::ecs::{System, World};
-#       use amethyst::core::SystemDesc;
-#       use amethyst::derive::SystemDesc;
 # 
-#       use amethyst;
-#       #[derive(SystemDesc)]
 #       pub struct PaddleSystem;
 #       impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 #           type SystemData = ();
@@ -254,10 +246,8 @@ Let's make it update the position of the paddle. To do this, we'll modify the y
 component of the transform's translation.
 
 ```rust
-# use amethyst::core::SystemDesc;
 # use amethyst::core::Transform;
-# use amethyst::derive::SystemDesc;
-# use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
+# use amethyst::ecs::{System, World};
 # use amethyst::input::InputHandler;
 # enum Side {
 #   Left,
@@ -266,8 +256,9 @@ component of the transform's translation.
 # pub struct Paddle {
 #   side: Side,
 # }
-# #[derive(SystemDesc)]
+#
 # pub struct PaddleSystem;
+#
 # impl<'s> System<'s> for PaddleSystem {
 #   type SystemData = (
 #       WriteStorage<'s, Transform>,
@@ -308,10 +299,8 @@ to `PADDLE_HEIGHT * 0.5` (the bottom of the arena plus the offset).
 Our run function should now look something like this:
 
 ```rust
-# use amethyst::core::SystemDesc;
 # use amethyst::core::Transform;
-# use amethyst::derive::SystemDesc;
-# use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
+# use amethyst::ecs::{System, World};
 # use amethyst::input::InputHandler;
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
@@ -324,7 +313,7 @@ Our run function should now look something like this:
 # pub struct Paddle {
 #   side: Side,
 # }
-# #[derive(SystemDesc)]
+#
 # pub struct PaddleSystem;
 # impl<'s> System<'s> for PaddleSystem {
 #   type SystemData = (

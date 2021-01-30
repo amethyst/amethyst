@@ -23,7 +23,6 @@ keeping it simple.
 In `pong.rs`, let's create the `Ball` Component.
 
 ```rust
-# use amethyst::ecs::{Component, DenseVecStorage};
 pub struct Ball {
     pub velocity: [f32; 2],
     pub radius: f32,
@@ -79,7 +78,7 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 
 ```rust
 # use amethyst::assets::Handle;
-# use amethyst::ecs::{Component, VecStorage, World};
+# use amethyst::ecs::{World};
 # use amethyst::prelude::*;
 # use amethyst::renderer::{SpriteSheet, Texture};
 # struct Paddle;
@@ -118,11 +117,7 @@ in the center. In the next section, we're going to make this ball actually move!
 We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 
 ```rust
-# use amethyst::ecs::{Component, DenseVecStorage};
-# 
 # mod pong {
-#   use amethyst::ecs::prelude::*;
-# 
 #   pub struct Ball {
 #       pub velocity: [f32; 2],
 #       pub radius: f32,
@@ -132,14 +127,11 @@ We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 use amethyst::{
     core::timing::Time,
     core::transform::Transform,
-    core::SystemDesc,
-    derive::SystemDesc,
-    ecs::{Read, ReadStorage, System, World, WriteStorage},
+    ecs::{System, World},
 };
 
 use crate::pong::Ball;
 
-#[derive(SystemDesc)]
 pub struct MoveBallsSystem;
 
 impl<'s> System<'s> for MoveBallsSystem {
@@ -180,11 +172,7 @@ If a collision is detected, the ball bounces off. This is done
 by negating the velocity of the `Ball` component on the `x` or `y` axis.
 
 ```rust
-# use amethyst::ecs::{Component, DenseVecStorage};
-# 
 # mod pong {
-#   use amethyst::ecs::prelude::*;
-# 
 #   pub struct Ball {
 #       pub velocity: [f32; 2],
 #       pub radius: f32,
@@ -206,14 +194,12 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 # }
 # 
 use amethyst::{
-    core::{SystemDesc, Transform},
-    derive::SystemDesc,
-    ecs::{ReadStorage, System, World, WriteStorage},
+    core::{Transform},
+    ecs::{System, World},
 };
 
 use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
-# #[derive(SystemDesc)]
 pub struct BounceSystem;
 
 impl<'s> System<'s> for BounceSystem {
@@ -292,23 +278,17 @@ as well as adding our new systems to the game data:
 #   let path = "./config/display.ron";
 #   let config = DisplayConfig::load(&path)?;
 #   mod systems {
-#       use amethyst;
 #       use amethyst::core::ecs::{System, World};
-#       use amethyst::core::SystemDesc;
-#       use amethyst::derive::SystemDesc;
-#       #[derive(SystemDesc)]
 #       pub struct PaddleSystem;
 #       impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 #           type SystemData = ();
 #           fn run(&mut self, _: Self::SystemData) {}
 #       }
-#       #[derive(SystemDesc)]
 #       pub struct MoveBallsSystem;
 #       impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
 #           type SystemData = ();
 #           fn run(&mut self, _: Self::SystemData) {}
 #       }
-#       #[derive(SystemDesc)]
 #       pub struct BounceSystem;
 #       impl<'a> amethyst::ecs::System<'a> for BounceSystem {
 #           type SystemData = ();

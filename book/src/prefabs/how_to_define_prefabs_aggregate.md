@@ -36,7 +36,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    #   assets::{PrefabData, ProgressCounter},
    #   core::Named,
    #   derive::PrefabData,
-   #   ecs::{storage::DenseVecStorage, Component, Entity, WriteStorage},
+   #   ecs::{Entity},
    #   prelude::*,
    #   Error,
    # };
@@ -78,7 +78,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
 
    #[derive(Clone, Copy, Component, Debug, Deserialize, Serialize, PrefabData)]
    #[prefab(Component)]
-   #[storage(VecStorage)]
    pub enum Weapon {
        Axe,
        Sword,

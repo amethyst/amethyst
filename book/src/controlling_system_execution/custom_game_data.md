@@ -16,7 +16,7 @@ are essential (like rendering, input and UI).
 Let's start by creating the `GameData` structure:
 
 ```rust
-# use amethyst::ecs::prelude::Dispatcher;
+# use amethyst::ecs::Dispatcher;
 # 
 pub struct CustomGameData<'a, 'b> {
     core_dispatcher: Option<Dispatcher<'a, 'b>>,
@@ -27,7 +27,7 @@ pub struct CustomGameData<'a, 'b> {
 We also add a utility function for performing dispatch:
 
 ```rust
-# use amethyst::ecs::prelude::{Dispatcher, World};
+# use amethyst::ecs::{Dispatcher, World};
 # 
 # pub struct CustomGameData<'a, 'b> {
 #   core_dispatcher: Option<Dispatcher<'a, 'b>>,
@@ -56,7 +56,7 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 
 ```rust
 # use amethyst::core::SystemBundle;
-# use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
+# use amethyst::ecs::{Dispatcher, DispatcherBuilder, System, World};
 # use amethyst::{DataDispose, DataInit, Error};
 # 
 # pub struct CustomGameData<'a, 'b> {
@@ -139,7 +139,7 @@ We can now use `CustomGameData` in place of the provided `GameData` when buildin
 our `Application`, but first we should create some `State`s.
 
 ```rust
-# use amethyst::ecs::prelude::{Dispatcher, World};
+# use amethyst::ecs::{Dispatcher, World};
 # use amethyst::input::{is_close_requested, is_key_down, VirtualKeyCode};
 # use amethyst::prelude::{State, StateData, StateEvent, Trans};
 # 

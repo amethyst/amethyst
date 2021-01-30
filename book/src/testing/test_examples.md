@@ -4,7 +4,7 @@
 
 ```rust
 # use amethyst::{
-#   core::bundle::SystemBundle, core::SystemDesc, derive::SystemDesc, ecs::prelude::*, prelude::*,
+#   core::bundle::SystemBundle, core::SystemDesc, derive::SystemDesc, prelude::*,
 #   Error,
 # };
 # use amethyst_test::prelude::*;
@@ -55,7 +55,7 @@ fn bundle_registers_system_with_resource() -> Result<(), Error> {
 ## Testing a `System`
 
 ```rust
-# use amethyst::{core::SystemDesc, derive::SystemDesc, ecs::prelude::*, prelude::*, Error};
+# use amethyst::{prelude::*, Error};
 # use amethyst_test::prelude::*;
 # 
 struct MyComponent(pub i32);
@@ -102,7 +102,7 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
 This is useful when your system must run *after* some setup has been done, for example adding a resource:
 
 ```rust
-# use amethyst::{core::SystemDesc, derive::SystemDesc, ecs::prelude::*, prelude::*, Error};
+# use amethyst::{prelude::*, Error};
 # use amethyst_test::prelude::*;
 # 
 // !Default

@@ -26,8 +26,6 @@ Then, we'll create `systems/winner.rs`:
 
 ```rust
 # mod pong {
-#   use amethyst::ecs::prelude::*;
-# 
 #   pub struct Ball {
 #       pub radius: f32,
 #       pub velocity: [f32; 2],
@@ -39,14 +37,11 @@ Then, we'll create `systems/winner.rs`:
 # 
 use amethyst::{
     core::transform::Transform,
-    core::SystemDesc,
-    derive::SystemDesc,
     ecs::{System, World, WriteStorage},
 };
 
 use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
 
-#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {
@@ -94,30 +89,23 @@ keep playing after someone scores and log who got the point.
 # };
 # 
 # mod systems {
-#   use amethyst;
 #   use amethyst::core::ecs::{System, World};
-#   use amethyst::core::SystemDesc;
-#   use amethyst::derive::SystemDesc;
 # 
-#   #[derive(SystemDesc)]
 #   pub struct PaddleSystem;
 #   impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 #       type SystemData = ();
 #       fn run(&mut self, _: Self::SystemData) {}
 #   }
-#   #[derive(SystemDesc)]
 #   pub struct MoveBallsSystem;
 #   impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
 #       type SystemData = ();
 #       fn run(&mut self, _: Self::SystemData) {}
 #   }
-#   #[derive(SystemDesc)]
 #   pub struct BounceSystem;
 #   impl<'a> amethyst::ecs::System<'a> for BounceSystem {
 #       type SystemData = ();
 #       fn run(&mut self, _: Self::SystemData) {}
 #   }
-#   #[derive(SystemDesc)]
 #   pub struct WinnerSystem;
 #   impl<'a> amethyst::ecs::System<'a> for WinnerSystem {
 #       type SystemData = ();
@@ -344,8 +332,6 @@ accordingly:
 
 ```rust
 # mod pong {
-#   use amethyst::ecs::prelude::*;
-# 
 #   pub struct Ball {
 #       pub radius: f32,
 #       pub velocity: [f32; 2],
@@ -368,16 +354,13 @@ accordingly:
 # 
 use amethyst::{
 #   core::transform::Transform,
-#   core::SystemDesc,
-#   derive::SystemDesc,
     // --snip--
-    ecs::{ReadExpect, System, World, Write, WriteStorage},
+    ecs::{System, World},
     ui::UiText,
 };
 
 use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_HEIGHT, ARENA_WIDTH};
 
-#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {

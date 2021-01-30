@@ -3,7 +3,6 @@
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     core::transform::TransformBundle,
-    ecs::prelude::WorldExt,
     input::InputBundle,
     prelude::*,
     renderer::{

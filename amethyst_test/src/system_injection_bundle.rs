@@ -1,4 +1,4 @@
-use amethyst::{core::bundle::SystemBundle, ecs::prelude::*, error::Error};
+use amethyst::{core::bundle::SystemBundle, ecs::*, error::Error};
 use derive_new::new;
 
 /// Adds a specified `System` to the dispatcher.

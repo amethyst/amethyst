@@ -1,11 +1,6 @@
 use std::time::Duration;
 
-use amethyst::{
-    assets::ProgressCounter,
-    core::Stopwatch,
-    ecs::{World},
-    State, StateData, Trans,
-};
+use amethyst::{assets::ProgressCounter, core::Stopwatch, ecs::World, State, StateData, Trans};
 use derivative::Derivative;
 use log::warn;
 
@@ -92,7 +87,6 @@ mod tests {
             Asset, AssetStorage, Handle, Loader, ProcessingState, Processor, ProgressCounter,
             RonFormat,
         },
-        ecs::{storage::VecStorage},
         Error,
     };
     use serde::{Deserialize, Serialize};
@@ -195,7 +189,6 @@ mod tests {
 
     impl Asset for TestAsset {
         type Data = Self;
-        type HandleStorage = VecStorage<Handle<Self>>;
 
         const NAME: &'static str = concat!(module_path!(), "::", stringify!(TestAsset));
     }

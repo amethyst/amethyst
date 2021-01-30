@@ -29,7 +29,7 @@ initialization code from the Pong code.
    use amethyst::{
        assets::{AssetStorage, DefaultLoader, Handle, Loader},
        core::transform::Transform,
-       ecs::{Component, DenseVecStorage},
+       ecs::{Component},
        prelude::*,
        renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
    };
@@ -364,7 +364,6 @@ First, let's declare the function and load the sprite sheet's image data.
 # use amethyst::{
 #   assets::{AssetStorage, DefaultLoader, Handle, Loader},
 #   core::transform::Transform,
-#   ecs::{Component, DenseVecStorage},
 #   prelude::*,
 #   renderer::{
 #       camera::Camera,
@@ -450,7 +449,6 @@ Finally, we load the file containing the position of each sprite on the sheet.
 # use amethyst::{
 #   assets::{AssetStorage, DefaultLoader, Handle, Loader},
 #   core::transform::Transform,
-#   ecs::{Component, DenseVecStorage},
 #   prelude::*,
 #   renderer::{
 #       camera::Camera,

@@ -3,7 +3,7 @@ use amethyst::{
         Animation, InterpolationFunction, Sampler, SpriteRenderChannel, SpriteRenderPrimitive,
     },
     assets::{AssetStorage, DefaultLoader, Handle, Loader},
-    ecs::prelude::*,
+    ecs::*,
     renderer::{
         loaders::load_from_srgba, palette::Srgba, Sprite, SpriteRender, SpriteSheet, Texture,
     },

@@ -26,7 +26,7 @@ In its stored form, a prefab is a serialized list of entities and their componen
 # use amethyst::{
 #   assets::{Prefab, PrefabData},
 #   derive::PrefabData,
-#   ecs::{storage::DenseVecStorage, Component, Entity, WriteStorage},
+#   ecs::{Entity},
 #   prelude::*,
 #   Error,
 # };
@@ -204,7 +204,6 @@ Could be implemented using an enum like this:
 #[derive(Clone, Copy, Component, Debug, Derivative, Deserialize, Serialize, PrefabData)]
 #[derivative(Default)]
 #[prefab(Component)]
-#[storage(VecStorage)]
 pub enum Weapon {
     #[derivative(Default)]
     Axe,

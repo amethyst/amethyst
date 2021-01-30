@@ -5,7 +5,7 @@ use amethyst::{
         deferred_dispatcher_operation::{AddSystem, AddSystemDesc, DispatcherOperation},
         SystemDesc,
     },
-    ecs::prelude::*,
+    ecs::*,
     prelude::*,
 };
 use derivative::Derivative;

@@ -14,7 +14,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
     },
     derive::SystemDesc,
-    ecs::prelude::{Entity, Read, ReadStorage, System, Write, WriteStorage},
+    ecs::{Entity, System},
     input::{get_key, is_close_requested, is_key_down, ElementState, InputBundle, VirtualKeyCode},
     prelude::*,
     renderer::{

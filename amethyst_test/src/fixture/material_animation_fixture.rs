@@ -1,7 +1,7 @@
 use amethyst::{
     animation::{Animation, InterpolationFunction, MaterialChannel, MaterialPrimitive, Sampler},
     assets::{AssetStorage, DefaultLoader, Handle, Loader},
-    ecs::prelude::*,
+    ecs::*,
     renderer::{loaders::load_from_srgba, palette::Srgba, Material},
 };
 

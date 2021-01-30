@@ -2,8 +2,8 @@ use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex};
 
 use amethyst::{
     self,
-    core::{transform::TransformBundle, EventReader, RunNowDesc, SystemBundle, SystemDesc},
-    ecs::prelude::*,
+    core::{transform::TransformBundle, EventReader, RunNowDesc, SystemBundle},
+    ecs::*,
     error::Error,
     input::{BindingTypes, InputBundle},
     prelude::*,
@@ -590,7 +590,7 @@ mod test {
         assets::{Asset, AssetStorage, DefaultLoader, Handle, Loader, ProcessingState, Processor},
         core::{bundle::SystemBundle, SystemDesc},
         derive::SystemDesc,
-        ecs::prelude::*,
+        ecs::*,
         error::Error,
         prelude::*,
         ui::FontAsset,
@@ -1162,10 +1162,6 @@ mod test {
             "amethyst_test::AssetZero"
         }
         type Data = Self;
-        type HandleStorage = VecStorage<Handle<Self>>;
-    }
-    impl Component for AssetZero {
-        type Storage = DenseVecStorage<Self>;
     }
     impl From<AssetZero> for Result<ProcessingState<AssetZero>, Error> {
         fn from(asset_translation_zero: AssetZero) -> Result<ProcessingState<AssetZero>, Error> {
@@ -1192,7 +1188,4 @@ mod test {
 
     // === Components === //
     struct ComponentZero(pub i32);
-    impl Component for ComponentZero {
-        type Storage = DenseVecStorage<Self>;
-    }
 }

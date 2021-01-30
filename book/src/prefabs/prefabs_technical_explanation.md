@@ -63,7 +63,7 @@ Let's take a look at the implementation for `Transform`, which is a core concept
 
 ```rust
 # use amethyst::assets::PrefabData;
-# use amethyst::ecs::{Component, Entity, NullStorage, WriteStorage};
+# use amethyst::ecs::{Entity};
 # use amethyst::Error;
 # 
 # // We declare that struct for the sake of automated testing.
@@ -113,7 +113,7 @@ load extra `Asset`s as part of a `Prefab`:
 # use amethyst::assets::{
 #   Asset, AssetStorage, DefaultLoader, Format, Handle, Loader, ProgressCounter,
 # };
-# use amethyst::ecs::{Entity, Read, ReadExpect, WriteStorage};
+# use amethyst::ecs::{Entity};
 # use amethyst::Error;
 # 
 #[derive(Deserialize, Serialize)]
@@ -235,7 +235,7 @@ Lets look at an example of an aggregate struct:
 #   ProgressCounter,
 # };
 # use amethyst::core::Transform;
-# use amethyst::ecs::{Entity, Read, ReadExpect, WriteStorage};
+# use amethyst::ecs::{Entity};
 # use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
 # use amethyst::Error;
 
@@ -256,7 +256,7 @@ One last example that also adds a custom pure data `Component` into the aggregat
 #   ProgressCounter,
 # };
 # use amethyst::core::Transform;
-# use amethyst::ecs::{Entity, Read, ReadExpect, WriteStorage};
+# use amethyst::ecs::{Entity};
 # use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
 # use amethyst::Error;
 

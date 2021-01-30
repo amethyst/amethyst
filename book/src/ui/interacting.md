@@ -73,8 +73,7 @@ impl SimpleButtonSystem {
 To add the system to our game data we actually need a `SystemDesc` implementation for our system:
 
 ```rust
-# use amethyst::core::SystemDesc;
-# use amethyst::ecs::{Read, System, World, Write};
+# use amethyst::ecs::{System, World};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
 # pub struct SimpleButtonSystem {
@@ -133,8 +132,7 @@ Firstly we need to fetch two more components that
 we used for our entity - `UiTransform` and `UiText`.
 
 ```rust
-# use amethyst::core::SystemDesc;
-# use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
+# use amethyst::ecs::{System, World};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::{UiEvent, UiText, UiTransform};
 # pub struct SimpleButtonSystem {
@@ -155,8 +153,7 @@ Usage of `WriteStorage<'s, UiText>` is needed since we will be changing
 the color that is the property of the `UiText` component.
 
 ```rust
-# use amethyst::core::SystemDesc;
-# use amethyst::ecs::{Read, ReadStorage, System, World, WriteStorage};
+# use amethyst::ecs::{System, World};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::{UiEvent, UiEventType, UiText, UiTransform};
 # pub struct SimpleButtonSystem {

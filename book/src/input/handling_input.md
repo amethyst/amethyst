@@ -129,9 +129,8 @@ And now you can get the [axis][axis_val] and [action][is_down] values from the `
 
 ```rust
 use amethyst::{
-    core::{SystemDesc, Transform},
-    derive::SystemDesc,
-    ecs::{Read, ReadStorage, System, World, WriteStorage},
+    core::{Transform},
+    ecs::{System, World},
     input::InputHandler,
     prelude::*,
 };

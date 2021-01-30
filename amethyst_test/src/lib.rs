@@ -33,7 +33,7 @@
 //! #
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #
@@ -116,7 +116,7 @@
 //! ```no_run
 //! # use amethyst::{
 //! #     core::bundle::SystemBundle,
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #
@@ -169,7 +169,7 @@
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
 //! #     core::bundle::SystemBundle,
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #
@@ -215,15 +215,11 @@
 //! ```
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #
 //! # struct MyComponent(pub i32);
-//! #
-//! # impl Component for MyComponent {
-//! #     type Storage = DenseVecStorage<Self>;
-//! # }
 //! #
 //! # #[derive(Debug)]
 //! # struct MySystem;
@@ -270,7 +266,7 @@
 //! ```
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #

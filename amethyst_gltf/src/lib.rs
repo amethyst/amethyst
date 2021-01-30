@@ -17,7 +17,7 @@ use std::{collections::HashMap, ops::Range};
 
 use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter};
 use amethyst_core::{
-    ecs::prelude::{Entity, Read, ReadExpect, Write, WriteStorage},
+    ecs::{Entity, Read, ReadExpect, Write, WriteStorage},
     math::{convert, Point3, Vector3},
     transform::Transform,
     Named,

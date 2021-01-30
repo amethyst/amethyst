@@ -7,7 +7,7 @@ First of all we required a `DispatcherBuilder`. The `DispatcherBuilder` handles 
 ```rust
 #
 # use amethyst::{
-#     ecs::prelude::*,
+#     ecs::*,
 #     prelude::*,
 # };
 # 
@@ -19,7 +19,7 @@ To add `System`s to the `DispatcherBuilder` we use a similar syntax to the one w
 ```rust
 #
 # use amethyst::{
-#     ecs::prelude::*,
+#     ecs::*,
 #     prelude::*,
 # };
 #
@@ -59,7 +59,7 @@ PongSystemsBundle::default()
 The `DispatcherBuilder` can be initialized and populated wherever desired, be it inside the `State` or in an external location. However, the `Dispatcher` needs to modify the `World`s resources in order to initialize the resources used by its `System`s. Therefore, we need to defer building the `Dispatcher` until we can access the `World`. This is commonly done in the `State`s `on_start` method. To showcase how this is done, we'll create a `SimpleState` with a `dispatcher` field and a `on_start` method that builds the `Dispatcher`.
 
 ```rust
-# use amethyst::{core::ArcThreadPool, ecs::prelude::*, prelude::*};
+# use amethyst::{core::ArcThreadPool, ecs::*, prelude::*};
 # 
 # struct MoveBallsSystem;
 # struct MovePaddlesSystem;
@@ -103,7 +103,7 @@ By default, the dispatcher will create its own pool of worker threads to execute
 The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifetimes of the `Dispatcher`. Now that we have our `Dispatcher` we need to ensure that it is executed. We do this in the `State`s `update` method.
 
 ```rust
-# use amethyst::{ecs::prelude::*, prelude::*};
+# use amethyst::{ecs::*, prelude::*};
 # 
 # #[derive(Default)]
 # pub struct CustomState<'a, 'b> {
