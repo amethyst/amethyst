@@ -125,7 +125,7 @@ use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
 pub struct PaddleSystem;
 
-impl<'s> System for PaddleSystem {
+impl System for PaddleSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Paddle>,
@@ -212,9 +212,8 @@ fn main() -> amethyst::Result<()> {
 #       use amethyst::core::ecs::{System, World};
 # 
 #       pub struct PaddleSystem;
-#       impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
-#           type SystemData = ();
-#           fn run(&mut self, _: Self::SystemData) {}
+#       impl System for PaddleSystem {
+#           fn build(mut self) -> Box<dyn ParallelRunnable> {}
 #       }
 #   }
 #   let input_bundle = amethyst::input::InputBundle::new();
@@ -259,7 +258,7 @@ component of the transform's translation.
 #
 # pub struct PaddleSystem;
 #
-# impl<'s> System for PaddleSystem {
+# impl System for PaddleSystem {
 #   type SystemData = (
 #       WriteStorage<'s, Transform>,
 #       ReadStorage<'s, Paddle>,
@@ -315,7 +314,7 @@ Our run function should now look something like this:
 # }
 #
 # pub struct PaddleSystem;
-# impl<'s> System for PaddleSystem {
+# impl System for PaddleSystem {
 #   type SystemData = (
 #       WriteStorage<'s, Transform>,
 #       ReadStorage<'s, Paddle>,

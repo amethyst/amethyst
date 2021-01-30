@@ -13,8 +13,7 @@ Let's start of with some boilerplate code:
 
 pub struct SimpleButtonSystem;
 
-impl<'s> System for SimpleButtonSystem {
-    type SystemData = ();
+impl System for SimpleButtonSystem {
 
     fn run(&mut self, data: Self::SystemData) {}
 }
@@ -40,7 +39,7 @@ pub struct SimpleButtonSystem {
     reader_id: ReaderId<UiEvent>,
 }
 
-impl<'s> System for SimpleButtonSystem {
+impl System for SimpleButtonSystem {
     type SystemData = Read<'s, EventChannel<UiEvent>>;
 
     fn run(&mut self, events: Self::SystemData) {}
@@ -58,7 +57,7 @@ We also need a constructor for our system:
 #   reader_id: ReaderId<UiEvent>,
 # }
 # 
-# impl<'s> System for SimpleButtonSystem {
+# impl System for SimpleButtonSystem {
 #   type SystemData = Read<'s, EventChannel<UiEvent>>;
 # 
 #   fn run(&mut self, events: Self::SystemData) {}
@@ -80,7 +79,7 @@ To add the system to our game data we actually need a `SystemDesc` implementatio
 #   reader_id: ReaderId<UiEvent>,
 # }
 # 
-# impl<'s> System for SimpleButtonSystem {
+# impl System for SimpleButtonSystem {
 #   type SystemData = Read<'s, EventChannel<UiEvent>>;
 # 
 #   fn run(&mut self, events: Self::SystemData) {}
@@ -92,7 +91,7 @@ To add the system to our game data we actually need a `SystemDesc` implementatio
 # }
 pub struct SimpleButtonSystemDesc;
 
-impl<'a, 'b> SystemDesc<'a, 'b, SimpleButtonSystem> for SimpleButtonSystemDesc {
+impl SystemDesc<'a, 'b, SimpleButtonSystem> for SimpleButtonSystemDesc {
     fn build(self, world: &mut World) -> SimpleButtonSystem {
         let mut event_channel = <Write<EventChannel<UiEvent>>>::fetch(world);
         let reader_id = event_channel.register_reader();
@@ -115,7 +114,7 @@ In our systems `run` method we are going to loop through all the events:
 #   reader_id: ReaderId<UiEvent>,
 # }
 # 
-# impl<'s> System for SimpleButtonSystem {
+# impl System for SimpleButtonSystem {
 #   type SystemData = Read<'s, EventChannel<UiEvent>>;
 # 
     fn run(&mut self, events: Self::SystemData) {
@@ -139,7 +138,7 @@ we used for our entity - `UiTransform` and `UiText`.
 #   reader_id: ReaderId<UiEvent>,
 # }
 # 
-# impl<'s> System for SimpleButtonSystem {
+# impl System for SimpleButtonSystem {
     type SystemData = Read<'s, EventChannel<UiEvent>>;
 #   fn run(&mut self, events: Self::SystemData) {
 #       for event in events.read(&mut self.reader_id) {
@@ -160,7 +159,7 @@ the color that is the property of the `UiText` component.
 #   reader_id: ReaderId<UiEvent>,
 # }
 # 
-# impl<'s> System for SimpleButtonSystem {
+# impl System for SimpleButtonSystem {
 #   type SystemData = (
 #       Read<'s, EventChannel<UiEvent>>,
 #       ReadStorage<'s, UiTransform>,

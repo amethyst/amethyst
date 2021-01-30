@@ -118,9 +118,9 @@ In the **producer** `System`, get a mutable reference to your resource:
 # 
 # struct MySystem;
 # 
-# impl<'a> amethyst::ecs::System<'a> for MySystem {
+# impl System for MySystem {
     type SystemData = Write<'a, EventChannel<MyEvent>>;
-#   fn run(&mut self, _: Self::SystemData) {}
+#   fn build(mut self) -> Box<dyn ParallelRunnable> {}
 # }
 ```
 
@@ -154,9 +154,9 @@ and you also need to get read access:
 # 
 # struct MySystem;
 # 
-# impl<'a> amethyst::ecs::System<'a> for MySystem {
+# impl System for MySystem {
     type SystemData = Read<'a, EventChannel<MyEvent>>;
-#   fn run(&mut self, _: Self::SystemData) {}
+#   fn build(mut self) -> Box<dyn ParallelRunnable> {}
 # }
 ```
 
@@ -186,9 +186,8 @@ impl MySystem {
     }
 }
 
-# impl<'a> amethyst::ecs::System<'a> for MySystem {
-#   type SystemData = ();
-#   fn run(&mut self, _: Self::SystemData) {}
+# impl System for MySystem {
+#   fn build(mut self) -> Box<dyn ParallelRunnable> {}
 # }
 ```
 
@@ -207,7 +206,7 @@ Finally, you can read events from your `System`.
 #   reader_id: amethyst::shrev::ReaderId<MyEvent>,
 # }
 # 
-impl<'a> amethyst::ecs::System<'a> for MySystem {
+impl System for MySystem {
     type SystemData = Read<'a, EventChannel<MyEvent>>;
     fn run(&mut self, my_event_channel: Self::SystemData) {
         for event in my_event_channel.read(&mut self.reader_id) {

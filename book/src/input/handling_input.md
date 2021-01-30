@@ -32,7 +32,7 @@ use amethyst::{
 
 struct ExampleSystem;
 
-impl<'s> System for ExampleSystem {
+impl System for ExampleSystem {
     type SystemData = Read<'s, InputHandler>;
 
     fn run(&mut self, input: Self::SystemData) {
@@ -63,8 +63,7 @@ Now you have to add the `System` to the game data, like you would do with any ot
 ```rust
 # use amethyst::{ecs::*, prelude::*};
 # struct ExampleSystem;
-# impl<'a> System for ExampleSystem {
-#   type SystemData = ();
+# impl System for ExampleSystem {
 #   fn run(&mut self, _: ()) {}
 # }
 # fn main() {
@@ -143,7 +142,7 @@ impl Player {
 
 struct MovementSystem;
 
-impl<'s> System for MovementSystem {
+impl System for MovementSystem {
     type SystemData = (
         WriteStorage<'s, Transform>,
         ReadStorage<'s, Player>,

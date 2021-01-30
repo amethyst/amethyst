@@ -24,8 +24,8 @@ To add `System`s to the `DispatcherBuilder` we use a similar syntax to the one w
 # };
 #
 # struct MoveBallsSystem; struct MovePaddlesSystem;
-# impl<'a> System for MoveBallsSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
-# impl<'a> System for MovePaddlesSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
+# impl System for MoveBallsSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
+# impl System for MovePaddlesSystem { type SystemData = (); fn run(&mut self, _: ()) {} }
 let mut dispatcher_builder = DispatcherBuilder::new();
 
 dispatcher_builder.add(MoveBallsSystem, "move_balls_system", &[]);
@@ -42,8 +42,8 @@ Alternatively we can add `Bundle`s of `System`s to our `DispatcherBuilder` direc
 #     prelude::*,
 # };
 # #[derive(Default)] struct PongSystemsBundle;
-# impl<'a, 'b> SystemBundle<'a, 'b> for PongSystemsBundle {
-#     fn build(self, _: &mut World, _: &mut DispatcherBuilder<'a, 'b>) -> Result<(), amethyst::Error> {
+# impl SystemBundle<'a, 'b> for PongSystemsBundle {
+#     fn build(self, _: &mut World, _: &mut DispatcherBuilder) -> Result<(), amethyst::Error> {
 #         Ok(())
 #     }
 # }
@@ -63,12 +63,10 @@ The `DispatcherBuilder` can be initialized and populated wherever desired, be it
 # 
 # struct MoveBallsSystem;
 # struct MovePaddlesSystem;
-# impl<'a> System for MoveBallsSystem {
-#   type SystemData = ();
+# impl System for MoveBallsSystem {
 #   fn run(&mut self, _: ()) {}
 # }
-# impl<'a> System for MovePaddlesSystem {
-#   type SystemData = ();
+# impl System for MovePaddlesSystem {
 #   fn run(&mut self, _: ()) {}
 # }
 # 
@@ -112,12 +110,10 @@ The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifeti
 # }
 # struct MoveBallsSystem;
 # struct MovePaddlesSystem;
-# impl<'a> System for MoveBallsSystem {
-#   type SystemData = ();
+# impl System for MoveBallsSystem {
 #   fn run(&mut self, _: ()) {}
 # }
-# impl<'a> System for MovePaddlesSystem {
-#   type SystemData = ();
+# impl System for MovePaddlesSystem {
 #   fn run(&mut self, _: ()) {}
 # }
 # 

@@ -26,8 +26,7 @@ use amethyst::{
 
 struct SystemName;
 
-impl<'a> System for SystemName {
-    type SystemData = ();
+impl System for SystemName {
 
     fn run(&mut self, data: Self::SystemData) {
         println!("Hello!");

@@ -10,18 +10,21 @@ Systems can be seen as a small unit of logic. All systems are run by the engine 
 
 A system struct is a structure implementing the trait `amethyst::ecs::System`.
 
-Here is a very simple example implementation:
+Here is a simple example implementation:
 
 ```rust
-use amethyst::ecs::System;
+use amethyst::ecs::{System, ParallelRunnable};
 
 struct MyFirstSystem;
 
-impl<'a> System for MyFirstSystem {
-    type SystemData = ();
-
-    fn run(&mut self, data: Self::SystemData) {
-        println!("Hello!");
+impl System for MyFirstSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MyFirstSystem")
+                 .build(|_, _, _, _| {
+                    println!("Hello!")
+                }),
+        )
     }
 }
 ```
@@ -30,27 +33,23 @@ This system will, on every iteration of the game loop, print "Hello!" in the con
 
 ## Accessing the context of the game
 
-In the definition of a system, the trait requires you to define a type `SystemData`. This type defines what data the system will be provided with on each call of its `run` method. `SystemData` is only meant to carry information accessible to multiple systems. Data local to a system is usually stored in the system's struct itself instead.
-
-The Amethyst engine provides useful system data types to use in order to access the context of a game. Here are some of the most important ones:
-
-- **Read\<'a, Resource>** (respectively **Write\<'a, Resource>**) allows you to obtain an immutable (respectively mutable) reference to a resource of the type you specify. This is guaranteed to not fail as if the resource is not available, it will give you the `Default::default()` of your resource.
-- **ReadExpect\<'a, Resource>** (respectively **WriteExpect\<'a, Resource>**) is a failable alternative to the previous system data, so that you can use resources that do not implement the `Default` trait.
-- **ReadStorage\<'a, Component>** (respectively **WriteStorage\<'a, Component>**) allows you to obtain an immutable (respectively mutable) reference to the entire storage of a certain `Component` type.
-- **Entities\<'a>** allows you to create or destroy entities in the context of a system.
-
-You can then use one, or multiple of them via a tuple.
+Using `SystemBuilder` requires you to specify the resource and component access requirements of the system using `read_resource`, `write_resource`, `read_component` and `write_component` (you can also use `with_query` but we'll get to that later.)  Refer to the [Legion SystemBuilder docs][sb] for more information.  A system may also have local data stored in its own struct.
 
 ```rust
-# use amethyst::core::timing::Time;
-# use amethyst::ecs::{Read, System};
-struct MyFirstSystem;
+use amethyst::core::timing::Time;
+use amethyst::ecs::{System, ParallelRunnable};
 
-impl<'a> System for MyFirstSystem {
-    type SystemData = Read<'a, Time>;
+struct TimeSystem;
 
-    fn run(&mut self, data: Self::SystemData) {
-        println!("{}", data.delta_seconds());
+impl System for TimeSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("TimeSystem")
+                .read_resource::<Time>()
+                 .build(|_, _, time, _| {
+                    println!("{}", data.delta_seconds());
+                }),
+        )
     }
 }
 ```
@@ -66,13 +65,14 @@ Once you have access to a storage, you can use them in different ways.
 Sometimes, it can be useful to get a component in the storage for a specific entity. This can easily be done using the `get` or, for mutable storages, `get_mut` methods.
 
 ```rust
-# use amethyst::core::Transform;
-# use amethyst::ecs::{Entity, System};
+use amethyst::core::Transform;
+use amethyst::ecs::{Entity, System};
+
 struct WalkPlayerUp {
     player: Entity,
 }
 
-impl<'a> System for WalkPlayerUp {
+impl System for WalkPlayerUp {
     type SystemData = WriteStorage<'a, Transform>;
 
     fn run(&mut self, mut transforms: Self::SystemData) {
@@ -111,7 +111,7 @@ use amethyst::ecs::Join;
 
 struct MakeObjectsFall;
 
-impl<'a> System for MakeObjectsFall {
+impl System for MakeObjectsFall {
     type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
@@ -142,7 +142,7 @@ use amethyst::ecs::Join;
 
 struct NotFallingObjects;
 
-impl<'a> System for NotFallingObjects {
+impl System for NotFallingObjects {
     type SystemData = (WriteStorage<'a, Transform>, ReadStorage<'a, FallingObject>);
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
@@ -172,7 +172,7 @@ struct SpawnEnemies {
     counter: u32,
 }
 
-impl<'a> System for SpawnEnemies {
+impl System for SpawnEnemies {
     type SystemData = (
         WriteStorage<'a, Transform>,
         WriteStorage<'a, Enemy>,
@@ -204,7 +204,7 @@ Deleting an entity is very easy using `Entities<'a>`.
 # struct MySystem {
 #   entity: Entity,
 # }
-# impl<'a> System for MySystem {
+# impl System for MySystem {
 #   type SystemData = Entities<'a>;
 #   fn run(&mut self, entities: Self::SystemData) {
 #       let entity = self.entity;
@@ -223,7 +223,7 @@ Sometimes, when you iterate over components, you may want to also know what enti
 # struct FallingObject;
 struct MakeObjectsFall;
 
-impl<'a> System for MakeObjectsFall {
+impl System for MakeObjectsFall {
     type SystemData = (
         Entities<'a>,
         WriteStorage<'a, Transform>,
@@ -255,7 +255,7 @@ To do that, you need to get a mutable storage of the component you want to modif
 # struct MySystem {
 #   entity: Entity,
 # }
-# impl<'a> System for MySystem {
+# impl System for MySystem {
 #   type SystemData = WriteStorage<'a, MyComponent>;
 #   fn run(&mut self, mut write_storage: Self::SystemData) {
 #       let entity = self.entity;
@@ -425,7 +425,7 @@ use amethyst::{
 
 struct MyGameplaySystem;
 
-impl<'s> System for MyGameplaySystem {
+impl System for MyGameplaySystem {
     type SystemData = (Read<'s, InputHandler>, Write<'s, Game>);
 
     fn run(&mut self, (input, mut game): Self::SystemData) {
@@ -497,7 +497,7 @@ struct MySystemData<'a> {
 
 struct MyFirstSystem;
 
-impl<'a> System for MyFirstSystem {
+impl System for MyFirstSystem {
     type SystemData = MySystemData<'a>;
 
     fn run(&mut self, mut data: Self::SystemData) {
@@ -512,3 +512,4 @@ impl<'a> System for MyFirstSystem {
 
 [r]: ./resource.md
 [s]: ./state.md
+[sb]: https://docs.rs/legion/0.3.1/legion/systems/struct.SystemBuilder.html

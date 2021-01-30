@@ -43,8 +43,7 @@ We'll use this `enum` `Resource` to control whether or not our `System` is runni
 #
 # #[derive(Default)] struct MovementSystem;
 # 
-# impl<'a> System for MovementSystem {
-#   type SystemData = ();
+# impl System for MovementSystem {
 #
 #   fn run(&mut self, data: Self::SystemData) {}
 # }

@@ -66,18 +66,18 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 # 
 use amethyst::core::ArcThreadPool;
 
-pub struct CustomDispatcherBuilder<'a, 'b> {
-    pub core: DispatcherBuilder<'a, 'b>,
-    pub running: DispatcherBuilder<'a, 'b>,
+pub struct CustomDispatcherBuilder {
+    pub core: DispatcherBuilder,
+    pub running: DispatcherBuilder,
 }
 
-impl<'a, 'b> Default for CustomDispatcherBuilder<'a, 'b> {
+impl<'a, 'b> Default for CustomDispatcherBuilder {
     fn default() -> Self {
         CustomDispatcherBuilder::new()
     }
 }
 
-impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
+impl<'a, 'b> CustomDispatcherBuilder {
     pub fn new() -> Self {
         CustomDispatcherBuilder {
             core: DispatcherBuilder::new(),
@@ -102,7 +102,7 @@ impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
     }
 }
 
-impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b> {
+impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         // Get a handle to the `ThreadPool`.
         let pool = (*resources.get::<ArcThreadPool>()).clone();
@@ -259,18 +259,18 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 #   running_dispatcher: Option<Dispatcher<'a, 'b>>,
 # }
 # 
-# pub struct CustomDispatcherBuilder<'a, 'b> {
-#   pub core: DispatcherBuilder<'a, 'b>,
-#   pub running: DispatcherBuilder<'a, 'b>,
+# pub struct CustomDispatcherBuilder {
+#   pub core: DispatcherBuilder,
+#   pub running: DispatcherBuilder,
 # }
 # 
-# impl<'a, 'b> Default for CustomDispatcherBuilder<'a, 'b> {
+# impl<'a, 'b> Default for CustomDispatcherBuilder {
 #   fn default() -> Self {
 #       unimplemented!()
 #   }
 # }
 # 
-# impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
+# impl<'a, 'b> CustomDispatcherBuilder {
 #   pub fn new() -> Self {
 #       unimplemented!()
 #   }
@@ -289,13 +289,13 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 #   }
 # }
 # 
-# impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b> {
+# impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder {
 #   fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
 #       unimplemented!()
 #   }
 # }
 # 
-# impl<'a, 'b> DataDispose for CustomDispatcherBuilder<'a, 'b> {
+# impl<'a, 'b> DataDispose for CustomDispatcherBuilder {
 #   fn dispose(&mut self, world: &mut World) {
 #       unimplemented!()
 #   }

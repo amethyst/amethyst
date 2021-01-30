@@ -44,7 +44,7 @@ use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
-impl<'s> System for WinnerSystem {
+impl System for WinnerSystem {
     type SystemData = (WriteStorage<'s, Ball>, WriteStorage<'s, Transform>);
 
     fn run(&mut self, (mut balls, mut locals): Self::SystemData) {
@@ -92,24 +92,20 @@ keep playing after someone scores and log who got the point.
 #   use amethyst::core::ecs::{System, World};
 # 
 #   pub struct PaddleSystem;
-#   impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
-#       type SystemData = ();
-#       fn run(&mut self, _: Self::SystemData) {}
+#   impl System for PaddleSystem {
+#       fn build(mut self) -> Box<dyn ParallelRunnable> {}
 #   }
 #   pub struct MoveBallsSystem;
-#   impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
-#       type SystemData = ();
-#       fn run(&mut self, _: Self::SystemData) {}
+#   impl System for MoveBallsSystem {
+#       fn build(mut self) -> Box<dyn ParallelRunnable> {}
 #   }
 #   pub struct BounceSystem;
-#   impl<'a> amethyst::ecs::System<'a> for BounceSystem {
-#       type SystemData = ();
-#       fn run(&mut self, _: Self::SystemData) {}
+#   impl System for BounceSystem {
+#       fn build(mut self) -> Box<dyn ParallelRunnable> {}
 #   }
 #   pub struct WinnerSystem;
-#   impl<'a> amethyst::ecs::System<'a> for WinnerSystem {
-#       type SystemData = ();
-#       fn run(&mut self, _: Self::SystemData) {}
+#   impl System for WinnerSystem {
+#       fn build(mut self) -> Box<dyn ParallelRunnable> {}
 #   }
 # }
 # 
@@ -363,7 +359,7 @@ use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_HEIGHT, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
-impl<'s> System for WinnerSystem {
+impl System for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         WriteStorage<'s, Transform>,

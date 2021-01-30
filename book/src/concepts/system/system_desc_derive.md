@@ -25,9 +25,7 @@ impl SystemName {
         SystemName { field_0, field_1 }
     }
 }
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 ```
 
@@ -48,9 +46,7 @@ impl SystemName {
 #   }
 # }
 # 
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 # 
 /// Builds a `SystemName`.
@@ -96,9 +92,7 @@ impl SystemName {
         }
     }
 }
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 ```
 
@@ -122,9 +116,7 @@ impl SystemName {
 #   }
 # }
 # 
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 # 
 /// Builds a `SystemName`.
@@ -160,9 +152,7 @@ will call  `SystemName::default()`:
 pub struct SystemName {
     field_0: u32,
 }
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 ```
 
@@ -177,9 +167,7 @@ pub struct SystemName {
 #   field_0: u32,
 # }
 # 
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 # 
 /// Builds a `SystemName`.
@@ -221,9 +209,7 @@ impl SystemName {
         SystemName { reader_id }
     }
 }
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 ```
 
@@ -247,9 +233,7 @@ impl SystemName {
 #   }
 # }
 # 
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 # 
 /// Builds a `SystemName`.
@@ -294,9 +278,7 @@ impl SystemName {
         SystemName { resize_events_id }
     }
 }
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 ```
 
@@ -320,9 +302,7 @@ impl SystemName {
 #   }
 # }
 # 
-# impl<'a> System for SystemName {
-#   type SystemData = ();
-#   fn run(&mut self, data: Self::SystemData) {}
+# impl System for SystemName {
 # }
 # 
 /// Builds a `SystemName`.
@@ -365,9 +345,8 @@ pub struct NonDefault;
 #[system_desc(insert(NonDefault))]
 pub struct SystemName;
 
-impl<'a> System for SystemName {
+impl System for SystemName {
     type SystemData = ReadExpect<'a, NonDefault>;
-    fn run(&mut self, data: Self::SystemData) {}
 }
 ```
 
@@ -384,9 +363,8 @@ impl<'a> System for SystemName {
 # #[derive(Default)]
 # pub struct SystemName;
 # 
-# impl<'a> System for SystemName {
+# impl System for SystemName {
 #   type SystemData = ReadExpect<'a, NonDefault>;
-#   fn run(&mut self, data: Self::SystemData) {}
 # }
 # 
 /// Builds a `SystemName`.

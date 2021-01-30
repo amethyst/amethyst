@@ -134,7 +134,7 @@ use crate::pong::Ball;
 
 pub struct MoveBallsSystem;
 
-impl<'s> System for MoveBallsSystem {
+impl System for MoveBallsSystem {
     type SystemData = (
         ReadStorage<'s, Ball>,
         WriteStorage<'s, Transform>,
@@ -202,7 +202,7 @@ use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
 pub struct BounceSystem;
 
-impl<'s> System for BounceSystem {
+impl System for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
@@ -280,19 +280,16 @@ as well as adding our new systems to the game data:
 #   mod systems {
 #       use amethyst::core::ecs::{System, World};
 #       pub struct PaddleSystem;
-#       impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
-#           type SystemData = ();
-#           fn run(&mut self, _: Self::SystemData) {}
+#       impl System for PaddleSystem {
+#           fn build(mut self) -> Box<dyn ParallelRunnable> {}
 #       }
 #       pub struct MoveBallsSystem;
-#       impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
-#           type SystemData = ();
-#           fn run(&mut self, _: Self::SystemData) {}
+#       impl System for MoveBallsSystem {
+#           fn build(mut self) -> Box<dyn ParallelRunnable> {}
 #       }
 #       pub struct BounceSystem;
-#       impl<'a> amethyst::ecs::System<'a> for BounceSystem {
-#           type SystemData = ();
-#           fn run(&mut self, _: Self::SystemData) {}
+#       impl System for BounceSystem {
+#           fn build(mut self) -> Box<dyn ParallelRunnable> {}
 #       }
 #   }
 #   let input_bundle = amethyst::input::InputBundle::new();
