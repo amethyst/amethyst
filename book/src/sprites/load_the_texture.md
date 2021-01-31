@@ -16,9 +16,6 @@ where
     let loader = resources.get::<DefaultLoader>();
     loader.load(
         name,
-        ImageFormat::default(),
-        (),
-        resources.get::<AssetStorage<Texture>>(),
     )
 }
 

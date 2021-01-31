@@ -31,7 +31,7 @@ pub struct Sounds {
 
 /// Loads an ogg audio track.
 fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
-    loader.load(file, OggFormat, (), resources.get().unwrap())
+    loader.load(file)
 }
 
 /// initialize audio in the world. This will eventually include

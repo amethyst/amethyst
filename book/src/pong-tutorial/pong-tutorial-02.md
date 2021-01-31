@@ -382,9 +382,6 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
         let texture_storage = resources.get::<AssetStorage<Texture>>();
         loader.load(
             "texture/pong_spritesheet.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
         )
     };
 
@@ -464,9 +461,6 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #       let texture_storage = resources.get::<AssetStorage<Texture>>();
 #       loader.load(
 #           "texture/pong_spritesheet.png",
-#           ImageFormat::default(),
-#           (),
-#           &texture_storage,
 #       )
 #   };
 # 
