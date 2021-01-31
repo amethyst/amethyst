@@ -2,9 +2,7 @@ use std::{default::Default, path::PathBuf};
 
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
-use atelier_assets::daemon::{
-    default_importer_contexts, default_importers, AssetDaemon, ImporterMap,
-};
+use distill::daemon::{default_importer_contexts, default_importers, AssetDaemon, ImporterMap};
 use log::info;
 
 use crate::{
@@ -22,7 +20,7 @@ fn asset_loading_tick(_: &mut World, resources: &mut Resources) {
         .expect("Error in Loader processing");
 }
 
-/// starts the asset thread with atelier_daemon
+/// starts the asset thread with distill_daemon
 pub fn start_asset_daemon(asset_dirs: Vec<PathBuf>) {
     let db_path = ".assets_db";
     let address = "127.0.0.1:9999";

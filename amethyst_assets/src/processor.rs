@@ -9,9 +9,9 @@ use amethyst_core::{
     ecs::{systems::ParallelRunnable, SystemBuilder},
 };
 use amethyst_error::Error;
-use atelier_assets::loader::storage::AssetLoadOp;
 use crossbeam_queue::SegQueue;
 use derivative::Derivative;
+use distill::loader::storage::AssetLoadOp;
 use log::debug;
 
 use crate::{
@@ -94,7 +94,7 @@ impl LoadNotifier {
     }
 }
 
-/// Represents asset data processed by `atelier-assets` that needs to be loaded by Amethyst.
+/// Represents asset data processed by `distill` that needs to be loaded by Amethyst.
 pub(crate) struct Processed<T> {
     data: Result<T, Error>,
     handle: LoadHandle,

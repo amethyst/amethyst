@@ -132,11 +132,11 @@ fn main() -> Result<(), Error> {
                 amethyst::LogLevelFilter::Debug,
             ),
             (
-                "atelier_daemon".to_string(),
+                "distill_daemon".to_string(),
                 amethyst::LogLevelFilter::Debug,
             ),
             (
-                "atelier_loader".to_string(),
+                "distill_loader".to_string(),
                 amethyst::LogLevelFilter::Trace,
             ),
         ],

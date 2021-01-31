@@ -1,5 +1,5 @@
 use amethyst_assets::{
-    atelier_importer::{typetag, SerdeImportable},
+    distill_importer::{typetag, SerdeImportable},
     register_asset_type, AssetProcessorSystem,
 };
 use amethyst_core::{

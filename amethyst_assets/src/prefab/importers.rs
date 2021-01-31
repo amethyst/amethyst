@@ -1,8 +1,8 @@
 use std::{collections::HashMap, io::Read};
 
-use atelier_assets::{
+use distill::{
     core::AssetUuid,
-    importer::{self as atelier_importer, ImportOp, ImportedAsset, Importer, ImporterValue},
+    importer::{self as distill_importer, ImportOp, ImportedAsset, Importer, ImporterValue},
 };
 use legion_prefab::ComponentRegistration;
 use prefab_format::ComponentTypeUuid;
@@ -46,7 +46,7 @@ impl Importer for PrefabImporter {
         source: &mut dyn Read,
         _: &Self::Options,
         state: &mut Self::State,
-    ) -> atelier_importer::Result<ImporterValue> {
+    ) -> distill_importer::Result<ImporterValue> {
         log::info!("Importing prefab");
         // STEP 1: Read in the data
 
@@ -77,7 +77,7 @@ impl Importer for PrefabImporter {
 
         let prefab_deser = legion_prefab::PrefabFormatDeserializer::new(prefab_serde_context);
         if let Err(err) = prefab_format::deserialize(&mut de, &prefab_deser) {
-            return Err(atelier_importer::Error::RonDe(err));
+            return Err(distill_importer::Error::RonDe(err));
         }
         let raw_prefab = prefab_deser.prefab();
 

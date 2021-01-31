@@ -31,8 +31,8 @@ mod simple_importer;
 mod source;
 mod storage;
 
-pub use atelier_assets::{
-    importer as atelier_importer,
+pub use distill::{
+    importer as distill_importer,
     loader::{
         handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
         storage::LoadHandle,

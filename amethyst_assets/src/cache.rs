@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, hash::Hash, marker::PhantomData};
 
-use atelier_assets::loader::{
+use distill::loader::{
     crossbeam_channel::Sender,
     handle::{AssetHandle, Handle, RefOp, WeakHandle},
 };

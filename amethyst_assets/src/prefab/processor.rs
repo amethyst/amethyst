@@ -2,7 +2,7 @@ use amethyst_core::{
     dispatcher::System,
     ecs::{systems::ParallelRunnable, SystemBuilder},
 };
-use atelier_assets::core::AssetUuid;
+use distill::core::AssetUuid;
 use fnv::{FnvHashMap, FnvHashSet};
 use prefab_format::PrefabUuid;
 
@@ -173,7 +173,7 @@ mod tests {
     use std::{collections::HashMap, sync::Once};
 
     use amethyst_core::{Logger, LoggerConfig};
-    use atelier_assets::loader::handle::AssetHandle;
+    use distill::loader::handle::AssetHandle;
     use legion_prefab::PrefabRef;
     use serial_test::serial;
 
