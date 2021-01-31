@@ -60,7 +60,7 @@ impl<A> AssetStorage<A> {
         if let Some(data) = self.assets.get(&handle) {
             if data.version == version {
                 self.to_drop
-                    .push(self.uncommitted.remove(&handle).unwrap().asset);
+                    .push(self.assets.remove(&handle).unwrap().asset);
             }
         }
     }
