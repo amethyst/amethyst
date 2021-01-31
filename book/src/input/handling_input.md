@@ -25,7 +25,7 @@ To use the `InputHandler` inside a `System` you have to add it to the `SystemDat
 
 ```rust
 use amethyst::{
-    ecs::{Read, System, World},
+    ecs::{System, World},
     input::{ControllerButton, InputHandler, VirtualKeyCode},
     prelude::*,
 };

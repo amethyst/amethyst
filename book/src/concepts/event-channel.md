@@ -144,7 +144,7 @@ struct ReceiverSystem {
 and you also need to get read access:
 
 ```rust
-# use amethyst::{ecs::Read, shrev::EventChannel};
+# use amethyst::{shrev::EventChannel};
 # 
 # #[derive(Debug)]
 # pub enum MyEvent {
@@ -194,7 +194,7 @@ impl MySystem {
 Finally, you can read events from your `System`.
 
 ```rust
-# use amethyst::{ecs::Read, shrev::EventChannel};
+# use amethyst::{shrev::EventChannel};
 # 
 # #[derive(Debug)]
 # pub enum MyEvent {

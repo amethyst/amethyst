@@ -118,7 +118,6 @@ Then, we'll update the Bounce System to play the sound whenever the ball bounces
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
-    ecs::{Read, ReadExpect},
 };
 
 use crate::audio::{play_bounce_sound, Sounds};
@@ -201,7 +200,6 @@ use crate::audio::{play_score_sound, Sounds};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
-    ecs::Read,
 };
 
 impl System for WinnerSystem {

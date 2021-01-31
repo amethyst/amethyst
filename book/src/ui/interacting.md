@@ -30,7 +30,7 @@ since the `ReaderId` actually pulls (reads) information  from the `EventChannel`
 Adding it up, it should look like this:
 
 ```rust
-# use amethyst::ecs::{Read, System};
+# use amethyst::ecs::{System};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
 
@@ -48,7 +48,7 @@ impl System for SimpleButtonSystem {
 We also need a constructor for our system:
 
 ```rust
-# use amethyst::ecs::{Read, System};
+# use amethyst::ecs::{System};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
 # 
@@ -105,8 +105,7 @@ Now that this is done we can start reading our events!
 In our systems `run` method we are going to loop through all the events:
 
 ```rust
-# use amethyst::core::SystemDesc;
-# use amethyst::ecs::{Read, System, World};
+# use amethyst::ecs::{System, World};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
 # pub struct SimpleButtonSystem {
