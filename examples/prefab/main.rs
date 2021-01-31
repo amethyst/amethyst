@@ -69,8 +69,8 @@ fn main() -> Result<(), Error> {
                 "amethyst_assets".to_string(),
                 amethyst::LogLevelFilter::Trace,
             ),
-            ("atelier_daemon".to_string(), amethyst::LogLevelFilter::Warn),
-            ("atelier_loader".to_string(), amethyst::LogLevelFilter::Warn),
+            ("distill_daemon".to_string(), amethyst::LogLevelFilter::Warn),
+            ("distill_loader".to_string(), amethyst::LogLevelFilter::Warn),
         ],
         ..Default::default()
     };

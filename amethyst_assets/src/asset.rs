@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use atelier_assets::loader::LoadHandle;
+use distill::loader::LoadHandle;
 use dyn_clone::DynClone;
 
 use crate::{processor::ProcessingState, AssetStorage};

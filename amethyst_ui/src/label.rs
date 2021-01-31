@@ -14,8 +14,8 @@ const DEFAULT_HEIGHT: f32 = 64.0;
 const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 use amethyst_assets::{
-    atelier_importer,
-    atelier_importer::{typetag, SerdeImportable},
+    distill_importer,
+    distill_importer::{typetag, SerdeImportable},
 };
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;

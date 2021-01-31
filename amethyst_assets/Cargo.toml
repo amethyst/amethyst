@@ -39,7 +39,7 @@ dyn-clone = "1.0"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
-atelier-assets = { version = "0.1", git = "https://github.com/radium-io/atelier-assets.git", rev = "702e9d95495d30816f04978e3cd0297278d2f945", features = [
+distill = { version = "0.0.2", features = [
     "serde-1",
     "type_uuid",
     "serde_importers",

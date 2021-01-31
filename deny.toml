@@ -7,9 +7,8 @@ yanked = "deny"
 notice = "deny"
 ignore = [
     "RUSTSEC-2020-0053", # FIXME: font-kit depends on old dirs
-    "RUSTSEC-2020-0077", # FIXME: atelier-assets depends on memmap
+    "RUSTSEC-2020-0077", # FIXME: distill depends on memmap
     "RUSTSEC-2020-0056", # FIXME: cpal dependency, check wasm branches for fix
-    "RUSTSEC-2019-0035", # FIXME: old rand_core
     # FIXME(#2472)
     # `stb_truetype` crate has been deprecated; use `ttf-parser` instead
     # This crate was maintained for use in rusttype which has switched to use [ttf-parser](https://crates.io/crates/ttf-parser)
@@ -31,7 +30,6 @@ skip = [
     { name = "cfg-if", version = "0.1.10" },
     { name = "winapi", version = "0.2.8" }, # upgrade tokio and notify
     { name = "wasi", version = "0.9.0" }, # upgrade tempfile and uuid
-    { name = "tinyvec", version = "0.3.4" }, # upgrade rodio
     { name = "rusttype", version = "0.8.3" }, # upgrade glyph_brush
     { name = "redox_users", version = "0.3.5" }, # upgrade font-kit
     { name = "nom", version = "5.1.2" }, # upgrade cpal
@@ -45,7 +43,7 @@ skip = [
     { name = "rand", version = "0.7.3" }, # upgrade nalgebra,glyph_brush
     { name = "itertools", version = "0.9.0" }, # duplicates in rendy tree
 ]
-skip-tree = [{ name = "rendy" }, { name = "atelier-assets" }]
+skip-tree = [{ name = "rendy" }, { name = "distill" }]
 deny = []
 
 [sources]
@@ -84,4 +82,4 @@ exceptions = [{ name = "lazy-bytes-cast", allow = ["BSL-1.0"] }]
 confidence-threshold = 0.93
 
 [sources.allow-org]
-github = ["amethyst", "radium-io", "rust-windowing"]
+github = ["amethyst", "rust-windowing"]

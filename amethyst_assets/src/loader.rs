@@ -11,18 +11,18 @@ use amethyst_core::{
     ecs::{DispatcherBuilder, Resources},
 };
 use amethyst_error::Error as AmethystError;
-use atelier_assets::loader as atelier_loader;
-pub(crate) use atelier_loader::LoadHandle;
-use atelier_loader::{
+use distill::loader as distill_loader;
+pub(crate) use distill_loader::LoadHandle;
+use distill_loader::{
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
     storage::{
         AssetLoadOp, AtomicHandleAllocator, DefaultIndirectionResolver, HandleAllocator,
         IndirectIdentifier, IndirectionTable, LoaderInfoProvider,
     },
-    AssetTypeId, Loader as AtelierLoader, RpcIO,
+    AssetTypeId, Loader as DistillLoader, RpcIO,
 };
-pub use atelier_loader::{storage::LoadStatus, AssetUuid};
+pub use distill_loader::{storage::LoadStatus, AssetUuid};
 use log::debug;
 use serde::de::Deserialize;
 
@@ -144,7 +144,7 @@ pub trait Loader: Send + Sync {
 
 /// Asset loader and storage.
 pub struct DefaultLoader {
-    loader: AtelierLoader,
+    loader: DistillLoader,
     storage_map: AssetStorageMap,
     ref_sender: Sender<RefOp>,
     ref_receiver: Receiver<RefOp>,
@@ -156,7 +156,7 @@ impl Default for DefaultLoader {
     fn default() -> Self {
         let (tx, rx) = unbounded();
         let handle_allocator = Arc::new(AtomicHandleAllocator::default());
-        let loader = AtelierLoader::new_with_handle_allocator(
+        let loader = DistillLoader::new_with_handle_allocator(
             Box::new(RpcIO::default()),
             handle_allocator.clone(),
         );
@@ -246,8 +246,8 @@ impl Loader for DefaultLoader {
 
 /// Storage for a particular asset type.
 ///
-/// This trait abtracts over the bridge between `atelier_loader` and Amethyst's asset storage. These
-/// methods are called through dynamic dispatch by `atelier_loader` when an asset is loaded /
+/// This trait abtracts over the bridge between `distill_loader` and Amethyst's asset storage. These
+/// methods are called through dynamic dispatch by `distill_loader` when an asset is loaded /
 /// unloaded. All of these operations are performed on Amethyst's `AssetStorage`
 pub trait AssetTypeStorage {
     /// Updates an asset.
@@ -256,7 +256,7 @@ pub trait AssetTypeStorage {
     ///
     /// * `handle`: Load handle of the asset.
     /// * `data`: Asset data bytes (uncompressed).
-    /// * `load_op`: Load operation to notify `atelier_loader` when the asset has been loaded.
+    /// * `load_op`: Load operation to notify `distill_loader` when the asset has been loaded.
     /// * `version`: Version of the asset -- this will be a new version for each hot reload.
     fn update_asset(
         &self,
@@ -351,9 +351,9 @@ impl Default for AssetStorageMap {
     }
 }
 
-/// Asset storage bridge between Amethyst and `atelier-assets`.
+/// Asset storage bridge between Amethyst and `distill`.
 ///
-/// This type implements the `atelier_loader::AssetStorage` trait which `atelier_loader` uses as the
+/// This type implements the `distill_loader::AssetStorage` trait which `distill_loader` uses as the
 /// storage type for all assets of all asset types.
 ///
 /// This contains immutable references to the `AssetStorageMap` and `World` resources.
@@ -377,7 +377,7 @@ impl<'a> WorldStorages<'a> {
     }
 }
 
-impl<'a> atelier_loader::storage::AssetStorage for WorldStorages<'a> {
+impl<'a> distill_loader::storage::AssetStorage for WorldStorages<'a> {
     fn update_asset(
         &self,
         loader_info: &dyn LoaderInfoProvider,
