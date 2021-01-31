@@ -41,7 +41,7 @@ use legion::{
 ///
 /// struct TestSystem;
 ///
-/// impl System<'_> for TestSystem {
+/// impl System for TestSystem {
 ///     fn build(self) -> Box<dyn ParallelRunnable> {
 ///         Box::new(pausable(
 ///             SystemBuilder::new("TestSystem")
@@ -164,7 +164,7 @@ mod test {
 
     struct TestSystem;
 
-    impl System<'_> for TestSystem {
+    impl System for TestSystem {
         fn build(self) -> Box<dyn ParallelRunnable> {
             Box::new(pausable(
                 SystemBuilder::new("TestSystem")

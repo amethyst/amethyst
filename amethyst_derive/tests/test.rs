@@ -5,7 +5,7 @@
 )]
 use amethyst_assets::ProgressCounter;
 use amethyst_core::{
-    ecs::{Component, DenseVecStorage, Entity, Read, SystemData, World, WriteStorage},
+    ecs::{Read, World, WriteStorage},
     shrev::{EventChannel, ReaderId},
     EventReader,
 };

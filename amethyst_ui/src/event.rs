@@ -103,7 +103,7 @@ impl UiMouseSystem {
     }
 }
 
-impl System<'static> for UiMouseSystem {
+impl System for UiMouseSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UiMouseSystem")

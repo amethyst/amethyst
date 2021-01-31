@@ -21,7 +21,7 @@ impl Default for MapMovementSystem {
         }
     }
 }
-impl System<'static> for MapMovementSystem {
+impl System for MapMovementSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MapMovementSystem")

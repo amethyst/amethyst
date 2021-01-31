@@ -25,9 +25,10 @@ use atelier_loader::{
 pub use atelier_loader::{storage::LoadStatus, AssetUuid};
 use log::debug;
 use serde::de::Deserialize;
-pub use type_uuid::TypeUuid;
 
-use crate::{processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset};
+use crate::{
+    processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset, TypeUuid,
+};
 
 /// Manages asset loading and storage for an application.
 pub trait Loader: Send + Sync {
@@ -469,7 +470,7 @@ pub fn create_asset_type<Intermediate, Asset, ProcessorSystem>() -> AssetType
 where
     Asset: 'static + TypeUuid + Send + Sync,
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
-    ProcessorSystem: System<'static> + Default + 'static,
+    ProcessorSystem: System + Default + 'static,
 {
     log::debug!("Creating asset type: {:x?}", Asset::UUID);
     AssetType {

@@ -15,7 +15,7 @@ use crate::{
 #[derive(Debug)]
 pub struct HideHierarchySystem;
 
-impl System<'_> for HideHierarchySystem {
+impl System for HideHierarchySystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("HideHierarchySystem")

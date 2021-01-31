@@ -44,7 +44,7 @@ impl SystemBundle for UdpNetworkBundle {
 /// Creates a new network simulation time system.
 pub struct UdpNetworkSendSystem;
 
-impl System<'_> for UdpNetworkSendSystem {
+impl System for UdpNetworkSendSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UdpNetworkSendSystem")
@@ -87,7 +87,7 @@ impl System<'_> for UdpNetworkSendSystem {
 /// Creates a new udp network receiver system
 pub struct UdpNetworkReceiveSystem;
 
-impl System<'_> for UdpNetworkReceiveSystem {
+impl System for UdpNetworkReceiveSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UdpNetworkReceiveSystem")

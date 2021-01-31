@@ -5,7 +5,7 @@ use amethyst::{
         deferred_dispatcher_operation::{AddSystem, AddSystemDesc, DispatcherOperation},
         SystemDesc,
     },
-    ecs::prelude::*,
+    ecs::*,
     prelude::*,
 };
 use derivative::Derivative;
@@ -25,7 +25,7 @@ pub struct CustomDispatcherState<'a, 'b> {
     dispatcher_operations: Option<Vec<Box<dyn DispatcherOperation<'a, 'b> + 'a>>>,
     /// State specific dispatcher.
     #[derivative(Debug = "ignore")]
-    dispatcher: Option<Dispatcher<'a, 'b>>,
+    dispatcher: Option<Dispatcher>,
 }
 
 impl<'a, 'b> CustomDispatcherState<'a, 'b> {

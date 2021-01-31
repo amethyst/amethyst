@@ -21,7 +21,7 @@ You don't have to use all three at the same time of course but variations of two
 
 One way of defining a `UiTransform` is like so:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::ui::{Anchor, UiTransform};
 
 let ui_transform = UiTransform::new(
@@ -51,17 +51,17 @@ to set the area big enough for the text to fit in!
 
 ### Creating the `UiText`
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
-# use amethyst::ui::{Anchor, FontAsset, get_default_font, LineMode, UiText};
-# use amethyst::prelude::{World, WorldExt};
-#
+```rust
+# use amethyst::assets::{AssetStorage, DefaultLoader, Loader};
+# use amethyst::prelude::World;
+# use amethyst::ui::{get_default_font, Anchor, FontAsset, LineMode, UiText};
+# 
 # fn some_function(world: &mut World) {
-#    let font_handle = {
-#        let loader = world.read_resource::<DefaultLoader>();
-#        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
-#        get_default_font(&loader, &font_storage)
-#    };
+#   let font_handle = {
+#       let loader = resources.get::<DefaultLoader>();
+#       let font_storage = resources.get::<AssetStorage<FontAsset>>();
+#       get_default_font(&loader, &font_storage)
+#   };
     let ui_text = UiText::new(
         font_handle,                   // font
         String::from("Simple Button"), // text
@@ -80,61 +80,52 @@ You also need to load a specific font handle and provide it for the text.
 
 If you had some state implemented you can create the button on its `on_start` method:
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
-# use amethyst::ui::{
-#     Anchor, FontAsset, get_default_font, LineMode, UiText, UiTransform,
-# };
-# use amethyst::prelude::{Builder, GameData, SimpleState, SimpleTrans, StateData, Trans, World, WorldExt};
-#
+```rust
+# use amethyst::assets::{AssetStorage, DefaultLoader, Loader};
+# use amethyst::prelude::*;
+# use amethyst::ui::{get_default_font, Anchor, FontAsset, LineMode, UiText, UiTransform};
+# 
 # pub struct State;
-#
+# 
 # impl SimpleState for State {
-#
-fn on_start(&mut self, data: StateData<'_, GameData>) {
-    let world = data.world;
+    fn on_start(&mut self, data: StateData<'_, GameData>) {
+        let world = data.world;
 
-    /* Create the transform */
-    let ui_transform = UiTransform::new(
-        // ...
-#         String::from("simple_button"), // id
-#         Anchor::Middle,                // anchor
-#         Anchor::Middle,                // pivot
-#         0f32,                          // x
-#         0f32,                          // y
-#         0f32,                          // z
-#         100f32,                        // width
-#         30f32,                         // height
-    );
-    #
-    #    let font_handle = {
-    #        let loader = world.read_resource::<DefaultLoader>();
-    #        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
-    #        get_default_font(&loader, &font_storage)
-    #    };
+        /* Create the transform */
+        let ui_transform = UiTransform::new(
+            // ...
+#           String::from("simple_button"), // id
+#           Anchor::Middle,                // anchor
+#           Anchor::Middle,                // pivot
+#           0f32,                          // x
+#           0f32,                          // y
+#           0f32,                          // z
+#           100f32,                        // width
+#           30f32,                         // height
+        );
+#       let font_handle = {
+#           let loader = resources.get::<DefaultLoader>();
+#           let font_storage = resources.get::<AssetStorage<FontAsset>>();
+#           get_default_font(&loader, &font_storage)
+#       };
 
-    /* Create the text */
-    let ui_text = UiText::new(
-        // ...
-#       font_handle,                   // font
-#       String::from("Simple Button"), // text
-#       [1.0, 1.0, 1.0, 0.5],          // color
-#       25f32,                         // font_size
-#       LineMode::Single,
-#       Anchor::Middle,
-    );
+        /* Create the text */
+        let ui_text = UiText::new(
+            // ...
+#           font_handle,                   // font
+#           String::from("Simple Button"), // text
+#           [1.0, 1.0, 1.0, 0.5],          // color
+#           25f32,                         // font_size
+#           LineMode::Single,
+#           Anchor::Middle,
+        );
 
-    /* Building the entity */
-    let _ = world
-        .create_entity()
-        .with(ui_transform)
-        .with(ui_text)
-        .build();
-}
-#
-#     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-#         Trans::None
-#     }
+        /* Building the entity */
+        let _ = world.push((ui_transform, ui_text));
+    }
+#   fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+#       Trans::None
+#   }
 # }
 ```
 
@@ -154,45 +145,41 @@ have a `UiTransform` component!
 
 The code snippet would look like this now:
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::assets::{AssetStorage,  DefaultLoader, Loader};
+```rust
+# use amethyst::assets::{AssetStorage, DefaultLoader, Loader};
+# use amethyst::ecs::World;
+# use amethyst::prelude::*;
 # use amethyst::ui::{
-#     Anchor, FontAsset, get_default_font, LineMode, UiText, UiTransform, Interactable,
+#   get_default_font, Anchor, FontAsset, Interactable, LineMode, UiText, UiTransform,
 # };
-# use amethyst::ecs::{Builder, World, WorldExt};
-# use amethyst::prelude::{GameData, SimpleTrans, StateData};
-#
+# 
 # fn some_function(world: &mut World) {
-#    let ui_transform = UiTransform::new(
-#         String::from("simple_button"), // id
-#         Anchor::Middle,                // anchor
-#         Anchor::Middle,                // pivot
-#         0f32,                          // x
-#         0f32,                          // y
-#         0f32,                          // z
-#         100f32,                        // width
-#         30f32,                         // height
-#    );
-#
-#    let font_handle = {
-#        let loader = world.read_resource::<DefaultLoader>();
-#        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
-#        get_default_font(&loader, &font_storage)
-#    };
-#    /* Create the text */
-#    let ui_text = UiText::new(
+#   let ui_transform = UiTransform::new(
+#       String::from("simple_button"), // id
+#       Anchor::Middle,                // anchor
+#       Anchor::Middle,                // pivot
+#       0f32,                          // x
+#       0f32,                          // y
+#       0f32,                          // z
+#       100f32,                        // width
+#       30f32,                         // height
+#   );
+# 
+#   let font_handle = {
+#       let loader = resources.get::<DefaultLoader>();
+#       let font_storage = resources.get::<AssetStorage<FontAsset>>();
+#       get_default_font(&loader, &font_storage)
+#   };
+#   /* Create the text */
+#   let ui_text = UiText::new(
 #       font_handle,                   // font
 #       String::from("Simple Button"), // text
 #       [1.0, 1.0, 1.0, 0.5],          // color
 #       25f32,                         // font_size
 #       LineMode::Single,
 #       Anchor::Middle,
-#    );
+#   );
 
-let _ = world.create_entity()
-    .with(ui_transform)
-    .with(ui_text)
-    .with(Interactable)
-    .build();
+    let _ = world.push((ui_transform, ui_text, Interactable));
 # }
 ```

@@ -7,7 +7,7 @@ use crate::ecs::*;
 #[derive(Debug)]
 pub struct TransformSystem;
 
-impl System<'_> for TransformSystem {
+impl System for TransformSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TransformSystem")

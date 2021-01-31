@@ -2,9 +2,9 @@
 
 Let's declare our state, and call it `MenuState`:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::ecs::Entity;
-#
+# 
 #[derive(Default)]
 pub struct MenuState {
     button: Option<Entity>,
@@ -21,12 +21,12 @@ It will also serve to hold our ui entity.
 In our `on_start` method of this state we can create the button as shown in
 previous chapters, but here we will save the entity in our struct:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{
 #  assets::{AssetStorage,  DefaultLoader, Loader},
-# 	ecs::{Entity, World, WorldExt},
-# 	ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiText, UiTransform},
-# 	prelude::{Builder, GameData, SimpleState, StateData},
+# 	ecs::{Entity, World},
+# 	ui::{Anchor, FontAsset, Interactable, LineMode, TtfFormat, UiText, UiTransform},
+# 	prelude::*,
 # };
 #
 # #[derive(Default)]
@@ -51,11 +51,11 @@ impl SimpleState for MenuState {
         );
 
         /* Create the text */
-        #       let font_handle = world.read_resource::<DefaultLoader>().load(
+        #       let font_handle = resources.get::<DefaultLoader>().load(
         #       "font/square.ttf",
         #       TtfFormat,
         #       (),
-        #       &world.read_resource(),
+        #       resources.get().unwrap(),
         #       );
         #
         let ui_text = UiText::new(
@@ -70,11 +70,7 @@ impl SimpleState for MenuState {
 
         /* Building the entity */
         let btn = world
-            .create_entity()
-            .with(ui_transform)
-            .with(ui_text)
-            .with(Interactable)
-            .build();
+            .push((ui_transform,ui_text,Interactable));
 
         /* Saving the button in our state struct */
         self.button = Some(btn);
@@ -85,12 +81,12 @@ impl SimpleState for MenuState {
 All the input received will be handled in the [handle\_event](https://docs.amethyst.rs/master/amethyst/trait.State.html#method.handle_event)
 method of our state:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
-#   ecs::{Entity, World, WorldExt},
-#   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
-#   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
+#   ecs::{Entity, World},
+#   ui::{Anchor, FontAsset, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
+#   prelude::*,
 #   StateEvent,
 # };
 #
@@ -117,11 +113,11 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Create the text */
-    #       let font_handle = world.read_resource::<DefaultLoader>().load(
+    #       let font_handle = resources.get::<DefaultLoader>().load(
     #          "font/square.ttf",
     #          TtfFormat,
     #          (),
-    #          &world.read_resource(),
+    #          resources.get().unwrap(),
     #       );
     #
     #       let ui_text = UiText::new(
@@ -134,11 +130,8 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Building the entity */
-    #       let btn = world.create_entity()
-    #           .with(ui_transform)
-    #           .with(ui_text)
-    #           .with(Interactable)
-    #           .build();
+    #       let btn = world
+    #        .push((ui_transform,ui_text,Interactable));
     #
     #       /* Saving the button in our state struct */
     #       self.button = Some(btn);
@@ -181,13 +174,13 @@ Upon pushing another state the `on_pause` method will run - here we can hide our
 The way we do that is by adding a [Hidden](https://docs.amethyst.rs/master/amethyst_core/struct.Hidden.html)
 component to our button:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
-#   ecs::{Entity, World, WorldExt},
-#   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
-#   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
+#   ecs::{Entity, World},
+#   ui::{Anchor, FontAsset, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
+#   prelude::*,
 #   StateEvent
 # };
 #
@@ -214,11 +207,11 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Create the text */
-    #       let font_handle = world.read_resource::<DefaultLoader>().load(
+    #       let font_handle = resources.get::<DefaultLoader>().load(
     #           "font/square.ttf",
     #           TtfFormat,
     #           (),
-    #           &world.read_resource(),
+    #           resources.get().unwrap(),
     #       );
     #
     #       let ui_text = UiText::new(
@@ -231,11 +224,8 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Building the entity */
-    #       let btn = world.create_entity()
-    #           .with(ui_transform)
-    #           .with(ui_text)
-    #           .with(Interactable)
-    #           .build();
+    #       let btn = world
+    #        .push((ui_transform,ui_text,Interactable));
     #
     #       /* Saving the button in our state struct */
     #       self.button = Some(btn);
@@ -274,13 +264,13 @@ impl SimpleState for MenuState {
 
 The same goes for `on_resume` if we actually want to redisplay the button:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   core::Hidden,
-#   ecs::{Entity, World, WorldExt},
-#   ui::{Anchor, Handle<FontAsset>, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
-#   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
+#   ecs::{Entity, World},
+#   ui::{Anchor, FontAsset, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
+#   prelude::*,
 #   StateEvent
 # };
 #
@@ -307,11 +297,8 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Create the text */
-    #       let font_handle = world.read_resource::<DefaultLoader>().load(
+    #       let font_handle = resources.get::<DefaultLoader>().load(
     #           "font/square.ttf",
-    #           TtfFormat,
-    #           (),
-    #           &world.read_resource(),
     #       );
     #
     #       let ui_text = UiText::new(
@@ -324,11 +311,8 @@ impl SimpleState for MenuState {
     #       );
     #
     #       /* Building the entity */
-    #       let btn = world.create_entity()
-    #           .with(ui_transform)
-    #           .with(ui_text)
-    #           .with(Interactable)
-    #           .build();
+    #       let btn = world
+    #        .push((ui_transform,ui_text,Interactable));
     #
     #       /* Saving the button in our state struct */
     #           self.button = Some(btn);

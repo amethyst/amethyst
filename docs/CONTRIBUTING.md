@@ -220,10 +220,10 @@ page, we can do this inline.
 [al]: https://another.url/
 ```
 
-Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust ,edition2018,no_run,noplaypen`. Note the space after `rust` to enable syntax support in editors.  Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example:
+Code snippets in markdown files should be surrounded by triple backticks with the modifier `rust`. Use `#` to hide lines that are necessary to compile in doctests but aren't relevant to the example, use `//` for in-code comments.  For example:
 
 ````markdown
-```rust ,edition2018,no_run,noplaypen
+```rust
 use amethyst::ecs::{World};
 
 // A simple struct with no data.
@@ -231,7 +231,7 @@ struct MyResource;
 
 fn main() {
     // We create a new `World` instance.
-    let mut world = World::new();
+    let mut world = World::default();
     
     // We create our resource.
     let my = MyResource;
@@ -273,13 +273,13 @@ you may have to run `cargo clean` and `cargo build` again before retrying the `m
 
 You can build Amethyst with a `profiler` feature like this:
 
-```
+```sh
 cargo build --release --features profiler
 ```
 
 Or if you wanted to run an example with profiler:
 
-```
+```sh
 cargo run -p my_example --release --features profiler
 ```
 

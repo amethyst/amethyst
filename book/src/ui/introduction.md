@@ -24,24 +24,24 @@ to draw these widgets.
 
 A minimalistic game data would now look like this:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{
-#     DispatcherBuilder,
-#     core::transform::TransformBundle,
-#     input::{InputBundle, StringBindings},
-#     renderer::{types::DefaultBackend, RenderingBundle, RenderToWindow},
-#     Result,
-#     ui::{RenderUi, UiBundle}
+#   core::transform::TransformBundle,
+#   input::InputBundle,
+#   renderer::{types::DefaultBackend, RenderToWindow, RenderingBundle},
+#   ui::{RenderUi, UiBundle},
+#   DispatcherBuilder, Result,
 # };
 # 
 # pub fn main() -> Result<()> {
     let game_data = DispatcherBuilder::default()
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(
+        .add_bundle(TransformBundle::new())?
+        .add_bundle(InputBundle::new())?
+        .add_bundle(UiBundle::new())?
+        .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
-                .with_plugin(RenderToWindow::from_config(Default::default())
+                .with_plugin(
+                    RenderToWindow::from_config(Default::default())
                         .with_clear([0.0, 0.0, 0.0, 1.0]),
                 )
                 .with_plugin(RenderUi::default()),

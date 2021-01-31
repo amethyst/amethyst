@@ -991,7 +991,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Add transparency support to core passes ([#543]), ([#574]), ([#584])
 - Add vertex skinning ([#545]), ([#619])
 - Expose a basic visibility ordering system, with the ability to swap in better replacement systems ([#595])
-- Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<Read<'a, Output>>` ([#679])
+- Audio `Output` is now added directly rather than as an `Option`, should now be fetched with `Option<.read_resource::<Output>>()` ([#679])
 - New nightly feature that enables `shred`s nightly feature ([#689])
 - `Transform` refactored, and added lots of utility functions ([#660])
 - Add new raw mouse events for use with camera rotation ([#699])

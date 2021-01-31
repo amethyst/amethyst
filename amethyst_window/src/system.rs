@@ -18,7 +18,7 @@ use crate::resources::ScreenDimensions;
 pub struct WindowSystem;
 
 /// Builds window system that updates `ScreenDimensions` resource from a provided `Window`.
-impl System<'_> for WindowSystem {
+impl System for WindowSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("WindowSystem")

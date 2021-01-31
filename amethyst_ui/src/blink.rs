@@ -27,7 +27,7 @@ pub struct Blink {
 #[derive(Debug)]
 pub struct BlinkSystem;
 
-impl System<'_> for BlinkSystem {
+impl System for BlinkSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("BlinkSystem")

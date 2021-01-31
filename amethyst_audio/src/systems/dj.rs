@@ -68,7 +68,7 @@ where
     _phantom: std::marker::PhantomData<R>,
 }
 
-impl<F, R> System<'static> for DjSystem<F, R>
+impl<F, R> System for DjSystem<F, R>
 where
     F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
     R: Send + Sync + 'static,

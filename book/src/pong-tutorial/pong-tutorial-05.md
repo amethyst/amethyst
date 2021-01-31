@@ -24,37 +24,28 @@ mod winner;
 
 Then, we'll create `systems/winner.rs`:
 
-```rust ,edition2018,no_run,noplaypen
-#
+```rust
 # mod pong {
-#     use amethyst::ecs::prelude::*;
-#
-#     pub struct Ball {
-#         pub radius: f32,
-#         pub velocity: [f32; 2],
-#     }
-#     impl Component for Ball {
-#         type Storage = DenseVecStorage<Self>;
-#     }
-#
-#     pub const ARENA_WIDTH: f32 = 100.0;
-#     pub const ARENA_HEIGHT: f32 = 100.0;
+#   pub struct Ball {
+#       pub radius: f32,
+#       pub velocity: [f32; 2],
+#   }
+# 
+#   pub const ARENA_WIDTH: f32 = 100.0;
+#   pub const ARENA_HEIGHT: f32 = 100.0;
 # }
-#
+# 
 use amethyst::{
     core::transform::Transform,
-    core::SystemDesc,
-    derive::SystemDesc,
-    ecs::{Join, System, SystemData, World, WriteStorage},
+    ecs::{System, World},
 };
 
 use crate::pong::{Ball, ARENA_HEIGHT, ARENA_WIDTH};
 
-#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
-impl<'s> System<'s> for WinnerSystem {
-    type SystemData = (WriteStorage<'s, Ball>, WriteStorage<'s, Transform>);
+impl System for WinnerSystem {
+    type SystemData = (.write_component::<Ball>() .write_component::<Transform>);
 
     fn run(&mut self, (mut balls, mut locals): Self::SystemData) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
@@ -80,7 +71,6 @@ impl<'s> System<'s> for WinnerSystem {
         }
     }
 }
-#
 # fn main() {}
 ```
 
@@ -89,81 +79,64 @@ and a `Transform` component, and then checking each ball to see if it has
 reached either the left or right boundary of the arena. If so, we reverse
 its direction and put it back in the middle of the screen.
 
-Now, we just need to add our new system to `main.rs`, and we should be able to
+Now, we need to add our new system to `main.rs`, and we should be able to
 keep playing after someone scores and log who got the point.
 
-```rust ,edition2018,no_run,noplaypen
-#
+```rust
 # use amethyst::{
-#    core::transform::TransformBundle,
-#    ecs::{World, WorldExt},
-#    prelude::*,
-#    input::StringBindings,
-#    window::DisplayConfig,
+#   core::transform::TransformBundle, ecs::World, input::StringBindings, prelude::*,
+#   window::DisplayConfig,
 # };
-#
+# 
 # mod systems {
-#     use amethyst;
-#     use amethyst::core::SystemDesc;
-#     use amethyst::core::ecs::{System, SystemData, World};
-#     use amethyst::derive::SystemDesc;
-#
-#     #[derive(SystemDesc)]
-#     pub struct PaddleSystem;
-#     impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-#     #[derive(SystemDesc)]
-#     pub struct MoveBallsSystem;
-#     impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-#     #[derive(SystemDesc)]
-#     pub struct BounceSystem;
-#     impl<'a> amethyst::ecs::System<'a> for BounceSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-#     #[derive(SystemDesc)]
-#     pub struct WinnerSystem;
-#     impl<'a> amethyst::ecs::System<'a> for WinnerSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
+#   use amethyst::core::ecs::{System, World};
+# 
+#   pub struct PaddleSystem;
+#   impl System for PaddleSystem {
+#       fn build(mut self) -> Box<dyn ParallelRunnable> {}
+#   }
+#   pub struct MoveBallsSystem;
+#   impl System for MoveBallsSystem {
+#       fn build(mut self) -> Box<dyn ParallelRunnable> {}
+#   }
+#   pub struct BounceSystem;
+#   impl System for BounceSystem {
+#       fn build(mut self) -> Box<dyn ParallelRunnable> {}
+#   }
+#   pub struct WinnerSystem;
+#   impl System for WinnerSystem {
+#       fn build(mut self) -> Box<dyn ParallelRunnable> {}
+#   }
 # }
-#
+# 
 # fn main() -> amethyst::Result<()> {
-#
-# let path = "./config/display.ron";
-# let config = DisplayConfig::load(&path)?;
-# let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-#
-let game_data = DispatcherBuilder::default()
-#    .with_bundle(TransformBundle::new())?
-#    .with_bundle(input_bundle)?
-#    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
-#    .with(systems::MoveBallsSystem, "ball_system", &[])
-#    .with(
-#        systems::BounceSystem,
-#        "collision_system",
-#        &["paddle_system", "ball_system"],
-#    )
-    .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
-#
-# let assets_dir = "/";
-# struct Pong;
-# impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data)?;
-# Ok(())
+#   let path = "./config/display.ron";
+#   let config = DisplayConfig::load(&path)?;
+#   let input_bundle = amethyst::input::InputBundle::new();
+# 
+    let game_data = DispatcherBuilder::default()
+#       .add_bundle(TransformBundle::new())?
+#       .add_bundle(input_bundle)?
+#       .with(systems::PaddleSystem, "paddle_system", &["input_system"])
+#       .with(systems::MoveBallsSystem, "ball_system", &[])
+#       .with(
+#           systems::BounceSystem,
+#           "collision_system",
+#           &["paddle_system", "ball_system"],
+#       )
+        .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
+#   let assets_dir = "/";
+#   struct Pong;
+#   impl SimpleState for Pong {}
+#   let mut game = Application::new(assets_dir, Pong, game_data)?;
+#   Ok(())
 # }
 ```
 
 ## Adding a Scoreboard
 
 We have a pretty functional Pong game now! At this point, the least fun thing
-about the game is just that players have to keep track of the score themselves.
+about the game is that players have to keep track of the score themselves.
 Our game should be able to do that for us.
 
 In this section, we'll set up UI rendering for our game and create a scoreboard
@@ -171,48 +144,43 @@ to display our players' scores.
 
 First, let's add the UI rendering in `main.rs`. Add the following imports:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 use amethyst::ui::{RenderUi, UiBundle};
 ```
 
 Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::{
-#     ecs::{World, WorldExt},
-#     prelude::*,
-#     renderer::{
-#         types::DefaultBackend,
-#         RenderingBundle,
-#     },
-#     ui::RenderUi,
+#   ecs::World,
+#   prelude::*,
+#   renderer::{types::DefaultBackend, RenderingBundle},
+#   ui::RenderUi,
 # };
-# fn main() -> Result<(), amethyst::Error>{
-# let game_data = DispatcherBuilder::default()
-    .with_bundle(RenderingBundle::<DefaultBackend>::new()
-        // ...
-            .with_plugin(RenderUi::default()),
-    )?;
-# Ok(()) }
+# fn main() -> Result<(), amethyst::Error> {
+#   let game_data = DispatcherBuilder::default()
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                // ...
+                .with_plugin(RenderUi::default()),
+        )?;
+#   Ok(())
+# }
 ```
 
 Finally, add the `UiBundle` after the `InputBundle`:
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::{
-#     ecs::{World, WorldExt},
-#     input::StringBindings,
-#     prelude::*,
-# };
+```rust
 # use amethyst::ui::UiBundle;
-# fn main() -> Result<(), amethyst::Error>{
-# let display_config_path = "";
-# struct Pong;
-# let game_data = DispatcherBuilder::default()
-.with_bundle(UiBundle::<StringBindings>::new())?
-# ;
-#
-# Ok(())
+# use amethyst::{ecs::World, input::StringBindings, prelude::*};
+# fn main() -> Result<(), amethyst::Error> {
+#   let display_config_path = "";
+#   struct Pong;
+#   let game_data = DispatcherBuilder::default()
+.add_bundle(UiBundle::new())?
+#;
+# 
+#   Ok(())
 # }
 ```
 
@@ -223,16 +191,14 @@ sprites.
 
 > **Note:** We're using a `UiBundle` with type `StringBindings` here because the
 > `UiBundle` needs to know what types our `InputHandler` is using to map `actions`
-> and `axes`. So just know that your `UiBundle` type should match your
+> and `axes`. So know that your `UiBundle` type should match your
 > `InputHandler` type. You can read more about those here: [UiBundle][ui-bundle],
 > [InputHandler][input-handler].
 
 Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
-```rust ,edition2018,no_run,noplaypen
-use amethyst::ecs::{Component, DenseVecStorage, Entity};
-
+```rust
 /// ScoreBoard contains the actual score data
 #[derive(Default)]
 pub struct ScoreBoard {
@@ -249,35 +215,34 @@ pub struct ScoreText {
 
 > Don't glimpse over the `#[derive(Default)]` annotation for the `ScoreBoard` struct!
 
-`ScoreBoard` is just a container that will allow us to keep track of each
+`ScoreBoard` is a container that will allow us to keep track of each
 player's score. We'll use this in another module later in this chapter, so we've
 gone ahead and marked it as public (same with `ScoreText`). `ScoreText` is also
 a container, but this one holds handles to the UI `Entity`s that will be
 rendered to the screen. We'll create those next:
 
-```rust ,edition2018,no_run,noplaypen
-#
+```rust
 use amethyst::ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform};
 
 # pub struct Pong;
-#
+# 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        #       let world = data.world;
+#       let world = data.world;
         // --snip--
 
-        initialise_scoreboard(world);
+        initialize_scoreboard(world);
     }
 }
 // ...
 
-/// Initialises a ui scoreboard
-fn initialise_scoreboard(world: &mut World) {
-    let font = world.read_resource::<DefaultLoader>().load(
+/// initializes a ui scoreboard
+fn initialize_scoreboard(world: &mut World) {
+    let font = resources.get::<DefaultLoader>().load(
         "font/square.ttf",
         TtfFormat,
         (),
-        &world.read_resource(),
+        resources.get().unwrap(),
     );
     let p1_transform = UiTransform::new(
         "P1".to_string(),
@@ -301,40 +266,37 @@ fn initialise_scoreboard(world: &mut World) {
     );
 
     let p1_score = world
-        .create_entity()
-        .with(p1_transform)
-        .with(UiText::new(
+        .push((p1_transform,UiText::new(
             font.clone(),
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
             LineMode::Single,
             Anchor::Middle,
-        ))
-        .build();
+        ));
 
     let p2_score = world
-        .create_entity()
-        .with(p2_transform)
-        .with(UiText::new(
+        .push((p2_transform,UiText::new(
             font,
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
             LineMode::Single,
             Anchor::Middle,
-        ))
-        .build();
+        ));
 
-    # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
+#   pub struct ScoreText {
+#       pub p1_score: Entity,
+#       pub p2_score: Entity,
+#   }
     world.insert(ScoreText { p1_score, p2_score });
 }
 ```
 
-Here, we add some UI imports and create a new `initialise_scoreboard` function,
+Here, we add some UI imports and create a new `initialize_scoreboard` function,
 which we'll call in the `on_start` method of the `Pong` game state.
 
-Inside `initialise_scoreboard`, we're first going to load up a font which we've
+Inside `initialize_scoreboard`, we're first going to load up a font which we've
 saved to `assets/font/square.ttf` ([download][font-download]). We pull
 in the `TtfFormat` to match this font type, load the font as a resource in the
 world, and then save the handle to a `font` variable (which we'll use to create
@@ -364,53 +326,44 @@ point. You'll see just how easy this is with our `ECS` design. All we have to do
 is modify our `WinnerSystem` to access the players' scores and update them
 accordingly:
 
-```rust ,edition2018,no_run,noplaypen
-#
+```rust
 # mod pong {
-#     use amethyst::ecs::prelude::*;
-#
-#     pub struct Ball {
-#         pub radius: f32,
-#         pub velocity: [f32; 2],
-#     }
-#     impl Component for Ball {
-#         type Storage = DenseVecStorage<Self>;
-#     }
-#
-#     #[derive(Default)]
-#     pub struct ScoreBoard {
-#         pub score_left: i32,
-#         pub score_right: i32,
-#     }
-#
-#     pub struct ScoreText {
-#         pub p1_score: Entity,
-#         pub p2_score: Entity,
-#     }
-#
-#     pub const ARENA_WIDTH: f32 = 100.0;
-#     pub const ARENA_HEIGHT: f32 = 100.0;
+#   pub struct Ball {
+#       pub radius: f32,
+#       pub velocity: [f32; 2],
+#   }
+# 
+#   #[derive(Default)]
+#   pub struct ScoreBoard {
+#       pub score_left: i32,
+#       pub score_right: i32,
+#   }
+# 
+#   pub struct ScoreText {
+#       pub p1_score: Entity,
+#       pub p2_score: Entity,
+#   }
+# 
+#   pub const ARENA_WIDTH: f32 = 100.0;
+#   pub const ARENA_HEIGHT: f32 = 100.0;
 # }
-#
+# 
 use amethyst::{
-    #     core::transform::Transform,
-    #     core::SystemDesc,
-    #     derive::SystemDesc,
+#   core::transform::Transform,
     // --snip--
-    ecs::{Join, ReadExpect, System, SystemData, World, Write, WriteStorage},
+    ecs::{System, World},
     ui::UiText,
 };
 
 use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_HEIGHT, ARENA_WIDTH};
 
-#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
-impl<'s> System<'s> for WinnerSystem {
+impl System for WinnerSystem {
     type SystemData = (
-        WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
-        WriteStorage<'s, UiText>,
+        .write_component::<Ball>()
+        .write_component::<Transform>()
+        .write_component::<UiText>()
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,
     );
@@ -420,7 +373,7 @@ impl<'s> System<'s> for WinnerSystem {
         (mut balls, mut locals, mut ui_text, mut scores, score_text): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut locals).join() {
-            #             let ball_x = transform.translation().x;
+#           let ball_x = transform.translation().x;
             // --snip--
 
             let did_hit = if ball_x <= ball.radius {
@@ -445,9 +398,9 @@ impl<'s> System<'s> for WinnerSystem {
             };
 
             if did_hit {
-                #                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
-                #                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
-                #                 transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
+#               ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
+#               transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
+#               transform.set_translation_y(ARENA_HEIGHT / 2.0); // Reset Position
 
                 // --snip--
 
@@ -460,7 +413,6 @@ impl<'s> System<'s> for WinnerSystem {
         }
     }
 }
-#
 # fn main() {}
 ```
 
@@ -480,9 +432,9 @@ use `Option<Write<'s, ScoreBoard>>` instead.
 We also use `ReadExpect` to access the `ScoreText` resource immutably. Again,
 `ScoreText` is a single resource item rather than a collection of components.
 With `ReadExpect`, we are asserting that `ScoreText` must already exist and will
-panic if it does not. We do this instead of just using `Read` because we are
+panic if it does not. We do this instead of using `Read` because we are
 manually adding the `ScoreText` resource to the game in
-`pong.rs > initialise_scoreboard` instead of having the system create this
+`pong.rs > initialize_scoreboard` instead of having the system create this
 resource for us automatically.
 
 Inside our `run` method (after updating the signature to match our `SystemData`

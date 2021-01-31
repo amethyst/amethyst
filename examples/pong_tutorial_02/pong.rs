@@ -22,8 +22,8 @@ impl SimpleState for Pong {
         // `texture` is the pixel data.
         let sprite_sheet_handle = load_sprite_sheet(data.resources);
 
-        initialise_paddles(world, sprite_sheet_handle);
-        initialise_camera(world);
+        initialize_paddles(world, sprite_sheet_handle);
+        initialize_camera(world);
     }
 }
 
@@ -64,8 +64,8 @@ fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
     )
 }
 
-/// Initialise the camera.
-fn initialise_camera(world: &mut World) {
+/// initialize the camera.
+fn initialize_camera(world: &mut World) {
     // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
     let mut transform = Transform::default();
     transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
@@ -73,8 +73,8 @@ fn initialise_camera(world: &mut World) {
     world.push((Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT), transform));
 }
 
-/// Initialises one paddle on the left, and one paddle on the right.
-fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+/// initializes one paddle on the left, and one paddle on the right.
+fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
 

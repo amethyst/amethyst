@@ -15,6 +15,9 @@
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
 
+/// Convenience alias for use in main functions that uses Amethyst.
+pub type Result<T> = std::result::Result<T, amethyst_error::Error>;
+
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource.
 pub type ArcThreadPool = std::sync::Arc<rayon::ThreadPool>;
 

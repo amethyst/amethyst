@@ -15,7 +15,7 @@ The text is designed to be searchable, so if you are looking for a specific type
 
 ## Type Changes
 
-Many types retain the same type name, just under the `nalgebra` namespace:
+Many types retain the same type name, under the `nalgebra` namespace:
 
 ```patch
 -use amethyst::core::cgmath::{Vector2, Vector3, Matrix4};

@@ -1,15 +1,15 @@
 use std::marker::PhantomData;
 
 use amethyst::{
-    core::{ArcThreadPool, SystemBundle, SystemDesc},
-    ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, WorldExt},
+    core::{ArcThreadPool, SystemBundle},
+    ecs::{Dispatcher, DispatcherBuilder, System, World},
     error::Error,
     DataDispose, DataInit,
 };
 
 pub struct CustomGameData<'a, 'b> {
-    pub base: Option<Dispatcher<'a, 'b>>,
-    pub running: Option<Dispatcher<'a, 'b>>,
+    pub base: Option<Dispatcher>,
+    pub running: Option<Dispatcher>,
 }
 
 impl<'a, 'b> CustomGameData<'a, 'b> {
@@ -69,7 +69,7 @@ impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
     ) -> Self
     where
         SD: SystemDesc<'a, 'b, S> + 'static,
-        S: for<'c> System<'c> + 'static + Send,
+        S: for<'c> System + 'static + Send,
     {
         let dispatcher_operation = Box::new(AddSystem {
             system_desc,
@@ -98,7 +98,7 @@ impl<'a, 'b> CustomDispatcherBuilder<'a, 'b> {
     ) -> Self
     where
         SD: SystemDesc<'a, 'b, S> + 'static,
-        S: for<'c> System<'c> + 'static + Send,
+        S: for<'c> System + 'static + Send,
     {
         let dispatcher_operation = Box::new(AddSystem {
             system_desc,
@@ -127,7 +127,7 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b
 fn build_dispatcher<'a, 'b>(
     world: &mut World,
     dispatcher_operations: Vec<Box<dyn DispatcherOperation<'a, 'b>>>,
-) -> Dispatcher<'a, 'b> {
+) -> Dispatcher {
     let mut dispatcher_builder = DispatcherBuilder::new();
 
     #[cfg(not(no_threading))]
@@ -168,7 +168,7 @@ struct AddSystem<SD, S> {
 impl<'a, 'b, SD, S> DispatcherOperation<'a, 'b> for AddSystem<SD, S>
 where
     SD: SystemDesc<'a, 'b, S>,
-    S: for<'s> System<'s> + Send + 'a,
+    S: for<'s> System + Send + 'a,
 {
     fn exec(
         self: Box<Self>,

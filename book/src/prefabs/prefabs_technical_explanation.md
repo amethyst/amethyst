@@ -61,20 +61,17 @@ Ok, so what would a simple implementation of `PrefabData` look like?
 
 Let's take a look at the implementation for `Transform`, which is a core concept in Amethyst:
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 # use amethyst::assets::PrefabData;
-# use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage};
+# use amethyst::ecs::{Entity};
 # use amethyst::Error;
-#
+# 
 # // We declare that struct for the sake of automated testing.
 # #[derive(Default, Clone)]
 # struct Transform;
-# impl Component for Transform {
-#   type Storage = NullStorage<Transform>;
-# }
-#
+# 
 impl<'a> PrefabData<'a> for Transform {
-    type SystemData = WriteStorage<'a, Transform>;
+.write_component::<Transform>()
     type Result = ();
 
     fn add_to_entity(
@@ -111,13 +108,14 @@ are no secondary assets to load from `Source` here.
 Let's look at a slightly more complex implementation, the `AssetPrefab`. This `PrefabData` is used to
 load extra `Asset`s as part of a `Prefab`:
 
-```rust ,edition2018,no_run,noplaypen
-# #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter};
+```rust
 # use amethyst::assets::PrefabData;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
+# use amethyst::assets::{
+#   Asset, AssetStorage, DefaultLoader, Format, Handle, Loader, ProgressCounter,
+# };
+# use amethyst::ecs::{Entity};
 # use amethyst::Error;
-#
+# 
 #[derive(Deserialize, Serialize)]
 pub enum AssetPrefab<A, F>
 where
@@ -139,8 +137,8 @@ where
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
-        WriteStorage<'a, Handle<A>>,
-        Read<'a, AssetStorage<A>>,
+        .write_component::<Handle<A>>()
+        .read_resource::<AssetStorage<A>>(),
     );
 
     type Result = Handle<A>;
@@ -212,27 +210,18 @@ and visible in the current scope. This is due to how Rust macros work.
 
 An example of a single `Component` derive:
 
-```rust ,edition2018,no_run,noplaypen
-# #[macro_use] extern crate serde_derive;
+```rust
 # use amethyst::{
-#     assets::{
-#         Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData
-#     },
-#     derive::PrefabData,
-#     ecs::{
-#         Component, DenseVecStorage, Entity, Read, ReadExpect, WriteStorage,
-#     },
-#     Error,
+#   assets::{Asset, AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter},
+#   derive::PrefabData,
+#   ecs::Entity,
+#   Error,
 # };
-#
+# 
 #[derive(Clone, PrefabData)]
 #[prefab(Component)]
 pub struct SomeComponent {
     pub id: u64,
-}
-
-impl Component for SomeComponent {
-    type Storage = DenseVecStorage<Self>;
 }
 ```
 
@@ -240,12 +229,14 @@ This will derive a `PrefabData` implementation that inserts `SomeComponent` on a
 
 Lets look at an example of an aggregate struct:
 
-```rust ,edition2018,no_run,noplaypen
-# #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
+```rust
+# use amethyst::assets::{
+#   Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
+#   ProgressCounter,
+# };
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
-# use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
+# use amethyst::ecs::Entity;
+# use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
 # use amethyst::Error;
 
 #[derive(PrefabData)]
@@ -259,12 +250,14 @@ This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities
 
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
-```rust ,edition2018,no_run,noplaypen
-# #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage,  DefaultLoader, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
+```rust
+# use amethyst::assets::{
+#   Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
+#   ProgressCounter,
+# };
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
-# use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
+# use amethyst::ecs::Entity;
+# use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
 # use amethyst::Error;
 
 #[derive(PrefabData)]
@@ -279,10 +272,6 @@ pub struct MyScenePrefab {
 #[derive(Clone)]
 pub struct SomeComponent {
     pub id: u64,
-}
-
-impl Component for SomeComponent {
-    type Storage = DenseVecStorage<Self>;
 }
 ```
 

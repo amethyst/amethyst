@@ -3,7 +3,7 @@
 This document outlines coding conventions used in the Amethyst.
 
 We follow the [Rust API Guidelines].
-This document only cover topics which aren't already outlined there.
+This document only covers topics which aren't already outlined there.
 
 ## Terminology
 
@@ -38,11 +38,11 @@ A lot of this can be implemented using [`err-derive`], as showcased below.
 
 ```rust
 use err_derive::Error;
-/// crate::error
+
 use std::{error, fmt, io};
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub enum MyError {
     /// I/O Error.
     #[error(display = "I/O Error")]
     Io(#[cause] io::Error),
@@ -52,12 +52,6 @@ pub enum Error {
     #[error(display = "Non-exhaustive Error")]
     #[doc(hidden)]
     __Nonexhaustive,
-}
-
-impl From<io::Error> for Error {
-    fn from(e: io::Error) -> Error {
-        Error::IoError(e)
-    }
 }
 ```
 
@@ -84,18 +78,28 @@ pub enum Error {
 This informs users of the API to include a catch-all arm when matching against the error:
 
 ```rust
-match e {
-    PermissionDenied => { /*  */ },
-    NotConnected => { /*  */ },
-    _ => { /*  */ },
-}
+# pub enum Error {
+#   PermissionDenied,
+#   NotConnected,
+#   #[doc(hidden)]
+#   __Nonexhaustive,
+# }
+# 
+# fn main() {
+#   let e = Error::PermissionDenied;
+    match e {
+        PermissionDenied => { /*  */ }
+        NotConnected => { /*  */ }
+        _ => { /*  */ }
+    }
+# }
 ```
 
 This pattern guards against any matches being non-exhaustive in case new error variants are added in the future.
 
 #### Use `amethyst_error::Error` for compositional APIs
 
-APIs which composes results from multiple crates _should_ use `amethyst_error::Error`.
+APIs which compose results from multiple crates _should_ use `amethyst_error::Error`.
 This is a generic error type which is capable of boxing any error and annotate it with debugging information.
 
 This must be used when defining APIs which composes errors generically, like with traits.
@@ -105,110 +109,122 @@ communicate backtraces.
 ###### Do
 
 ```rust
-// crate `a`
-// depends on `c`
-mod a {
-    use amethyst_error::Error;
+# mod example {
+    // crate `a`
+    // depends on `c`
+    mod a {
+        use amethyst_error::Error;
 
-    pub mod error {
-        pub enum Error {
-            Problem,
+        pub mod error {
+            use derive_more::Display;
+
+            #[derive(Display, Debug)]
+            pub enum Error {
+                Problem,
+            }
+
+            impl std::error::Error for Error {}
+        }
+
+        struct Example;
+
+        impl super::c::Example for Example {
+            fn foo() -> Result<u32, amethyst_error::Error> {
+                Err(error::Error::Problem.into())
+            }
         }
     }
 
-    struct Example;
+    // crate `b`
+    // depends on `c`
+    mod b {
+        use amethyst_error::Error;
 
-    impl c::Example for Example {
-        fn foo() -> Result<u32, Error> {
-            Err(Error::from(error::Error::Problem))
+        pub mod error {
+            use derive_more::Display;
+
+            #[derive(Display, Debug)]
+            pub enum Error {
+                Problem,
+            }
+
+            impl std::error::Error for Error {}
+        }
+
+        struct Example;
+
+        impl super::c::Example for Example {
+            fn foo() -> Result<u32, amethyst_error::Error> {
+                Err(error::Error::Problem.into())
+            }
         }
     }
-}
 
-// crate `b`
-// depends on `c`
-mod b {
-    use amethyst_error::Error;
+    // crate `c`
+    // no dependencies
+    mod c {
+        use amethyst_error::Error;
 
-    pub mod error {
-        pub enum Error {
-            Problem,
+        pub trait Example {
+            fn foo() -> Result<u32, Error>;
         }
     }
-
-    struct Example;
-
-    impl c::Example for Example {
-        fn foo() -> Result<u32, Error> {
-            Err(Error::from(error::Error::Problem))
-        }
-    }
-}
-
-// crate `c`
-// no dependencies
-mod c {
-    use amethyst_error::Error;
-
-    pub trait Example {
-        fn foo() -> Result<u32, Error>;
-    }
-}
+# }
 ```
 
 ###### Don't
 
 ```rust
-// crate `a`
-// depends on `c`
-mod a {
-    pub mod error {
+# mod example {
+    // crate `a`
+    // depends on `c`
+    mod a {
+        pub mod error {
+            pub enum Error {
+                Problem,
+            }
+        }
+
+        struct Example;
+
+        impl super::c::Example for Example {
+            fn foo() -> Result<u32, super::c::Error> {
+                Err(super::c::Error::A(error::Error::Problem))
+            }
+        }
+    }
+
+    // crate `b`
+    // depends on `c`
+    mod b {
+        pub mod error {
+            pub enum Error {
+                Problem,
+            }
+        }
+
+        struct Example;
+
+        impl super::c::Example for Example {
+            fn foo() -> Result<u32, super::c::Error> {
+                Err(super::c::Error::B(error::Error::Problem))
+            }
+        }
+    }
+
+    // crate `c`
+    // depends on `a` and `b`.
+    mod c {
         pub enum Error {
-            Problem,
+            A(super::a::error::Error),
+            B(super::b::error::Error),
+        }
+
+        pub trait Example {
+            fn foo() -> Result<u32, Error>;
         }
     }
-
-    struct Example;
-
-    impl c::Example for Example {
-        fn foo() -> Result<u32, c::Error> {
-            Err(c::Error::A(error::Error::Problem))
-        }
-    }
-}
-
-// crate `b`
-// depends on `c`
-mod b {
-    pub mod error {
-        pub enum Error {
-            Problem,
-        }
-    }
-
-    struct Example;
-
-    impl c::Example for Example {
-        fn foo() -> Result<u32, c::Error> {
-            Err(c::Error::B(error::Error::Problem))
-        }
-    }
-}
-
-// crate `c`
-// depends on `a` and `b`.
-mod c {
-    use crate::{a, b};
-
-    pub enum Error {
-        A(a::error::Error),
-        B(b::error::Error),
-    }
-
-    pub trait Example {
-        fn foo() -> Result<u32, Error>;
-    }
-}
+# }
 ```
 
 #### Avoid overloading the default `Result`
@@ -220,17 +236,6 @@ This is a future-proofing pattern that prevents having to deal with conflicting 
 code re-use.
 Overloading `Result` also makes it harder to use the default `Result` when it's needed.
 This is especially useful when multiple modules export their own `Result` types.
-
-Crates _should not_ define their own `Result`.
-Instead prefer using `Result` directly with the crate-local error type, like this:
-
-```rust
-use crate::error::Error;
-
-fn foo() -> Result<u32, Error> {
-    Ok(42)
-}
-```
 
 ###### Do
 
@@ -248,6 +253,21 @@ fn foo() -> io::Result<u32> {
 use std::io::Result;
 
 fn foo() -> Result<u32> {
+    Ok(42)
+}
+```
+
+Crates _should not_ define their own `Result`.
+Instead prefer using `Result` directly with the crate-local error type, like this:
+
+```rust
+pub mod error {
+    pub enum Error {
+        Problem,
+    }
+}
+
+fn foo() -> Result<u32, error::Error> {
     Ok(42)
 }
 ```

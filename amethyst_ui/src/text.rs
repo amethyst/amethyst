@@ -168,7 +168,7 @@ impl TextEditingMouseSystem {
     }
 }
 
-impl System<'static> for TextEditingMouseSystem {
+impl System for TextEditingMouseSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TextEditingMouseSystem")

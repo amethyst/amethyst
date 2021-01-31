@@ -5,8 +5,8 @@
 
 use amethyst::{
     assets::{
-        Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystemDesc,
-        Processor, ProgressCounter, RonFormat,
+        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystemDesc, Processor,
+        ProgressCounter, RonFormat,
     },
     core::{
         math::{UnitQuaternion, Vector3},
@@ -14,13 +14,10 @@ use amethyst::{
         transform::{Transform, TransformBundle},
     },
     ecs::{
-        prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage},
-        ReadExpect, SystemData, World,
+        prelude::{Entity, Read, ReadStorage, System, Write, WriteStorage},
+        ReadExpect, World,
     },
-    input::{
-        get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
-        VirtualKeyCode,
-    },
+    input::{get_key, is_close_requested, is_key_down, ElementState, InputBundle, VirtualKeyCode},
     prelude::*,
     renderer::{
         light::Light,
@@ -95,7 +92,7 @@ impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
 
-        world.create_entity().with(self.scene.clone()).build();
+        world.push((self.scene.clone(),));
     }
 
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
@@ -198,9 +195,8 @@ fn main() -> Result<(), Error> {
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
         .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .add_bundle(InputBundle::<StringBindings>::new())?
-        .add_bundle(UiBundle::<StringBindings>::new())?
-        .add_bundle(HotReloadBundle::default())?
+        .add_bundle(InputBundle::new())?
+        .add_bundle(UiBundle::new())?
         .add_bundle(FpsCounterBundle::default())?
         // The below Systems, are used to handle some rendering resources.
         // Most likely these must be always called as last thing.
@@ -367,7 +363,7 @@ struct ExampleSystem {
     fps_display: Option<Entity>,
 }
 
-impl<'a> System<'a> for ExampleSystem {
+impl<'a> System for ExampleSystem {
     type SystemData = (
         WriteStorage<'a, Light>,
         Read<'a, Time>,

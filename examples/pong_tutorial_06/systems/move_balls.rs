@@ -8,7 +8,7 @@ use crate::pong::Ball;
 
 pub struct BallSystem;
 
-impl System<'_> for BallSystem {
+impl System for BallSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MoveBallsSystem")

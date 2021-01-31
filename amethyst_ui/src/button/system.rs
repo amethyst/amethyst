@@ -76,7 +76,7 @@ impl UiButtonSystem {
     }
 }
 
-impl System<'static> for UiButtonSystem {
+impl System for UiButtonSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UiButtonSystem")

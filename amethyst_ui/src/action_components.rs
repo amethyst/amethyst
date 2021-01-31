@@ -1,5 +1,4 @@
 use amethyst_audio::SourceHandle;
-use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
 use amethyst_rendy::TextureHandle;
 
 /// When this component is added to a UI element with a `TextureHandle`
@@ -29,10 +28,6 @@ impl OnUiActionImage {
     }
 }
 
-impl Component for OnUiActionImage {
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// When this component is added to a UI element
 /// it will play sounds based on mouse interaction.
 /// Requires `MouseReactive`.
@@ -58,8 +53,4 @@ impl OnUiActionSound {
             release_sound,
         }
     }
-}
-
-impl Component for OnUiActionSound {
-    type Storage = DenseVecStorage<Self>;
 }

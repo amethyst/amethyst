@@ -148,7 +148,7 @@ impl UiTransformSystem {
     }
 }
 
-impl System<'static> for UiTransformSystem {
+impl System for UiTransformSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("UiTransformSystem")

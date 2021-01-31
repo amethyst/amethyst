@@ -2,7 +2,7 @@
 
 With the `tiles` feature installed and our `RenderTiles2D` render pass setup, we can create a `TileMap` component and add it an entity. We need to have a sprite sheet loaded before the creation so this example assume a handle to a sprite sheet exists.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 use amethyst::{
     core::{
         math::{Point3, Vector3},
@@ -10,22 +10,18 @@ use amethyst::{
     },
     tiles::{Tile, TileMap},
 };
-# use amethyst::{
-#     assets::Handle,
-#     prelude::*,
-#     renderer::SpriteSheet,
-# };
-#
+# use amethyst::{assets::Handle, prelude::*, renderer::SpriteSheet};
+# 
 # #[derive(Clone, Default)]
 # struct SimpleTile;
 # impl Tile for SimpleTile {
-#     fn sprite(&self, _coords: Point3<u32>, _: &World) -> Option<usize> {
-#         Some(1)
-#     }
+#   fn sprite(&self, _coords: Point3<u32>, _: &World) -> Option<usize> {
+#       Some(1)
+#   }
 # }
 
 # pub fn load_sprite_sheet() -> Handle<SpriteSheet> {
-#     unimplemented!();
+#   unimplemented!();
 # }
 
 #[derive(Debug)]
@@ -33,7 +29,7 @@ struct ExampleState;
 
 impl SimpleState for ExampleState {
     fn on_start(&mut self, mut data: StateData<'_, GameData>) {
-        #        let world = data.world;
+#       let world = data.world;
         let sprite_sheet_handle = load_sprite_sheet();
         // ...
         init_map(world, sprite_sheet_handle.clone())
@@ -48,9 +44,8 @@ fn init_map(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     );
     let transform = Transform::default();
 
-    world.create_entity().with(map).with(transform).build();
+    world.push((map, transform));
 }
-#
 # fn main() {}
 ```
 

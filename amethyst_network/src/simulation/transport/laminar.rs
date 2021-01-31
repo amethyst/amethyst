@@ -49,7 +49,7 @@ impl SystemBundle for LaminarNetworkBundle {
 /// Creates a new laminar network send system.
 pub struct LaminarNetworkSendSystem;
 
-impl System<'_> for LaminarNetworkSendSystem {
+impl System for LaminarNetworkSendSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("LaminarNetworkSendSystem")
@@ -129,7 +129,7 @@ impl System<'_> for LaminarNetworkSendSystem {
 /// Creates a new laminar network poll system.
 pub struct LaminarNetworkPollSystem;
 
-impl System<'_> for LaminarNetworkPollSystem {
+impl System for LaminarNetworkPollSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("LaminarNetworkPollSystem")
@@ -146,7 +146,7 @@ impl System<'_> for LaminarNetworkPollSystem {
 /// Creates a new laminar receive system.
 pub struct LaminarNetworkRecvSystem;
 
-impl System<'_> for LaminarNetworkRecvSystem {
+impl System for LaminarNetworkRecvSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("LaminarNetworkRecvSystem")

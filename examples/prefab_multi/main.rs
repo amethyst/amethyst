@@ -10,7 +10,7 @@ use amethyst::{
     core::{Named, Parent},
     derive::PrefabData,
     ecs::{
-        storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, World,
+        Entities, Entity, ReadStorage, World,
         WriteStorage,
     },
     prelude::*,
@@ -54,9 +54,7 @@ impl SimpleState for CustomPrefabState {
         // Create one set of entities from the prefab.
         (0..1).for_each(|_| {
             data.world
-                .create_entity()
-                .with(prefab_handle.clone())
-                .build();
+                .push((prefab_handle.clone(),));
         });
 
         self.prefab_handle = Some(prefab_handle);

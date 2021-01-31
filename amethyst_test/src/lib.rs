@@ -33,7 +33,7 @@
 //! #
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #
@@ -64,15 +64,13 @@
 //! #
 //! // #[test]
 //! fn loading_state_adds_load_resource() {
-//!     assert!(
-//!         AmethystApplication::blank()
-//!             .with_state(|| LoadingState::new())
-//!             .with_assertion(|world| {
-//!                 world.read_resource::<LoadResource>();
-//!             })
-//!             .run()
-//!             .is_ok()
-//!     );
+//!     assert!(AmethystApplication::blank()
+//!         .with_state(|| LoadingState::new())
+//!         .with_assertion(|world| {
+//!             world.read_resource::<LoadResource>();
+//!         })
+//!         .run()
+//!         .is_ok());
 //! }
 //! #
 //! # loading_state_adds_load_resource();
@@ -97,8 +95,7 @@
 //!     //
 //!     // The type parameters here are the Axis and Action types for the
 //!     // `InputBundle` and `UiBundle`.
-//!     use amethyst::input::StringBindings;
-//!     AmethystApplication::ui_base::<StringBindings>();
+//!     AmethystApplication::ui_base();
 //!
 //!     // If you need types from the rendering bundle, make sure you have
 //!     // the `"test-support"` feature enabled:
@@ -110,8 +107,7 @@
 //!     //
 //!     // Then you can include the `RenderEmptyBundle`:
 //!     use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
-//!     AmethystApplication::blank()
-//!         .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
+//!     AmethystApplication::blank().add_bundle(RenderEmptyBundle::<DefaultBackend>::new());
 //! }
 //! ```
 //!
@@ -120,7 +116,7 @@
 //! ```no_run
 //! # use amethyst::{
 //! #     core::bundle::SystemBundle,
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #
@@ -136,19 +132,18 @@
 //! fn test_name() {
 //!     let visibility = false; // Whether the window should be shown
 //!     AmethystApplication::render_base::<String, String, _>("test_name", visibility)
-//!         .with_bundle(MyBundle::new())                // Registers a bundle.
-//!         .with_bundle_fn(|| MyNonSendBundle::new())   // Registers a `!Send` bundle.
-//!         .with_resource(MyResource::new())            // Adds a resource to the world.
-//!         .with_system(MySystem, "my_sys", &[])        // Registers a system with the main
-//!                                                      // dispatcher.
-//!
+//!         .add_bundle(MyBundle::new()) // Registers a bundle.
+//!         .add_bundle_fn(|| MyNonSendBundle::new()) // Registers a `!Send` bundle.
+//!         .with_resource(MyResource::new()) // Adds a resource to the world.
+//!         .with_system(MySystem, "my_sys", &[]) // Registers a system with the main
+//!         // dispatcher.
 //!         // These are run in the order they are invoked.
 //!         // You may invoke them multiple times.
 //!         .with_setup(|world| { /* do something */ })
 //!         .with_state(|| MyState::new())
 //!         .with_effect(|world| { /* do something */ })
 //!         .with_assertion(|world| { /* do something */ })
-//!          // ...
+//!     // ...
 //! }
 //! ```
 //!
@@ -159,12 +154,10 @@
 //! #[test]
 //! fn test_name() {
 //!     let visibility = false; // Whether the window should be shown
-//!     assert!(
-//!         AmethystApplication::render_base("test_name", visibility)
-//!             // ...
-//!             .run()
-//!             .is_ok()
-//!     );
+//!     assert!(AmethystApplication::render_base("test_name", visibility)
+//!         // ...
+//!         .run()
+//!         .is_ok());
 //! }
 //! ```
 //!
@@ -176,7 +169,7 @@
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
 //! #     core::bundle::SystemBundle,
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #
@@ -205,13 +198,13 @@
 //! #
 //! // #[test]
 //! fn bundle_registers_system_with_resource() {
-//!     assert!(
-//!         AmethystApplication::blank()
-//!             .with_bundle(MyBundle)
-//!             .with_assertion(|world| { world.read_resource::<ApplicationResource>(); })
-//!             .run()
-//!             .is_ok()
-//!     );
+//!     assert!(AmethystApplication::blank()
+//!         .add_bundle(MyBundle)
+//!         .with_assertion(|world| {
+//!             world.read_resource::<ApplicationResource>();
+//!         })
+//!         .run()
+//!         .is_ok());
 //! }
 //! #
 //! # bundle_registers_system_with_resource();
@@ -222,15 +215,11 @@
 //! ```
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #
 //! # struct MyComponent(pub i32);
-//! #
-//! # impl Component for MyComponent {
-//! #     type Storage = DenseVecStorage<Self>;
-//! # }
 //! #
 //! # #[derive(Debug)]
 //! # struct MySystem;
@@ -247,27 +236,25 @@
 //! #
 //! // #[test]
 //! fn system_increases_component_value_by_one() {
-//!     assert!(
-//!         AmethystApplication::blank()
-//!             .with_system(MySystem, "my_system", &[])
-//!             .with_effect(|world| {
-//!                 let entity = world.create_entity().with(MyComponent(0)).build();
-//!                 world.insert(EffectReturn(entity));
-//!             })
-//!             .with_assertion(|world| {
-//!                 let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
+//!     assert!(AmethystApplication::blank()
+//!         .with_system(MySystem, "my_system", &[])
+//!         .with_effect(|world| {
+//!             let entity = world.push((MyComponent(0),));
+//!             world.insert(EffectReturn(entity));
+//!         })
+//!         .with_assertion(|world| {
+//!             let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
 //!
-//!                 let my_component_storage = world.read_storage::<MyComponent>();
-//!                 let my_component = my_component_storage
-//!                     .get(entity)
-//!                     .expect("Entity should have a `MyComponent` component.");
+//!             let my_component_storage = world.read_storage::<MyComponent>();
+//!             let my_component = my_component_storage
+//!                 .get(entity)
+//!                 .expect("Entity should have a `MyComponent` component.");
 //!
-//!                 // If the system ran, the value in the `MyComponent` should be 1.
-//!                 assert_eq!(1, my_component.0);
-//!             })
-//!             .run()
-//!             .is_ok()
-//!     );
+//!             // If the system ran, the value in the `MyComponent` should be 1.
+//!             assert_eq!(1, my_component.0);
+//!         })
+//!         .run()
+//!         .is_ok());
 //! }
 //! #
 //! # system_increases_component_value_by_one();
@@ -279,7 +266,7 @@
 //! ```
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     ecs::prelude::*,
+//! #     ecs::*,
 //! #     prelude::*,
 //! # };
 //! #
@@ -299,21 +286,19 @@
 //! #
 //! // #[test]
 //! fn system_increases_resource_value_by_one() {
-//!     assert!(
-//!         AmethystApplication::blank()
-//!             .with_setup(|world| {
-//!                 world.insert(MyResource(0));
-//!             })
-//!             .with_system_single(MySystem, "my_system", &[])
-//!             .with_assertion(|world| {
-//!                 let my_resource = world.read_resource::<MyResource>();
+//!     assert!(AmethystApplication::blank()
+//!         .with_setup(|world| {
+//!             world.insert(MyResource(0));
+//!         })
+//!         .with_system_single(MySystem, "my_system", &[])
+//!         .with_assertion(|world| {
+//!             let my_resource = world.read_resource::<MyResource>();
 //!
-//!                 // If the system ran, the value in the `MyResource` should be 1.
-//!                 assert_eq!(1, my_resource.0);
-//!             })
-//!             .run()
-//!             .is_ok()
-//!     );
+//!             // If the system ran, the value in the `MyResource` should be 1.
+//!             assert_eq!(1, my_resource.0);
+//!         })
+//!         .run()
+//!         .is_ok());
 //! }
 //! #
 //! # system_increases_resource_value_by_one();

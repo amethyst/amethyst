@@ -82,8 +82,8 @@ impl SimpleState for AssetsExample {
         } = data;
         world.push((0usize,));
 
-        initialise_camera(world);
-        initialise_lights(world);
+        initialize_camera(world);
+        initialize_lights(world);
 
         // Add custom cube object to scene
         let (mesh, mtl) = {
@@ -169,7 +169,7 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn initialise_camera(world: &mut World) {
+fn initialize_camera(world: &mut World) {
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, -20.0, 10.0);
     transform.prepend_rotation_x_axis(1.325_752_1);
@@ -181,7 +181,7 @@ fn initialise_camera(world: &mut World) {
 }
 
 /// Adds lights to the scene.
-fn initialise_lights(world: &mut World) {
+fn initialize_lights(world: &mut World) {
     let light: Light = PointLight {
         intensity: 100.0,
         radius: 1.0,

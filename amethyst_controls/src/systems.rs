@@ -30,7 +30,7 @@ pub struct FlyMovementSystem {
     pub(crate) longitudinal_axis: Option<Cow<'static, str>>,
 }
 
-impl System<'static> for FlyMovementSystem {
+impl System for FlyMovementSystem {
     fn build(self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("FlyMovementSystem")
@@ -65,7 +65,7 @@ impl System<'static> for FlyMovementSystem {
 #[derive(Debug)]
 pub struct ArcBallRotationSystem;
 
-impl System<'_> for ArcBallRotationSystem {
+impl System for ArcBallRotationSystem {
     fn build(self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ArcBallRotationSystem")
@@ -121,7 +121,7 @@ pub struct FreeRotationSystem {
     pub(crate) reader: ReaderId<Event<'static, ()>>,
 }
 
-impl System<'static> for FreeRotationSystem {
+impl System for FreeRotationSystem {
     fn build(mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("FreeRotationSystem")
@@ -165,7 +165,7 @@ pub struct MouseFocusUpdateSystem {
     pub(crate) reader: ReaderId<Event<'static, ()>>,
 }
 
-impl System<'static> for MouseFocusUpdateSystem {
+impl System for MouseFocusUpdateSystem {
     fn build(mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MouseFocusUpdateSystem")

@@ -20,13 +20,12 @@ If you are looking for a guide to define prefab data for a `Component`, first we
 
   This is where the `Component` type itself is completely serializable – the data is self-contained.
 
-  ```rust, edition2018,no_run,noplaypen
+  ```rust
   # extern crate serde;
-  #
-  # use amethyst::ecs::{storage::DenseVecStorage, Component};
+  # 
   # use serde::{Deserialize, Serialize};
-  #
-  #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
+  # 
+  #[derive(Component, Debug, Deserialize, Serialize)]
   pub struct Position(pub f32, pub f32, pub f32);
   ```
 
@@ -36,10 +35,9 @@ If you are looking for a guide to define prefab data for a `Component`, first we
 
   This is where are multiple ways to construct the component, and a user should be able to choose which one to use.
 
-  ```rust, edition2018,no_run,noplaypen
+  ```rust
   # extern crate serde;
   #
-  # use amethyst::ecs::{storage::DenseVecStorage, Component};
   # use serde::{Deserialize, Serialize};
   #
   # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
@@ -72,24 +70,23 @@ If you are looking for a guide to define prefab data for a `Component`, first we
 
   This is where most of the component is serializable, but there is also data that is only accessible at runtime, such as a device ID or an asset handle.
 
-  ```rust, edition2018,no_run,noplaypen
-  #
+  ```rust
   # use amethyst_audio::output::Output;
   # use amethyst_core::{
-  #     math::Point3,
-  #     ecs::{storage::HashMapStorage, Component},
+  #   ecs::{storage::HashMapStorage, Component},
+  #   math::Point3,
   # };
-  #
+  # 
   #[derive(Debug, Component)]
   # #[storage(HashMapStorage)]
   pub struct AudioListener {
       /// Output used by this listener to emit sounds to
       pub output: Output, // <--- NOTE: Only available at runtime
       // ..
-  #     /// Position of the left ear relative to the global transform on this entity.
-  #     pub left_ear: Point3<f32>,
-  #     /// Position of the right ear relative to the global transform on this entity.
-  #     pub right_ear: Point3<f32>,
+  #   /// Position of the left ear relative to the global transform on this entity.
+  #   pub left_ear: Point3<f32>,
+  #   /// Position of the right ear relative to the global transform on this entity.
+  #   pub right_ear: Point3<f32>,
   }
   ```
 
@@ -107,14 +104,9 @@ If you are looking for a guide to define prefab data for a `Component`, first we
 
   This is where the `Component` itself stores `Handle<_>`s.
 
-  ```rust, edition2018,no_run,noplaypen
-  #
-  # use amethyst::{
-  #     assets::Handle,
-  #     ecs::{storage::DenseVecStorage, Component},
-  #     renderer::Texture,
-  # };
-  #
+  ```rust
+  # use amethyst::{assets::Handle, renderer::Texture};
+  # 
   /// Material struct.
   #[derive(Clone, PartialEq)]
   pub struct Material {
@@ -123,10 +115,6 @@ If you are looking for a guide to define prefab data for a `Component`, first we
       /// Emission map.
       pub emission: Handle<Texture>,
       // ..
-  }
-
-  impl Component for Material {
-      type Storage = DenseVecStorage<Self>;
   }
   ```
 

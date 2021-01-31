@@ -1,5 +1,5 @@
 use amethyst::{
-    ecs::prelude::Entity,
+    ecs::Entity,
     input::{is_close_requested, is_key_down, is_mouse_button_down},
     prelude::*,
     ui::UiCreator,

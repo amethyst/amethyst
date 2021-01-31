@@ -66,7 +66,7 @@ where
     }
 }
 
-impl<G> System<'static> for SelectionKeyboardSystem<G>
+impl<G> System for SelectionKeyboardSystem<G>
 where
     G: Send + Sync + 'static + PartialEq,
 {
@@ -177,7 +177,7 @@ where
     }
 }
 
-impl<G> System<'static> for SelectionMouseSystem<G>
+impl<G> System for SelectionMouseSystem<G>
 where
     G: Send + Sync + 'static + PartialEq,
 {

@@ -8,9 +8,9 @@ use amethyst::{
     core::transform::TransformBundle,
     ecs::{
         prelude::{Component, Entity},
-        NullStorage, WorldExt,
+        NullStorage,
     },
-    input::{is_close_requested, is_key_down, InputBundle, StringBindings},
+    input::{is_close_requested, is_key_down, InputBundle},
     prelude::*,
     renderer::{
         palette::Srgb,
@@ -61,10 +61,6 @@ struct Paused {
 
 #[derive(Default)]
 struct Tag;
-
-impl Component for Tag {
-    type Storage = NullStorage<Self>;
-}
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
     fn on_start(&mut self, data: StateData<'_, CustomGameData>) {
@@ -156,7 +152,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
     fn on_start(&mut self, data: StateData<'_, CustomGameData>) {
-        data.world.create_entity().with(self.scene.clone()).build();
+        data.world.push((self.scene.clone(),);
     }
 
     fn handle_event(
@@ -171,9 +167,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
                 Trans::Push(Box::new(Paused {
                     ui: data
                         .world
-                        .create_entity()
-                        .with(self.paused_ui.clone())
-                        .build(),
+                        .push((self.paused_ui.clone(),)),
                 }))
             } else {
                 Trans::None
@@ -212,8 +206,8 @@ fn main() -> Result<(), Error> {
         .with_running(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(TransformBundle::new())
         .with_base_bundle(FpsCounterBundle::default())
-        .with_base_bundle(InputBundle::<StringBindings>::new())
-        .with_base_bundle(UiBundle::<StringBindings>::new())
+        .with_base_bundle(InputBundle::new())
+        .with_base_bundle(UiBundle::new())
         .with_base_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

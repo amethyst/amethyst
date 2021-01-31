@@ -12,16 +12,12 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
 1. Instantiate the Amethyst application with the assets directory.
 
-   ```rust ,edition2018,no_run,noplaypen
-   #
-   use amethyst::{
-       prelude::*,
-       #   ecs::{World, WorldExt},
-       utils::application_root_dir,
-   };
-   #
-   # pub struct LoadingState;
-   # impl SimpleState for LoadingState {}
+   ```rust
+   use amethyst::prelude::*;
+   use amethyst::utils::application_root_dir;
+
+   pub struct LoadingState;
+   impl SimpleState for LoadingState {}
 
    fn main() -> amethyst::Result<()> {
        // Sets up the application to read assets in
@@ -29,109 +25,103 @@ This guide covers the basic usage of assets into Amethyst for existing supported
        let app_root = application_root_dir()?;
        let assets_dir = app_root.join("assets");
 
-       //..
-       #   let world = World::new();
-       #   let game_data = DispatcherBuilder::default();
+       let game_data = DispatcherBuilder::default();
 
        let mut game = Application::new(assets_dir, LoadingState, game_data)?;
-       #
-       #   game.run();
-       #   Ok(())
+       //game.run();
+       Ok(())
    }
    ```
 
-1. Ensure that the [`Processor<A>` system][doc_processor_system] for asset type `A` is registered in the dispatcher.
+1. Ensure that the [`AssetProcessorSystem<A>` system][doc_processor_system] for asset type `A` is registered in the dispatcher.
+   You can use `register_asset_type!` macro for this.
 
-   For asset type `A`, `Processor<A>` is a `System` that will asynchronously load `A` assets. Usually the crate that provides `A` will also register `Processor<A>` through a `SystemBundle`. Examples:
+   For asset type `A`, `AssetProcessorSystem<A>` is a `System` that will asynchronously load `A` assets. Usually the crate that provides `A` will also register `AssetProcessorSystem<A>` through a `SystemBundle`. Examples:
 
-   - `FontAsset` is provided by `amethyst_ui`, `UiBundle` registers `Processor<FontAsset>`.
-   - `Source` is provided by `amethyst_audio`, `AudioBundle` registers `Processor<Source>`.
-   - `SpriteSheet` is not added by a bundle, so `Processor<SpriteSheet>` needs to be added
-     to the builder.
+   - `FontAsset` is provided by `amethyst_ui`, `UiBundle` registers `AssetProcessorSystem<FontAsset>`.
+   - `Source` is provided by `amethyst_audio`, `AudioBundle` registers `AssetProcessorSystem<Source>`.
 
 1. Use the [`Loader`][doc_loader] resource to load the asset.
 
-   ```rust ,edition2018,no_run,noplaypen
+   ```rust
+   # use amethyst::prelude::*;
+   # use amethyst::utils::application_root_dir;
    # use amethyst::{
-   #     assets::{AssetStorage, Handle,  DefaultLoader, Loader, ProgressCounter},
-   #     ecs::{World, WorldExt},
-   #     prelude::*,
-   #     renderer::{formats::texture::ImageFormat, Texture},
-   #     utils::application_root_dir,
+   #   assets::{AssetStorage, DefaultLoader, Handle, Loader, ProgressCounter},
+   #   renderer::{formats::texture::ImageFormat, Texture},
    # };
-   #
+   # 
    pub struct LoadingState {
-       /// Tracks loaded assets.
-       progress_counter: ProgressCounter,
        /// Handle to the player texture.
        texture_handle: Option<Handle<Texture>>,
    }
 
    impl SimpleState for LoadingState {
        fn on_start(&mut self, data: StateData<'_, GameData>) {
-           let loader = &data.world.read_resource::<DefaultLoader>();
-           let texture_handle = loader.load(
-               "player.png",
-               ImageFormat::default(),
-               &mut self.progress_counter,
-               &data.world.read_resource::<AssetStorage<Texture>>(),
-           );
+           let loader = data.resources.get::<DefaultLoader>().unwrap();
+           let texture_handle = loader.load("player.png");
 
            self.texture_handle = Some(texture_handle);
        }
    }
-   #
    # fn main() -> amethyst::Result<()> {
    #   let app_root = application_root_dir()?;
    #   let assets_dir = app_root.join("assets");
-   #
+   # 
    #   let game_data = DispatcherBuilder::default();
    #   let mut game = Application::new(
    #       assets_dir,
    #       LoadingState {
-   #           progress_counter: ProgressCounter::new(),
    #           texture_handle: None,
    #       },
    #       game_data,
    #   )?;
-   #
-   #   game.run();
+   # 
+   #   //game.run();
    #   Ok(())
    # }
    ```
 
 1. Wait for the asset to be loaded.
 
-   When [`loader.load(..)`][doc_load] is used to load an [`Asset`][doc_asset], the method returns immediately with a handle for the asset. The asset loading is handled asynchronously in the background, so if the handle is used to retrieve the asset, such as with [`world.read_resource::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], it will return `None` until the `Texture` has finished loading.
+   When [`loader.load(..)`][doc_load] is used to load an [`Asset`][doc_asset], the method returns immediately with a handle for the asset. The asset loading is handled asynchronously in the background, so if the handle is used to retrieve the asset, such as with [`resources.get::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], it will return `None` until the `Texture` has finished loading.
 
-   ```rust ,edition2018,no_run,noplaypen
+   ```rust
+   # use amethyst::prelude::*;
+   # use amethyst::utils::application_root_dir;
    # use amethyst::{
-   #     assets::{Handle, ProgressCounter},
-   #     prelude::*,
-   #     renderer::Texture,
+   #   assets::{AssetStorage, DefaultLoader, Handle, Loader, ProgressCounter},
+   #   renderer::{formats::texture::ImageFormat, Texture},
    # };
-   #
+   # 
    # pub struct GameState {
-   #     /// Handle to the player texture.
-   #     texture_handle: Handle<Texture>,
+   #   /// Handle to the player texture.
+   #   texture_handle: Handle<Texture>,
    # }
-   #
+   # 
    # impl SimpleState for GameState {}
-   #
+   # 
    # pub struct LoadingState {
-   #     /// Tracks loaded assets.
-   #     progress_counter: ProgressCounter,
-   #     /// Handle to the player texture.
-   #     texture_handle: Option<Handle<Texture>>,
+   #   /// Handle to the player texture.
+   #   texture_handle: Option<Handle<Texture>>,
    # }
-   #
+   # 
    impl SimpleState for LoadingState {
-       fn update(&mut self, _data: &mut StateData<'_, GameData>) -> SimpleTrans {
-           if self.progress_counter.is_complete() {
+       //..
+   #   fn on_start(&mut self, data: StateData<'_, GameData>) {
+   #       let loader = data.resources.get::<DefaultLoader>().unwrap();
+   #       let texture_handle = loader.load("player.png");
+   # 
+   #       self.texture_handle = Some(texture_handle);
+   #   }
+   # 
+       fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+           let texture_storage = data.resources.get::<AssetStorage<Texture>>().unwrap();
+           if let Some(texture) = texture_storage.get(self.texture_handle.as_ref().unwrap()) {
+               println!("Loaded texture: {:?}", texture);
                Trans::Switch(Box::new(GameState {
                    texture_handle: self.texture_handle.take().expect(
-                       "Expected `texture_handle` to exist when \
-                           `progress_counter` is complete.",
+                       "Expected `texture_handle` to exist when `progress_counter` is complete.",
                    ),
                }))
            } else {
@@ -139,38 +129,95 @@ This guide covers the basic usage of assets into Amethyst for existing supported
            }
        }
    }
+   # fn main() -> amethyst::Result<()> {
+   #   let app_root = application_root_dir()?;
+   #   let assets_dir = app_root.join("assets");
+   # 
+   #   let game_data = DispatcherBuilder::default();
+   #   let mut game = Application::new(
+   #       assets_dir,
+   #       LoadingState {
+   #           texture_handle: None,
+   #       },
+   #       game_data,
+   #   )?;
+   # 
+   #   //game.run();
+   #   Ok(())
+   # }
    ```
 
    The asset handle can now be used:
 
-   ```rust ,edition2018,no_run,noplaypen
+   ```rust
+   # use amethyst::prelude::*;
+   # use amethyst::utils::application_root_dir;
    # use amethyst::{
-   #     assets::Handle,
-   #     prelude::*,
-   #     renderer::Texture,
+   #   assets::{AssetStorage, DefaultLoader, Handle, Loader, ProgressCounter},
+   #   renderer::{formats::texture::ImageFormat, Texture},
    # };
-   #
-   # pub struct GameState {
-   #     /// Handle to the player texture.
-   #     texture_handle: Handle<Texture>,
+   # 
+   # pub struct LoadingState {
+   #   /// Handle to the player texture.
+   #   texture_handle: Option<Handle<Texture>>,
    # }
-   #
+   # 
+   # impl SimpleState for LoadingState {
+   #   fn on_start(&mut self, data: StateData<'_, GameData>) {
+   #       let loader = data.resources.get::<DefaultLoader>().unwrap();
+   #       let texture_handle = loader.load("player.png");
+   # 
+   #       self.texture_handle = Some(texture_handle);
+   #   }
+   # 
+   #   fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+   #       let texture_storage = data.resources.get::<AssetStorage<Texture>>().unwrap();
+   #       if let Some(texture) = texture_storage.get(self.texture_handle.as_ref().unwrap()) {
+   #           println!("Loaded texture: {:?}", texture);
+   #           Trans::Switch(Box::new(GameState {
+   #               texture_handle: self.texture_handle.take().expect(
+   #                   "Expected `texture_handle` to exist when `progress_counter` is complete.",
+   #               ),
+   #           }))
+   #       } else {
+   #           Trans::None
+   #       }
+   #   }
+   # }
+   # 
+   # pub struct GameState {
+   #   /// Handle to the player texture.
+   #   texture_handle: Handle<Texture>,
+   # }
    impl SimpleState for GameState {
        fn on_start(&mut self, data: StateData<'_, GameData>) {
            // Create the player entity.
-           data.world
-               .create_entity()
-               // Use the texture handle as a component
-               .with(self.texture_handle.clone())
-               .build();
+           data.world.push((self.texture_handle.clone(),));
        }
    }
+   # fn main() -> amethyst::Result<()> {
+   #   let app_root = application_root_dir()?;
+   #   let assets_dir = app_root.join("assets");
+   # 
+   #   let game_data = DispatcherBuilder::default();
+   #   let mut game = Application::new(
+   #       assets_dir,
+   #       LoadingState {
+   #           texture_handle: None,
+   #       },
+   #       game_data,
+   #   )?;
+   # 
+   #   //game.run();
+   #   Ok(())
+   # }
+   # 
    ```
 
 [doc_asset]: https://docs.amethyst.rs/master/amethyst_assets/trait.Asset.html
 [doc_asset_get]: https://docs.amethyst.rs/master/amethyst_assets/struct.AssetStorage.html#method.get
 [doc_load]: https://docs.amethyst.rs/master/amethyst_assets/struct.Loader.html#method.load
 [doc_loader]: https://docs.amethyst.rs/master/amethyst_assets/struct.Loader.html
-[doc_processor_system]: https://docs.amethyst.rs/master/amethyst_assets/struct.Processor.html
+[doc_processor_system]: https://docs.amethyst.rs/master/amethyst_assets/struct.AssetProcessorSystem.html
 [doc_read_resource]: https://docs.rs/specs/~0.16/specs/world/struct.World.html#method.read_resource
 [doc_search_format]: https://docs.amethyst.rs/master/amethyst/?search=Format

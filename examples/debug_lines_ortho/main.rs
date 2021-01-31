@@ -22,7 +22,7 @@ use amethyst::{
 
 struct ExampleLinesSystem;
 
-impl System<'_> for ExampleLinesSystem {
+impl System for ExampleLinesSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ExampleLinesSystem")

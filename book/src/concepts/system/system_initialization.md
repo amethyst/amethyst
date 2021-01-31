@@ -19,19 +19,12 @@ logic to instantiate the `System`. For `System`s that do not require special
 initialization logic, the `SystemDesc` derive automatically implements the
 `SystemDesc` trait on the system type itself:
 
-```rust ,edition2018,no_run,noplaypen
-use amethyst::{
-    core::SystemDesc,
-    derive::SystemDesc,
-    ecs::{System, SystemData, World},
-};
+```rust
+use amethyst::ecs::{System, World};
 
-#[derive(SystemDesc)]
 struct SystemName;
 
-impl<'a> System<'a> for SystemName {
-    type SystemData = ();
-
+impl System for SystemName {
     fn run(&mut self, data: Self::SystemData) {
         println!("Hello!");
     }

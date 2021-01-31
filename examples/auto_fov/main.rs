@@ -247,7 +247,7 @@ impl SimpleState for Example {
 
 struct ShowFovSystem;
 
-impl System<'_> for ShowFovSystem {
+impl System for ShowFovSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ShowFovSystem")

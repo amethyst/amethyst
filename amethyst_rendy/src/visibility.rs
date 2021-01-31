@@ -79,7 +79,7 @@ pub struct VisibilitySortingSystem {
     transparent: Vec<Internals>,
 }
 
-impl System<'static> for VisibilitySortingSystem {
+impl System for VisibilitySortingSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("VisibilitySortingSystem")
