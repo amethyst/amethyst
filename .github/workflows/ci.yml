@@ -57,16 +57,7 @@ jobs:
       - run: cargo +nightly clippy -Z unstable-options --workspace --all-targets --all-features
         if: matrix.toolchain == 'nightly'
 
-      - name: clean clippy-generated amethyst libs
-        # Remove the clippy-generated amethyst files.
-        # They mess up `mdbook test` later on for some reason
-        run: rm -rf ./target/debug/deps/libamethyst*
-        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
-
-      - run: cargo test --workspace --all-features --all-targets
-
-      - run: cargo test --workspace --all-features --doc
-        continue-on-error: true
+      - run: cargo test --workspace --all-features
 
       - uses: peaceiris/actions-mdbook@v1
         with:
@@ -78,8 +69,6 @@ jobs:
 
       - run: mdbook build book
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
-        continue-on-error: true
 
       - run: mdbook test -L ./target/debug/deps book
         if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
-        continue-on-error: true
