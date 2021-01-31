@@ -36,7 +36,7 @@ Then let's add an `initialize_ball` function the same way we wrote the
 
 ```rust
 # use amethyst::assets::{AssetStorage, Handle, Loader};
-# use amethyst::core::transform::Transform;
+# use amethyst::core::Transform;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;
 # use amethyst::renderer::{Sprite, SpriteRender, SpriteSheet, Texture};
@@ -126,7 +126,7 @@ We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 # 
 use amethyst::{
     core::timing::Time,
-    core::transform::Transform,
+    core::Transform,
     ecs::{System, World},
 };
 

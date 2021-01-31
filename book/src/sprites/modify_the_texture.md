@@ -14,7 +14,7 @@ effect on the sprite.
 
 ```rust
 # use amethyst::assets::{AssetStorage, DefaultLoader, Handle, Loader};
-use amethyst::core::transform::Transform;
+use amethyst::core::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
     palette::Srgba, resources::Tint, SpriteRender, SpriteSheet, Texture, Transparent,

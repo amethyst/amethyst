@@ -28,7 +28,7 @@ initialization code from the Pong code.
    ```rust
    use amethyst::{
        assets::{AssetStorage, DefaultLoader, Handle, Loader},
-       core::transform::Transform,
+       core::Transform,
        ecs::Component,
        prelude::*,
        renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
@@ -195,7 +195,7 @@ include that component and add them to our `World`.
 First let's look at our imports:
 
 ```rust
-use amethyst::core::transform::Transform;
+use amethyst::core::Transform;
 ```
 
 `Transform` is an Amethyst ECS component which carries
@@ -363,7 +363,7 @@ First, let's declare the function and load the sprite sheet's image data.
 ```rust
 # use amethyst::{
 #   assets::{AssetStorage, DefaultLoader, Handle, Loader},
-#   core::transform::Transform,
+#   core::Transform,
 #   prelude::*,
 #   renderer::{
 #       camera::Camera,
@@ -445,7 +445,7 @@ Finally, we load the file containing the position of each sprite on the sheet.
 ```rust
 # use amethyst::{
 #   assets::{AssetStorage, DefaultLoader, Handle, Loader},
-#   core::transform::Transform,
+#   core::Transform,
 #   prelude::*,
 #   renderer::{
 #       camera::Camera,

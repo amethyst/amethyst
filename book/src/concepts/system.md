@@ -42,7 +42,7 @@ impl System for TimeSystem {
             SystemBuilder::new("TimeSystem")
                 .read_resource::<Time>()
                 .build(|_, _, time, _| {
-                    println!("{}", data.delta_seconds());
+                    println!("{}", time.delta_seconds());
                 }),
         )
     }
@@ -57,24 +57,29 @@ Once you have access to a storage, you can use them in different ways.
 
 ### Getting a component of a specific entity
 
-Sometimes, it can be useful to get a component in the storage for a specific entity. This can easily be done using the `get` or, for mutable storages, `get_mut` methods.
+Sometimes, it can be useful to get a reference to a component for a specific entity. First you must get an `Entry` for the entity, this can be done using the `world.entry` or `world.entry_mut` methods.  Once you have the entry, you may use `get_component` or, for mutable reference, `get_component_mut` methods.
 
 ```rust
 use amethyst::core::Transform;
-use amethyst::ecs::{Entity, System};
+use amethyst::ecs::{Entity, ParallelRunnable, System, SystemBuilder};
 
-struct WalkPlayerUp {
+struct WalkPlayerUpSystem {
     player: Entity,
 }
 
-impl System for WalkPlayerUp {
-.write_component::<Transform>()
-
-    fn run(&mut self, mut transforms: Self::SystemData) {
-        transforms
-            .get_mut(self.player)
-            .unwrap()
-            .prepend_translation_y(0.1);
+impl System for WalkPlayerUpSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("WalkPlayerUpSystem")
+                .write_component::<Transform>()
+                .build(|_, world, _, _| {
+                    if let Ok(entry) = world.entry_mut(self.player) {
+                        if let Ok(transform) = entry.get_component_mut::<Transform>() {
+                            transform.prepend_translation_y(0.1);
+                        }
+                    }
+                }),
+        )
     }
 }
 ```
@@ -99,22 +104,27 @@ Needless to say that you can use it with only one storage to iterate over all en
 Keep in mind that **the `join` method is only available by importing `amethyst::ecs::Join`**.
 
 ```rust
-# use amethyst::core::Transform;
-# use amethyst::ecs::{System};
-# struct FallingObject;
-use amethyst::ecs::Join;
+use amethyst::core::Transform;
+use amethyst::ecs::{System, ParallelRunnable, SystemBuilder};
+struct FallingObject;
 
-struct MakeObjectsFall;
+struct MakeObjectsFallSystem;
 
-impl System for MakeObjectsFall {
-    type SystemData = (.write_component::<Transform>().read_component::<FallingObject>());
+impl System for MakeObjectsFallSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MakeObjectsFallSystem")
+            .write_component::<Transform>()
+            .read_component::<FallingObject>()
+            .with_query(<(&mut Transform, &FallingObject)>::query())
+            .build(|_, world, _, query| {
 
-    fn run(&mut self, (mut transforms, falling): Self::SystemData) {
-        for (transform, _) in (&mut transforms, &falling).join() {
+        for (transform, _) in query.iter_mut(world) {
             if transform.translation().y > 0.0 {
                 transform.prepend_translation_y(-0.1);
             }
         }
+    })
     }
 }
 ```
@@ -151,9 +161,7 @@ impl System for NotFallingObjects {
 
 ## Manipulating the structure of entities
 
-It may sometimes be interesting to manipulate the structure of entities in a system, such as creating new ones or modifying the component layout of existing ones. This kind of process is done using the `Entities<'a>` system data.
-
-> Requesting `Entities<'a>` does not impact performance, as it contains only immutable resources and therefore [does not block the dispatching](./dispatcher.html).
+It may sometimes be interesting to manipulate the structure of entities in a system, such as creating new ones or modifying the component layout of existing ones. This kind of process is done using the `Entity` system data.
 
 ### Creating new entities in a system
 
@@ -192,15 +200,12 @@ This system will spawn a new enemy every 200 game loop iterations.
 
 ### Removing an entity
 
-Deleting an entity is very easy using `Entities<'a>`.
-
 ```rust
-# use amethyst::ecs::{Entities, Entity, System};
+# use amethyst::ecs::{Entity, System};
 # struct MySystem {
 #   entity: Entity,
 # }
 # impl System for MySystem {
-#   type SystemData = Entities<'a>;
 #   fn run(&mut self, entities: Self::SystemData) {
 #       let entity = self.entity;
         entities.delete(entity);

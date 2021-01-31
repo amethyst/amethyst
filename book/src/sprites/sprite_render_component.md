@@ -64,7 +64,7 @@ Cool, finally we have all the parts, let's build a `SpriteRender` and attach it 
 
 ```rust
 use amethyst::assets::{AssetStorage, DefaultLoader, Handle, Loader, ProcessingQueue};
-use amethyst::core::transform::Transform;
+use amethyst::core::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::{SpriteRender, SpriteSheet, Texture, Transparent};
 use amethyst::window::ScreenDimensions;

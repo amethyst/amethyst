@@ -1,5 +1,5 @@
 use amethyst::{
-    core::transform::Transform,
+    core::Transform,
     ecs::SystemBuilder,
     input::{get_input_axis_simple, InputHandler},
     prelude::*,

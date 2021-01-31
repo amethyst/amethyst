@@ -36,7 +36,7 @@ Then, we'll create `systems/winner.rs`:
 # }
 # 
 use amethyst::{
-    core::transform::Transform,
+    core::Transform,
     ecs::{System, World},
 };
 
@@ -349,7 +349,7 @@ accordingly:
 # }
 # 
 use amethyst::{
-#   core::transform::Transform,
+#   core::Transform,
     // --snip--
     ecs::{System, World},
     ui::UiText,
