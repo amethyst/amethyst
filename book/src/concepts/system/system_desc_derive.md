@@ -25,7 +25,6 @@ impl SystemName {
         SystemName { field_0, field_1 }
     }
 }
-# impl System for SystemName {}
 ```
 
 <details>
@@ -45,8 +44,6 @@ impl SystemName {
 #   }
 # }
 # 
-# impl System for SystemName {}
-# 
 /// Builds a `SystemName`.
 #[derive(Default, Debug)]
 pub struct SystemNameDesc {
@@ -62,8 +59,6 @@ impl SystemNameDesc {
 
 impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
     fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
-        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
-
         SystemName::new(self.field_0, self.field_1)
     }
 }
@@ -128,8 +123,6 @@ impl SystemNameDesc {
 
 impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
     fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
-        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
-
         SystemName::new(self.field_1)
     }
 }
@@ -175,8 +168,6 @@ impl Default for SystemNameDesc {
 
 impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
     fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
-        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
-
         SystemName::default()
     }
 }
@@ -239,8 +230,6 @@ impl Default for SystemNameDesc {
 
 impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
     fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
-        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
-
         let reader_id = world.fetch_mut::<EventChannel<UiEvent>>().register_reader();
 
         SystemName::new(reader_id)
@@ -305,8 +294,6 @@ impl Default for SystemNameDesc {
 
 impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
     fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
-        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
-
         let resize_events_id = WriteStorage::<UiResize>::fetch(&world).register_reader();
 
         SystemName::new(resize_events_id)
@@ -358,8 +345,6 @@ impl Default for SystemNameDesc {
 
 impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
     fn build(self, world: &mut ::amethyst::ecs::World) -> SystemName {
-        <SystemName as ::amethyst::ecs::System<'_>>::SystemData::setup(world);
-
         world.insert(NonDefault);
 
         SystemName::default()

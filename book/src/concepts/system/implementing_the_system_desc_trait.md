@@ -26,8 +26,6 @@ pub struct AudioSystemDesc {
 
 impl SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
     fn build(self, world: &mut World) -> AudioSystem {
-        <AudioSystem as System>::SystemData::setup(world);
-
         world.insert(self.output.clone());
 
         AudioSystem(self.output)
@@ -48,8 +46,6 @@ pub struct SystemNameDesc;
 
 impl SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
     fn build(self, world: &mut World) -> SystemName {
-        <SystemName as System>::SystemData::setup(world);
-
         let arg = unimplemented!("Replace code here");
 
         SystemName::new(arg)
@@ -77,8 +73,6 @@ where
     T: unimplemented!("Replace me."),
 {
     fn build(self, world: &mut World) -> SystemName<T> {
-        <SystemName<T> as System>::SystemData::setup(world);
-
         let arg = unimplemented!("Replace code here");
 
         SystemName::new(arg)
