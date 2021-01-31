@@ -73,7 +73,7 @@ The `DispatcherBuilder` can be initialized and populated wherever desired, be it
 #[derive(Default)]
 pub struct CustomState<'a, 'b> {
     /// The `State` specific `Dispatcher`, containing `System`s only relevant for this `State`.
-    dispatcher: Option<Dispatcher<'a, 'b>>,
+    dispatcher: Option<Dispatcher>,
 }
 
 impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
@@ -106,7 +106,7 @@ The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifeti
 # #[derive(Default)]
 # pub struct CustomState<'a, 'b> {
 #   /// The `State` specific `Dispatcher`, containing `System`s only relevant for this `State`.
-#   dispatcher: Option<Dispatcher<'a, 'b>>,
+#   dispatcher: Option<Dispatcher>,
 # }
 # struct MoveBallsSystem;
 # struct MovePaddlesSystem;

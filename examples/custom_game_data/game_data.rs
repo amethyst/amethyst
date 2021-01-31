@@ -8,8 +8,8 @@ use amethyst::{
 };
 
 pub struct CustomGameData<'a, 'b> {
-    pub base: Option<Dispatcher<'a, 'b>>,
-    pub running: Option<Dispatcher<'a, 'b>>,
+    pub base: Option<Dispatcher>,
+    pub running: Option<Dispatcher>,
 }
 
 impl<'a, 'b> CustomGameData<'a, 'b> {
@@ -127,7 +127,7 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomDispatcherBuilder<'a, 'b
 fn build_dispatcher<'a, 'b>(
     world: &mut World,
     dispatcher_operations: Vec<Box<dyn DispatcherOperation<'a, 'b>>>,
-) -> Dispatcher<'a, 'b> {
+) -> Dispatcher {
     let mut dispatcher_builder = DispatcherBuilder::new();
 
     #[cfg(not(no_threading))]

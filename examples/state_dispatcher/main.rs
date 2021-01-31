@@ -31,7 +31,7 @@ impl SimpleState for StateA {
 
 /// StateB isn't Send + Sync
 struct StateB<'a> {
-    dispatcher: Dispatcher<'static, 'static>,
+    dispatcher: Dispatcher,
     _phantom: &'a PhantomData<()>,
 }
 

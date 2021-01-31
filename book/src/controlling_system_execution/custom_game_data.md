@@ -19,8 +19,8 @@ Let's start by creating the `GameData` structure:
 # use amethyst::ecs::Dispatcher;
 # 
 pub struct CustomGameData<'a, 'b> {
-    core_dispatcher: Option<Dispatcher<'a, 'b>>,
-    running_dispatcher: Option<Dispatcher<'a, 'b>>,
+    core_dispatcher: Option<Dispatcher>,
+    running_dispatcher: Option<Dispatcher>,
 }
 ```
 
@@ -30,8 +30,8 @@ We also add a utility function for performing dispatch:
 # use amethyst::ecs::{Dispatcher, World};
 # 
 # pub struct CustomGameData<'a, 'b> {
-#   core_dispatcher: Option<Dispatcher<'a, 'b>>,
-#   running_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   core_dispatcher: Option<Dispatcher>,
+#   running_dispatcher: Option<Dispatcher>,
 # }
 # 
 impl<'a, 'b> CustomGameData<'a, 'b> {
@@ -60,8 +60,8 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 # use amethyst::{DataDispose, DataInit, Error};
 # 
 # pub struct CustomGameData<'a, 'b> {
-#   core_dispatcher: Option<Dispatcher<'a, 'b>>,
-#   running_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   core_dispatcher: Option<Dispatcher>,
+#   running_dispatcher: Option<Dispatcher>,
 # }
 # 
 use amethyst::core::ArcThreadPool;
@@ -144,8 +144,8 @@ our `Application`, but first we should create some `State`s.
 # use amethyst::prelude::{State, StateData, StateEvent, Trans};
 # 
 # pub struct CustomGameData<'a, 'b> {
-#   core_dispatcher: Option<Dispatcher<'a, 'b>>,
-#   running_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   core_dispatcher: Option<Dispatcher>,
+#   running_dispatcher: Option<Dispatcher>,
 # }
 # 
 # impl<'a, 'b> CustomGameData<'a, 'b> {
@@ -255,8 +255,8 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 # };
 # 
 # pub struct CustomGameData<'a, 'b> {
-#   core_dispatcher: Option<Dispatcher<'a, 'b>>,
-#   running_dispatcher: Option<Dispatcher<'a, 'b>>,
+#   core_dispatcher: Option<Dispatcher>,
+#   running_dispatcher: Option<Dispatcher>,
 # }
 # 
 # pub struct CustomDispatcherBuilder {
