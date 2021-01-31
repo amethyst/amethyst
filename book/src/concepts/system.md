@@ -421,7 +421,7 @@ use amethyst::{
 struct MyGameplaySystem;
 
 impl System for MyGameplaySystem {
-    type SystemData = (Read<'s, InputHandler>, Write<'s, Game>);
+    type SystemData = (.read_resource::<Game>());
 
     fn run(&mut self, (input, mut game): Self::SystemData) {
         match game.current_state {

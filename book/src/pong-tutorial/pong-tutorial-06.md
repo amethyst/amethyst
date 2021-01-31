@@ -128,9 +128,9 @@ impl System for BounceSystem {
         .write_component::<Ball>()
       .read_component::<Paddle>(),
       .read_component::<Transform>(),
-        Read<'s, AssetStorage<Source>>,
+        .read_resource::<AssetStorage<Source>>(),
         ReadExpect<'s, Sounds>,
-        Option<Read<'s, Output>>,
+        Option<.read_resource::<Output>>(),
     );
 
     fn run(
@@ -211,9 +211,9 @@ impl System for WinnerSystem {
         .write_component::<UiText>()
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,
-        Read<'s, AssetStorage<Source>>,
+        .read_resource::<AssetStorage<Source>>(),
         ReadExpect<'s, Sounds>,
-        Option<Read<'s, Output>>,
+        Option<.read_resource::<Output>>(),
     );
 
     fn run(

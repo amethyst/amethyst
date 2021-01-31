@@ -39,7 +39,7 @@ pub struct SimpleButtonSystem {
 }
 
 impl System for SimpleButtonSystem {
-    type SystemData = Read<'s, EventChannel<UiEvent>>;
+    type SystemData = .read_resource::<EventChannel<UiEvent>>();
 
     fn run(&mut self, events: Self::SystemData) {}
 }
@@ -57,7 +57,7 @@ We also need a constructor for our system:
 # }
 # 
 # impl System for SimpleButtonSystem {
-#   type SystemData = Read<'s, EventChannel<UiEvent>>;
+#   type SystemData = .read_resource::<EventChannel<UiEvent>>();
 # 
 #   fn run(&mut self, events: Self::SystemData) {}
 # }
@@ -79,7 +79,7 @@ To add the system to our game data we actually need a `SystemDesc` implementatio
 # }
 # 
 # impl System for SimpleButtonSystem {
-#   type SystemData = Read<'s, EventChannel<UiEvent>>;
+#   type SystemData = .read_resource::<EventChannel<UiEvent>>();
 # 
 #   fn run(&mut self, events: Self::SystemData) {}
 # }
@@ -114,7 +114,7 @@ In our systems `run` method we are going to loop through all the events:
 # }
 # 
 # impl System for SimpleButtonSystem {
-#   type SystemData = Read<'s, EventChannel<UiEvent>>;
+#   type SystemData = .read_resource::<EventChannel<UiEvent>>();
 # 
     fn run(&mut self, events: Self::SystemData) {
         for event in events.read(&mut self.reader_id) {
@@ -138,7 +138,7 @@ we used for our entity - `UiTransform` and `UiText`.
 # }
 # 
 # impl System for SimpleButtonSystem {
-    type SystemData = Read<'s, EventChannel<UiEvent>>;
+    type SystemData = .read_resource::<EventChannel<UiEvent>>();
 #   fn run(&mut self, events: Self::SystemData) {
 #       for event in events.read(&mut self.reader_id) {
 #           println!("{:?}", event);
@@ -160,7 +160,7 @@ the color that is the property of the `UiText` component.
 # 
 # impl System for SimpleButtonSystem {
 #   type SystemData = (
-#       Read<'s, EventChannel<UiEvent>>,
+#       .read_resource::<EventChannel<UiEvent>>(),
 #     .read_component::<UiTransform>(),
 #       .write_component::<UiText>()
 #   );

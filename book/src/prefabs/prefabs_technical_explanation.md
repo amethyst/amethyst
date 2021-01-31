@@ -138,7 +138,7 @@ where
     type SystemData = (
         ReadExpect<'a, Loader>,
         .write_component::<Handle<A>>()
-        Read<'a, AssetStorage<A>>,
+        .read_resource::<AssetStorage<A>>(),
     );
 
     type Result = Handle<A>;

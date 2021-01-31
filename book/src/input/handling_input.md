@@ -33,7 +33,7 @@ use amethyst::{
 struct ExampleSystem;
 
 impl System for ExampleSystem {
-    type SystemData = Read<'s, InputHandler>;
+    type SystemData = .read_resource::<InputHandler>();
 
     fn run(&mut self, input: Self::SystemData) {
         // Gets mouse coordinates
@@ -145,7 +145,7 @@ struct MovementSystem;
 impl System for MovementSystem {
     type SystemData = (
         .write_component::<Transform>().read_component::<Player>(),
-        Read<'s, InputHandler>,
+        .read_resource::<InputHandler>(),
     );
 
     fn run(&mut self, (mut transforms, players, input): Self::SystemData) {

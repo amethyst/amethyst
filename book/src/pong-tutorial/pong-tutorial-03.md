@@ -129,7 +129,7 @@ impl System for PaddleSystem {
     type SystemData = (
         .write_component::<Transform>()
        .read_component::<Paddle>(),
-        Read<'s, InputHandler>,
+        .read_resource::<InputHandler>(),
     );
 
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
@@ -261,7 +261,7 @@ component of the transform's translation.
 #   type SystemData = (
 #       .write_component::<Transform>()
 #     .read_component::<Paddle>(),
-#       Read<'s, InputHandler>,
+#       .read_resource::<InputHandler>(),
 #   );
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
         for (paddle, transform) in (&paddles, &mut transforms).join() {
@@ -317,7 +317,7 @@ Our run function should now look something like this:
 #   type SystemData = (
 #       .write_component::<Transform>()
 #     .read_component::<Paddle>(),
-#       Read<'s, InputHandler>,
+#       .read_resource::<InputHandler>(),
 #   );
     fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
         for (paddle, transform) in (&paddles, &mut transforms).join() {

@@ -155,7 +155,7 @@ and you also need to get read access:
 # struct MySystem;
 # 
 # impl System for MySystem {
-    type SystemData = Read<'a, EventChannel<MyEvent>>;
+    type SystemData = .read_resource::<EventChannel<MyEvent>>();
 #   fn build(mut self) -> Box<dyn ParallelRunnable> {}
 # }
 ```
@@ -207,7 +207,7 @@ Finally, you can read events from your `System`.
 # }
 # 
 impl System for MySystem {
-    type SystemData = Read<'a, EventChannel<MyEvent>>;
+    type SystemData = .read_resource::<EventChannel<MyEvent>>();
     fn run(&mut self, my_event_channel: Self::SystemData) {
         for event in my_event_channel.read(&mut self.reader_id) {
             println!("Received an event: {:?}", event);

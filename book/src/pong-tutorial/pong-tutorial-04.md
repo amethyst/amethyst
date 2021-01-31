@@ -138,7 +138,7 @@ impl System for MoveBallsSystem {
     type SystemData = (
       .read_component::<Ball>(),
         .write_component::<Transform>()
-        Read<'s, Time>,
+        .read_resource::<Time>(),
     );
 
     fn run(&mut self, (balls, mut locals, time): Self::SystemData) {
