@@ -82,7 +82,7 @@ If you had some state implemented you can create the button on its `on_start` me
 
 ```rust
 # use amethyst::assets::{AssetStorage, DefaultLoader, Loader};
-# use amethyst::prelude::{Builder, GameData, SimpleState, SimpleTrans, StateData, Trans, World};
+# use amethyst::prelude::*;
 # use amethyst::ui::{get_default_font, Anchor, FontAsset, LineMode, UiText, UiTransform};
 # 
 # pub struct State;
@@ -148,7 +148,7 @@ The code snippet would look like this now:
 ```rust
 # use amethyst::assets::{AssetStorage, DefaultLoader, Loader};
 # use amethyst::ecs::World;
-# use amethyst::prelude::{GameData, SimpleTrans, StateData};
+# use amethyst::prelude::*;
 # use amethyst::ui::{
 #   get_default_font, Anchor, FontAsset, Interactable, LineMode, UiText, UiTransform,
 # };

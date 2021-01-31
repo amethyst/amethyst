@@ -26,7 +26,7 @@ previous chapters, but here we will save the entity in our struct:
 #  assets::{AssetStorage,  DefaultLoader, Loader},
 # 	ecs::{Entity, World},
 # 	ui::{Anchor, FontAsset, Interactable, LineMode, TtfFormat, UiText, UiTransform},
-# 	prelude::{Builder, GameData, SimpleState, StateData},
+# 	prelude::*,
 # };
 #
 # #[derive(Default)]
@@ -86,7 +86,7 @@ method of our state:
 #   assets::{AssetStorage,  DefaultLoader, Loader},
 #   ecs::{Entity, World},
 #   ui::{Anchor, FontAsset, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
-#   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
+#   prelude::*,
 #   StateEvent,
 # };
 #
@@ -180,7 +180,7 @@ component to our button:
 #   core::Hidden,
 #   ecs::{Entity, World},
 #   ui::{Anchor, FontAsset, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
-#   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
+#   prelude::*,
 #   StateEvent
 # };
 #
@@ -270,7 +270,7 @@ The same goes for `on_resume` if we actually want to redisplay the button:
 #   core::Hidden,
 #   ecs::{Entity, World},
 #   ui::{Anchor, FontAsset, Interactable, LineMode, TtfFormat, UiEventType, UiText, UiTransform},
-#   prelude::{Builder, GameData, SimpleState, StateData, SimpleTrans},
+#   prelude::*,
 #   StateEvent
 # };
 #
