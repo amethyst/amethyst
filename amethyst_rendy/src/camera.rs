@@ -7,6 +7,8 @@ use amethyst_core::{
     transform::Transform,
 };
 use type_uuid::TypeUuid;
+use amethyst_assets::Asset;
+use crate::SpriteSheet;
 
 /// Camera struct.
 ///
@@ -38,6 +40,13 @@ pub struct Camera {
     pub matrix: Matrix4<f32>,
     /// Its inverse
     pub inverse: Matrix4<f32>,
+}
+
+impl Asset for Camera {
+    fn name() -> &'static str {
+        "rendy::Camera"
+    }
+    type Data = Self;
 }
 
 impl Camera {

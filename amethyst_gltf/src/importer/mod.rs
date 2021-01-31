@@ -1,25 +1,24 @@
-use gltf::{Gltf, Document, buffer, Node, Mesh};
-use gltf::buffer::Data;
-use gltf::iter::Buffers;
-use atelier_assets::importer::{Importer, ImportOp, ImporterValue, Error, ImportedAsset};
-use std::io::Read;
-use crate::{GltfSceneOptions, error, GltfAsset, GltfNodeExtent};
+use std::{cmp::Ordering, io::Read};
+
+use amethyst_assets::{
+    atelier_importer,
+    atelier_importer::{Error, ImportOp, ImportedAsset, Importer, ImporterValue},
+};
+use amethyst_core::{
+    math::{convert, Quaternion, Unit, Vector3, Vector4},
+    transform::Transform,
+    Named,
+};
+use amethyst_rendy::{light::Light, Camera};
 use atelier_assets::core::AssetUuid;
+use gltf::{buffer, buffer::Data, Document, Gltf, Mesh, Node};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
-use amethyst_assets::{atelier_importer, inventory};
-use atelier_assets::make_handle;
-use atelier_assets::loader::handle::Handle;
-use crate::importer::gltf_bytes_converter::convert_bytes;
-use amethyst_core::transform::Transform;
-use amethyst_core::math::{convert, Vector3, Unit, Quaternion, Vector4};
-use amethyst_core::Named;
-use amethyst_rendy::Camera;
-use amethyst_rendy::light::Light;
-use gltf::khr_lights_punctual::Kind;
-use amethyst_animation::Skin;
-use crate::importer::mesh::load_mesh;
-use std::cmp::Ordering;
+
+use crate::{
+    importer::{gltf_bytes_converter::convert_bytes, mesh::load_mesh},
+    GltfAsset, GltfNodeExtent, GltfSceneOptions,
+};
 
 mod gltf_bytes_converter;
 mod mesh;
@@ -29,7 +28,6 @@ struct SkinInfo {
     skin_index: usize,
     mesh_indices: Vec<usize>,
 }
-
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum GltfObjectId {
@@ -62,7 +60,13 @@ impl Importer for GltfImporter {
     type Options = GltfSceneOptions;
     type State = GltfImporterState;
 
-    fn import(&self, op: &mut ImportOp, source: &mut dyn Read, options: &Self::Options, state: &mut Self::State) -> atelier_importer::Result<ImporterValue> {
+    fn import(
+        &self,
+        op: &mut ImportOp,
+        source: &mut dyn Read,
+        options: &Self::Options,
+        _state: &mut Self::State,
+    ) -> amethyst_assets::atelier_importer::Result<ImporterValue> {
         log::info!("Importing scene");
 
         let mut bytes = Vec::new();
@@ -71,12 +75,13 @@ impl Importer for GltfImporter {
 
         if let Err(err) = result {
             log::error!("GLTF Import error: {:?}", err);
-            return Err(Error::Boxed(Box::new(err)));
+            return Err(atelier_importer::Error::Boxed(Box::new(err)));
         }
 
         let mut asset_accumulator = Vec::new();
+        let mut asset_accumulator2 = Vec::new();
 
-        let (doc, buffers, images) = result.unwrap();
+        let (doc, buffers, _images) = result.unwrap();
 
         // TODO : load images
         // TODO : load materials (with / without images)
@@ -94,13 +99,28 @@ impl Importer for GltfImporter {
             asset_accumulator.append(&mut node_assets);
         });
 
+        asset_accumulator2.push(ImportedAsset {
+            id: op.new_asset_uuid(),
+            search_tags: Vec::new(),
+            build_deps: Vec::new(),
+            load_deps: Vec::new(),
+            asset_data: Box::new(Camera::standard_3d(1.0, 1.0)),
+            build_pipeline: None,
+        });
+
         Ok(ImporterValue {
-            assets: asset_accumulator
+            assets: asset_accumulator2,
         })
     }
 }
 
-fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers: &Vec<Data>, node_index: &mut usize) -> Vec<ImportedAsset> {
+fn load_node(
+    node: &Node<'_>,
+    op: &mut ImportOp,
+    options: &GltfSceneOptions,
+    buffers: &Vec<Data>,
+    node_index: &mut usize,
+) -> Vec<ImportedAsset> {
     let mut imported_assets = Vec::new();
     let mut node_asset = GltfAsset::default();
 
@@ -118,9 +138,11 @@ fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers
     node_asset.camera = load_camera(node);
     node_asset.light = load_light(node);
 
-    let mut skin = node.skin().map(|skin| SkinInfo {
-        skin_index: skin.index(),
-        mesh_indices: Vec::default(),
+    let mut skin = node.skin().map(|skin| {
+        SkinInfo {
+            skin_index: skin.index(),
+            mesh_indices: Vec::default(),
+        }
     });
 
     let mut bounding_box = GltfNodeExtent::default();
@@ -131,13 +153,14 @@ fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers
         match loaded_mesh.len().cmp(&1) {
             Ordering::Equal => {
                 // single primitive can be loaded directly onto the node
-                let (mesh, material_index, bounds) = loaded_mesh.remove(0);
+                let (mesh, _material_index, bounds) = loaded_mesh.remove(0);
                 let mut mesh_search_tags: Vec<(String, Option<String>)> = vec![];
                 bounding_box.extend_range(&bounds);
                 let mut mesh_asset = GltfAsset::default();
                 mesh_asset.mesh = Some(mesh);
                 mesh_asset.index = *node_index;
-                mesh_search_tags.push(("node_index".to_string(), Some(mesh_asset.index.to_string())));
+                mesh_search_tags
+                    .push(("node_index".to_string(), Some(mesh_asset.index.to_string())));
                 *node_index += 1;
                 //TODO: material
 
@@ -170,7 +193,6 @@ fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers
         imported_assets.append(&mut child_assets);
     }
 
-
     imported_assets.push(ImportedAsset {
         id: op.new_asset_uuid(),
         search_tags,
@@ -182,37 +204,39 @@ fn load_node(node: &Node, op: &mut ImportOp, options: &GltfSceneOptions, buffers
     imported_assets
 }
 
-fn load_light(node: &Node) -> Option<Light> {
+fn load_light(node: &Node<'_>) -> Option<Light> {
     if let Some(light) = node.light() {
         return Some(Light::from(light));
     }
     None
 }
 
-fn load_camera(node: &Node) -> Option<Camera> {
+fn load_camera(node: &Node<'_>) -> Option<Camera> {
     if let Some(camera) = node.camera() {
-        return Some(
-            match camera.projection() {
-                gltf::camera::Projection::Orthographic(proj) => Camera::orthographic(
+        return Some(match camera.projection() {
+            gltf::camera::Projection::Orthographic(proj) => {
+                Camera::orthographic(
                     -proj.xmag(),
                     proj.xmag(),
                     -proj.ymag(),
                     proj.ymag(),
                     proj.znear(),
                     proj.zfar(),
-                ),
-                gltf::camera::Projection::Perspective(proj) => Camera::perspective(
+                )
+            }
+            gltf::camera::Projection::Perspective(proj) => {
+                Camera::perspective(
                     proj.aspect_ratio().expect("Camera {} failed to load"),
                     proj.yfov(),
                     proj.znear(),
-                ),
+                )
             }
-        );
+        });
     }
     None
 }
 
-fn load_transform(node: &Node) -> Option<Transform> {
+fn load_transform(node: &Node<'_>) -> Option<Transform> {
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::default();
@@ -233,34 +257,45 @@ fn get_scene_index(document: &Document, options: &GltfSceneOptions) -> Result<us
         }
         (Some(index), _) => Ok(index),
         (None, Some(scene)) => Ok(scene.index()),
-        (None, _) if num_scenes > 1 => Err(Error::Custom(format!("Invalid Scene Gltf {}", num_scenes))),
+        (None, _) if num_scenes > 1 => {
+            Err(Error::Custom(format!("Invalid Scene Gltf {}", num_scenes)))
+        }
         (None, _) => Ok(0),
     }
 }
 
-
 #[cfg(test)]
 mod test {
-    use super::*;
-    use super::super::GltfSceneOptions;
-    use std::fs::File;
-    use std::io::Read;
+    use std::{fs::File, io::Read};
+
     use atelier_assets::importer::BoxedImporter;
     use type_uuid::TypeUuid;
+
+    use super::{super::GltfSceneOptions, *};
 
     #[test]
     fn importer_basic_test() {
         let mut f = File::open("test/sample.gltf").expect("suzanne.glb not found");
         let mut buffer = Vec::new();
         // read the whole file
-        f.read_to_end(&mut buffer).expect("read_to_end did not work");
+        f.read_to_end(&mut buffer)
+            .expect("read_to_end did not work");
         let mut buffer_slice = buffer.as_slice();
         let importer: Box<dyn BoxedImporter> = Box::new(GltfImporter::default());
         let mut import_op = ImportOp::default();
-        let res = futures::executor::block_on(importer.import_boxed(&mut import_op, &mut buffer_slice, Box::new(GltfSceneOptions::default()), Box::new(GltfImporterState { id: None })));
+        let res = futures::executor::block_on(importer.import_boxed(
+            &mut import_op,
+            &mut buffer_slice,
+            Box::new(GltfSceneOptions::default()),
+            Box::new(GltfImporterState { id: None }),
+        ));
         match res {
-            Ok(r) => { println!("res : {:?}", r.value.assets.len()); }
-            Err(e) => { println!("error e {:?}", e); }
+            Ok(r) => {
+                println!("res : {:?}", r.value.assets.len());
+            }
+            Err(e) => {
+                println!("error e {:?}", e);
+            }
         };
     }
 }

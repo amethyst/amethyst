@@ -1,13 +1,16 @@
-use amethyst_rendy::rendy::mesh::{Position, Normal, TexCoord, Tangent, MeshBuilder, Color};
-use mikktspace::{generate_tangents, Geometry};
-use amethyst_core::math::{zero, Vector3};
-use gltf::buffer::Data;
-use crate::{GltfSceneOptions, error};
+use std::{iter::repeat, ops::Range};
+
 use amethyst_assets::error::Error;
-use std::ops::Range;
+use amethyst_core::math::{zero, Vector3};
+use amethyst_rendy::{
+    rendy::mesh::{Color, MeshBuilder, Normal, Position, Tangent, TexCoord},
+    skinning::JointCombined,
+};
+use gltf::buffer::Data;
 use log::{trace, warn};
-use std::iter::repeat;
-use amethyst_rendy::skinning::JointCombined;
+use mikktspace::{generate_tangents, Geometry};
+
+use crate::GltfSceneOptions;
 
 pub fn load_mesh(
     mesh: &gltf::Mesh<'_>,
@@ -130,13 +133,10 @@ pub fn load_mesh(
         let material = primitive.material().index();
 
         primitives.push((builder, material, bounds));
-
     }
     trace!("Loaded mesh");
     Ok(primitives)
 }
-
-
 
 fn compute_if<T, F: Fn() -> T>(predicate: bool, func: F) -> Option<T> {
     if predicate {
@@ -255,8 +255,9 @@ fn calculate_tangents(
 
 #[cfg(test)]
 mod tests {
-    use super::{calculate_tangents, Indices};
     use amethyst_rendy::rendy::mesh::{Normal, Position, Tangent, TexCoord};
+
+    use super::{calculate_tangents, Indices};
 
     const POSITIONS: &[Position] = &[
         Position([0.0, 0.0, 0.0]),

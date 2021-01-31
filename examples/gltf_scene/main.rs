@@ -1,33 +1,56 @@
-use amethyst::utils::application_root_dir;
-use amethyst::ecs::DispatcherBuilder;
-use amethyst::{Application, SimpleState, StateData, GameData};
-use amethyst::core::transform::TransformBundle;
-use amethyst::renderer::{RenderingBundle, RenderToWindow, RenderSkybox, RenderPbr3D};
-use amethyst::renderer::types::DefaultBackend;
-use amethyst::assets::{LoaderBundle, DefaultLoader, Handle, Loader};
-use amethyst::gltf::GltfAsset;
+use amethyst::{assets::{DefaultLoader, Handle, Loader, LoaderBundle}, core::transform::TransformBundle, ecs::DispatcherBuilder, gltf::GltfAsset, renderer::{types::DefaultBackend, RenderSkybox, RenderToWindow, RenderingBundle}, utils::application_root_dir, Application, GameData, SimpleState, StateData, SimpleTrans, Trans};
+use amethyst::assets::prefab::Prefab;
+use amethyst::renderer::Camera;
+use amethyst::ui::UiTransform;
+use amethyst::ecs::{Entity, IntoQuery};
 
 struct GltfExample;
 
 #[derive(Debug, Clone, PartialEq)]
-struct Scene{
-    gltf_handle: Handle<GltfAsset>
+struct Scene {
+    gltf_handle: Handle<GltfAsset>,
 }
 
-impl SimpleState for GltfExample{
+impl SimpleState for GltfExample {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let StateData { world, resources, .. } = data;
+        let StateData {
+            world, resources, ..
+        } = data;
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let res: Handle<GltfAsset> = loader.load(
+        let res: Handle<Camera> = loader.load(
             "gltf/sample.gltf", // Here we load the associated ron file
         );
-        println!("res {:?}", res);
-        world.push((res,));
+        let entity = world.push((res,));
+        println!("entity ? {:?}", entity);
+    }
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+
+        let StateData {
+            world, resources, ..
+        } = data;
+        let mut q = <(&Camera)>::query();
+
+        q.iter(*world).for_each(|e| println!("yeeeeeeaaaah"));
+
+
+        Trans::None
     }
 }
 
 fn main() -> Result<(), amethyst::Error> {
-    amethyst::start_logger(Default::default());
+    let config = amethyst::LoggerConfig {
+        level_filter: amethyst::LogLevelFilter::Debug,
+        module_levels: vec![
+            (
+                "amethyst_assets".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+            ("atelier_daemon".to_string(), amethyst::LogLevelFilter::Trace),
+            ("atelier_loader".to_string(), amethyst::LogLevelFilter::Trace),
+        ],
+        ..Default::default()
+    };
+    amethyst::start_logger(config);
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("config/display.ron");
     let assets_dir = app_root.join("assets/");

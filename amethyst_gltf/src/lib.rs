@@ -1,21 +1,25 @@
 //! A crate for loading GLTF format scenes into Amethyst
 
 #![doc(
-html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
-html_root_url = "https://docs.amethyst.rs/stable"
+    html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
+    html_root_url = "https://docs.amethyst.rs/stable"
 )]
 #![warn(
-missing_debug_implementations,
-missing_docs,
-rust_2018_idioms,
-rust_2018_compatibility
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
 )]
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
 use std::{collections::HashMap, ops::Range};
 
-use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter, prefab::Prefab, inventory, Asset, AssetProcessorSystem};
+use amethyst_animation::Skin;
+use amethyst_assets::{
+    inventory,register_asset_type,  prefab::{Prefab, register_component_type}, Asset, AssetProcessorSystem, AssetStorage, Handle, Loader,
+    ProgressCounter,
+};
 use amethyst_core::{
     ecs::{Entity, Read, ReadExpect, Write, WriteStorage},
     ecs::*,
@@ -23,32 +27,33 @@ use amethyst_core::{
     transform::Transform,
     Named,
 };
-use amethyst_error::Error;
-use amethyst_rendy::{rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere, Camera, Material};
+use amethyst_rendy::{
+    light::Light, rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere, Camera,
+    Material,
+};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
-use amethyst_rendy::light::Light;
-use amethyst_animation::Skin;
 
-mod error;
 mod importer;
 
 pub use importer::GltfImporter;
 
-inventory::submit!{
+inventory::submit! {
     amethyst_assets::SourceFileImporter {
         extension: "gltf",
         instantiator: || Box::new(GltfImporter::default()),
     }
 }
 
-inventory::submit!{
+inventory::submit! {
     amethyst_assets::SourceFileImporter {
         extension: "glb",
         instantiator: || Box::new(GltfImporter::default()),
     }
 }
+
+register_asset_type!(Camera => Camera; AssetProcessorSystem<Camera>);
 
 /// A GLTF node extent
 #[derive(Clone, Debug, Serialize)]
@@ -56,7 +61,7 @@ pub struct GltfNodeExtent {
     /// The beginning of this extent
     pub start: Point3<f32>,
     /// The end of this extent
-    pub end: Point3<f32>,
+    pub end: Point3<f32>
 }
 
 impl Default for GltfNodeExtent {
@@ -190,7 +195,7 @@ pub struct GltfAsset {
     /// `Material` is placed on all `Entity`s with graphics primitives with material
     pub material: Option<Material>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
-  // pub animatable: Option<Animatable<usize, Transform>>,
+    // pub animatable: Option<Animatable<usize, Transform>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
     /// using the skin
     pub skin: Option<Skin>,
