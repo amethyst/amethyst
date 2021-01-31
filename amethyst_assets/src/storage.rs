@@ -1,5 +1,5 @@
-use atelier_assets::loader::{handle::AssetHandle, storage::IndirectionTable, LoadHandle};
 use crossbeam_queue::SegQueue;
+use distill::loader::{handle::AssetHandle, storage::IndirectionTable, LoadHandle};
 use fnv::FnvHashMap;
 
 struct AssetState<A> {
@@ -180,7 +180,7 @@ impl<A> AssetStorage<A> {
     }
 }
 
-impl<A> atelier_assets::loader::handle::TypedAssetStorage<A> for AssetStorage<A> {
+impl<A> distill::loader::handle::TypedAssetStorage<A> for AssetStorage<A> {
     fn get<T: AssetHandle>(&self, handle: &T) -> Option<&A> {
         self.get(handle)
     }

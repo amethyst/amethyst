@@ -16,8 +16,8 @@ mod retrigger;
 mod system;
 
 use amethyst_assets::{
-    atelier_importer,
-    atelier_importer::{typetag, SerdeImportable},
+    distill_importer,
+    distill_importer::{typetag, SerdeImportable},
 };
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;

@@ -281,8 +281,8 @@ pub struct SpriteGrid {
 }
 
 use amethyst_assets::{
-    atelier_importer,
-    atelier_importer::{typetag, SerdeImportable},
+    distill_importer,
+    distill_importer::{typetag, SerdeImportable},
 };
 
 /// Allows loading of sprite sheets in RON format.

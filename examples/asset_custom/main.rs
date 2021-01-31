@@ -1,7 +1,7 @@
 use amethyst::{
     assets::{
-        atelier_importer,
-        atelier_importer::{typetag, SerdeImportable},
+        distill_importer,
+        distill_importer::{typetag, SerdeImportable},
         register_asset_type, Asset, AssetProcessorSystem, AssetStorage, DefaultLoader, Format,
         Handle, Loader, LoaderBundle, TypeUuid,
     },
@@ -91,11 +91,11 @@ fn main() -> amethyst::Result<()> {
                 amethyst::LogLevelFilter::Debug,
             ),
             (
-                "atelier_daemon".to_string(),
+                "distill_daemon".to_string(),
                 amethyst::LogLevelFilter::Debug,
             ),
             (
-                "atelier_loader".to_string(),
+                "distill_loader".to_string(),
                 amethyst::LogLevelFilter::Trace,
             ),
         ],

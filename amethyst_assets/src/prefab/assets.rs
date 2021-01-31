@@ -1,6 +1,6 @@
 use amethyst_core::ecs::World;
-use atelier_assets::importer as atelier_importer;
-use atelier_importer::{typetag, SerdeImportable};
+use distill::importer as distill_importer;
+use distill_importer::{typetag, SerdeImportable};
 use fnv::FnvHashSet;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
