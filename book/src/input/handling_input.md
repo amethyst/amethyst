@@ -69,7 +69,7 @@ Now you have to add the `System` to the game data, like you would do with any ot
 # fn main() {
     let game_data = DispatcherBuilder::default()
         //..
-        .with(ExampleSystem, "example_system", &["input_system"]);
+        .add_system(ExampleSystem)
     //..
 # }
 ```

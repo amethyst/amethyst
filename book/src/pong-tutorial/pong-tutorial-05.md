@@ -117,14 +117,10 @@ keep playing after someone scores and log who got the point.
     let game_data = DispatcherBuilder::default()
 #       .add_bundle(TransformBundle)?
 #       .add_bundle(input_bundle)?
-#       .with(systems::PaddleSystem, "paddle_system", &["input_system"])
-#       .with(systems::MoveBallsSystem, "ball_system", &[])
-#       .with(
-#           systems::BounceSystem,
-#           "collision_system",
-#           &["paddle_system", "ball_system"],
-#       )
-        .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
+#       .add_system(systems::PaddleSystem)
+#       .add_system(systems::MoveBallsSystem)
+#       .add_system(           systems::BounceSystem)
+        .add_system(systems::WinnerSystem)
 #   let assets_dir = "/";
 #   struct Pong;
 #   impl SimpleState for Pong {}

@@ -590,7 +590,7 @@ fn main() -> amethyst::Result<()> {
     )?;
 
     let mut game_data = DispatcherBuilder::default()
-        .with(OrbitSystem, "orbit", &[])
+        .add_system(OrbitSystem)
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .add_bundle(FpsCounterBundle::default())?
         .with_system_desc(
