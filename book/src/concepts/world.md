@@ -9,32 +9,34 @@ are singletons available across all systems.  See [Resources][res] for more abou
 ## Creating entities
 
 ```rust
-# use amethyst::ecs::{World};
+use amethyst::ecs::World;
 
 #[derive(Default)]
 struct MyComponent {
     value: u8,
-};
+}
 
-# fn main() {
-   let mut world = World::default();
-    world.push((MyComponent::default(),));
-# }
+fn main() {
+    let mut world = World::default();
+    world.push((MyComponent::default(),)); // notice the trailing comma, push takes a tuple argument
+}
 ```
 
 ## Accessing a `Component`
 
 ```rust
-# use amethyst::ecs::{World};
+# use amethyst::ecs::World;
+# 
 # #[derive(Default)]
 # struct MyComponent {
-#     value: u8,
-# };
+#   value: u8,
+# }
+# 
 # fn main() {
-   let mut world = World::default();
+    let mut world = World::default();
     // Create an `Entity` with `MyComponent`.
     // `World` will implicitly write to the component's storage in `Resources`.
-    let my_entity =     world.push((MyComponent::default(),));
+    let my_entity = world.push((MyComponent::default(),));
 
     if let Some(entry) = world.entry(my_entity) {
         let my_component = entry.get_component::<MyComponent>().unwrap();
@@ -47,15 +49,17 @@ struct MyComponent {
 This is almost the same as accessing a component:
 
 ```rust
-# use amethyst::ecs::{ World};
+# use amethyst::ecs::World;
+# 
 # #[derive(Default)]
 # struct MyComponent {
-#     value: u8,
-# };
+#   value: u8,
+# }
+# 
 # fn main() {
-  let mut world = World::default();
-    let my_entity =     world.push((MyComponent::default(),));
-    if let Some(entry) = world.entry(my_entity) {
+    let mut world = World::default();
+    let my_entity = world.push((MyComponent::default(),));
+    if let Some(mut entry) = world.entry(my_entity) {
         let mut my_component = entry.get_component_mut::<MyComponent>().unwrap();
         my_component.value = 5;
     }
@@ -64,18 +68,24 @@ This is almost the same as accessing a component:
 
 ## Delete an entity
 
-Single:
+To remove a single entity call `world.remove`.
 
 ```rust
 # use amethyst::ecs::World;
+# 
+# #[derive(Default)]
+# struct MyComponent {
+#   value: u8,
+# }
+# 
 # fn main() {
-    let mut world = World::default();
-    let my_entity = world.push((MyComponent,));
+#   let mut world = World::default();
+    let my_entity = world.push((MyComponent::default(),));
     assert!(world.remove(my_entity));
 # }
 ```
 
-All:
+To clear the world and start from scratch call `world.clear`.
 
 ```rust
 # use amethyst::ecs::World;
@@ -85,8 +95,6 @@ All:
 # }
 ```
 
-__Note: Entities are lazily deleted, which means that deletion only happens at the end of the frame and not immediately when calling the `delete` method.__
-
 ## Check if the entity was deleted
 
 ```rust
@@ -95,7 +103,8 @@ __Note: Entities are lazily deleted, which means that deletion only happens at t
 #   let mut world = World::default();
     let my_entity = world.push((0usize,));
     assert!(world.contains(my_entity));
-    assert!(!world.contains(Entity(100)))
+    assert!(world.remove(my_entity));
+    assert!(!world.contains(my_entity))
 # }
 ```
 
