@@ -13,7 +13,7 @@ A system struct is a structure implementing the trait `amethyst::ecs::System`.
 Here is a simple example implementation:
 
 ```rust
-use amethyst::ecs::{ParallelRunnable, System};
+use amethyst::ecs::{ParallelRunnable, System, SystemBuilder};
 
 struct MyFirstSystem;
 
@@ -31,8 +31,10 @@ This system will, on every iteration of the game loop, print "Hello!" in the con
 Using `SystemBuilder` requires you to specify the resource and component access requirements of the system using `read_resource`, `write_resource`, `read_component` and `write_component` (you can also use `with_query` but we'll get to that later.)  Refer to the [Legion SystemBuilder docs][sb] for more information.  A system may also have local data stored in its own struct.
 
 ```rust
-use amethyst::core::timing::Time;
-use amethyst::ecs::{ParallelRunnable, System};
+use amethyst::{
+    core::timing::Time,
+    ecs::{ParallelRunnable, System, SystemBuilder},
+};
 
 struct TimeSystem;
 
@@ -60,8 +62,10 @@ Once you have access to a storage, you can use them in different ways.
 Sometimes, it can be useful to get a reference to a component for a specific entity. First you must get an `Entry` for the entity, this can be done using the `world.entry` or `world.entry_mut` methods.  Once you have the entry, you may use `get_component` or, for mutable reference, `get_component_mut` methods.
 
 ```rust
-use amethyst::core::Transform;
-use amethyst::ecs::{Entity, ParallelRunnable, System, SystemBuilder};
+use amethyst::{
+    core::Transform,
+    ecs::{Entity, EntityStore, ParallelRunnable, System, SystemBuilder},
+};
 
 struct WalkPlayerUpSystem {
     player: Entity,
@@ -72,8 +76,8 @@ impl System for WalkPlayerUpSystem {
         Box::new(
             SystemBuilder::new("WalkPlayerUpSystem")
                 .write_component::<Transform>()
-                .build(|_, world, _, _| {
-                    if let Ok(entry) = world.entry_mut(self.player) {
+                .build(move |_, world, _, _| {
+                    if let Ok(mut entry) = world.entry_mut(self.player) {
                         if let Ok(transform) = entry.get_component_mut::<Transform>() {
                             transform.prepend_translation_y(0.1);
                         }
@@ -104,8 +108,10 @@ Needless to say that you can use it with only one storage to iterate over all en
 Keep in mind that **the `join` method is only available by importing `amethyst::ecs::Join`**.
 
 ```rust
-use amethyst::core::Transform;
-use amethyst::ecs::{System, ParallelRunnable, SystemBuilder};
+use amethyst::{
+    core::Transform,
+    ecs::{IntoQuery, ParallelRunnable, System, SystemBuilder},
+};
 struct FallingObject;
 
 struct MakeObjectsFallSystem;
@@ -114,17 +120,17 @@ impl System for MakeObjectsFallSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MakeObjectsFallSystem")
-            .write_component::<Transform>()
-            .read_component::<FallingObject>()
-            .with_query(<(&mut Transform, &FallingObject)>::query())
-            .build(|_, world, _, query| {
-
-        for (transform, _) in query.iter_mut(world) {
-            if transform.translation().y > 0.0 {
-                transform.prepend_translation_y(-0.1);
-            }
-        }
-    })
+                .write_component::<Transform>()
+                .read_component::<FallingObject>()
+                .with_query(<(&mut Transform, &FallingObject)>::query())
+                .build(|_, world, _, query| {
+                    for (mut transform, _) in query.iter_mut(world) {
+                        if transform.translation().y > 0.0 {
+                            transform.prepend_translation_y(-0.1);
+                        }
+                    }
+                }),
+        )
     }
 }
 ```
@@ -135,63 +141,70 @@ Cool! Now that looks like something we'll actually do in our games!
 
 ### Getting entities that have some components, but not others
 
-There is a special type of `Storage` in specs called `AntiStorage`.
-The not operator (!) turns a Storage into its AntiStorage counterpart, allowing you to iterate over entities that do NOT have this `Component`.
-It is used like this:
+Queries may have additional filters on them using boolean syntax.
+The not operator `!` allows you to iterate over entities that do not have a particular component.
 
 ```rust
-# use amethyst::core::Transform;
-# use amethyst::ecs::{System};
-# struct FallingObject;
-use amethyst::ecs::Join;
+use amethyst::{
+    core::Transform,
+    ecs::{component, IntoQuery, ParallelRunnable, System, SystemBuilder},
+};
+struct FallingObject;
 
-struct NotFallingObjects;
+struct MakeObjectsRiseSystem;
 
-impl System for NotFallingObjects {
-    type SystemData = (.write_component::<Transform>().read_component::<FallingObject>());
-
-    fn run(&mut self, (mut transforms, falling): Self::SystemData) {
-        for (mut transform, _) in (&mut transforms, !&falling).join() {
-            // If they don't fall, why not make them go up!
-            transform.prepend_translation_y(0.1);
-        }
+impl System for MakeObjectsRiseSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MakeObjectsRiseSystem")
+                .write_component::<Transform>()
+                .read_component::<FallingObject>()
+                .with_query(<(&mut Transform)>::query().filter(!component::<FallingObject>()))
+                .build(|_, world, _, query| {
+                    for (mut transform) in query.iter_mut(world) {
+                        // If they don't fall, why not make them go up!
+                        transform.prepend_translation_y(0.1);
+                    }
+                }),
+        )
     }
 }
 ```
 
 ## Manipulating the structure of entities
 
-It may sometimes be interesting to manipulate the structure of entities in a system, such as creating new ones or modifying the component layout of existing ones. This kind of process is done using the `Entity` system data.
+It may sometimes be interesting to manipulate the structure of entities in a system, such as creating new ones or modifying the component layout of existing ones.
 
 ### Creating new entities in a system
 
-Creating an entity while in the context of a system is very similar to the way one would create an entity using the `World` struct. The only difference is that one needs to provide mutable storages of all the components they plan to add to the entity.
+Creating an entity while in the context of a system is similar to the way one would create an entity using the `World` struct.  You'll notice we don't use `.read_component()` or `.write_component()` here as the `commands` closure parameter is a Legion `CommandBuffer`.  `CommandBuffer` is asynchronous by default, and does not perform changes to the world or components until all systems have run in a frame, therefore we don't have to lock out other parallel systems.
+
+`CommandBuffer` can be flushed manually when needed, for example if systems depend on that behavior to run their logic in the same frame.
 
 ```rust
-# use amethyst::core::Transform;
-# use amethyst::ecs::{Entities, System};
-# struct Enemy;
-struct SpawnEnemies {
+use amethyst::{
+    core::Transform,
+    ecs::{ParallelRunnable, System, SystemBuilder},
+};
+
+struct Enemy;
+
+struct SpawnEnemiesSystem {
     counter: u32,
 }
 
-impl System for SpawnEnemies {
-    type SystemData = (
-        .write_component::<Transform>()
-        .write_component::<Enemy>()
-        Entities<'a>,
-    );
-
-    fn run(&mut self, (mut transforms, mut enemies, entities): Self::SystemData) {
-        self.counter += 1;
-        if self.counter > 200 {
-            entities
-                .build_entity()
-                .with(Transform::default(), &mut transforms)
-                .with(Enemy, &mut enemies)
-                .build();
-            self.counter = 0;
-        }
+impl System for SpawnEnemiesSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("SpawnEnemiesSystem").build(move |commands, world, _, _| {
+                // `move` is needed to capture `self`
+                self.counter += 1;
+                if self.counter > 200 {
+                    commands.push((Transform::default(), Enemy));
+                    self.counter = 0;
+                }
+            }),
+        )
     }
 }
 ```
@@ -200,44 +213,60 @@ This system will spawn a new enemy every 200 game loop iterations.
 
 ### Removing an entity
 
+The following example also introduces the special use the `Entity` struct.  You can specify `Entity` as a member of a query like a component. Notice that you do not need to use `&` before `Entity`.
+
 ```rust
-# use amethyst::ecs::{Entity, System};
-# struct MySystem {
-#   entity: Entity,
-# }
-# impl System for MySystem {
-#   fn run(&mut self, entities: Self::SystemData) {
-#       let entity = self.entity;
-        entities.delete(entity);
-#   }
-# }
+use amethyst::ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder};
+
+struct Enemy;
+
+struct RemoveEnemiesSystem;
+
+impl System for RemoveEnemiesSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("RemoveEnemiesSystem")
+                .with_query(<(Entity, &Enemy)>::query()) // no & for Entity, it is not a reference
+                .build(|commands, world, _, query| {
+                    for (entity, _) in query.iter(world) {
+                        commands.remove(*entity); // query.iter returns a tuple of references, so we deref to get the Entity here
+                    }
+                }),
+        )
+    }
+}
 ```
 
 ### Iterating over components with associated entity
 
-Sometimes, when you iterate over components, you may want to also know what entity you are working with. To do that, you can use the joining operation with `Entities<'a>`.
+Here is a more sophisticated example of using `Entity` in a query.
 
 ```rust
-# use amethyst::core::Transform;
-# use amethyst::ecs::{Entities, System};
-# struct FallingObject;
-struct MakeObjectsFall;
+use amethyst::{
+    core::Transform,
+    ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
+};
+struct FallingObject;
 
-impl System for MakeObjectsFall {
-    type SystemData = (
-        Entities<'a>,
-        .write_component::<Transform>()
-      .read_component::<FallingObject>(),
-    );
+struct MakeObjectsFallAndDisappearSystem;
 
-    fn run(&mut self, (entities, mut transforms, falling): Self::SystemData) {
-        for (e, mut transform, _) in (&*entities, &mut transforms, &falling).join() {
-            if transform.translation().y > 0.0 {
-                transform.prepend_translation_y(-0.1);
-            } else {
-                entities.delete(e);
-            }
-        }
+impl System for MakeObjectsFallAndDisappearSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MakeObjectsFallAndDisappearSystem")
+                .write_component::<Transform>()
+                .read_component::<FallingObject>()
+                .with_query(<(Entity, &mut Transform, &FallingObject)>::query())
+                .build(|commands, world, _, query| {
+                    for (entity, mut transform, _) in query.iter_mut(world) {
+                        if transform.translation().y > 0.0 {
+                            transform.prepend_translation_y(-0.1);
+                        } else {
+                            commands.remove(*entity);
+                        }
+                    }
+                }),
+        )
     }
 }
 ```
@@ -250,27 +279,30 @@ You can also insert or remove components from a specific entity.
 To do that, you need to get a mutable storage of the component you want to modify, and simply do:
 
 ```rust
-# use amethyst::ecs::{Entity, System};
-# struct MyComponent;
-# struct MySystem {
-#   entity: Entity,
-# }
-# impl System for MySystem {
-.write_component::<MyComponent>()
-#   fn run(&mut self, mut write_storage: Self::SystemData) {
-#       let entity = self.entity;
-        // Add the component
-        write_storage.insert(entity, MyComponent);
+use amethyst::ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder};
+struct MyComponent;
+struct AddMyComponentSystem {
+    entity: Entity,
+}
 
-        // Remove the component
-        write_storage.remove(entity);
-#   }
-# }
+impl System for AddMyComponentSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MakeObjectsFallAndDisappearSystem").build(
+                move |commands, world, _, query| {
+                    commands.add_component(self.entity, MyComponent);
+                    // inversely,
+                    commands.remove_component::<MyComponent>(self.entity);
+                },
+            ),
+        )
+    }
+}
 ```
 
 Keep in mind that inserting a component on an entity that already has a component of the same type **will overwrite the previous one**.
 
-## Changing states through resources
+## Changing States from a System through Resources
 
 In a previous section we talked about [`States`][s], and how they are used to organize your game
 into different logical sections.
@@ -341,7 +373,7 @@ impl SimpleState for GameplayState {
         // If the `Game` resource has been set up to go back to the menu, push
         // the menu state so that we go back.
 
-        let mut game = data.world.write_resource::<Game>();
+        let mut game = data.resources.get_mut::<Game>().unwrap();
 
         if let Some(UserAction::OpenMenu) = game.user_action.take() {
             return Trans::Push(Box::new(GameMenuState));
@@ -352,7 +384,7 @@ impl SimpleState for GameplayState {
 
     fn on_resume(&mut self, mut data: StateData<'_, GameData>) {
         // mark that the current state is a gameplay state.
-        data.world.write_resource::<Game>().current_state = CurrentState::Gameplay;
+        data.resources.get_mut::<Game>().unwrap().current_state = CurrentState::Gameplay;
     }
 }
 
@@ -360,7 +392,7 @@ struct GameMenuState;
 
 impl SimpleState for GameMenuState {
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let mut game = data.world.write_resource::<Game>();
+        let mut game = data.resources.get_mut::<Game>().unwrap();
 
         match game.user_action.take() {
             Some(UserAction::ResumeGame) => Trans::Pop,
@@ -374,13 +406,14 @@ impl SimpleState for GameMenuState {
 
     fn on_resume(&mut self, mut data: StateData<'_, GameData>) {
         // mark that the current state is a main menu state.
-        data.world.write_resource::<Game>().current_state = CurrentState::MainMenu;
+        data.resources.get_mut::<Game>().unwrap().current_state = CurrentState::MainMenu;
     }
 }
 ```
 
 Let's say we want the player to be able to press escape to enter the menu.
-We modify our input handler to map the `open_menu` action to `Esc`, and we write the following
+To access the `Resource` from our system we use the `read_resource` method of `SystemBuilder`.
+Modify the input handler to map the `open_menu` action to `Esc`, and write the following
 system:
 
 ```rust
@@ -418,7 +451,7 @@ system:
 # }
 # 
 use amethyst::{
-    ecs::{prelude::*, System},
+    ecs::{ParallelRunnable, System, SystemBuilder},
     input::InputHandler,
     prelude::*,
 };
@@ -426,89 +459,33 @@ use amethyst::{
 struct MyGameplaySystem;
 
 impl System for MyGameplaySystem {
-    type SystemData = (.read_resource::<Game>());
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MyGameplaySystem")
+                .read_resource::<InputHandler>()
+                .write_resource::<Game>()
+                .build(|_, _, (input, game), _| {
+                    match game.current_state {
+                        CurrentState::Gameplay => {
+                            let open_menu = input.action_is_down("open_menu").unwrap_or(false);
 
-    fn run(&mut self, (input, mut game): Self::SystemData) {
-        match game.current_state {
-            CurrentState::Gameplay => {
-                let open_menu = input.action_is_down("open_menu").unwrap_or(false);
-
-                // Toggle the `open_menu` variable to signal the state to
-                // transition.
-                if open_menu {
-                    game.user_action = Some(UserAction::OpenMenu);
-                }
-            }
-            // do nothing for other states.
-            _ => {}
-        }
+                            // Toggle the `open_menu` variable to signal the state to
+                            // transition.
+                            if open_menu {
+                                game.user_action = Some(UserAction::OpenMenu);
+                            }
+                        }
+                        // do nothing for other states.
+                        _ => {}
+                    }
+                }),
+        )
     }
 }
 ```
 
 Now whenever you are playing the game and you press the button associated with the `open_menu`
 action, the `GameMenuState` will resume and the `GameplayState` will pause.
-
-## The SystemData trait
-
-While this is rarely useful, it is possible to create custom `SystemData` types.
-
-The `Dispatcher` populates the `SystemData` on every call of the `run` method. To do that, your `SystemData` type must implement the trait `amethyst::ecs::SystemData` in order to have it be valid.
-
-This is rather complicated trait to implement, fortunately Amethyst provides a derive macro for it, that can implement the trait to any struct as long as all its fields are `SystemData`. Most of the time however, you will not even need to implement it at all as you will be using `SystemData` structs provided by the engine.
-
-Please note that tuples of structs implementing `SystemData` are themselves `SystemData`. This is very useful when you need to request multiple `SystemData` at once quickly.
-
-```rust
-# extern crate shred;
-# #[macro_use]
-# extern crate shred_derive;
-# 
-# use amethyst::{
-#   ecs::{System, World},
-#   shred::ResourceId,
-# };
-# 
-# struct FooComponent {
-#   stuff: f32,
-# }
-# 
-# struct BarComponent {
-#   stuff: f32,
-# }
-# 
-# #[derive(SystemData)]
-# struct BazSystemData<'a> {
-#   field:().read_component::<FooComponent>(),
-# }
-# 
-# impl<'a> BazSystemData<'a> {
-#   fn should_process(&self) -> bool {
-#       true
-#   }
-# }
-# 
-#[derive(SystemData)]
-struct MySystemData<'a> {
-    foo:().read_component::<FooComponent>(),
-    bar: .write_component::<BarComponent>()
-    baz: BazSystemData<'a>,
-}
-
-struct MyFirstSystem;
-
-impl System for MyFirstSystem {
-    type SystemData = MySystemData<'a>;
-
-    fn run(&mut self, mut data: Self::SystemData) {
-        if data.baz.should_process() {
-            for (foo, mut bar) in (&data.foo, &mut data.bar).join() {
-                bar.stuff += foo.stuff;
-            }
-        }
-    }
-}
-```
 
 [r]: ./resource.md
 [s]: ./state.md

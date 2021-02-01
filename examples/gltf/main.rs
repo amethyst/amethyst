@@ -178,7 +178,7 @@ fn main() -> Result<(), amethyst::Error> {
     let assets_dir = app_root.join("assets/");
 
     let mut game_data = DispatcherBuilder::default()
-        .with(AutoFovSystem::default(), "auto_fov", &[])
+        .add_system(AutoFovSystem::default())
         .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
             "scene_loader",
