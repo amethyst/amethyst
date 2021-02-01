@@ -3,7 +3,7 @@
 ## What is a state?
 
 The word "state" can mean a lot of different things in computer science.
-In the case of amethyst, it is used to represent the "game state".
+In the case of Amethyst, it is used to represent the "game state".
 
 A game state is a *general* and *global* section of the game.
 

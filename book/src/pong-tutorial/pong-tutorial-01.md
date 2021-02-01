@@ -1,6 +1,6 @@
 # Setting up the project
 
-In this chapter, we will go through the basics of setting up the amethyst project,
+In this chapter, we will go through the basics of setting up the Amethyst project,
 starting the logger, opening a window and preparing a simple rendering setup.
 
 ## Creating a new project
@@ -96,7 +96,7 @@ fn main() -> amethyst::Result<()> {
 
 ## Setting up the logger
 
-Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
+Inside `main()` we first start the Amethyst logger with a default `LoggerConfig`
 so we can see errors, warnings and debug messages while the program is running.
 
 ```rust

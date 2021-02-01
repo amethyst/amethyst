@@ -435,7 +435,7 @@ List((
 > **Note:** Make sure to pay attention to the kind of parentheses in the ron file.
 > Especially, if you are used to writing JSON or similar format files, you might
 > be tempted to use curly braces there; that will however lead to very
-> hard-to-debug errors, especially since amethyst will not warn you about that
+> hard-to-debug errors, especially since Amethyst will not warn you about that
 > when compiling.
 
 Finally, we load the file containing the position of each sprite on the sheet.

@@ -42,7 +42,7 @@ To begin hacking, make sure you have [git lfs](https://git-lfs.github.com/)
 installed, fork the repository to your account and `git clone` the forked
 copy to your local machine. On clone you will be on the *master* branch. This
 is the branch that contains all new work that has not been released yet. If you
-are adding a new feature to amethyst then you want to base your work off of this
+are adding a new feature to Amethyst then you want to base your work off of this
 branch. Otherwise, if you are attempting to fix something in an older release you
 will have to base your work off of a released tag. This can be done after a clone
 by running `git checkout TAG` where `TAG` is a released tag eg `v0.8.0`. Now that
@@ -245,9 +245,9 @@ fn main() {
 Examples in `book/` can be tested with the following:
 
 ```shell
-# First, clean up amethyst artifacts and rebuild to ensure there is only one copy of the artifacts in
-# the amethyst repo, otherwise mdbook complains. You only need to do this once, unless you change code
-# in the actual amethyst library.
+# First, clean up Amethyst artifacts and rebuild to ensure there is only one copy of the artifacts in
+# the Amethyst repo, otherwise mdbook complains. You only need to do this once, unless you change code
+# in the actual Amethyst library.
 rm -rf ./target/debug/deps/libamethyst*
 cargo test --workspace --features=empty,tiles --no-run
 

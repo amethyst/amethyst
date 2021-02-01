@@ -8,9 +8,9 @@ application developers can use to develop online multiplayer games. The main eng
 This project is still at an early stage. We are currently designing and implementing a robust networking system on
 top of specs. To exercise our implementation, we are creating a small test game which we will make public when we feel
 it's in a good place. Eventually, as we gain more confidence in our solution, we will move stable functionality over
-from that game to amethyst network.
+from that game to Amethyst network.
 
-Currently, amethyst network supports:
+Currently, Amethyst network supports:
 
 - `NetworkSimulationTime` resource to decouple simulation frame rate from ECS frame rate
 - An API abstraction for various transport layer network systems
@@ -22,7 +22,7 @@ Currently, amethyst network supports:
 Unless you explicitly state otherwise, any Contribution intentionally submitted for inclusion in the work by you, as
 defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
-For more information or help, please come find us on the amethyst discord server's `#net` channel. We are working on
+For more information or help, please come find us on the Amethyst discord server's `#net` channel. We are working on
 architecture, design, and roadmaps and can definitely use some helping hands, don't hesitate :).
 
 ## License

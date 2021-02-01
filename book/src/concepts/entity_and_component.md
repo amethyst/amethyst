@@ -57,7 +57,7 @@ fn main() {
 
     // Another archetype of entity
     world.push((
-        // some components are provided by amethyst such as Named and Transform
+        // some components are provided by Amethyst such as Named and Transform
         Named("Cubey".into()),
         Shape::Cuboid {
             height: 4.,
