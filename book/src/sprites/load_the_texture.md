@@ -14,9 +14,7 @@ where
     N: Into<String>,
 {
     let loader = resources.get::<DefaultLoader>();
-    loader.load(
-        name,
-    )
+    loader.load(name)
 }
 
 #[derive(Debug)]

@@ -21,7 +21,7 @@ pub enum MyEvent {
 }
 
 # fn main() {
-let mut channel = EventChannel::<MyEvent>::new();
+    let mut channel = EventChannel::<MyEvent>::new();
 # }
 ```
 
@@ -31,7 +31,7 @@ Single:
 
 ```rust
 # use amethyst::shrev::EventChannel;
-#
+# 
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -48,7 +48,7 @@ Multiple:
 
 ```rust
 # use amethyst::shrev::EventChannel;
-#
+# 
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -69,7 +69,7 @@ To subscribe to events, register a reader against the `EventChannel` to receive 
 
 ```rust
 # use amethyst::shrev::EventChannel;
-#
+# 
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -110,21 +110,21 @@ In the **producer** `System`, get a mutable reference to your resource:
 #   B,
 # }
 # 
- struct MyEventProducerSystem;
+struct MyEventProducerSystem;
 
- use amethyst::ecs::{System, ParallelRunnable, SystemBuilder};
- 
- impl System for MyEventProducerSystem {
+use amethyst::ecs::{ParallelRunnable, System, SystemBuilder};
+
+impl System for MyEventProducerSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("MyEventProducerSystem")
                 .write_resource::<EventChannel<MyEvent>>()
-                .build(move |_, _, my_event_channel, _| { 
-                                        my_event_channel.single_write(MyEvent::A);
-                })
+                .build(move |_, _, my_event_channel, _| {
+                    my_event_channel.single_write(MyEvent::A);
+                }),
         )
     }
- }
+}
 ```
 
 In the **consumer** `System`s, you need to store the `ReaderId`.
@@ -142,25 +142,27 @@ In the **consumer** `System`s, you need to store the `ReaderId`.
 # }
 # 
 struct MyEventConsumerSystem {
-  reader_id: ReaderId<MyEvent>,
+    reader_id: ReaderId<MyEvent>,
 }
 
 impl MyEventConsumerSystem {
     pub fn new(resources: &mut Resources) -> Self {
-        let reader_id = resources.get_mut::<EventChannel<MyEvent>>().register_reader();
+        let reader_id = resources
+            .get_mut::<EventChannel<MyEvent>>()
+            .register_reader();
         Self { reader_id }
     }
 }
 
-    fn build(mut self) -> Box<dyn ParallelRunnable> {
-        Box::new(
-            SystemBuilder::new("MyEventConsumerSystem")
-                .read_resource::<EventChannel<MyEvent>>()
-                .build(move |_, _, my_event_channel, _| {
-                    for event in my_event_channel.read(&mut self.reader) {
-                        println!("Received an event: {:?}", event);
-                    }
-                }),
-        )
-    }
+fn build(mut self) -> Box<dyn ParallelRunnable> {
+    Box::new(
+        SystemBuilder::new("MyEventConsumerSystem")
+            .read_resource::<EventChannel<MyEvent>>()
+            .build(move |_, _, my_event_channel, _| {
+                for event in my_event_channel.read(&mut self.reader) {
+                    println!("Received an event: {:?}", event);
+                }
+            }),
+    )
+}
 ```

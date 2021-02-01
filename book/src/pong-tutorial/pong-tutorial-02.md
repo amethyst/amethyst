@@ -380,9 +380,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     let texture_handle = {
         let loader = resources.get::<DefaultLoader>();
         let texture_storage = resources.get::<AssetStorage<Texture>>();
-        loader.load(
-            "texture/pong_spritesheet.png",
-        )
+        loader.load("texture/pong_spritesheet.png")
     };
 
     //...
@@ -459,9 +457,7 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #   let texture_handle = {
 #       let loader = resources.get::<DefaultLoader>();
 #       let texture_storage = resources.get::<AssetStorage<Texture>>();
-#       loader.load(
-#           "texture/pong_spritesheet.png",
-#       )
+#       loader.load("texture/pong_spritesheet.png")
 #   };
 # 
     // ...
