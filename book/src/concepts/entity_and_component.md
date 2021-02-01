@@ -50,7 +50,7 @@ enum Shape {
 }
 
 fn main() {
-    let world = World::default();
+    let mut world = World::default();
 
     // One archetype of entity
     world.push((Shape::Sphere { radius: 3. },)); // notice the trailing comma in the tuple

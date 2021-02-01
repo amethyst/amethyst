@@ -4,22 +4,25 @@
 
 An `EventChannel` is a broadcast queue of events. Events may be any type that implements `Send + Sync + 'static`.
 
-Typically, `EventChannel`s are inserted as resources in the `World`.
+Typically, `EventChannel`s are inserted as resources in `Resources`.
 
 ## Examples
 
 ### Creating an event channel
 
 ```rust
-# use amethyst::shrev::EventChannel;
-// In the following examples, `MyEvent` is the event type of the channel.
+use amethyst::shrev::EventChannel;
+
+// In the following examples, `MyEvent` is the event type.
 #[derive(Debug)]
 pub enum MyEvent {
     A,
     B,
 }
 
+# fn main() {
 let mut channel = EventChannel::<MyEvent>::new();
+# }
 ```
 
 ### Writing events to the event channel
@@ -27,6 +30,8 @@ let mut channel = EventChannel::<MyEvent>::new();
 Single:
 
 ```rust
+# use amethyst::shrev::EventChannel;
+#
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -34,7 +39,7 @@ Single:
 # }
 # 
 # fn main() {
-#   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
+#   let mut channel = EventChannel::<MyEvent>::new();
     channel.single_write(MyEvent::A);
 # }
 ```
@@ -42,6 +47,8 @@ Single:
 Multiple:
 
 ```rust
+# use amethyst::shrev::EventChannel;
+#
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -49,7 +56,7 @@ Multiple:
 # }
 # 
 # fn main() {
-#   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
+#   let mut channel = EventChannel::<MyEvent>::new();
     channel.iter_write(vec![MyEvent::A, MyEvent::A, MyEvent::B].into_iter());
 # }
 ```
@@ -61,6 +68,8 @@ Multiple:
 To subscribe to events, register a reader against the `EventChannel` to receive a `ReaderId`:
 
 ```rust
+# use amethyst::shrev::EventChannel;
+#
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -68,23 +77,8 @@ To subscribe to events, register a reader against the `EventChannel` to receive 
 # }
 # 
 # fn main() {
-#   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
+#   let mut channel = EventChannel::<MyEvent>::new();
     let mut reader_id = channel.register_reader();
-# }
-```
-
-When reading events, pass the `ReaderId` in:
-
-```rust
-# #[derive(Debug)]
-# pub enum MyEvent {
-#   A,
-#   B,
-# }
-# 
-# fn main() {
-#   let mut channel = amethyst::shrev::EventChannel::<MyEvent>::new();
-#   let mut reader_id = channel.register_reader();
     for event in channel.read(&mut reader_id) {
         // The type of the event is inferred from the generic type
         // we assigned to the `EventChannel<MyEvent>` earlier when creating it.
@@ -102,7 +96,7 @@ It is the `ReaderId` that needs to be mutable to keep track of where your last r
 
 ## Patterns
 
-When using the event channel, we usually re-use the same pattern over and over again to maximize parallelism.
+When using the event channel, we re-use the same pattern over and over again to maximize parallelism.
 It goes as follow:
 
 In the **producer** `System`, get a mutable reference to your resource:
@@ -116,51 +110,24 @@ In the **producer** `System`, get a mutable reference to your resource:
 #   B,
 # }
 # 
-# struct MySystem;
-# 
-# impl System for MySystem {
-    type SystemData = Write<'a, EventChannel<MyEvent>>;
-#   fn build(mut self) -> Box<dyn ParallelRunnable> {}
-# }
+ struct MyEventProducerSystem;
+
+ use amethyst::ecs::{System, ParallelRunnable, SystemBuilder};
+ 
+ impl System for MyEventProducerSystem {
+    fn build(self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MyEventProducerSystem")
+                .write_resource::<EventChannel<MyEvent>>()
+                .build(move |_, _, my_event_channel, _| { 
+                                        my_event_channel.single_write(MyEvent::A);
+                })
+        )
+    }
+ }
 ```
 
-In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
-
-```rust
-# use amethyst::shrev::ReaderId;
-# 
-# #[derive(Debug)]
-# pub enum MyEvent {
-#   A,
-#   B,
-# }
-# 
-struct ReceiverSystem {
-    // The type inside of ReaderId should be the type of the event you are using.
-    reader: Option<ReaderId<MyEvent>>,
-}
-```
-
-and you also need to get read access:
-
-```rust
-# use amethyst::{shrev::EventChannel};
-# 
-# #[derive(Debug)]
-# pub enum MyEvent {
-#   A,
-#   B,
-# }
-# 
-# struct MySystem;
-# 
-# impl System for MySystem {
-    type SystemData = .read_resource::<EventChannel<MyEvent>>();
-#   fn build(mut self) -> Box<dyn ParallelRunnable> {}
-# }
-```
-
-Then, in the `System`'s `new` method:
+In the **consumer** `System`s, you need to store the `ReaderId`.
 
 ```rust
 # use amethyst::{
@@ -174,44 +141,26 @@ Then, in the `System`'s `new` method:
 #   B,
 # }
 # 
-# struct MySystem {
-#   reader_id: ReaderId<MyEvent>,
-# }
-# 
-impl MySystem {
-    pub fn new(world: &mut World) -> Self {
-        <Self as System>::SystemData::setup(world);
-        let reader_id = world.fetch_mut::<EventChannel<MyEvent>>().register_reader();
+struct MyEventConsumerSystem {
+  reader_id: ReaderId<MyEvent>,
+}
+
+impl MyEventConsumerSystem {
+    pub fn new(resources: &mut Resources) -> Self {
+        let reader_id = resources.get_mut::<EventChannel<MyEvent>>().register_reader();
         Self { reader_id }
     }
 }
 
-# impl System for MySystem {
-#   fn build(mut self) -> Box<dyn ParallelRunnable> {}
-# }
-```
-
-Finally, you can read events from your `System`.
-
-```rust
-# use amethyst::{shrev::EventChannel};
-# 
-# #[derive(Debug)]
-# pub enum MyEvent {
-#   A,
-#   B,
-# }
-# 
-# struct MySystem {
-#   reader_id: amethyst::shrev::ReaderId<MyEvent>,
-# }
-# 
-impl System for MySystem {
-    type SystemData = .read_resource::<EventChannel<MyEvent>>();
-    fn run(&mut self, my_event_channel: Self::SystemData) {
-        for event in my_event_channel.read(&mut self.reader_id) {
-            println!("Received an event: {:?}", event);
-        }
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MyEventConsumerSystem")
+                .read_resource::<EventChannel<MyEvent>>()
+                .build(move |_, _, my_event_channel, _| {
+                    for event in my_event_channel.read(&mut self.reader) {
+                        println!("Received an event: {:?}", event);
+                    }
+                }),
+        )
     }
-}
 ```
