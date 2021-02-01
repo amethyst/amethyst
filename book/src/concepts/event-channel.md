@@ -11,6 +11,7 @@ Typically, `EventChannel`s are inserted as resources in `Resources`.
 ### Creating an event channel
 
 ```rust
+use amethyst::ecs::Resources;
 use amethyst::shrev::EventChannel;
 
 // In the following examples, `MyEvent` is the event type.
@@ -21,7 +22,9 @@ pub enum MyEvent {
 }
 
 # fn main() {
+#   let mut resources = Resources::default();
     let mut channel = EventChannel::<MyEvent>::new();
+    resources.insert(channel);
 # }
 ```
 
@@ -131,7 +134,7 @@ In the **consumer** `System`s, you need to store the `ReaderId`.
 
 ```rust
 # use amethyst::{
-#   ecs::{System, World},
+#   ecs::{ParallelRunnable, Resources, System, SystemBuilder, World},
 #   shrev::{EventChannel, ReaderId},
 # };
 # 
@@ -149,20 +152,23 @@ impl MyEventConsumerSystem {
     pub fn new(resources: &mut Resources) -> Self {
         let reader_id = resources
             .get_mut::<EventChannel<MyEvent>>()
+            .unwrap()
             .register_reader();
         Self { reader_id }
     }
 }
 
-fn build(mut self) -> Box<dyn ParallelRunnable> {
-    Box::new(
-        SystemBuilder::new("MyEventConsumerSystem")
-            .read_resource::<EventChannel<MyEvent>>()
-            .build(move |_, _, my_event_channel, _| {
-                for event in my_event_channel.read(&mut self.reader) {
-                    println!("Received an event: {:?}", event);
-                }
-            }),
-    )
+impl System for MyEventConsumerSystem {
+    fn build(mut self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MyEventConsumerSystem")
+                .read_resource::<EventChannel<MyEvent>>()
+                .build(move |_, _, my_event_channel, _| {
+                    for event in my_event_channel.read(&mut self.reader_id) {
+                        println!("Received an event: {:?}", event);
+                    }
+                }),
+        )
+    }
 }
 ```
