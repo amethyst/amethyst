@@ -40,7 +40,7 @@ initialization code from the Pong code.
 
 1. In `main.rs` declare `pong` as a module and import the `Pong` state:
 
-   ```rust
+   ```rust ,ignore
    mod pong;
 
    use crate::pong::Pong;
@@ -337,7 +337,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = DispatcherBuilder::default()
         // ...
         // Add the transform bundle which handles tracking entity positions
-        .add_bundle(TransformBundle::new())?;
+        .add_bundle(TransformBundle)?;
 
 #   let assets_dir = "/";
 #   let mut game = Application::new(assets_dir, Pong, game_data)?;

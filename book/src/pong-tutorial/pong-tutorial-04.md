@@ -294,7 +294,7 @@ as well as adding our new systems to the game data:
 #   }
 #   let input_bundle = amethyst::input::InputBundle::new();
     let game_data = DispatcherBuilder::default()
-#       .add_bundle(TransformBundle::new())?
+#       .add_bundle(TransformBundle)?
 #       .add_bundle(input_bundle)?
 #       .with(systems::PaddleSystem, "paddle_system", &["input_system"])
         // ...other systems...

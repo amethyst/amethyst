@@ -204,7 +204,7 @@ fn main() -> Result<(), Error> {
     let mut game_data = CustomDispatcherBuilder::default()
         .with_base(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_running(ExampleSystem::default(), "example_system", &[])
-        .with_base_bundle(TransformBundle::new())
+        .with_base_bundle(TransformBundle)
         .with_base_bundle(FpsCounterBundle::default())
         .with_base_bundle(InputBundle::new())
         .with_base_bundle(UiBundle::new())

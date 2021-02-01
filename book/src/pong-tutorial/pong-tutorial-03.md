@@ -74,7 +74,7 @@ axes we defined. Let's make the following changes to `main.rs`.
 #   struct Pong;
 #   impl SimpleState for Pong {}
     let game_data = DispatcherBuilder::default()
-        .add_bundle(TransformBundle::new())
+        .add_bundle(TransformBundle)
         .add_bundle(input_bundle);
     // ..
 
@@ -94,7 +94,7 @@ directory called `systems` under `src` to hold all our systems. We'll use a
 module to collect and export each of our systems to the rest of the
 application. Here's our `mod.rs` for `src/systems`:
 
-```rust
+```rust ,ignore
 pub use self::paddle::PaddleSystem;
 
 mod paddle;
@@ -193,10 +193,8 @@ immutable for the `Paddle` and mutable for the `Transform`.
 Let's add this system to our `DispatcherBuilder` in `main.rs`:
 
 ```rust
-mod systems; // Import the module
-```
+mod systems;
 
-```rust
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::input::StringBindings;
 # use amethyst::prelude::*;
@@ -218,11 +216,10 @@ fn main() -> amethyst::Result<()> {
 #   let input_bundle = amethyst::input::InputBundle::new();
     let game_data = DispatcherBuilder::default()
 // ...
-.add_bundle(TransformBundle::new())?
+.add_bundle(TransformBundle)?
 .add_bundle(input_bundle)?
-.with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
-// ...
-#;
+.add_system(systems::PaddleSystem); // Add this line
+#
 #   let assets_dir = "/";
 #   struct Pong;
 #   impl SimpleState for Pong {}

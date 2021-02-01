@@ -317,7 +317,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderUi::default()),
         )?
-        .with_base_bundle(&mut app_builder.world, TransformBundle::new())?
+        .with_base_bundle(&mut app_builder.world, TransformBundle)?
         .with_base_bundle(&mut app_builder.world, UiBundle::new())?
         .with_base_bundle(
             &mut app_builder.world,
