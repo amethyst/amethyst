@@ -53,7 +53,8 @@ inventory::submit! {
     }
 }
 
-register_asset_type!(Camera => Camera; AssetProcessorSystem<Camera>);
+register_component_type!(Camera);
+register_component_type!(Light);
 
 /// A GLTF node extent
 #[derive(Clone, Debug, Serialize)]

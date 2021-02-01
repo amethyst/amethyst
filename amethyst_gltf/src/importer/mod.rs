@@ -14,11 +14,15 @@ use atelier_assets::core::AssetUuid;
 use gltf::{buffer, buffer::Data, Document, Gltf, Mesh, Node};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
+use log::debug;
 
 use crate::{
     importer::{gltf_bytes_converter::convert_bytes, mesh::load_mesh},
     GltfAsset, GltfNodeExtent, GltfSceneOptions,
 };
+use amethyst_assets::prefab::legion_prefab::{PrefabBuilder, CookedPrefab};
+use amethyst_assets::prefab::{Prefab, legion_prefab};
+use amethyst_core::ecs::World;
 
 mod gltf_bytes_converter;
 mod mesh;
@@ -68,6 +72,7 @@ impl Importer for GltfImporter {
         _state: &mut Self::State,
     ) -> amethyst_assets::atelier_importer::Result<ImporterValue> {
         log::info!("Importing scene");
+        let mut world = World::default();
 
         let mut bytes = Vec::new();
         source.read_to_end(&mut bytes)?;
@@ -77,9 +82,6 @@ impl Importer for GltfImporter {
             log::error!("GLTF Import error: {:?}", err);
             return Err(atelier_importer::Error::Boxed(Box::new(err)));
         }
-
-        let mut asset_accumulator = Vec::new();
-        let mut asset_accumulator2 = Vec::new();
 
         let (doc, buffers, _images) = result.unwrap();
 
@@ -95,32 +97,34 @@ impl Importer for GltfImporter {
         let mut node_index: usize = 0;
 
         scene.nodes().into_iter().for_each(|node| {
-            let mut node_assets = load_node(&node, op, &options, &buffers, &mut node_index);
-            asset_accumulator.append(&mut node_assets);
+            load_node(&node, &mut world, op, &options, &buffers, &mut node_index);
         });
 
-        asset_accumulator2.push(ImportedAsset {
-            id: op.new_asset_uuid(),
-            search_tags: Vec::new(),
-            build_deps: Vec::new(),
-            load_deps: Vec::new(),
-            asset_data: Box::new(Camera::standard_3d(1.0, 1.0)),
-            build_pipeline: None,
-        });
+        let legion_prefab = legion_prefab::Prefab::new(world);
+        let prefab_asset = Prefab::new(legion_prefab);
 
         Ok(ImporterValue {
-            assets: asset_accumulator2,
+            assets: vec![ImportedAsset {
+                id: op.new_asset_uuid(),
+                search_tags: Vec::new(),
+                build_deps: Vec::new(),
+                load_deps: Vec::new(),
+                asset_data: Box::new(prefab_asset),
+                build_pipeline: None,
+            }],
         })
     }
 }
 
 fn load_node(
     node: &Node<'_>,
+    world: &mut World,
     op: &mut ImportOp,
     options: &GltfSceneOptions,
     buffers: &Vec<Data>,
     node_index: &mut usize,
 ) -> Vec<ImportedAsset> {
+    let current_node_entity = world.push(());
     let mut imported_assets = Vec::new();
     let mut node_asset = GltfAsset::default();
 
@@ -134,9 +138,17 @@ fn load_node(
         search_tags.push(("node_name".to_string(), Some(name.to_string())));
         search_tags.push(("node_index".to_string(), Some(node_asset.index.to_string())));
     }
-    node_asset.transform = load_transform(node);
-    node_asset.camera = load_camera(node);
-    node_asset.light = load_light(node);
+    if let Some(transform) = load_transform(node) {
+       // world.entry(current_node_entity).expect("We just added this entity").add_component(transform);
+    }
+    if let Some(camera) = load_camera(node) {
+        debug!("Adding a camera component to to the current node entity");
+        world.entry(current_node_entity).expect("We just added this entity").add_component(camera);
+    }
+    if let Some(light) = load_light(node) {
+        debug!("Adding a light component to to the current node entity");
+        world.entry(current_node_entity).expect("We just added this entity").add_component(light);
+    }
 
     let mut skin = node.skin().map(|skin| {
         SkinInfo {
@@ -189,8 +201,7 @@ fn load_node(
 
     // load childs
     for child in node.children() {
-        let mut child_assets = load_node(&child, op, options, buffers, node_index);
-        imported_assets.append(&mut child_assets);
+        load_node(&child, world, op, options, buffers, node_index);
     }
 
     imported_assets.push(ImportedAsset {

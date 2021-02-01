@@ -7,8 +7,12 @@ use amethyst_core::{
     transform::Transform,
 };
 use type_uuid::TypeUuid;
-use amethyst_assets::Asset;
+use amethyst_assets::{Asset, prefab::{serde_diff, SerdeDiff}};
 use crate::SpriteSheet;
+use serde::de::SeqAccess;
+use amethyst_assets::prefab::serde_diff::{DiffContext, ApplyContext};
+use serde::ser::SerializeSeq;
+use serde::de;
 
 /// Camera struct.
 ///
@@ -33,13 +37,24 @@ use crate::SpriteSheet;
 ///
 /// If you change `matrix` you must also change `inverse` so that they stay in sync.
 /// You should probably use from_matrix instead.
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, TypeUuid)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, TypeUuid, Default)]
 #[uuid = "56946ce2-356e-4038-82ad-e55a69ddfde9"]
 pub struct Camera {
     /// The projection matrix
     pub matrix: Matrix4<f32>,
     /// Its inverse
     pub inverse: Matrix4<f32>,
+}
+
+impl SerdeDiff for Camera{
+    fn diff<'a, S: SerializeSeq>(&self, ctx: &mut DiffContext<'a, S>, other: &Self) -> Result<bool, <S as SerializeSeq>::Error> {
+        unimplemented!()
+    }
+
+    fn apply<'de, A>(&mut self, seq: &mut A, ctx: &mut ApplyContext) -> Result<bool, <A as SeqAccess<'de>>::Error> where
+        A: de::SeqAccess<'de> {
+        unimplemented!()
+    }
 }
 
 impl Asset for Camera {

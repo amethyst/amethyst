@@ -3,6 +3,7 @@ use amethyst::assets::prefab::Prefab;
 use amethyst::renderer::Camera;
 use amethyst::ui::UiTransform;
 use amethyst::ecs::{Entity, IntoQuery};
+use amethyst::renderer::light::Light;
 
 struct GltfExample;
 
@@ -17,7 +18,7 @@ impl SimpleState for GltfExample {
             world, resources, ..
         } = data;
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let res: Handle<Camera> = loader.load(
+        let res: Handle<Prefab> = loader.load(
             "gltf/sample.gltf", // Here we load the associated ron file
         );
         let entity = world.push((res,));
@@ -28,9 +29,9 @@ impl SimpleState for GltfExample {
         let StateData {
             world, resources, ..
         } = data;
-        let mut q = <(&Camera)>::query();
+        let mut q = <(Entity, &Light)>::query();
 
-        q.iter(*world).for_each(|e| println!("yeeeeeeaaaah"));
+        q.iter(*world).for_each(|e| println!("yeeeeeeaaaah {:?}", e));
 
 
         Trans::None
