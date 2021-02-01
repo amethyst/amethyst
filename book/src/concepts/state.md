@@ -55,24 +55,24 @@ Amethyst has multiple types of transitions.
 - You can Push a `State` over another.
 - You can also Switch a `State`, which replaces the current `State` with a new one.
 
-Events are what trigger the transitions. In the case of amethyst, it is the different methods called on the `State`. Continue reading to learn about them.
+`Trans` events are what trigger the transitions. Continue reading to learn about them.
 
 ## Life Cycle
 
 `State`s are only valid for a certain period of time, during which a lot of things can occur.
 A `State` contains methods that reflect the most common of those events:
 
-- on\_start: When a `State` is added to the stack, this method is called on it.
-- on\_stop: When a `State` is removed from the stack, this method is called on it.
-- on\_pause: When a `State` is pushed over the current one, the current one is paused, and this method is called on it.
-- on\_resume: When the `State` that was pushed over the current `State` is popped, the current one resumes, and this method is called on the now-current `State`.
-- handle\_event: Allows easily handling events, like the window closing or a key being pressed.
-- fixed\_update: This method is called on the active `State` at a fixed time interval (1/60th second by default).
-- update: This method is called on the active `State` as often as possible by the engine.
-- shadow\_update: This method is called as often as possible by the engine on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `update`, this does not return a `Trans`.
-- shadow\_fixed\_update: This method is called at a fixed time interval (1/60th second by default) on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `fixed_update`, this does not return a `Trans`.
+- `on_start`: When a `State` is added to the stack, this method is called on it.
+- `on_stop`: When a `State` is removed from the stack, this method is called on it.
+- `on_pause`: When a `State` is pushed over the current one, the current one is paused, and this method is called on it.
+- `on_resume`: When a `State` is popped, the previous one resumes, and this method is called on the previous `State`.
+- `handle_event`: Allows handling events, like the window closing or a key being pressed.  Returns a `Trans` event that can modify state stack.
+- `fixed_update`: This method is called on the active `State` at a fixed time interval (1/60th second by default). Returns a `Trans` event that can modify state stack.
+- `update`: This method is called on the active `State` as often as possible by the engine. Returns a `Trans` event that can modify state stack.
+- `shadow_update`: This method is called as often as possible by the engine on all `State`s which are on the `StateMachines` stack, including inactive and active `State`s. Unlike `update`, this does not return a `Trans` event.
+- `shadow_fixed_update`: This method is called at a fixed time interval (1/60th second by default) on all `State`s which are on the `StateMachines` stack, including including inactive and active `State`s. Unlike `fixed_update`, this does not return a `Trans`.
 
-If you aren't using `SimpleState` or `EmptyState`, you *must* implement the `update` method to call `data.data.update(&mut data.world)`.
+If you aren't using `SimpleState` or `EmptyState`, the `update` method *must* call `data.data.update(&mut data.world, &mut data.resources)`.
 
 ## Game Data
 
@@ -82,17 +82,17 @@ If you need to store data that is tightly coupled to your `State`, the classic w
 `State`s also have internal data, which is any type T.
 In most cases, the two following are the most used: `()` and `GameData`.
 
-`()` means that there is no data associated with this `State`. This is usually used for tests and not for actual games.
-`GameData` is the de-facto standard. It is a struct containing a `Dispatcher`. This will be discussed later.
+- `()` means that there is no data associated with this `State`. This is usually used for tests and not for actual games.
+- `GameData` is the de-facto standard. It is a struct containing a `Dispatcher` which controls system execution. This will be discussed later.
 
-When calling your `State`'s methods, the engine will pass a `StateData` struct which contains both the `World` (which will also be discussed later) and the Game Data type that you chose.
+When calling your `State`'s methods above, the engine will pass a `StateData` struct which contains the ECS `World`, `Resources` and the `StateData` type that you chose (usually `GameData`).
 
 ## Code
 
 Yes! It's finally time to get some code in here!
 
 Here will be a small code snippet that shows the basics of `State`'s usage.
-For more advanced examples, see the following pong tutorial.
+For more advanced examples, see the [pong tutorial](../pong-tutorial).
 
 ### Creating a State
 
@@ -100,8 +100,8 @@ For more advanced examples, see the following pong tutorial.
 use amethyst::prelude::*;
 
 struct GameplayState {
-    /// The `State`-local data. Usually you will not have anything.
-    /// In this case, we have the number of players here.
+    /// The `State`-local data.
+    /// We have the number of players here.
     player_count: u8,
 }
 
@@ -111,8 +111,6 @@ impl SimpleState for GameplayState {
     }
 }
 ```
-
-That's a lot of code, indeed!
 
 We first declare the `State`'s struct `GameplayState`.
 
@@ -146,11 +144,8 @@ struct GameplayState;
 
 struct PausedState;
 
-// This time around, we are using () instead of GameData, because we don't have any `System`s that need to be updated.
-// (They are covered in the dedicated section of the book.)
-// Instead of writing `State<(), StateEvent>`, we can instead use `EmptyState`.
-impl EmptyState for GameplayState {
-    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent) -> EmptyTrans {
+impl SimpleState for GameplayState {
+    fn handle_event(&mut self, _data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
                 // Pause the game by going to the `PausedState`.
@@ -163,8 +158,8 @@ impl EmptyState for GameplayState {
     }
 }
 
-impl EmptyState for PausedState {
-    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent) -> EmptyTrans {
+impl SimpleState for PausedState {
+    fn handle_event(&mut self, _data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
                 // Go back to the `GameplayState`.
@@ -181,46 +176,51 @@ impl EmptyState for PausedState {
 ### Event Handling
 
 As you already saw, we can handle events from the `handle_event` method.
-But what is this weird `StateEvent` all about?
+But what is this `StateEvent` all about?
 
-Well, it is simply an enum. It regroups multiple types of events that are emitted throughout the engine by default.
+Well, it is simply an enum. It groups types of events that are emitted throughout the engine by default.
 To change the set of events that the state receives, you create a new event enum and derive `EventReader` for that type.
+See the [`events_custom_states_event` example](https://github.com/amethyst/amethyst/tree/main/examples/events_custom_state_event) for a complete runnable example.
 
 ```rust
-// These imports are required for the #[derive(EventReader)] code to build
 use amethyst::{
     core::{
         ecs::World,
         shrev::{EventChannel, ReaderId},
         EventReader,
     },
+    derive::EventReader,
     input::{is_key_down, VirtualKeyCode},
     prelude::*,
     ui::UiEvent,
-    winit::Event,
+    winit::event::Event,
 };
 
 #[derive(Clone, Debug)]
-pub struct AppEvent {
+pub struct MyAppEvent {
     data: i32,
 }
 
 #[derive(Debug, EventReader, Clone)]
-#[reader(MyEventReader)]
-pub enum MyEvent {
-    Window(Event),
+#[reader(MyStateEventReader)]
+pub enum MyStateEvent {
+    Window(Event<'static, ()>),
     Ui(UiEvent),
-    App(AppEvent),
+    App(MyAppEvent),
 }
 
 struct GameplayState;
 
-impl State<(), MyEvent> for GameplayState {
-    fn handle_event(&mut self, _data: StateData<()>, event: MyEvent) -> Trans<(), MyEvent> {
+impl State<(), MyStateEvent> for GameplayState {
+    fn handle_event(
+        &mut self,
+        _data: StateData<()>,
+        event: MyStateEvent,
+    ) -> Trans<(), MyStateEvent> {
         match event {
-            MyEvent::Window(_) => {} // Events related to the window and inputs.
-            MyEvent::Ui(_) => {}     // Ui event. Button presses, mouse hover, etc...
-            MyEvent::App(ev) => println!("Got an app event: {:?}", ev),
+            MyStateEvent::Window(_) => {} // Events related to the window and inputs.
+            MyStateEvent::Ui(_) => {}     // Ui event. Button presses, mouse hover, etc...
+            MyStateEvent::App(ev) => println!("Got an app event: {:?}", ev),
         };
 
         Trans::None
