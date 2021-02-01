@@ -14,6 +14,7 @@ Adding a resource to a `Resources` instance is done like this:
 ```rust
 use amethyst::ecs::Resources;
 
+#[derive(Default, Debug, PartialEq)]
 struct MyResource {
     pub game_score: i32,
 }
@@ -33,21 +34,22 @@ Fetching a resource can be done like this:
 
 ```rust
 # use amethyst::ecs::Resources;
-# #[derive(Debug, PartialEq)]
+# 
+# #[derive(Default, Debug, PartialEq)]
 # struct MyResource {
 #   pub game_score: i32,
 # }
+# 
 # fn main() {
 #   let mut resources = Resources::default();
 #   let my = MyResource { game_score: 0 };
-    resources.insert(my);
-    let fetched = resources.get::<MyResource>(); // returns Option<Fetch<T>>
-    if let Some(fetched_resource) = fetched {
-        // dereference Fetch<MyResource> to access data
+#   resources.insert(my);
+    if let Some(fetched_resource) = resources.get::<MyResource>() {
+        // dereference Fetch<MyResource> to access data directly
         assert_eq!(*fetched_resource, MyResource { game_score: 0 });
     } else {
         println!("No MyResource present in `Resources`");
-    }
+    };
 # }
 ```
 
@@ -55,12 +57,18 @@ If you want to get a resource and create it if it doesn't exist:
 
 ```rust
 # use amethyst::ecs::Resources;
-# struct MyResource;
+# 
+# #[derive(Default, Debug, PartialEq)]
+# struct MyResource {
+#   pub game_score: i32,
+# }
+# 
 # fn main() {
 #   let mut resources = Resources::default();
     // If the resource isn't inside `Resources`,
     // it will insert the instance we created earlier.
-    let fetched = resources.get_or_insert_with(|| MyResource);
+    let fetched = resources.get_or_insert_with(|| MyResource { game_score: 0 });
+#   drop(fetched);
     // or
     let fetched = resources.get_or_default::<MyResource>();
 # }
@@ -70,22 +78,24 @@ If you want to change a resource that is already inside of `Resources`:
 
 ```rust
 # use amethyst::ecs::Resources;
+# 
+# #[derive(Default, Debug, PartialEq)]
 # struct MyResource {
 #   pub game_score: i32,
 # }
+# 
 # fn main() {
-#   let mut resources = Resources::empty();
+#   let mut resources = Resources::default();
 #   let my = MyResource { game_score: 0 };
 #   resources.insert(my);
     // get_mut returns a Option<FetchMut<MyResource>>
-    let fetched = resources.get_mut::<MyResource>();
-    if let Some(mut fetched_resource) = fetched {
+    if let Some(mut fetched_resource) = resources.get_mut::<MyResource>() {
         assert_eq!(fetched_resource.game_score, 0);
         fetched_resource.game_score = 10;
         assert_eq!(fetched_resource.game_score, 10);
     } else {
         println!("No MyResource present in `Resources`");
-    }
+    };
 # }
 ```
 
@@ -95,11 +105,14 @@ Other ways of fetching a resource will be covered in the system section of the b
 
 ```rust
 # use amethyst::ecs::Resources;
+# 
+# #[derive(Default, Debug, PartialEq)]
 # struct MyResource {
 #   pub game_score: i32,
 # }
+# 
 # fn main() {
-#   let mut resources = Resources::empty();
+#   let mut resources = Resources::default();
 #   let my = MyResource { game_score: 0 };
 #   resources.insert(my);
     resources.remove::<MyResource>();
