@@ -1,21 +1,18 @@
 # Drawing the paddles
 
 Now let's do some drawing! But to draw something, we need something to draw. In
-Amethyst, those "somethings" are called entities.
+Amethyst, those "somethings" are entities.
 
-Amethyst uses an Entity-Component-System (ECS) framework called **specs**, also
-written in Rust. You can learn more about Specs in the [The Specs Book][sb].
-Here's a basic explanation of ECS from the documentation:
+Amethyst uses an Entity-Component-System (ECS) framework called **Legion**, also
+written in Rust. You can learn more about Legion in the [The Legion API Documentation][legion_api].
+Here's a basic explanation of ECS:
 
 > The term ECS is shorthand for Entity-Component-System. These are the three
 > core concepts. Each **entity** is associated with some **components**. Those entities
 > and components are processed by **systems**. This way, you have your data
 > (components) completely separated from the behavior (systems). An entity just
-> logically groups components; so a Velocity component can be applied to the
-> Position component of the same entity.
-
-I recommend at least skimming the rest of The Specs Book to get a good intuition
-of how Amethyst works, especially if you're new to ECS.
+> logically groups components; so for example a Velocity component can be attached to the
+> same entity as a Position Component.
 
 ## A quick refactor
 
@@ -23,15 +20,14 @@ Before adding more of the Pong logic, we are going to separate the application
 initialization code from the Pong code.
 
 1. In the `src` directory, create a new file called `pong.rs` and add the
-   following `use` statements. These are needed to make it through this chapter:
+   following `use` statements. These are needed for the rest of this chapter:
 
    ```rust
    use amethyst::{
        assets::{AssetStorage, DefaultLoader, Handle, Loader},
        core::Transform,
-       ecs::Component,
        prelude::*,
-       renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+       renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, Texture},
    };
    ```
 
@@ -59,15 +55,15 @@ impl SimpleState for Pong {
 }
 ```
 
-The `StateData<'_, GameData>` is a structure given to all State methods.
-The important part of its content here is its `world` field.
-
-The `World` structure stores all of the game's runtime data -- entities and components.
+The `StateData<'_, GameData>` is a struct given to all State methods.
+The important part of its content for us in this chapter is the `world` field.
+The `data.world` field holds a `World` structure which stores all of the game's entities and components.
+We will be adding game initialization code to the `on_start` method throughout this chapter.
 
 ## Rendering the game using the Camera
 
 The first thing we will need in our game is a `Camera`. This is the component that
-will determine what is rendered on screen. It behaves like a real-life
+will determine what is visible on screen. It behaves like a real-life
 camera: it looks at a specific part of the world and can be moved around at
 will.
 
@@ -78,7 +74,7 @@ will.
    pub const ARENA_WIDTH: f32 = 100.0;
    ```
 
-   These are public as they will be used in other modules.
+   These are `pub` as they will be used in other modules.
 
 1. Create the camera entity.
 
@@ -98,7 +94,7 @@ will.
    ```
 
    This creates an entity that will carry our camera, with an orthographic
-   projection of the size of our arena. We also attach a `Transform` component,
+   projection the size of our arena. We also attach a `Transform` component,
    representing its position in the world.
 
    The `Camera::standard_2d` function creates a default 2D camera that is
@@ -117,7 +113,7 @@ will.
    ![Camera Z shift](../images/pong_tutorial/camera.png)
 
    > **Note:** Orthographic projections are a type of 3D visualization on 2D screens
-   > that keeps the size ratio of the 2D images displayed intact. They are very
+   > that keeps the size ratio of the 2D images displayed intact. They are
    > useful in games without actual 3D, like our pong example. Perspective projections
    > are another way of displaying graphics, more useful in 3D scenes.
 
@@ -141,7 +137,7 @@ Now that our camera is set up, it's time to add the paddles.
 
 ## Our first Component
 
-Now, we will create the `Paddle` component, all in `pong.rs`.
+Now, we will create the `Paddle` component in `pong.rs`.
 
 1. Define constants for the paddle width and height.
 
@@ -179,13 +175,12 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
    }
    ```
 
-   *"But that just looks like a regular struct!"* you might say.
-
-   Legion will take care of creating the archetypes for optimal storage automatically based on the combination of components given to an entity.
+   *"But that just looks like a regular struct!"* you might say.  Well it is!  Legion will take care of creating the archetypes for
+   optimal storage of these structs automatically based on the combination of components added to an entity.
 
 ## initialize some entities
 
-Now that we have a `Paddle` component, let's define some paddle entities that
+Now that we have a `Paddle` component, let's define some entities that
 include that component and add them to our `World`.
 
 First let's look at our imports:
@@ -203,9 +198,10 @@ which will create left and right paddle entities and attach a `Transform`
 component to each to position them in our world. As we defined earlier,
 our canvas is from `0.0` to `ARENA_WIDTH` in the horizontal dimension and
 from `0.0` to `ARENA_HEIGHT` in the vertical dimension.
+
 Keep in mind that the anchor point of our entities will be in the middle of the
-image we will want to render on top of them. This is a good rule to follow in
-general, as it makes operations like rotation easier.
+sprite we will want to render so must take `PADDLE_WIDTH` in to account.
+This is a good rule to follow in general, as it makes operations like rotation easier.
 
 ```rust
 # use amethyst::{core::Transform, ecs::World, prelude::*};
@@ -262,46 +258,7 @@ compiles. Update the `on_start` method to the following:
 # }
 ```
 
-Let's run our blank screen game!
-
-```text
-Tried to fetch resource of type `MaskedStorage<Paddle>`[^1] from the `World`, but the resource does not exist.
-
-You may ensure the resource exists through one of the following methods:
-
-* Inserting it when the world is created: `world.insert(..)`.
-* If the resource implements `Default`, include it in a system's `SystemData`, and ensure the system is registered in the dispatcher.
-* If the resource does not implement `Default`, insert in the world during `System::setup`.
-
-[^1]: Full type name: `amethyst::ecs::storage::MaskedStorage<pong::Paddle>`
-```
-
-Uh oh, what's wrong?
-
-For a `Component` to be used, there must be a `Storage<ComponentType>` resource
-set up in the `World`. The error message above means we have registered the
-`Paddle` component on an entity, but have not set up the `Storage`. We can fix
-this by adding the following line before `initialize_paddles(world)` in the
-`on_start` method:
-
-```rust
-# use amethyst::ecs::World;
-# struct Paddle;
-# fn register() {
-#   let mut world = World::default();
-    world.register::<Paddle>();
-# }
-```
-
-This is rather inconvenient — to need to manually register each component
-before it can be used. There *must* be a better way. **Hint:** there is.
-
-When we add systems to our application, any component that a `System` uses is
-automatically registered.
-However, as we haven't got any `System`s, we have to
-live with registering the `Paddle` component manually.
-
-Let's run the game again.
+You may run the game now but there will still be a blank screen!  Let's remedy this in the next two sections.
 
 ## Bundles
 
@@ -314,36 +271,23 @@ registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
 
 ```rust
-use amethyst::core::transform::TransformBundle;
-# use amethyst::{prelude::*, utils::application_root_dir};
-# 
-# struct Pong;
-# impl SimpleState for Pong {}
-# 
+use amethyst::{assets::LoaderBundle, prelude::*};
 fn main() -> amethyst::Result<()> {
-#   amethyst::start_logger(Default::default());
-# 
-#   let app_root = application_root_dir()?;
-#   let display_config_path = app_root.join("config/display.ron");
-# 
     // ...
-    let game_data = DispatcherBuilder::default()
-        // ...
-        // Add the transform bundle which handles tracking entity positions
-        .add_bundle(TransformBundle)?;
-
-#   let assets_dir = "/";
-#   let mut game = Application::new(assets_dir, Pong, game_data)?;
+    let mut game_data = DispatcherBuilder::default();
+    // ...
+    // Add the LoaderBundle which handles loading assets such as images and audio
+    game_data.add_bundle(LoaderBundle);
+    // ...
 #   Ok(())
 }
 ```
 
-This time, when you run the game you should see the familiar black screen.
-Hooray!
+Next we will draw things.
 
 ## Drawing
 
-This section will finally allow us to see something.
+This section will allow us to see something.
 
 The first thing we will have to do is load the sprite sheet we will use for all
 our graphics in the game. Create a `texture` folder in the `assets` directory of the project.
@@ -355,44 +299,36 @@ First, let's declare the function and load the sprite sheet's image data.
 
 ```rust
 # use amethyst::{
-#   assets::{AssetStorage, DefaultLoader, Handle, Loader},
-#   core::Transform,
+#   assets::{DefaultLoader, Handle, Loader},
 #   prelude::*,
-#   renderer::{
-#       camera::Camera,
-#       formats::texture::ImageFormat,
-#       sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
-#       Texture,
-#   },
+#   renderer::{sprite::SpriteSheet, Texture},
 # };
 # 
-fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
+
+fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
-    // `texture_handle` is a cloneable reference to the texture
-    let texture_handle = {
-        let loader = resources.get::<DefaultLoader>();
-        let texture_storage = resources.get::<AssetStorage<Texture>>();
+    // `texture` is a cloneable Handle to the texture
+    let texture: Handle<Texture> = {
+        let loader = resources.get::<DefaultLoader>().unwrap();
         loader.load("texture/pong_spritesheet.png")
     };
-
-    //...
 #   unimplemented!()
 }
 ```
 
-The `Loader` is an asset loader which is defined as a resource (not an
-`Entity`, `Component`, or `System`, but still a part of our ECS `World`). It was
+The `DefaultLoader` is an asset loader which is defined as a `Resource` (not an
+`Entity`, `Component`, or `System`, but still a part of our ECS). It was
 created when we built our Application in `main.rs`, and it can read assets like
 .obj files, but also it can `load` a .png as a `Texture` as in our use case.
 
-> Resources in Specs are a type of data which can be shared between systems,
+> Resources in Legion are a type of data which can be shared between systems,
 > while being independent of entities, in contrast to components, which are
 > attached to specific entities.
 
-The `AssetStorage<Texture>` is also a resource; this is where the loader
-puts the `Texture` it will load from our sprite sheet. In order to manage them
-while remaining fast, Amethyst does not give us direct access to the assets we load.
+`AssetStorage<Texture>` is also a resource (not present in this code!); this is where the loader
+will put the loaded `Texture`. In order to manage themwhile remaining fast, Amethyst does not
+give us direct access to the assets we load.
 If it did otherwise, we would have to wait for the texture to be fully loaded to do all the
 other things we have to prepare, which would be a waste of time!
 Instead, the `load` function will return a `Handle<Texture>`.
@@ -401,33 +337,36 @@ equivalent to a reference-counted option. It is extremely useful, especially as 
 the handle does not clone the asset in memory, so many things can use the same asset at once.
 
 Alongside our sprite sheet texture, we need a file describing where the sprites
-are on the sheet. Let's create, right next to it, a file called
+are on the sheet. Let's create, right next to the image, a file called
 `pong_spritesheet.ron`. It will contain the following sprite sheet definition:
 
-```text
-List((
-    texture_width: 8,
-    texture_height: 16,
-    sprites: [
-        (
-            x: 0,
-            y: 0,
-            width: 4,
-            height: 16,
-        ),
-        (
-            x: 4,
-            y: 0,
-            width: 4,
-            height: 4,
-        ),
-    ],
-))
+```rust ,ignore
+{
+    "04c60333-c790-4586-aa76-086b19167a04": // this UUID is provided by Amethyst, look at the docs for `Sprites`
+    List((
+        texture_width: 8,
+        texture_height: 16,
+        sprites: [
+            (
+                x: 0,
+                y: 0,
+                width: 4,
+                height: 16,
+            ),
+            (
+                x: 4,
+                y: 0,
+                width: 4,
+                height: 4,
+            ),
+        ],
+    ))
+}
 ```
 
-> **Note:** Make sure to pay attention to the kind of parentheses in the ron file.
+> **Note:** Make sure to pay attention to the kind of parentheses or braces in the ron file.
 > Especially, if you are used to writing JSON or similar format files, you might
-> be tempted to use curly braces there; that will however lead to very
+> be tempted to use curly braces; that will however lead to very
 > hard-to-debug errors, especially since Amethyst will not warn you about that
 > when compiling.
 
@@ -435,39 +374,30 @@ Finally, we load the file containing the position of each sprite on the sheet.
 
 ```rust
 # use amethyst::{
-#   assets::{AssetStorage, DefaultLoader, Handle, Loader},
-#   core::Transform,
+#   assets::{DefaultLoader, Handle, Loader, ProcessingQueue},
 #   prelude::*,
-#   renderer::{
-#       camera::Camera,
-#       formats::texture::ImageFormat,
-#       sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
-#       Texture,
-#   },
+#   renderer::{sprite::SpriteSheet, Texture},
 # };
 # 
-fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
-#   let texture_handle = {
-#       let loader = resources.get::<DefaultLoader>();
-#       let texture_storage = resources.get::<AssetStorage<Texture>>();
+fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
+#   let texture: Handle<Texture> = {
+#       let loader = resources.get::<DefaultLoader>().unwrap();
 #       loader.load("texture/pong_spritesheet.png")
 #   };
-# 
     // ...
+    let loader = resources.get::<DefaultLoader>().unwrap();
+    let sprites = loader.load("texture/pong_spritesheet.ron");
 
-    let loader = resources.get::<DefaultLoader>();
-    let sprite_sheet_store = resources.get::<AssetStorage<SpriteSheet>>();
-    loader.load(
-        "texture/pong_spritesheet.ron", // Here we load the associated ron file
-        SpriteSheetFormat(texture_handle),
+    loader.load_from_data(
+        SpriteSheet { texture, sprites },
         (),
-        &sprite_sheet_store,
+        &resources.get::<ProcessingQueue<SpriteSheet>>().unwrap(),
     )
 # }
 ```
 
-This is where we have to use the texture handle. The `Loader` will take the
-file containing the sprites' positions and the texture handle, and create a
+This is where we have to use the texture handle. The `DefaultLoader` will take handle
+to the file containing the sprites' positions and the texture handle, and create a
 nicely packaged `SpriteSheet` struct. It is this struct that we will be using
 to actually draw stuff on the screen.
 
@@ -497,33 +427,51 @@ the right one is flipped horizontally.
 #   ecs::World,
 #   renderer::{SpriteRender, SpriteSheet},
 # };
-# fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+    // ...
     // Assign the sprites for the paddles
     let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
-# }
+}
 ```
 
 `SpriteRender` is the `Component` that indicates which sprite of which sprite
 sheet should be drawn for a particular entity. Since the paddle is the first
 sprite in the sprite sheet, we use `0` for the `sprite_number`.
 
-Next we simply add the components to the paddle entities:
+Next we add the `SpriteRender` components to the paddle entities:
 
 ```rust
 # use amethyst::{
 #   assets::Handle,
+#   core::Transform,
 #   ecs::World,
 #   prelude::*,
 #   renderer::sprite::{SpriteRender, SpriteSheet},
 # };
+# enum Side {
+#   Left,
+#   Right,
+# }
+# struct Paddle;
+# impl Paddle {
+#   fn new(side: Side) -> Paddle {
+#       Paddle
+#   }
+# }
 # fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 #   let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
-                                                                   // Create a left plank entity.
-    world.push((sprite_render.clone() /* ... other components */,));
+#   let mut left_transform = Transform::default();
+#   let mut right_transform = Transform::default();
+    // ...
+    // Create a left plank entity.
+    world.push((
+        sprite_render.clone(),
+        Paddle::new(Side::Left),
+        left_transform,
+    ));
 
     // Create right plank entity.
-    world.push((sprite_render /* ... other components */,));
-
+    world.push((sprite_render, Paddle::new(Side::Right), right_transform));
 # }
 ```
 
@@ -531,27 +479,22 @@ We're nearly there, we have to wire up the sprite to the paddles. We put it
 all together in the `on_start()` method:
 
 ```rust
-# use amethyst::{
-#   assets::Handle,
-#   ecs::World,
-#   prelude::*,
-#   renderer::{sprite::SpriteSheet, Texture},
-# };
+# use amethyst::{assets::Handle, ecs::World, prelude::*, renderer::sprite::SpriteSheet};
 # struct Paddle;
 # fn initialize_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
 # fn initialize_camera(world: &mut World) {}
-# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
+# fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
 #   unimplemented!()
 # }
 # struct MyState;
 # impl SimpleState for MyState {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let world = data.world;
+        let StateData {
+            resources, world, ..
+        } = data; // destructure for ease of use
 
         // Load the spritesheet necessary to render the graphics.
-        let sprite_sheet_handle = load_sprite_sheet(world);
-
-        world.register::<Paddle>();
+        let sprite_sheet_handle = load_sprite_sheet(resources);
 
         initialize_paddles(world, sprite_sheet_handle);
         initialize_camera(world);
@@ -568,5 +511,5 @@ If all is well, we should get something that looks like this:
 In the next chapter, we'll explore the "S" in ECS and actually get these paddles
 moving!
 
-[sb]: https://specs.amethyst.rs/docs/tutorials/
+[legion_api]: https://docs.rs/legion/latest/legion/
 [ss]: ../images/pong_tutorial/pong_spritesheet.png
