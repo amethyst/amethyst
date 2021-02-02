@@ -271,11 +271,13 @@ registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
 
 ```rust
-use amethyst::{assets::LoaderBundle, prelude::*};
+use amethyst::{assets::LoaderBundle, core::transform::TransformBundle, prelude::*};
 fn main() -> amethyst::Result<()> {
     // ...
     let mut game_data = DispatcherBuilder::default();
     // ...
+    // Add the TransformBundle which handles positioning things in our world
+    game_data.add_bundle(TransformBundle);
     // Add the LoaderBundle which handles loading assets such as images and audio
     game_data.add_bundle(LoaderBundle);
     // ...
