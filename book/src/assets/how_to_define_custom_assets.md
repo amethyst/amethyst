@@ -126,17 +126,21 @@ This guide explains how to define a new asset type to use in an Amethyst applica
            _handle: &LoadHandle,
        ) -> amethyst::Result<ProcessingState<Self::Data, Self>> {
            match energy_blast_data {
-               EnergyBlastData::Version1 { hp_damage } => Ok(ProcessingState::Loaded(Self {
-                   hp_damage,
-                   ..Default::default()
-               })),
+               EnergyBlastData::Version1 { hp_damage } => {
+                   Ok(ProcessingState::Loaded(Self {
+                       hp_damage,
+                       ..Default::default()
+                   }))
+               }
                EnergyBlastData::Version2 {
                    hp_damage,
                    mp_damage,
-               } => Ok(ProcessingState::Loaded(Self {
-                   hp_damage,
-                   mp_damage,
-               })),
+               } => {
+                   Ok(ProcessingState::Loaded(Self {
+                       hp_damage,
+                       mp_damage,
+                   }))
+               }
            }
        }
    }
@@ -185,17 +189,21 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    #       _handle: &LoadHandle,
    #   ) -> amethyst::Result<ProcessingState<Self::Data, Self>> {
    #       match energy_blast_data {
-   #           EnergyBlastData::Version1 { hp_damage } => Ok(ProcessingState::Loaded(Self {
-   #               hp_damage,
-   #               ..Default::default()
-   #           })),
+   #           EnergyBlastData::Version1 { hp_damage } => {
+   #               Ok(ProcessingState::Loaded(Self {
+   #                   hp_damage,
+   #                   ..Default::default()
+   #               }))
+   #           }
    #           EnergyBlastData::Version2 {
    #               hp_damage,
    #               mp_damage,
-   #           } => Ok(ProcessingState::Loaded(Self {
-   #               hp_damage,
-   #               mp_damage,
-   #           })),
+   #           } => {
+   #               Ok(ProcessingState::Loaded(Self {
+   #                   hp_damage,
+   #                   mp_damage,
+   #               }))
+   #           }
    #       }
    #   }
    # }
@@ -205,10 +213,11 @@ This guide explains how to define a new asset type to use in an Amethyst applica
        energy_blast_handle: Option<Handle<EnergyBlast>>,
    }
 
-   use amethyst::assets::{DefaultLoader, Loader};
    use amethyst::{
-       ecs::DispatcherBuilder, utils::application_root_dir, Application, GameData, SimpleState,
-       SimpleTrans, StateData, Trans,
+       assets::{DefaultLoader, Loader},
+       ecs::DispatcherBuilder,
+       utils::application_root_dir,
+       Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
    };
 
    impl SimpleState for LoadingState {

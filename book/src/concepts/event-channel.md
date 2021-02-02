@@ -11,8 +11,7 @@ Typically, `EventChannel`s are inserted as resources in `Resources`.
 ### Creating an event channel
 
 ```rust
-use amethyst::ecs::Resources;
-use amethyst::shrev::EventChannel;
+use amethyst::{ecs::Resources, shrev::EventChannel};
 
 // In the following examples, `MyEvent` is the event type.
 #[derive(Debug)]

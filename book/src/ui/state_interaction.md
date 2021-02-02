@@ -39,16 +39,16 @@ impl SimpleState for MenuState {
 
         /* Create the transform */
         let ui_transform = UiTransform::new(
-            // ...
-#           String::from("simple_button"), // id
-#           Anchor::Middle,                // anchor
-#           Anchor::Middle,                // pivot
-#           0f32,                          // x
-#           0f32,                          // y
-#           0f32,                          // z
-#           100f32,                        // width
-#           30f32,                         // height
-        );
+// ...
+#          String::from("simple_button"), // id
+#          Anchor::Middle,                // anchor
+#          Anchor::Middle,                // pivot
+#          0f32,                          // x
+#          0f32,                          // y
+#          0f32,                          // z
+#          100f32,                        // width
+#          30f32,                         // height
+);
 
         /* Create the text */
 #       let font_handle = resources.get::<DefaultLoader>().load(
@@ -59,14 +59,14 @@ impl SimpleState for MenuState {
 #       );
 # 
         let ui_text = UiText::new(
-            // ...
-#           font_handle,                      // font
-#           String::from("Simple Button"),    // text
-#           [1.0f32, 1.0f32, 1.0f32, 0.5f32], // color
-#           25f32,                            // font_size
-#           LineMode::Single,                 // line_mode
-#           Anchor::Middle,                   // align
-        );
+// ...
+#          font_handle,                      // font
+#          String::from("Simple Button"),    // text
+#          [1.0f32, 1.0f32, 1.0f32, 0.5f32], // color
+#          25f32,                            // font_size
+#          LineMode::Single,                 // line_mode
+#          Anchor::Middle,                   // align
+);
 
         /* Building the entity */
         let btn = world.push((ui_transform, ui_text, Interactable));

@@ -51,9 +51,7 @@ contains an `InputHandler` system which captures inputs, and maps them to the
 axes we defined. Let's make the following changes to `main.rs`.
 
 ```rust
-# use amethyst::core::transform::TransformBundle;
-# use amethyst::prelude::*;
-# use amethyst::window::DisplayConfig;
+# use amethyst::{core::transform::TransformBundle, prelude::*, window::DisplayConfig};
 # use amethyst_utils::application_root_dir;
 # macro_rules! env {
 #   ($x:expr) => {
@@ -195,10 +193,9 @@ Let's add this system to our `DispatcherBuilder` in `main.rs`:
 ```rust
 mod systems;
 
-# use amethyst::core::transform::TransformBundle;
-# use amethyst::input::StringBindings;
-# use amethyst::prelude::*;
-# use amethyst::window::DisplayConfig;
+# use amethyst::{
+#   core::transform::TransformBundle, input::StringBindings, prelude::*, window::DisplayConfig,
+# };
 fn main() -> amethyst::Result<()> {
     // --snip--
 
@@ -215,11 +212,10 @@ fn main() -> amethyst::Result<()> {
 #   }
 #   let input_bundle = amethyst::input::InputBundle::new();
     let game_data = DispatcherBuilder::default()
-// ...
-.add_bundle(TransformBundle)?
-.add_bundle(input_bundle)?
-.add_system(systems::PaddleSystem); // Add this line
-#
+        // ...
+        .add_bundle(TransformBundle)?
+        .add_bundle(input_bundle)?
+        .add_system(systems::PaddleSystem); // Add this line
 #   let assets_dir = "/";
 #   struct Pong;
 #   impl SimpleState for Pong {}
@@ -346,10 +342,7 @@ we no longer need to manually register it with the `world`: the system
 will take care of that for us, as well as set up the storage.
 
 ```rust
-# use amethyst::assets::Handle;
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
-# use amethyst::renderer::SpriteSheet;
+# use amethyst::{assets::Handle, ecs::World, prelude::*, renderer::SpriteSheet};
 # struct Paddle;
 # fn initialize_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
 # fn initialize_camera(world: &mut World) {}

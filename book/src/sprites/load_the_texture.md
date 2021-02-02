@@ -5,9 +5,11 @@ The first part of loading sprites into Amethyst is to read the image into memory
 The following snippet shows how to load a PNG / JPEG / GIF / ICO image:
 
 ```rust
-use amethyst::assets::{AssetStorage, DefaultLoader, Handle, Loader};
-use amethyst::prelude::*;
-use amethyst::renderer::{formats::texture::ImageFormat, Texture};
+use amethyst::{
+    assets::{AssetStorage, DefaultLoader, Handle, Loader},
+    prelude::*,
+    renderer::{formats::texture::ImageFormat, Texture},
+};
 
 pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
 where

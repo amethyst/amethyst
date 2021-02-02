@@ -77,10 +77,12 @@ second one, whose index is `1`.
 Finally, let's make sure the code is working as intended by updating the `on_start` method:
 
 ```rust
-# use amethyst::assets::Handle;
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
-# use amethyst::renderer::{SpriteSheet, Texture};
+# use amethyst::{
+#   assets::Handle,
+#   ecs::World,
+#   prelude::*,
+#   renderer::{SpriteSheet, Texture},
+# };
 # struct Paddle;
 # struct Ball;
 # fn initialize_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {}
@@ -270,10 +272,9 @@ Also, don't forget to add `mod move_balls` and `mod bounce` in `systems/mod.rs`
 as well as adding our new systems to the game data:
 
 ```rust
-# use amethyst::core::transform::TransformBundle;
-# use amethyst::input::StringBindings;
-# use amethyst::prelude::*;
-# use amethyst::window::DisplayConfig;
+# use amethyst::{
+#   core::transform::TransformBundle, input::StringBindings, prelude::*, window::DisplayConfig,
+# };
 # fn main() -> amethyst::Result<()> {
 #   let path = "./config/display.ron";
 #   let config = DisplayConfig::load(&path)?;
@@ -299,7 +300,7 @@ as well as adding our new systems to the game data:
 #       .add_system(systems::PaddleSystem)
         // ...other systems...
         .add_system(systems::MoveBallsSystem)
-        .add_system(            systems::BounceSystem);
+        .add_system(systems::BounceSystem);
 #   let assets_dir = "/";
 #   struct Pong;
 #   impl SimpleState for Pong {}
@@ -387,9 +388,7 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 - then we have to `initialize_ball` once after the time has passed inside `update`:
 
 ```rust
-# use amethyst::prelude::*;
-# use amethyst::{assets::Handle, renderer::SpriteSheet};
-use amethyst::core::timing::Time;
+use amethyst::{assets::Handle, core::timing::Time, prelude::*, renderer::SpriteSheet};
 
 # struct Paddle;
 # struct Ball;

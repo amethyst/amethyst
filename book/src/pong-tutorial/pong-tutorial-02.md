@@ -87,10 +87,7 @@ will.
    ```rust
    # const ARENA_HEIGHT: f32 = 100.0;
    # const ARENA_WIDTH: f32 = 100.0;
-   # use amethyst::core::Transform;
-   # use amethyst::ecs::World;
-   # use amethyst::prelude::*;
-   # use amethyst::renderer::Camera;
+   # use amethyst::{core::Transform, ecs::World, prelude::*, renderer::Camera};
    fn initialize_camera(world: &mut World) {
        // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
        let mut transform = Transform::default();
@@ -128,8 +125,7 @@ will.
    Pong state's `on_start` method:
 
    ```rust
-   # use amethyst::ecs::World;
-   # use amethyst::prelude::*;
+   # use amethyst::{ecs::World, prelude::*};
    # fn initialize_camera(world: &mut World) {}
    # struct MyState;
    # impl SimpleState for MyState {
@@ -212,9 +208,7 @@ image we will want to render on top of them. This is a good rule to follow in
 general, as it makes operations like rotation easier.
 
 ```rust
-# use amethyst::core::Transform;
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
+# use amethyst::{core::Transform, ecs::World, prelude::*};
 # enum Side {
 #   Left,
 #   Right,
@@ -254,8 +248,7 @@ As a sanity check, let's make sure the code for initializing the paddles
 compiles. Update the `on_start` method to the following:
 
 ```rust
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
+# use amethyst::{ecs::World, prelude::*};
 # fn initialize_paddles(world: &mut World) {}
 # fn initialize_camera(world: &mut World) {}
 # struct MyState;
@@ -488,8 +481,7 @@ to the paddles. We update the `initialize_paddles` function by changing its
 signature to:
 
 ```rust
-# use amethyst::ecs::World;
-# use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
+# use amethyst::{assets::Handle, ecs::World, renderer::sprite::SpriteSheet};
 fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>)
 # {
 # }
@@ -500,9 +492,9 @@ only need one here, since the only difference between the two paddles is that
 the right one is flipped horizontally.
 
 ```rust
-# use amethyst::ecs::World;
 # use amethyst::{
 #   assets::Handle,
+#   ecs::World,
 #   renderer::{SpriteRender, SpriteSheet},
 # };
 # fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
@@ -518,10 +510,12 @@ sprite in the sprite sheet, we use `0` for the `sprite_number`.
 Next we simply add the components to the paddle entities:
 
 ```rust
-# use amethyst::assets::Handle;
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
-# use amethyst::renderer::sprite::{SpriteRender, SpriteSheet};
+# use amethyst::{
+#   assets::Handle,
+#   ecs::World,
+#   prelude::*,
+#   renderer::sprite::{SpriteRender, SpriteSheet},
+# };
 # fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 #   let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
                                                                    // Create a left plank entity.
@@ -537,10 +531,12 @@ We're nearly there, we have to wire up the sprite to the paddles. We put it
 all together in the `on_start()` method:
 
 ```rust
-# use amethyst::assets::Handle;
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
-# use amethyst::renderer::{sprite::SpriteSheet, Texture};
+# use amethyst::{
+#   assets::Handle,
+#   ecs::World,
+#   prelude::*,
+#   renderer::{sprite::SpriteSheet, Texture},
+# };
 # struct Paddle;
 # fn initialize_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
 # fn initialize_camera(world: &mut World) {}

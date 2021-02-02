@@ -137,9 +137,11 @@ Now, in the `initialize_paddles()` function, add the following lines after the i
 #   }
 # }
 # 
+# use amethyst::{
+#   ecs::{Resources, World},
+#   StateData,
+# };
 # use config::ArenaConfig;
-# 
-# use amethyst::{ecs::Resources, ecs::World, StateData};
 # 
 # fn main() -> amethyst::Result<()> {
 #   let mut resources = Resources::default();
@@ -179,9 +181,8 @@ it in the `System`'s closure, add `.read_resource::<ArenaConfig>()` to the `Syst
 #       }
 #   }
 # }
-# use config::ArenaConfig;
-
 use amethyst::ecs::{ParallelRunnable, Resources, System, SystemBuilder};
+use config::ArenaConfig;
 
 struct ArenaSystem;
 

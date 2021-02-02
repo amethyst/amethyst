@@ -52,9 +52,11 @@ to set the area big enough for the text to fit in!
 ### Creating the `UiText`
 
 ```rust
-# use amethyst::assets::{AssetStorage, DefaultLoader, Loader};
-# use amethyst::prelude::World;
-# use amethyst::ui::{get_default_font, Anchor, FontAsset, LineMode, UiText};
+# use amethyst::{
+#   assets::{AssetStorage, DefaultLoader, Loader},
+#   prelude::World,
+#   ui::{get_default_font, Anchor, FontAsset, LineMode, UiText},
+# };
 # 
 # fn some_function(world: &mut World) {
 #   let font_handle = {
@@ -81,9 +83,11 @@ You also need to load a specific font handle and provide it for the text.
 If you had some state implemented you can create the button on its `on_start` method:
 
 ```rust
-# use amethyst::assets::{AssetStorage, DefaultLoader, Loader};
-# use amethyst::prelude::*;
-# use amethyst::ui::{get_default_font, Anchor, FontAsset, LineMode, UiText, UiTransform};
+# use amethyst::{
+#   assets::{AssetStorage, DefaultLoader, Loader},
+#   prelude::*,
+#   ui::{get_default_font, Anchor, FontAsset, LineMode, UiText, UiTransform},
+# };
 # 
 # pub struct State;
 # 
@@ -93,16 +97,16 @@ If you had some state implemented you can create the button on its `on_start` me
 
         /* Create the transform */
         let ui_transform = UiTransform::new(
-            // ...
-#           String::from("simple_button"), // id
-#           Anchor::Middle,                // anchor
-#           Anchor::Middle,                // pivot
-#           0f32,                          // x
-#           0f32,                          // y
-#           0f32,                          // z
-#           100f32,                        // width
-#           30f32,                         // height
-        );
+// ...
+#          String::from("simple_button"), // id
+#          Anchor::Middle,                // anchor
+#          Anchor::Middle,                // pivot
+#          0f32,                          // x
+#          0f32,                          // y
+#          0f32,                          // z
+#          100f32,                        // width
+#          30f32,                         // height
+);
 #       let font_handle = {
 #           let loader = resources.get::<DefaultLoader>();
 #           let font_storage = resources.get::<AssetStorage<FontAsset>>();
@@ -146,11 +150,11 @@ have a `UiTransform` component!
 The code snippet would look like this now:
 
 ```rust
-# use amethyst::assets::{AssetStorage, DefaultLoader, Loader};
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
-# use amethyst::ui::{
-#   get_default_font, Anchor, FontAsset, Interactable, LineMode, UiText, UiTransform,
+# use amethyst::{
+#   assets::{AssetStorage, DefaultLoader, Loader},
+#   ecs::World,
+#   prelude::*,
+#   ui::{get_default_font, Anchor, FontAsset, Interactable, LineMode, UiText, UiTransform},
 # };
 # 
 # fn some_function(world: &mut World) {

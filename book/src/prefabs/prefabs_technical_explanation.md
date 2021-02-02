@@ -230,14 +230,16 @@ This will derive a `PrefabData` implementation that inserts `SomeComponent` on a
 Lets look at an example of an aggregate struct:
 
 ```rust
-# use amethyst::assets::{
-#   Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
-#   ProgressCounter,
+# use amethyst::{
+#   assets::{
+#       Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
+#       ProgressCounter,
+#   },
+#   core::Transform,
+#   ecs::Entity,
+#   renderer::{formats::mesh::ObjFormat, Mesh},
+#   Error,
 # };
-# use amethyst::core::Transform;
-# use amethyst::ecs::Entity;
-# use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
-# use amethyst::Error;
 
 #[derive(PrefabData)]
 pub struct MyScenePrefab {
@@ -251,14 +253,16 @@ This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
 ```rust
-# use amethyst::assets::{
-#   Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
-#   ProgressCounter,
+# use amethyst::{
+#   assets::{
+#       Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
+#       ProgressCounter,
+#   },
+#   core::Transform,
+#   ecs::Entity,
+#   renderer::{formats::mesh::ObjFormat, Mesh},
+#   Error,
 # };
-# use amethyst::core::Transform;
-# use amethyst::ecs::Entity;
-# use amethyst::renderer::{formats::mesh::ObjFormat, Mesh};
-# use amethyst::Error;
 
 #[derive(PrefabData)]
 pub struct MyScenePrefab {

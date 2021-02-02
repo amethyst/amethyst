@@ -72,8 +72,7 @@ impl SimpleState for Pong {
 Finally, we'll need our game to include the Audio Bundle. In `main.rs`:
 
 ```rust
-# use amethyst::DispatcherBuilder;
-use amethyst::audio::AudioBundle;
+use amethyst::{audio::AudioBundle, DispatcherBuilder};
 
 fn main() -> amethyst::Result<()> {
     // --snip--
@@ -272,6 +271,7 @@ Then, create a Music Resource:
 
 ```rust
 use std::{iter::Cycle, vec::IntoIter};
+
 # use amethyst::audio::SourceHandle;
 
 pub struct Music {
@@ -345,8 +345,9 @@ pub fn initialize_audio(world: &mut World) {
 Finally, let's add a DJ System to our game to play the music. In `main.rs`:
 
 ```rust
-use crate::audio::Music;
 use amethyst::audio::DjSystemDesc;
+
+use crate::audio::Music;
 
 fn main() -> amethyst::Result<()> {
     // --snip--
