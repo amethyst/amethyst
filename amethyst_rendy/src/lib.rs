@@ -96,6 +96,7 @@ pub use rendy::{
         GraphBuilder,
     },
     hal::{format::Format, image::Kind},
+    hal::command::ClearColor,
 };
 
 #[doc(inline)]

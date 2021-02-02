@@ -20,15 +20,6 @@ edition = "2018"
 
 [dependencies.amethyst]
 version = "0.15"
-features = ["vulkan"]
-```
-
-Alternatively, if you are developing on macOS, you might want to use the `metal` rendering backend instead of `vulkan`. In this case, you should change the `features` entry in the `amethyst` dependency table.
-
-```toml
-[dependencies.amethyst]
-version = "0.15"
-features = ["metal"]
 ```
 
 We can start with editing the `main.rs` file inside `src` directory.
@@ -42,7 +33,7 @@ use amethyst::{
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
         types::DefaultBackend,
-        RenderingBundle,
+        ClearColor, RenderingBundle,
     },
     utils::application_root_dir,
 };
@@ -57,7 +48,7 @@ working on defining our game code.
 
 ## Creating the game state
 
-Now we create our core game struct:
+Now we create our core game `State` struct:
 
 ```rust
 pub struct Pong;
@@ -67,6 +58,8 @@ We'll be implementing the [`SimpleState`][simplestate] trait on this struct, whi
 used by Amethyst's state machine to start, stop, and update the game.
 
 ```rust
+# use amethyst::prelude::*;
+# pub struct Pong;
 impl SimpleState for Pong {}
 ```
 
@@ -75,12 +68,11 @@ is received from your operating system. This happens when you press the close
 button in your graphical environment. This allows the application to quit as needed.
 
 Now that our `Pong` is already a game state, let's add some code to actually get things
-started! We'll start with our `main()` function, and we'll have it return a
+started! We'll start with our `main()` function, and we'll have it return an Amethyst
 `Result` so that we can use `?`. This will allow us to automatically exit
 if any errors occur during setup.
 
 ```rust
-# use amethyst::prelude::*;
 fn main() -> amethyst::Result<()> {
     // We'll put the rest of the code here.
 
@@ -105,7 +97,7 @@ so we can see errors, warnings and debug messages while the program is running.
 # }
 ```
 
-From now on, every info, warning, and error will be present and clearly formatted
+From now on, every info, warning, and error will be presented and clearly formatted
 inside your terminal window.
 
 > **Note:** There are many ways to configure that logger, for example, to write the
@@ -120,14 +112,10 @@ window. We can either define the configuration in our code or better yet load it
 from a file. The latter approach is handier, as it allows us to change configuration
 (e.g, the window size) without having to recompile our game every time.
 
-Starting the project with `amethyst new` should have automatically generated
-`DisplayConfig` data in `config/display.ron`. If you created the
-project manually, go ahead and create it now.
-
-In either case, open `display.ron` and change its contents to the
+Open `config/display.ron` and change its contents to the
 following:
 
-```rust
+```rust ,ignore
 (
     title: "Pong!",
     dimensions: Some((500, 500)),
@@ -146,10 +134,10 @@ In `main()` in `main.rs`, we will prepare the path to a file containing
 the display configuration:
 
 ```rust
-# use amethyst::{utils::application_root_dir, Error};
+# use amethyst::utils::application_root_dir;
 # 
-# fn main() -> Result<(), Error> {
-    let app_root = application_root_dir()?;
+# fn main() -> amethyst::Result<()> {
+    let app_root = application_root_dir()?; // this helper points to the CARGO_MANIFEST_DIR in development and the binary directory in release
     let display_config_path = app_root.join("config").join("display.ron");
 #   Ok(())
 # }
@@ -161,15 +149,15 @@ In `main()` in `main.rs` we are going to add the basic application setup:
 
 ```rust
 # use amethyst::{prelude::*, utils::application_root_dir};
-# fn main() -> Result<(), amethyst::Error> {
-#   struct Pong;
-#   impl SimpleState for Pong {}
-    let game_data = DispatcherBuilder::default();
-
+# struct Pong;
+# impl SimpleState for Pong {}
+# fn main() -> amethyst::Result<()> {
 #   let app_root = application_root_dir()?;
+    let mut game_data = DispatcherBuilder::default();
     let assets_dir = app_root.join("assets");
     let mut game = Application::new(assets_dir, Pong, game_data)?;
-    //game.run();
+    // uncomment the following line to run the game
+    // game.run();
 #   Ok(())
 # }
 ```
@@ -189,7 +177,7 @@ have been popped off the state machine's stack.
 Now, try compiling the code.
 
 > **Note:** Please note that when compiling the game for the first time, it may
-> take upwards an half an hour. Be assured, though, that subsequent builds of
+> take a long time. Rest assured, though, that subsequent builds of
 > the project will be faster.
 
 You should be able to see the application start, but nothing
@@ -208,37 +196,39 @@ Last time we left our `DispatcherBuilder` instance empty, now we'll add some sys
 #   renderer::{
 #       plugins::{RenderFlat2D, RenderToWindow},
 #       types::DefaultBackend,
-#       RenderingBundle,
+#       ClearColor, RenderingBundle,
 #   },
 #   utils::application_root_dir,
 # };
 # fn main() -> Result<(), amethyst::Error> {
-    let app_root = application_root_dir()?;
-
-    let display_config_path = app_root.join("config").join("display.ron");
-
-    let game_data = DispatcherBuilder::default().add_bundle(
+#   let app_root = application_root_dir()?;
+#   let display_config_path = app_root.join("config").join("display.ron");
+#   let mut game_data = DispatcherBuilder::default();
+    game_data.add_bundle(
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
             .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.0, 0.0, 0.0, 1.0]),
+                RenderToWindow::from_config_path(display_config_path)
+                    .unwrap_or_default() // You may use ? if you want this to fail when config file is missing
+                    .with_clear(ClearColor {
+                        float32: [0.0, 0.0, 0.0, 1.0],
+                    }),
             )
             // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
             .with_plugin(RenderFlat2D::default()),
-    )?;
+    );
 #   Ok(())
 # }
 ```
 
 Here we are adding a `RenderingBundle`. Bundles are essentially sets of systems
-preconfigured to work together, so you don't have to write them all down one by one.
+preconfigured to work together, so you don't have to add them all one by one.
 
 > **Note:** We will cover systems and bundles in more detail later. For now, think of a bundle
 > as a collection of systems that, in combination, will provide a certain feature to the engine.
 > You will surely be writing your own bundles for your own game's features soon.
 
-The `RenderingBundle` has a difference to most other bundles: It doesn't really do much by itself.
+The `RenderingBundle` is different to most other bundles: It doesn't really do much by itself.
 Instead, it relies on its own plugin system to define what should be rendered and how. We use the
 `with_plugin` method to tell it that we want to add the `RenderToWindow` and `RenderFlat2D` plugins.
 Those plugins will equip our renderer with the ability to open a window and draw sprites to it.
