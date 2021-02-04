@@ -1,28 +1,23 @@
 use std::{cmp::Ordering, io::Read};
 
-use amethyst_assets::{
-    atelier_importer,
-    atelier_importer::{Error, ImportOp, ImportedAsset, Importer, ImporterValue},
-};
+use amethyst_assets::{distill_importer, distill_importer::{Error, ImportOp, ImportedAsset, Importer, ImporterValue}, Handle, AssetUuid, make_handle};
 use amethyst_core::{
     math::{convert, Quaternion, Unit, Vector3, Vector4},
     transform::Transform,
     Named,
 };
 use amethyst_rendy::{light::Light, Camera};
-use atelier_assets::core::AssetUuid;
 use gltf::{buffer, buffer::Data, Document, Gltf, Mesh, Node};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 use log::debug;
 
-use crate::{
-    importer::{gltf_bytes_converter::convert_bytes, mesh::load_mesh},
-    GltfAsset, GltfNodeExtent, GltfSceneOptions,
-};
+use crate::{importer::{gltf_bytes_converter::convert_bytes, mesh::load_mesh}, GltfNodeExtent, GltfSceneOptions};
 use amethyst_assets::prefab::legion_prefab::{PrefabBuilder, CookedPrefab};
 use amethyst_assets::prefab::{Prefab, legion_prefab};
 use amethyst_core::ecs::World;
+use amethyst_rendy::types::MeshData;
+use crate::types::MeshHandle;
 
 mod gltf_bytes_converter;
 mod mesh;
@@ -50,7 +45,7 @@ pub struct GltfImporterState {
 /// The importer for '.gltf' or '.glb' files.
 #[derive(Default, TypeUuid)]
 #[uuid = "6dbb4496-bd73-42cd-b817-11046e964e30"]
-pub struct GltfImporter {}
+pub struct GltfImporter;
 
 impl Importer for GltfImporter {
     fn version_static() -> u32 {
@@ -70,8 +65,9 @@ impl Importer for GltfImporter {
         source: &mut dyn Read,
         options: &Self::Options,
         _state: &mut Self::State,
-    ) -> amethyst_assets::atelier_importer::Result<ImporterValue> {
+    ) -> amethyst_assets::distill_importer::Result<ImporterValue> {
         log::info!("Importing scene");
+        let mut asset_accumulator = Vec::new();
         let mut world = World::default();
 
         let mut bytes = Vec::new();
@@ -80,7 +76,7 @@ impl Importer for GltfImporter {
 
         if let Err(err) = result {
             log::error!("GLTF Import error: {:?}", err);
-            return Err(atelier_importer::Error::Boxed(Box::new(err)));
+            return Err(distill_importer::Error::Boxed(Box::new(err)));
         }
 
         let (doc, buffers, _images) = result.unwrap();
@@ -97,25 +93,36 @@ impl Importer for GltfImporter {
         let mut node_index: usize = 0;
 
         scene.nodes().into_iter().for_each(|node| {
-            load_node(&node, &mut world, op, &options, &buffers, &mut node_index);
+            let mut node_assets = load_node(&node, &mut world, op, &options, &buffers, &mut node_index);
+            asset_accumulator.append(&mut node_assets);
         });
 
+
         let legion_prefab = legion_prefab::Prefab::new(world);
-        let prefab_asset = Prefab::new(legion_prefab);
+        let scene_prefab = Prefab::new(legion_prefab);
+
+        let prefab_id = op.new_asset_uuid();
+        println!("PREFAB HANDLE : {:?}", prefab_id);
+
+        asset_accumulator.push(ImportedAsset {
+            id: prefab_id,
+            search_tags: Vec::new(),
+            build_deps: Vec::new(),
+            load_deps: Vec::new(),
+            asset_data: Box::new(scene_prefab),
+            build_pipeline: None,
+        });
 
         Ok(ImporterValue {
-            assets: vec![ImportedAsset {
-                id: op.new_asset_uuid(),
-                search_tags: Vec::new(),
-                build_deps: Vec::new(),
-                load_deps: Vec::new(),
-                asset_data: Box::new(prefab_asset),
-                build_pipeline: None,
-            }],
+            assets: asset_accumulator,
         })
     }
 }
 
+// This method will return the mesh assets that need to be loaded by distill.
+// Contrary to the material, I've considered that loading a mesh is only mandatory is it's used somewhere
+// For example, if I need to attach a mesh, I'll add the mesh as an ImportedAsset and set
+// the matching uuid to the entry's component in an Handle
 fn load_node(
     node: &Node<'_>,
     world: &mut World,
@@ -126,20 +133,9 @@ fn load_node(
 ) -> Vec<ImportedAsset> {
     let current_node_entity = world.push(());
     let mut imported_assets = Vec::new();
-    let mut node_asset = GltfAsset::default();
 
-    node_asset.index = *node_index;
-    *node_index += 1;
-
-    let mut search_tags: Vec<(String, Option<String>)> = vec![];
-
-    if let Some(name) = node.name() {
-        node_asset.name = Some(Named::new(name.to_string()));
-        search_tags.push(("node_name".to_string(), Some(name.to_string())));
-        search_tags.push(("node_index".to_string(), Some(node_asset.index.to_string())));
-    }
     if let Some(transform) = load_transform(node) {
-       // world.entry(current_node_entity).expect("We just added this entity").add_component(transform);
+        world.entry(current_node_entity).expect("We just added this entity").add_component(transform);
     }
     if let Some(camera) = load_camera(node) {
         debug!("Adding a camera component to to the current node entity");
@@ -166,32 +162,38 @@ fn load_node(
             Ordering::Equal => {
                 // single primitive can be loaded directly onto the node
                 let (mesh, _material_index, bounds) = loaded_mesh.remove(0);
-                let mut mesh_search_tags: Vec<(String, Option<String>)> = vec![];
                 bounding_box.extend_range(&bounds);
-                let mut mesh_asset = GltfAsset::default();
-                mesh_asset.mesh = Some(mesh);
-                mesh_asset.index = *node_index;
-                mesh_search_tags
-                    .push(("node_index".to_string(), Some(mesh_asset.index.to_string())));
-                *node_index += 1;
-                //TODO: material
-
-                // if we have a skin we need to track the mesh entities
-                if let Some(ref mut skin) = skin {
-                    skin.mesh_indices.push(mesh_asset.index);
-                }
+                let mesh_asset_id = op.new_asset_uuid();
+                let mesh_data: MeshData = mesh.into();
                 imported_assets.push(ImportedAsset {
-                    id: op.new_asset_uuid(),
-                    search_tags: mesh_search_tags,
+                    id: mesh_asset_id,
+                    search_tags: vec![],
                     build_deps: vec![],
                     load_deps: vec![],
                     build_pipeline: None,
-                    asset_data: Box::new(mesh_asset),
+                    asset_data: Box::new(mesh_data),
                 });
+
+                println!("MESH HANDLE : {:?}", mesh_asset_id);
+
+                world.entry(current_node_entity)
+                    .expect("We just added this entity")
+                    .add_component(MeshHandle(make_handle(mesh_asset_id)));
+
+                debug!("Adding a mesh component to to the current node entity");
+                //TODO: material and skin
+
+                // if we have a skin we need to track the mesh entities
+                if let Some(ref mut skin) = skin {
+                    //skin.mesh_indices.push(mesh_asset.index);
+                    // TODO
+                }
+
             }
             Ordering::Greater => {
                 // if we have multiple primitives,
                 // we need to add each primitive as a child entity to the node
+                // TODO reimplement here
             }
             Ordering::Less => {
                 // Nothing to do here
@@ -201,17 +203,10 @@ fn load_node(
 
     // load childs
     for child in node.children() {
-        load_node(&child, world, op, options, buffers, node_index);
+        let mut child_assets = load_node(&child, world, op, options, buffers, node_index);
+        imported_assets.append(&mut child_assets);
     }
 
-    imported_assets.push(ImportedAsset {
-        id: op.new_asset_uuid(),
-        search_tags,
-        build_deps: vec![],
-        load_deps: vec![],
-        build_pipeline: None,
-        asset_data: Box::new(node_asset),
-    });
     imported_assets
 }
 

@@ -17,11 +17,10 @@ use std::{collections::HashMap, ops::Range};
 
 use amethyst_animation::Skin;
 use amethyst_assets::{
-    inventory,register_asset_type,  prefab::{Prefab, register_component_type}, Asset, AssetProcessorSystem, AssetStorage, Handle, Loader,
+    inventory,register_asset_type,  prefab::{Prefab, register_component_type}, Asset, AssetProcessorSystem, AssetStorage, Handle, Loader,distill_importer, distill_importer::{ImportedAsset, typetag, SerdeImportable},
     ProgressCounter,
 };
 use amethyst_core::{
-    ecs::{Entity, Read, ReadExpect, Write, WriteStorage},
     ecs::*,
     math::{convert, Point3, Vector3},
     transform::Transform,
@@ -35,9 +34,18 @@ use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
+pub mod bundle;
 mod importer;
+mod types;
+mod system;
 
 pub use importer::GltfImporter;
+use amethyst_assets::prefab::SerdeDiff;
+use amethyst_assets::erased_serde::private::serde::ser::SerializeSeq;
+use amethyst_assets::erased_serde::private::serde::de::SeqAccess;
+use amethyst_assets::prefab::serde_diff::{DiffContext, ApplyContext};
+use amethyst_assets::erased_serde::private::serde::de;
+use amethyst_rendy::types::MeshData;
 
 inventory::submit! {
     amethyst_assets::SourceFileImporter {
@@ -55,6 +63,8 @@ inventory::submit! {
 
 register_component_type!(Camera);
 register_component_type!(Light);
+register_component_type!(Transform);
+
 
 /// A GLTF node extent
 #[derive(Clone, Debug, Serialize)]
@@ -176,43 +186,4 @@ pub struct GltfSceneOptions {
     /// Load the given scene index, if not supplied will either load the default scene (if set),
     /// or the first scene (only if there is only one scene, otherwise an `Error` will be returned).
     pub scene_index: Option<usize>,
-}
-
-/// `AssetData` for gltf objects.
-#[derive(Default, TypeUuid, Serialize)]
-#[uuid = "8a7b7733-d770-4400-8ea8-b82dbc10aae2"]
-pub struct GltfAsset {
-    /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
-    /// certain scenarios (based on the data in the Gltf file)
-    pub transform: Option<Transform>,
-    /// `Camera` will always be placed
-    pub camera: Option<Camera>,
-    /// Lights can be added to a prefab with the `KHR_lights_punctual` feature enabled
-    pub light: Option<Light>,
-    /// `MeshData` is placed on all `Entity`s with graphics primitives
-    pub mesh: Option<MeshBuilder<'static>>,
-    /// Mesh handle after sub asset loading is done
-    pub mesh_handle: Option<Handle<Mesh>>,
-    /// `Material` is placed on all `Entity`s with graphics primitives with material
-    pub material: Option<Material>,
-    /// Loaded animations, if applicable, will always only be placed on the main `Entity`
-    // pub animatable: Option<Animatable<usize, Transform>>,
-    /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
-    /// using the skin
-    pub skin: Option<Skin>,
-    /// Node extent
-    pub extent: Option<GltfNodeExtent>,
-    /// Node name
-    pub name: Option<Named>,
-    /// Node index when loading a full scene
-    pub index: usize,
-    pub(crate) materials: Option<GltfMaterialSet>,
-    pub(crate) material_id: Option<usize>,
-}
-
-impl Asset for GltfAsset {
-    fn name() -> &'static str {
-        "Texture"
-    }
-    type Data = ();
 }

@@ -1,4 +1,4 @@
-use atelier_assets::importer::Error;
+use amethyst_assets::distill_importer::Error;
 use gltf::Document;
 
 pub fn convert_bytes(

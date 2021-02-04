@@ -1,15 +1,19 @@
-use amethyst::{assets::{DefaultLoader, Handle, Loader, LoaderBundle}, core::transform::TransformBundle, ecs::DispatcherBuilder, gltf::GltfAsset, renderer::{types::DefaultBackend, RenderSkybox, RenderToWindow, RenderingBundle}, utils::application_root_dir, Application, GameData, SimpleState, StateData, SimpleTrans, Trans};
+use amethyst::{assets::{DefaultLoader, Handle, Loader, LoaderBundle}, core::transform::TransformBundle, ecs::DispatcherBuilder, renderer::{types::DefaultBackend, RenderSkybox, RenderToWindow, RenderingBundle}, utils::application_root_dir, Application, GameData, SimpleState, StateData, SimpleTrans, Trans};
 use amethyst::assets::prefab::Prefab;
-use amethyst::renderer::Camera;
+use amethyst::renderer::{Camera, Mesh};
 use amethyst::ui::UiTransform;
 use amethyst::ecs::{Entity, IntoQuery};
 use amethyst::renderer::light::Light;
+use amethyst::core::Transform;
+use amethyst::assets::{ProcessingQueue, AssetHandle};
+use amethyst::renderer::rendy::mesh::{MeshBuilder, Position};
+use amethyst::renderer::types::MeshData;
+use amethyst::gltf::bundle::GltfBundle;
 
 struct GltfExample;
 
 #[derive(Debug, Clone, PartialEq)]
 struct Scene {
-    gltf_handle: Handle<GltfAsset>,
 }
 
 impl SimpleState for GltfExample {
@@ -18,18 +22,18 @@ impl SimpleState for GltfExample {
             world, resources, ..
         } = data;
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let res: Handle<Prefab> = loader.load(
+        let t: Handle<Prefab> = loader.load(
             "gltf/sample.gltf", // Here we load the associated ron file
         );
-        let entity = world.push((res,));
-        println!("entity ? {:?}", entity);
+        world.push((t,));
     }
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
 
         let StateData {
             world, resources, ..
         } = data;
-        let mut q = <(Entity, &Light)>::query();
+
+        let mut q = <(Entity, &Camera)>::query();
 
         q.iter(*world).for_each(|e| println!("yeeeeeeaaaah {:?}", e));
 
@@ -46,8 +50,10 @@ fn main() -> Result<(), amethyst::Error> {
                 "amethyst_assets".to_string(),
                 amethyst::LogLevelFilter::Trace,
             ),
-            ("atelier_daemon".to_string(), amethyst::LogLevelFilter::Trace),
-            ("atelier_loader".to_string(), amethyst::LogLevelFilter::Trace),
+            ("amethyst_rendy".to_string(), amethyst::LogLevelFilter::Trace),
+            ("distill_daemon".to_string(), amethyst::LogLevelFilter::Trace),
+            ("distill_loader".to_string(), amethyst::LogLevelFilter::Trace),
+            ("gfx_backend_metal::window".to_string(), amethyst::LogLevelFilter::Off),
         ],
         ..Default::default()
     };
@@ -59,6 +65,7 @@ fn main() -> Result<(), amethyst::Error> {
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher
         .add_bundle(LoaderBundle)
+        //.add_bundle(GltfBundle)
         .add_bundle(TransformBundle)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()

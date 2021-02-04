@@ -32,6 +32,7 @@ mod source;
 mod storage;
 
 pub use distill::{
+    make_handle,
     importer as distill_importer,
     loader::{
         handle::{AssetHandle, GenericHandle, Handle, WeakHandle},

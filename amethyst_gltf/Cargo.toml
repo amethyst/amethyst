@@ -20,14 +20,6 @@ amethyst_animation = { path = "../amethyst_animation", version = "0.15.3" }
 amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
 amethyst_rendy = { path = "../amethyst_rendy", version = "0.15.3" }
-atelier-assets = { git = "https://github.com/radium-io/atelier-assets.git", rev = "6987e6b4abe061f1810018efd7518866b62b70fb", features = [
-    "serde-1",
-    "type_uuid",
-    "serde_importers",
-    "parallel_hash",
-    "rpc_io",
-    "handle",
-] }
 err-derive = "0.2.3"
 base64 = "0.11"
 fnv = "1"
