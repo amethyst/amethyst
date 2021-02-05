@@ -14,8 +14,8 @@ use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
-            Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
-            ReadStorage, System, SystemData, World, Write, WriteStorage,
+            DispatcherBuilder, Entities, Entity, Read, ReadStorage, System, World, Write,
+            WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -57,7 +57,7 @@ use thread_profiler::profile_scope;
 
 struct Example {
     entity: Option<Entity>,
-    initialised: bool,
+    initialized: bool,
     progress: Option<ProgressCounter>,
     bullet_time: bool,
 }
@@ -66,7 +66,7 @@ impl Example {
     pub fn new() -> Self {
         Self {
             entity: None,
-            initialised: false,
+            initialized: false,
             progress: None,
             bullet_time: false,
         }
@@ -80,13 +80,9 @@ struct Orbit {
     radius: f32,
 }
 
-impl Component for Orbit {
-    type Storage = DenseVecStorage<Self>;
-}
-
 struct OrbitSystem;
 
-impl<'a> System<'a> for OrbitSystem {
+impl<'a> System for OrbitSystem {
     type SystemData = (
         Read<'a, Time>,
         ReadStorage<'a, Orbit>,
@@ -372,7 +368,7 @@ impl SimpleState for Example {
             time.set_time_scale(if self.bullet_time { 0.2 } else { 1.0 });
         }
 
-        if !self.initialised {
+        if !self.initialized {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
 
@@ -403,7 +399,7 @@ impl SimpleState for Example {
                     .exec(|finder: TagFinder<'_, AnimationMarker>| finder.find())
                 {
                     self.entity = Some(entity);
-                    self.initialised = true;
+                    self.initialized = true;
                 }
             }
 
@@ -618,9 +614,9 @@ fn main() -> amethyst::Result<()> {
             )
             .with_dep(&["gltf_loader"]),
         )?
-        .add_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))?
+        .add_bundle(InputBundle::new().with_bindings(bindings))?
         .add_bundle(
-            FlyControlBundle::<StringBindings>::new(
+            FlyControlBundle::new(
                 Some("horizontal".into()),
                 None,
                 Some("vertical".into()),

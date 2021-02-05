@@ -2,7 +2,7 @@
 
 Renders debug lines with a 3D perspective via two separate methods: The
 [`DebugLines`] [resource] and the [`DebugLinesComponent`] [component].
-Internally, `DebugLines` is just a wrapper around a `DebugLinesComponent`, but
+Internally, `DebugLines` is a wrapper around a `DebugLinesComponent`, but
 they each have their separate, specific use cases.
 
 The resource method is useful for rendering moving lines such as the purple ones

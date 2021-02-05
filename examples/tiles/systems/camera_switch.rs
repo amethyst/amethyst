@@ -22,7 +22,7 @@ impl Default for CameraSwitchSystem {
         }
     }
 }
-impl System<'static> for CameraSwitchSystem {
+impl System for CameraSwitchSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("CameraSwitchSystem")

@@ -24,12 +24,12 @@ pub trait SystemBundle {
 }
 
 /// A System builds a ParallelRunnable for the Dispatcher
-pub trait System<'a> {
+pub trait System {
     /// builds the Runnable part of System
     fn build(self) -> Box<dyn ParallelRunnable + 'static>;
 }
 
-impl<'a, T, R> System<'a> for T
+impl<T, R> System for T
 where
     T: FnOnce() -> R,
     R: ParallelRunnable + 'static,
@@ -89,7 +89,7 @@ pub struct DispatcherBuilder {
 
 impl<'a> DispatcherBuilder {
     /// Adds a system to the schedule.
-    pub fn add_system<S: System<'a> + 'a>(&mut self, system: S) -> &mut Self {
+    pub fn add_system<S: System + 'a>(&mut self, system: S) -> &mut Self {
         log::debug!("Building system");
         self.items.push(DispatcherItem::System(system.build()));
         self
@@ -230,7 +230,7 @@ pub mod tests {
 
     struct MySystem;
 
-    impl System<'_> for MySystem {
+    impl System for MySystem {
         fn build(self) -> Box<dyn ParallelRunnable> {
             Box::new(
                 SystemBuilder::new("test")

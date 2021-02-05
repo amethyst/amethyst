@@ -8,7 +8,7 @@ use crate::systems::{
     bounce::BounceSystem, move_balls::BallSystem, paddle::PaddleSystem, winner::WinnerSystem,
 };
 
-/// A bundle is a convenient way to initialise related resources, components and systems in a
+/// A bundle is a convenient way to initialize related resources, components and systems in a
 /// world. This bundle prepares the world for a game of pong.
 pub struct PongBundle;
 

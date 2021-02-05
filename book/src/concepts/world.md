@@ -2,128 +2,43 @@
 
 ## What is a `World`?
 
-A `World` is a container for resources, with some helper functions that make your life easier.
-This chapter will showcase those functions and their usage.
-
-## Adding a resource
-
-```rust ,edition2018,no_run,noplaypen
-use amethyst::ecs::{World, WorldExt};
-
-// A simple struct with no data.
-struct MyResource;
-
-fn main() {
-    // We create a new `World` instance.
-    let mut world = World::new();
-
-    // We create our resource.
-    let my = MyResource;
-
-    // We add the resource to the world.
-    world.insert(my);
-}
-```
-
-## Fetching a resource
-
-Here's how to fetch a read-only resource. Be aware that this method panics if the resource isn't inserted into `Resources`.
-
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{World, WorldExt};
-# struct MyResource;
-# fn main() {
-#   let mut world = World::new();
-    let my = world.read_resource::<MyResource>();
-# }
-```
-
-If you are not sure that the resource will be present, use the methods available on `Resources`, as shown in the resource chapter.
-
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{World, WorldExt};
-# struct MyResource;
-# fn main() {
-#   let mut world = World::new();
-    let my = world.entry::<MyResource>().or_insert_with(|| MyResource);
-# }
-```
-
-## Modifying a resource
-
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{World, WorldExt};
-# struct MyResource;
-# fn main() {
-#   let mut world = World::new();
-    let mut my = world.write_resource::<MyResource>();
-# }
-```
+A `World` is a container for entities, with some helper functions that make your life easier.
+This chapter will showcase those functions and their usage.  Along with the `World` there is a concept of `Resources` which
+are singletons available across all systems.  See [Resources][res] for more about them.
 
 ## Creating entities
 
-You first start by creating the entity builder.
-Then, you can add components to your entity.
-Finally, you call the build() method on the entity builder to get the actual entity.
-Please note that **in order to use this syntax, you need to import the `amethyst::prelude::Builder` trait.**
+```rust
+# use amethyst::ecs::{World};
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{World, WorldExt};
-# struct MyComponent;
-# impl amethyst::ecs::Component for MyComponent {
-#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
-# }
+#[derive(Default)]
+struct MyComponent {
+    value: u8,
+};
+
 # fn main() {
-#   let mut world = World::new();
-    world.register::<MyComponent>();
-    use amethyst::prelude::Builder;
-
-    let mut entity_builder = world.create_entity();
-    entity_builder = entity_builder.with(MyComponent);
-    let my_entity = entity_builder.build();
+   let mut world = World::default();
+    world.push((MyComponent::default(),));
 # }
 ```
-
-Shorter version:
-
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{World, WorldExt};
-# struct MyComponent;
-# impl amethyst::ecs::Component for MyComponent {
-#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
-# }
-# fn main() {
-#   let mut world = World::new();
-    use amethyst::prelude::Builder;
-
-    let my_entity = world
-       .create_entity()
-       .with(MyComponent)
-       .build();
-# }
-```
-
-Internally, the `World` interacts with `EntitiesRes`, which is a resource holding the entities inside of `Resources`.
 
 ## Accessing a `Component`
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{Builder, World, WorldExt};
-# struct MyComponent;
-# impl amethyst::ecs::Component for MyComponent {
-#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
-# }
+```rust
+# use amethyst::ecs::{World};
+# #[derive(Default)]
+# struct MyComponent {
+#     value: u8,
+# };
 # fn main() {
-#   let mut world = World::new();
+   let mut world = World::default();
     // Create an `Entity` with `MyComponent`.
     // `World` will implicitly write to the component's storage in `Resources`.
-    let my_entity = world.create_entity().with(MyComponent).build();
-    
-    // Get a ReadStorage<MyComponent>
-    let storage = world.read_storage::<MyComponent>();
-    
-    // Get the actual component from the storage.
-    let my = storage.get(my_entity).expect("Failed to get component for entity");
+    let my_entity =     world.push((MyComponent::default(),));
+
+    if let Some(entry) = world.entry(my_entity) {
+        let my_component = entry.get_component::<MyComponent>().unwrap();
+    }
 # }
 ```
 
@@ -131,30 +46,19 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 
 This is almost the same as accessing a component:
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{Builder, World, WorldExt};
-# struct MyComponent;
-# impl amethyst::ecs::Component for MyComponent {
-#   type Storage = amethyst::ecs::VecStorage<MyComponent>;
-# }
+```rust
+# use amethyst::ecs::{ World};
+# #[derive(Default)]
+# struct MyComponent {
+#     value: u8,
+# };
 # fn main() {
-#   let mut world = World::new();
-    let my_entity = world.create_entity().with(MyComponent).build();
-    let mut storage = world.write_storage::<MyComponent>();
-    let mut my = storage.get_mut(my_entity).expect("Failed to get component for entity");
-# }
-```
-
-## Getting all entities
-
-It is pretty rare to use this, but can be useful in some occasions.
-
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{World, WorldExt};
-# fn main() {
-#   let mut world = World::new();
-    // Returns `EntitiesRes`
-    let entities = world.entities();
+  let mut world = World::default();
+    let my_entity =     world.push((MyComponent::default(),));
+    if let Some(entry) = world.entry(my_entity) {
+        let mut my_component = entry.get_component_mut::<MyComponent>().unwrap();
+        my_component.value = 5;
+    }
 # }
 ```
 
@@ -162,33 +66,22 @@ It is pretty rare to use this, but can be useful in some occasions.
 
 Single:
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{Builder, World, WorldExt};
+```rust
+# use amethyst::ecs::World;
 # fn main() {
-#   let mut world = World::new();
-#   let my_entity = world.create_entity().build();
-    world.delete_entity(my_entity).expect("Failed to delete entity. Was it already removed?");
-# }
-```
-
-Multiple:
-
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{Builder, World, WorldExt};
-# fn main() {
-#   let mut world = World::new();
-#   let entity_vec: Vec<amethyst::ecs::Entity> = vec![world.create_entity().build()];
-    world.delete_entities(entity_vec.as_slice()).expect("Failed to delete entities from specified list.");
+    let mut world = World::default();
+    let my_entity = world.push((MyComponent,));
+    assert!(world.remove(my_entity));
 # }
 ```
 
 All:
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{World, WorldExt};
+```rust
+# use amethyst::ecs::World;
 # fn main() {
-#   let mut world = World::new();
-    world.delete_all();
+#   let mut world = World::default();
+    world.clear();
 # }
 ```
 
@@ -196,39 +89,14 @@ __Note: Entities are lazily deleted, which means that deletion only happens at t
 
 ## Check if the entity was deleted
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{Builder, World, WorldExt};
+```rust
+# use amethyst::ecs::World;
 # fn main() {
-#   let mut world = World::new();
-#   let my_entity = world.create_entity().build();
-    // Returns true if the entity was **not** deleted.
-    let is_alive = world.is_alive(my_entity);
+#   let mut world = World::default();
+    let my_entity = world.push((0usize,));
+    assert!(world.contains(my_entity));
+    assert!(!world.contains(Entity(100)))
 # }
 ```
 
-## Exec
-
-**This is just to show that this feature exists. It is normal to not understand what it does until you read the system chapter**
-
-Sometimes, you will want to create an entity where you need to fetch resources to create the correct components for it.
-There is a function that acts as a shorthand for this:
-
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::ecs::{ReadExpect, World, WorldExt};
-# struct Dummy;
-# type SomeSystemData<'a> = ReadExpect<'a, Dummy>;
-# trait DoSomething {
-#   fn do_something(&mut self);
-# }
-# impl<'a> DoSomething for SomeSystemData<'a> {
-#   fn do_something(&mut self) { }
-# }
-# fn main() {
-#   let mut world = World::new();
-    world.exec(|mut data: SomeSystemData| {
-        data.do_something();
-    });
-# }
-```
-
-We will talk about what `SystemData` is in the system chapter.
+[res]: ./resource.html

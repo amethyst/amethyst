@@ -11,7 +11,7 @@ use crate::ecs::*;
 #[derive(Debug)]
 pub struct ParentUpdateSystem;
 
-impl System<'_> for ParentUpdateSystem {
+impl System for ParentUpdateSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("ParentUpdateSystem")

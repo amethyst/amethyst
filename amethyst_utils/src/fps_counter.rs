@@ -82,7 +82,7 @@ impl FpsCounter {
 /// to the [FpsCounter](../resources/struct.FpsCounter.html) resource with id 0
 struct FpsCounterSystem;
 
-impl System<'_> for FpsCounterSystem {
+impl System for FpsCounterSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("fps_counter_system")

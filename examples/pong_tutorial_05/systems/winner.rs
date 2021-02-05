@@ -11,7 +11,7 @@ use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
-impl System<'_> for WinnerSystem {
+impl System for WinnerSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("WinnerSystem")

@@ -1,6 +1,6 @@
 /*!
-    @import /amethyst_input/src/bindings.rs#Bindings, StringBindings
-    Bindings<StringBindings>
+    @import /amethyst_input/src/bindings.rs#Bindings
+    Bindings
 */
 
 (

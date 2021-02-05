@@ -27,7 +27,7 @@ impl<'a, 'b> SystemBundle for MyBundle {
 /// Signals the state when it's time to increase the game difficulty
 struct DifficultySystem;
 
-impl System<'_> for DifficultySystem {
+impl System for DifficultySystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("DifficultySystem")

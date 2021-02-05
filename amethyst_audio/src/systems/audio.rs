@@ -28,7 +28,7 @@ pub struct AudioSystem;
 #[derive(Debug, Default)]
 pub struct SelectedListener(pub Option<Entity>);
 
-impl System<'_> for AudioSystem {
+impl System for AudioSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("AudioSystem")

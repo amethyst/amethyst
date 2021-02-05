@@ -135,7 +135,13 @@ dirs-next = "2.0.0"
 vergen = "3.1.0"
 
 [dev-dependencies]
+derive_more = "0.99.11"
+doc-comment = "0.3.3"
 env_logger = "0.8.2"
+err-derive = "0.3.0"
+glob = "0.3.0"
+ron = "0.6.4"
+type-uuid = "0.1.2"
 
 [package.metadata.docs.rs]
 features = [

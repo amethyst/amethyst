@@ -9,10 +9,7 @@ use amethyst::{
     },
     core::{Named, Parent},
     derive::PrefabData,
-    ecs::{
-        storage::{DenseVecStorage, VecStorage},
-        Component, Entities, Entity, Join, ReadStorage, World, WorldExt, WriteStorage,
-    },
+    ecs::{Component, Entities, Entity, ReadStorage, World, WriteStorage},
     prelude::*,
     utils::application_root_dir,
     Error,
@@ -27,7 +24,6 @@ pub struct Position(pub f32, pub f32, pub f32);
 
 #[derive(Clone, Copy, Component, Debug, Derivative, Deserialize, Serialize, PrefabData)]
 #[derivative(Default)]
-#[storage(VecStorage)]
 pub enum Weapon {
     #[derivative(Default)]
     Axe,
@@ -75,10 +71,7 @@ impl SimpleState for CustomPrefabState {
 
         // Create two sets of entities from the prefab.
         (0..1).for_each(|_| {
-            data.world
-                .create_entity()
-                .with(prefab_handle.clone())
-                .build();
+            data.world.push((prefab_handle.clone(),));
         });
 
         self.prefab_handle = Some(prefab_handle);

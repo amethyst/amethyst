@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use amethyst::{
     core::{bundle::SystemBundle, RunNowDesc},
-    ecs::prelude::*,
+    ecs::*,
     error::Error,
 };
 use derive_new::new;

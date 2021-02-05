@@ -6,7 +6,7 @@ use amethyst::{
     ui::{Anchor, LineMode, UiText, UiTransform},
 };
 
-use crate::audio::initialise_audio;
+use crate::audio::initialize_audio;
 
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
@@ -38,10 +38,10 @@ impl SimpleState for Pong {
         // `texture` is the pixel data.
         self.sprite_sheet_handle
             .replace(load_sprite_sheet(resources));
-        initialise_paddles(world, self.sprite_sheet_handle.clone().unwrap());
-        initialise_camera(world);
-        initialise_audio(world, resources);
-        initialise_scoreboard(world, resources);
+        initialize_paddles(world, self.sprite_sheet_handle.clone().unwrap());
+        initialize_camera(world);
+        initialize_audio(world, resources);
+        initialize_scoreboard(world, resources);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
@@ -57,7 +57,7 @@ impl SimpleState for Pong {
             }
             if timer <= 0.0 {
                 // When timer expire, spawn the ball
-                initialise_ball(world, self.sprite_sheet_handle.clone().unwrap());
+                initialize_ball(world, self.sprite_sheet_handle.clone().unwrap());
             } else {
                 // If timer is not expired yet, put it back onto the state.
                 self.ball_spawn_timer.replace(timer);
@@ -137,8 +137,8 @@ fn load_sprite_sheet(resources: &mut Resources) -> Handle<SpriteSheet> {
     loader.load_from_data(sheet, (), &q)
 }
 
-/// Initialise the camera.
-fn initialise_camera(world: &mut World) {
+/// initialize the camera.
+fn initialize_camera(world: &mut World) {
     // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
     let mut transform = Transform::default();
     transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
@@ -146,8 +146,8 @@ fn initialise_camera(world: &mut World) {
     world.push((Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT), transform));
 }
 
-/// Initialises one paddle on the left, and one paddle on the right.
-fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+/// initializes one paddle on the left, and one paddle on the right.
+fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
 
@@ -170,8 +170,8 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet
     world.push((sprite_render, Paddle::new(Side::Right), right_transform));
 }
 
-/// Initialises one ball in the middle of the arena.
-fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
+/// initializes one ball in the middle of the arena.
+fn initialize_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     // Create the translation.
     let mut local_transform = Transform::default();
     local_transform.set_translation_xyz(
@@ -193,8 +193,8 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
     ));
 }
 
-/// Initialises a ui scoreboard
-fn initialise_scoreboard(world: &mut World, resources: &mut Resources) {
+/// initializes a ui scoreboard
+fn initialize_scoreboard(world: &mut World, resources: &mut Resources) {
     resources.insert(ScoreBoard::default());
 
     let font = {

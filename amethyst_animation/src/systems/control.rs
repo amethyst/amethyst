@@ -37,7 +37,7 @@ pub(crate) struct AnimationControlSystem<
     next_id: u64,
 }
 
-impl<I, T> System<'static> for AnimationControlSystem<I, T>
+impl<I, T> System for AnimationControlSystem<I, T>
 where
     I: std::fmt::Debug + PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Clone + std::fmt::Debug,

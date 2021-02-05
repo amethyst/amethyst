@@ -19,6 +19,7 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
+use proc_macro2::{Ident, Span};
 use syn::{parse_macro_input, DeriveInput};
 
 mod event_reader;
@@ -42,4 +43,38 @@ pub fn widget_id_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let gen = widget_id::impl_widget_id(&ast);
     gen.into()
+}
+
+use std::path::Path;
+
+use glob::glob;
+use quote::quote;
+
+/// creates test out of every *.md file in the repo
+#[proc_macro]
+pub fn make_doc_tests(_: TokenStream) -> TokenStream {
+    let doc_paths: Vec<String> = glob("**/*.md")
+        .expect("bad glob")
+        .map(|entry| "../".to_string() + &entry.unwrap().to_string_lossy())
+        .collect();
+
+    let idents = doc_paths
+        .iter()
+        .cloned()
+        .map(|s| {
+            Path::new(&s)
+                .to_string_lossy()
+                .into_owned()
+                .replace("-", "_")
+                .replace("/", "_")
+                .replace("\\", "_")
+                .replace(".", "")
+        })
+        .map(|s| Ident::new(&s, Span::call_site()));
+
+    let expanded = quote! {
+        #(doctest!(#doc_paths, #idents);)*
+    };
+
+    expanded.into()
 }

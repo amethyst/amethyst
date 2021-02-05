@@ -43,7 +43,7 @@ impl DragWidgetSystem {
     }
 }
 
-impl System<'static> for DragWidgetSystem {
+impl System for DragWidgetSystem {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("DragWidgetSystem")

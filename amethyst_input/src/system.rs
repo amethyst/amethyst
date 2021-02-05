@@ -17,7 +17,7 @@ pub struct InputSystem {
     pub(crate) reader: ReaderId<Event<'static, ()>>,
 }
 
-impl System<'static> for InputSystem {
+impl System for InputSystem {
     fn build(mut self) -> Box<dyn systems::ParallelRunnable> {
         Box::new(
             SystemBuilder::new("InputSystem")

@@ -1,48 +1,39 @@
 # Handling Input
 
 Amethyst uses an `InputHandler` to handle user input.
-You initialise this `InputHandler` by creating an `InputBundle` and adding it to the game data.
+You initialize this `InputHandler` by creating an `InputBundle` and adding it to the game data.
 
-```rust ,edition2018,no_run,noplaypen
-use amethyst::{
-    prelude::*,
-    input::{InputBundle, StringBindings},
-};
+```rust
+use amethyst::{input::InputBundle, prelude::*};
 
 # struct Example;
 # impl SimpleState for Example {}
-fn main() -> amethyst::Result<()> {
-    // StringBindings is the default BindingTypes
-    let input_bundle = InputBundle::<StringBindings>::new();
+# fn main() -> amethyst::Result<()> {
 
-    let mut world = World::new();
+    let input_bundle = InputBundle::new();
+
+    let mut world = World::default();
     let game_data = DispatcherBuilder::default()
-    //..
-    .with_bundle(input_bundle)?
-    //..
-#   ;
+        //..
+        .add_bundle(input_bundle)?;
 
-    Ok(())
-}
+#   Ok(())
+# }
 ```
 
 To use the `InputHandler` inside a `System` you have to add it to the `SystemData`. With this you can check for events from input devices.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 use amethyst::{
-    core::SystemDesc,
-    derive::SystemDesc,
-    ecs::{Read, System, SystemData, World},
-    input::{ControllerButton, InputHandler, StringBindings, VirtualKeyCode},
+    ecs::{System, World},
+    input::{ControllerButton, InputHandler, VirtualKeyCode},
     prelude::*,
 };
 
-#[derive(SystemDesc)]
 struct ExampleSystem;
 
-impl<'s> System<'s> for ExampleSystem {
-    // The same BindingTypes from the InputBundle needs to be inside the InputHandler
-    type SystemData = Read<'s, InputHandler<StringBindings>>;
+impl System for ExampleSystem {
+    type SystemData = .read_resource::<InputHandler>();
 
     fn run(&mut self, input: Self::SystemData) {
         // Gets mouse coordinates
@@ -67,19 +58,20 @@ impl<'s> System<'s> for ExampleSystem {
 
 You can find all the methods from `InputHandler` [here][input_ha].
 
-Now you have to add the `System` to the game data, just like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
+Now you have to add the `System` to the game data, like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::{prelude::*, ecs::*, core::SystemDesc, derive::SystemDesc};
-# #[derive(SystemDesc)]
-# struct ExampleSystem; 
-# impl<'a> System<'a> for ExampleSystem { type SystemData = (); fn run(&mut self, _: ()) {}}
-#
-let game_data = DispatcherBuilder::default()
+```rust
+# use amethyst::{ecs::*, prelude::*};
+# struct ExampleSystem;
+# impl System for ExampleSystem {
+#   fn run(&mut self, _: ()) {}
+# }
+# fn main() {
+    let game_data = DispatcherBuilder::default()
+        //..
+        .with(ExampleSystem, "example_system", &["input_system"]);
     //..
-    .with(ExampleSystem, "example_system", &["input_system"])
-    //..
-#   ;
+# }
 ```
 
 ## Defining Key Bindings in a File
@@ -115,30 +107,26 @@ The possible inputs you can specify for axes are listed [here][in_axis]. The pos
 
 To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the `InputBundle`.
 
-```rust ,edition2018,no_run,noplaypen
-# use amethyst::{prelude::*, input::*, utils::*};
-# fn main() -> amethyst::Result::<()> {
-let root = application_root_dir()?;
-let bindings_config = root.join("config").join("bindings.ron");
+```rust
+# use amethyst::{input::*, prelude::*, utils::*};
+# fn main() -> amethyst::Result<()> {
+    let root = application_root_dir()?;
+    let bindings_config = root.join("config").join("bindings.ron");
 
-let input_bundle = InputBundle::<StringBindings>::new()
-    .with_bindings_from_file(bindings_config)?;
+    let input_bundle = InputBundle::new().with_bindings_from_file(bindings_config)?;
 
-//..
-# Ok(()) }
+    //..
+#   Ok(())
+# }
 ```
 
 And now you can get the [axis][axis_val] and [action][is_down] values from the `InputHandler`.
 
-```rust ,edition2018,no_run,noplaypen
+```rust
 use amethyst::{
-    core::{SystemDesc, Transform},
-    derive::SystemDesc,
-    ecs::{
-        Component, DenseVecStorage, Join, Read, ReadStorage, System, SystemData, World,
-        WriteStorage,
-    },
-    input::{InputHandler, StringBindings},
+    core::{Transform},
+    ecs::{System, World},
+    input::InputHandler,
     prelude::*,
 };
 
@@ -152,18 +140,12 @@ impl Player {
     }
 }
 
-impl Component for Player {
-    type Storage = DenseVecStorage<Self>;
-}
-
-#[derive(SystemDesc)]
 struct MovementSystem;
 
-impl<'s> System<'s> for MovementSystem {
+impl System for MovementSystem {
     type SystemData = (
-        WriteStorage<'s, Transform>,
-        ReadStorage<'s, Player>,
-        Read<'s, InputHandler<StringBindings>>,
+        .write_component::<Transform>().read_component::<Player>(),
+        .read_resource::<InputHandler>(),
     );
 
     fn run(&mut self, (mut transforms, players, input): Self::SystemData) {

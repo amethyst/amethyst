@@ -18,8 +18,8 @@ If you've cloned the Amethyst repo, you can run any of the examples like so:
 cargo run -p pong_tutorial_01
 ```
 
-The example named `pong_tutorial_xy` contains the code which you should have
-after following all tutorials from 1 to xy.
+The example named `pong_tutorial_##` contains the code which you should have
+after following all tutorials from 1 to ##.
 
 [examples]: https://github.com/amethyst/amethyst/tree/master/examples
 [pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong_tutorial_06

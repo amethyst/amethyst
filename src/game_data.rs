@@ -1,6 +1,6 @@
 use crate::{core::ecs::*, error::Error};
 
-/// Initialise trait for game data
+/// initialize trait for game data
 pub trait DataInit<T> {
     /// Build game data
     fn build(self, world: &mut World, resources: &mut Resources) -> Result<T, Error>;

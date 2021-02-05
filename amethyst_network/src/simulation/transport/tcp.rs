@@ -67,7 +67,7 @@ impl SystemBundle for TcpNetworkBundle {
 pub struct TcpStreamManagementSystem;
 
 #[allow(clippy::map_entry)]
-impl System<'_> for TcpStreamManagementSystem {
+impl System for TcpStreamManagementSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TcpStreamManagementSystem")
@@ -114,7 +114,7 @@ impl System<'_> for TcpStreamManagementSystem {
 /// System to listen for incoming connections and cache them to the resource.
 pub struct TcpConnectionListenerSystem;
 
-impl System<'_> for TcpConnectionListenerSystem {
+impl System for TcpConnectionListenerSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TcpConnectionListenerSystem")
@@ -154,7 +154,7 @@ impl System<'_> for TcpConnectionListenerSystem {
 /// System to send messages to a particular open `TcpStream`.
 pub struct TcpNetworkSendSystem;
 
-impl System<'_> for TcpNetworkSendSystem {
+impl System for TcpNetworkSendSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TcpNetworkSendSystem")
@@ -205,7 +205,7 @@ fn write_message(
 /// System to receive messages from all open `TcpStream`s.
 pub struct TcpNetworkRecvSystem;
 
-impl System<'_> for TcpNetworkRecvSystem {
+impl System for TcpNetworkRecvSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("TcpNetworkRecvSystem")

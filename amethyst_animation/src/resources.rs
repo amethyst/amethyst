@@ -552,7 +552,7 @@ where
     Pause,
     /// Abort the animation, will cause the control object to be removed from the world
     Abort,
-    /// Only initialise the animation without starting it
+    /// Only initialize the animation without starting it
     Init,
 }
 
@@ -568,7 +568,7 @@ where
 {
     /// Animation handle
     pub animation: Handle<Animation<T>>,
-    /// Id, a value of zero means this has not been initialised yet
+    /// Id, a value of zero means this has not been initialized yet
     /// (this is done by the control system)
     pub id: u64,
     /// What to do when animation ends

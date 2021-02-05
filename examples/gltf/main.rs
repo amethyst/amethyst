@@ -14,7 +14,7 @@ use amethyst::{
     derive::PrefabData,
     ecs::{Entity, ReadStorage, Write, WriteStorage},
     gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystemDesc},
-    input::{is_close_requested, is_key_down, StringBindings, VirtualKeyCode},
+    input::{is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
     renderer::{
         camera::CameraPrefab,
@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Default)]
 struct Example {
     entity: Option<Entity>,
-    initialised: bool,
+    initialized: bool,
     progress: Option<ProgressCounter>,
 }
 
@@ -99,7 +99,7 @@ impl SimpleState for Example {
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        if !self.initialised {
+        if !self.initialized {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
 
@@ -112,7 +112,7 @@ impl SimpleState for Example {
                         .unwrap()
                         .clone();
 
-                    data.world.create_entity().with(scene_handle).build();
+                    data.world.push((scene_handle,));
 
                     true
                 }
@@ -131,7 +131,7 @@ impl SimpleState for Example {
                     .exec(|finder: TagFinder<'_, AnimationMarker>| finder.find())
                 {
                     self.entity = Some(entity);
-                    self.initialised = true;
+                    self.initialized = true;
                 }
             }
         }
@@ -194,7 +194,7 @@ fn main() -> Result<(), amethyst::Error> {
                 .with_dep(&["gltf_loader"]),
         )?
         .add_bundle(
-            FlyControlBundle::<StringBindings>::new(None, None, None)
+            FlyControlBundle::new(None, None, None)
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
         )?

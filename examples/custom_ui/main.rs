@@ -3,8 +3,7 @@
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     core::transform::TransformBundle,
-    ecs::prelude::WorldExt,
-    input::{InputBundle, StringBindings},
+    input::InputBundle,
     prelude::*,
     renderer::{
         plugins::RenderToWindow,
@@ -79,11 +78,11 @@ struct Example;
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
-        // Initialise the scene with an object, a light and a camera.
+        // initialize the scene with an object, a light and a camera.
         let handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, ())
         });
-        world.create_entity().with(handle).build();
+        world.push((handle,));
 
         // Load custom UI prefab
         world.exec(|mut creator: UiCreator<'_, CustomUi>| {
@@ -102,7 +101,7 @@ fn main() -> amethyst::Result<()> {
     let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .add_bundle(TransformBundle::new())?
-        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(InputBundle::new())?
         .add_bundle(UiBundle::<StringBindings, CustomUi>::new())?
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()

@@ -1,9 +1,9 @@
 # Appendix A: Config Files
 
-In the [full Pong example][pong], the paddle sizes, ball sizes, colors, and arena size are all hard-coded
+In the [full Pong example][pong] the paddle sizes, ball sizes, colors, and arena size are all hard-coded
 into the implementation. This means that if you want to change any of these, you need to recompile the
 project. Wouldn't it be nice to not have to recompile the project each time you wanted to change one or all
-of these things?
+of these?
 
 Luckily, Amethyst uses [RON] configuration files and has infrastructure in the form of the
 [Config] trait to help us implement our own config files.

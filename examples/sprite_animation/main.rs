@@ -89,7 +89,7 @@ impl SimpleState for ExampleState {
             world.push((SpriteRender::new(sheet, 0), Transform::default(), anim_set));
         }
 
-        initialise_camera(world, resources);
+        initialize_camera(world, resources);
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
@@ -126,7 +126,7 @@ impl SimpleState for ExampleState {
     }
 }
 
-fn initialise_camera(world: &mut World, resources: &mut Resources) {
+fn initialize_camera(world: &mut World, resources: &mut Resources) {
     let (width, height) = {
         let dim = resources.get::<ScreenDimensions>().unwrap();
         (dim.width(), dim.height())

@@ -1,7 +1,6 @@
 use std::ops::Deref;
 
-use amethyst_error::Error;
-use atelier_assets::loader::LoadHandle;
+use distill::loader::LoadHandle;
 use dyn_clone::DynClone;
 
 use crate::{processor::ProcessingState, AssetStorage};
@@ -36,7 +35,7 @@ pub trait ProcessableAsset: Asset + Sized {
         data: Self::Data,
         storage: &mut AssetStorage<Self>,
         handle: &LoadHandle,
-    ) -> Result<ProcessingState<Self::Data, Self>, Error>;
+    ) -> amethyst_core::Result<ProcessingState<Self::Data, Self>>;
 }
 
 impl<T: Asset<Data = T>> ProcessableAsset for T {
@@ -44,7 +43,7 @@ impl<T: Asset<Data = T>> ProcessableAsset for T {
         data: Self::Data,
         _storage: &mut AssetStorage<Self>,
         _handle: &LoadHandle,
-    ) -> Result<ProcessingState<Self::Data, Self>, Error> {
+    ) -> amethyst_core::Result<ProcessingState<Self::Data, Self>> {
         Ok(ProcessingState::Loaded(data))
     }
 }
@@ -67,7 +66,7 @@ pub trait Format<D: 'static>: DynClone + Send + Sync + 'static {
     ///
     /// If you are implementing `format` yourself, this method will never be used
     /// and can be left unimplemented.
-    fn import_simple(&self, _bytes: Vec<u8>) -> Result<D, Error> {
+    fn import_simple(&self, _bytes: Vec<u8>) -> amethyst_core::Result<D> {
         unimplemented!("You must implement either `import_simple` or `import`.")
     }
 }
@@ -89,7 +88,7 @@ impl<D: 'static> Format<D> for Box<dyn Format<D>> {
     fn name(&self) -> &'static str {
         self.deref().name()
     }
-    fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> amethyst_core::Result<D> {
         self.deref().import_simple(bytes)
     }
 }

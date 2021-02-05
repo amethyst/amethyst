@@ -19,7 +19,7 @@ thumbs.db
 # Thread profiler output
 thread_profile.json
 
-# Atelier Assets
+# Distill Assets
 .assets_db
 prefab.ron
 *.meta

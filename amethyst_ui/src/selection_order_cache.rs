@@ -56,7 +56,7 @@ impl<G> CacheSelectionSystem<G> {
     }
 }
 
-impl<G> System<'_> for CacheSelectionSystem<G>
+impl<G> System for CacheSelectionSystem<G>
 where
     G: Send + Sync + 'static + PartialEq,
 {

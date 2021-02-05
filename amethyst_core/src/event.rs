@@ -5,7 +5,7 @@ pub trait EventReader {
     /// The event type produced by the reader
     type Event: Clone + Send + Sync + 'static;
 
-    /// Read events from the linked `SystemData` and append to the given Vec
+    /// Read events and append to the given Vec
     fn read(&mut self, _: &mut Resources, _: &mut Vec<Self::Event>);
 
     /// Setup event reader

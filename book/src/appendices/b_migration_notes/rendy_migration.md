@@ -19,7 +19,7 @@
 
 - `Bindings<AX, AC>` is now `Bindings<T>`, where `T` is a new type you must implement:
 
-  ```rust
+  ```rust ,ignore
   pub struct ControlBindings;
 
   impl BindingTypes for ControlBindings {
@@ -39,7 +39,7 @@
 
   ```patch
   -InputBundle::<String, String>::new()
-  +InputBundle::<StringBindings>::new()
+  +InputBundle::new()
   ```
 
 - `UiBundle` type parameters:
@@ -48,7 +48,7 @@
   +use amethyst::renderer::types::DefaultBackend;
 
   -UiBundle::<String, String>::new()
-  +UiBundle::<DefaultBackend, StringBindings>::new()
+  +UiBundle::<DefaultBackend>::new()
   ```
 
 ## Window
@@ -57,10 +57,10 @@
 
 - `WindowBundle` is now separate from `amethyst_renderer`.
 
-  ```rust
+  ```rust ,ignore
   use amethyst::window::WindowBundle;
 
-  game_data.with_bundle(WindowBundle::from_config_file(display_config_path))?;
+  game_data.add_bundle(WindowBundle::from_config_file(display_config_path))?;
   ```
 
   This system is loaded automatically by the `RenderToWindow` render plugin.
@@ -85,7 +85,7 @@
 
 - To load a texture in memory, you can't use `[0.; 4].into()` as the `TextureData` anymore. Use:
 
-  ```rust
+  ```rust ,ignore
   use amethyst::{
       assets::{AssetStorage, Handle,  DefaultLoader, Loader, Prefab, PrefabLoader},
       ecs::World,
@@ -108,11 +108,11 @@
 
   In `main.rs`:
 
-  ```rust
+  ```rust ,ignore
   use amethyst::renderer::{types::DefaultBackend, RenderingSystem};
 
   let game_data = DispatcherBuilder::default()
-      .with_bundle(
+      .add_bundle(
           RenderingBundle::<DefaultBackend>::new()
               .with_plugin(
                   RenderToWindow::from_config_path(display_config)
@@ -129,7 +129,7 @@
 
 - Render passes can be integrated into amethyst by using the newly introduced `RenderPlugin` trait, for example:
 
-  ```rust
+  ```rust ,ignore
   pub struct RenderCustom {
       target: Target,
   }
@@ -143,7 +143,7 @@
   }
 
   impl<B: Backend> RenderPlugin<B> for RenderCustom {
-      fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+      fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder) -> Result<(), Error> {
           // You can add systems that are needed by your renderpass here
           Ok(())
       }
@@ -165,7 +165,7 @@
 
 - `RenderBundle::with_sprite_sheet_processor()` is replaced by:
 
-  ```rust
+  ```rust ,ignore
   game_data.with(
       Processor::<SpriteSheet>::new(),
       "sprite_sheet_processor",
@@ -177,7 +177,7 @@
 
 - `RenderBundle::with_sprite_visibility_sorting()` is replaced by:
 
-  ```rust
+  ```rust ,ignore
   use amethyst::rendy::sprite_visibility::SpriteVisibilitySortingSystem;
 
   game_data.with(
@@ -224,7 +224,7 @@ Z-axis direction clarifications:
   -AmethystApplication::render_base("test_name", visibility);
   +use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
   +AmethystApplication::blank()
-  +    .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
+  +    .add_bundle(RenderEmptyBundle::<DefaultBackend>::new());
   ```
 
 - The `mark_render()` and `.run()` chained call is replaced by a single `run_isolated()` call.

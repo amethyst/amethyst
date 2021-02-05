@@ -2,40 +2,27 @@
 
 ## Testing a `Bundle`
 
-```rust ,edition2018
-#
+```rust
+# use amethyst::{core::bundle::SystemBundle, prelude::*, Error};
 # use amethyst_test::prelude::*;
-# use amethyst::{
-#     core::bundle::SystemBundle,
-#     core::SystemDesc,
-#     derive::SystemDesc,
-#     ecs::prelude::*,
-#     prelude::*,
-#     Error,
-# };
-#
+# 
 # #[derive(Debug)]
 # struct ApplicationResource;
-#
-# #[derive(Debug, SystemDesc)]
-# #[system_desc(insert(ApplicationResource))]
+# 
+# #[derive(Debug)]
 # struct MySystem;
-#
-# impl<'s> System<'s> for MySystem {
-#     type SystemData = ReadExpect<'s, ApplicationResource>;
-#
-#     fn run(&mut self, _: Self::SystemData) {}
+# 
+# impl System for MySystem {
+#   type SystemData = ReadExpect<'s, ApplicationResource>;
+# 
+#   fn build(mut self) -> Box<dyn ParallelRunnable> {}
 # }
-#
+# 
 #[derive(Debug)]
 struct MyBundle;
 
-impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-    fn build(
-        self,
-        world: &mut World,
-        builder: &mut DispatcherBuilder<'a, 'b>,
-    ) -> Result<(), Error> {
+impl SystemBundle<'a, 'b> for MyBundle {
+    fn build(self, world: &mut World, builder: &mut DispatcherBuilder) -> Result<(), Error> {
         // System that adds `ApplicationResource` to the `World`
         builder.add(MySystem.build(world), "my_system", &[]);
         Ok(())
@@ -45,42 +32,30 @@ impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
 // #[test]
 fn bundle_registers_system_with_resource() -> Result<(), Error> {
     AmethystApplication::blank()
-        .with_bundle(MyBundle)
+        .add_bundle(MyBundle)
         .with_assertion(|world| {
             // The next line would panic if the resource wasn't added.
-            world.read_resource::<ApplicationResource>();
+            resources.get::<ApplicationResource>();
         })
         .run()
 }
-#
 # fn main() {
-#     bundle_registers_system_with_resource();
+#   bundle_registers_system_with_resource();
 # }
 ```
 
 ## Testing a `System`
 
-```rust ,edition2018
-#
+```rust
+# use amethyst::{prelude::*, Error};
 # use amethyst_test::prelude::*;
-# use amethyst::{
-#     core::SystemDesc,
-#     derive::SystemDesc,
-#     ecs::prelude::*,
-#     prelude::*,
-#     Error,
-# };
-#
+# 
 struct MyComponent(pub i32);
 
-impl Component for MyComponent {
-    type Storage = DenseVecStorage<Self>;
-}
-
-#[derive(Debug, SystemDesc)]
+#[derive(Debug)]
 struct MySystem;
-impl<'s> System<'s> for MySystem {
-    type SystemData = WriteStorage<'s, MyComponent>;
+impl System for MySystem {
+.write_component::<MyComponent>()
     fn run(&mut self, mut my_component_storage: Self::SystemData) {
         for mut my_component in (&mut my_component_storage).join() {
             my_component.0 += 1
@@ -93,11 +68,11 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
     AmethystApplication::blank()
         .with_system(MySystem, "my_system", &[])
         .with_effect(|world| {
-            let entity = world.create_entity().with(MyComponent(0)).build();
+            let entity = world.push((MyComponent(0),));
             world.insert(EffectReturn(entity));
         })
         .with_assertion(|world| {
-            let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
+            let entity = resources.get::<EffectReturn<Entity>>().0.clone();
 
             let my_component_storage = world.read_storage::<MyComponent>();
             let my_component = my_component_storage
@@ -109,9 +84,8 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
         })
         .run()
 }
-#
 # fn main() {
-#     system_increases_component_value_by_one();
+#   system_increases_component_value_by_one();
 # }
 ```
 
@@ -119,24 +93,17 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
 
 This is useful when your system must run *after* some setup has been done, for example adding a resource:
 
-```rust ,edition2018
-#
+```rust
+# use amethyst::{prelude::*, Error};
 # use amethyst_test::prelude::*;
-# use amethyst::{
-#     core::SystemDesc,
-#     derive::SystemDesc,
-#     ecs::prelude::*,
-#     prelude::*,
-#     Error,
-# };
-#
+# 
 // !Default
 struct MyResource(pub i32);
 
-#[derive(Debug, SystemDesc)]
+#[derive(Debug)]
 struct MySystem;
 
-impl<'s> System<'s> for MySystem {
+impl System for MySystem {
     type SystemData = WriteExpect<'s, MyResource>;
 
     fn run(&mut self, mut my_resource: Self::SystemData) {
@@ -152,15 +119,14 @@ fn system_increases_resource_value_by_one() -> Result<(), Error> {
         })
         .with_system_single(MySystem, "my_system", &[])
         .with_assertion(|world| {
-            let my_resource = world.read_resource::<MyResource>();
+            let my_resource = resources.get::<MyResource>();
 
             // If the system ran, the value in the `MyResource` should be 1.
             assert_eq!(1, my_resource.0);
         })
         .run()
 }
-#
 # fn main() {
-#     system_increases_resource_value_by_one();
+#   system_increases_resource_value_by_one();
 # }
 ```

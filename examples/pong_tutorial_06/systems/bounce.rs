@@ -13,7 +13,7 @@ use crate::{
 
 pub struct BounceSystem;
 
-impl System<'_> for BounceSystem {
+impl System for BounceSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("BounceSystem")

@@ -11,7 +11,7 @@ const DEFAULT_SIM_FRAME_RATE: u32 = 30;
 /// This system is used exclusively to update the state of the `NetworkSimulationTime` resource.
 pub struct NetworkSimulationTimeSystem;
 
-impl System<'_> for NetworkSimulationTimeSystem {
+impl System for NetworkSimulationTimeSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("NetworkSimulationTimeSystem")

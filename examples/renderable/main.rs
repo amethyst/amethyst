@@ -5,22 +5,16 @@
 
 use amethyst::{
     assets::{
-        Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystemDesc,
-        ProgressCounter, RonFormat,
+        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystemDesc, ProgressCounter,
+        RonFormat,
     },
     core::{
         math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
     },
-    derive::SystemDesc,
-    ecs::prelude::{
-        Entity, Join, Read, ReadStorage, System, SystemData, WorldExt, Write, WriteStorage,
-    },
-    input::{
-        get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
-        VirtualKeyCode,
-    },
+    ecs::{Entity, System},
+    input::{get_key, is_close_requested, is_key_down, ElementState, InputBundle, VirtualKeyCode},
     prelude::*,
     renderer::{
         light::Light,
@@ -94,7 +88,7 @@ impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { world, .. } = data;
 
-        world.create_entity().with(self.scene.clone()).build();
+        world.push((self.scene.clone(),));
     }
 
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
@@ -195,15 +189,14 @@ fn main() -> Result<(), Error> {
 
     let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .add_bundle(InputBundle::<StringBindings>::new())?
+        .add_bundle(InputBundle::new())?
         .with(
             ExampleSystem::default(),
             "example_system",
             &["input_system"],
         )
         .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .add_bundle(UiBundle::<StringBindings>::new())?
-        .add_bundle(HotReloadBundle::default())?
+        .add_bundle(UiBundle::new())?
         .add_bundle(FpsCounterBundle::default())?
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
@@ -242,12 +235,12 @@ impl Default for DemoState {
     }
 }
 
-#[derive(Default, SystemDesc)]
+#[derive(Default)]
 struct ExampleSystem {
     fps_display: Option<Entity>,
 }
 
-impl<'a> System<'a> for ExampleSystem {
+impl<'a> System for ExampleSystem {
     type SystemData = (
         WriteStorage<'a, Light>,
         Read<'a, Time>,
