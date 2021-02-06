@@ -13,13 +13,13 @@ own values, so a [`Tint`][doc_tint] with a white color will have no
 effect on the sprite.
 
 ```rust
-use amethyst::core::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
     palette::Srgba, resources::Tint, SpriteRender, SpriteSheet, Texture, Transparent,
 };
 use amethyst::{
     assets::{AssetStorage, DefaultLoader, Handle, Loader},
+    core::Transform,
     window::ScreenDimensions,
 };
 

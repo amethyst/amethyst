@@ -98,14 +98,14 @@ If you had some state implemented you can create the button on its `on_start` me
         /* Create the transform */
         let ui_transform = UiTransform::new(
 // ...
-#          String::from("simple_button"), // id
-#          Anchor::Middle,                // anchor
-#          Anchor::Middle,                // pivot
-#          0f32,                          // x
-#          0f32,                          // y
-#          0f32,                          // z
-#          100f32,                        // width
-#          30f32,                         // height
+#         String::from("simple_button"), // id
+#         Anchor::Middle,                // anchor
+#         Anchor::Middle,                // pivot
+#         0f32,                          // x
+#         0f32,                          // y
+#         0f32,                          // z
+#         100f32,                        // width
+#         30f32,                         // height
 );
 #       let font_handle = {
 #           let loader = resources.get::<DefaultLoader>();
