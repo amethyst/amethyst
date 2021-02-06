@@ -1,4 +1,4 @@
-use amethyst::{assets::{DefaultLoader, Handle, Loader, LoaderBundle}, core::transform::TransformBundle, ecs::DispatcherBuilder, renderer::{types::DefaultBackend, RenderSkybox, RenderToWindow, RenderingBundle}, utils::application_root_dir, Application, GameData, SimpleState, StateData, SimpleTrans, Trans};
+use amethyst::{assets::{DefaultLoader, Handle, Loader, LoaderBundle}, core::transform::TransformBundle, ecs::DispatcherBuilder, renderer::{types::DefaultBackend,RenderFlat3D, RenderSkybox, RenderToWindow, RenderingBundle, RenderPbr3D}, utils::application_root_dir, Application, GameData, SimpleState, StateData, SimpleTrans, Trans};
 use amethyst::assets::prefab::Prefab;
 use amethyst::renderer::{Camera, Mesh};
 use amethyst::ui::UiTransform;
@@ -9,7 +9,7 @@ use amethyst::assets::{ProcessingQueue, AssetHandle};
 use amethyst::renderer::rendy::mesh::{MeshBuilder, Position};
 use amethyst::renderer::types::MeshData;
 use amethyst::gltf::bundle::GltfBundle;
-
+ç
 struct GltfExample;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -23,7 +23,7 @@ impl SimpleState for GltfExample {
         } = data;
         let loader = resources.get::<DefaultLoader>().unwrap();
         let t: Handle<Prefab> = loader.load(
-            "gltf/sample.gltf", // Here we load the associated ron file
+            "gltf/sample.gltf",
         );
         world.push((t,));
     }
@@ -33,10 +33,9 @@ impl SimpleState for GltfExample {
             world, resources, ..
         } = data;
 
-        let mut q = <(Entity, &Camera)>::query();
+        let mut q = <(Entity, &Mesh, &Transform)>::query();
 
-        q.iter(*world).for_each(|e| println!("yeeeeeeaaaah {:?}", e));
-
+        q.iter(*world).for_each(|(e,c, t)| println!("TCameras {:?}", t));
 
         Trans::None
     }
@@ -65,12 +64,12 @@ fn main() -> Result<(), amethyst::Error> {
     let mut dispatcher = DispatcherBuilder::default();
     dispatcher
         .add_bundle(LoaderBundle)
-        //.add_bundle(GltfBundle)
+        .add_bundle(GltfBundle)
         .add_bundle(TransformBundle)
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
-                //.with_plugin(RenderPbr3D::default().with_skinning())
+                .with_plugin(RenderFlat3D::default())
                 .with_plugin(RenderSkybox::default()),
         );
 

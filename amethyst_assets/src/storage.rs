@@ -131,6 +131,14 @@ impl<A> AssetStorage<A> {
         self.get_asset_state(handle.load_handle()).map(|a| &a.asset)
     }
 
+    pub fn pop<T: AssetHandle>(&mut self, handle: &T) -> Option<A> {
+        if let Some(r) = self.assets.remove(&handle.load_handle()) {
+            Some(r.asset)
+        }else{
+            None
+        }
+    }
+
     /// Returns the version of a loaded asset, or `None` if has not completed loading.
     ///
     /// # Parameters

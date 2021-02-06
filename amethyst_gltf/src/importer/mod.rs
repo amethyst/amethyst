@@ -15,9 +15,10 @@ use log::debug;
 use crate::{importer::{gltf_bytes_converter::convert_bytes, mesh::load_mesh}, GltfNodeExtent, GltfSceneOptions};
 use amethyst_assets::prefab::legion_prefab::{PrefabBuilder, CookedPrefab};
 use amethyst_assets::prefab::{Prefab, legion_prefab};
-use amethyst_core::ecs::World;
+use amethyst_core::ecs::{World, Entity};
 use amethyst_rendy::types::MeshData;
 use crate::types::MeshHandle;
+use std::collections::HashMap;
 
 mod gltf_bytes_converter;
 mod mesh;
@@ -40,6 +41,7 @@ pub enum GltfObjectId {
 #[uuid = "3c5571c0-abec-436e-9b28-6bce92f1070a"]
 pub struct GltfImporterState {
     pub id: Option<AssetUuid>,
+    pub mesh_uuids: Option<HashMap<String, AssetUuid>>,
 }
 
 /// The importer for '.gltf' or '.glb' files.
@@ -64,7 +66,7 @@ impl Importer for GltfImporter {
         op: &mut ImportOp,
         source: &mut dyn Read,
         options: &Self::Options,
-        _state: &mut Self::State,
+        state: &mut Self::State,
     ) -> amethyst_assets::distill_importer::Result<ImporterValue> {
         log::info!("Importing scene");
         let mut asset_accumulator = Vec::new();
@@ -93,7 +95,7 @@ impl Importer for GltfImporter {
         let mut node_index: usize = 0;
 
         scene.nodes().into_iter().for_each(|node| {
-            let mut node_assets = load_node(&node, &mut world, op, &options, &buffers, &mut node_index);
+            let mut node_assets = load_node(&node, &mut world, op, state, &options, &buffers, None);
             asset_accumulator.append(&mut node_assets);
         });
 
@@ -101,11 +103,13 @@ impl Importer for GltfImporter {
         let legion_prefab = legion_prefab::Prefab::new(world);
         let scene_prefab = Prefab::new(legion_prefab);
 
-        let prefab_id = op.new_asset_uuid();
-        println!("PREFAB HANDLE : {:?}", prefab_id);
+        if state.id.is_none() {
+            state.id = Some(op.new_asset_uuid());
+        }
+        println!("PREFAB HANDLE : {:?}", state.id.expect("UUID generation for main scene prefab didn't work"));
 
         asset_accumulator.push(ImportedAsset {
-            id: prefab_id,
+            id: state.id.expect("UUID generation for main scene prefab didn't work"),
             search_tags: Vec::new(),
             build_deps: Vec::new(),
             load_deps: Vec::new(),
@@ -127,20 +131,37 @@ fn load_node(
     node: &Node<'_>,
     world: &mut World,
     op: &mut ImportOp,
+    state: &mut GltfImporterState,
     options: &GltfSceneOptions,
     buffers: &Vec<Data>,
-    node_index: &mut usize,
+    parent_node_entity: Option<&Entity>,
 ) -> Vec<ImportedAsset> {
     let current_node_entity = world.push(());
     let mut imported_assets = Vec::new();
 
     if let Some(transform) = load_transform(node) {
-        world.entry(current_node_entity).expect("We just added this entity").add_component(transform);
+        if let Some(p) = parent_node_entity {
+            let t = {
+                let entry = world.entry(*p).expect("We just added this entity");
+                let result = entry.get_component::<Transform>();
+                if let Ok(result) = result{
+                    result.clone()
+                }else{
+                    transform
+                }
+            };
+            world.entry(current_node_entity).expect("We just added this entity").add_component(t);
+        }else{
+            world.entry(current_node_entity).expect("We just added this entity").add_component(transform);
+        }
     }
+
     if let Some(camera) = load_camera(node) {
-        debug!("Adding a camera component to to the current node entity");
+        debug!("Adding a camera component to to the current node entity and has parent ?");
         world.entry(current_node_entity).expect("We just added this entity").add_component(camera);
+
     }
+
     if let Some(light) = load_light(node) {
         debug!("Adding a light component to to the current node entity");
         world.entry(current_node_entity).expect("We just added this entity").add_component(light);
@@ -161,9 +182,18 @@ fn load_node(
         match loaded_mesh.len().cmp(&1) {
             Ordering::Equal => {
                 // single primitive can be loaded directly onto the node
-                let (mesh, _material_index, bounds) = loaded_mesh.remove(0);
+                let (name, mesh, _material_index, bounds) = loaded_mesh.remove(0);
                 bounding_box.extend_range(&bounds);
-                let mesh_asset_id = op.new_asset_uuid();
+
+                if state.mesh_uuids.is_none() {
+                    state.mesh_uuids = Some(Default::default());
+                }
+
+                let mesh_asset_id =
+                    *state.mesh_uuids.as_mut().expect("Meshes hashmap didn't work")
+                        .entry(name)
+                        .or_insert_with(|| op.new_asset_uuid());
+
                 let mesh_data: MeshData = mesh.into();
                 imported_assets.push(ImportedAsset {
                     id: mesh_asset_id,
@@ -203,7 +233,7 @@ fn load_node(
 
     // load childs
     for child in node.children() {
-        let mut child_assets = load_node(&child, world, op, options, buffers, node_index);
+        let mut child_assets = load_node(&child, world, op, state,options, buffers, Some(&current_node_entity));
         imported_assets.append(&mut child_assets);
     }
 

@@ -16,7 +16,7 @@ pub fn load_mesh(
     mesh: &gltf::Mesh<'_>,
     buffers: &Vec<Data>,
     options: &GltfSceneOptions,
-) -> Result<Vec<(MeshBuilder<'static>, Option<usize>, Range<[f32; 3]>)>, Error> {
+) -> Result<Vec<(String, MeshBuilder<'static>, Option<usize>, Range<[f32; 3]>)>, Error> {
     trace!("Loading mesh");
     let mut primitives = vec![];
     for primitive in mesh.primitives() {
@@ -132,7 +132,7 @@ pub fn load_mesh(
         let bounds = bounds.min..bounds.max;
         let material = primitive.material().index();
 
-        primitives.push((builder, material, bounds));
+        primitives.push((mesh.name().expect("Meshes must have a name").to_string(), builder, material, bounds));
     }
     trace!("Loaded mesh");
     Ok(primitives)
