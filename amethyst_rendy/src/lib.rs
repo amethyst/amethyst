@@ -95,8 +95,7 @@ pub use rendy::{
         render::{RenderGroupDesc, SubpassBuilder},
         GraphBuilder,
     },
-    hal::{format::Format, image::Kind},
-    hal::command::ClearColor,
+    hal::{command::ClearColor, format::Format, image::Kind},
 };
 
 #[doc(inline)]
