@@ -1,14 +1,19 @@
 //! 'Global' rendering type declarations
-use amethyst_assets::{Asset, Handle};
+use amethyst_assets::{
+    erased_serde::private::serde::{
+        de, de::SeqAccess, ser::SerializeSeq, Deserializer, Serializer,
+    },
+    prefab::{
+        register_component_type,
+        serde_diff::{ApplyContext, DiffContext},
+        SerdeDiff,
+    },
+    Asset, Handle,
+};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
 use crate::system::{MeshProcessorSystem, TextureProcessorSystem};
-use amethyst_assets::erased_serde::private::serde::{Serializer, Deserializer, de};
-use amethyst_assets::prefab::{SerdeDiff, register_component_type};
-use amethyst_assets::erased_serde::private::serde::ser::SerializeSeq;
-use amethyst_assets::erased_serde::private::serde::de::SeqAccess;
-use amethyst_assets::prefab::serde_diff::{DiffContext, ApplyContext};
 
 /// Extension of the rendy Backend trait.
 pub trait Backend: rendy::hal::Backend {
@@ -59,15 +64,19 @@ pub enum Mesh {
 }
 
 impl Serialize for Mesh {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
-        S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
         unimplemented!()
     }
 }
 
-impl <'ge> Deserialize<'ge> for Mesh {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'ge>>::Error> where
-        D: Deserializer<'ge> {
+impl<'ge> Deserialize<'ge> for Mesh {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'ge>>::Error>
+    where
+        D: Deserializer<'ge>,
+    {
         unimplemented!()
     }
 }
@@ -84,12 +93,22 @@ impl Clone for Mesh {
 }
 
 impl SerdeDiff for Mesh {
-    fn diff<'a, S: SerializeSeq>(&self, ctx: &mut DiffContext<'a, S>, other: &Self) -> Result<bool, <S as SerializeSeq>::Error> {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        ctx: &mut DiffContext<'a, S>,
+        other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
         unimplemented!()
     }
 
-    fn apply<'de, A>(&mut self, seq: &mut A, ctx: &mut ApplyContext) -> Result<bool, <A as SeqAccess<'de>>::Error> where
-        A: de::SeqAccess<'de> {
+    fn apply<'de, A>(
+        &mut self,
+        seq: &mut A,
+        ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
         unimplemented!()
     }
 }

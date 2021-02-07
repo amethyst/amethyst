@@ -1,17 +1,18 @@
-use amethyst_core::ecs::{World, Resources, Entity, IntoQuery};
-use crate::types::MeshHandle;
-use amethyst_rendy::{Camera, Mesh, MaterialDefaults};
-use amethyst_assets::{Handle, AssetStorage};
-use std::ops::Deref;
 
-/// This will attach a Mesh to any Entity with a MeshHandle
+
+use amethyst_assets::{AssetStorage};
+use amethyst_core::ecs::{Entity, IntoQuery, Resources, World};
+use amethyst_rendy::{
+    loaders::load_from_srgba, palette::Srgba, types::TextureData, Camera, Material,
+    MaterialDefaults, Mesh, Texture,
+};
+
+use crate::types::MeshHandle;
+
+/// This will attach a Mesh to any Entity with a MeshHandle, and remove the Meshhandle
 pub(crate) fn mesh_handle_loading(world: &mut World, resources: &mut Resources) {
     let mut mesh_storage = resources
         .get_mut::<AssetStorage<Mesh>>()
-        .expect("AssetStorage<Mesh> can not be retrieved from ECS Resources");
-
-    let mut default_mat = resources
-        .get_mut::<MaterialDefaults>()
         .expect("AssetStorage<Mesh> can not be retrieved from ECS Resources");
 
     let mut entity_mesh = Vec::new();
@@ -22,10 +23,11 @@ pub(crate) fn mesh_handle_loading(world: &mut World, resources: &mut Resources) 
         }
     });
 
-    while let Some((e, m)) = entity_mesh.pop(){
-        world.entry(e).expect("Can't not be").remove_component::<MeshHandle>();
-        world.entry(e).expect("Can't not be").add_component(m);
-        world.entry(e).expect("Can't not be").add_component(default_mat.0.clone());
+    while let Some((entity, mesh)) = entity_mesh.pop() {
+        world
+            .entry(entity)
+            .expect("This can't exist because we just register this entity from the world")
+            .remove_component::<MeshHandle>();
+        world.entry(entity).expect("This can't exist because we just register this entity from the world").add_component(mesh);
     }
-
 }

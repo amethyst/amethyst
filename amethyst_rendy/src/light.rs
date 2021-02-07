@@ -2,15 +2,14 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
+use amethyst_assets::prefab::{
+    serde_diff::{ApplyContext, DiffContext},
+    SerdeDiff,
+};
 use amethyst_core::math::Vector3;
+use gltf::{khr_lights_punctual, khr_lights_punctual::Kind};
+use serde::{de, de::SeqAccess, ser::SerializeSeq};
 use type_uuid::TypeUuid;
-use gltf::khr_lights_punctual;
-use gltf::khr_lights_punctual::Kind;
-use amethyst_assets::prefab::SerdeDiff;
-use serde::de::SeqAccess;
-use amethyst_assets::prefab::serde_diff::{DiffContext, ApplyContext};
-use serde::ser::SerializeSeq;
-use serde::de;
 
 /// A light source.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, TypeUuid)]
@@ -29,19 +28,29 @@ pub enum Light {
     Sun(SunLight),
 }
 
-impl Default for Light{
+impl Default for Light {
     fn default() -> Self {
         Light::Area
     }
 }
 
-impl SerdeDiff for Light{
-    fn diff<'a, S: SerializeSeq>(&self, ctx: &mut DiffContext<'a, S>, other: &Self) -> Result<bool, <S as SerializeSeq>::Error> {
+impl SerdeDiff for Light {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        ctx: &mut DiffContext<'a, S>,
+        other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
         unimplemented!()
     }
 
-    fn apply<'de, A>(&mut self, seq: &mut A, ctx: &mut ApplyContext) -> Result<bool, <A as SeqAccess<'de>>::Error> where
-        A: de::SeqAccess<'de> {
+    fn apply<'de, A>(
+        &mut self,
+        seq: &mut A,
+        ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
         unimplemented!()
     }
 }

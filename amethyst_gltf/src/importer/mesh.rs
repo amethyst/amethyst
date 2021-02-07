@@ -7,7 +7,7 @@ use amethyst_rendy::{
     skinning::JointCombined,
 };
 use gltf::buffer::Data;
-use log::{trace, warn};
+use log::{debug, trace, warn};
 use mikktspace::{generate_tangents, Geometry};
 
 use crate::GltfSceneOptions;
@@ -17,13 +17,13 @@ pub fn load_mesh(
     buffers: &Vec<Data>,
     options: &GltfSceneOptions,
 ) -> Result<Vec<(String, MeshBuilder<'static>, Option<usize>, Range<[f32; 3]>)>, Error> {
-    trace!("Loading mesh");
+    debug!("Loading mesh");
     let mut primitives = vec![];
     for primitive in mesh.primitives() {
-        trace!("Loading mesh primitive");
+        debug!("Loading mesh primitive");
         let reader = primitive.reader(|buffer| buffers.get(buffer.index()).map(|x| &**x));
 
-        trace!("Loading indices");
+        debug!("Loading indices");
         use gltf::mesh::util::ReadIndices;
         let indices = match reader.read_indices() {
             Some(ReadIndices::U8(iter)) => Indices::U16(iter.map(u16::from).collect()),
@@ -32,7 +32,7 @@ pub fn load_mesh(
             None => Indices::None,
         };
 
-        trace!("Loading positions");
+        debug!("Loading positions");
         let positions = reader
             .read_positions()
             .expect("Missing position !")
@@ -40,17 +40,17 @@ pub fn load_mesh(
             .collect::<Vec<_>>();
 
         let normals = compute_if(options.load_normals || options.load_tangents, || {
-            trace!("Loading normals");
+            debug!("Loading normals");
             if let Some(normals) = reader.read_normals() {
                 normals.map(Normal).collect::<Vec<_>>()
             } else {
-                trace!("Calculating normals");
+                debug!("Calculating normals");
                 calculate_normals(&positions, &indices)
             }
         });
 
         let tex_coords = compute_if(options.load_texcoords || options.load_tangents, || {
-            trace!("Loading texture coordinates");
+            debug!("Loading texture coordinates");
             if let Some(tex_coords) = reader.read_tex_coords(0).map(|t| t.into_f32()) {
                 if options.flip_v_coord {
                     tex_coords
@@ -69,12 +69,12 @@ pub fn load_mesh(
         });
 
         let tangents = compute_if(options.load_tangents, || {
-            trace!("Loading tangents");
+            debug!("Loading tangents");
             let tangents = reader.read_tangents();
             match tangents {
                 Some(tangents) => tangents.map(Tangent).collect::<Vec<_>>(),
                 None => {
-                    trace!("Calculating tangents");
+                    debug!("Calculating tangents");
                     calculate_tangents(
                         &positions,
                         normals.as_ref().unwrap(),
@@ -86,7 +86,7 @@ pub fn load_mesh(
         });
 
         let colors = try_compute_if(options.load_colors, || {
-            trace!("Loading colors");
+            debug!("Loading colors");
             if let Some(colors) = reader.read_colors(0) {
                 Some(colors.into_rgba_f32().map(Color).collect::<Vec<_>>())
             } else {
@@ -95,7 +95,7 @@ pub fn load_mesh(
         });
 
         let joints = try_compute_if(options.load_animations, || {
-            trace!("Loading animations");
+            debug!("Loading animations");
             if let (Some(ids), Some(weights)) = (reader.read_joints(0), reader.read_weights(0)) {
                 let zip = ids.into_u16().zip(weights.into_f32());
                 let joints = zip
@@ -132,7 +132,12 @@ pub fn load_mesh(
         let bounds = bounds.min..bounds.max;
         let material = primitive.material().index();
 
-        primitives.push((mesh.name().expect("Meshes must have a name").to_string(), builder, material, bounds));
+        primitives.push((
+            mesh.name().expect("Meshes must have a name").to_string(),
+            builder,
+            material,
+            bounds,
+        ));
     }
     trace!("Loaded mesh");
     Ok(primitives)

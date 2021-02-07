@@ -1,20 +1,26 @@
-use amethyst::{assets::{DefaultLoader, Handle, Loader, LoaderBundle}, core::transform::TransformBundle, ecs::DispatcherBuilder, renderer::{types::DefaultBackend,RenderFlat3D, RenderSkybox, RenderToWindow, RenderingBundle, RenderPbr3D}, utils::application_root_dir, Application, GameData, SimpleState, StateData, SimpleTrans, Trans};
-use amethyst::assets::prefab::Prefab;
-use amethyst::renderer::{Camera, Mesh};
-use amethyst::ui::UiTransform;
-use amethyst::ecs::{Entity, IntoQuery};
-use amethyst::renderer::light::Light;
-use amethyst::core::Transform;
-use amethyst::assets::{ProcessingQueue, AssetHandle};
-use amethyst::renderer::rendy::mesh::{MeshBuilder, Position};
-use amethyst::renderer::types::MeshData;
-use amethyst::gltf::bundle::GltfBundle;
-ç
+use amethyst::{
+    assets::{
+        prefab::Prefab, AssetHandle, DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue,
+    },
+    core::{math::Vector3, transform::TransformBundle, Transform},
+    ecs::{DispatcherBuilder, Entity, IntoQuery},
+    gltf::bundle::GltfBundle,
+    renderer::{
+        light::Light,
+        rendy::mesh::{MeshBuilder, Position},
+        types::{DefaultBackend, MeshData},
+        Camera, Material, Mesh, RenderFlat3D, RenderPbr3D, RenderSkybox, RenderToWindow,
+        RenderingBundle,
+    },
+    ui::UiTransform,
+    utils::application_root_dir,
+    Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
+};
+
 struct GltfExample;
 
 #[derive(Debug, Clone, PartialEq)]
-struct Scene {
-}
+struct Scene {}
 
 impl SimpleState for GltfExample {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
@@ -22,20 +28,20 @@ impl SimpleState for GltfExample {
             world, resources, ..
         } = data;
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let t: Handle<Prefab> = loader.load(
-            "gltf/sample.gltf",
-        );
+        let t: Handle<Prefab> = loader.load("gltf/sample.gltf");
         world.push((t,));
     }
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-
         let StateData {
             world, resources, ..
         } = data;
 
-        let mut q = <(Entity, &Mesh, &Transform)>::query();
+        let mut q = <(Entity, &Mesh, &mut Transform)>::query();
 
-        q.iter(*world).for_each(|(e,c, t)| println!("TCameras {:?}", t));
+        q.iter_mut(*world).for_each(|(e, m, t)| {
+            println!("Mat {:?}", m);
+            println!("Tra {:?}", t);
+        });
 
         Trans::None
     }
@@ -49,10 +55,22 @@ fn main() -> Result<(), amethyst::Error> {
                 "amethyst_assets".to_string(),
                 amethyst::LogLevelFilter::Trace,
             ),
-            ("amethyst_rendy".to_string(), amethyst::LogLevelFilter::Trace),
-            ("distill_daemon".to_string(), amethyst::LogLevelFilter::Trace),
-            ("distill_loader".to_string(), amethyst::LogLevelFilter::Trace),
-            ("gfx_backend_metal::window".to_string(), amethyst::LogLevelFilter::Off),
+            (
+                "amethyst_rendy".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+            (
+                "distill_daemon".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+            (
+                "distill_loader".to_string(),
+                amethyst::LogLevelFilter::Trace,
+            ),
+            (
+                "gfx_backend_metal::window".to_string(),
+                amethyst::LogLevelFilter::Off,
+            ),
         ],
         ..Default::default()
     };
@@ -69,7 +87,7 @@ fn main() -> Result<(), amethyst::Error> {
         .add_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path)?)
-                .with_plugin(RenderFlat3D::default())
+                .with_plugin(RenderPbr3D::default())
                 .with_plugin(RenderSkybox::default()),
         );
 

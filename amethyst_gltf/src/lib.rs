@@ -15,9 +15,13 @@
 
 use std::{collections::HashMap, ops::Range};
 
-use amethyst_animation::Skin;
+
 use amethyst_assets::{
-    inventory,register_asset_type,  prefab::{Prefab, register_component_type}, Asset, AssetProcessorSystem, AssetStorage, Handle, Loader,distill_importer, distill_importer::{ImportedAsset, typetag, SerdeImportable},
+    distill_importer,
+    distill_importer::{typetag, ImportedAsset, SerdeImportable},
+    inventory,
+    prefab::{register_component_type, Prefab},
+    register_asset_type, Asset, AssetProcessorSystem, AssetStorage, Handle, Loader,
     ProgressCounter,
 };
 use amethyst_core::{
@@ -36,16 +40,18 @@ use type_uuid::TypeUuid;
 
 pub mod bundle;
 mod importer;
-mod types;
 mod system;
+mod types;
+
+use amethyst_assets::{
+    erased_serde::private::serde::{de, de::SeqAccess, ser::SerializeSeq},
+    prefab::{
+        serde_diff::{ApplyContext, DiffContext},
+        SerdeDiff,
+    },
+};
 
 pub use importer::GltfImporter;
-use amethyst_assets::prefab::SerdeDiff;
-use amethyst_assets::erased_serde::private::serde::ser::SerializeSeq;
-use amethyst_assets::erased_serde::private::serde::de::SeqAccess;
-use amethyst_assets::prefab::serde_diff::{DiffContext, ApplyContext};
-use amethyst_assets::erased_serde::private::serde::de;
-use amethyst_rendy::types::MeshData;
 
 inventory::submit! {
     amethyst_assets::SourceFileImporter {
@@ -65,14 +71,13 @@ register_component_type!(Camera);
 register_component_type!(Light);
 register_component_type!(Transform);
 
-
 /// A GLTF node extent
 #[derive(Clone, Debug, Serialize)]
 pub struct GltfNodeExtent {
     /// The beginning of this extent
     pub start: Point3<f32>,
     /// The end of this extent
-    pub end: Point3<f32>
+    pub end: Point3<f32>,
 }
 
 impl Default for GltfNodeExtent {

@@ -134,7 +134,7 @@ impl<A> AssetStorage<A> {
     pub fn pop<T: AssetHandle>(&mut self, handle: &T) -> Option<A> {
         if let Some(r) = self.assets.remove(&handle.load_handle()) {
             Some(r.asset)
-        }else{
+        } else {
             None
         }
     }

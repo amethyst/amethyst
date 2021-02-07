@@ -30,7 +30,7 @@ pub struct Prefab {
 
 impl Prefab {
     pub fn new(raw: legion_prefab::Prefab) -> Self {
-        Self{
+        Self {
             raw,
             ..Default::default()
         }

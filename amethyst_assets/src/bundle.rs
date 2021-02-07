@@ -19,7 +19,6 @@ fn asset_loading_tick(_: &mut World, resources: &mut Resources) {
     loader
         .process(resources)
         .expect("Error in Loader processing");
-
 }
 
 /// starts the asset thread with distill_daemon

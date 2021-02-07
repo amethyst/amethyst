@@ -182,7 +182,10 @@ impl Loader for DefaultLoader {
         Handle::new(
             self.ref_sender.clone(),
             self.loader
-                .add_ref_indirect(IndirectIdentifier::PathWithType(path.to_string(), AssetTypeId(A::UUID))),
+                .add_ref_indirect(IndirectIdentifier::PathWithType(
+                    path.to_string(),
+                    AssetTypeId(A::UUID),
+                )),
         )
     }
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {
@@ -230,7 +233,7 @@ impl Loader for DefaultLoader {
                 Err(TryRecvError::Disconnected) => panic!("RefOp receiver disconnected"),
                 Ok(RefOp::Decrease(handle)) => {
                     self.loader.remove_ref(handle);
-                },
+                }
                 Ok(RefOp::Increase(handle)) => {
                     self.loader
                         .get_load_info(handle)

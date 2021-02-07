@@ -6,7 +6,6 @@ pub fn convert_bytes(
 ) -> Result<(Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>), Error> {
     log::debug!("Starting Gltf import");
     let result = gltf::import_slice(&bytes.as_slice());
-    log::debug!("Import slice has been done with result {:?}", result);
     if let Err(err) = result {
         log::error!("Import error: {:?}", err);
         return Err(Error::Boxed(Box::new(err)));

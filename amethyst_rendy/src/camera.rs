@@ -1,18 +1,22 @@
 //! Camera type with support for perspective and orthographic projections.
 
+use amethyst_assets::{
+    prefab::{
+        serde_diff::{ApplyContext, DiffContext},
+        SerdeDiff,
+    },
+    Asset,
+};
 use amethyst_core::{
     ecs::*,
     geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
     transform::Transform,
 };
+use serde::{de, de::SeqAccess, ser::SerializeSeq};
 use type_uuid::TypeUuid;
-use amethyst_assets::{Asset, prefab::{serde_diff, SerdeDiff}};
-use crate::SpriteSheet;
-use serde::de::SeqAccess;
-use amethyst_assets::prefab::serde_diff::{DiffContext, ApplyContext};
-use serde::ser::SerializeSeq;
-use serde::de;
+
+
 
 /// Camera struct.
 ///
@@ -46,13 +50,23 @@ pub struct Camera {
     pub inverse: Matrix4<f32>,
 }
 
-impl SerdeDiff for Camera{
-    fn diff<'a, S: SerializeSeq>(&self, ctx: &mut DiffContext<'a, S>, other: &Self) -> Result<bool, <S as SerializeSeq>::Error> {
+impl SerdeDiff for Camera {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        ctx: &mut DiffContext<'a, S>,
+        other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
         unimplemented!()
     }
 
-    fn apply<'de, A>(&mut self, seq: &mut A, ctx: &mut ApplyContext) -> Result<bool, <A as SeqAccess<'de>>::Error> where
-        A: de::SeqAccess<'de> {
+    fn apply<'de, A>(
+        &mut self,
+        seq: &mut A,
+        ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
         unimplemented!()
     }
 }
