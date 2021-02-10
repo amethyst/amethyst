@@ -2,11 +2,12 @@ use amethyst_assets::{
     erased_serde::private::serde::{de, de::SeqAccess, ser::SerializeSeq},
     prefab::{
         register_component_type,
-        serde_diff::{ApplyContext, DiffContext}, SerdeDiff,
+        serde_diff::{ApplyContext, DiffContext},
+        SerdeDiff,
     },
     Handle,
 };
-use amethyst_rendy::{Mesh, Material};
+use amethyst_rendy::{Material, Mesh};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
@@ -44,7 +45,6 @@ impl SerdeDiff for MeshHandle {
 
 register_component_type!(MeshHandle);
 
-
 /// MaterialHandle is a component that will handle the fact that we attach
 /// a material handle to an entity as an asset handle that will later be loaded.
 #[derive(Serialize, Deserialize, TypeUuid, Clone)]
@@ -70,8 +70,8 @@ impl SerdeDiff for MaterialHandle {
         _seq: &mut A,
         _ctx: &mut ApplyContext,
     ) -> Result<bool, <A as SeqAccess<'de>>::Error>
-        where
-            A: de::SeqAccess<'de>,
+    where
+        A: de::SeqAccess<'de>,
     {
         unimplemented!()
     }

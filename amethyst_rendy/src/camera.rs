@@ -16,8 +16,6 @@ use amethyst_core::{
 use serde::{de, de::SeqAccess, ser::SerializeSeq};
 use type_uuid::TypeUuid;
 
-
-
 /// Camera struct.
 ///
 /// Contains a projection matrix to convert from world/eye-space

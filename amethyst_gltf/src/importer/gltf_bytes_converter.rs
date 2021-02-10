@@ -17,10 +17,7 @@ pub fn convert_bytes(
 mod test {
     use std::{fs::File, io::Read};
 
-    use amethyst_assets::distill_importer::BoxedImporter;
-    use type_uuid::TypeUuid;
-
-    use super::{super::GltfSceneOptions, *};
+    use super::*;
 
     #[test]
     fn should_import_glb_gltf() {

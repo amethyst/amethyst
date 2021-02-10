@@ -1,4 +1,8 @@
-use std::{cmp::Ordering, collections::HashMap, io::Read};
+use std::{
+    cmp::Ordering,
+    collections::{HashMap, HashSet},
+    io::Read,
+};
 
 use amethyst_assets::{
     distill_importer,
@@ -24,15 +28,13 @@ use type_uuid::TypeUuid;
 
 use crate::{
     importer::{
-        gltf_bytes_converter::convert_bytes, images::load_image, material::load_material,
+        gltf_bytes_converter::convert_bytes,
+        material::{convert_optional_index_to_string, load_material},
         mesh::load_mesh,
     },
-    types::MeshHandle,
+    types::{MaterialHandle, MeshHandle},
     GltfNodeExtent, GltfSceneOptions,
 };
-use std::collections::HashSet;
-use crate::importer::material::convert_optional_index_to_string;
-use crate::types::MaterialHandle;
 
 mod gltf_bytes_converter;
 mod images;
@@ -103,10 +105,10 @@ impl Importer for GltfImporter {
         });
          */
 
-        let mut materials = HashMap::<String, Material>::new();
+        let _materials = HashMap::<String, Material>::new();
 
         doc.materials().for_each(|material| {
-            let mut material_assets= load_material(&material, op, &buffers, state);
+            let mut material_assets = load_material(&material, op, &buffers, state);
             asset_accumulator.append(&mut material_assets);
         });
 
@@ -202,7 +204,7 @@ fn load_node(
             .add_component(light);
     }
 
-    let mut skin = node.skin().map(|skin| {
+    let skin = node.skin().map(|skin| {
         SkinInfo {
             skin_index: skin.index(),
             mesh_indices: Vec::default(),
@@ -251,12 +253,15 @@ fn load_node(
                 world
                     .entry(current_node_entity)
                     .expect("We just added this entity")
-                    .add_component(MaterialHandle(
-                        make_handle(
-                            state.material_uuids.as_ref()
-                                .expect("Meshes hashmap didn't work")
-                                .get(&convert_optional_index_to_string(material_index))
-                        .expect("A requested material is not loded").clone())));
+                    .add_component(MaterialHandle(make_handle(
+                        state
+                            .material_uuids
+                            .as_ref()
+                            .expect("Meshes hashmap didn't work")
+                            .get(&convert_optional_index_to_string(material_index))
+                            .expect("A requested material is not loded")
+                            .clone(),
+                    )));
 
                 // if we have a skin we need to track the mesh entities
                 if let Some(_skin) = skin {
@@ -349,41 +354,5 @@ fn get_scene_index(document: &Document, options: &GltfSceneOptions) -> Result<us
             Err(Error::Custom(format!("Invalid Scene Gltf {}", num_scenes)))
         }
         (None, _) => Ok(0),
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use std::{fs::File, io::Read};
-
-    use amethyst_assets::distill_importer::BoxedImporter;
-    use type_uuid::TypeUuid;
-
-    use super::{super::GltfSceneOptions, *};
-
-    #[test]
-    fn importer_basic_test() {
-        let mut f = File::open("test/sample.gltf").expect("suzanne.glb not found");
-        let mut buffer = Vec::new();
-        // read the whole file
-        f.read_to_end(&mut buffer)
-            .expect("read_to_end did not work");
-        let mut buffer_slice = buffer.as_slice();
-        let importer: Box<dyn BoxedImporter> = Box::new(GltfImporter::default());
-        let mut import_op = ImportOp::default();
-        let res = futures::executor::block_on(importer.import_boxed(
-            &mut import_op,
-            &mut buffer_slice,
-            Box::new(GltfSceneOptions::default()),
-            Box::new(GltfImporterState { id: None, images_uuids: None, material_uuids: None, material_transparencies: None, mesh_uuids: None }),
-        ));
-        match res {
-            Ok(r) => {
-                println!("res : {:?}", r.value.assets.len());
-            }
-            Err(e) => {
-                println!("error e {:?}", e);
-            }
-        };
     }
 }

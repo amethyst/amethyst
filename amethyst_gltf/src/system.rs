@@ -1,13 +1,6 @@
-
-
-use amethyst_assets::{AssetStorage};
 use amethyst_core::ecs::{Entity, IntoQuery, Resources, World};
-use amethyst_rendy::{
-    loaders::load_from_srgba, palette::Srgba, types::TextureData, Camera, Material,
-    MaterialDefaults, Mesh, Texture,
-};
 
-use crate::types::{MeshHandle, MaterialHandle};
+use crate::types::{MaterialHandle, MeshHandle};
 
 /// This will attach a Handle<Mesh> to any Entity with a MeshHandle, and remove the Meshhandle
 pub(crate) fn mesh_handle_loading(world: &mut World, _resources: &mut Resources) {
@@ -22,7 +15,10 @@ pub(crate) fn mesh_handle_loading(world: &mut World, _resources: &mut Resources)
             .entry(entity)
             .expect("This can't exist because we just register this entity from the world")
             .remove_component::<MeshHandle>();
-        world.entry(entity).expect("This can't exist because we just register this entity from the world").add_component(mesh);
+        world
+            .entry(entity)
+            .expect("This can't exist because we just register this entity from the world")
+            .add_component(mesh);
     }
 }
 
@@ -39,6 +35,9 @@ pub(crate) fn material_handle_loading(world: &mut World, _resources: &mut Resour
             .entry(entity)
             .expect("This can't exist because we just register this entity from the world")
             .remove_component::<MaterialHandle>();
-        world.entry(entity).expect("This can't exist because we just register this entity from the world").add_component(material);
+        world
+            .entry(entity)
+            .expect("This can't exist because we just register this entity from the world")
+            .add_component(material);
     }
 }

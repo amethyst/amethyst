@@ -284,6 +284,7 @@ impl Stopwatch {
 // Unit tests
 #[cfg(test)]
 mod tests {
+
     use std::{thread, time::Duration};
 
     use super::Stopwatch;

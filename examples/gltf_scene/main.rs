@@ -28,49 +28,15 @@ impl SimpleState for GltfExample {
             world, resources, ..
         } = data;
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let t: Handle<Prefab> = loader.load("gltf/sample.gltf");
+        let t: Handle<Prefab> = loader.load("gltf/suzanne.glb");
         world.push((t,));
-    }
-    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let StateData {
-            world, resources, ..
-        } = data;
-
-        let mut q = <(Entity, &Camera, &mut Transform)>::query();
-
-        q.iter_mut(*world).for_each(|(e, c, t)| {
-           // t.face_towards(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
-        });
-
-        Trans::None
     }
 }
 
 fn main() -> Result<(), amethyst::Error> {
     let config = amethyst::LoggerConfig {
-        level_filter: amethyst::LogLevelFilter::Debug,
-        module_levels: vec![
-            (
-                "amethyst_assets".to_string(),
-                amethyst::LogLevelFilter::Trace,
-            ),
-            (
-                "amethyst_rendy".to_string(),
-                amethyst::LogLevelFilter::Trace,
-            ),
-            (
-                "distill_daemon".to_string(),
-                amethyst::LogLevelFilter::Trace,
-            ),
-            (
-                "distill_loader".to_string(),
-                amethyst::LogLevelFilter::Trace,
-            ),
-            (
-                "gfx_backend_metal::window".to_string(),
-                amethyst::LogLevelFilter::Off,
-            ),
-        ],
+        level_filter: amethyst::LogLevelFilter::Warn,
+        module_levels: vec![],
         ..Default::default()
     };
     amethyst::start_logger(config);

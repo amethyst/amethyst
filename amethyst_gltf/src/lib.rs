@@ -15,7 +15,6 @@
 
 use std::{collections::HashMap, ops::Range};
 
-
 use amethyst_assets::{
     distill_importer,
     distill_importer::{typetag, ImportedAsset, SerdeImportable},
@@ -30,10 +29,7 @@ use amethyst_core::{
     transform::Transform,
     Named,
 };
-use amethyst_rendy::{
-    light::Light, rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere, Camera,
-    Material,
-};
+use amethyst_rendy::{light::Light, visibility::BoundingSphere, Camera, Material};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -50,7 +46,6 @@ use amethyst_assets::{
         SerdeDiff,
     },
 };
-
 pub use importer::GltfImporter;
 
 inventory::submit! {

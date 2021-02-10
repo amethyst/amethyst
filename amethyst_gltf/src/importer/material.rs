@@ -1,9 +1,14 @@
-use amethyst_assets::{distill_importer::{ImportedAsset, ImportOp}, error::Error, make_handle, AssetUuid};
+use std::collections::{HashMap, HashSet};
+
+use amethyst_assets::{
+    distill_importer::{ImportOp, ImportedAsset},
+    error::Error,
+    make_handle, AssetUuid,
+};
 use amethyst_rendy::{
     loaders::{load_from_linear_rgba, load_from_srgba},
     palette::{LinSrgba, Srgba},
     rendy::{
-        core::hal::image::Filter,
         hal,
         texture::{
             image::{load_from_image, ImageFormat as DataFormat, ImageTextureConfig, Repr},
@@ -13,15 +18,16 @@ use amethyst_rendy::{
     types::TextureData,
     Material,
 };
-use gltf::{buffer::Data};
+use gltf::{
+    buffer::Data,
+    material::{AlphaMode, NormalTexture, OcclusionTexture, PbrMetallicRoughness},
+    texture::Info,
+};
 
 use crate::importer::{
     images::{read_image_data, ImageFormat as ImportDataFormat},
     GltfImporterState,
 };
-use std::collections::{HashMap, HashSet};
-use gltf::material::{PbrMetallicRoughness, NormalTexture, OcclusionTexture, AlphaMode};
-use gltf::texture::Info;
 
 /// load a material as an asset
 pub fn load_material(
@@ -44,10 +50,30 @@ pub fn load_material(
     let material_name = convert_optional_index_to_string(material.index());
 
     let (albedo_id, albedo_asset) = load_albedo(&pbr, buffers, state, op, material_name.clone());
-    let (roughness_id, roughness_asset) = load_metallic_roughness(&pbr, buffers, state, op, material_name.clone());
-    let (emission_id, emission_asset) = load_emission(&em_factor, material.emissive_texture(), buffers, state, op, material_name.clone());
-    let (normal_id, normal_asset) = load_normal(material.normal_texture(), buffers, state, op, material_name.clone());
-    let (occlusion_id, occlusion_asset) = load_occlusion(material.occlusion_texture(), buffers, state, op, material_name.clone());
+    let (roughness_id, roughness_asset) =
+        load_metallic_roughness(&pbr, buffers, state, op, material_name.clone());
+    let (emission_id, emission_asset) = load_emission(
+        &em_factor,
+        material.emissive_texture(),
+        buffers,
+        state,
+        op,
+        material_name.clone(),
+    );
+    let (normal_id, normal_asset) = load_normal(
+        material.normal_texture(),
+        buffers,
+        state,
+        op,
+        material_name.clone(),
+    );
+    let (occlusion_id, occlusion_asset) = load_occlusion(
+        material.occlusion_texture(),
+        buffers,
+        state,
+        op,
+        material_name.clone(),
+    );
     let (cavity_id, cavity_asset) = load_cavity(state, op, material_name.clone());
     let alpha_cutoff = match material.alpha_mode() {
         AlphaMode::Blend => {
@@ -58,12 +84,8 @@ pub fn load_material(
                 .insert(material_name.clone());
             std::f32::MIN_POSITIVE
         }
-        AlphaMode::Mask => {
-            material.alpha_cutoff()
-        }
-        AlphaMode::Opaque => {
-            0.0
-        }
+        AlphaMode::Mask => material.alpha_cutoff(),
+        AlphaMode::Opaque => 0.0,
     };
 
     assets_accumulator.push(albedo_asset);
@@ -73,7 +95,7 @@ pub fn load_material(
     assets_accumulator.push(occlusion_asset);
     assets_accumulator.push(cavity_asset);
 
-    let mut material = Material {
+    let material = Material {
         alpha_cutoff,
         albedo: make_handle(albedo_id),
         emission: make_handle(emission_id),
@@ -90,16 +112,16 @@ pub fn load_material(
         .entry(material_name.to_string())
         .or_insert_with(|| op.new_asset_uuid());
 
-    assets_accumulator.push(ImportedAsset{
+    assets_accumulator.push(ImportedAsset {
         id,
         search_tags: vec![],
         build_deps: vec![],
         load_deps: vec![],
         build_pipeline: None,
-        asset_data: Box::new(material)
+        asset_data: Box::new(material),
     });
 
-     assets_accumulator
+    assets_accumulator
 }
 
 fn load_texture_with_factor(
@@ -130,21 +152,20 @@ fn load_texture_with_factor(
 }
 
 fn load_albedo(
-    pbr: &PbrMetallicRoughness,
+    pbr: &PbrMetallicRoughness<'_>,
     buffers: &Vec<Data>,
     state: &mut GltfImporterState,
     op: &mut ImportOp,
     material_name: String,
 ) -> (AssetUuid, ImportedAsset) {
-    let albedo: TextureData =
-        load_texture_with_factor(
-            pbr.base_color_texture(),
-            pbr.base_color_factor(),
-            buffers,
-            true,
-        )
-            .map(|(texture, _)| texture.into())
-            .expect("The mapping between the TextureBuilder and TextureDate did not work");
+    let albedo: TextureData = load_texture_with_factor(
+        pbr.base_color_texture(),
+        pbr.base_color_factor(),
+        buffers,
+        true,
+    )
+    .map(|(texture, _)| texture.into())
+    .expect("The mapping between the TextureBuilder and TextureDate did not work");
 
     let id = *state
         .material_uuids
@@ -152,20 +173,21 @@ fn load_albedo(
         .expect("Meshes hashmap didn't work")
         .entry(format!("{}_albedo", material_name))
         .or_insert_with(|| op.new_asset_uuid());
-    (id,
-     ImportedAsset {
-         id,
-         search_tags: vec![],
-         build_deps: vec![],
-         load_deps: vec![],
-         build_pipeline: None,
-         asset_data: Box::new(albedo),
-     }
+    (
+        id,
+        ImportedAsset {
+            id,
+            search_tags: vec![],
+            build_deps: vec![],
+            load_deps: vec![],
+            build_pipeline: None,
+            asset_data: Box::new(albedo),
+        },
     )
 }
 
 fn load_metallic_roughness(
-    pbr: &PbrMetallicRoughness,
+    pbr: &PbrMetallicRoughness<'_>,
     buffers: &Vec<Data>,
     state: &mut GltfImporterState,
     op: &mut ImportOp,
@@ -176,8 +198,9 @@ fn load_metallic_roughness(
         [1.0, pbr.roughness_factor(), pbr.metallic_factor(), 1.0],
         buffers,
         false,
-    ).map(|(texture, _)| texture.into())
-        .expect("The mapping between the TextureBuilder and TextureDate did not work");
+    )
+    .map(|(texture, _)| texture.into())
+    .expect("The mapping between the TextureBuilder and TextureDate did not work");
 
     let id = *state
         .material_uuids
@@ -185,15 +208,16 @@ fn load_metallic_roughness(
         .expect("Meshes hashmap didn't work")
         .entry(format!("{}_metallic_roughness", material_name))
         .or_insert_with(|| op.new_asset_uuid());
-    (id,
-     ImportedAsset {
-         id,
-         search_tags: vec![],
-         build_deps: vec![],
-         load_deps: vec![],
-         build_pipeline: None,
-         asset_data: Box::new(roughness),
-     }
+    (
+        id,
+        ImportedAsset {
+            id,
+            search_tags: vec![],
+            build_deps: vec![],
+            load_deps: vec![],
+            build_pipeline: None,
+            asset_data: Box::new(roughness),
+        },
     )
 }
 
@@ -210,8 +234,9 @@ fn load_emission(
         [em_factor[0], em_factor[1], em_factor[2], 1.0],
         buffers,
         true,
-    ).map(|(texture, _)| texture.into())
-        .expect("The mapping between the TextureBuilder and TextureDate did not work");
+    )
+    .map(|(texture, _)| texture.into())
+    .expect("The mapping between the TextureBuilder and TextureDate did not work");
 
     let id = *state
         .material_uuids
@@ -219,15 +244,16 @@ fn load_emission(
         .expect("Meshes hashmap didn't work")
         .entry(format!("{}_emission", material_name))
         .or_insert_with(|| op.new_asset_uuid());
-    (id,
-     ImportedAsset {
-         id,
-         search_tags: vec![],
-         build_deps: vec![],
-         load_deps: vec![],
-         build_pipeline: None,
-         asset_data: Box::new(emission),
-     }
+    (
+        id,
+        ImportedAsset {
+            id,
+            search_tags: vec![],
+            build_deps: vec![],
+            load_deps: vec![],
+            build_pipeline: None,
+            asset_data: Box::new(emission),
+        },
     )
 }
 
@@ -241,18 +267,13 @@ fn load_normal(
     let normal: TextureData = {
         match normal_texture {
             Some(normal_texture) => {
-                load_texture(
-                    &normal_texture.texture(),
-                    buffers,
-                    false,
-                )
+                load_texture(&normal_texture.texture(), buffers, false)
                     .map(|data| data.into())
                     .expect("The mapping between the TextureBuilder and TextureDate did not work")
             }
             None => {
                 // Default normal Texture
-                load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 1.0, 1.0))
-                    .into()
+                load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 1.0, 1.0)).into()
             }
         }
     };
@@ -262,15 +283,16 @@ fn load_normal(
         .expect("Meshes hashmap didn't work")
         .entry(format!("{}_normal", material_name))
         .or_insert_with(|| op.new_asset_uuid());
-    (id,
-     ImportedAsset {
-         id,
-         search_tags: vec![],
-         build_deps: vec![],
-         load_deps: vec![],
-         build_pipeline: None,
-         asset_data: Box::new(normal),
-     }
+    (
+        id,
+        ImportedAsset {
+            id,
+            search_tags: vec![],
+            build_deps: vec![],
+            load_deps: vec![],
+            build_pipeline: None,
+            asset_data: Box::new(normal),
+        },
     )
 }
 
@@ -284,18 +306,13 @@ fn load_occlusion(
     let occlusion: TextureData = {
         match occlusion_texture {
             Some(normal_texture) => {
-                load_texture(
-                    &normal_texture.texture(),
-                    buffers,
-                    false,
-                )
+                load_texture(&normal_texture.texture(), buffers, false)
                     .map(|data| data.into())
                     .expect("The mapping between the TextureBuilder and TextureDate did not work")
             }
             None => {
                 // Default occlusion Texture
-                load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0))
-                    .into()
+                load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0)).into()
             }
         }
     };
@@ -305,15 +322,16 @@ fn load_occlusion(
         .expect("Meshes hashmap didn't work")
         .entry(format!("{}_occlusion", material_name))
         .or_insert_with(|| op.new_asset_uuid());
-    (id,
-     ImportedAsset {
-         id,
-         search_tags: vec![],
-         build_deps: vec![],
-         load_deps: vec![],
-         build_pipeline: None,
-         asset_data: Box::new(occlusion),
-     }
+    (
+        id,
+        ImportedAsset {
+            id,
+            search_tags: vec![],
+            build_deps: vec![],
+            load_deps: vec![],
+            build_pipeline: None,
+            asset_data: Box::new(occlusion),
+        },
     )
 }
 
@@ -322,23 +340,23 @@ fn load_cavity(
     op: &mut ImportOp,
     material_name: String,
 ) -> (AssetUuid, ImportedAsset) {
-    let cavity: TextureData = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0))
-        .into();
+    let cavity: TextureData = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0)).into();
     let id = *state
         .material_uuids
         .as_mut()
         .expect("Meshes hashmap didn't work")
         .entry(format!("{}_cavity", material_name))
         .or_insert_with(|| op.new_asset_uuid());
-    (id,
-     ImportedAsset {
-         id,
-         search_tags: vec![],
-         build_deps: vec![],
-         load_deps: vec![],
-         build_pipeline: None,
-         asset_data: Box::new(cavity),
-     }
+    (
+        id,
+        ImportedAsset {
+            id,
+            search_tags: vec![],
+            build_deps: vec![],
+            load_deps: vec![],
+            build_pipeline: None,
+            asset_data: Box::new(cavity),
+        },
     )
 }
 

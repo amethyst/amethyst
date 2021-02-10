@@ -1,15 +1,17 @@
 //! Physically-based material.
 
-use amethyst_assets::{Asset, Handle};
+use amethyst_assets::{
+    erased_serde::private::serde::{de, de::SeqAccess, ser::SerializeSeq},
+    prefab::{
+        serde_diff::{ApplyContext, DiffContext},
+        SerdeDiff,
+    },
+    Asset, Handle,
+};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
 use crate::types::Texture;
-use amethyst_assets::prefab::SerdeDiff;
-use amethyst_assets::erased_serde::private::serde::ser::SerializeSeq;
-use amethyst_assets::erased_serde::private::serde::de::SeqAccess;
-use amethyst_assets::prefab::serde_diff::{DiffContext, ApplyContext};
-use amethyst_assets::erased_serde::private::serde::de;
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -58,19 +60,29 @@ impl Asset for Material {
     type Data = Self;
 }
 
-impl Default for Material{
+impl Default for Material {
     fn default() -> Self {
         unimplemented!()
     }
 }
 
-impl SerdeDiff for Material{
-    fn diff<'a, S: SerializeSeq>(&self, ctx: &mut DiffContext<'a, S>, other: &Self) -> Result<bool, <S as SerializeSeq>::Error> {
+impl SerdeDiff for Material {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        ctx: &mut DiffContext<'a, S>,
+        other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
         unimplemented!()
     }
 
-    fn apply<'de, A>(&mut self, seq: &mut A, ctx: &mut ApplyContext) -> Result<bool, <A as SeqAccess<'de>>::Error> where
-        A: de::SeqAccess<'de> {
+    fn apply<'de, A>(
+        &mut self,
+        seq: &mut A,
+        ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
         unimplemented!()
     }
 }
