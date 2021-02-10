@@ -7,20 +7,14 @@ use amethyst_rendy::{
     MaterialDefaults, Mesh, Texture,
 };
 
-use crate::types::MeshHandle;
+use crate::types::{MeshHandle, MaterialHandle};
 
-/// This will attach a Mesh to any Entity with a MeshHandle, and remove the Meshhandle
-pub(crate) fn mesh_handle_loading(world: &mut World, resources: &mut Resources) {
-    let mut mesh_storage = resources
-        .get_mut::<AssetStorage<Mesh>>()
-        .expect("AssetStorage<Mesh> can not be retrieved from ECS Resources");
-
+/// This will attach a Handle<Mesh> to any Entity with a MeshHandle, and remove the Meshhandle
+pub(crate) fn mesh_handle_loading(world: &mut World, _resources: &mut Resources) {
     let mut entity_mesh = Vec::new();
 
     <(Entity, &MeshHandle)>::query().for_each(world, |(entity, mesh_handle)| {
-        if let Some(mesh) = mesh_storage.pop(&mesh_handle.0) {
-            entity_mesh.push((*entity, mesh));
-        }
+        entity_mesh.push((*entity, mesh_handle.0.clone()));
     });
 
     while let Some((entity, mesh)) = entity_mesh.pop() {
@@ -29,5 +23,22 @@ pub(crate) fn mesh_handle_loading(world: &mut World, resources: &mut Resources) 
             .expect("This can't exist because we just register this entity from the world")
             .remove_component::<MeshHandle>();
         world.entry(entity).expect("This can't exist because we just register this entity from the world").add_component(mesh);
+    }
+}
+
+/// This will attach a Handle<Material> to any Entity with a MaterialHandle, and remove the MaterialHandle
+pub(crate) fn material_handle_loading(world: &mut World, _resources: &mut Resources) {
+    let mut entity_material = Vec::new();
+
+    <(Entity, &MaterialHandle)>::query().for_each(world, |(entity, material_handle)| {
+        entity_material.push((*entity, material_handle.0.clone()));
+    });
+
+    while let Some((entity, material)) = entity_material.pop() {
+        world
+            .entry(entity)
+            .expect("This can't exist because we just register this entity from the world")
+            .remove_component::<MaterialHandle>();
+        world.entry(entity).expect("This can't exist because we just register this entity from the world").add_component(material);
     }
 }

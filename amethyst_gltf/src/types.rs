@@ -6,7 +6,7 @@ use amethyst_assets::{
     },
     Handle,
 };
-use amethyst_rendy::{Mesh};
+use amethyst_rendy::{Mesh, Material};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
@@ -43,3 +43,38 @@ impl SerdeDiff for MeshHandle {
 }
 
 register_component_type!(MeshHandle);
+
+
+/// MaterialHandle is a component that will handle the fact that we attach
+/// a material handle to an entity as an asset handle that will later be loaded.
+#[derive(Serialize, Deserialize, TypeUuid, Clone)]
+#[uuid = "40a2d8f7-54e8-46ad-b668-66d759feb806"]
+pub struct MaterialHandle(pub Handle<Material>);
+impl Default for MaterialHandle {
+    fn default() -> Self {
+        unimplemented!()
+    }
+}
+
+impl SerdeDiff for MaterialHandle {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        _ctx: &mut DiffContext<'a, S>,
+        _other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
+        unimplemented!()
+    }
+
+    fn apply<'de, A>(
+        &mut self,
+        _seq: &mut A,
+        _ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+        where
+            A: de::SeqAccess<'de>,
+    {
+        unimplemented!()
+    }
+}
+
+register_component_type!(MaterialHandle);

@@ -70,6 +70,7 @@ inventory::submit! {
 register_component_type!(Camera);
 register_component_type!(Light);
 register_component_type!(Transform);
+register_component_type!(Material);
 
 /// A GLTF node extent
 #[derive(Clone, Debug, Serialize)]
@@ -165,10 +166,6 @@ pub struct GltfMaterialSet {
 #[serde(default)]
 #[uuid = "8e3da51a-26d4-4b0f-b9f7-7f52d1b78945"]
 pub struct GltfSceneOptions {
-    /// Path of the gltf scene file
-    pub scene_path: String,
-    /// Name of the current scene
-    pub scene_name: String,
     /// Generate texture coordinates if none exist in the Gltf file
     pub generate_tex_coords: (f32, f32),
     #[derivative(Default(value = "true"))]

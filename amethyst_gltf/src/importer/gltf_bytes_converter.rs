@@ -17,7 +17,7 @@ pub fn convert_bytes(
 mod test {
     use std::{fs::File, io::Read};
 
-    use atelier_assets::importer::BoxedImporter;
+    use amethyst_assets::distill_importer::BoxedImporter;
     use type_uuid::TypeUuid;
 
     use super::{super::GltfSceneOptions, *};

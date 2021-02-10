@@ -4,7 +4,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 
-use crate::system::mesh_handle_loading;
+use crate::system::{mesh_handle_loading, material_handle_loading};
 
 /// Bundle that initializes needed resources to use GLTF
 pub struct GltfBundle;
@@ -17,6 +17,7 @@ impl SystemBundle for GltfBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
         builder.add_thread_local_fn(mesh_handle_loading);
+        builder.add_thread_local_fn(material_handle_loading);
         Ok(())
     }
 

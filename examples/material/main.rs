@@ -1,29 +1,22 @@
 //! Displays spheres with physically based materials.
-use amethyst::{
-    assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue},
-    core::{
-        ecs::*,
-        transform::{Transform, TransformBundle},
+use amethyst::{assets::{DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue}, core::{
+    ecs::*,
+    transform::{Transform, TransformBundle},
+}, renderer::{
+    camera::Camera,
+    light::{Light, PointLight},
+    mtl::{Material, MaterialDefaults},
+    palette::{LinSrgba, Srgb},
+    plugins::{RenderPbr3D, RenderToWindow},
+    rendy::{
+        hal::command::ClearColor,
+        mesh::{Normal, Position, Tangent, TexCoord},
+        texture::palette::load_from_linear_rgba,
     },
-    renderer::{
-        camera::Camera,
-        light::{Light, PointLight},
-        mtl::{Material, MaterialDefaults},
-        palette::{LinSrgba, Srgb},
-        plugins::{RenderPbr3D, RenderToWindow},
-        rendy::{
-            hal::command::ClearColor,
-            mesh::{Normal, Position, Tangent, TexCoord},
-            texture::palette::load_from_linear_rgba,
-        },
-        shape::Shape,
-        types::{DefaultBackend, MeshData, TextureData},
-        Mesh, RenderingBundle, Texture,
-    },
-    utils::application_root_dir,
-    window::ScreenDimensions,
-    Application, GameData, SimpleState, StateData,
-};
+    shape::Shape,
+    types::{DefaultBackend, MeshData, TextureData},
+    Mesh, RenderingBundle, Texture,
+}, utils::application_root_dir, window::ScreenDimensions, Application, GameData, SimpleState, StateData, SimpleTrans, Trans};
 
 struct Example;
 
@@ -127,6 +120,23 @@ impl SimpleState for Example {
 
         world.extend(vec![(Camera::standard_3d(width, height), transform)]);
     }
+
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+        let StateData {
+            world, resources, ..
+        } = data;
+
+        let mut q = <(Entity, &Handle<Mesh>, &Handle<Material>, &mut Transform)>::query();
+
+        q.iter_mut(*world).for_each(|(e, m, m1, t)| {
+            println!("{:?}",m);
+            println!("{:?}",m1);
+            println!("{:?}",t);
+        });
+
+        Trans::None
+    }
+
 }
 
 fn main() -> amethyst::Result<()> {

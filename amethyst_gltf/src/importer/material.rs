@@ -19,8 +19,9 @@ use crate::importer::{
     images::{read_image_data, ImageFormat as ImportDataFormat},
     GltfImporterState,
 };
-use std::collections::HashMap;
-use gltf::material::PbrMetallicRoughness;
+use std::collections::{HashMap, HashSet};
+use gltf::material::{PbrMetallicRoughness, NormalTexture, OcclusionTexture, AlphaMode};
+use gltf::texture::Info;
 
 /// load a material as an asset
 pub fn load_material(
@@ -32,39 +33,73 @@ pub fn load_material(
     if state.material_uuids.is_none() {
         state.material_uuids = Some(HashMap::new());
     }
+    if state.material_transparencies.is_none() {
+        state.material_transparencies = Some(HashSet::new());
+    }
 
     let mut assets_accumulator = Vec::new();
 
-    // TODO : normal (or default)
-    // TODO : Ambient occlusion (or default)
-    // TODO : alpha mode
-
     let pbr = material.pbr_metallic_roughness();
     let em_factor = material.emissive_factor();
+    let material_name = convert_optional_index_to_string(material.index());
 
-    let (albedo_id, albedo_asset) = load_albedo(&pbr, buffers, state, op, material.index());
-    let (roughness_id, roughness_asset) = load_metallic_roughness(&pbr, buffers, state, op, material.index());
-    let (emission_id, emission_asset) = load_emission(&em_factor, buffers, state, op, material.index());
-
+    let (albedo_id, albedo_asset) = load_albedo(&pbr, buffers, state, op, material_name.clone());
+    let (roughness_id, roughness_asset) = load_metallic_roughness(&pbr, buffers, state, op, material_name.clone());
+    let (emission_id, emission_asset) = load_emission(&em_factor, material.emissive_texture(), buffers, state, op, material_name.clone());
+    let (normal_id, normal_asset) = load_normal(material.normal_texture(), buffers, state, op, material_name.clone());
+    let (occlusion_id, occlusion_asset) = load_occlusion(material.occlusion_texture(), buffers, state, op, material_name.clone());
+    let (cavity_id, cavity_asset) = load_cavity(state, op, material_name.clone());
+    let alpha_cutoff = match material.alpha_mode() {
+        AlphaMode::Blend => {
+            state
+                .material_transparencies
+                .as_mut()
+                .expect("Meshes hashmap didn't work")
+                .insert(material_name.clone());
+            std::f32::MIN_POSITIVE
+        }
+        AlphaMode::Mask => {
+            material.alpha_cutoff()
+        }
+        AlphaMode::Opaque => {
+            0.0
+        }
+    };
 
     assets_accumulator.push(albedo_asset);
     assets_accumulator.push(roughness_asset);
     assets_accumulator.push(emission_asset);
+    assets_accumulator.push(normal_asset);
+    assets_accumulator.push(occlusion_asset);
+    assets_accumulator.push(cavity_asset);
 
-
-/*
     let mut material = Material {
-        alpha_cutoff: 0.0,
+        alpha_cutoff,
         albedo: make_handle(albedo_id),
         emission: make_handle(emission_id),
-        normal: (),
+        normal: make_handle(normal_id),
         metallic_roughness: make_handle(roughness_id),
-        ambient_occlusion: (),
-        cavity: (),
+        ambient_occlusion: make_handle(occlusion_id),
+        cavity: make_handle(cavity_id),
         uv_offset: Default::default(),
     };
-*/
-    assets_accumulator
+    let id = *state
+        .material_uuids
+        .as_mut()
+        .expect("Meshes hashmap didn't work")
+        .entry(material_name.to_string())
+        .or_insert_with(|| op.new_asset_uuid());
+
+    assets_accumulator.push(ImportedAsset{
+        id,
+        search_tags: vec![],
+        build_deps: vec![],
+        load_deps: vec![],
+        build_pipeline: None,
+        asset_data: Box::new(material)
+    });
+
+     assets_accumulator
 }
 
 fn load_texture_with_factor(
@@ -99,7 +134,7 @@ fn load_albedo(
     buffers: &Vec<Data>,
     state: &mut GltfImporterState,
     op: &mut ImportOp,
-    index: Option<usize>
+    material_name: String,
 ) -> (AssetUuid, ImportedAsset) {
     let albedo: TextureData =
         load_texture_with_factor(
@@ -115,7 +150,7 @@ fn load_albedo(
         .material_uuids
         .as_mut()
         .expect("Meshes hashmap didn't work")
-        .entry(format!("{}albedo", index.map(|i| i.to_string()).unwrap_or("default".to_string())))
+        .entry(format!("{}_albedo", material_name))
         .or_insert_with(|| op.new_asset_uuid());
     (id,
      ImportedAsset {
@@ -134,13 +169,13 @@ fn load_metallic_roughness(
     buffers: &Vec<Data>,
     state: &mut GltfImporterState,
     op: &mut ImportOp,
-    index: Option<usize>
+    material_name: String,
 ) -> (AssetUuid, ImportedAsset) {
     let roughness: TextureData = load_texture_with_factor(
         pbr.metallic_roughness_texture(),
         [1.0, pbr.roughness_factor(), pbr.metallic_factor(), 1.0],
         buffers,
-        source.clone()
+        false,
     ).map(|(texture, _)| texture.into())
         .expect("The mapping between the TextureBuilder and TextureDate did not work");
 
@@ -148,7 +183,7 @@ fn load_metallic_roughness(
         .material_uuids
         .as_mut()
         .expect("Meshes hashmap didn't work")
-        .entry(format!("{}metallic-roughness", index.map(|i| i.to_string()).unwrap_or("default".to_string())))
+        .entry(format!("{}_metallic_roughness", material_name))
         .or_insert_with(|| op.new_asset_uuid());
     (id,
      ImportedAsset {
@@ -164,16 +199,17 @@ fn load_metallic_roughness(
 
 fn load_emission(
     em_factor: &[f32; 3],
+    em_texture: Option<Info<'_>>,
     buffers: &Vec<Data>,
     state: &mut GltfImporterState,
     op: &mut ImportOp,
-    index: Option<usize>
+    material_name: String,
 ) -> (AssetUuid, ImportedAsset) {
     let emission: TextureData = load_texture_with_factor(
-        material.emissive_texture(),
+        em_texture,
         [em_factor[0], em_factor[1], em_factor[2], 1.0],
         buffers,
-        source.clone()
+        true,
     ).map(|(texture, _)| texture.into())
         .expect("The mapping between the TextureBuilder and TextureDate did not work");
 
@@ -181,7 +217,7 @@ fn load_emission(
         .material_uuids
         .as_mut()
         .expect("Meshes hashmap didn't work")
-        .entry(format!("{}emission", index.map(|i| i.to_string()).unwrap_or("default".to_string())))
+        .entry(format!("{}_emission", material_name))
         .or_insert_with(|| op.new_asset_uuid());
     (id,
      ImportedAsset {
@@ -191,6 +227,117 @@ fn load_emission(
          load_deps: vec![],
          build_pipeline: None,
          asset_data: Box::new(emission),
+     }
+    )
+}
+
+fn load_normal(
+    normal_texture: Option<NormalTexture<'_>>,
+    buffers: &Vec<Data>,
+    state: &mut GltfImporterState,
+    op: &mut ImportOp,
+    material_name: String,
+) -> (AssetUuid, ImportedAsset) {
+    let normal: TextureData = {
+        match normal_texture {
+            Some(normal_texture) => {
+                load_texture(
+                    &normal_texture.texture(),
+                    buffers,
+                    false,
+                )
+                    .map(|data| data.into())
+                    .expect("The mapping between the TextureBuilder and TextureDate did not work")
+            }
+            None => {
+                // Default normal Texture
+                load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 1.0, 1.0))
+                    .into()
+            }
+        }
+    };
+    let id = *state
+        .material_uuids
+        .as_mut()
+        .expect("Meshes hashmap didn't work")
+        .entry(format!("{}_normal", material_name))
+        .or_insert_with(|| op.new_asset_uuid());
+    (id,
+     ImportedAsset {
+         id,
+         search_tags: vec![],
+         build_deps: vec![],
+         load_deps: vec![],
+         build_pipeline: None,
+         asset_data: Box::new(normal),
+     }
+    )
+}
+
+fn load_occlusion(
+    occlusion_texture: Option<OcclusionTexture<'_>>,
+    buffers: &Vec<Data>,
+    state: &mut GltfImporterState,
+    op: &mut ImportOp,
+    material_name: String,
+) -> (AssetUuid, ImportedAsset) {
+    let occlusion: TextureData = {
+        match occlusion_texture {
+            Some(normal_texture) => {
+                load_texture(
+                    &normal_texture.texture(),
+                    buffers,
+                    false,
+                )
+                    .map(|data| data.into())
+                    .expect("The mapping between the TextureBuilder and TextureDate did not work")
+            }
+            None => {
+                // Default occlusion Texture
+                load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0))
+                    .into()
+            }
+        }
+    };
+    let id = *state
+        .material_uuids
+        .as_mut()
+        .expect("Meshes hashmap didn't work")
+        .entry(format!("{}_occlusion", material_name))
+        .or_insert_with(|| op.new_asset_uuid());
+    (id,
+     ImportedAsset {
+         id,
+         search_tags: vec![],
+         build_deps: vec![],
+         load_deps: vec![],
+         build_pipeline: None,
+         asset_data: Box::new(occlusion),
+     }
+    )
+}
+
+fn load_cavity(
+    state: &mut GltfImporterState,
+    op: &mut ImportOp,
+    material_name: String,
+) -> (AssetUuid, ImportedAsset) {
+    let cavity: TextureData = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0))
+        .into();
+    let id = *state
+        .material_uuids
+        .as_mut()
+        .expect("Meshes hashmap didn't work")
+        .entry(format!("{}_cavity", material_name))
+        .or_insert_with(|| op.new_asset_uuid());
+    (id,
+     ImportedAsset {
+         id,
+         search_tags: vec![],
+         build_deps: vec![],
+         load_deps: vec![],
+         build_pipeline: None,
+         asset_data: Box::new(cavity),
      }
     )
 }
@@ -243,6 +390,14 @@ fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::Sample
     s.mag_filter = mag_filter;
     s.mip_filter = mip_filter;
     s
+}
+
+pub fn convert_optional_index_to_string(index: Option<usize>) -> String {
+    if let Some(i) = index {
+        i.to_string()
+    } else {
+        String::from("default")
+    }
 }
 
 fn map_wrapping(gltf_wrap: gltf::texture::WrappingMode) -> hal::image::WrapMode {

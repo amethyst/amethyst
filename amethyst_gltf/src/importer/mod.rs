@@ -16,7 +16,7 @@ use amethyst_core::{
     math::{convert, Quaternion, Unit, Vector3, Vector4},
     transform::Transform,
 };
-use amethyst_rendy::{light::Light, types::MeshData, Camera};
+use amethyst_rendy::{light::Light, types::MeshData, Camera, Material};
 use gltf::{buffer, buffer::Data, Document, Gltf, Mesh, Node};
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -30,6 +30,9 @@ use crate::{
     types::MeshHandle,
     GltfNodeExtent, GltfSceneOptions,
 };
+use std::collections::HashSet;
+use crate::importer::material::convert_optional_index_to_string;
+use crate::types::MaterialHandle;
 
 mod gltf_bytes_converter;
 mod images;
@@ -50,6 +53,7 @@ pub struct GltfImporterState {
     pub id: Option<AssetUuid>,
     pub images_uuids: Option<HashMap<usize, AssetUuid>>,
     pub material_uuids: Option<HashMap<String, AssetUuid>>,
+    pub material_transparencies: Option<HashSet<String>>,
     pub mesh_uuids: Option<HashMap<String, AssetUuid>>,
 }
 
@@ -77,7 +81,7 @@ impl Importer for GltfImporter {
         options: &Self::Options,
         state: &mut Self::State,
     ) -> amethyst_assets::distill_importer::Result<ImporterValue> {
-        log::info!("Importing scene");
+        log::info!("Importing scene with options {:?}", options);
         let mut asset_accumulator: Vec<ImportedAsset> = Vec::new();
         let mut world = World::default();
 
@@ -92,13 +96,17 @@ impl Importer for GltfImporter {
 
         let (doc, buffers, _images) = result.unwrap();
 
+        /*
         doc.images().for_each(|image| {
             let mut image_assets = load_image(&image, state, &buffers);
             asset_accumulator.append(&mut image_assets);
         });
+         */
+
+        let mut materials = HashMap::<String, Material>::new();
 
         doc.materials().for_each(|material| {
-            let mut material_assets = load_material(&material, op, &buffers, state);
+            let mut material_assets= load_material(&material, op, &buffers, state);
             asset_accumulator.append(&mut material_assets);
         });
 
@@ -209,7 +217,7 @@ fn load_node(
         match loaded_mesh.len().cmp(&1) {
             Ordering::Equal => {
                 // single primitive can be loaded directly onto the node
-                let (name, mesh, _material_index, bounds) = loaded_mesh.remove(0);
+                let (name, mesh, material_index, bounds) = loaded_mesh.remove(0);
                 bounding_box.extend_range(&bounds);
 
                 if state.mesh_uuids.is_none() {
@@ -239,7 +247,16 @@ fn load_node(
                     .add_component(MeshHandle(make_handle(mesh_asset_id)));
 
                 debug!("Adding a mesh component to to the current node entity");
-                //TODO: material and skin
+
+                world
+                    .entry(current_node_entity)
+                    .expect("We just added this entity")
+                    .add_component(MaterialHandle(
+                        make_handle(
+                            state.material_uuids.as_ref()
+                                .expect("Meshes hashmap didn't work")
+                                .get(&convert_optional_index_to_string(material_index))
+                        .expect("A requested material is not loded").clone())));
 
                 // if we have a skin we need to track the mesh entities
                 if let Some(_skin) = skin {
@@ -339,7 +356,7 @@ fn get_scene_index(document: &Document, options: &GltfSceneOptions) -> Result<us
 mod test {
     use std::{fs::File, io::Read};
 
-    use atelier_assets::importer::BoxedImporter;
+    use amethyst_assets::distill_importer::BoxedImporter;
     use type_uuid::TypeUuid;
 
     use super::{super::GltfSceneOptions, *};
@@ -358,7 +375,7 @@ mod test {
             &mut import_op,
             &mut buffer_slice,
             Box::new(GltfSceneOptions::default()),
-            Box::new(GltfImporterState { id: None }),
+            Box::new(GltfImporterState { id: None, images_uuids: None, material_uuids: None, material_transparencies: None, mesh_uuids: None }),
         ));
         match res {
             Ok(r) => {

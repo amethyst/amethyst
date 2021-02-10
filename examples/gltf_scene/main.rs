@@ -36,11 +36,10 @@ impl SimpleState for GltfExample {
             world, resources, ..
         } = data;
 
-        let mut q = <(Entity, &Mesh, &mut Transform)>::query();
+        let mut q = <(Entity, &Camera, &mut Transform)>::query();
 
-        q.iter_mut(*world).for_each(|(e, m, t)| {
-            println!("Mat {:?}", m);
-            println!("Tra {:?}", t);
+        q.iter_mut(*world).for_each(|(e, c, t)| {
+           // t.face_towards(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
         });
 
         Trans::None

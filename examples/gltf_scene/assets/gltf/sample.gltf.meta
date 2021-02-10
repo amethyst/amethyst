@@ -1,0 +1,30 @@
+(
+    version: 2,
+    importer_options: (
+        generate_tex_coords: (0, 0),
+        load_normals: true,
+        load_colors: true,
+        load_texcoords: true,
+        load_tangents: true,
+        load_animations: true,
+        flip_v_coord: false,
+        scene_index: None,
+    ),
+    importer_state: (
+        id: Some("f8ce2f0a-8d7b-42bc-b2b6-8fb5149a3397"),
+        images_uuids: None,
+        material_uuids: Some({
+            "0": "c6957381-b301-4b4c-bae0-aac0713a2650",
+            "0_emission": "1854eb96-630d-46cc-80b6-1195df6a55c9",
+            "0_cavity": "a9314588-ce61-4b9c-99d5-66b1389fe4c2",
+            "0_albedo": "9e21fc90-3a0e-4eb0-bb1a-e6851480a161",
+            "0_metallic_roughness": "dc635287-2139-48ac-b751-68286eb0fe0c",
+            "0_normal": "3b744491-c196-4b87-b6ed-02e9e68cd7b1",
+            "0_occlusion": "92500da5-2f41-4819-8108-1d1c91da82de",
+        }),
+        material_transparencies: Some([]),
+        mesh_uuids: Some({
+            "Cube": "24968e87-1174-4aba-95d8-44753103e180",
+        }),
+    ),
+)
