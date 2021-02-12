@@ -8,12 +8,8 @@ use amethyst_assets::{
     distill_importer,
     distill_importer::{Error, ImportOp, ImportedAsset, Importer, ImporterValue},
     make_handle,
-    prefab::{
-        legion_prefab,
-        legion_prefab::{CookedPrefab, PrefabBuilder},
-        Prefab,
-    },
-    AssetUuid, Handle,
+    prefab::{legion_prefab, Prefab},
+    AssetUuid,
 };
 use amethyst_core::{
     ecs::{Entity, World},
@@ -21,7 +17,7 @@ use amethyst_core::{
     transform::Transform,
 };
 use amethyst_rendy::{light::Light, types::MeshData, Camera, Material};
-use gltf::{buffer, buffer::Data, Document, Gltf, Mesh, Node};
+use gltf::{buffer::Data, Document, Node};
 use log::debug;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -29,11 +25,12 @@ use type_uuid::TypeUuid;
 use crate::{
     importer::{
         gltf_bytes_converter::convert_bytes,
+        images::load_image,
         material::{convert_optional_index_to_string, load_material},
         mesh::load_mesh,
     },
     types::{MaterialHandle, MeshHandle},
-    GltfNodeExtent, GltfSceneOptions,
+    GltfSceneOptions,
 };
 
 mod gltf_bytes_converter;
@@ -49,7 +46,7 @@ struct SkinInfo {
 
 /// A simple state for Importer to retain the same UUID between imports
 /// for all single-asset source files
-#[derive(Default, Deserialize, Serialize, TypeUuid)]
+#[derive(Default, Debug, Deserialize, Serialize, TypeUuid)]
 #[uuid = "3c5571c0-abec-436e-9b28-6bce92f1070a"]
 pub struct GltfImporterState {
     pub id: Option<AssetUuid>,
@@ -60,7 +57,7 @@ pub struct GltfImporterState {
 }
 
 /// The importer for '.gltf' or '.glb' files.
-#[derive(Default, TypeUuid)]
+#[derive(Default, TypeUuid, Debug)]
 #[uuid = "6dbb4496-bd73-42cd-b817-11046e964e30"]
 pub struct GltfImporter;
 
@@ -98,12 +95,10 @@ impl Importer for GltfImporter {
 
         let (doc, buffers, _images) = result.unwrap();
 
-        /*
         doc.images().for_each(|image| {
-            let mut image_assets = load_image(&image, state, &buffers);
-            asset_accumulator.append(&mut image_assets);
+            let mut _image_assets = load_image(&image, state, &buffers);
+            // asset_accumulator.append(&mut image_assets);
         });
-         */
 
         let _materials = HashMap::<String, Material>::new();
 
@@ -164,29 +159,34 @@ fn load_node(
 ) -> Vec<ImportedAsset> {
     let current_node_entity = world.push(());
     let mut imported_assets = Vec::new();
-
-    if let Some(transform) = load_transform(node) {
-        if let Some(p) = parent_node_entity {
-            let t = {
-                let entry = world.entry(*p).expect("We just added this entity");
-                let result = entry.get_component::<Transform>();
-                if let Ok(result) = result {
-                    *result
-                } else {
-                    transform
-                }
-            };
-            world
-                .entry(current_node_entity)
-                .expect("We just added this entity")
-                .add_component(t);
-        } else {
-            world
-                .entry(current_node_entity)
-                .expect("We just added this entity")
-                .add_component(transform);
+    let current_transform = {
+        if let Some(transform) = load_transform(node) {
+            if let Some(p) = parent_node_entity {
+                let t = {
+                    let entry = world.entry(*p).expect("We just added this entity");
+                    let result = entry.get_component::<Transform>();
+                    if let Ok(result) = result {
+                        *result
+                    } else {
+                        transform
+                    }
+                };
+                world
+                    .entry(current_node_entity)
+                    .expect("We just added this entity")
+                    .add_component(t);
+                Some(t)
+            } else {
+                world
+                    .entry(current_node_entity)
+                    .expect("We just added this entity")
+                    .add_component(transform);
+                Some(transform)
+            }
+        }else{
+            None
         }
-    }
+    };
 
     if let Some(camera) = load_camera(node) {
         debug!("Adding a camera component to to the current node entity and has parent ?");
@@ -204,77 +204,102 @@ fn load_node(
             .add_component(light);
     }
 
-    let skin = node.skin().map(|skin| {
+    let mut skin = node.skin().map(|skin| {
         SkinInfo {
             skin_index: skin.index(),
             mesh_indices: Vec::default(),
         }
     });
 
-    let mut bounding_box = GltfNodeExtent::default();
-
     // load graphics
     if let Some(mesh) = node.mesh() {
-        let mut loaded_mesh = load_mesh(&mesh, buffers, options).expect("It should work");
-        match loaded_mesh.len().cmp(&1) {
+        if state.mesh_uuids.is_none() {
+            state.mesh_uuids = Some(Default::default());
+        }
+        let mut loaded_primitives = load_mesh(&mesh, buffers, options).expect("It should work");
+        match loaded_primitives.len().cmp(&1) {
             Ordering::Equal => {
-                // single primitive can be loaded directly onto the node
-                let (name, mesh, material_index, bounds) = loaded_mesh.remove(0);
-                bounding_box.extend_range(&bounds);
+                if let Some((name, mesh, material_index, _bounds)) = loaded_primitives.pop() {
+                    let mesh_asset_id = *state
+                        .mesh_uuids
+                        .as_mut()
+                        .expect("Meshes hashmap didn't work")
+                        .entry(format!("{}_{}", name, 0))
+                        .or_insert_with(|| op.new_asset_uuid());
 
-                if state.mesh_uuids.is_none() {
-                    state.mesh_uuids = Some(Default::default());
-                }
+                    let mesh_data: MeshData = mesh.into();
+                    imported_assets.push(ImportedAsset {
+                        id: mesh_asset_id,
+                        search_tags: vec![],
+                        build_deps: vec![],
+                        load_deps: vec![],
+                        build_pipeline: None,
+                        asset_data: Box::new(mesh_data),
+                    });
 
-                let mesh_asset_id = *state
-                    .mesh_uuids
-                    .as_mut()
-                    .expect("Meshes hashmap didn't work")
-                    .entry(name)
-                    .or_insert_with(|| op.new_asset_uuid());
+                    world
+                        .entry(current_node_entity)
+                        .expect("We just added this entity")
+                        .add_component(MeshHandle(make_handle(mesh_asset_id)));
 
-                let mesh_data: MeshData = mesh.into();
-                imported_assets.push(ImportedAsset {
-                    id: mesh_asset_id,
-                    search_tags: vec![],
-                    build_deps: vec![],
-                    load_deps: vec![],
-                    build_pipeline: None,
-                    asset_data: Box::new(mesh_data),
-                });
+                    debug!("Adding a mesh component to to the current node entity");
 
-                world
-                    .entry(current_node_entity)
-                    .expect("We just added this entity")
-                    .add_component(MeshHandle(make_handle(mesh_asset_id)));
+                    world
+                        .entry(current_node_entity)
+                        .expect("We just added this entity")
+                        .add_component(MaterialHandle(make_handle(
+                            state
+                                .material_uuids
+                                .as_ref()
+                                .expect("Meshes hashmap didn't work")
+                                .get(&convert_optional_index_to_string(material_index))
+                                .expect("A requested material is not loded")
+                                .clone(),
+                        )));
 
-                debug!("Adding a mesh component to to the current node entity");
-
-                world
-                    .entry(current_node_entity)
-                    .expect("We just added this entity")
-                    .add_component(MaterialHandle(make_handle(
-                        state
-                            .material_uuids
-                            .as_ref()
-                            .expect("Meshes hashmap didn't work")
-                            .get(&convert_optional_index_to_string(material_index))
-                            .expect("A requested material is not loded")
-                            .clone(),
-                    )));
-
-                // if we have a skin we need to track the mesh entities
-                if let Some(_skin) = skin {
-                    //skin.mesh_indices.push(mesh_asset.index);
-                    // TODO
+                    // if we have a skin we need to track the mesh entities
+                    if let Some(ref mut _skin) = skin {
+                        // Should add an entity per primitive
+                    }
                 }
             }
             Ordering::Greater => {
-                // if we have multiple primitives,
-                // we need to add each primitive as a child entity to the node
-                // TODO reimplement here
+                let mut primitive_index = 0;
+                while let Some((name, mesh, material_index, _bounds)) = loaded_primitives.pop() {
+                    let mesh_asset_id = *state
+                        .mesh_uuids
+                        .as_mut()
+                        .expect("Meshes hashmap didn't work")
+                        .entry(format!("{}_{}", name, primitive_index))
+                        .or_insert_with(|| op.new_asset_uuid());
+
+                    let mesh_data: MeshData = mesh.into();
+                    imported_assets.push(ImportedAsset {
+                        id: mesh_asset_id,
+                        search_tags: vec![],
+                        build_deps: vec![],
+                        load_deps: vec![],
+                        build_pipeline: None,
+                        asset_data: Box::new(mesh_data),
+                    });
+
+                    world.push((
+                        current_transform.expect("Meshes must have a transform component"),
+                        MeshHandle(make_handle(mesh_asset_id)),
+                        MaterialHandle(make_handle(
+                            state
+                                .material_uuids
+                                .as_ref()
+                                .expect("Meshes hashmap didn't work")
+                                .get(&convert_optional_index_to_string(material_index))
+                                .expect("A requested material is not loded")
+                                .clone(),
+                        ))
+                    ));
+                    primitive_index += 1;
+                }
             }
-            Ordering::Less => {
+            _ => {
                 // Nothing to do here
             }
         }

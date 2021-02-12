@@ -4,11 +4,10 @@ use amethyst_assets::{
         de, de::SeqAccess, ser::SerializeSeq, Deserializer, Serializer,
     },
     prefab::{
-        register_component_type,
         serde_diff::{ApplyContext, DiffContext},
         SerdeDiff,
     },
-    Asset, Handle,
+    Asset,
 };
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;

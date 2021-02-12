@@ -28,14 +28,14 @@ impl SimpleState for GltfExample {
             world, resources, ..
         } = data;
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let t: Handle<Prefab> = loader.load("gltf/suzanne.glb");
+        let t: Handle<Prefab> = loader.load("gltf/sample.glb");
         world.push((t,));
     }
 }
 
 fn main() -> Result<(), amethyst::Error> {
     let config = amethyst::LoggerConfig {
-        level_filter: amethyst::LogLevelFilter::Warn,
+        level_filter: amethyst::LogLevelFilter::Trace,
         module_levels: vec![],
         ..Default::default()
     };

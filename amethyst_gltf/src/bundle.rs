@@ -7,6 +7,7 @@ use amethyst_error::Error;
 use crate::system::{material_handle_loading, mesh_handle_loading};
 
 /// Bundle that initializes needed resources to use GLTF
+#[derive(Debug)]
 pub struct GltfBundle;
 
 impl SystemBundle for GltfBundle {

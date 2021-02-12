@@ -44,11 +44,11 @@ pub fn read_image_data(
                         ImageFormat::from_mime_type(mime_type),
                     ))
                 } else {
-                    error!("Grrrr");
+                    error!("Image loading didn't work");
                     Err(Error::Source)
                 }
             } else {
-                error!("Grrrr2");
+                error!("Image loading didn't work");
                 Err(Error::Source)
             }
         }

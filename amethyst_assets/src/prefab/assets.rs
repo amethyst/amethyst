@@ -29,6 +29,7 @@ pub struct Prefab {
 }
 
 impl Prefab {
+    /// Create a new Amethyst Prefab giving a legion Prefab object
     pub fn new(raw: legion_prefab::Prefab) -> Self {
         Self {
             raw,

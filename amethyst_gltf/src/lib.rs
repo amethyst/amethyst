@@ -13,39 +13,19 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
-use std::{collections::HashMap, ops::Range};
-
-use amethyst_assets::{
-    distill_importer,
-    distill_importer::{typetag, ImportedAsset, SerdeImportable},
-    inventory,
-    prefab::{register_component_type, Prefab},
-    register_asset_type, Asset, AssetProcessorSystem, AssetStorage, Handle, Loader,
-    ProgressCounter,
-};
-use amethyst_core::{
-    ecs::*,
-    math::{convert, Point3, Vector3},
-    transform::Transform,
-    Named,
-};
-use amethyst_rendy::{light::Light, visibility::BoundingSphere, Camera, Material};
+use amethyst_assets::{inventory, prefab::register_component_type};
+use amethyst_core::transform::Transform;
+use amethyst_rendy::{light::Light, Camera, Material};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
+/// Bundle that initializes needed resources to use GLTF
 pub mod bundle;
 mod importer;
 mod system;
 mod types;
 
-use amethyst_assets::{
-    erased_serde::private::serde::{de, de::SeqAccess, ser::SerializeSeq},
-    prefab::{
-        serde_diff::{ApplyContext, DiffContext},
-        SerdeDiff,
-    },
-};
 pub use importer::GltfImporter;
 
 inventory::submit! {
@@ -66,95 +46,6 @@ register_component_type!(Camera);
 register_component_type!(Light);
 register_component_type!(Transform);
 register_component_type!(Material);
-
-/// A GLTF node extent
-#[derive(Clone, Debug, Serialize)]
-pub struct GltfNodeExtent {
-    /// The beginning of this extent
-    pub start: Point3<f32>,
-    /// The end of this extent
-    pub end: Point3<f32>,
-}
-
-impl Default for GltfNodeExtent {
-    fn default() -> Self {
-        Self {
-            start: Point3::from(Vector3::from_element(std::f32::MAX)),
-            end: Point3::from(Vector3::from_element(std::f32::MIN)),
-        }
-    }
-}
-
-impl GltfNodeExtent {
-    /// Extends this to include the input range.
-    pub fn extend_range(&mut self, other: &Range<[f32; 3]>) {
-        for i in 0..3 {
-            if other.start[i] < self.start[i] {
-                self.start[i] = other.start[i];
-            }
-            if other.end[i] > self.end[i] {
-                self.end[i] = other.end[i];
-            }
-        }
-    }
-
-    /// Extends this to include the provided extent.
-    pub fn extend(&mut self, other: &GltfNodeExtent) {
-        for i in 0..3 {
-            if other.start[i] < self.start[i] {
-                self.start[i] = other.start[i];
-            }
-            if other.end[i] > self.end[i] {
-                self.end[i] = other.end[i];
-            }
-        }
-    }
-
-    /// Returns the centroid of this extent
-    pub fn centroid(&self) -> Point3<f32> {
-        (self.start + self.end.coords) / 2.
-    }
-
-    /// Returns the 3 dimensional distance between the start and end of this.
-    pub fn distance(&self) -> Vector3<f32> {
-        self.end - self.start
-    }
-
-    /// Determines if this extent is valid.
-    pub fn valid(&self) -> bool {
-        for i in 0..3 {
-            if self.start[i] > self.end[i] {
-                return false;
-            }
-        }
-        true
-    }
-}
-
-impl Into<BoundingSphere> for GltfNodeExtent {
-    fn into(self) -> BoundingSphere {
-        BoundingSphere {
-            center: convert(self.centroid()),
-            radius: convert(self.distance().magnitude() * 0.5),
-        }
-    }
-}
-
-impl From<Range<[f32; 3]>> for GltfNodeExtent {
-    fn from(range: Range<[f32; 3]>) -> Self {
-        GltfNodeExtent {
-            start: Point3::from(range.start),
-            end: Point3::from(range.end),
-        }
-    }
-}
-
-/// Used during gltf loading to contain the materials used from scenes in the file
-#[derive(Derivative, Serialize)]
-#[derivative(Default(bound = ""))]
-pub struct GltfMaterialSet {
-    pub(crate) materials: HashMap<usize, Prefab>,
-}
 
 /// Options used when loading a GLTF file
 #[derive(Debug, Clone, Default, Derivative, Serialize, Deserialize, TypeUuid)]
