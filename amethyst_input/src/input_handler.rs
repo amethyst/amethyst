@@ -631,7 +631,8 @@ impl InputHandler {
         self.bindings.axes.get(id).map(|a| self.axis_value_impl(a))
     }
 
-    /// Returns true if any of the actions bindings is down.
+    /// Returns Some(true) if any of the actions bindings is down, and Some(false) if
+    /// the actions bindings is not down. Returns None if the given action is not found.
     ///
     /// If a binding represents a combination of buttons, all of them need to be down.
     pub fn action_is_down(&self, action: &str) -> Option<bool> {
