@@ -35,7 +35,7 @@ impl SimpleState for GltfExample {
 
 fn main() -> Result<(), amethyst::Error> {
     let config = amethyst::LoggerConfig {
-        level_filter: amethyst::LogLevelFilter::Trace,
+        level_filter: amethyst::LogLevelFilter::Warn,
         module_levels: vec![],
         ..Default::default()
     };

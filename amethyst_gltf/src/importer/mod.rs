@@ -32,16 +32,18 @@ use crate::{
     types::{MaterialHandle, MeshHandle},
     GltfSceneOptions,
 };
+use crate::importer::skin::load_skin;
 
 mod gltf_bytes_converter;
 mod images;
 mod material;
 mod mesh;
+mod skin;
 
 #[derive(Debug)]
-struct SkinInfo {
+pub struct SkinInfo {
     skin_index: usize,
-    mesh_indices: Vec<usize>,
+    mesh_indices: Vec<Entity>,
 }
 
 /// A simple state for Importer to retain the same UUID between imports
@@ -107,6 +109,8 @@ impl Importer for GltfImporter {
             asset_accumulator.append(&mut material_assets);
         });
 
+
+
         // TODO : load animation
 
         let scene_index = get_scene_index(&doc, options).expect("No scene has been found !");
@@ -115,10 +119,28 @@ impl Importer for GltfImporter {
             .nth(scene_index)
             .expect("Tried to load a scene which does not exist");
 
+        let mut skin_map = HashMap::new();
+        let mut node_map = HashMap::new();
+
         scene.nodes().into_iter().for_each(|node| {
-            let mut node_assets = load_node(&node, &mut world, op, state, &options, &buffers, None);
+            let mut node_assets = load_node(&node, &mut world, op, state, &options, &buffers, None, &mut node_map, &mut skin_map);
             asset_accumulator.append(&mut node_assets);
         });
+
+        // load skins
+        for (entity, skin_info) in skin_map {
+            load_skin(
+                &doc.skins().nth(skin_info.skin_index).expect(
+                    "Unreachable: `skin_map` is initialized with indexes from the `Gltf` object",
+                ),
+                &buffers,
+                entity,
+                &skin_info,
+                &node_map,
+                &mut world
+            );
+        }
+
 
         let legion_prefab = legion_prefab::Prefab::new(world);
         let scene_prefab = Prefab::new(legion_prefab);
@@ -156,8 +178,11 @@ fn load_node(
     options: &GltfSceneOptions,
     buffers: &Vec<Data>,
     parent_node_entity: Option<&Entity>,
+    node_map: &mut HashMap<usize, Entity>,
+    skin_map: &mut HashMap<Entity, SkinInfo>
 ) -> Vec<ImportedAsset> {
     let current_node_entity = world.push(());
+    node_map.insert(node.index(), current_node_entity);
     let mut imported_assets = Vec::new();
     let current_transform = {
         if let Some(transform) = load_transform(node) {
@@ -258,8 +283,9 @@ fn load_node(
                         )));
 
                     // if we have a skin we need to track the mesh entities
-                    if let Some(ref mut _skin) = skin {
+                    if let Some(ref mut skin) = skin {
                         // Should add an entity per primitive
+                        skin.mesh_indices.push(current_node_entity);
                     }
                 }
             }
@@ -283,7 +309,7 @@ fn load_node(
                         asset_data: Box::new(mesh_data),
                     });
 
-                    world.push((
+                    let current_primitive_entity = world.push((
                         current_transform.expect("Meshes must have a transform component"),
                         MeshHandle(make_handle(mesh_asset_id)),
                         MaterialHandle(make_handle(
@@ -297,11 +323,17 @@ fn load_node(
                         ))
                     ));
                     primitive_index += 1;
+
+                    // Should add an entity per primitive
+                    if let Some(ref mut skin) = skin {
+                        skin.mesh_indices.push(current_primitive_entity);
+                    }
                 }
             }
             _ => {
                 // Nothing to do here
             }
+
         }
     }
 
@@ -315,8 +347,15 @@ fn load_node(
             options,
             buffers,
             Some(&current_node_entity),
+            node_map,
+            skin_map
         );
         imported_assets.append(&mut child_assets);
+    }
+
+    // propagate skin information
+    if let Some(skin) = skin {
+        skin_map.insert(current_node_entity, skin);
     }
 
     imported_assets
