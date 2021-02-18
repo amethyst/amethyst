@@ -33,6 +33,7 @@ use crate::{
     GltfSceneOptions,
 };
 use crate::importer::skin::load_skin;
+use crate::types::GltfNodeExtent;
 
 mod gltf_bytes_converter;
 mod images;
@@ -97,11 +98,6 @@ impl Importer for GltfImporter {
 
         let (doc, buffers, _images) = result.unwrap();
 
-        doc.images().for_each(|image| {
-            let mut _image_assets = load_image(&image, state, &buffers);
-            // asset_accumulator.append(&mut image_assets);
-        });
-
         let _materials = HashMap::<String, Material>::new();
 
         doc.materials().for_each(|material| {
@@ -121,9 +117,10 @@ impl Importer for GltfImporter {
 
         let mut skin_map = HashMap::new();
         let mut node_map = HashMap::new();
+        let mut bounding_box = GltfNodeExtent::default();
 
         scene.nodes().into_iter().for_each(|node| {
-            let mut node_assets = load_node(&node, &mut world, op, state, &options, &buffers, None, &mut node_map, &mut skin_map);
+            let mut node_assets = load_node(&node, &mut world, op, state, &options, &buffers, None, &mut node_map, &mut skin_map, None);
             asset_accumulator.append(&mut node_assets);
         });
 
@@ -179,7 +176,8 @@ fn load_node(
     buffers: &Vec<Data>,
     parent_node_entity: Option<&Entity>,
     node_map: &mut HashMap<usize, Entity>,
-    skin_map: &mut HashMap<Entity, SkinInfo>
+    skin_map: &mut HashMap<Entity, SkinInfo>,
+    parent_bounding_box: Option<&mut GltfNodeExtent>,
 ) -> Vec<ImportedAsset> {
     let current_node_entity = world.push(());
     node_map.insert(node.index(), current_node_entity);
@@ -236,6 +234,8 @@ fn load_node(
         }
     });
 
+    let mut bounding_box = GltfNodeExtent::default();
+
     // load graphics
     if let Some(mesh) = node.mesh() {
         if state.mesh_uuids.is_none() {
@@ -244,7 +244,8 @@ fn load_node(
         let mut loaded_primitives = load_mesh(&mesh, buffers, options).expect("It should work");
         match loaded_primitives.len().cmp(&1) {
             Ordering::Equal => {
-                if let Some((name, mesh, material_index, _bounds)) = loaded_primitives.pop() {
+                if let Some((name, mesh, material_index, bounds)) = loaded_primitives.pop() {
+                    bounding_box.extend_range(&bounds);
                     let mesh_asset_id = *state
                         .mesh_uuids
                         .as_mut()
@@ -282,11 +283,17 @@ fn load_node(
                                 .clone(),
                         )));
 
-                    // if we have a skin we need to track the mesh entities
                     if let Some(ref mut skin) = skin {
                         // Should add an entity per primitive
                         skin.mesh_indices.push(current_node_entity);
                     }
+
+                    bounding_box.extend_range(&bounds);
+                    let extend: GltfNodeExtent = bounds.into();
+                    world
+                        .entry(current_node_entity)
+                        .expect("We just added this entity")
+                        .add_component(extend);
                 }
             }
             Ordering::Greater => {
@@ -348,9 +355,22 @@ fn load_node(
             buffers,
             Some(&current_node_entity),
             node_map,
-            skin_map
+            skin_map,
+            Some(&mut bounding_box)
         );
         imported_assets.append(&mut child_assets);
+    }
+
+    if bounding_box.valid() {
+        if let Some(parent_bounding_box) = parent_bounding_box {
+            parent_bounding_box.extend(&bounding_box);
+        } else {
+            let extend: GltfNodeExtent = bounding_box.into();
+            world
+                .entry(current_node_entity)
+                .expect("We just added this entity")
+                .add_component(extend);
+        }
     }
 
     // propagate skin information
