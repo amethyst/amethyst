@@ -1,13 +1,17 @@
-use gltf::buffer::Data;
-use amethyst_core::ecs::{Entity, World, EntityStore};
-use crate::importer::SkinInfo;
-use amethyst_error::Error;
 use std::collections::HashMap;
-use amethyst_core::math::{Matrix4, convert};
-use amethyst_animation::{Skin, Joint};
-use amethyst_rendy::skinning::JointTransforms;
 
-struct JointTransformInfos{
+use amethyst_animation::{Joint, Skin};
+use amethyst_core::{
+    ecs::{Entity, World},
+    math::{convert, Matrix4},
+};
+use amethyst_error::Error;
+use amethyst_rendy::skinning::JointTransforms;
+use gltf::buffer::Data;
+
+use crate::importer::SkinInfo;
+
+struct JointTransformInfos {
     pub skin: Entity,
     pub size: usize,
 }
@@ -18,7 +22,7 @@ pub fn load_skin(
     entity: Entity,
     skin_infos: &SkinInfo,
     node_map: &HashMap<usize, Entity>,
-    world: &mut World
+    world: &mut World,
 ) -> Result<(), Error> {
     let joint_entities = skin
         .joints()
@@ -29,9 +33,15 @@ pub fn load_skin(
         })
         .collect::<Vec<_>>();
 
-    let reader = skin.reader(|buffer| Some(buffers.get(buffer.index())
-        .expect("Error while reading skin buffer")
-        .0.as_slice()));
+    let reader = skin.reader(|buffer| {
+        Some(
+            buffers
+                .get(buffer.index())
+                .expect("Error while reading skin buffer")
+                .0
+                .as_slice(),
+        )
+    });
 
     let inverse_bind_matrices = reader
         .read_inverse_bind_matrices()
@@ -48,22 +58,27 @@ pub fn load_skin(
     for (_bind_index, joint_entity) in joint_entities.iter().enumerate() {
         aggregator
             .entry(*joint_entity)
-            .or_insert_with(||Vec::new())
+            .or_insert_with(|| Vec::new())
             .push(entity);
     }
 
-    for (entity, skins) in aggregator.iter(){
+    for (entity, skins) in aggregator.iter() {
         let joint = Joint {
             skins: skins.clone(),
         };
-        world.entry(*entity)
+        world
+            .entry(*entity)
             .expect("This can't be reached because the entity comes from this world")
             .add_component(joint);
     }
 
-    let joint_transforms = JointTransforms{ skin: entity, matrices: vec![Matrix4::identity(); joint_entities.len()] };
+    let joint_transforms = JointTransforms {
+        skin: entity,
+        matrices: vec![Matrix4::identity(); joint_entities.len()],
+    };
     for mesh_entity in &skin_infos.mesh_indices {
-        world.entry(*mesh_entity)
+        world
+            .entry(*mesh_entity)
             .expect("This can't be reached because the entity comes from this world")
             .add_component(joint_transforms.clone());
     }
@@ -76,7 +91,8 @@ pub fn load_skin(
         joint_matrices: Vec::with_capacity(len),
     };
 
-    world.entry(entity)
+    world
+        .entry(entity)
         .expect("This can't be reached because the entity comes from this world")
         .add_component(skin);
 

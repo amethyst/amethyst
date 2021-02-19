@@ -187,7 +187,7 @@ where
 /// - `T`: the component type that the animation should be applied to
 ///
 /// [sampler]: struct.Sampler.html
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(bound(
     serialize = "T::Channel: Serialize, T::Primitive: Serialize",
     deserialize = "T::Channel: Deserialize<'de>, T::Primitive: Deserialize<'de>",

@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use amethyst_assets::{
     erased_serde::private::serde::{de, de::SeqAccess, ser::SerializeSeq},
     prefab::{
@@ -7,12 +9,10 @@ use amethyst_assets::{
     },
     Handle,
 };
-use amethyst_rendy::{Material, Mesh};
+use amethyst_core::math::{convert, Point3, Vector3};
+use amethyst_rendy::{visibility::BoundingSphere, Material, Mesh};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
-use amethyst_core::math::{Point3, Vector3, convert};
-use std::ops::Range;
-use amethyst_rendy::visibility::BoundingSphere;
 
 /// MeshHandle is a component that will handle the fact that we attach
 /// a mesh to an entity as an asset handle that will later be loaded.

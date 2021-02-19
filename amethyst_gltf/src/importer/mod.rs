@@ -4,6 +4,7 @@ use std::{
     io::Read,
 };
 
+use amethyst_animation::AnimationHierarchy;
 use amethyst_assets::{
     distill_importer,
     distill_importer::{Error, ImportOp, ImportedAsset, Importer, ImporterValue},
@@ -24,17 +25,17 @@ use type_uuid::TypeUuid;
 
 use crate::{
     importer::{
+        animation::load_animations,
         gltf_bytes_converter::convert_bytes,
-        images::load_image,
         material::{convert_optional_index_to_string, load_material},
         mesh::load_mesh,
+        skin::load_skin,
     },
-    types::{MaterialHandle, MeshHandle},
+    types::{GltfNodeExtent, MaterialHandle, MeshHandle},
     GltfSceneOptions,
 };
-use crate::importer::skin::load_skin;
-use crate::types::GltfNodeExtent;
 
+mod animation;
 mod gltf_bytes_converter;
 mod images;
 mod material;
@@ -57,6 +58,8 @@ pub struct GltfImporterState {
     pub material_uuids: Option<HashMap<String, AssetUuid>>,
     pub material_transparencies: Option<HashSet<String>>,
     pub mesh_uuids: Option<HashMap<String, AssetUuid>>,
+    pub animation_sampler_uuids: Option<HashMap<String, AssetUuid>>,
+    pub animation_uuids: Option<HashMap<String, AssetUuid>>,
 }
 
 /// The importer for '.gltf' or '.glb' files.
@@ -105,10 +108,6 @@ impl Importer for GltfImporter {
             asset_accumulator.append(&mut material_assets);
         });
 
-
-
-        // TODO : load animation
-
         let scene_index = get_scene_index(&doc, options).expect("No scene has been found !");
         let scene = doc
             .scenes()
@@ -117,10 +116,20 @@ impl Importer for GltfImporter {
 
         let mut skin_map = HashMap::new();
         let mut node_map = HashMap::new();
-        let mut bounding_box = GltfNodeExtent::default();
 
         scene.nodes().into_iter().for_each(|node| {
-            let mut node_assets = load_node(&node, &mut world, op, state, &options, &buffers, None, &mut node_map, &mut skin_map, None);
+            let mut node_assets = load_node(
+                &node,
+                &mut world,
+                op,
+                state,
+                &options,
+                &buffers,
+                None,
+                &mut node_map,
+                &mut skin_map,
+                None,
+            );
             asset_accumulator.append(&mut node_assets);
         });
 
@@ -134,10 +143,28 @@ impl Importer for GltfImporter {
                 entity,
                 &skin_info,
                 &node_map,
-                &mut world
+                &mut world,
             );
         }
 
+        // load animations, if applicable
+        if options.load_animations {
+            let animation_entity = world.push((AnimationHierarchy::<Transform>::new_many(
+                node_map
+                    .iter()
+                    .map(|(node, entity)| (*node, *entity))
+                    .collect(),
+            ),));
+            load_animations(
+                doc.animations(),
+                &buffers,
+                &node_map,
+                op,
+                state,
+                &mut world,
+                &animation_entity,
+            );
+        }
 
         let legion_prefab = legion_prefab::Prefab::new(world);
         let scene_prefab = Prefab::new(legion_prefab);
@@ -206,7 +233,7 @@ fn load_node(
                     .add_component(transform);
                 Some(transform)
             }
-        }else{
+        } else {
             None
         }
     };
@@ -327,7 +354,7 @@ fn load_node(
                                 .get(&convert_optional_index_to_string(material_index))
                                 .expect("A requested material is not loded")
                                 .clone(),
-                        ))
+                        )),
                     ));
                     primitive_index += 1;
 
@@ -340,7 +367,6 @@ fn load_node(
             _ => {
                 // Nothing to do here
             }
-
         }
     }
 
@@ -356,7 +382,7 @@ fn load_node(
             Some(&current_node_entity),
             node_map,
             skin_map,
-            Some(&mut bounding_box)
+            Some(&mut bounding_box),
         );
         imported_assets.append(&mut child_assets);
     }
