@@ -4,6 +4,8 @@ use std::{
     error::Error,
     ops::{Deref, DerefMut},
     sync::Arc,
+    fs::File,
+    path::PathBuf,
 };
 
 use amethyst_core::{
@@ -20,7 +22,8 @@ use distill_loader::{
         AssetLoadOp, AtomicHandleAllocator, DefaultIndirectionResolver, HandleAllocator,
         IndirectIdentifier, IndirectionTable, LoaderInfoProvider,
     },
-    AssetTypeId, Loader as DistillLoader, RpcIO,
+    io::LoaderIO,
+    AssetTypeId, Loader as DistillLoader, RpcIO, PackfileReader,
 };
 pub use distill_loader::{storage::LoadStatus, AssetUuid};
 use log::debug;
@@ -152,12 +155,30 @@ pub struct DefaultLoader {
     pub(crate) indirection_table: IndirectionTable,
 }
 
+
 impl Default for DefaultLoader {
     fn default() -> Self {
+        Self::new(true, None, None)
+    }
+}
+
+
+impl DefaultLoader {
+    fn new(loader_io_use_rpc: bool, connect_string: Option<String>, packfile_path: Option<PathBuf> ) -> Self {
         let (tx, rx) = unbounded();
         let handle_allocator = Arc::new(AtomicHandleAllocator::default());
+        let loader_io: Box<dyn LoaderIO> = if loader_io_use_rpc {
+            log::info!("Using RpcIO");
+            let rpc_io = connect_string.and_then(|cs| RpcIO::new(cs).ok()).unwrap_or_else(RpcIO::default);
+            Box::new(rpc_io)
+        } else {
+            log::info!("Using PackfileIO");
+            let packfile_io = packfile_path.map(|pfp| File::open(pfp).expect("Could not open packfile"))
+                .and_then(|pf| PackfileReader::new(pf).ok()).expect("packfile not found");
+            Box::new(packfile_io)
+        };
         let loader = DistillLoader::new_with_handle_allocator(
-            Box::new(RpcIO::default()),
+            loader_io,
             handle_allocator.clone(),
         );
         Self {
@@ -170,6 +191,7 @@ impl Default for DefaultLoader {
         }
     }
 }
+
 
 impl Loader for DefaultLoader {
     fn load_asset_generic(&self, id: AssetUuid) -> GenericHandle {

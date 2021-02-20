@@ -55,6 +55,9 @@ legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", r
 prefab-format = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
 encoding_rs_io = "0.1"
 serde-diff = "0.4"
+structopt = { version = "0.3", default-features = false, optional = true }
+# TODO remove this dependency by wrapping it in distill
+tokio = { version = "1.0", features = ["sync"], optional = true }
 
 [dev-dependencies]
 amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
@@ -64,5 +67,7 @@ serde-diff = "0.4"
 serial_test = "0.5.1"
 
 [features]
+default = ["asset-daemon"]
 profiler = ["thread_profiler/thread_profiler"]
 json = ["serde_json"]
+asset-daemon = ["structopt", "tokio"]

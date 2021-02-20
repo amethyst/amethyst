@@ -24,8 +24,8 @@ autoexamples = false # Our examples come with their own Cargo.toml and are in th
 crate-type = ["lib"]
 
 [features]
-default = ["parallel", "renderer", "utils", "no-slow-safety-checks"]
-optional = ["audio", "network", "locale", "ui", "tiles", "animation"]
+default = ["parallel", "renderer", "utils", "no-slow-safety-checks", "asset-daemon"]
+optional = ["audio", "network", "locale", "ui", "tiles", "animation",]
 
 tiles = ["amethyst_tiles"]
 animation = ["amethyst_animation"]
@@ -36,6 +36,8 @@ network = ["amethyst_network"]
 utils = ["amethyst_utils"]
 renderer = ["amethyst_rendy"]
 ui = ["amethyst_ui", "amethyst_animation/ui"]
+
+
 
 empty = ["amethyst_rendy/empty"]
 vulkan = ["amethyst_rendy/vulkan"]
@@ -65,6 +67,8 @@ shader-compiler = ["amethyst_rendy/shader-compiler"]
 test-support = ["amethyst_rendy/test-support", "amethyst_window/test-support"]
 experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 parallel = ["amethyst_core/parallel"]
+# asset-packfile = ["amethyst_assets/packfile"]
+asset-daemon = ["amethyst_assets/asset-daemon"]
 
 [workspace]
 members = ["examples/*", "amethyst_*"]

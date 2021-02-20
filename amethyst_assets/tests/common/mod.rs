@@ -1,6 +1,6 @@
 use std::{panic, path::PathBuf, sync::Once};
 
-use amethyst_assets::{start_asset_daemon, LoaderBundle};
+use amethyst_assets::{AssetDaemon, LoaderBundle};
 use amethyst_core::{
     dispatcher::{Dispatcher, DispatcherBuilder},
     ecs::{Resources, World},
@@ -20,8 +20,8 @@ where
         })
         .level_for("mio", log::LevelFilter::Error)
         .start();
-
-        start_asset_daemon(vec![PathBuf::from("tests/assets")]);
+        let mut asset_daemon = AssetDaemon::new(vec![PathBuf::from("tests/assets")]);
+        asset_daemon.start_on_new_thread();
     });
 
     let result = panic::catch_unwind(|| {
