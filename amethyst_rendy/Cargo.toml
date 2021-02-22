@@ -34,6 +34,7 @@ indexmap = { version = "1.3", features = ["rayon"] }
 type-uuid = "0.1"
 thread_profiler = { version = "0.3", optional = true }
 approx = "0.4"
+legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 rendy = { version = "0.5", git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["metal"] }

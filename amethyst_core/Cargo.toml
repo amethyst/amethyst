@@ -30,6 +30,7 @@ legion = { version = "0.3.1", default-features = false, features = [
     "crossbeam-events",
     "codegen",
 ] }
+legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
 nalgebra = { version = "0.24", default-features = false, features = ["serde-serialize"] }
 rayon = "1.5"
 shrev = "1.1.1"

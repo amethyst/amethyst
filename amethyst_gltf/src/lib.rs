@@ -13,9 +13,8 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+use amethyst_animation::{AnimationHierarchy, AnimationSet, Joint, Skin};
 use amethyst_assets::{inventory, prefab::register_component_type};
-use amethyst_core::transform::Transform;
-use amethyst_rendy::{light::Light, Camera, Material};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -42,10 +41,7 @@ inventory::submit! {
     }
 }
 
-register_component_type!(Camera);
-register_component_type!(Light);
-register_component_type!(Transform);
-register_component_type!(Material);
+register_component_type!(Joint);
 
 /// Options used when loading a GLTF file
 #[derive(Debug, Clone, Default, Derivative, Serialize, Deserialize, TypeUuid)]

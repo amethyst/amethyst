@@ -2,7 +2,7 @@ use amethyst::{
     assets::{
         prefab::Prefab, AssetHandle, DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue,
     },
-    core::{math::Vector3, transform::TransformBundle, Transform},
+    core::{logger::LevelFilter, math::Vector3, transform::TransformBundle, Transform},
     ecs::{DispatcherBuilder, Entity, IntoQuery},
     gltf::bundle::GltfBundle,
     renderer::{
@@ -28,7 +28,7 @@ impl SimpleState for GltfExample {
             world, resources, ..
         } = data;
         let loader = resources.get::<DefaultLoader>().unwrap();
-        let t: Handle<Prefab> = loader.load("gltf/sample.glb");
+        let t: Handle<Prefab> = loader.load("gltf/puffy.glb");
         world.push((t,));
     }
 }
@@ -36,9 +36,22 @@ impl SimpleState for GltfExample {
 fn main() -> Result<(), amethyst::Error> {
     let config = amethyst::LoggerConfig {
         level_filter: amethyst::LogLevelFilter::Warn,
-        module_levels: vec![],
+        module_levels: vec![
+            (
+                "amethyst_assets".to_string(),
+                amethyst::LogLevelFilter::Warn,
+            ),
+            ("amethyst_rendy".to_string(), amethyst::LogLevelFilter::Warn),
+            ("distill_daemon".to_string(), amethyst::LogLevelFilter::Warn),
+            ("distill_loader".to_string(), amethyst::LogLevelFilter::Warn),
+            (
+                "gfx_backend_metal::window".to_string(),
+                amethyst::LogLevelFilter::Off,
+            ),
+        ],
         ..Default::default()
     };
+
     amethyst::start_logger(config);
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("config/display.ron");

@@ -3,6 +3,7 @@
 use amethyst_assets::{
     erased_serde::private::serde::{de, de::SeqAccess, ser::SerializeSeq},
     prefab::{
+        register_component_type,
         serde_diff::{ApplyContext, DiffContext},
         SerdeDiff,
     },
@@ -86,6 +87,8 @@ impl SerdeDiff for Material {
         unimplemented!()
     }
 }
+
+register_component_type!(Material);
 
 // impl From<Material> for Material {
 //     fn from(material: Material) -> Self {

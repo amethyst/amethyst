@@ -2,6 +2,7 @@
 
 use amethyst_assets::{
     prefab::{
+        register_component_type,
         serde_diff::{ApplyContext, DiffContext},
         SerdeDiff,
     },
@@ -68,6 +69,8 @@ impl SerdeDiff for Camera {
         unimplemented!()
     }
 }
+
+register_component_type!(Camera);
 
 impl Asset for Camera {
     fn name() -> &'static str {

@@ -3,6 +3,7 @@
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
 use amethyst_assets::prefab::{
+    register_component_type,
     serde_diff::{ApplyContext, DiffContext},
     SerdeDiff,
 };
@@ -54,6 +55,8 @@ impl SerdeDiff for Light {
         unimplemented!()
     }
 }
+
+register_component_type!(Light);
 
 /// A directional light source.
 #[repr(C)]

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use amethyst_animation::{
-    Animation, AnimationSet, InterpolationFunction, InterpolationPrimitive,
-    Sampler, SamplerPrimitive, TransformChannel,
+    Animation, AnimationSet, InterpolationFunction, InterpolationPrimitive, Sampler,
+    SamplerPrimitive, TransformChannel,
 };
 use amethyst_assets::{
     distill_importer::{Error, ImportOp, ImportedAsset},
@@ -39,13 +39,12 @@ pub fn load_animations(
     let mut animations_accumulator = FnvHashMap::default();
 
     animations.for_each(|animation| {
-        let samplers = load_samplers(&animation, buffers).expect(
-            format!(
+        let samplers = load_samplers(&animation, buffers).unwrap_or_else(|_| {
+            panic!(
                 "Animation sampling loading didn't work for animation {:?}",
                 animation.index()
             )
-            .as_str(),
-        );
+        });
         if samplers
             .iter()
             .any(|sampler| node_map.contains_key(&sampler.0))
@@ -59,14 +58,14 @@ pub fn load_animations(
                     .entry(format!("{}_{}", animation.index(), sampler_index))
                     .or_insert_with(|| op.new_asset_uuid());
                 asset_accumulator.push(ImportedAsset {
-                    id: sampler_asset_id.clone(),
+                    id: sampler_asset_id,
                     search_tags: vec![],
                     build_deps: vec![],
                     load_deps: vec![],
                     build_pipeline: None,
                     asset_data: Box::new(sampler.clone()),
                 });
-                nodes.push((*node_index, channel.clone(), make_handle(sampler_asset_id)));
+                nodes.push((*node_index, *channel, make_handle(sampler_asset_id)));
             }
 
             let animation_asset_id = *state
@@ -77,7 +76,7 @@ pub fn load_animations(
                 .or_insert_with(|| op.new_asset_uuid());
 
             asset_accumulator.push(ImportedAsset {
-                id: animation_asset_id.clone(),
+                id: animation_asset_id,
                 search_tags: vec![],
                 build_deps: vec![],
                 load_deps: vec![],
@@ -93,7 +92,7 @@ pub fn load_animations(
         .entry(*animation_entity)
         .expect("Unreachable: `animation_entity` is initialized previously")
         .add_component(AnimationSet::<usize, Transform> {
-            animations: animations_accumulator.into(),
+            animations: animations_accumulator,
         });
 
     asset_accumulator

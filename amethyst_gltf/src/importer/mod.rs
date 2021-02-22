@@ -155,7 +155,7 @@ impl Importer for GltfImporter {
                     .map(|(node, entity)| (*node, *entity))
                     .collect(),
             ),));
-            load_animations(
+            let animations_assets = load_animations(
                 doc.animations(),
                 &buffers,
                 &node_map,
@@ -164,6 +164,7 @@ impl Importer for GltfImporter {
                 &mut world,
                 &animation_entity,
             );
+            asset_accumulator.extend(animations_assets);
         }
 
         let legion_prefab = legion_prefab::Prefab::new(world);
@@ -301,13 +302,12 @@ fn load_node(
                         .entry(current_node_entity)
                         .expect("We just added this entity")
                         .add_component(MaterialHandle(make_handle(
-                            state
+                            *state
                                 .material_uuids
                                 .as_ref()
                                 .expect("Meshes hashmap didn't work")
                                 .get(&convert_optional_index_to_string(material_index))
-                                .expect("A requested material is not loded")
-                                .clone(),
+                                .expect("A requested material is not loded"),
                         )));
 
                     if let Some(ref mut skin) = skin {
@@ -347,13 +347,12 @@ fn load_node(
                         current_transform.expect("Meshes must have a transform component"),
                         MeshHandle(make_handle(mesh_asset_id)),
                         MaterialHandle(make_handle(
-                            state
+                            *state
                                 .material_uuids
                                 .as_ref()
                                 .expect("Meshes hashmap didn't work")
                                 .get(&convert_optional_index_to_string(material_index))
-                                .expect("A requested material is not loded")
-                                .clone(),
+                                .expect("A requested material is not loded"),
                         )),
                     ));
                     primitive_index += 1;
@@ -391,7 +390,7 @@ fn load_node(
         if let Some(parent_bounding_box) = parent_bounding_box {
             parent_bounding_box.extend(&bounding_box);
         } else {
-            let extend: GltfNodeExtent = bounding_box.into();
+            let extend: GltfNodeExtent = bounding_box;
             world
                 .entry(current_node_entity)
                 .expect("We just added this entity")

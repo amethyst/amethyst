@@ -109,7 +109,7 @@ pub fn load_material(
         .material_uuids
         .as_mut()
         .expect("Meshes hashmap didn't work")
-        .entry(material_name.to_string())
+        .entry(material_name)
         .or_insert_with(|| op.new_asset_uuid());
 
     assets_accumulator.push(ImportedAsset {

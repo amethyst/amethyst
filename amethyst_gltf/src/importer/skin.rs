@@ -58,7 +58,7 @@ pub fn load_skin(
     for (_bind_index, joint_entity) in joint_entities.iter().enumerate() {
         aggregator
             .entry(*joint_entity)
-            .or_insert_with(|| Vec::new())
+            .or_insert_with(Vec::new)
             .push(entity);
     }
 

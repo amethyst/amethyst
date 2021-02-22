@@ -285,9 +285,9 @@ impl Stopwatch {
 #[cfg(test)]
 mod tests {
 
-    
+    use std::{thread, time::Duration};
 
-    
+    use super::Stopwatch;
 
     // Timing varies more on macOS CI
     fn get_uncertainty() -> u32 {
