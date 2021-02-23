@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest, windows-latest, ubuntu-18.04]
         toolchain: [stable, beta, nightly]
     steps:
       - uses: actions/checkout@v2
@@ -50,7 +50,7 @@ jobs:
 
       - run: cargo +nightly fmt --all -- --check
         if: matrix.toolchain == 'nightly' && matrix.os == 'ubuntu-latest'
-        
+
       - run: rustup component add clippy
         if: matrix.toolchain == 'nightly'
 
