@@ -1,4 +1,4 @@
-# Test suite must pass on GitHub Actions before merging into `master`.
+# Test suite must pass on GitHub Actions before merging into `main`.
 status = [
     "Tests (macos-latest, stable)",
     "Tests (macos-latest, beta)",
@@ -6,9 +6,9 @@ status = [
     "Tests (windows-latest, stable)",
     "Tests (windows-latest, beta)",
 #    "Tests (windows-latest, nightly)",
-    "Tests (ubuntu-latest, stable)",
-    "Tests (ubuntu-latest, beta)",
-#    "Tests (ubuntu-latest, nightly)",
+    "Tests (ubuntu-18.04, stable)",
+    "Tests (ubuntu-18.04, beta)",
+#    "Tests (ubuntu-18.04, nightly)",
 ]
 
 # Do not allow pull requests with these labels to be merged.
