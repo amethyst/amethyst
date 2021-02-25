@@ -83,13 +83,37 @@ impl SerdeDiff for MaterialHandle {
 register_component_type!(MaterialHandle);
 
 /// A GLTF node extent
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, TypeUuid, Clone, Debug)]
+#[uuid = "e569daf6-f391-4235-b75b-28d55b26b0a1"]
 pub struct GltfNodeExtent {
     /// The beginning of this extent
     pub start: Point3<f32>,
     /// The end of this extent
     pub end: Point3<f32>,
 }
+
+impl SerdeDiff for GltfNodeExtent {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        _ctx: &mut DiffContext<'a, S>,
+        _other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
+        unimplemented!()
+    }
+
+    fn apply<'de, A>(
+        &mut self,
+        _seq: &mut A,
+        _ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+        where
+            A: de::SeqAccess<'de>,
+    {
+        unimplemented!()
+    }
+}
+
+register_component_type!(GltfNodeExtent);
 
 impl Default for GltfNodeExtent {
     fn default() -> Self {

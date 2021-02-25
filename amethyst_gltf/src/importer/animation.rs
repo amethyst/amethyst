@@ -1,13 +1,7 @@
 use std::collections::HashMap;
 
-use amethyst_animation::{
-    Animation, AnimationSet, InterpolationFunction, InterpolationPrimitive, Sampler,
-    SamplerPrimitive, TransformChannel,
-};
-use amethyst_assets::{
-    distill_importer::{Error, ImportOp, ImportedAsset},
-    make_handle,
-};
+use amethyst_animation::{Animation, AnimationSet, InterpolationFunction, InterpolationPrimitive, Sampler, SamplerPrimitive, TransformChannel, AnimationHierarchy};
+use amethyst_assets::{distill_importer::{Error, ImportOp, ImportedAsset}, make_handle, AssetUuid, prefab::{register_component_type, SerdeDiff, serde_diff}};
 use amethyst_core::{
     ecs::{Entity, World},
     math::{convert, Vector3, Vector4},
@@ -15,8 +9,30 @@ use amethyst_core::{
 };
 use fnv::FnvHashMap;
 use gltf::{buffer::Data, iter};
+use log::debug;
+
+use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
 use crate::importer::GltfImporterState;
+
+/// A struct to be able to link this hierarchy to its entities using the file AssetUuid as identifier
+#[derive(TypeUuid, Serialize, Debug, Deserialize, PartialEq, SerdeDiff, Clone, Default)]
+#[uuid = "6f7bccdf-2939-4f9d-89a4-8a65ddd9c20b"]
+pub struct UniqueAnimationHierarchyId {
+    pub id: String
+}
+
+register_component_type!(UniqueAnimationHierarchyId);
+
+#[derive(TypeUuid, Serialize, Debug, Deserialize, PartialEq, SerdeDiff, Clone, Default)]
+#[uuid = "0c1a252a-25a4-4261-b5a5-eb1767302afa"]
+pub struct NodeEntityIdentifier {
+    pub node: usize,
+    pub id: String,
+}
+
+register_component_type!(NodeEntityIdentifier);
 
 pub fn load_animations(
     animations: iter::Animations<'_>,
@@ -25,7 +41,6 @@ pub fn load_animations(
     op: &mut ImportOp,
     state: &mut GltfImporterState,
     world: &mut World,
-    animation_entity: &Entity,
 ) -> Vec<ImportedAsset> {
     if state.animation_sampler_uuids.is_none() {
         state.animation_sampler_uuids = Some(HashMap::new());
@@ -34,6 +49,13 @@ pub fn load_animations(
     if state.animation_uuids.is_none() {
         state.animation_uuids = Some(HashMap::new());
     }
+
+    let animation_entity = world.push((UniqueAnimationHierarchyId { id: state.id.expect("UUID generation for main scene prefab didn't work").to_string() }, ));
+    node_map
+        .iter()
+        .for_each(|(node, entity)| world.entry(*entity).expect("Unreachable")
+            .add_component(NodeEntityIdentifier { node: *node, id: state.id.expect("UUID generation for main scene prefab didn't work").to_string() })
+        );
 
     let mut asset_accumulator = Vec::new();
     let mut animations_accumulator = FnvHashMap::default();
@@ -75,6 +97,8 @@ pub fn load_animations(
                 .entry(format!("{}", animation.index()))
                 .or_insert_with(|| op.new_asset_uuid());
 
+            debug!("nodes length {:?}", nodes.len());
+
             asset_accumulator.push(ImportedAsset {
                 id: animation_asset_id,
                 search_tags: vec![],
@@ -88,11 +112,12 @@ pub fn load_animations(
         }
     });
 
+
     world
-        .entry(*animation_entity)
+        .entry(animation_entity)
         .expect("Unreachable: `animation_entity` is initialized previously")
         .add_component(AnimationSet::<usize, Transform> {
-            animations: animations_accumulator,
+            animations: animations_accumulator.clone(),
         });
 
     asset_accumulator
@@ -191,8 +216,8 @@ fn load_channel(
 }
 
 fn map_interpolation_type<T>(ty: gltf::animation::Interpolation) -> InterpolationFunction<T>
-where
-    T: InterpolationPrimitive,
+    where
+        T: InterpolationPrimitive,
 {
     use gltf::animation::Interpolation::*;
 

@@ -127,24 +127,6 @@ impl SimpleState for Example {
 
         world.extend(vec![(Camera::standard_3d(width, height), transform)]);
     }
-
-    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let StateData {
-            world,
-            resources: _,
-            ..
-        } = data;
-
-        let mut q = <(Entity, &Handle<Mesh>, &Handle<Material>, &mut Transform)>::query();
-
-        q.iter_mut(*world).for_each(|(_e, m, m1, t)| {
-            println!("{:?}", m);
-            println!("{:?}", m1);
-            println!("{:?}", t);
-        });
-
-        Trans::None
-    }
 }
 
 fn main() -> amethyst::Result<()> {

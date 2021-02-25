@@ -13,8 +13,9 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
-use amethyst_animation::{AnimationHierarchy, AnimationSet, Joint, Skin};
-use amethyst_assets::{inventory, prefab::register_component_type};
+use amethyst_core::{Transform};
+use amethyst_animation::{AnimationHierarchy, AnimationSet, Joint, Skin, Animation};
+use amethyst_assets::{inventory, prefab::register_component_type, register_asset_type, AssetProcessorSystem};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -42,10 +43,12 @@ inventory::submit! {
 }
 
 register_component_type!(Joint);
+register_asset_type!(Animation<Transform> => Animation<Transform>; AssetProcessorSystem<Animation<Transform>>);
 
 /// Options used when loading a GLTF file
-#[derive(Debug, Clone, Default, Derivative, Serialize, Deserialize, TypeUuid)]
+#[derive(Debug, Clone, Derivative, Serialize, Deserialize, TypeUuid)]
 #[serde(default)]
+#[derivative(Default)]
 #[uuid = "8e3da51a-26d4-4b0f-b9f7-7f52d1b78945"]
 pub struct GltfSceneOptions {
     /// Generate texture coordinates if none exist in the Gltf file

@@ -4,7 +4,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 
-use crate::system::{material_handle_loading, mesh_handle_loading};
+use crate::system::{material_handle_loading, mesh_handle_loading, animation_hierarchy_loading};
 
 /// Bundle that initializes needed resources to use GLTF
 #[derive(Debug)]
@@ -19,6 +19,7 @@ impl SystemBundle for GltfBundle {
     ) -> Result<(), Error> {
         builder.add_thread_local_fn(mesh_handle_loading);
         builder.add_thread_local_fn(material_handle_loading);
+        builder.add_thread_local_fn(animation_hierarchy_loading);
         Ok(())
     }
 

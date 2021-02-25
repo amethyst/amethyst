@@ -42,6 +42,8 @@ mod material;
 mod mesh;
 mod skin;
 
+pub use animation::{NodeEntityIdentifier, UniqueAnimationHierarchyId};
+
 #[derive(Debug)]
 pub struct SkinInfo {
     skin_index: usize,
@@ -87,6 +89,11 @@ impl Importer for GltfImporter {
         state: &mut Self::State,
     ) -> amethyst_assets::distill_importer::Result<ImporterValue> {
         log::info!("Importing scene with options {:?}", options);
+
+        if state.id.is_none() {
+            state.id = Some(op.new_asset_uuid());
+        }
+
         let mut asset_accumulator: Vec<ImportedAsset> = Vec::new();
         let mut world = World::default();
 
@@ -149,20 +156,13 @@ impl Importer for GltfImporter {
 
         // load animations, if applicable
         if options.load_animations {
-            let animation_entity = world.push((AnimationHierarchy::<Transform>::new_many(
-                node_map
-                    .iter()
-                    .map(|(node, entity)| (*node, *entity))
-                    .collect(),
-            ),));
             let animations_assets = load_animations(
                 doc.animations(),
                 &buffers,
                 &node_map,
                 op,
                 state,
-                &mut world,
-                &animation_entity,
+                &mut world
             );
             asset_accumulator.extend(animations_assets);
         }
@@ -170,9 +170,7 @@ impl Importer for GltfImporter {
         let legion_prefab = legion_prefab::Prefab::new(world);
         let scene_prefab = Prefab::new(legion_prefab);
 
-        if state.id.is_none() {
-            state.id = Some(op.new_asset_uuid());
-        }
+
 
         asset_accumulator.push(ImportedAsset {
             id: state

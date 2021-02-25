@@ -24,6 +24,7 @@ pub enum TransformChannel {
     Scale,
 }
 
+// feb635f3-752a-456f-96a6-87cff13595b9
 impl TypeUuid for Animation<Transform> {
     const UUID: type_uuid::Bytes =
         *Uuid::from_u128(338570003214035303785978659011038647737).as_bytes();
