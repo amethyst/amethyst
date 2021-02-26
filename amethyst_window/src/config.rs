@@ -7,9 +7,10 @@ use winit::{
 };
 #[cfg(target_os = "windows")]
 use {
-    log::error,
-    winit::platform::windows::{IconExtWindows, WindowBuilderExtWindows},
+    winit::platform::windows::{WindowBuilderExtWindows},
 };
+
+use image;
 
 use crate::monitor::{MonitorIdent, MonitorsAccess};
 
@@ -153,26 +154,40 @@ impl DisplayConfig {
         {
             builder = builder.with_drag_and_drop(false);
         }
+
         builder.window = attrs;
-        builder = builder.with_window_icon(self.loaded_icon);
 
-        #[cfg(target_os = "windows")]
-        if let Some(icon) = self.icon {
-            let icon = match Icon::from_path(&icon, None) {
-                Ok(x) => Some(x),
-                Err(e) => {
-                    error!(
-                        "Failed to load window icon from `{}`: {}",
-                        icon.display(),
-                        e
-                    );
+        if self.loaded_icon.is_some() {
+            builder = builder.with_window_icon(self.loaded_icon);
+        }else{
+            match self.icon {
+                Some(icon_path) => {
 
-                    None
+                    let (icon_rgba, icon_width, icon_height) = {
+                        let image = image::open(icon_path).expect("Failed to open icon path");
+                        use image::{GenericImageView, Pixel};
+                        let (width, height) = image.dimensions();
+                        let mut rgba = Vec::with_capacity((width * height) as usize * 4);
+                        for (_, _, pixel) in image.pixels() {
+                            rgba.extend_from_slice(&pixel.to_rgba().channels());
+                        }
+                        (rgba, width, height)
+                    };
+                    match Icon::from_rgba(icon_rgba, icon_width, icon_height) {
+                        Ok(res) => { builder = builder.with_window_icon(Option::from( res )); }
+
+                        Err(e) => {
+                            // TODO: Fallback amethyst icon.
+                        }
+                    };
+                    ()
                 }
-            };
-
-            builder = builder.with_window_icon(icon);
+                None => {
+                    // TODO: Fallback amethyst icon.
+                }
+            }
         }
+
 
         builder
     }
