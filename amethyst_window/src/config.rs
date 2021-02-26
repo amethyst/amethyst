@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use log::info;
 use serde::{Deserialize, Serialize};
-use winit::{dpi::Size, platform::windows::IconExtWindows, window::{Fullscreen, Icon, WindowAttributes, WindowBuilder}};
+use winit::{dpi::Size, window::{Fullscreen, Icon, WindowAttributes, WindowBuilder}};
 #[cfg(target_os = "windows")]
 use {
-    winit::platform::windows::{WindowBuilderExtWindows},
+    winit::platform::windows::{IconExtWindows, WindowBuilderExtWindows},
 };
 
 use image::{self, DynamicImage};
