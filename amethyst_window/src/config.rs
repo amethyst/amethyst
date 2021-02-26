@@ -163,24 +163,26 @@ impl DisplayConfig {
             match self.icon {
                 Some(icon_path) => {
 
-                    let (icon_rgba, icon_width, icon_height) = {
-                        let image = image::open(icon_path).expect("Failed to open icon path");
-                        use image::{GenericImageView, Pixel};
-                        let (width, height) = image.dimensions();
-                        let mut rgba = Vec::with_capacity((width * height) as usize * 4);
-                        for (_, _, pixel) in image.pixels() {
-                            rgba.extend_from_slice(&pixel.to_rgba().channels());
-                        }
-                        (rgba, width, height)
-                    };
-                    match Icon::from_rgba(icon_rgba, icon_width, icon_height) {
-                        Ok(res) => { builder = builder.with_window_icon(Option::from( res )); }
-
-                        Err(e) => {
-                            // TODO: Fallback amethyst icon.
-                        }
-                    };
-                    ()
+                    let image = image::open(icon_path);
+                    if image.is_ok() {
+                        let img = image.unwrap();
+                        let (icon_rgba, icon_width, icon_height) = {
+                            use image::{GenericImageView, Pixel};
+                            let (width, height) = img.dimensions();
+                            let mut rgba = Vec::with_capacity((width * height) as usize * 4);
+                            for (_, _, pixel) in img.pixels() {
+                                rgba.extend_from_slice(&pixel.to_rgba().channels());
+                            }
+                            (rgba, width, height)
+                        };
+                        match Icon::from_rgba(icon_rgba, icon_width, icon_height) {
+                            Ok(res) => { builder = builder.with_window_icon(Option::from( res )); }
+                            
+                            Err(e) => {
+                                // TODO: Fallback amethyst icon.
+                            }
+                        };
+                    }
                 }
                 None => {
                     // TODO: Fallback amethyst icon.
