@@ -181,13 +181,13 @@ impl SimpleState for Example {
                 }
             }
         }
-        buffer.flush(data.world);
+        buffer.flush(data.world, data.resources);
 
         Trans::None
     }
 
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
-        let StateData { world, .. } = data;
+        let StateData { world, resources, .. } = data;
         let mut buffer = CommandBuffer::new(world);
 
         if let StateEvent::Window(event) = &event {
@@ -198,6 +198,7 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::Space, ElementState::Pressed)) => {
                     add_animation(
                         world,
+                        resources,
                         self.sphere.unwrap(),
                         self.current_animation,
                         self.rate,
@@ -209,6 +210,7 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::D, ElementState::Pressed)) => {
                     add_animation(
                         world,
+                        resources,
                         self.sphere.unwrap(),
                         AnimationId::Translate,
                         self.rate,
@@ -217,6 +219,7 @@ impl SimpleState for Example {
                     );
                     add_animation(
                         world,
+                        resources,
                         self.sphere.unwrap(),
                         AnimationId::Rotate,
                         self.rate,
@@ -225,6 +228,7 @@ impl SimpleState for Example {
                     );
                     add_animation(
                         world,
+                        resources,
                         self.sphere.unwrap(),
                         AnimationId::Scale,
                         self.rate,
@@ -301,7 +305,7 @@ impl SimpleState for Example {
                 _ => {}
             };
         }
-        buffer.flush(world);
+        buffer.flush(world, resources);
 
         Trans::None
     }
@@ -339,6 +343,7 @@ fn main() -> amethyst::Result<()> {
 
 fn add_animation(
     world: &mut World,
+    resources: &mut Resources,
     entity: Entity,
     id: AnimationId,
     rate: f32,
@@ -388,6 +393,6 @@ fn add_animation(
             }
         }
 
-        buffer.flush(world);
+        buffer.flush(world, resources);
     }
 }

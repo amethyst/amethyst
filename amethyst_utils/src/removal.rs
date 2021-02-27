@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// // Force the world to be up to date. This is normally called automatically at the end of the
 /// // frame by amethyst.
-/// buffer.flush(&mut world);
+/// buffer.flush(&mut world, &mut Resources);
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Removal<I>
