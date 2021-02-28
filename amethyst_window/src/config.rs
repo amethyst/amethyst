@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use log::info;
 use serde::{Deserialize, Serialize};
 use winit::{dpi::Size, window::{Fullscreen, Icon, WindowAttributes, WindowBuilder}};
 #[cfg(target_os = "windows")]
@@ -160,7 +159,6 @@ impl DisplayConfig {
         }else{
             let mut use_fallback = true;
             let mut img = DynamicImage::new_rgb8(1, 1);
-
             match self.icon {
                 Some(icon_path) => {
                     let image = image::open(icon_path);
@@ -174,7 +172,10 @@ impl DisplayConfig {
 
             if use_fallback {
                 let fallback_icon = include_bytes!("fallback.png");
-                img = image::load_from_memory_with_format(fallback_icon, image::ImageFormat::Png).expect("failed to load fallback icon");
+                let icon_img = image::load_from_memory_with_format(fallback_icon, image::ImageFormat::Png);
+                if icon_img.is_ok() {
+                    img = icon_img.unwrap();
+                }
             }
 
             
@@ -192,7 +193,7 @@ impl DisplayConfig {
                     builder = builder.with_window_icon(Option::from( res ));
                 }
                 
-                Err(e) => {}
+                Err(_e) => {}
             };
         }
 
