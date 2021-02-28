@@ -21,6 +21,7 @@ log = "0.4"
 serde = { version = "1", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
 winit = { version = "0.24", git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
+image = "0.23.13"
 
 [dev-dependencies]
 amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }

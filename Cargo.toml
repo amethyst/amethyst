@@ -77,7 +77,6 @@ exclude = [
     "amethyst_test",
     "examples/Cargo.toml",
     "examples/_unused_assets",
-    "examples/examples.sh",
     "examples/README.md",
     "examples/LICENSE_ASSETS.md",
     "examples/LICENSE_AUDIO.txt",
