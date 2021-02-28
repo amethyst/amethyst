@@ -15,7 +15,6 @@ use crate::{
     resources::{AnimationControlSet, AnimationSampling},
     Sampler,
 };
-use log::info;
 
 /// Get the animation set for an entity. If none exists, one will be added. If entity is invalid,
 /// (eg. removed before) None will be returned.

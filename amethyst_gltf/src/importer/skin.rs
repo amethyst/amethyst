@@ -5,16 +5,10 @@ use amethyst_core::{
     ecs::{Entity, World},
     math::{convert, Matrix4},
 };
-use amethyst_error::Error;
 use amethyst_rendy::skinning::JointTransforms;
 use gltf::buffer::Data;
 
 use crate::importer::SkinInfo;
-
-struct JointTransformInfos {
-    pub skin: Entity,
-    pub size: usize,
-}
 
 pub fn load_skin(
     skin: &gltf::Skin<'_>,
@@ -23,7 +17,7 @@ pub fn load_skin(
     skin_infos: &SkinInfo,
     node_map: &HashMap<usize, Entity>,
     world: &mut World,
-) -> Result<(), Error> {
+) {
     let joint_entities = skin
         .joints()
         .map(|j| {
@@ -95,6 +89,4 @@ pub fn load_skin(
         .entry(entity)
         .expect("This can't be reached because the entity comes from this world")
         .add_component(skin);
-
-    Ok(())
 }

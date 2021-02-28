@@ -1,32 +1,24 @@
 use amethyst::{
-    assets::{
-        prefab::Prefab, AssetHandle, DefaultLoader, Handle, Loader, LoaderBundle, ProcessingQueue,
+    animation::{
+        get_animation_set, AnimationBundle, AnimationCommand, AnimationHierarchy, AnimationSet,
+        EndControl,
     },
-    core::{logger::LevelFilter, math::Vector3, transform::TransformBundle, Transform},
+    assets::{prefab::Prefab, DefaultLoader, Handle, Loader, LoaderBundle, ProgressCounter},
+    core::{ecs::CommandBuffer, transform::TransformBundle, Transform},
     ecs::{DispatcherBuilder, Entity, IntoQuery},
     gltf::bundle::GltfBundle,
-    renderer::{
-        light::Light,
-        rendy::mesh::{MeshBuilder, Position},
-        types::{DefaultBackend, MeshData},
-        Camera, Material, Mesh, RenderFlat3D, RenderPbr3D, RenderSkybox, RenderToWindow,
-        RenderingBundle,
-    },
-    ui::UiTransform,
+    renderer::{types::DefaultBackend, RenderPbr3D, RenderSkybox, RenderToWindow, RenderingBundle},
     utils::application_root_dir,
     Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
 };
-use amethyst::animation::{AnimationBundle, AnimationHierarchy, AnimationSet, get_animation_set, EndControl, AnimationCommand, AnimationControlSet};
-use amethyst::core::ecs::CommandBuffer;
-use amethyst::assets::ProgressCounter;
 
-struct GltfExample{
+struct GltfExample {
     pub progress_counter: Option<ProgressCounter>,
 }
 
-impl Default for GltfExample{
+impl Default for GltfExample {
     fn default() -> Self {
-        GltfExample{
+        GltfExample {
             progress_counter: Some(ProgressCounter::default()),
         }
     }
@@ -43,11 +35,13 @@ impl SimpleState for GltfExample {
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let StateData {
-            world, ..
-        } = data;
+        let StateData { world, .. } = data;
 
-        let mut query = <(Entity, &AnimationSet<usize, Transform>, &AnimationHierarchy<Transform>)>::query();
+        let mut query = <(
+            Entity,
+            &AnimationSet<usize, Transform>,
+            &AnimationHierarchy<Transform>,
+        )>::query();
         let mut buffer = CommandBuffer::new(world);
 
         if let Some(ref progress_counter) = self.progress_counter {
@@ -57,7 +51,7 @@ impl SimpleState for GltfExample {
                 for (entity, animation_set, _t) in query.iter(&query_world) {
                     // Creates a new AnimationControlSet for the entity
                     if let Some(control_set) =
-                    get_animation_set(&mut subworld, &mut buffer, *entity)
+                        get_animation_set(&mut subworld, &mut buffer, *entity)
                     {
                         if control_set.is_empty() {
                             control_set.add_animation(
@@ -76,7 +70,6 @@ impl SimpleState for GltfExample {
         buffer.flush(world);
 
         Trans::None
-
     }
 }
 

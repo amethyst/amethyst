@@ -20,7 +20,7 @@ impl ImageFormat {
     }
 }
 
-pub fn load_image(
+pub fn _load_image(
     _image: &gltf::Image<'_>,
     _state: &mut GltfImporterState,
     _buffers: &Vec<Data>,

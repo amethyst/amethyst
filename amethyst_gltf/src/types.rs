@@ -106,8 +106,8 @@ impl SerdeDiff for GltfNodeExtent {
         _seq: &mut A,
         _ctx: &mut ApplyContext,
     ) -> Result<bool, <A as SeqAccess<'de>>::Error>
-        where
-            A: de::SeqAccess<'de>,
+    where
+        A: de::SeqAccess<'de>,
     {
         unimplemented!()
     }

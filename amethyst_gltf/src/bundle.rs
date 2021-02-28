@@ -4,7 +4,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 
-use crate::system::{material_handle_loading, mesh_handle_loading, animation_hierarchy_loading};
+use crate::system::{animation_hierarchy_loading, material_handle_loading, mesh_handle_loading};
 
 /// Bundle that initializes needed resources to use GLTF
 #[derive(Debug)]

@@ -4,7 +4,6 @@ use std::{
     io::Read,
 };
 
-use amethyst_animation::AnimationHierarchy;
 use amethyst_assets::{
     distill_importer,
     distill_importer::{Error, ImportOp, ImportedAsset, Importer, ImporterValue},
@@ -156,21 +155,13 @@ impl Importer for GltfImporter {
 
         // load animations, if applicable
         if options.load_animations {
-            let animations_assets = load_animations(
-                doc.animations(),
-                &buffers,
-                &node_map,
-                op,
-                state,
-                &mut world
-            );
+            let animations_assets =
+                load_animations(doc.animations(), &buffers, &node_map, op, state, &mut world);
             asset_accumulator.extend(animations_assets);
         }
 
         let legion_prefab = legion_prefab::Prefab::new(world);
         let scene_prefab = Prefab::new(legion_prefab);
-
-
 
         asset_accumulator.push(ImportedAsset {
             id: state

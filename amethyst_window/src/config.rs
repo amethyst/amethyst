@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
-use serde::{Deserialize, Serialize};
-use winit::{dpi::Size, window::{Fullscreen, Icon, WindowAttributes, WindowBuilder}};
-#[cfg(target_os = "windows")]
-use {
-    winit::platform::windows::{IconExtWindows, WindowBuilderExtWindows},
-};
-
 use image::{self, DynamicImage};
+use serde::{Deserialize, Serialize};
+#[cfg(target_os = "windows")]
+use winit::platform::windows::{IconExtWindows, WindowBuilderExtWindows};
+use winit::{
+    dpi::Size,
+    window::{Fullscreen, Icon, WindowAttributes, WindowBuilder},
+};
 
 use crate::monitor::{MonitorIdent, MonitorsAccess};
 
@@ -156,7 +156,7 @@ impl DisplayConfig {
 
         if self.loaded_icon.is_some() {
             builder = builder.with_window_icon(self.loaded_icon);
-        }else{
+        } else {
             let mut use_fallback = true;
             let mut img = DynamicImage::new_rgb8(1, 1);
             match self.icon {
@@ -172,13 +172,13 @@ impl DisplayConfig {
 
             if use_fallback {
                 let fallback_icon = include_bytes!("fallback.png");
-                let icon_img = image::load_from_memory_with_format(fallback_icon, image::ImageFormat::Png);
+                let icon_img =
+                    image::load_from_memory_with_format(fallback_icon, image::ImageFormat::Png);
                 if icon_img.is_ok() {
                     img = icon_img.unwrap();
                 }
             }
 
-            
             let (icon_rgba, icon_width, icon_height) = {
                 use image::{GenericImageView, Pixel};
                 let (width, height) = img.dimensions();
@@ -189,14 +189,13 @@ impl DisplayConfig {
                 (rgba, width, height)
             };
             match Icon::from_rgba(icon_rgba, icon_width, icon_height) {
-                Ok(res) => { 
-                    builder = builder.with_window_icon(Option::from( res ));
+                Ok(res) => {
+                    builder = builder.with_window_icon(Option::from(res));
                 }
-                
+
                 Err(_e) => {}
             };
         }
-
 
         builder
     }

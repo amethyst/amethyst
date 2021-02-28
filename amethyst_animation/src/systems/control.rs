@@ -1,4 +1,4 @@
-use std::{hash::Hash, marker::PhantomData, time::Duration};
+use std::{collections::HashMap, hash::Hash, marker::PhantomData, time::Duration};
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{ecs::*, timing::secs_to_duration};
@@ -14,7 +14,6 @@ use crate::resources::{
     AnimationSampling, ControlState, DeferStartRelation, RestState, Sampler, SamplerControl,
     SamplerControlSet, StepDirection,
 };
-use std::collections::HashMap;
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
@@ -39,9 +38,9 @@ pub(crate) struct AnimationControlSystem<
 }
 
 impl<I, T> System for AnimationControlSystem<I, T>
-    where
-        I: std::fmt::Debug + PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
-        T: AnimationSampling + Clone + std::fmt::Debug,
+where
+    I: std::fmt::Debug + PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
+    T: AnimationSampling + Clone + std::fmt::Debug,
 {
     fn build(mut self) -> Box<dyn ParallelRunnable> {
         self.next_id = 1;
@@ -216,8 +215,8 @@ impl<I, T> System for AnimationControlSystem<I, T>
 }
 
 fn find_max_duration<T>(control_id: u64, samplers: Option<&SamplerControlSet<T>>) -> f32
-    where
-        T: AnimationSampling,
+where
+    T: AnimationSampling,
 {
     samplers
         .and_then(|set| set.get_running_duration(control_id))
@@ -227,8 +226,8 @@ fn find_max_duration<T>(control_id: u64, samplers: Option<&SamplerControlSet<T>>
 /// Check if the given animation list is for a single node. If so, we don't need an
 /// `AnimationHierarchy`.
 fn only_one_index<C, P>(nodes: &[(usize, C, Handle<Sampler<P>>)]) -> bool
-    where
-        P: InterpolationPrimitive,
+where
+    P: InterpolationPrimitive,
 {
     if nodes.is_empty() {
         true
@@ -270,8 +269,8 @@ fn process_animation_control<T>(
     remove: &mut bool,
     next_id: &mut u64,
 ) -> Option<ControlState>
-    where
-        T: AnimationSampling + Clone,
+where
+    T: AnimationSampling + Clone,
 {
     // Checking hierarchy
     let h_fallback = AnimationHierarchy::new_single(animation.nodes[0].0, entity);
@@ -408,8 +407,8 @@ fn start_animation<T>(
     buffer: &mut CommandBuffer,
     hierarchy: &AnimationHierarchy<T>,
 ) -> bool
-    where
-        T: AnimationSampling + Clone,
+where
+    T: AnimationSampling + Clone,
 {
     // check that hierarchy is valid, and all samplers exist
     let valid = animation
@@ -467,8 +466,10 @@ fn start_animation<T>(
                 } else {
                     let mut set = SamplerControlSet::default();
                     // try to retrieve the component from the dirty cache
-                    if dirty_sampler_control_set_cache.contains_key(node_entity){
-                        set = dirty_sampler_control_set_cache.remove(node_entity).expect("Unreachable, we just checked");
+                    if dirty_sampler_control_set_cache.contains_key(node_entity) {
+                        set = dirty_sampler_control_set_cache
+                            .remove(node_entity)
+                            .expect("Unreachable, we just checked");
                     }
 
                     debug!("Adding SamplerControl to new SamplerControlSet");
@@ -490,8 +491,8 @@ fn start_animation<T>(
 }
 
 fn pause_animation<T>(control_id: u64, hierarchy: &AnimationHierarchy<T>, world: &mut SubWorld<'_>)
-    where
-        T: AnimationSampling,
+where
+    T: AnimationSampling,
 {
     for node_entity in hierarchy.nodes.values() {
         if let Ok(mut entry) = world.entry_mut(*node_entity) {
@@ -597,8 +598,8 @@ fn check_and_terminate_animation<T>(
     world: &mut SubWorld<'_>,
     buffer: &mut CommandBuffer,
 ) -> bool
-    where
-        T: AnimationSampling,
+where
+    T: AnimationSampling,
 {
     // Check for termination
     if check_termination(control_id, hierarchy, world) {
@@ -637,8 +638,8 @@ fn check_termination<T>(
     hierarchy: &AnimationHierarchy<T>,
     world: &mut SubWorld<'_>,
 ) -> bool
-    where
-        T: AnimationSampling,
+where
+    T: AnimationSampling,
 {
     hierarchy.nodes.iter().all(|(_, node_entity)| {
         world

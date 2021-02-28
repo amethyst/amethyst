@@ -13,9 +13,11 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
-use amethyst_core::{Transform};
-use amethyst_animation::{AnimationHierarchy, AnimationSet, Joint, Skin, Animation};
-use amethyst_assets::{inventory, prefab::register_component_type, register_asset_type, AssetProcessorSystem};
+use amethyst_animation::{Animation, Joint};
+use amethyst_assets::{
+    inventory, prefab::register_component_type, register_asset_type, AssetProcessorSystem,
+};
+use amethyst_core::Transform;
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
