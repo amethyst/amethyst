@@ -1,15 +1,13 @@
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
-use winit::{
-    dpi::Size,
-    window::{Fullscreen, Icon, WindowAttributes, WindowBuilder},
-};
+use winit::{dpi::Size, window::{Fullscreen, Icon, WindowAttributes, WindowBuilder}};
 #[cfg(target_os = "windows")]
 use {
-    log::error,
     winit::platform::windows::{IconExtWindows, WindowBuilderExtWindows},
 };
+
+use image::{self, DynamicImage};
 
 use crate::monitor::{MonitorIdent, MonitorsAccess};
 
@@ -153,26 +151,52 @@ impl DisplayConfig {
         {
             builder = builder.with_drag_and_drop(false);
         }
+
         builder.window = attrs;
-        builder = builder.with_window_icon(self.loaded_icon);
 
-        #[cfg(target_os = "windows")]
-        if let Some(icon) = self.icon {
-            let icon = match Icon::from_path(&icon, None) {
-                Ok(x) => Some(x),
-                Err(e) => {
-                    error!(
-                        "Failed to load window icon from `{}`: {}",
-                        icon.display(),
-                        e
-                    );
-
-                    None
+        if self.loaded_icon.is_some() {
+            builder = builder.with_window_icon(self.loaded_icon);
+        }else{
+            let mut use_fallback = true;
+            let mut img = DynamicImage::new_rgb8(1, 1);
+            match self.icon {
+                Some(icon_path) => {
+                    let image = image::open(icon_path);
+                    if image.is_ok() {
+                        img = image.unwrap();
+                        use_fallback = false;
+                    }
                 }
-            };
+                None => {}
+            }
 
-            builder = builder.with_window_icon(icon);
+            if use_fallback {
+                let fallback_icon = include_bytes!("fallback.png");
+                let icon_img = image::load_from_memory_with_format(fallback_icon, image::ImageFormat::Png);
+                if icon_img.is_ok() {
+                    img = icon_img.unwrap();
+                }
+            }
+
+            
+            let (icon_rgba, icon_width, icon_height) = {
+                use image::{GenericImageView, Pixel};
+                let (width, height) = img.dimensions();
+                let mut rgba = Vec::with_capacity((width * height) as usize * 4);
+                for (_, _, pixel) in img.pixels() {
+                    rgba.extend_from_slice(&pixel.to_rgba().channels());
+                }
+                (rgba, width, height)
+            };
+            match Icon::from_rgba(icon_rgba, icon_width, icon_height) {
+                Ok(res) => { 
+                    builder = builder.with_window_icon(Option::from( res ));
+                }
+                
+                Err(_e) => {}
+            };
         }
+
 
         builder
     }
