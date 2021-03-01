@@ -55,9 +55,11 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 `GameData` structure.
 
 ```rust
-# use amethyst::core::SystemBundle;
-# use amethyst::ecs::{Dispatcher, DispatcherBuilder, System, World};
-# use amethyst::{DataDispose, DataInit, Error};
+# use amethyst::{
+#   core::SystemBundle,
+#   ecs::{Dispatcher, DispatcherBuilder, System, World},
+#   DataDispose, DataInit, Error,
+# };
 # 
 # pub struct CustomGameData<'a, 'b> {
 #   core_dispatcher: Option<Dispatcher>,
@@ -139,9 +141,11 @@ We can now use `CustomGameData` in place of the provided `GameData` when buildin
 our `Application`, but first we should create some `State`s.
 
 ```rust
-# use amethyst::ecs::{Dispatcher, World};
-# use amethyst::input::{is_close_requested, is_key_down, VirtualKeyCode};
-# use amethyst::prelude::*;
+# use amethyst::{
+#   ecs::{Dispatcher, World},
+#   input::{is_close_requested, is_key_down, VirtualKeyCode},
+#   prelude::*,
+# };
 # 
 # pub struct CustomGameData<'a, 'b> {
 #   core_dispatcher: Option<Dispatcher>,
@@ -317,7 +321,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderUi::default()),
         )?
-        .with_base_bundle(&mut app_builder.world, TransformBundle::new())?
+        .with_base_bundle(&mut app_builder.world, TransformBundle)?
         .with_base_bundle(&mut app_builder.world, UiBundle::new())?
         .with_base_bundle(
             &mut app_builder.world,

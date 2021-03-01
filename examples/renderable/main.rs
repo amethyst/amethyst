@@ -195,7 +195,7 @@ fn main() -> Result<(), Error> {
             "example_system",
             &["input_system"],
         )
-        .add_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .add_bundle(TransformBundle.with_dep(&["example_system"]))?
         .add_bundle(UiBundle::new())?
         .add_bundle(FpsCounterBundle::default())?
         .add_bundle(

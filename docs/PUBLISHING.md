@@ -7,7 +7,7 @@ dev-dependencies when publishing.
 Steps:
 
 - Create a new branch / pull request
-  - Bump all the versions of all the crates to the new version, push, make sure CI passes.  All crates use the same version as the root amethyst crate for sanity's sake.†
+  - Bump all the versions of all the crates to the new version, push, make sure CI passes.  All crates use the same version as the root Amethyst crate for sanity's sake.†
   - For non-trivial releases: bump dependencies, push, fix things until CI passes.\*
   - Review all the PRs since the last release and update the changelog.
     - On the [pull request page], use search filters like: `is:pr is:merged base:master merged:>=YYYY-MM-DD`

@@ -108,8 +108,7 @@ the `ArenaConfig`.
 In `pong.rs`, underneath our loading of the `ArenaConfig`, add the following lines
 
 ```rust
-# use amethyst::core::math::Vector2;
-# use amethyst::ecs::Resources;
+# use amethyst::{core::math::Vector2, ecs::Resources};
 # use serde::{Deserialize, Serialize};
 # 
 # #[derive(Debug, Deserialize, Serialize)]

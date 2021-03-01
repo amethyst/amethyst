@@ -127,7 +127,7 @@
       )?;
   ```
 
-- Render passes can be integrated into amethyst by using the newly introduced `RenderPlugin` trait, for example:
+- Render passes can be integrated into Amethyst by using the newly introduced `RenderPlugin` trait, for example:
 
   ```rust ,ignore
   pub struct RenderCustom {

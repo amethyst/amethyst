@@ -15,6 +15,6 @@ pub use serde_diff::{self, SerdeDiff};
 mod processor;
 
 // register core components
-register_component_type!(amethyst_core::transform::Transform);
+register_component_type!(amethyst_core::Transform);
 register_component_type!(amethyst_core::transform::TransformValues);
 register_component_type!(Parent);

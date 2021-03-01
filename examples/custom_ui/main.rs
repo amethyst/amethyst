@@ -100,7 +100,7 @@ fn main() -> amethyst::Result<()> {
 
     let mut game_data = DispatcherBuilder::default()
         .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
-        .add_bundle(TransformBundle::new())?
+        .add_bundle(TransformBundle)?
         .add_bundle(InputBundle::new())?
         .add_bundle(UiBundle::<StringBindings, CustomUi>::new())?
         .add_bundle(

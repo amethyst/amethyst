@@ -35,7 +35,7 @@ A minimalistic game data would now look like this:
 # 
 # pub fn main() -> Result<()> {
     let game_data = DispatcherBuilder::default()
-        .add_bundle(TransformBundle::new())?
+        .add_bundle(TransformBundle)?
         .add_bundle(InputBundle::new())?
         .add_bundle(UiBundle::new())?
         .add_bundle(

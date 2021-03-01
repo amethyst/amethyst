@@ -42,7 +42,7 @@ pub fn main() -> amethyst::Result<()> {
     let mut game_data = DispatcherBuilder::default()
         // a lot of other bundles/systems depend on this (without it being explicitly clear), so it
         // makes sense to add it early on
-        .add_bundle(TransformBundle::new())?
+        .add_bundle(TransformBundle)?
         // This system is in 'events.rs'. Basically, it registers UI events that
         // happen. Without it, the buttons will not react.
         .add_bundle(InputBundle::new())?

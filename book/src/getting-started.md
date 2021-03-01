@@ -54,7 +54,7 @@ Amethyst is divided into two major versions:
 > in your browser. The book/documentation for `master` contains "master" in the address,
 > the crates.io version is called "stable".
 
-Depending on the book version that you choose to read, make sure that the amethyst version in your Cargo.toml matches that.
+Depending on the book version that you choose to read, make sure that the Amethyst version in your Cargo.toml matches that.
 
 For the released crates.io version, you should have something like this:
 

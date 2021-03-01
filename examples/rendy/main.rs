@@ -590,7 +590,7 @@ fn main() -> amethyst::Result<()> {
     )?;
 
     let mut game_data = DispatcherBuilder::default()
-        .with(OrbitSystem, "orbit", &[])
+        .add_system(OrbitSystem)
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .add_bundle(FpsCounterBundle::default())?
         .with_system_desc(
@@ -624,7 +624,7 @@ fn main() -> amethyst::Result<()> {
             .with_sensitivity(0.1, 0.1)
             .with_speed(5.),
         )?
-        .add_bundle(TransformBundle::new().with_dep(&[
+        .add_bundle(TransformBundle.with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "sprite_animation_control",

@@ -25,7 +25,7 @@ serde = { version = "1", features = ["derive"] }
 approx = "0.4"
 derive-new = "0.5"
 getset = "0.1.1"
-legion = { version = "0.3.1", default-features = false, features = [
+legion = { version = "0.3", default-features = false, features = [
     "serialize",
     "crossbeam-events",
     "codegen",

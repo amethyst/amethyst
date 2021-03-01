@@ -3,14 +3,16 @@
 With the `tiles` feature installed and our `RenderTiles2D` render pass setup, we can create a `TileMap` component and add it an entity. We need to have a sprite sheet loaded before the creation so this example assume a handle to a sprite sheet exists.
 
 ```rust
-use amethyst::{
-    core::{
-        math::{Point3, Vector3},
-        transform::Transform,
-    },
-    tiles::{Tile, TileMap},
-};
-# use amethyst::{assets::Handle, prelude::*, renderer::SpriteSheet};
+# use amethyst::{
+#   assets::Handle,
+#   core::{
+#       math::{Point3, Vector3},
+#       transform::Transform,
+#   },
+#   prelude::*,
+#   renderer::SpriteSheet,
+#   tiles::{Tile, TileMap},
+# };
 # 
 # #[derive(Clone, Default)]
 # struct SimpleTile;

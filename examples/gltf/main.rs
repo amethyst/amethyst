@@ -178,7 +178,7 @@ fn main() -> Result<(), amethyst::Error> {
     let assets_dir = app_root.join("assets/");
 
     let mut game_data = DispatcherBuilder::default()
-        .with(AutoFovSystem::default(), "auto_fov", &[])
+        .add_system(AutoFovSystem::default())
         .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
             "scene_loader",
@@ -198,7 +198,7 @@ fn main() -> Result<(), amethyst::Error> {
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
         )?
-        .add_bundle(TransformBundle::new().with_dep(&[
+        .add_bundle(TransformBundle.with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "fly_movement",

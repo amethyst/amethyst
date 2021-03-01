@@ -1,4 +1,4 @@
-use amethyst::{core::transform::Transform, ecs::SystemBuilder, prelude::*};
+use amethyst::{core::Transform, ecs::SystemBuilder, prelude::*};
 
 use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 

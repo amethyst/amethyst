@@ -73,17 +73,21 @@ If you are defining a new format that may be useful to others, [please send us a
    #       _handle: &LoadHandle,
    #   ) -> amethyst::Result<ProcessingState<Self::Data, Self>> {
    #       match energy_blast_data {
-   #           EnergyBlastData::Version1 { hp_damage } => Ok(ProcessingState::Loaded(Self {
-   #               hp_damage,
-   #               ..Default::default()
-   #           })),
+   #           EnergyBlastData::Version1 { hp_damage } => {
+   #               Ok(ProcessingState::Loaded(Self {
+   #                   hp_damage,
+   #                   ..Default::default()
+   #               }))
+   #           }
    #           EnergyBlastData::Version2 {
    #               hp_damage,
    #               mp_damage,
-   #           } => Ok(ProcessingState::Loaded(Self {
-   #               hp_damage,
-   #               mp_damage,
-   #           })),
+   #           } => {
+   #               Ok(ProcessingState::Loaded(Self {
+   #                   hp_damage,
+   #                   mp_damage,
+   #               }))
+   #           }
    #       }
    #   }
    # }
@@ -165,10 +169,11 @@ If you are defining a new format that may be useful to others, [please send us a
    # }
    # 
 
-   use amethyst::assets::{DefaultLoader, Loader, LoaderBundle};
    use amethyst::{
-       ecs::DispatcherBuilder, utils::application_root_dir, Application, GameData, SimpleState,
-       SimpleTrans, StateData, Trans,
+       assets::{DefaultLoader, Loader, LoaderBundle},
+       ecs::DispatcherBuilder,
+       utils::application_root_dir,
+       Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
    };
 
    impl SimpleState for LoadingState {

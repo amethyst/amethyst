@@ -8,7 +8,7 @@ If you are a practical person and want to quickly get into the code, you can ski
 section of the book, which is focused on practice.
 That said, reading this section is suggested, as it can be hard to understand the examples without knowing the theory presented here.
 
-If you don't understand how something works in amethyst, knowing the concepts presented here will help you understand how some implementations are made.
+If you don't understand how something works in Amethyst, knowing the concepts presented here will help you understand how some implementations are made.
 
 ## Chapters
 
