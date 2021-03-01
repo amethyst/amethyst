@@ -28,7 +28,7 @@ ______________________________________________________________________
    1. [Asset Loading](asset_loading)
    1. [Material](material)
    1. [Animation](animation)
-   1. [GLTF](gltf)
+   1. [GLTF](gltf_scene)
    1. Prefabs
       1. [Prefab Adapter](prefab_adapter)
       1. [Prefab Basic](prefab_basic)
@@ -36,6 +36,7 @@ ______________________________________________________________________
       1. [Prefab Custom](prefab_custom)
 1. UI
    1. [UI](ui)
+   1. [UI from code](ui_from_code)
    1. [Custom UI](custom_ui)
    1. [States Example](states_ui)
 1. Debugging
