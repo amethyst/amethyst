@@ -1,11 +1,20 @@
 //! Camera type with support for perspective and orthographic projections.
 
+use amethyst_assets::{
+    prefab::{
+        register_component_type,
+        serde_diff::{ApplyContext, DiffContext},
+        SerdeDiff,
+    },
+    Asset,
+};
 use amethyst_core::{
     ecs::*,
     geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
     transform::Transform,
 };
+use serde::{de, de::SeqAccess, ser::SerializeSeq};
 use type_uuid::TypeUuid;
 
 /// Camera struct.
@@ -31,13 +40,43 @@ use type_uuid::TypeUuid;
 ///
 /// If you change `matrix` you must also change `inverse` so that they stay in sync.
 /// You should probably use from_matrix instead.
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, TypeUuid)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize, TypeUuid, Default)]
 #[uuid = "56946ce2-356e-4038-82ad-e55a69ddfde9"]
 pub struct Camera {
     /// The projection matrix
     pub matrix: Matrix4<f32>,
     /// Its inverse
     pub inverse: Matrix4<f32>,
+}
+
+impl SerdeDiff for Camera {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        ctx: &mut DiffContext<'a, S>,
+        other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
+        unimplemented!()
+    }
+
+    fn apply<'de, A>(
+        &mut self,
+        seq: &mut A,
+        ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        unimplemented!()
+    }
+}
+
+register_component_type!(Camera);
+
+impl Asset for Camera {
+    fn name() -> &'static str {
+        "rendy::Camera"
+    }
+    type Data = Self;
 }
 
 impl Camera {

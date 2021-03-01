@@ -33,10 +33,12 @@ mod storage;
 
 pub use distill::{
     importer as distill_importer,
+    importer::Error,
     loader::{
         handle::{AssetHandle, GenericHandle, Handle, WeakHandle},
         storage::LoadHandle,
     },
+    make_handle,
 };
 pub use type_uuid::TypeUuid;
 // used in macros. Private API otherwise.

@@ -2,7 +2,14 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
+use amethyst_assets::prefab::{
+    register_component_type,
+    serde_diff::{ApplyContext, DiffContext},
+    SerdeDiff,
+};
 use amethyst_core::math::Vector3;
+use gltf::{khr_lights_punctual, khr_lights_punctual::Kind};
+use serde::{de, de::SeqAccess, ser::SerializeSeq};
 use type_uuid::TypeUuid;
 
 /// A light source.
@@ -21,6 +28,35 @@ pub enum Light {
     /// A sun light.
     Sun(SunLight),
 }
+
+impl Default for Light {
+    fn default() -> Self {
+        Light::Area
+    }
+}
+
+impl SerdeDiff for Light {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        ctx: &mut DiffContext<'a, S>,
+        other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
+        unimplemented!()
+    }
+
+    fn apply<'de, A>(
+        &mut self,
+        seq: &mut A,
+        ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        unimplemented!()
+    }
+}
+
+register_component_type!(Light);
 
 /// A directional light source.
 #[repr(C)]
@@ -175,5 +211,44 @@ impl Default for SunLight {
 impl From<SunLight> for Light {
     fn from(sun: SunLight) -> Self {
         Light::Sun(sun)
+    }
+}
+
+/// Import a gltf light into a Light
+impl From<khr_lights_punctual::Light<'_>> for Light {
+    fn from(light: khr_lights_punctual::Light<'_>) -> Self {
+        let color = {
+            let parts = light.color();
+            palette::Srgb::new(parts[0], parts[1], parts[2])
+        };
+        let intensity = light.intensity();
+        let range = light.range();
+        match light.kind() {
+            Kind::Directional => {
+                let mut directional = DirectionalLight::default();
+                directional.color = color;
+                directional.intensity = intensity;
+                Light::Directional(directional)
+            }
+            Kind::Point => {
+                let mut point = PointLight::default();
+                point.color = color;
+                point.intensity = intensity;
+                if let Some(r) = range {
+                    point.radius = r;
+                }
+                Light::Point(point)
+            }
+            Kind::Spot {
+                inner_cone_angle,
+                outer_cone_angle,
+            } => {
+                let mut spot = SpotLight::default();
+                spot.angle = outer_cone_angle;
+                spot.color = color;
+                spot.intensity = intensity;
+                Light::Spot(spot)
+            }
+        }
     }
 }

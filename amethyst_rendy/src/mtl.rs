@@ -1,6 +1,14 @@
 //! Physically-based material.
 
-use amethyst_assets::{Asset, Handle};
+use amethyst_assets::{
+    erased_serde::private::serde::{de, de::SeqAccess, ser::SerializeSeq},
+    prefab::{
+        register_component_type,
+        serde_diff::{ApplyContext, DiffContext},
+        SerdeDiff,
+    },
+    Asset, Handle,
+};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
@@ -52,6 +60,35 @@ impl Asset for Material {
     }
     type Data = Self;
 }
+
+impl Default for Material {
+    fn default() -> Self {
+        unimplemented!()
+    }
+}
+
+impl SerdeDiff for Material {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        ctx: &mut DiffContext<'a, S>,
+        other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
+        unimplemented!()
+    }
+
+    fn apply<'de, A>(
+        &mut self,
+        seq: &mut A,
+        ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        unimplemented!()
+    }
+}
+
+register_component_type!(Material);
 
 // impl From<Material> for Material {
 //     fn from(material: Material) -> Self {

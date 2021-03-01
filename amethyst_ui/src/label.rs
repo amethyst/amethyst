@@ -258,7 +258,6 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
         // the following 4 lines won't be usefull anymore.
         text_entry.add_component(Transform::default());
 
-
         (id, widget)
     }
 }

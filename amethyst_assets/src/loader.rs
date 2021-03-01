@@ -3,6 +3,7 @@ use std::{
     collections::HashMap,
     error::Error,
     ops::{Deref, DerefMut},
+    path::PathBuf,
     sync::Arc,
 };
 
@@ -11,14 +12,16 @@ use amethyst_core::{
     ecs::{DispatcherBuilder, Resources},
 };
 use amethyst_error::Error as AmethystError;
-use distill::loader as distill_loader;
+use distill::{
+    importer::AssetMetadata, loader as distill_loader, loader::storage::IndirectionResolver,
+};
 pub(crate) use distill_loader::LoadHandle;
 use distill_loader::{
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
     storage::{
-        AssetLoadOp, AtomicHandleAllocator, DefaultIndirectionResolver, HandleAllocator,
-        IndirectIdentifier, IndirectionTable, LoaderInfoProvider,
+        AssetLoadOp, AtomicHandleAllocator, HandleAllocator, IndirectIdentifier, IndirectionTable,
+        LoaderInfoProvider,
     },
     AssetTypeId, Loader as DistillLoader, RpcIO,
 };
@@ -182,7 +185,10 @@ impl Loader for DefaultLoader {
         Handle::new(
             self.ref_sender.clone(),
             self.loader
-                .add_ref_indirect(IndirectIdentifier::Path(path.to_string())),
+                .add_ref_indirect(IndirectIdentifier::PathWithType(
+                    path.to_string(),
+                    AssetTypeId(A::UUID),
+                )),
         )
     }
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {
@@ -228,7 +234,9 @@ impl Loader for DefaultLoader {
             match self.ref_receiver.try_recv() {
                 Err(TryRecvError::Empty) => break,
                 Err(TryRecvError::Disconnected) => panic!("RefOp receiver disconnected"),
-                Ok(RefOp::Decrease(handle)) => self.loader.remove_ref(handle),
+                Ok(RefOp::Decrease(handle)) => {
+                    self.loader.remove_ref(handle);
+                }
                 Ok(RefOp::Increase(handle)) => {
                     self.loader
                         .get_load_info(handle)
@@ -240,7 +248,32 @@ impl Loader for DefaultLoader {
             }
         }
         let storages = WorldStorages::new(resources, &self.storage_map, &self.ref_sender);
-        self.loader.process(&storages, &DefaultIndirectionResolver)
+        self.loader.process(&storages, &AssetIndirectionResolver)
+    }
+}
+
+pub struct AssetIndirectionResolver;
+impl IndirectionResolver for AssetIndirectionResolver {
+    fn resolve(
+        &self,
+        id: &IndirectIdentifier,
+        candidates: Vec<(PathBuf, Vec<AssetMetadata>)>,
+    ) -> Option<AssetUuid> {
+        let id_type = id.type_id();
+        let candidates_len = candidates.len();
+        for candidate in candidates {
+            for asset in candidate.1 {
+                if let Some(artifact) = asset.artifact {
+                    if id_type.is_none()
+                        || candidates_len == 1
+                        || *id_type.unwrap() == artifact.type_id
+                    {
+                        return Some(asset.id);
+                    }
+                }
+            }
+        }
+        None
     }
 }
 

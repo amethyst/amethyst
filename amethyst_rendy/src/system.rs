@@ -160,7 +160,6 @@ impl<B: Backend> System for MeshProcessorSystem<B> {
                           _| {
                         #[cfg(feature = "profiler")]
                         profile_scope!("mesh_processor");
-
                         processing_queue.process(mesh_storage, |b, _, _| {
                             log::trace!("Processing Mesh: {:?}", b);
 

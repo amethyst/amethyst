@@ -1,5 +1,6 @@
 //! Local transform component.
 use getset::*;
+use legion_prefab::register_component_type;
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use simba::scalar::SubsetOf;
@@ -591,6 +592,8 @@ impl Default for Transform {
         }
     }
 }
+
+register_component_type!(Transform);
 
 /// Creates a Transform using the `Vector3` as the translation vector.
 ///

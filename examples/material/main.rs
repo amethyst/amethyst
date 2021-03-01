@@ -22,7 +22,7 @@ use amethyst::{
     },
     utils::application_root_dir,
     window::ScreenDimensions,
-    Application, GameData, SimpleState, StateData,
+    Application, GameData, SimpleState, SimpleTrans, StateData, Trans,
 };
 
 struct Example;
