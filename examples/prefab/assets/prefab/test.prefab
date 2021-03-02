@@ -31,5 +31,21 @@ Prefab(
                  ),
              ]
         )),
+        Entity((
+             // Entity AssetUuid
+             id: "62b3dbd1-56a8-469e-a262-41a66321da8c",
+             // Component data and types
+             components: [
+                 (
+                     // Component AssetTypeId
+                     type: "046b3348-424f-4db2-8888-f01206aa1dad",
+                     data: (
+                         shape: Cube,
+                         format: VecPosNormTangTex,
+                         scale: Some((1.,1.,1.))
+                     ),
+                 ),
+             ]
+        )),
     ]
 )

@@ -66,6 +66,7 @@ pub mod light;
 pub mod mtl;
 pub mod pipeline;
 pub mod plugins;
+pub mod prefab;
 pub mod resources;
 pub mod serde_shim;
 pub mod shape;
