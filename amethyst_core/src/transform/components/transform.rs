@@ -638,6 +638,17 @@ pub struct TransformValues {
     scale: [f32; 3],
 }
 
+impl TransformValues {
+    /// Initialize a new TransformValues object that can later be use to generate a `Transform`
+    pub fn new(translation: [f32; 3], rotation: [f32; 4], scale: [f32; 3]) -> Self {
+        Self {
+            translation,
+            rotation,
+            scale,
+        }
+    }
+}
+
 impl Default for TransformValues {
     /// The default transform does nothing when used to transform an entity.
     fn default() -> Self {

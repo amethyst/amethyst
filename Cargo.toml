@@ -77,7 +77,6 @@ exclude = [
     "examples/LICENSE_ASSETS.md",
     "examples/LICENSE_AUDIO.txt",
     "examples/LICENSE_TEXTURES.txt",
-    "examples/spotlights",
     "examples/renderable",
     "examples/renderable_custom",
     "examples/rendy",
