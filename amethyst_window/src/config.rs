@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use image::{self, DynamicImage};
 use serde::{Deserialize, Serialize};
 #[cfg(target_os = "windows")]
-use winit::platform::windows::{IconExtWindows, WindowBuilderExtWindows};
+use winit::platform::windows::WindowBuilderExtWindows;
 use winit::{
     dpi::Size,
     window::{Fullscreen, Icon, WindowAttributes, WindowBuilder},
