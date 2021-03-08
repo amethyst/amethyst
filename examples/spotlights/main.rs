@@ -85,6 +85,7 @@ mod example_utils {
             Camera, Material, MaterialDefaults, Mesh, Texture,
         },
     };
+    use amethyst::core::num::FloatConst;
 
     pub fn build_mesh_from_shape(world: &mut World, resources: &mut Resources) {
         let loader = resources.get::<DefaultLoader>().unwrap();
@@ -195,7 +196,7 @@ mod example_utils {
 
         world.push((
             camera_transform,
-            Camera::perspective(1.3, 1.0471975512, 0.1),
+            Camera::perspective(1.3, f32::FRAC_PI_3(), 0.1),
         ));
     }
 }
