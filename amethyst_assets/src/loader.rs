@@ -261,10 +261,11 @@ impl IndirectionResolver for AssetIndirectionResolver {
     ) -> Option<AssetUuid> {
         let id_type = id.type_id();
         for candidate in candidates {
-            let candidate_assets_len =  candidate.1.len();
+            let candidate_assets_len = candidate.1.len();
             for asset in candidate.1 {
                 if let Some(artifact) = asset.artifact {
-                    if id_type.is_none() || candidate_assets_len == 1
+                    if id_type.is_none()
+                        || candidate_assets_len == 1
                         || *id_type.unwrap() == artifact.type_id
                     {
                         return Some(asset.id);

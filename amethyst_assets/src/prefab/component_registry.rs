@@ -63,13 +63,13 @@ impl ComponentRegistryBuilder {
         FromT: Component,
         IntoT: Component,
         F: Fn(
-            &Resources,                                 // resources
-            Range<usize>,                               // src_entity_range
-            &Archetype,                                 // src_arch
-            &Components,                                // src_components
-            &mut ComponentWriter<'_, IntoT>,            // dst
-            fn(&mut ComponentWriter<'_, IntoT>, IntoT), // push_fn
-        ) + Send
+                &Resources,                                 // resources
+                Range<usize>,                               // src_entity_range
+                &Archetype,                                 // src_arch
+                &Components,                                // src_components
+                &mut ComponentWriter<'_, IntoT>,            // dst
+                fn(&mut ComponentWriter<'_, IntoT>, IntoT), // push_fn
+            ) + Send
             + Sync
             + 'static,
     {
