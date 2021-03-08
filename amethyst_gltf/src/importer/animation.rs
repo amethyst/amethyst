@@ -134,7 +134,7 @@ pub fn load_animations(
         .entry(animation_entity)
         .expect("Unreachable: `animation_entity` is initialized previously")
         .add_component(AnimationSet::<usize, Transform> {
-            animations: animations_accumulator.clone(),
+            animations: animations_accumulator,
         });
 
     asset_accumulator
