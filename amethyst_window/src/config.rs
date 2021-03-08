@@ -159,23 +159,23 @@ impl DisplayConfig {
         } else {
             let mut use_fallback = true;
             let mut img = DynamicImage::new_rgb8(1, 1);
-            match self.icon {
-                Some(icon_path) => {
-                    let image = image::open(icon_path);
-                    if image.is_ok() {
-                        img = image.unwrap();
-                        use_fallback = false;
-                    }
+
+            if let Some(icon_path) = self.icon {
+                let image = image::open(icon_path);
+
+                if let Ok(image) = image {
+                    img = image;
+                    use_fallback = false;
                 }
-                None => {}
             }
 
             if use_fallback {
                 let fallback_icon = include_bytes!("fallback.png");
                 let icon_img =
                     image::load_from_memory_with_format(fallback_icon, image::ImageFormat::Png);
-                if icon_img.is_ok() {
-                    img = icon_img.unwrap();
+
+                if let Ok(icon_img) = icon_img {
+                    img = icon_img;
                 }
             }
 
