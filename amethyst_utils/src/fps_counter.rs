@@ -120,7 +120,6 @@ impl FpsCounterBundle {
     pub fn sample_size(self, samplesize: usize) -> Self {
         Self {
             samplesize: Some(samplesize),
-            ..self
         }
     }
 }
