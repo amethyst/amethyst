@@ -124,9 +124,8 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             focused_edit.cursor_blink_timer = 0.0;
                         }
                         VirtualKeyCode::Back => {
-                            if !delete_highlighted(focused_edit, focused_text)
-                                && focused_edit.cursor_position > 0
-                            {
+                            let updated = delete_highlighted(focused_edit, focused_text);
+                            if !updated && focused_edit.cursor_position > 0 {
                                 if let Some((byte, len)) = focused_text
                                     .text
                                     .grapheme_indices(true)
@@ -135,11 +134,17 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                 {
                                     focused_text.text.drain(byte..(byte + len));
                                     focused_edit.cursor_position -= 1;
+                                    updated = true;
                                 }
+                            }
+                            if updated {
+                                edit_events
+                                    .single_write(UiEvent::new(UiEventType::ValueChange, entity));
                             }
                         }
                         VirtualKeyCode::Delete => {
-                            if !delete_highlighted(focused_edit, focused_text) {
+                            let updated = delete_highlighted(focused_edit, focused_text);
+                            if !updated {
                                 if let Some((start_byte, start_glyph_len)) = focused_text
                                     .text
                                     .grapheme_indices(true)
@@ -150,7 +155,12 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                     focused_text
                                         .text
                                         .drain(start_byte..(start_byte + start_glyph_len));
+                                    updated = true;
                                 }
+                            }
+                            if updated {
+                                edit_events
+                                    .single_write(UiEvent::new(UiEventType::ValueChange, entity));
                             }
                         }
                         VirtualKeyCode::Left => {
