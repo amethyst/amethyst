@@ -124,7 +124,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             focused_edit.cursor_blink_timer = 0.0;
                         }
                         VirtualKeyCode::Back => {
-                            let updated = delete_highlighted(focused_edit, focused_text);
+                            let mut updated = delete_highlighted(focused_edit, focused_text);
                             if !updated && focused_edit.cursor_position > 0 {
                                 if let Some((byte, len)) = focused_text
                                     .text
@@ -143,7 +143,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::Delete => {
-                            let updated = delete_highlighted(focused_edit, focused_text);
+                            let mut updated = delete_highlighted(focused_edit, focused_text);
                             if !updated {
                                 if let Some((start_byte, start_glyph_len)) = focused_text
                                     .text
