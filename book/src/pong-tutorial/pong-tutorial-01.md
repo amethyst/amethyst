@@ -38,9 +38,11 @@ You can delete everything in that file, then add these imports:
 //! Pong Tutorial 1
 
 use amethyst::{
+    assets::LoaderBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -169,7 +171,7 @@ In `main()` in `main.rs` we are going to add the basic application setup:
 #   let app_root = application_root_dir()?;
     let assets_dir = app_root.join("assets");
     let mut game = Application::new(assets_dir, Pong, game_data)?;
-    //game.run();
+    game.run();
 #   Ok(())
 # }
 ```
@@ -204,9 +206,11 @@ Last time we left our `DispatcherBuilder` instance empty, now we'll add some sys
 
 ```rust
 # use amethyst::{
+#   assets::LoaderBundle,
 #   prelude::*,
 #   renderer::{
 #       plugins::{RenderFlat2D, RenderToWindow},
+#       rendy::hal::command::ClearColor,
 #       types::DefaultBackend,
 #       RenderingBundle,
 #   },
@@ -217,16 +221,23 @@ Last time we left our `DispatcherBuilder` instance empty, now we'll add some sys
 
     let display_config_path = app_root.join("config").join("display.ron");
 
-    let game_data = DispatcherBuilder::default().add_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.0, 0.0, 0.0, 1.0]),
-            )
-            // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
-            .with_plugin(RenderFlat2D::default()),
-    )?;
+    let mut game_data = DispatcherBuilder::default();
+    game_data
+        // TODO loader bundle explanation
+        .add_bundle(LoaderBundle)
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?
+                        .with_clear(ClearColor {
+                            float32: [0.0, 0.0, 0.0, 1.0],
+                        }),
+                    )
+                // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
+                .with_plugin(RenderFlat2D::default()),
+        );
+
 #   Ok(())
 # }
 ```
