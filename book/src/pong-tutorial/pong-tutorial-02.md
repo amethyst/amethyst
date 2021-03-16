@@ -29,7 +29,6 @@ initialization code from the Pong code.
    use amethyst::{
        assets::{AssetStorage, DefaultLoader, Handle, Loader},
        core::transform::Transform,
-       ecs::Component,
        prelude::*,
        renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
    };
@@ -187,7 +186,7 @@ Now, we will create the `Paddle` component, all in `pong.rs`.
 
    Legion will take care of creating the archetypes for optimal storage automatically based on the combination of components given to an entity.
 
-## initialize some entities
+## Initialize some Entities
 
 Now that we have a `Paddle` component, let's define some paddle entities that
 include that component and add them to our `World`.
@@ -334,10 +333,11 @@ fn main() -> amethyst::Result<()> {
 #   let display_config_path = app_root.join("config/display.ron");
 # 
     // ...
-    let game_data = DispatcherBuilder::default()
+    let game_data = DispatcherBuilder::default();
+    game_data
         // ...
         // Add the transform bundle which handles tracking entity positions
-        .add_bundle(TransformBundle::new())?;
+        .add_bundle(TransformBundle::default());
 
 #   let assets_dir = "/";
 #   let mut game = Application::new(assets_dir, Pong, game_data)?;
@@ -528,7 +528,7 @@ Next we simply add the components to the paddle entities:
 # use amethyst::renderer::sprite::{SpriteRender, SpriteSheet};
 # fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
 #   let sprite_render = SpriteRender::new(sprite_sheet_handle, 0); // paddle is the first sprite in the sprite_sheet
-                                                                   // Create a left plank entity.
+    // Create a left plank entity.
     world.push((sprite_render.clone() /* ... other components */,));
 
     // Create right plank entity.
