@@ -29,6 +29,8 @@ pub use num_traits as num;
 pub use shrev;
 pub use simba as simd;
 
+pub use game_clock::Time;
+
 pub use self::{
     axis::{Axis2, Axis3},
     event::EventReader,
@@ -36,7 +38,6 @@ pub use self::{
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     named::Named,
     shrev::EventChannel,
-    timing::*,
     transform::Transform,
 };
 
