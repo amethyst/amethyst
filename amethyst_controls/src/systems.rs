@@ -5,7 +5,7 @@ use amethyst_core::{
     ecs::*,
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
-    timing::Time,
+    Time,
     transform::Transform,
 };
 use amethyst_input::{get_input_axis_simple, InputHandler};
@@ -47,7 +47,7 @@ impl System for FlyMovementSystem {
 
                     if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
                         for (_, transform) in controls.iter_mut(world) {
-                            let delta_sec = time.delta_seconds();
+                            let delta_sec = time.delta_time().as_secs_f32();
                             transform.append_translation_along(dir, delta_sec * self.speed);
                         }
                     }

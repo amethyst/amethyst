@@ -2,7 +2,7 @@
 
 use amethyst_core::{
     ecs::*,
-    timing::{duration_to_nanos, Time},
+    Time,
 };
 use amethyst_error::Error;
 #[cfg(feature = "profiler")]
@@ -92,7 +92,7 @@ impl System for FpsCounterSystem {
                     #[cfg(feature = "profiler")]
                     profile_scope!("fps_counter_system");
 
-                    counter.push(duration_to_nanos(time.delta_real_time()));
+                    counter.push(time.delta_real_time().as_nanos() as u64);
                     //Enable this to debug performance engine wide.
                     log::debug!(
                         "Cur FPS: {}, Sampled: {}",

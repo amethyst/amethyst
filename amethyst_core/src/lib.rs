@@ -36,6 +36,7 @@ pub use self::{
     event::EventReader,
     hidden::{Hidden, HiddenPropagate},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
+    timing::Stopwatch,
     named::Named,
     shrev::EventChannel,
     transform::Transform,
@@ -61,9 +62,6 @@ pub mod frame_limiter;
 /// The geometry module.
 pub mod geometry;
 
-/// The timing module.
-pub mod timing;
-
 /// The transformation module.
 pub mod transform;
 
@@ -76,5 +74,6 @@ pub mod logger;
 mod axis;
 mod event;
 mod hidden;
+mod timing;
 mod named;
 pub mod system_ext;
