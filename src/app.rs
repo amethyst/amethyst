@@ -14,8 +14,7 @@ use crate::{
     core::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
-        timing::{Stopwatch, Time},
-        ArcThreadPool, EventReader,
+        ArcThreadPool, EventReader, Stopwatch, Time,
     },
     ecs::*,
     error::Error,
@@ -245,8 +244,7 @@ where
                 let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
                 let elapsed = stopwatch.elapsed();
                 let mut time = self.resources.get_mut::<Time>().unwrap();
-                time.increment_frame_number();
-                time.set_delta_time(elapsed);
+                time.advance_frame(elapsed);
                 stopwatch.stop();
                 stopwatch.restart();
             }
@@ -341,12 +339,6 @@ where
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
 
-            {
-                self.resources
-                    .get_mut::<Time>()
-                    .unwrap()
-                    .start_fixed_update();
-            }
             while {
                 self.resources
                     .get_mut::<Time>()
@@ -358,12 +350,6 @@ where
                     &mut self.resources,
                     &mut self.data,
                 ));
-            }
-            {
-                self.resources
-                    .get_mut::<Time>()
-                    .unwrap()
-                    .finish_fixed_update();
             }
         }
         {
