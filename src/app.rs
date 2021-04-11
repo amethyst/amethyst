@@ -14,9 +14,7 @@ use crate::{
     core::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
-        Time,
-        Stopwatch,
-        ArcThreadPool, EventReader,
+        ArcThreadPool, EventReader, Stopwatch, Time,
     },
     ecs::*,
     error::Error,

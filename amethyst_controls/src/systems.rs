@@ -5,8 +5,8 @@ use amethyst_core::{
     ecs::*,
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
-    Time,
     transform::Transform,
+    Time,
 };
 use amethyst_input::{get_input_axis_simple, InputHandler};
 #[cfg(feature = "profiler")]
