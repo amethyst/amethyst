@@ -15,7 +15,7 @@ use crate::math::{
 ///
 /// Used for rendering position and orientation.
 ///
-/// The transforms are preformed in this order: scale, then rotation, then translation.
+/// The transforms are performed in this order: scale, then rotation, then translation.
 #[derive(
     Clone,
     Copy,
