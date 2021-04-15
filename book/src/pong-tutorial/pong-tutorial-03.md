@@ -12,7 +12,7 @@ engines, this probably sounds familiar: Unity engine calls these objects
 `MonoBehaviour`s and Unreal engine calls them `Actor`s, but these all represent
 the same basic idea.
 
-Systems in Specs / Amethyst are slightly different. Rather than describing the
+Systems in legion / Amethyst are slightly different. Rather than describing the
 behavior of a single instance (e.g., a single enemy in your game), they describe
 the behavior of all components of a specific type (all enemies). This makes
 your code more modular, easier to test, and makes it run faster.
@@ -54,32 +54,34 @@ axes we defined. Let's make the following changes to `main.rs`.
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::prelude::*;
 # use amethyst::window::DisplayConfig;
+# use amethyst::input::InputBundle;
 # use amethyst_utils::application_root_dir;
 # macro_rules! env {
 #   ($x:expr) => {
 #       ""
 #   };
 # }
-# fn main() -> amethyst::Result<()> {
-    use amethyst::input::InputBundle;
+use amethyst::input::InputBundle;
+fn main() -> amethyst::Result<()> {
+    // -- snip --
 
 #   let app_root = application_root_dir()?;
-    let binding_path = app_root.join("config").join("bindings.ron");
-
-    let input_bundle = InputBundle::new().with_bindings_from_file(binding_path)?;
-
 #   let path = "./config/display.ron";
 #   let config = DisplayConfig::load(&path)?;
 #   let assets_dir = "assets";
 #   struct Pong;
 #   impl SimpleState for Pong {}
-    let game_data = DispatcherBuilder::default()
-        .add_bundle(TransformBundle::new())
-        .add_bundle(input_bundle);
-    // ..
+#   let mut dispatcher = DispatcherBuilder::default();
+    dispatcher
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
+        .add_bundle(
+            InputBundle::new().with_bindings_from_file(app_root.join("config/bindings.ron"))?,
+        )
+    // -- snip --
 
     let mut game = Application::new(assets_dir, Pong, game_data)?;
-    //game.run();
+#   // game.run();
 #   Ok(())
 # }
 ```
@@ -95,12 +97,10 @@ module to collect and export each of our systems to the rest of the
 application. Here's our `mod.rs` for `src/systems`:
 
 ```rust
-pub use self::paddle::PaddleSystem;
-
-mod paddle;
+pub mod paddle;
 ```
 
-We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
+Now we're ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
 ```rust
 # mod pong {
@@ -116,9 +116,12 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 #   pub const PADDLE_HEIGHT: f32 = 16.0;
 # }
 # 
-use amethyst::core::{Transform};
-use amethyst::ecs::{System, World};
-use amethyst::input::InputHandler;
+use amethyst::{
+    core::transform::Transform,
+    ecs::SystemBuilder,
+    input::{get_input_axis_simple, InputHandler},
+    prelude::*,
+};
 
 // You'll have to mark PADDLE_HEIGHT as public in pong.rs
 use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
@@ -126,28 +129,15 @@ use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 pub struct PaddleSystem;
 
 impl System for PaddleSystem {
-    type SystemData = (
-        .write_component::<Transform>()
-       .read_component::<Paddle>(),
-        .read_resource::<InputHandler>(),
-    );
-
-    fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
-        for (paddle, transform) in (&paddles, &mut transforms).join() {
-            let movement = match paddle.side {
-                Side::Left => input.axis_value("left_paddle"),
-                Side::Right => input.axis_value("right_paddle"),
-            };
-            if let Some(mv_amount) = movement {
-                if mv_amount != 0.0 {
-                    let side_name = match paddle.side {
-                        Side::Left => "left",
-                        Side::Right => "right",
-                    };
-                    println!("Side {:?} moving {}", side_name, mv_amount);
-                }
-            }
-        }
+    fn build(self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("PaddleSystem")
+                .with_query(<(&Paddle, &mut Transform)>::query())
+                .read_resource::<InputHandler>()
+                .build(move |_commands, world, input, query_paddles| {
+                    // -- todo --
+                }),
+        )
     }
 }
 # fn main() {}
@@ -155,30 +145,93 @@ impl System for PaddleSystem {
 
 Alright, there's quite a bit going on here!
 
-We create a unit struct `PaddleSystem`, and with the `SystemDesc` derive. This
-is short for **System Descriptor**. In Amethyst, systems may need to access
-resources from the `World` in order to be instantiated. For each `System`, an
-implementation of the `SystemDesc` trait must be provided to specify the logic
-to instantiate the `System`. For `System`s that do not require special
-instantiation logic, the `SystemDesc` derive automatically implements the
-`SystemDesc` trait on the system type itself.
+We create a unit struct `PaddleSystem` and implement the `System` trait for it.
+The `System` trait is provided by legion and contains just one method, `build`:
 
-Next, we implement the `System` trait for it with the lifetime of the components
-on which it operates. Inside the implementation, we define the data the system
-operates on in the `SystemData` tuple: `WriteStorage`, `ReadStorage`, and
-`Read`. More specifically, the generic types we've used here tell us that the
-`PaddleSystem` mutates `Transform` components, `.write_component::<Transform>`, it
-reads `Paddle` components,.read\_component::<Paddle>()`, and also accesses the `InputHandler`resource we created earlier, using the`Read\`
-structure.
+```rust
+# use amethyst::prelude::*;
+// legion's System trait
+pub trait System {
+    /// builds the Runnable part of System
+    fn build(self) -> Box<dyn ParallelRunnable + 'static>;
+}
+```
 
-> For `InputHandler`, make sure the parameter type is the same
-> as the one used to create the `InputBundle` earlier.
+Inside `build`, we  describe the data our System needs, and our System's behavior.
+Ultimately, `build` returns a `Runnable` struct, which legion uses during runtime 
+to run our System.
+
+> ### What's a `Box<dyn ParallelRunnable>`?
+> The `Runnable` trait exposes a `run` method, which legion invokes for us during runtime. 
+> A `ParallelRunnable` is just a `Runnable` which is also `Send` and `Sync`. Finally, to 
+> support any type which implements `ParallelRunnable`, the `build` method returns a `Box<dyn ParallelRunnable>`.
+
+First, we call `SystemBuilder::new` with a name: `"PaddleSystem"`. (Our system's name
+is just for debugging and visualization purposes.) 
+
+Second, we invoke `.with_query` with the argument `<(&Paddle, &mut Transform)>::query()`. In
+this context, the type `<(&Paddle, &mut Transform)>` declares a **view**. A view describes
+the kind of data that our system needs. This view says that our system reads `Paddle`
+components and mutates `Transform` components. Legion provides the `query`
+method to construct a query from the view that we've declared.
+
+Third, we invoke `.read_resource::<InputHandler>()`. This method declares that our system reads
+the `InputHandler` resource, so that we can read the input state.
+
+Finally, we invoke `build` with a closure. This closure accepts four arguments: `|_commands, world, input, query_paddles|`. We're not using `_commands` for now. The `world` contains our 
+entities and their component data. `input` is the `InputHandler` resource, which we asked for
+above with `.read_resource::<InputHandler>()`. Finally, `query_paddles` contains the query
+that we described above with `.with_query`. Our closure has all of the data we requested,
+and it's time to write the system's behavior!
+
+```rust
+# mod pong {
+#   pub enum Side {
+#       Left,
+#       Right,
+#   }
+#   pub struct Paddle {
+#       pub side: Side,
+#   }
+# 
+#   pub const ARENA_HEIGHT: f32 = 100.0;
+#   pub const PADDLE_HEIGHT: f32 = 16.0;
+# }
+# 
+# use amethyst::{
+#     core::transform::Transform,
+#     ecs::SystemBuilder,
+#     input::{get_input_axis_simple, InputHandler},
+#     prelude::*,
+# };
+# 
+# // You'll have to mark PADDLE_HEIGHT as public in pong.rs
+# use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
+# 
+# pub struct PaddleSystem;
+# 
+# impl System for PaddleSystem {
+#    fn build(self) -> Box<dyn ParallelRunnable> {
+#        Box::new(
+            SystemBuilder::new("PaddleSystem")
+                .with_query(<(&Paddle, &mut Transform)>::query())
+                .read_resource::<InputHandler>()
+                .build(move |_commands, world, input, query_paddles| {
+                    for (paddle, transform) in query_paddles.iter_mut(world) {
+                        // read input
+                        // move paddle
+                    }
+                }),
+#        )
+#    }
+# }
+# fn main() {}
+```
 
 Now that we have access to the storages of the components we want, we can iterate
-over them. We perform a join operation over the `Transform` and `Paddle`
-storages. This will iterate over all entities that have both a `Paddle`
-and `Transform` attached to them, and give us access to the actual components,
-immutable for the `Paddle` and mutable for the `Transform`.
+over them. We invoke the `iter_mut` method on our query to perform a join operation 
+over the `Transform` and `Paddle` storages. This will iterate over all entities that 
+have both a `Paddle` and `Transform` attached to them, and give us access to the actual components, immutable for the `Paddle` and mutable for the `Transform`.
 
 > There are many other ways to use storages. For example, you can use them to get
 > a reference to the component of a specific type held by an entity, or simply
@@ -186,120 +239,205 @@ immutable for the `Paddle` and mutable for the `Transform`.
 > be to join over multiple storages as it is rare to have a system affect
 > only one specific component.
 
-> Please also note that it is possible to join over storages using multiple threads
-> by using `par_join` instead of `join`, but here the overhead introduced is not
-> worth the gain offered by parallelism.
+## Reading the input
 
-Let's add this system to our `DispatcherBuilder` in `main.rs`:
-
-```rust
-mod systems; // Import the module
-```
+Our system needs to know the current state of the input, so we can decide how to move the paddles.
+Let's use the `InputHandler` we asked for!
 
 ```rust
-# use amethyst::core::transform::TransformBundle;
-# use amethyst::input::StringBindings;
-# use amethyst::prelude::*;
-# use amethyst::window::DisplayConfig;
-fn main() -> amethyst::Result<()> {
-    // --snip--
-
-#   let path = "./config/display.ron";
-#   let config = DisplayConfig::load(&path)?;
-#   mod systems {
-# 
-#       use amethyst::core::ecs::{System, World};
-# 
-#       pub struct PaddleSystem;
-#       impl System for PaddleSystem {
-#           fn build(mut self) -> Box<dyn ParallelRunnable> {}
-#       }
+# mod pong {
+#   pub enum Side {
+#       Left,
+#       Right,
 #   }
-#   let input_bundle = amethyst::input::InputBundle::new();
-    let game_data = DispatcherBuilder::default()
-// ...
-.add_bundle(TransformBundle::new())?
-.add_bundle(input_bundle)?
-.with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
-// ...
-#;
-#   let assets_dir = "/";
-#   struct Pong;
-#   impl SimpleState for Pong {}
-#   let mut game = Application::new(assets_dir, Pong, game_data)?;
-#   Ok(())
-}
+#   pub struct Paddle {
+#       pub side: Side,
+#   }
+# 
+#   pub const ARENA_HEIGHT: f32 = 100.0;
+#   pub const PADDLE_HEIGHT: f32 = 16.0;
+# }
+# 
+# use amethyst::{
+#     core::transform::Transform,
+#     ecs::SystemBuilder,
+#     input::{get_input_axis_simple, InputHandler},
+#     prelude::*,
+# };
+# 
+# // You'll have to mark PADDLE_HEIGHT as public in pong.rs
+# use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
+# 
+# pub struct PaddleSystem;
+# 
+# impl System for PaddleSystem {
+#    fn build(self) -> Box<dyn ParallelRunnable> {
+#        Box::new(
+#           SystemBuilder::new("PaddleSystem")
+#               .with_query(<(&Paddle, &mut Transform)>::query())
+#               .read_resource::<InputHandler>()
+#               .build(move |_commands, world, input, query_paddles| {
+                    for (paddle, transform) in query_paddles.iter_mut(world) {
+                        let movement = match paddle.side {
+                            Side::Left => get_input_axis_simple(&Some("left_paddle".into()), input),
+                            Side::Right => {
+                                get_input_axis_simple(&Some("right_paddle".into()), input)
+                            }
+                        };
+                    }
+#               }),
+#        )
+#    }
+# }
+# fn main() {}
 ```
 
-Take a look at the `with` method call. Here, we're not adding a bundle, we're adding
-a system alone. We provide an instance of the system, a string representing its name
-and a list of dependencies. The dependencies are the names of the systems that
-must be run before our newly added system. Here, we require the `input_system` to be run as we will use the user's input to move the paddles, so we need to have this
-data be prepared. The `input_system` key itself is defined in the standard `InputBundle`.
+Amethyst provides the `get_input_axis_simple` function. We take the axis name we wrote earlier
+in `bindings.ron`, convert it to `Some` clone-on-write smart pointer, and pass it into `get_input_axis_simple` to get the state of our axis.
 
 ## Modifying the transform
 
-If we run the game now, we'll see the console print our keypresses.
-Let's make it update the position of the paddle. To do this, we'll modify the y
+Let's make our system update the position of the paddle. To do this, we'll modify the y
 component of the transform's translation.
 
 ```rust
-# use amethyst::core::Transform;
-# use amethyst::ecs::{System, World};
-# use amethyst::input::InputHandler;
-# enum Side {
-#   Left,
-#   Right,
+# mod pong {
+#   pub enum Side {
+#       Left,
+#       Right,
+#   }
+#   pub struct Paddle {
+#       pub side: Side,
+#   }
+# 
+#   pub const ARENA_HEIGHT: f32 = 100.0;
+#   pub const PADDLE_HEIGHT: f32 = 16.0;
 # }
-# pub struct Paddle {
-#   side: Side,
-# }
-#
+# 
+# use amethyst::{
+#     core::transform::Transform,
+#     ecs::SystemBuilder,
+#     input::{get_input_axis_simple, InputHandler},
+#     prelude::*,
+# };
+# 
+# // You'll have to mark PADDLE_HEIGHT as public in pong.rs
+# use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
+# 
 # pub struct PaddleSystem;
-#
+# 
 # impl System for PaddleSystem {
-#   type SystemData = (
-#       .write_component::<Transform>()
-#     .read_component::<Paddle>(),
-#       .read_resource::<InputHandler>(),
-#   );
-    fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
-        for (paddle, transform) in (&paddles, &mut transforms).join() {
-            let movement = match paddle.side {
-                Side::Left => input.axis_value("left_paddle"),
-                Side::Right => input.axis_value("right_paddle"),
-            };
-            if let Some(mv_amount) = movement {
-                let scaled_amount = 1.2 * mv_amount as f32;
-                transform.prepend_translation_y(scaled_amount);
-            }
-        }
-    }
+#    fn build(self) -> Box<dyn ParallelRunnable> {
+#        Box::new(
+#           SystemBuilder::new("PaddleSystem")
+#               .with_query(<(&Paddle, &mut Transform)>::query())
+#               .read_resource::<InputHandler>()
+#               .build(move |_commands, world, input, query_paddles| {
+                    for (paddle, transform) in query_paddles.iter_mut(world) {
+                        let movement = match paddle.side {
+                            Side::Left => get_input_axis_simple(&Some("left_paddle".into()), input),
+                            Side::Right => {
+                                get_input_axis_simple(&Some("right_paddle".into()), input)
+                            }
+                        };
+                    }
+                    let scaled_amount = 1.2 * movement;
+                    let paddle_y = transform.translation().y;
+                    transform.set_translation_y((paddle_y + scaled_amount));
+#               }),
+#        )
+#    }
 # }
+# fn main() {}
 ```
 
 This is our first attempt at moving the paddles: we take the movement and
 scale it by some factor to make the motion seem smooth. In a real game, we
 would use the time elapsed between frames to determine how far to move the
 paddle, so that the behavior of the game would not be tied to the game's
-framerate. Amethyst provides you with [`amethyst::core::timing::Time`][doc_time]
-for that purpose, but for now current approach should suffice.
-If you run the game now, you'll notice the paddles are able to "fall" off the edges of the game area.
+framerate. Amethyst provides [`amethyst::core::timing::Time`][doc_time]
+for that purpose. For now, our current approach will suffice.
+
+Let's add our system to the game! In `main.rs`:
+
+```rust
+mod pong;
+mod systems; // Add our systems mod
+
+use amethyst::{
+    // --snip--
+#   assets::LoaderBundle,
+#   core::transform::TransformBundle,
+#   input::InputBundle,
+#   prelude::*,
+#   renderer::{
+#       plugins::{RenderFlat2D, RenderToWindow},
+#       rendy::hal::command::ClearColor,
+#       types::DefaultBackend,
+#       RenderingBundle,
+#   },
+#   utils::application_root_dir,
+};
+# use systems::paddle::PaddleSystem;
+
+# use crate::pong::Pong;
+
+fn main() -> amethyst::Result<()> {
+#   amethyst::start_logger(Default::default());
+#
+#   let app_root = application_root_dir()?;
+#   let display_config_path = app_root.join("config/display.ron");
+#   let assets_dir = app_root.join("assets/");
+#
+#   let mut dispatcher = DispatcherBuilder::default();
+    // -- snip--
+    dispatcher
+        .add_bundle(LoaderBundle)
+        .add_bundle(TransformBundle)
+        .add_bundle(
+            InputBundle::new().with_bindings_from_file(app_root.join("config/bindings.ron"))?,
+        )
+        // We have now added our own system, the PaddleSystem, defined in systems/paddle.rs
+        .add_system(PaddleSystem)
+        // -- snip--
+#       .add_bundle(
+#           RenderingBundle::<DefaultBackend>::new()
+#               // The RenderToWindow plugin provides all the scaffolding for opening a window and
+#               // drawing on it
+#               .with_plugin(
+#                   RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+#                       float32: [0.0, 0.0, 0.0, 1.0],
+#                   }),
+#               )
+#               // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
+#               .with_plugin(RenderFlat2D::default()),
+#       );
+
+#   let game = Application::new(assets_dir, Pong, dispatcher)?;
+#   game.run();
+#   Ok(())
+}
+```
+
+If you run the game now, you'll notice the paddles can "fall" off the edges of the game area.
 
 To fix this, we need to limit the paddle's movement to the arena border with
-a minimum and maximum value. But as the anchor point of the paddle is in
-the middle of the sprite, we also need to offset that limit by half the height
-of the sprite for the paddles not to go halfway out of the screen.
+a minimum and maximum value. Since the anchor point of the paddle is in
+its center, we also need to offset that limit by half the height
+of the paddle to prevent the paddle going halfway out of the screen.
 Therefore, we will clamp the **y** value of the transform from
 `ARENA_HEIGHT - PADDLE_HEIGHT * 0.5` (the top of the arena minus the offset)
 to `PADDLE_HEIGHT * 0.5` (the bottom of the arena plus the offset).
 
-Our run function should now look something like this:
+Our `build` function in `systems/paddle.rs` should now look something like this:
 
 ```rust
-# use amethyst::core::Transform;
-# use amethyst::ecs::{System, World};
-# use amethyst::input::InputHandler;
+# use amethyst::{
+#     core::transform::Transform,
+#     ecs::SystemBuilder,
+#     input::{get_input_axis_simple, InputHandler},
+#     prelude::*,
+# };
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
 # const ARENA_HEIGHT: f32 = 100.0;
@@ -313,67 +451,35 @@ Our run function should now look something like this:
 # }
 #
 # pub struct PaddleSystem;
-# impl System for PaddleSystem {
-#   type SystemData = (
-#       .write_component::<Transform>()
-#     .read_component::<Paddle>(),
-#       .read_resource::<InputHandler>(),
-#   );
-    fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
-        for (paddle, transform) in (&paddles, &mut transforms).join() {
-            let movement = match paddle.side {
-                Side::Left => input.axis_value("left_paddle"),
-                Side::Right => input.axis_value("right_paddle"),
-            };
-            if let Some(mv_amount) = movement {
-                let scaled_amount = 1.2 * mv_amount as f32;
-                let paddle_y = transform.translation().y;
-                transform.set_translation_y(
-                    (paddle_y + scaled_amount)
-                        .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
-                        .max(PADDLE_HEIGHT * 0.5),
-                );
-            }
-        }
+impl System for PaddleSystem {
+    fn build(self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("PaddleSystem")
+                .with_query(<(&Paddle, &mut Transform)>::query())
+                .read_resource::<InputHandler>()
+                .build(move |_commands, world, input, query_paddles| {
+                    for (paddle, transform) in query_paddles.iter_mut(world) {
+                        let movement = match paddle.side {
+                            Side::Left => get_input_axis_simple(&Some("left_paddle".into()), input),
+                            Side::Right => {
+                                get_input_axis_simple(&Some("right_paddle".into()), input)
+                            }
+                        };
+                        let scaled_amount = 1.2 * movement;
+                        let paddle_y = transform.translation().y;
+                        transform.set_translation_y(
+                            (paddle_y + scaled_amount)
+                                .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
+                                .max(PADDLE_HEIGHT * 0.5),
+                        );
+                    }
+                }),
+        )
     }
-# }
+}
 ```
 
-## Automatic set up of resources by a system.
-
-You might remember that we had troubles because Amethyst requires us
-to `register` storage for `Paddle` before we could use it.
-
-Now that we have a system in place that uses the `Paddle` component,
-we no longer need to manually register it with the `world`: the system
-will take care of that for us, as well as set up the storage.
-
-```rust
-# use amethyst::assets::Handle;
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
-# use amethyst::renderer::SpriteSheet;
-# struct Paddle;
-# fn initialize_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) {}
-# fn initialize_camera(world: &mut World) {}
-# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
-#   unimplemented!()
-# }
-# struct MyState;
-# impl SimpleState for MyState {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let world = data.world;
-
-        // Load the spritesheet necessary to render the graphics.
-        let sprite_sheet_handle = load_sprite_sheet(world);
-
-        world.register::<Paddle>(); // <<-- No longer needed
-
-        initialize_paddles(world, sprite_sheet_handle);
-        initialize_camera(world);
-    }
-# }
-```
+When you run the game, the paddles should now stay in the arena. Nice work!
 
 ## Summary
 
