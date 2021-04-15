@@ -157,7 +157,7 @@ pub trait System {
 }
 ```
 
-Inside `build`, we  describe the data our System needs, and our System's behavior.
+Inside `build`, we describe the data our System needs, and our System's behavior.
 Ultimately, `build` returns a `Runnable` struct, which legion uses during runtime 
 to run our System.
 
