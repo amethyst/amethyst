@@ -35,37 +35,44 @@ Then let's add an `initialize_ball` function the same way we wrote the
 `initialize_paddles` function.
 
 ```rust
-# use amethyst::assets::{AssetStorage, Handle, Loader};
-# use amethyst::core::transform::Transform;
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
-# use amethyst::renderer::{Sprite, SpriteRender, SpriteSheet, Texture};
+# use amethyst::{
+#     assets::{DefaultLoader, Handle, Loader, ProcessingQueue},
+#     core::{timing::Time, transform::Transform},
+#     prelude::*,
+#     renderer::{Camera, SpriteRender, SpriteSheet, Texture},
+# };
+# pub const ARENA_HEIGHT: f32 = 100.0;
+# pub const ARENA_WIDTH: f32 = 100.0;
+# pub const PADDLE_HEIGHT: f32 = 16.0;
+# pub const PADDLE_WIDTH: f32 = 4.0;
+# pub const BALL_VELOCITY_X: f32 = 75.0;
+# pub const BALL_VELOCITY_Y: f32 = 50.0;
+# pub const BALL_RADIUS: f32 = 2.0;
 # pub struct Ball {
-#   pub velocity: [f32; 2],
-#   pub radius: f32,
+#     pub velocity: [f32; 2],
+#     pub radius: f32,
 # }
-# const PADDLE_HEIGHT: f32 = 16.0;
-# const PADDLE_WIDTH: f32 = 4.0;
-# const SPRITESHEET_SIZE: (f32, f32) = (8.0, 16.0);
-# const BALL_RADIUS: f32 = 2.0;
-# const BALL_VELOCITY_X: f32 = 75.0;
-# const BALL_VELOCITY_Y: f32 = 50.0;
-# const ARENA_HEIGHT: f32 = 100.0;
-# const ARENA_WIDTH: f32 = 100.0;
 /// initializes one ball in the middle-ish of the arena.
 fn initialize_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     // Create the translation.
     let mut local_transform = Transform::default();
-    local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+    local_transform.set_translation_xyz(
+        (ARENA_WIDTH - BALL_RADIUS) * 0.5,
+        (ARENA_HEIGHT - BALL_RADIUS) * 0.5,
+        0.0,
+    );
 
-    // Assign the sprite for the ball. The ball is the second sprite in the sheet.
-    let sprite_render = SpriteRender::new(sprite_sheet_handle, 1);
+    // Assign the sprite for the ball
+    let sprite_render = SpriteRender::new(sprite_sheet_handle, 1); // ball is the second sprite on the sprite_sheet
 
-    world
-        .push((sprite_render),Ball {
+    world.push((
+        sprite_render,
+        Ball {
             radius: BALL_RADIUS,
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
-        },local_transform));
+        },
+        local_transform,
+    ));
 }
 ```
 
@@ -77,10 +84,12 @@ second one, whose index is `1`.
 Finally, let's make sure the code is working as intended by updating the `on_start` method:
 
 ```rust
-# use amethyst::assets::Handle;
-# use amethyst::ecs::World;
-# use amethyst::prelude::*;
-# use amethyst::renderer::{SpriteSheet, Texture};
+# use amethyst::{
+#     assets::{DefaultLoader, Handle, Loader, ProcessingQueue},
+#     core::{timing::Time, transform::Transform},
+#     prelude::*,
+#     renderer::{Camera, SpriteRender, SpriteSheet, Texture},
+# };
 # struct Paddle;
 # struct Ball;
 # fn initialize_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {}
@@ -96,8 +105,6 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 
         // Load the spritesheet necessary to render the graphics.
         let sprite_sheet_handle = load_sprite_sheet(world);
-
-        world.register::<Ball>(); // <- add this line temporarily
 
         initialize_ball(world, sprite_sheet_handle.clone()); // <- add this line
         initialize_paddles(world, sprite_sheet_handle);
@@ -125,35 +132,37 @@ We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 # }
 # 
 use amethyst::{
-    core::timing::Time,
-    core::transform::Transform,
-    ecs::{System, World},
+    core::{timing::Time, transform::Transform},
+    ecs::SystemBuilder,
+    prelude::*,
 };
 
 use crate::pong::Ball;
 
 pub struct MoveBallsSystem;
 
-impl System for MoveBallsSystem {
-    type SystemData = (
-      .read_component::<Ball>(),
-        .write_component::<Transform>()
-        .read_resource::<Time>(),
-    );
-
-    fn run(&mut self, (balls, mut locals, time): Self::SystemData) {
-        // Move every ball according to its speed, and the time passed.
-        for (ball, local) in (&balls, &mut locals).join() {
-            local.prepend_translation_x(ball.velocity[0] * time.delta_seconds());
-            local.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
-        }
+impl System for BallSystem {
+    fn build(self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("MoveBallsSystem")
+                .with_query(<(&Ball, &mut Transform)>::query())
+                .read_resource::<Time>()
+                .read_component::<Ball>()
+                .write_component::<Transform>()
+                .build(move |_commands, world, time, query_balls| {
+                    for (ball, local) in query_balls.iter_mut(world) {
+                        local.prepend_translation_x(ball.velocity[0] * time.delta_seconds());
+                        local.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
+                    }
+                }),
+        )
     }
 }
 # fn main() {}
 ```
 
 This system is responsible for moving all balls according to their speed and
-the elapsed time. Notice how the `join()` method is used to iterate over all
+the elapsed time. Notice how the `iter_mut()` method is used to iterate over all
 ball entities. Here we only have one ball, but if we ever need multiple, the
 system will handle them out of the box.
 In this system, we also want *framerate independence*.
@@ -193,64 +202,65 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 #   pub const ARENA_HEIGHT: f32 = 100.0;
 # }
 # 
-use amethyst::{
-    core::{Transform},
-    ecs::{System, World},
-};
+use amethyst::{core::transform::Transform, ecs::SystemBuilder, prelude::*};
 
 use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
 pub struct BounceSystem;
 
 impl System for BounceSystem {
-    type SystemData = (
-        .write_component::<Ball>()
-      .read_component::<Paddle>(),
-      .read_component::<Transform>(),
-    );
+    fn build(self) -> Box<dyn ParallelRunnable> {
+        Box::new(
+            SystemBuilder::new("BounceSystem")
+                .with_query(<(&mut Ball, &Transform)>::query())
+                .with_query(<&Paddle>::query())
+                .read_component::<Paddle>()
+                .read_component::<Transform>()
+                .write_component::<Ball>()
+                .build(
+                    move |_commands, world, _resources, (query_balls, query_paddles)| {
+                        let (mut ball_world, remaining) = world.split_for_query(query_balls);
 
-    fn run(&mut self, (mut balls, paddles, transforms): Self::SystemData) {
-        // Check whether a ball collided, and bounce off accordingly.
-        //
-        // We also check for the velocity of the ball every time, to prevent multiple collisions
-        // from occurring.
-        for (ball, transform) in (&mut balls, &transforms).join() {
-            let ball_x = transform.translation().x;
-            let ball_y = transform.translation().y;
+                        // Check whether a ball collided, and bounce off accordingly.
+                        //
+                        // We also check for the velocity of the ball every time, to prevent multiple collisions
+                        // from occurring.
+                        for (ball, transform) in query_balls.iter_mut(&mut ball_world) {
+                            let ball_x = transform.translation().x;
+                            let ball_y = transform.translation().y;
 
-            // Bounce at the top or the bottom of the arena.
-            if (ball_y <= ball.radius && ball.velocity[1] < 0.0)
-                || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
-            {
-                ball.velocity[1] = -ball.velocity[1];
-            }
+                            // Bounce at the top or the bottom of the arena.
+                            if (ball_y <= ball.radius && ball.velocity[1] < 0.0)
+                                || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
+                            {
+                                ball.velocity[1] = -ball.velocity[1];
+                            }
 
-            // Bounce at the paddles.
-            for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                let paddle_x = paddle_transform.translation().x - (paddle.width * 0.5);
-                let paddle_y = paddle_transform.translation().y - (paddle.height * 0.5);
-
-                // To determine whether the ball has collided with a paddle, we create a larger
-                // rectangle around the current one, by subtracting the ball radius from the
-                // lowest coordinates, and adding the ball radius to the highest ones. The ball
-                // is then within the paddle if its center is within the larger wrapper
-                // rectangle.
-                if point_in_rect(
-                    ball_x,
-                    ball_y,
-                    paddle_x - ball.radius,
-                    paddle_y - ball.radius,
-                    paddle_x + paddle.width + ball.radius,
-                    paddle_y + paddle.height + ball.radius,
-                ) {
-                    if (paddle.side == Side::Left && ball.velocity[0] < 0.0)
-                        || (paddle.side == Side::Right && ball.velocity[0] > 0.0)
-                    {
-                        ball.velocity[0] = -ball.velocity[0];
-                    }
-                }
-            }
-        }
+                            // Bounce at the paddles.
+                            for paddle in query_paddles.iter(&remaining) {
+                                // To determine whether the ball has collided with a paddle, we create a larger
+                                // rectangle around the current one, by subtracting the ball radius from the
+                                // lowest coordinates, and adding the ball radius to the highest ones. The ball
+                                // is then within the paddle if its centre is within the larger wrapper
+                                // rectangle.
+                                if point_in_rect(
+                                    ball_x,
+                                    ball_y,
+                                    paddle.x - paddle.width / 2. - ball.radius,
+                                    paddle.y - paddle.height / 2. - ball.radius,
+                                    paddle.x + paddle.width / 2. + ball.radius,
+                                    paddle.y + paddle.height / 2. + ball.radius,
+                                ) && ((paddle.side == Side::Left && ball.velocity[0] < 0.0)
+                                    || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
+                                {
+                                    println!("Bounce!");
+                                    ball.velocity[0] = -ball.velocity[0];
+                                }
+                            }
+                        }
+                    },
+                ),
+        )
     }
 }
 
@@ -293,21 +303,22 @@ as well as adding our new systems to the game data:
 #       }
 #   }
 #   let input_bundle = amethyst::input::InputBundle::new();
-    let game_data = DispatcherBuilder::default()
-#       .add_bundle(TransformBundle::new())?
-#       .add_bundle(input_bundle)?
-#       .with(systems::PaddleSystem, "paddle_system", &["input_system"])
+    let mut dispatcher = DispatcherBuilder::default();
+    dispatcher
+#       .add_bundle(LoaderBundle)
+#       // Add the transform bundle which handles tracking entity positions
+#       .add_bundle(TransformBundle)
+#       .add_bundle(
+#           InputBundle::new().with_bindings_from_file(app_root.join("config/bindings.ron"))?,
+#       )
+#       .add_system(PaddleSystem)
         // ...other systems...
-        .with(systems::MoveBallsSystem, "ball_system", &[])
-        .with(
-            systems::BounceSystem,
-            "collision_system",
-            &["paddle_system", "ball_system"],
-        );
+        .add_system(BallSystem)
+        .add_system(BounceSystem);
 #   let assets_dir = "/";
 #   struct Pong;
 #   impl SimpleState for Pong {}
-#   let mut game = Application::new(assets_dir, Pong, game_data)?;
+#   let game = Application::new(assets_dir, Pong::default(), dispatcher)?;
 #   Ok(())
 # }
 ```
@@ -336,8 +347,8 @@ Let's add that `update` method just below `on_start`:
 
 ```rust
 # use amethyst::prelude::*;
-# struct MyState;
-# impl SimpleState for MyState {
+# struct Pong;
+# impl SimpleState for Pong {
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
         Trans::None
     }
@@ -377,10 +388,10 @@ default empty state. Now let's use that inside our `Application` creation code i
 # struct Pong;
 # impl SimpleState for Pong {}
 # fn main() -> amethyst::Result<()> {
-#   let game_data = DispatcherBuilder::default();
+#   let mut dispatcher = DispatcherBuilder::default();
 #   let assets_dir = "/";
 #   let world = World::default();
-    let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
+    let mut game = Application::new(assets_dir, Pong::default(), dispatcher)?;
 #   Ok(())
 # }
 ```
@@ -391,9 +402,12 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 - then we have to `initialize_ball` once after the time has passed inside `update`:
 
 ```rust
-# use amethyst::prelude::*;
-# use amethyst::{assets::Handle, renderer::SpriteSheet};
-use amethyst::core::timing::Time;
+use amethyst::{
+    assets::{DefaultLoader, Handle, Loader, ProcessingQueue},
+    core::{timing::Time, transform::Transform},
+    prelude::*,
+    renderer::{Camera, SpriteRender, SpriteSheet, Texture},
+};
 
 # struct Paddle;
 # struct Ball;
@@ -409,6 +423,7 @@ use amethyst::core::timing::Time;
 #   sprite_sheet_handle: Option<Handle<SpriteSheet>>,
 # }
 # 
+// -- snip --
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let world = data.world;
@@ -419,7 +434,8 @@ impl SimpleState for Pong {
         // Load the spritesheet necessary to render the graphics.
         // `spritesheet` is the layout of the sprites on the image;
         // `texture` is the pixel data.
-        self.sprite_sheet_handle.replace(load_sprite_sheet(world));
+        self.sprite_sheet_handle
+            .replace(load_sprite_sheet(data.resources));
         initialize_paddles(world, self.sprite_sheet_handle.clone().unwrap());
         initialize_camera(world);
     }
@@ -428,7 +444,7 @@ impl SimpleState for Pong {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
             // If the timer isn't expired yet, subtract the time that passed since the last update.
             {
-                let time = data.world.fetch::<Time>();
+                let time = data.resources.get::<Time>().unwrap();
                 timer -= time.delta_seconds();
             }
             if timer <= 0.0 {
