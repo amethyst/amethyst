@@ -1,4 +1,6 @@
 use amethyst::{
+    assets::AssetStorage,
+    audio::{output::OutputWrapper, Source},
     core::{
         ecs::{ParallelRunnable, System},
         transform::Transform,
@@ -7,7 +9,8 @@ use amethyst::{
     ui::UiText,
 };
 
-use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
+use crate::audio::{play_score, Sounds};
+use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_HEIGHT, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
@@ -22,10 +25,13 @@ impl System for WinnerSystem {
                 .write_component::<UiText>()
                 .write_resource::<ScoreBoard>()
                 .read_resource::<ScoreText>()
+                .read_resource::<Sounds>()
+                .read_resource::<AssetStorage<Source>>()
+                .read_resource::<OutputWrapper>()
                 .build(
                     move |_commands,
                           world,
-                          (score_board, score_text),
+                          (score_board, score_text, sounds, storage, output_wrapper),
                           (balls_query, edit_query)| {
                         let (mut ball_world, mut score_world) = world.split_for_query(balls_query);
 
@@ -58,6 +64,9 @@ impl System for WinnerSystem {
                                 // Reset the ball.
                                 ball.velocity[0] = -ball.velocity[0];
                                 transform.set_translation_x(ARENA_WIDTH / 2.0);
+                                transform.set_translation_y(ARENA_HEIGHT / 2.0);
+
+                                play_score(&*sounds, &storage, output_wrapper.output.as_ref());
                                 // Print the score board.
                                 println!(
                                     "Score: | {:^3} | {:^3} |",
