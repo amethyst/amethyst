@@ -2,9 +2,8 @@ use std::{collections::HashSet, marker::PhantomData, time::Duration};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    duration_to_nanos, duration_to_secs,
     ecs::{systems::ParallelRunnable, *},
-    nanos_to_duration, secs_to_duration, Time,
+    Time,
 };
 use derivative::Derivative;
 use log::debug;
@@ -124,7 +123,7 @@ fn process_sampler<T>(
                 control.blend_weight,
                 control.channel.clone(),
                 sampler.function.interpolate(
-                    duration_to_secs(duration),
+                    duration.as_secs_f32(),
                     &sampler.input,
                     &sampler.output,
                     false,
@@ -197,12 +196,12 @@ where
         // sampling is running, update duration and check end condition
         Running(duration) => {
             let current_dur =
-                duration + secs_to_duration(time.delta_seconds() * control.rate_multiplier);
+                duration + Duration::from_secs_f32(time.delta_time().as_secs_f32() * control.rate_multiplier);
             let last_frame = sampler
                 .input
                 .last()
                 .cloned()
-                .map(secs_to_duration)
+                .map(|t| Duration::from_secs_f32(t))
                 .unwrap_or_else(|| Duration::from_secs(0));
             // duration is past last frame of sampling
             if current_dur > last_frame {
@@ -240,11 +239,11 @@ where
 }
 
 fn next_duration(last_frame: Duration, duration: Duration) -> (Duration, u32) {
-    let animation_duration = duration_to_nanos(last_frame);
-    let current_duration = duration_to_nanos(duration);
+    let animation_duration = last_frame.as_nanos();
+    let current_duration = duration.as_nanos();
     let remain_duration = current_duration % animation_duration;
     let loops = current_duration / animation_duration;
-    (nanos_to_duration(remain_duration), loops as u32)
+    (Duration::from_nanos(remain_duration as u64), loops as u32)
 }
 
 fn linear_blend<T>(
