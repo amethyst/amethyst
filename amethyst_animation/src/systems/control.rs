@@ -1,7 +1,7 @@
 use std::{collections::HashMap, hash::Hash, marker::PhantomData, time::Duration};
 
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{ecs::*, timing::secs_to_duration};
+use amethyst_core::ecs::*;
 use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::{debug, error};
@@ -171,7 +171,7 @@ where
                                 .expect("Unreachable: Id of current `deferred_start` was taken from previous loop over `deferred_animations`");
 
                             let mut def = control_set.deferred_animations.remove(index);
-                            def.control.state = ControlState::Deferred(secs_to_duration(start_dur));
+                            def.control.state = ControlState::Deferred(Duration::from_secs_f32(start_dur));
                             def.control.command = AnimationCommand::Start;
                             let mut remove = false;
                             if let Some(state) =

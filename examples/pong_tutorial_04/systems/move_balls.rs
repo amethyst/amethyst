@@ -1,5 +1,5 @@
 use amethyst::{
-    core::{timing::Time, transform::Transform},
+    core::{Time, transform::Transform},
     ecs::SystemBuilder,
     prelude::*,
 };
@@ -18,8 +18,8 @@ impl System for BallSystem {
                 .write_component::<Transform>()
                 .build(move |_commands, world, time, query_balls| {
                     for (ball, local) in query_balls.iter_mut(world) {
-                        local.prepend_translation_x(ball.velocity[0] * time.delta_seconds());
-                        local.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
+                        local.prepend_translation_x(ball.velocity[0] * time.delta_time().as_secs_f32());
+                        local.prepend_translation_y(ball.velocity[1] * time.delta_time().as_secs_f32());
                     }
                 }),
         )

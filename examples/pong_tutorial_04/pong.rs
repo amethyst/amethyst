@@ -1,6 +1,6 @@
 use amethyst::{
     assets::{DefaultLoader, Handle, Loader, ProcessingQueue},
-    core::{timing::Time, transform::Transform},
+    core::{Time, transform::Transform},
     prelude::*,
     renderer::{Camera, SpriteRender, SpriteSheet, Texture},
 };
@@ -42,7 +42,7 @@ impl SimpleState for Pong {
             // If the timer isn't expired yet, substract the time that passed since last update.
             {
                 let time = data.resources.get::<Time>().unwrap();
-                timer -= time.delta_seconds();
+                timer -= time.delta_time().as_secs_f32();
             }
             if timer <= 0.0 {
                 // When timer expire, spawn the ball

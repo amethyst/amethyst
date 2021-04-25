@@ -73,7 +73,7 @@ fn main() -> amethyst::Result<()> {
 mod example_utils {
     use amethyst::{
         assets::{DefaultLoader, Handle, Loader},
-        core::{math::Vector3, transform::TransformValues, Transform},
+        core::{math::Vector3, num::FloatConst, transform::TransformValues, Transform},
         ecs::{Resources, World},
         renderer::{
             light::{Light, SpotLight},
@@ -85,7 +85,6 @@ mod example_utils {
             Camera, Material, MaterialDefaults, Mesh, Texture,
         },
     };
-    use amethyst::core::num::FloatConst;
 
     pub fn build_mesh_from_shape(world: &mut World, resources: &mut Resources) {
         let loader = resources.get::<DefaultLoader>().unwrap();

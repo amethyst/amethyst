@@ -82,7 +82,7 @@ impl System for SpamSystem {
                             let payload = format!(
                                 "CL: sim_frame:{},abs_time:{}",
                                 frame,
-                                time.absolute_time_seconds()
+                                time.absolute_time().as_secs_f32(),
                             );
                             net.send(server_addr, payload.as_bytes());
                         }
