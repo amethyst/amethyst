@@ -36,6 +36,7 @@ rayon = "1.5"
 shrev = "1.1.1"
 simba = { version = "0.3" }
 smallvec = "1.4"
+spin_sleep = "1.0.0"
 thread_profiler = { version = "0.3", optional = true }
 serde-diff = "0.4"
 

@@ -44,8 +44,8 @@
 //!   passed. This will result in the most accurate frame timings, but effectively guarantees
 //!   that one CPU core will be fully utilized during the frame's idle time.
 //! * `Sleep` will sleep for the approximate remainder of the frame duration. This will result in
-//!   lower CPU usage while the game is idle, but risks fluctuations in frame timing if the
-//!   operating system doesn't wake the game until after the frame should have started.
+//!   lower CPU usage while the game is idle; this is the best compromise between resources
+//!   occupation and accuracy.
 //! * `SleepAndYield` will sleep until there's only a small amount of time left in the frame,
 //!   and then will yield until the next frame starts. This approach attempts to get the
 //!   consistent frame timings of yielding, while reducing CPU usage compared to the yield-only
@@ -55,17 +55,26 @@
 //! games that aren't as affected by extra CPU usage. For mobile devices, the `Sleep` strategy
 //! will help conserve battery life.
 //!
+//! The sleep implementation is based on the `spin-sleep` crate, which uses accurate sleeping on
+//! Windows, and a standard `thread::sleep()` on other systems.
+//! For experimental data, and related testing tooling, see the related [GitHub Issue](https://github.com/amethyst/amethyst/issues/2083).
+//! It's important to be aware that the semantics of the `spin-sleep` crate are not exact; the
+//! crate does not perform a [busy wait](https://en.wikipedia.org/wiki/Busy_loop), rather, it
+//! uses the Windows APIs that make the sleep time as accurate as possible. For a related article,
+//! see this [blog post](https://randomascii.wordpress.com/2020/10/04/windows-timer-resolution-the-great-rule-change).
+//!
 //! `SleepAndYield` can potentially be as accurate as `Yield` while using less CPU time, but you
 //! will have to test different grace period timings to determine how much time needs to be left
 //! to ensure that the main thread doesn't sleep too long and miss the start of the next frame.
 //!
 //! [`Application`]: ../../amethyst/type.Application.html
 //! [`FrameRateLimitStrategy`]: ./enum.FrameRateLimitStrategy.html
+//! [`spin-sleep` crate]: https://github.com/alexheretic/spin-sleep
 //! [`thread::yield_now`]: https://doc.rust-lang.org/std/thread/fn.yield_now.html
 //! [`thread::sleep`]: https://doc.rust-lang.org/stable/std/thread/fn.sleep.html
 
 use std::{
-    thread::{sleep, yield_now},
+    thread::yield_now,
     time::{Duration, Instant},
 };
 
@@ -226,7 +235,7 @@ impl FrameLimiter {
             if elapsed >= frame_duration {
                 break;
             } else {
-                sleep(frame_duration - elapsed);
+                spin_sleep::sleep(frame_duration - elapsed);
             }
         }
     }
