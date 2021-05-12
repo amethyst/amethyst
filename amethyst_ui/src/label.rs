@@ -1,7 +1,10 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::{register_asset_type, Asset, AssetProcessorSystem, Handle};
-use amethyst_core::ecs::*;
+use amethyst_core::{
+    ecs::*,
+    transform::{Parent, Transform},
+};
 
 use crate::{
     define_widget, Anchor, FontAsset, LineMode, Selectable, Stretch, UiText, UiTransform, WidgetId,
@@ -196,7 +199,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
 
     /// Build this with the `UiLabelBuilderResources`.
     pub fn build_from_world_and_resources(
-        self,
+        mut self,
         world: &mut World,
         resources: &mut Resources,
     ) -> (I, UiLabel) {
@@ -245,6 +248,15 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
         if let Some(order) = self.selectable {
             text_entry.add_component(Selectable::<G>::new(order));
         }
+
+        if let Some(parent) = self.parent.take() {
+            text_entry.add_component(Parent(parent));
+        }
+
+        // FIXME : The current parent update system in amethyst_core is updating based on the Transform component...
+        // That's actually a 'bad' linkage. Later to legion port, we'll replace the system by legion_transform which is better,
+        // the following 4 lines won't be usefull anymore.
+        text_entry.add_component(Transform::default());
 
         (id, widget)
     }

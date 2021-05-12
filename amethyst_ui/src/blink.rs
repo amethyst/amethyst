@@ -38,8 +38,8 @@ impl System for BlinkSystem {
                     #[cfg(feature = "profiler")]
                     profile_scope!("blink_system");
 
-                    let abs_sec = time.delta_seconds();
-                    let abs_unscaled_sec = time.delta_real_seconds();
+                    let abs_sec = time.delta_time().as_secs_f32();
+                    let abs_unscaled_sec = time.delta_real_time().as_secs_f32();
 
                     let (mut blinks_world, mut subworld) = world.split_for_query(&blinks);
 

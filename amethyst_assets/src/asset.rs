@@ -52,7 +52,7 @@ impl<T: Asset<Data = T>> ProcessableAsset for T {
 /// in turn accepted by `Asset::from_data`. Examples for formats are
 /// `Png`, `Obj` and `Wave`.
 ///
-/// The format type itself represents loading options, which are passed to `import`.
+/// The format type itself represents loading options, which are passed to `import_simple`.
 /// E.g. for textures this would be stuff like mipmap levels and
 /// sampler info.
 pub trait Format<D: 'static>: DynClone + Send + Sync + 'static {

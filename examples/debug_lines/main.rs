@@ -36,7 +36,7 @@ impl System for ExampleLinesSystem {
                 .write_resource::<DebugLines>()
                 .build(|_, _, (time, debug_lines_resource), _| {
                     // Drawing debug lines as a resource
-                    let t = (time.absolute_time_seconds() as f32).cos();
+                    let t = time.absolute_time().as_secs_f32().cos();
 
                     debug_lines_resource.draw_direction(
                         Point3::new(t, 0.0, 0.5),

@@ -28,6 +28,16 @@ pub struct Prefab {
     pub(crate) version: u32,
 }
 
+impl Prefab {
+    /// Create a new Amethyst Prefab giving a legion Prefab object
+    pub fn new(raw: legion_prefab::Prefab) -> Self {
+        Self {
+            raw,
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for Prefab {
     fn default() -> Self {
         Prefab {

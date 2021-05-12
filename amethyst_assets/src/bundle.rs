@@ -9,6 +9,7 @@ fn asset_loading_tick(_: &mut World, resources: &mut Resources) {
     let mut loader = resources
         .get_mut::<DefaultLoader>()
         .expect("Could not get_mut DefaultLoader");
+
     loader
         .process(resources)
         .expect("Error in Loader processing");

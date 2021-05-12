@@ -13,118 +13,45 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
-use std::{collections::HashMap, ops::Range};
-
-use amethyst_assets::{AssetStorage, Handle, Loader, ProgressCounter};
-use amethyst_core::{
-    ecs::{Entity, Read, ReadExpect, Write, WriteStorage},
-    math::{convert, Point3, Vector3},
-    transform::Transform,
-    Named,
+use amethyst_animation::{Animation, Joint};
+use amethyst_assets::{
+    inventory, prefab::register_component_type, register_asset_type, AssetProcessorSystem,
 };
-use amethyst_error::Error;
-use amethyst_rendy::{rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere};
+use amethyst_core::Transform;
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
-pub use crate::format::GltfSceneFormat;
+/// Bundle that initializes needed resources to use GLTF
+pub mod bundle;
+mod importer;
+mod system;
+mod types;
 
-mod error;
-mod format;
+pub use importer::GltfImporter;
 
-/// A GLTF node extent
-#[derive(Clone, Debug)]
-pub struct GltfNodeExtent {
-    /// The beginning of this extent
-    pub start: Point3<f32>,
-    /// The end of this extent
-    pub end: Point3<f32>,
-}
-
-impl Default for GltfNodeExtent {
-    fn default() -> Self {
-        Self {
-            start: Point3::from(Vector3::from_element(std::f32::MAX)),
-            end: Point3::from(Vector3::from_element(std::f32::MIN)),
-        }
+inventory::submit! {
+    amethyst_assets::SourceFileImporter {
+        extension: "gltf",
+        instantiator: || Box::new(GltfImporter::default()),
     }
 }
 
-impl GltfNodeExtent {
-    /// Extends this to include the input range.
-    pub fn extend_range(&mut self, other: &Range<[f32; 3]>) {
-        for i in 0..3 {
-            if other.start[i] < self.start[i] {
-                self.start[i] = other.start[i];
-            }
-            if other.end[i] > self.end[i] {
-                self.end[i] = other.end[i];
-            }
-        }
-    }
-
-    /// Extends this to include the provided extent.
-    pub fn extend(&mut self, other: &GltfNodeExtent) {
-        for i in 0..3 {
-            if other.start[i] < self.start[i] {
-                self.start[i] = other.start[i];
-            }
-            if other.end[i] > self.end[i] {
-                self.end[i] = other.end[i];
-            }
-        }
-    }
-
-    /// Returns the centroid of this extent
-    pub fn centroid(&self) -> Point3<f32> {
-        (self.start + self.end.coords) / 2.
-    }
-
-    /// Returns the 3 dimensional distance between the start and end of this.
-    pub fn distance(&self) -> Vector3<f32> {
-        self.end - self.start
-    }
-
-    /// Determines if this extent is valid.
-    pub fn valid(&self) -> bool {
-        for i in 0..3 {
-            if self.start[i] > self.end[i] {
-                return false;
-            }
-        }
-        true
+inventory::submit! {
+    amethyst_assets::SourceFileImporter {
+        extension: "glb",
+        instantiator: || Box::new(GltfImporter::default()),
     }
 }
 
-impl Into<BoundingSphere> for GltfNodeExtent {
-    fn into(self) -> BoundingSphere {
-        BoundingSphere {
-            center: convert(self.centroid()),
-            radius: convert(self.distance().magnitude() * 0.5),
-        }
-    }
-}
-
-impl From<Range<[f32; 3]>> for GltfNodeExtent {
-    fn from(range: Range<[f32; 3]>) -> Self {
-        GltfNodeExtent {
-            start: Point3::from(range.start),
-            end: Point3::from(range.end),
-        }
-    }
-}
-
-/// Used during gltf loading to contain the materials used from scenes in the file
-#[derive(Debug, Derivative)]
-#[derivative(Default(bound = ""))]
-pub struct GltfMaterialSet {
-    pub(crate) materials: HashMap<usize, MaterialPrefab>,
-}
+register_component_type!(Joint);
+register_asset_type!(Animation<Transform> => Animation<Transform>; AssetProcessorSystem<Animation<Transform>>);
 
 /// Options used when loading a GLTF file
-#[derive(Debug, Clone, Derivative, Serialize, Deserialize)]
-#[derivative(Default)]
+#[derive(Debug, Clone, Derivative, Serialize, Deserialize, TypeUuid)]
 #[serde(default)]
+#[derivative(Default)]
+#[uuid = "8e3da51a-26d4-4b0f-b9f7-7f52d1b78945"]
 pub struct GltfSceneOptions {
     /// Generate texture coordinates if none exist in the Gltf file
     pub generate_tex_coords: (f32, f32),

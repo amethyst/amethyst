@@ -1,15 +1,25 @@
 use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
 
-use amethyst_assets::{Asset, AssetStorage, Handle};
+use amethyst_assets::{
+    erased_serde::private::serde::{de, de::SeqAccess, ser::SerializeSeq},
+    prefab::{
+        register_component_type,
+        serde_diff::{ApplyContext, DiffContext},
+        SerdeDiff,
+    },
+    Asset, AssetStorage, Handle,
+};
 use amethyst_core::{
     ecs::*,
-    timing::{duration_to_secs, secs_to_duration},
+    Transform,
 };
 use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::debug;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
+use uuid::Uuid;
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
@@ -116,7 +126,7 @@ where
 /// Defines the hierarchy of nodes that a single animation can control.
 /// Attached to the root entity that an animation can be defined for.
 /// Only required for animations which target more than a single node or entity.
-#[derive(Derivative, Debug, Clone)]
+#[derive(Derivative, Debug, Clone, Serialize, Deserialize)]
 #[derivative(Default(bound = ""))]
 pub struct AnimationHierarchy<T> {
     /// A mapping between indices and entities
@@ -175,6 +185,35 @@ where
     }
 }
 
+// d8d687ef-da49-a839-5066-c0d703b99bdc
+impl TypeUuid for AnimationSet<usize, Transform> {
+    const UUID: type_uuid::Bytes =
+        *Uuid::from_u128(288227155745652393685123926184903154652).as_bytes();
+}
+
+impl SerdeDiff for AnimationSet<usize, Transform> {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        _ctx: &mut DiffContext<'a, S>,
+        _other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
+        unimplemented!()
+    }
+
+    fn apply<'de, A>(
+        &mut self,
+        _seq: &mut A,
+        _ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        unimplemented!()
+    }
+}
+
+register_component_type!(AnimationHierarchy<Transform>);
+
 /// Defines a single animation.
 ///
 /// An animation is a set of [`Sampler`][sampler]s that should always run together as a unit.
@@ -187,7 +226,7 @@ where
 /// - `T`: the component type that the animation should be applied to
 ///
 /// [sampler]: struct.Sampler.html
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(bound(
     serialize = "T::Channel: Serialize, T::Primitive: Serialize",
     deserialize = "T::Channel: Deserialize<'de>, T::Primitive: Deserialize<'de>",
@@ -431,7 +470,7 @@ where
     where
         T: AnimationSampling,
     {
-        let dur = secs_to_duration(input);
+        let dur = Duration::from_secs_f32(input);
         self.samplers
             .iter_mut()
             .filter(|t| t.control_id == control_id)
@@ -490,7 +529,7 @@ where
             .filter(|t| t.control_id == control_id)
             .map(|t| {
                 if let ControlState::Running(dur) = t.state {
-                    duration_to_secs(dur)
+                    dur.as_secs_f32()
                 } else {
                     0.
                 }
@@ -507,7 +546,7 @@ fn set_step_state<T>(
     T: AnimationSampling,
 {
     if let ControlState::Running(dur) = control.state {
-        let dur_s = duration_to_secs(dur);
+        let dur_s = dur.as_secs_f32();
         let new_index = match (get_input_index(dur_s, &sampler.input), direction) {
             (Some(index), &StepDirection::Forward) if index >= sampler.input.len() - 1 => {
                 sampler.input.len() - 1
@@ -517,7 +556,7 @@ fn set_step_state<T>(
             (Some(index), &StepDirection::Backward) => index - 1,
             (None, _) => 0,
         };
-        control.state = ControlState::Running(secs_to_duration(sampler.input[new_index]));
+        control.state = ControlState::Running(Duration::from_secs_f32(sampler.input[new_index]));
     }
 }
 
@@ -824,7 +863,7 @@ where
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnimationSet<I, T>
 where
     I: Eq + Hash,
@@ -867,5 +906,34 @@ where
     /// Retrieve an animation handle from the set
     pub fn get(&self, id: &I) -> Option<&Handle<Animation<T>>> {
         self.animations.get(id)
+    }
+}
+
+register_component_type!(AnimationSet<usize, Transform>);
+
+// d8160db6-6dc5-49fd-4c08-8b81739b175c
+impl TypeUuid for AnimationHierarchy<Transform> {
+    const UUID: type_uuid::Bytes =
+        *Uuid::from_u128(287227755745252393685123926184901154652).as_bytes();
+}
+
+impl SerdeDiff for AnimationHierarchy<Transform> {
+    fn diff<'a, S: SerializeSeq>(
+        &self,
+        _ctx: &mut DiffContext<'a, S>,
+        _other: &Self,
+    ) -> Result<bool, <S as SerializeSeq>::Error> {
+        unimplemented!()
+    }
+
+    fn apply<'de, A>(
+        &mut self,
+        _seq: &mut A,
+        _ctx: &mut ApplyContext,
+    ) -> Result<bool, <A as SeqAccess<'de>>::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        unimplemented!()
     }
 }

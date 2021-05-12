@@ -1,6 +1,6 @@
 //! Allows you to automatically delete an entity after a set time has elapsed.
 
-use amethyst_core::{ecs::*, timing::Time};
+use amethyst_core::{ecs::*, Time};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -31,7 +31,7 @@ pub fn build_destroy_at_time_system() -> impl Runnable {
             profile_scope!("destroy_at_time_system");
 
             for (ent, dat) in dat_query.iter_mut(subworld) {
-                if time.absolute_time_seconds() > dat.time {
+                if time.absolute_time().as_secs_f64() > dat.time {
                     commands.remove(*ent);
                 }
             }
@@ -52,7 +52,7 @@ pub fn build_destroy_in_time_system() -> impl Runnable {
                     commands.remove(*ent);
                 }
 
-                dit.timer -= f64::from(time.delta_seconds());
+                dit.timer -= time.delta_time().as_secs_f64();
             }
         })
 }

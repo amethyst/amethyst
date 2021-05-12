@@ -7,7 +7,7 @@ use amethyst_assets::{
 use amethyst_core::{
     ecs::*,
     shrev::{EventChannel, ReaderId},
-    timing::Time,
+    Time,
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
@@ -194,7 +194,7 @@ impl System for TextEditingMouseSystem {
 
                         // TODO: Finish TextEditingCursorSystem and remove this
                         selected_text_editings.for_each_mut(world, |(text_editing, _)| {
-                            text_editing.cursor_blink_timer += time.delta_real_seconds();
+                            text_editing.cursor_blink_timer += time.delta_real_time().as_secs_f32();
                             if text_editing.cursor_blink_timer >= 0.5 {
                                 text_editing.cursor_blink_timer = 0.0;
                             }

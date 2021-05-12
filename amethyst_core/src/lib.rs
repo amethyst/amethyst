@@ -24,6 +24,7 @@ pub type ArcThreadPool = std::sync::Arc<rayon::ThreadPool>;
 pub use core::fmt; //FIXME https://github.com/amethyst/amethyst/issues/2478
 
 pub use approx;
+pub use game_clock::Time;
 pub use nalgebra as math;
 pub use num_traits as num;
 pub use shrev;
@@ -36,7 +37,7 @@ pub use self::{
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     named::Named,
     shrev::EventChannel,
-    timing::*,
+    timing::Stopwatch,
     transform::Transform,
 };
 
@@ -60,9 +61,6 @@ pub mod frame_limiter;
 /// The geometry module.
 pub mod geometry;
 
-/// The timing module.
-pub mod timing;
-
 /// The transformation module.
 pub mod transform;
 
@@ -77,3 +75,4 @@ mod event;
 mod hidden;
 mod named;
 pub mod system_ext;
+mod timing;
