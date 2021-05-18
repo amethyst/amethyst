@@ -277,8 +277,8 @@ mod move_balls;
 mod bounce;
 mod paddle;
 ```
-Also, don't forget to add our new systems to the game data:
 
+Also, don't forget to add our new systems to the game data:
 ```rust
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::input::StringBindings;
