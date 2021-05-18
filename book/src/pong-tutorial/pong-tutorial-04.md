@@ -266,8 +266,18 @@ The following image illustrates how collisions with paddles are checked.
 
 ![Collision explanotary drawing](../images/pong_tutorial/pong_paddle_collision.png)
 
-Also, don't forget to add `mod move_balls` and `mod bounce` in `systems/mod.rs`
-as well as adding our new systems to the game data:
+We will need to add `mod move_balls` and `mod bounce` as well as `MoveBallsSystem` and
+`BounceSystem` to our `systems/mod.rs`:
+```rust
+pub use self::paddle::PaddleSystem;
+pub use self::move_balls::MoveBallsSystem;
+pub use self::bounce::BounceSystem;
+
+mod move_balls;
+mod bounce;
+mod paddle;
+```
+Also, don't forget to add our new systems to the game data:
 
 ```rust
 # use amethyst::core::transform::TransformBundle;
