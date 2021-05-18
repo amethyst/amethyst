@@ -2,11 +2,10 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     error::Error,
-    ops::{Deref, DerefMut},
-    path::PathBuf,
-    sync::Arc,
     fs::File,
     path::PathBuf,
+    ops::{Deref, DerefMut},
+    sync::Arc,
 };
 
 use amethyst_core::{
