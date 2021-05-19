@@ -39,7 +39,7 @@ dyn-clone = "1.0"
 erased-serde = "0.3.9"
 inventory = "0.1.5"
 lazy_static = "1.4"
-distill = { version = "0.0.2", features = [
+distill = { version = "0.0.3", features = [
     "serde-1",
     "type_uuid",
     "serde_importers",

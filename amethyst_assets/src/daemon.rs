@@ -1,4 +1,4 @@
-use crate::simple_importer::get_source_importers;
+use crate::{prefab::PrefabImporter, simple_importer::get_source_importers};
 use amethyst_error::Error;
 use distill::daemon::AssetDaemon as AtelierAssetDaemon;
 use std::{
@@ -118,6 +118,7 @@ impl InitializedDaemon {
     fn start_on_new_thread(&self) -> AssetDaemonState {
         let (join_handle, shutdown) = AtelierAssetDaemon::default()
             .with_importers_boxed(get_source_importers())
+            .with_importer("prefab", PrefabImporter::default())
             .with_db_path(self.opt.db_dir.clone())
             .with_address(self.opt.address)
             .with_asset_dirs(self.opt.asset_dirs.clone())
