@@ -38,9 +38,11 @@ You can delete everything in that file, then add these imports:
 //! Pong Tutorial 1
 
 use amethyst::{
+    assets::LoaderBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
+        rendy::hal::command::ClearColor,
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -50,10 +52,9 @@ use amethyst::{
 
 We'll be learning more about these as we go through this tutorial. The prelude
 includes the basic (and most important) types like `Application`, `World`, and
-`State`. We also import all the necessary types to define a basic rendering pipeline.
+`State`. We also import the necessary types to load assets, and define a basic rendering pipeline.
 
-Now we have all the dependencies installed and imports prepared, we are ready to start
-working on defining our game code.
+With the dependencies installed and imports prepared, we can start defining our game code.
 
 ## Creating the game state
 
@@ -116,16 +117,13 @@ inside your terminal window.
 ## Preparing the display config
 
 Next, we need to create a `DisplayConfig` to store the configuration for our game's
-window. We can either define the configuration in our code or better yet load it
-from a file. The latter approach is handier, as it allows us to change configuration
-(e.g, the window size) without having to recompile our game every time.
+window. We'll load the configuration from a file. Since it's outside our code, we can change configuration (e.g, the window size) without having to recompile our game every time.
 
 Starting the project with `amethyst new` should have automatically generated
-`DisplayConfig` data in `config/display.ron`. If you created the
-project manually, go ahead and create it now.
+`DisplayConfig` data in `config/display.ron`. If you started the
+project manually, go ahead and create `config/display.ron` now.
 
-In either case, open `display.ron` and change its contents to the
-following:
+Open `config/display.ron` and change its contents to the following:
 
 ```rust
 (
@@ -150,7 +148,7 @@ the display configuration:
 # 
 # fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("config").join("display.ron");
+    let display_config_path = app_root.join("config/display.ron");
 #   Ok(())
 # }
 ```
@@ -160,16 +158,17 @@ the display configuration:
 In `main()` in `main.rs` we are going to add the basic application setup:
 
 ```rust
-# use amethyst::{prelude::*, utils::application_root_dir};
 # fn main() -> Result<(), amethyst::Error> {
-#   struct Pong;
-#   impl SimpleState for Pong {}
-    let game_data = DispatcherBuilder::default();
+#   amethyst::start_logger(Default::default());
 
 #   let app_root = application_root_dir()?;
+#   let display_config_path = app_root.join("config/display.ron");
+
+    let mut dispatcher = DispatcherBuilder::default();
+
     let assets_dir = app_root.join("assets");
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
-    //game.run();
+    let mut game = Application::new(assets_dir, Pong, dispatcher)?;
+    game.run();
 #   Ok(())
 # }
 ```
@@ -204,39 +203,53 @@ Last time we left our `DispatcherBuilder` instance empty, now we'll add some sys
 
 ```rust
 # use amethyst::{
-#   prelude::*,
-#   renderer::{
-#       plugins::{RenderFlat2D, RenderToWindow},
-#       types::DefaultBackend,
-#       RenderingBundle,
-#   },
-#   utils::application_root_dir,
+#    assets::LoaderBundle,
+#    prelude::*,
+#    renderer::{
+#        plugins::{RenderFlat2D, RenderToWindow},
+#        rendy::hal::command::ClearColor,
+#        types::DefaultBackend,
+#        RenderingBundle,
+#    },
+#    utils::application_root_dir,
 # };
+
 # fn main() -> Result<(), amethyst::Error> {
-    let app_root = application_root_dir()?;
-
-    let display_config_path = app_root.join("config").join("display.ron");
-
-    let game_data = DispatcherBuilder::default().add_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?
-                    .with_clear([0.0, 0.0, 0.0, 1.0]),
-            )
-            // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
-            .with_plugin(RenderFlat2D::default()),
-    )?;
+#   amethyst::start_logger(Default::default());
+#
+#   let app_root = application_root_dir()?;
+#   let display_config_path = app_root.join("config/display.ron");
+#
+    let dispatcher = DispatcherBuilder::default();
+    dispatcher
+        // The LoaderBundle manages asset loading and storage.
+        .add_bundle(LoaderBundle)
+        // The RenderingBundle provides a mechanism for registering rendering plugins.
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                // The RenderToWindow plugin opens a window and draws on it.
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.0, 0.0, 0.0, 1.0],
+                    }),
+                )
+                // The RenderFlat2D plugin renders entities with a `SpriteRender` component.
+                .with_plugin(RenderFlat2D::default()),
+        );
+#   let game = Application::new(assets_dir, Pong, dispatcher)?;
+#   game.run();        
 #   Ok(())
 # }
 ```
 
-Here we are adding a `RenderingBundle`. Bundles are essentially sets of systems
-preconfigured to work together, so you don't have to write them all down one by one.
+Here we are adding bundles to our `DispatcherBuilder`. Bundles contain preconfigured sets of systems that work together.
 
 > **Note:** We will cover systems and bundles in more detail later. For now, think of a bundle
 > as a collection of systems that, in combination, will provide a certain feature to the engine.
 > You will surely be writing your own bundles for your own game's features soon.
+
+The `LoaderBundle` manages loading and storing assets. We'll use this later to load files,
+such as the sprites for our paddles and ball.
 
 The `RenderingBundle` has a difference to most other bundles: It doesn't really do much by itself.
 Instead, it relies on its own plugin system to define what should be rendered and how. We use the

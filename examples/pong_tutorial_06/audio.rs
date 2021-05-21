@@ -75,3 +75,11 @@ pub fn play_bounce(sounds: &Sounds, storage: &AssetStorage<Source>, output: Opti
         }
     }
 }
+
+pub fn play_score(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
+    if let Some(ref output) = output.as_ref() {
+        if let Some(sound) = storage.get(&sounds.score_sfx) {
+            output.play_once(sound, 1.0);
+        }
+    }
+}

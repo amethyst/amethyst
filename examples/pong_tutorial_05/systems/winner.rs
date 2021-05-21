@@ -7,7 +7,7 @@ use amethyst::{
     ui::UiText,
 };
 
-use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
+use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_HEIGHT, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
@@ -58,6 +58,7 @@ impl System for WinnerSystem {
                                 // Reset the ball.
                                 ball.velocity[0] = -ball.velocity[0];
                                 transform.set_translation_x(ARENA_WIDTH / 2.0);
+                                transform.set_translation_y(ARENA_HEIGHT / 2.0);
                                 // Print the score board.
                                 println!(
                                     "Score: | {:^3} | {:^3} |",

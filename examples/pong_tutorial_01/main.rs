@@ -27,18 +27,21 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("assets/");
 
     let mut dispatcher = DispatcherBuilder::default();
-    dispatcher.add_bundle(LoaderBundle).add_bundle(
-        RenderingBundle::<DefaultBackend>::new()
-            // The RenderToWindow plugin provides all the scaffolding for opening a window and
-            // drawing on it
-            .with_plugin(
-                RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
-                    float32: [0.0, 0.0, 0.0, 1.0],
-                }),
-            )
-            // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
-            .with_plugin(RenderFlat2D::default()),
-    );
+    dispatcher
+        // The LoaderBundle manages asset loading and storage.
+        .add_bundle(LoaderBundle)
+        // The RenderingBundle provides a mechanism for registering rendering plugins.
+        .add_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                // The RenderToWindow plugin provides functionality to open a window and draw on it.
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?.with_clear(ClearColor {
+                        float32: [0.0, 0.0, 0.0, 1.0],
+                    }),
+                )
+                // The RenderFlat2D plugin renders entities with a `SpriteRender` component.
+                .with_plugin(RenderFlat2D::default()),
+        );
 
     let game = Application::new(assets_dir, Pong, dispatcher)?;
     game.run();
