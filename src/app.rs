@@ -160,12 +160,6 @@ where
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
     ///        game logic.
     ///
-    /// # Lifetimes
-    ///
-    /// - `a`: The lifetime of the `State` objects.
-    /// - `b`: This lifetime is inherited from `specs` and `shred`, it is
-    ///        the minimum lifetime of the systems used by `CoreApplication`
-    ///
     /// # Errors
     ///
     /// Application will return an error if the internal thread pool fails
@@ -430,12 +424,6 @@ where
     ///
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
     ///        game logic.
-    ///
-    /// # Lifetimes
-    ///
-    /// - `a`: The lifetime of the `State` objects.
-    /// - `b`: This lifetime is inherited from `specs` and `shred`, it is
-    ///        the minimum lifetime of the systems used by `CoreApplication`
     ///
     /// # Errors
     ///
