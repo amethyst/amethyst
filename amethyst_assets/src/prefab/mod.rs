@@ -1,5 +1,6 @@
+#[cfg(feature = "asset-daemon")]
 mod importers;
-use amethyst_core::transform::Parent;
+#[cfg(feature = "asset-daemon")]
 pub use importers::PrefabImporter;
 
 mod assets;
@@ -17,4 +18,4 @@ mod processor;
 // register core components
 register_component_type!(amethyst_core::transform::Transform);
 register_component_type!(amethyst_core::transform::TransformValues);
-register_component_type!(Parent);
+register_component_type!(amethyst_core::transform::Parent);

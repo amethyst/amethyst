@@ -18,6 +18,8 @@ pub use rayon::ThreadPool;
 mod asset;
 mod bundle;
 mod cache;
+#[cfg(feature = "asset-daemon")]
+mod daemon;
 /// asset loading specific errors
 pub mod error;
 #[cfg(feature = "json")]
@@ -45,11 +47,15 @@ pub use type_uuid::TypeUuid;
 #[doc(hidden)]
 pub use {erased_serde, inventory, lazy_static};
 
+#[cfg(feature = "asset-daemon")]
+/// internal AssetDaemon control
+pub use crate::daemon::AssetDaemon;
+
 #[cfg(feature = "json")]
 pub use crate::json::JsonFormat;
 pub use crate::{
     asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
-    bundle::{start_asset_daemon, LoaderBundle},
+    bundle::LoaderBundle,
     cache::Cache,
     loader::{create_asset_type, AssetUuid, DefaultLoader, LoadStatus, Loader},
     processor::{AssetProcessorSystem, ProcessingQueue, ProcessingState},

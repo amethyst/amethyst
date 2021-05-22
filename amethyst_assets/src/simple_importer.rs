@@ -89,6 +89,7 @@ pub struct SourceFileImporter {
 inventory::collect!(SourceFileImporter);
 
 /// Get the registered importers and their associated extension.
+#[allow(dead_code)]
 pub fn get_source_importers(
 ) -> impl Iterator<Item = (&'static str, Box<dyn BoxedImporter + 'static>)> {
     inventory::iter::<SourceFileImporter>
