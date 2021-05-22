@@ -108,7 +108,7 @@ amethyst_ui = { path = "amethyst_ui", version = "0.15.3", optional = true }
 amethyst_utils = { path = "amethyst_utils", version = "0.15.3", optional = true }
 amethyst_window = { path = "amethyst_window", version = "0.15.3" }
 amethyst_tiles = { path = "amethyst_tiles", version = "0.15.3", optional = true }
-winit = { version = "0.24", git = "https://github.com/rust-windowing/winit", rev = "38fccebe1fbc4226c75d6180e5317bd93c024951", features = ["serde"] }
+winit = { version = "0.25", features = ["serde"] }
 crossbeam-channel = "0.5"
 derivative = "2.1.1"
 log = { version = "0.4", features = ["serde"] }

@@ -130,6 +130,7 @@ impl DisplayConfig {
     pub fn into_window_builder(self, monitors: &impl MonitorsAccess) -> WindowBuilder {
         let attrs = WindowAttributes {
             title: self.title,
+            position: None,
             maximized: self.maximized,
             visible: self.visibility,
             transparent: self.transparent,
