@@ -5,6 +5,7 @@ implementation for system initialization, the `SystemDesc` trait can be
 implemented manually:
 
 ```rust
+# extern crate amethyst;
 use amethyst::{
     audio::output::Output,
     ecs::{System, World},
@@ -40,6 +41,7 @@ impl SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
 ## Templates
 
 ```rust
+# extern crate amethyst;
 /// Builds a `SystemName`.
 #[derive(Default, Debug)]
 pub struct SystemNameDesc;
@@ -56,6 +58,8 @@ impl SystemDesc<'a, 'b, SystemName> for SystemNameDesc {
 With type parameters:
 
 ```rust
+# extern crate amethyst;
+# extern crate derivative;
 use std::marker::PhantomData;
 
 use derivative::Derivative;

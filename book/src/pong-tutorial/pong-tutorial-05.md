@@ -25,6 +25,7 @@ mod winner;
 Then, we'll create `systems/winner.rs`:
 
 ```rust
+# extern crate amethyst;
 # mod pong {
 #   pub struct Ball {
 #       pub radius: f32,
@@ -83,6 +84,7 @@ Now, we need to add our new system to `main.rs`, and we should be able to
 keep playing after someone scores and log who got the point.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   core::transform::TransformBundle, ecs::World, input::StringBindings, prelude::*,
 #   window::DisplayConfig,
@@ -145,12 +147,14 @@ to display our players' scores.
 First, let's add the UI rendering in `main.rs`. Add the following imports:
 
 ```rust
+# extern crate amethyst;
 use amethyst::ui::{RenderUi, UiBundle};
 ```
 
 Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   ecs::World,
 #   prelude::*,
@@ -171,6 +175,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 Finally, add the `UiBundle` after the `InputBundle`:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ui::UiBundle;
 # use amethyst::{ecs::World, input::StringBindings, prelude::*};
 # fn main() -> Result<(), amethyst::Error> {
@@ -199,6 +204,7 @@ Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
 ```rust
+# extern crate amethyst;
 /// ScoreBoard contains the actual score data
 #[derive(Default)]
 pub struct ScoreBoard {
@@ -222,6 +228,7 @@ a container, but this one holds handles to the UI `Entity`s that will be
 rendered to the screen. We'll create those next:
 
 ```rust
+# extern crate amethyst;
 use amethyst::ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform};
 
 # pub struct Pong;
@@ -327,6 +334,7 @@ is modify our `WinnerSystem` to access the players' scores and update them
 accordingly:
 
 ```rust
+# extern crate amethyst;
 # mod pong {
 #   pub struct Ball {
 #       pub radius: f32,

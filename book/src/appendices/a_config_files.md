@@ -31,6 +31,7 @@ file. To start, let's create a new file, `config.rs`, to hold our configuration 
 `use` statements to the top of this file:
 
 ```rust
+# extern crate amethyst;
 use std::path::Path;
 
 use amethyst::config::Config;

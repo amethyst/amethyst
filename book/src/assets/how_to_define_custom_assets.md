@@ -20,6 +20,8 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    - The asset type itself, in which case you derive `Serialize`, `Deserialize` and `TypeUuid` on the type:
 
      ```rust
+     # extern crate type_uuid;
+     # extern crate serde;
      use serde::{Deserialize, Serialize};
      use type_uuid::TypeUuid;
 
@@ -34,6 +36,7 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    - An enum with different variants – each for a different data layout:
 
      ```rust
+     # extern crate serde;
      # use serde::{Deserialize, Serialize};
 
      /// Separate serializable type to support different versions
@@ -50,6 +53,8 @@ This guide explains how to define a new asset type to use in an Amethyst applica
 1. Implement the [`Asset`][doc_asset] trait on the asset type.
 
    ```rust
+   # extern crate amethyst;
+   # extern crate serde;
    # use amethyst::assets::{Asset, Handle};
    # use serde::{Deserialize, Serialize};
    # use type_uuid::TypeUuid;
@@ -86,6 +91,9 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    The [`AssetProcessorSystem<A>` system][doc_processor_system] uses this trait to convert the deserialized asset data into the asset.
 
    ```rust
+   # extern crate amethyst;
+   # extern crate serde;
+   # extern crate type_uuid;
    # use amethyst::assets::{Asset, Handle};
    # use serde::{Deserialize, Serialize};
    # use type_uuid::TypeUuid;
@@ -145,6 +153,9 @@ This guide explains how to define a new asset type to use in an Amethyst applica
    If your asset is stored using one of the existing supported formats such as RON or JSON, it can now be used:
 
    ```rust
+   # extern crate amethyst;
+   # extern crate serde;
+   # extern crate type_uuid;
    # use amethyst::assets::{Asset, Handle};
    # use serde::{Deserialize, Serialize};
    # use type_uuid::TypeUuid;

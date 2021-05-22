@@ -5,6 +5,7 @@ This guide explains how to define a state-specific `Dispatcher` whose `System`s 
 First of all we required a `DispatcherBuilder`. The `DispatcherBuilder` handles the actual creation of the `Dispatcher` and the assignment of `System`s to our `Dispatcher`.
 
 ```rust
+# extern crate amethyst;
 #
 # use amethyst::{
 #     ecs::*,
@@ -17,6 +18,7 @@ let mut dispatcher_builder = DispatcherBuilder::new();
 To add `System`s to the `DispatcherBuilder` we use a similar syntax to the one we used to add `System`s to `GameData`.
 
 ```rust
+# extern crate amethyst;
 #
 # use amethyst::{
 #     ecs::*,
@@ -35,6 +37,7 @@ dispatcher_builder.add(MovePaddlesSystem, "move_paddles_system", &[]);
 Alternatively we can add `Bundle`s of `System`s to our `DispatcherBuilder` directly.
 
 ```rust
+# extern crate amethyst;
 #
 # use amethyst::{
 #     core::bundle::SystemBundle,
@@ -59,6 +62,7 @@ PongSystemsBundle::default()
 The `DispatcherBuilder` can be initialized and populated wherever desired, be it inside the `State` or in an external location. However, the `Dispatcher` needs to modify the `World`s resources in order to initialize the resources used by its `System`s. Therefore, we need to defer building the `Dispatcher` until we can access the `World`. This is commonly done in the `State`s `on_start` method. To showcase how this is done, we'll create a `SimpleState` with a `dispatcher` field and a `on_start` method that builds the `Dispatcher`.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{core::ArcThreadPool, ecs::*, prelude::*};
 # 
 # struct MoveBallsSystem;
@@ -101,6 +105,7 @@ By default, the dispatcher will create its own pool of worker threads to execute
 The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifetimes of the `Dispatcher`. Now that we have our `Dispatcher` we need to ensure that it is executed. We do this in the `State`s `update` method.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{ecs::*, prelude::*};
 # 
 # #[derive(Default)]

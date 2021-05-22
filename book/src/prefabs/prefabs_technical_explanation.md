@@ -62,6 +62,7 @@ Ok, so what would a simple implementation of `PrefabData` look like?
 Let's take a look at the implementation for `Transform`, which is a core concept in Amethyst:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::PrefabData;
 # use amethyst::ecs::{Entity};
 # use amethyst::Error;
@@ -109,6 +110,7 @@ Let's look at a slightly more complex implementation, the `AssetPrefab`. This `P
 load extra `Asset`s as part of a `Prefab`:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::PrefabData;
 # use amethyst::assets::{
 #   Asset, AssetStorage, DefaultLoader, Format, Handle, Loader, ProgressCounter,
@@ -211,6 +213,7 @@ and visible in the current scope. This is due to how Rust macros work.
 An example of a single `Component` derive:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   assets::{Asset, AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter},
 #   derive::PrefabData,
@@ -230,6 +233,7 @@ This will derive a `PrefabData` implementation that inserts `SomeComponent` on a
 Lets look at an example of an aggregate struct:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::{
 #   Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
 #   ProgressCounter,
@@ -251,6 +255,7 @@ This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::{
 #   Asset, AssetPrefab, AssetStorage, DefaultLoader, Format, Handle, Loader, PrefabData,
 #   ProgressCounter,

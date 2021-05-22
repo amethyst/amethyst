@@ -20,6 +20,7 @@ initialization logic, the `SystemDesc` derive automatically implements the
 `SystemDesc` trait on the system type itself:
 
 ```rust
+# extern crate amethyst;
 use amethyst::ecs::{System, World};
 
 struct SystemName;

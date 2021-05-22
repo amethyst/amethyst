@@ -3,6 +3,7 @@
 ## Testing a `Bundle`
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{core::bundle::SystemBundle, prelude::*, Error};
 # use amethyst_test::prelude::*;
 # 
@@ -47,6 +48,7 @@ fn bundle_registers_system_with_resource() -> Result<(), Error> {
 ## Testing a `System`
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{prelude::*, Error};
 # use amethyst_test::prelude::*;
 # 
@@ -94,6 +96,7 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
 This is useful when your system must run *after* some setup has been done, for example adding a resource:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{prelude::*, Error};
 # use amethyst_test::prelude::*;
 # 

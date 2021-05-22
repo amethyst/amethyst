@@ -13,6 +13,7 @@ A system struct is a structure implementing the trait `amethyst::ecs::System`.
 Here is a simple example implementation:
 
 ```rust
+# extern crate amethyst;
 use amethyst::ecs::{ParallelRunnable, System};
 
 struct MyFirstSystem;
@@ -31,6 +32,7 @@ This system will, on every iteration of the game loop, print "Hello!" in the con
 Using `SystemBuilder` requires you to specify the resource and component access requirements of the system using `read_resource`, `write_resource`, `read_component` and `write_component` (you can also use `with_query` but we'll get to that later.)  Refer to the [Legion SystemBuilder docs][sb] for more information.  A system may also have local data stored in its own struct.
 
 ```rust
+# extern crate amethyst;
 use amethyst::core::timing::Time;
 use amethyst::ecs::{ParallelRunnable, System};
 
@@ -60,6 +62,7 @@ Once you have access to a storage, you can use them in different ways.
 Sometimes, it can be useful to get a component in the storage for a specific entity. This can easily be done using the `get` or, for mutable storages, `get_mut` methods.
 
 ```rust
+# extern crate amethyst;
 use amethyst::core::Transform;
 use amethyst::ecs::{Entity, System};
 

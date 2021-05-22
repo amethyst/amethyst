@@ -25,6 +25,7 @@ to draw these widgets.
 A minimalistic game data would now look like this:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   core::transform::TransformBundle,
 #   input::InputBundle,

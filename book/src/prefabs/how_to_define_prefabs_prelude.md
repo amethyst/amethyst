@@ -21,6 +21,7 @@ If you are looking for a guide to define prefab data for a `Component`, first we
   This is where the `Component` type itself is completely serializable – the data is self-contained.
 
   ```rust
+  # extern crate amethyst;
   # extern crate serde;
   # 
   # use serde::{Deserialize, Serialize};
@@ -36,6 +37,7 @@ If you are looking for a guide to define prefab data for a `Component`, first we
   This is where are multiple ways to construct the component, and a user should be able to choose which one to use.
 
   ```rust
+  # extern crate amethyst;
   # extern crate serde;
   #
   # use serde::{Deserialize, Serialize};
@@ -71,6 +73,7 @@ If you are looking for a guide to define prefab data for a `Component`, first we
   This is where most of the component is serializable, but there is also data that is only accessible at runtime, such as a device ID or an asset handle.
 
   ```rust
+  # extern crate amethyst;
   # use amethyst_audio::output::Output;
   # use amethyst_core::{
   #   ecs::{storage::HashMapStorage, Component},
@@ -105,6 +108,7 @@ If you are looking for a guide to define prefab data for a `Component`, first we
   This is where the `Component` itself stores `Handle<_>`s.
 
   ```rust
+  # extern crate amethyst;
   # use amethyst::{assets::Handle, renderer::Texture};
   # 
   /// Material struct.
