@@ -4,6 +4,7 @@ Amethyst uses an `InputHandler` to handle user input.
 You initialize this `InputHandler` by creating an `InputBundle` and adding it to the game data.
 
 ```rust
+# extern crate amethyst;
 use amethyst::{input::InputBundle, prelude::*};
 
 # struct Example;
@@ -24,6 +25,7 @@ use amethyst::{input::InputBundle, prelude::*};
 To use the `InputHandler` inside a `System` you have to add it to the `SystemData`. With this you can check for events from input devices.
 
 ```rust
+# extern crate amethyst;
 use amethyst::{
     ecs::{System, World},
     input::{ControllerButton, InputHandler, VirtualKeyCode},
@@ -61,6 +63,7 @@ You can find all the methods from `InputHandler` [here][input_ha].
 Now you have to add the `System` to the game data, like you would do with any other `System`. A `System` that uses an `InputHandler` needs `"input_system"` inside its dependencies.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{ecs::*, prelude::*};
 # struct ExampleSystem;
 # impl System for ExampleSystem {
@@ -108,6 +111,7 @@ The possible inputs you can specify for axes are listed [here][in_axis]. The pos
 To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the `InputBundle`.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{input::*, prelude::*, utils::*};
 # fn main() -> amethyst::Result<()> {
     let root = application_root_dir()?;
@@ -123,6 +127,7 @@ To add these bindings to the `InputBundle` you simply need to call the `with_bin
 And now you can get the [axis][axis_val] and [action][is_down] values from the `InputHandler`.
 
 ```rust
+# extern crate amethyst;
 use amethyst::{
     core::{Transform},
     ecs::{System, World},

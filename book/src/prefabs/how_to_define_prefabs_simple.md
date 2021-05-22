@@ -26,6 +26,8 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 1. Import the following items:
 
    ```rust
+   # extern crate amethyst;
+   # extern crate serde;
    use amethyst::{
        assets::{PrefabData, ProgressCounter},
        derive::PrefabData,
@@ -38,6 +40,8 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 1. Add the following attributes on your type:
 
    ```rust
+   # extern crate amethyst;
+   # extern crate serde;
    #[derive(Deserialize, Serialize, PrefabData)]
    #[prefab(Component)]
    #[serde(default)] // <--- optional

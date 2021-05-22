@@ -3,6 +3,8 @@
 To begin with, let's make the `Arena` dimensions configurable. Add this structure to a new file `config.rs`.
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -34,6 +36,8 @@ be present. For now though, let's use the `Default` trait.
 We'll need to load the config at startup, so let's add this to the `main` function in `main.rs`
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # mod config {
 #   use serde::{Deserialize, Serialize};
 # 
@@ -64,6 +68,8 @@ Now that we have loaded our config, we want to add it to the world so other modu
 it. We do this by adding the config as a resource during `Application` creation:
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 use amethyst::{
     assets::LoaderBundle,
     config::Config,
@@ -111,6 +117,8 @@ First, let's change our initialization steps in `pong.rs`.
 Add the following line to the top of `pong.rs`:
 
 ```rust ,ignore
+# extern crate amethyst;
+# extern crate serde;
 use crate::config::ArenaConfig;
 ```
 
@@ -118,6 +126,8 @@ Now, in the `initialize_paddles()` function, add the following lines after the i
 `left_transform` and `right_transform`.
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # mod config {
 #   use serde::{Deserialize, Serialize};
 # 
@@ -161,6 +171,8 @@ It is actually simpler to access a Config file from a system than via the `Resou
 it in the `System`'s closure, add `.read_resource::<ArenaConfig>()` to the `SystemBuilder`.
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # mod config {
 #   use serde::{Deserialize, Serialize};
 # 

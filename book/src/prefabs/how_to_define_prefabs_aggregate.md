@@ -17,6 +17,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
 1. Import the following items:
 
    ```rust
+   # extern crate amethyst;
    use amethyst::{
        assets::{PrefabData, ProgressCounter},
        derive::PrefabData,
@@ -60,6 +61,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    If you want to mix different types of entities within a single prefab then you must define an enum that implements `PrefabData`. Each variant is treated in the same way as `PrefabData` structs.
 
    ```rust
+   # extern crate amethyst;
    # extern crate serde;
    # use amethyst::{
    #   assets::{PrefabData, ProgressCounter},
@@ -104,6 +106,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    **Note:** There is an important limitation when building `PrefabData`s, particularly enum `PrefabData`s. No two fields in the `PrefabData` or in any nested `PrefabData`s under it can access the same `Component` unless all accesses are reads. This is still true even if the fields appear in different variants of an enum. This means that the following `PrefabData` will fail at runtime when loaded:
 
    ```rust
+   # extern crate amethyst;
    # extern crate serde;
    # use amethyst::{
    #   assets::{PrefabData, ProgressCounter},
@@ -137,6 +140,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
    The problem is that both the `SpriteScenePrefab`s need to write to `Transform` and several other common `Components`. Because Amythest's underlyng ECS system determines what resources are accessed based on static types it can't determine that only one of the `SpriteScenePrefab`s will be accessed at a time and it attempts a double mutable borrow which fails. The solution is to define the `PrefabData` hierarchically so each component only appears once:
 
    ```rust
+   # extern crate amethyst;
    # extern crate serde;
    # use amethyst::{
    #   assets::{PrefabData, ProgressCounter},

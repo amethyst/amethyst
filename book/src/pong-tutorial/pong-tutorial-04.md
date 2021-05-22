@@ -35,6 +35,7 @@ Then let's add an `initialize_ball` function the same way we wrote the
 `initialize_paddles` function.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::{AssetStorage, Handle, Loader};
 # use amethyst::core::transform::Transform;
 # use amethyst::ecs::World;
@@ -77,6 +78,7 @@ second one, whose index is `1`.
 Finally, let's make sure the code is working as intended by updating the `on_start` method:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::Handle;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;
@@ -117,6 +119,7 @@ in the center. In the next section, we're going to make this ball actually move!
 We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 
 ```rust
+# extern crate amethyst;
 # mod pong {
 #   pub struct Ball {
 #       pub velocity: [f32; 2],
@@ -172,6 +175,7 @@ If a collision is detected, the ball bounces off. This is done
 by negating the velocity of the `Ball` component on the `x` or `y` axis.
 
 ```rust
+# extern crate amethyst;
 # mod pong {
 #   pub struct Ball {
 #       pub velocity: [f32; 2],
@@ -269,6 +273,7 @@ The following image illustrates how collisions with paddles are checked.
 We will need to add `mod move_balls` and `mod bounce` as well as `MoveBallsSystem` and
 `BounceSystem` to our `systems/mod.rs`:
 ```rust
+# extern crate amethyst;
 pub use self::paddle::PaddleSystem;
 pub use self::move_balls::MoveBallsSystem;
 pub use self::bounce::BounceSystem;
@@ -280,6 +285,7 @@ mod paddle;
 
 Also, don't forget to add our new systems to the game data:
 ```rust
+# extern crate amethyst;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::input::StringBindings;
 # use amethyst::prelude::*;
@@ -345,6 +351,7 @@ First, let's add a new method to our state: `update`.
 Let's add that `update` method just below `on_start`:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::prelude::*;
 # struct MyState;
 # impl SimpleState for MyState {
@@ -365,6 +372,7 @@ as a local variable inside `on_start`. For that reason, we have to make it a par
 Let's add some fields to our `Pong` struct:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::Handle;
 #[derive(Default)]
 pub struct Pong {
@@ -381,6 +389,7 @@ We've also added `#[derive(Default)]`, which will automatically implement `Defau
 default empty state. Now let's use that inside our `Application` creation code in `main.rs`:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{ecs::World, prelude::*};
 # 
 # #[derive(Default)]
@@ -401,6 +410,7 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 - then we have to `initialize_ball` once after the time has passed inside `update`:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::{assets::Handle, renderer::SpriteSheet};
 use amethyst::core::timing::Time;

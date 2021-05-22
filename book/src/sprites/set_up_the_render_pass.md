@@ -4,6 +4,7 @@ Amethyst supports drawing sprites using the `RenderFlat2D` render plugin.
 To enable this you have to do the following:
 
 ```rust
+# extern crate amethyst;
 use amethyst::{
     ecs::World,
     prelude::*,

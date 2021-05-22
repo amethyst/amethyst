@@ -23,6 +23,7 @@ impl Default for CurrentState {
 We'll use this `enum` `Resource` to control whether or not our `System` is running. Next we'll register our `System` and set it as pausable.
 
 ```rust
+# extern crate amethyst;
 #
 # use amethyst::{
 #     ecs::*,
@@ -60,6 +61,7 @@ dispatcher.add(
 To register the `Resource` or change its value, we can use the following code:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::prelude::*;
 # #[derive(PartialEq)]
 # pub enum CurrentState {
