@@ -23,7 +23,7 @@ amethyst_rendy = { path = "../amethyst_rendy", version = "0.15.3" }
 err-derive = "0.2.3"
 base64 = "0.11"
 fnv = "1"
-gltf = { git = "https://github.com/gltf-rs/gltf.git", rev = "4298aac70336ae0413312a61344badbf67fbcbde", features = ["KHR_lights_punctual"] }
+gltf = { version = "0.16", features = ["KHR_lights_punctual"] }
 legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
 hibitset = { version = "0.6.2", features = ["parallel"] }
 log = "0.4"

@@ -20,7 +20,7 @@ amethyst_config = { path = "../amethyst_config", version = "0.15.3" }
 derive-new = "0.5"
 genmesh = "0.6"
 glsl-layout = "0.4"
-gltf = { git = "https://github.com/gltf-rs/gltf.git", rev = "4298aac70336ae0413312a61344badbf67fbcbde", features = ["KHR_lights_punctual"] }
+gltf = { version = "0.16", features = ["KHR_lights_punctual"] }
 lazy_static = "1.4"
 log = "0.4"
 palette = { version = "0.4", default-features = false, features = ["serde"] }

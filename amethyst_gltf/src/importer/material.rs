@@ -84,7 +84,7 @@ pub fn load_material(
                 .insert(material_name.clone());
             std::f32::MIN_POSITIVE
         }
-        AlphaMode::Mask => material.alpha_cutoff(),
+        AlphaMode::Mask => material.alpha_cutoff().unwrap_or(std::f32::MIN_POSITIVE),
         AlphaMode::Opaque => 0.0,
     };
 
@@ -131,23 +131,18 @@ fn load_texture_with_factor(
     srgb: bool,
 ) -> Result<(TextureBuilder<'static>, [f32; 4]), Error> {
     match texture {
-        Some(info) => {
-            Ok((
-                load_texture(&info.texture(), buffers, srgb)?
-                    .with_mip_levels(MipLevels::GenerateAuto),
-                factor,
-            ))
-        }
-        None => {
-            Ok((
-                if srgb {
-                    load_from_srgba(Srgba::new(factor[0], factor[1], factor[2], factor[3]))
-                } else {
-                    load_from_linear_rgba(LinSrgba::new(factor[0], factor[1], factor[2], factor[3]))
-                },
-                [1.0, 1.0, 1.0, 1.0],
-            ))
-        }
+        Some(info) => Ok((
+            load_texture(&info.texture(), buffers, srgb)?.with_mip_levels(MipLevels::GenerateAuto),
+            factor,
+        )),
+        None => Ok((
+            if srgb {
+                load_from_srgba(Srgba::new(factor[0], factor[1], factor[2], factor[3]))
+            } else {
+                load_from_linear_rgba(LinSrgba::new(factor[0], factor[1], factor[2], factor[3]))
+            },
+            [1.0, 1.0, 1.0, 1.0],
+        )),
     }
 }
 
@@ -266,11 +261,9 @@ fn load_normal(
 ) -> (AssetUuid, ImportedAsset) {
     let normal: TextureData = {
         match normal_texture {
-            Some(normal_texture) => {
-                load_texture(&normal_texture.texture(), buffers, false)
-                    .map(|data| data.into())
-                    .expect("The mapping between the TextureBuilder and TextureDate did not work")
-            }
+            Some(normal_texture) => load_texture(&normal_texture.texture(), buffers, false)
+                .map(|data| data.into())
+                .expect("The mapping between the TextureBuilder and TextureDate did not work"),
             None => {
                 // Default normal Texture
                 load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 1.0, 1.0)).into()
@@ -305,11 +298,9 @@ fn load_occlusion(
 ) -> (AssetUuid, ImportedAsset) {
     let occlusion: TextureData = {
         match occlusion_texture {
-            Some(normal_texture) => {
-                load_texture(&normal_texture.texture(), buffers, false)
-                    .map(|data| data.into())
-                    .expect("The mapping between the TextureBuilder and TextureDate did not work")
-            }
+            Some(normal_texture) => load_texture(&normal_texture.texture(), buffers, false)
+                .map(|data| data.into())
+                .expect("The mapping between the TextureBuilder and TextureDate did not work"),
             None => {
                 // Default occlusion Texture
                 load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0)).into()
