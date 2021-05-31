@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_rendy"
-version = "0.15.3"
+version = "0.16.0"
 authors = ["Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "High-level rendering engine with multiple backends"
@@ -12,11 +12,11 @@ license = "MIT/Apache-2.0"
 features = ["shader-compiler", "test-support", "winit", "vulkan"]
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
-amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
-amethyst_window = { path = "../amethyst_window", version = "0.15.3", optional = true }
-amethyst_config = { path = "../amethyst_config", version = "0.15.3" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.16.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
+amethyst_window = { path = "../amethyst_window", version = "0.16.0", optional = true }
+amethyst_config = { path = "../amethyst_config", version = "0.16.0" }
 derive-new = "0.5"
 genmesh = "0.6"
 glsl-layout = "0.4"
@@ -46,7 +46,7 @@ rendy = { version = "0.5", git = "https://github.com/amethyst/rendy", rev = "506
 rendy = { version = "0.5", git = "https://github.com/amethyst/rendy", rev = "50667887612adc9314accea77438aa7fb925bce0", default-features = false, features = ["vulkan"] }
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 winit = { version = "0.25", features = ["serde"] }
 rayon = "1.5"
 more-asserts = "0.2.1"

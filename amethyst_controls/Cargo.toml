@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_controls"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "Joël Lupien <jojolepro@jojolepro.com>",
     "Amethyst Foundation <contact@amethyst.rs>",
@@ -15,10 +15,10 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-#amethyst_derive = { path = "../amethyst_derive", version = "0.15.3" }
-amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
-amethyst_input = { path = "../amethyst_input", version = "0.15.3" }
+amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
+#amethyst_derive = { path = "../amethyst_derive", version = "0.16.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
+amethyst_input = { path = "../amethyst_input", version = "0.16.0" }
 derive-new = "0.5"
 serde = { version = "1", features = ["derive"] }
 winit = { version = "0.25", features = ["serde"] }
@@ -26,7 +26,7 @@ log = "0.4"
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 
 
 [features]

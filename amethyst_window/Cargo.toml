@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_window"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "Frizi <frizi09@gmail.com>",
     "Amethyst Foundation <contact@amethyst.rs>",
@@ -13,9 +13,9 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_config = { path = "../amethyst_config", version = "0.15.3" }
-amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
+amethyst_config = { path = "../amethyst_config", version = "0.16.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
 
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
@@ -24,7 +24,7 @@ winit = { version = "0.25", features = ["serde"] }
 image = "0.23.13"
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]
