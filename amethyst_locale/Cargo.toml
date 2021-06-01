@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_locale"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "Joël Lupien <jojolepro@jojolepro.com>",
     "Amethyst Foundation <contact@amethyst.rs>",
@@ -20,9 +20,9 @@ homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
-amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.16.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
 serde = { version = "1", features = ["derive"] }
 fluent = "0.14"
 unic-langid = { version = "0.9", features = ["macros"] }
@@ -31,7 +31,7 @@ type-uuid = "0.1"
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

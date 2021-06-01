@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_assets"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "torkleyy <torkleyy@gmail.com>",
     "Amethyst Foundation <contact@amethyst.rs>",
@@ -20,8 +20,8 @@ homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
 crossbeam-queue = "0.3"
 derivative = "2.1.1"
 crossbeam-channel = "0.5"
@@ -60,7 +60,7 @@ structopt = { version = "0.3", default-features = false, optional = true }
 tokio = { version = "1.0", features = ["sync"], optional = true }
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 serde_json = "1"
 fern = { version = "0.6", features = ["colored"] }
 serde-diff = "0.4"
