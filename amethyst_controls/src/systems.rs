@@ -41,9 +41,9 @@ impl System for FlyMovementSystem {
                     #[cfg(feature = "profiler")]
                     profile_scope!("fly_movement_system");
 
-                    let x = get_input_axis_simple(&self.horizontal_axis, &input);
-                    let y = get_input_axis_simple(&self.vertical_axis, &input);
-                    let z = get_input_axis_simple(&self.longitudinal_axis, &input);
+                    let x = get_input_axis_simple(&self.horizontal_axis, input);
+                    let y = get_input_axis_simple(&self.vertical_axis, input);
+                    let z = get_input_axis_simple(&self.longitudinal_axis, input);
 
                     if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
                         for (_, transform) in controls.iter_mut(world) {
@@ -80,14 +80,11 @@ impl System for ArcBallRotationSystem {
                         .0
                         .iter(world)
                         .map(|ctrl| {
-                            match world
+                            world
                                 .entry_ref(ctrl.target)
                                 .ok()
                                 .and_then(|e| e.into_component::<Transform>().ok())
-                            {
-                                Some(trans) => Some((ctrl.target, *trans)),
-                                None => None,
-                            }
+                                .map(|trans| (ctrl.target, *trans))
                         })
                         .filter(|t| t.is_some())
                         .map(|t| t.unwrap())

@@ -185,7 +185,7 @@ impl DisplayConfig {
                 let (width, height) = img.dimensions();
                 let mut rgba = Vec::with_capacity((width * height) as usize * 4);
                 for (_, _, pixel) in img.pixels() {
-                    rgba.extend_from_slice(&pixel.to_rgba().channels());
+                    rgba.extend_from_slice(pixel.to_rgba().channels());
                 }
                 (rgba, width, height)
             };

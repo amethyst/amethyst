@@ -195,8 +195,10 @@ where
 
         // sampling is running, update duration and check end condition
         Running(duration) => {
-            let current_dur =
-                duration + Duration::from_secs_f32(time.delta_time().as_secs_f32() * control.rate_multiplier);
+            let current_dur = duration
+                + Duration::from_secs_f32(
+                    time.delta_time().as_secs_f32() * control.rate_multiplier,
+                );
             let last_frame = sampler
                 .input
                 .last()

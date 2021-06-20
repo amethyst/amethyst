@@ -227,7 +227,7 @@ impl<B: Backend, V: VertexDataBufferType> PerImageDynamicVertexData<B, V> {
     /// Calls the utility function, [util::ensure_buffer] to dynamically grow the buffer if needed.
     fn ensure(&mut self, factory: &Factory<B>, max_size: u64) -> bool {
         util::ensure_buffer(
-            &factory,
+            factory,
             &mut self.buffer,
             V::usage(),
             rendy::memory::Dynamic,
@@ -243,10 +243,8 @@ impl<B: Backend, V: VertexDataBufferType> PerImageDynamicVertexData<B, V> {
         range: Range<u64>,
     ) -> Option<(bool, MappedRange<'a, B>)> {
         let alloc = self.ensure(factory, range.end);
-        if let Some(buffer) = &mut self.buffer {
-            Some((alloc, buffer.map(factory.device(), range).unwrap()))
-        } else {
-            None
-        }
+        self.buffer
+            .as_mut()
+            .map(|buffer| (alloc, buffer.map(factory.device(), range).unwrap()))
     }
 }

@@ -106,7 +106,7 @@ impl System for ParentUpdateSystem {
                     // Deleted `Parents` (ie. Entities with a `Children` but no `Transform`).
                     for (entity, children) in queries.2.iter(world) {
                         log::trace!("The entity {:?} doesn't have a Transform", entity);
-                        if children_additions.remove(&entity).is_none() {
+                        if children_additions.remove(entity).is_none() {
                             log::trace!(" > It needs to be remove from the ECS.");
                             for child_entity in children.0.iter() {
                                 commands.remove_component::<Parent>(*child_entity);

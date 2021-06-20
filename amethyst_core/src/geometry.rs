@@ -33,7 +33,7 @@ where
 
     /// Create a new `Plane` from a point normal representation
     pub fn from_point_vectors(point: &Point3<T>, v1: &Vector3<T>, v2: &Vector3<T>) -> Self {
-        Self::from_point_normal(point, &v1.cross(&v2))
+        Self::from_point_normal(point, &v1.cross(v2))
     }
 
     /// Create a `Plane` which is facing along the X-Axis at the provided coordinate.

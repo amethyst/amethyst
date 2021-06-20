@@ -50,7 +50,6 @@ pub use {erased_serde, inventory, lazy_static};
 #[cfg(feature = "asset-daemon")]
 /// internal AssetDaemon control
 pub use crate::daemon::AssetDaemon;
-
 #[cfg(feature = "json")]
 pub use crate::json::JsonFormat;
 pub use crate::{

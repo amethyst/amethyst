@@ -33,8 +33,9 @@ impl System for TransformSystem {
                             transform.global_matrix = transform.matrix();
                             debug_assert!(
                                 transform.is_finite(),
-                                    "Entity {:?} had a non-finite `Transform` {:?}",
-                                    entity, transform
+                                "Entity {:?} had a non-finite `Transform` {:?}",
+                                entity,
+                                transform
                             );
                         }
 
@@ -73,8 +74,9 @@ impl System for TransformSystem {
                             transform.global_matrix = transform.parent_matrix * transform.matrix();
                             debug_assert!(
                                 transform.is_finite(),
-                                    "Entity {:?} had a non-finite `Transform` {:?}",
-                                    entity, transform
+                                "Entity {:?} had a non-finite `Transform` {:?}",
+                                entity,
+                                transform
                             );
                         }
                     },

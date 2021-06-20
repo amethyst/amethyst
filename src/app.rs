@@ -17,7 +17,6 @@ use winit::event::{Event, WindowEvent};
 
 #[cfg(feature = "asset-daemon")]
 use crate::assets::AssetDaemon;
-
 use crate::{
     assets::{DefaultLoader, Source},
     core::{

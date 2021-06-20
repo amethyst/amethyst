@@ -3,8 +3,8 @@ use std::{
     collections::HashMap,
     error::Error,
     fs::File,
-    path::PathBuf,
     ops::{Deref, DerefMut},
+    path::PathBuf,
     sync::Arc,
 };
 
@@ -20,12 +20,12 @@ pub(crate) use distill_loader::LoadHandle;
 use distill_loader::{
     crossbeam_channel::{unbounded, Receiver, Sender, TryRecvError},
     handle::{AssetHandle, GenericHandle, Handle, RefOp, SerdeContext, WeakHandle},
+    io::LoaderIO,
     storage::{
         AssetLoadOp, AtomicHandleAllocator, HandleAllocator, IndirectIdentifier, IndirectionTable,
         LoaderInfoProvider,
     },
-    io::LoaderIO,
-    AssetTypeId, Loader as DistillLoader, RpcIO, PackfileReader,
+    AssetTypeId, Loader as DistillLoader, PackfileReader, RpcIO,
 };
 pub use distill_loader::{storage::LoadStatus, AssetUuid};
 use log::debug;
@@ -157,32 +157,35 @@ pub struct DefaultLoader {
     pub(crate) indirection_table: IndirectionTable,
 }
 
-
 impl Default for DefaultLoader {
     fn default() -> Self {
         Self::new(true, None, None)
     }
 }
 
-
 impl DefaultLoader {
-    fn new(loader_io_use_rpc: bool, connect_string: Option<String>, packfile_path: Option<PathBuf> ) -> Self {
+    fn new(
+        loader_io_use_rpc: bool,
+        connect_string: Option<String>,
+        packfile_path: Option<PathBuf>,
+    ) -> Self {
         let (tx, rx) = unbounded();
         let handle_allocator = Arc::new(AtomicHandleAllocator::default());
         let loader_io: Box<dyn LoaderIO> = if loader_io_use_rpc {
             log::info!("Using RpcIO");
-            let rpc_io = connect_string.and_then(|cs| RpcIO::new(cs).ok()).unwrap_or_else(RpcIO::default);
+            let rpc_io = connect_string
+                .and_then(|cs| RpcIO::new(cs).ok())
+                .unwrap_or_else(RpcIO::default);
             Box::new(rpc_io)
         } else {
             log::info!("Using PackfileIO");
-            let packfile_io = packfile_path.map(|pfp| File::open(pfp).expect("Could not open packfile"))
-                .and_then(|pf| PackfileReader::new(pf).ok()).expect("packfile not found");
+            let packfile_io = packfile_path
+                .map(|pfp| File::open(pfp).expect("Could not open packfile"))
+                .and_then(|pf| PackfileReader::new(pf).ok())
+                .expect("packfile not found");
             Box::new(packfile_io)
         };
-        let loader = DistillLoader::new_with_handle_allocator(
-            loader_io,
-            handle_allocator.clone(),
-        );
+        let loader = DistillLoader::new_with_handle_allocator(loader_io, handle_allocator.clone());
         Self {
             indirection_table: loader.indirection_table(),
             loader,
@@ -193,7 +196,6 @@ impl DefaultLoader {
         }
     }
 }
-
 
 impl Loader for DefaultLoader {
     fn load_asset_generic(&self, id: AssetUuid) -> GenericHandle {
@@ -393,8 +395,8 @@ impl AssetStorageMap {
             storages_by_asset_uuid.insert(t.asset_uuid, t.clone());
         }
         AssetStorageMap {
-            storages_by_asset_uuid,
             storages_by_data_uuid,
+            storages_by_asset_uuid,
         }
     }
 }

@@ -9,10 +9,7 @@ use amethyst_assets::{
     },
     Asset, AssetStorage, Handle,
 };
-use amethyst_core::{
-    ecs::*,
-    Transform,
-};
+use amethyst_core::{ecs::*, Transform};
 use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::debug;

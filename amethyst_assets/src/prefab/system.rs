@@ -66,7 +66,7 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
         let entity_map = world.clone_from(
             &prefab.world,
             &query::any(),
-            &mut component_registry.spawn_clone_impl(&resources, &prev_entity_map),
+            &mut component_registry.spawn_clone_impl(resources, &prev_entity_map),
         );
 
         let live_entities: HashSet<Entity, EntityHasher> = entity_map.values().copied().collect();

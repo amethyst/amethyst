@@ -649,12 +649,7 @@ impl InputHandler {
     fn alloc_controller_id(&self) -> u32 {
         let mut i = 0u32;
         loop {
-            if self
-                .connected_controllers
-                .iter()
-                .find(|ids| ids.0 == i)
-                .is_none()
-            {
+            if !self.connected_controllers.iter().any(|ids| ids.0 == i) {
                 return i;
             }
             i += 1;

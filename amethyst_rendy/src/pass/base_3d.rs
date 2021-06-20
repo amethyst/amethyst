@@ -222,7 +222,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                     if let Some(tint) = tint {
                         (
                             (mat, mesh.load_handle()),
-                            VertexArgs::from_object_data(tform, Some(&tint)),
+                            VertexArgs::from_object_data(tform, Some(tint)),
                         )
                     } else {
                         (
@@ -235,7 +235,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                     // log::debug!("mesh_id: {:?}, mat_id: {:?}", mesh_id, mat);
                     if mesh_storage.contains(mesh_id) {
                         // log::debug!("if mesh_storage.contains(mesh_id)");
-                        if let Some((mat, _)) = materials_ref.insert(factory, resources, &mat) {
+                        if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
                             // log::debug!("statics_ref.insert(mat, mesh_id, data.drain(..))");
                             statics_ref.insert(mat, mesh_id, data.drain(..));
                         }
@@ -263,25 +263,25 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3D<B
                         (
                             (mat, mesh.load_handle()),
                             SkinnedVertexArgs::from_object_data(
-                                &tform,
-                                Some(&tint),
-                                skinning_ref.insert(&joints),
+                                tform,
+                                Some(tint),
+                                skinning_ref.insert(joints),
                             ),
                         )
                     } else {
                         (
                             (mat, mesh.load_handle()),
                             SkinnedVertexArgs::from_object_data(
-                                &tform,
+                                tform,
                                 None,
-                                skinning_ref.insert(&joints),
+                                skinning_ref.insert(joints),
                             ),
                         )
                     }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
                     if mesh_storage.contains(mesh_id) {
-                        if let Some((mat, _)) = materials_ref.insert(factory, resources, &mat) {
+                        if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
                             skinned_ref.insert(mat, mesh_id, data.drain(..));
                         }
                     }
@@ -571,19 +571,19 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                     if let Some(tint) = tint {
                         (
                             (mat, mesh.load_handle()),
-                            VertexArgs::from_object_data(&tform, Some(&tint)),
+                            VertexArgs::from_object_data(tform, Some(tint)),
                         )
                     } else {
                         (
                             (mat, mesh.load_handle()),
-                            VertexArgs::from_object_data(&tform, None),
+                            VertexArgs::from_object_data(tform, None),
                         )
                     }
                 })
                 .for_each_group(|(mat, mesh_id), data| {
                     if mesh_storage.contains(mesh_id) {
                         if let Some((mat, this_changed)) =
-                            materials_ref.insert(factory, resources, &mat)
+                            materials_ref.insert(factory, resources, mat)
                         {
                             changed = changed || this_changed;
                             statics_ref.insert(mat, mesh_id, data.drain(..));
@@ -614,18 +614,18 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                         (
                             (mat, mesh.load_handle()),
                             SkinnedVertexArgs::from_object_data(
-                                &tform,
-                                Some(&tint),
-                                skinning_ref.insert(&joints),
+                                tform,
+                                Some(tint),
+                                skinning_ref.insert(joints),
                             ),
                         )
                     } else {
                         (
                             (mat, mesh.load_handle()),
                             SkinnedVertexArgs::from_object_data(
-                                &tform,
+                                tform,
                                 None,
-                                skinning_ref.insert(&joints),
+                                skinning_ref.insert(joints),
                             ),
                         )
                     }
@@ -633,7 +633,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, GraphAuxData> for DrawBase3DTr
                 .for_each_group(|(mat, mesh_id), data| {
                     if mesh_storage.contains(mesh_id) {
                         if let Some((mat, this_changed)) =
-                            materials_ref.insert(factory, resources, &mat)
+                            materials_ref.insert(factory, resources, mat)
                         {
                             changed = changed || this_changed;
                             skinned_ref.insert(mat, mesh_id, data.drain(..));
