@@ -35,6 +35,7 @@ We can start with editing the `main.rs` file inside `src` directory.
 You can delete everything in that file, then add these imports:
 
 ```rust
+# extern crate amethyst;
 //! Pong Tutorial 1
 
 use amethyst::{
@@ -67,6 +68,7 @@ We'll be implementing the [`SimpleState`][simplestate] trait on this struct, whi
 used by Amethyst's state machine to start, stop, and update the game.
 
 ```rust
+# extern crate amethyst;
 impl SimpleState for Pong {}
 ```
 
@@ -80,6 +82,7 @@ started! We'll start with our `main()` function, and we'll have it return a
 if any errors occur during setup.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::prelude::*;
 fn main() -> amethyst::Result<()> {
     // We'll put the rest of the code here.
@@ -100,6 +103,7 @@ Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
 so we can see errors, warnings and debug messages while the program is running.
 
 ```rust
+# extern crate amethyst;
 # fn main() {
     amethyst::start_logger(Default::default());
 # }
@@ -146,6 +150,7 @@ In `main()` in `main.rs`, we will prepare the path to a file containing
 the display configuration:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{utils::application_root_dir, Error};
 # 
 # fn main() -> Result<(), Error> {
@@ -160,6 +165,7 @@ the display configuration:
 In `main()` in `main.rs` we are going to add the basic application setup:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{prelude::*, utils::application_root_dir};
 # fn main() -> Result<(), amethyst::Error> {
 #   struct Pong;
@@ -203,6 +209,7 @@ After preparing the display config and application scaffolding, it's time to act
 Last time we left our `DispatcherBuilder` instance empty, now we'll add some systems to it.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   prelude::*,
 #   renderer::{

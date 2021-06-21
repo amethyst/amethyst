@@ -30,7 +30,7 @@ impl System for ExampleLinesSystem {
                 .read_resource::<Time>()
                 .write_resource::<DebugLines>()
                 .build(|_, _, (screen_dimensions, time, debug_lines_resource), _| {
-                    let t = (time.absolute_time_seconds() as f32).cos() / 2.0 + 0.5;
+                    let t = time.absolute_time().as_secs_f32().cos() / 2.0 + 0.5;
 
                     let screen_w = screen_dimensions.width();
                     let screen_h = screen_dimensions.height();

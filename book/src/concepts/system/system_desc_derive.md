@@ -14,6 +14,7 @@ If your system initialization use case is not covered, please see the
 ## Passing parameters to system constructor
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::System;
 pub struct SystemName {
     field_0: u32,
@@ -31,6 +32,7 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::System;
 # 
 # pub struct SystemName {
@@ -69,6 +71,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 ## Fields to skip -- defaulted by the system constructor
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::System;
 # 
 pub struct SystemName {
@@ -91,6 +94,7 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::System;
 # 
 # pub struct SystemName {
@@ -134,6 +138,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 will call  `SystemName::default()`:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::System;
 # 
 #[derive(Default)]
@@ -147,6 +152,7 @@ pub struct SystemName {
 <summary>Generated code</summary>
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::System;
 # 
 # #[derive(Default)]
@@ -178,6 +184,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 ## Registering a `ReaderId` for an `EventChannel<_>` in the `World`
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   ecs::System,
 #   shrev::{EventChannel, ReaderId},
@@ -200,6 +207,7 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   ecs::System,
 #   shrev::{EventChannel, ReaderId},
@@ -242,6 +250,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 ## Registering a `ReaderId` to a component's `FlaggedStorage`
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   ecs::System,
 #   shrev::{EventChannel, ReaderId},
@@ -264,6 +273,7 @@ impl SystemName {
 <summary>Generated code</summary>
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   ecs::System,
 #   shrev::{EventChannel, ReaderId},
@@ -306,6 +316,7 @@ impl<'a, 'b> ::amethyst::core::SystemDesc<'a, 'b, SystemName> for SystemNameDesc
 ## Inserting a resource into the `World`
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::System;
 # 
 pub struct NonDefault;
@@ -322,6 +333,7 @@ impl System for SystemName {
 <summary>Generated code</summary>
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::System;
 # 
 # pub struct NonDefault;

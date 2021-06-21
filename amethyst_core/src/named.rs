@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// can generally treat the `name` field as a [`&str`][str] without needing to know whether the
 /// name is actually an owned or borrowed string.
 ///
-/// [`Entity`]: https://docs.rs/specs/*/specs/struct.Entity.html
+/// `Entity`
 /// [`Cow<'static, str>`]: https://doc.rust-lang.org/std/borrow/enum.Cow.html
 /// [`String`]: https://doc.rust-lang.org/std/string/struct.String.html
 /// [str]: https://doc.rust-lang.org/std/primitive.str.html

@@ -4,6 +4,7 @@ Finally, we're going to add a configuration struct for our Paddles. Because our 
 players, we should let them configure each separately. Add the following to the `config.rs` file:
 
 ```rust
+# extern crate serde;
 # use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -31,6 +32,7 @@ Just like the `BallConfig`, we need to read in the color as a tuple instead of a
 Now, to allow us to have two separate `PaddleConfig`s, we will wrap them in a bigger structure as follows:
 
 ```rust
+# extern crate serde;
 # use serde::{Deserialize, Serialize};
 # 
 # #[derive(Debug, Deserialize, Serialize)]
@@ -62,6 +64,8 @@ pub struct PaddlesConfig {
 Now we need to add the `PaddlesConfig` to our `PongConfig` as shown below
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # use amethyst::core::math::Vector2;
 # use serde::{Deserialize, Serialize};
 # 
@@ -134,6 +138,8 @@ pub struct PongConfig {
 and modify the `main.rs`'s `run()` function to add our `PaddleConfig`s.
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # use amethyst::{
 #   assets::LoaderBundle,
 #   config::Config,
@@ -236,6 +242,8 @@ unwrapping them in one big assignment statement.
 In `initialize_paddles()` in `pong.rs`, add this code below reading the `ArenaConfig`.
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # use amethyst::ecs::Resources;
 # use serde::{Deserialize, Serialize};
 # 

@@ -9,6 +9,7 @@ and the latter interaction through `handle_event` method of your active state.
 Let's start of with some boilerplate code:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::System;
 
 pub struct SimpleButtonSystem;
@@ -30,6 +31,7 @@ since the `ReaderId` actually pulls (reads) information  from the `EventChannel`
 Adding it up, it should look like this:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{System};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
@@ -48,6 +50,7 @@ impl System for SimpleButtonSystem {
 We also need a constructor for our system:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{System};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
@@ -71,6 +74,7 @@ impl SimpleButtonSystem {
 To add the system to our game data we actually need a `SystemDesc` implementation for our system:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{System, World};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
@@ -105,6 +109,7 @@ Now that this is done we can start reading our events!
 In our systems `run` method we are going to loop through all the events:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{System, World};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::UiEvent;
@@ -129,6 +134,7 @@ Firstly we need to fetch two more components that
 we used for our entity - `UiTransform` and `UiText`.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{System, World};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::{UiEvent, UiText, UiTransform};
@@ -150,6 +156,7 @@ Usage of `.write_component::<UiText>` is needed since we will be changing
 the color that is the property of the `UiText` component.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{System, World};
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ui::{UiEvent, UiEventType, UiText, UiTransform};

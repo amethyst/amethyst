@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_core"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "Simon Rönnberg <seamonr@gmail.com>",
     "Joël Lupien <jojolepro@jojolepro.com>",
@@ -16,7 +16,8 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
+game_clock = "1.1.1"
 fern = { version = "0.6", features = ["colored"] }
 type-uuid = "0.1"
 log = "0.4"
@@ -36,11 +37,12 @@ rayon = "1.5"
 shrev = "1.1.1"
 simba = { version = "0.3" }
 smallvec = "1.4"
+spin_sleep = "1.0.0"
 thread_profiler = { version = "0.3", optional = true }
 serde-diff = "0.4"
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 ron = "0.6.4"
 
 [features]

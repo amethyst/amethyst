@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_tiles"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "Walter Pearce <jaynus@gmail.com>",
     "Amethyst Foundation <contact@amethyst.rs>",
@@ -19,11 +19,11 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
-amethyst_rendy = { path = "../amethyst_rendy", version = "0.15.3" }
-amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
-amethyst_window = { path = "../amethyst_window", version = "0.15.3" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.16.0" }
+amethyst_rendy = { path = "../amethyst_rendy", version = "0.16.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
+amethyst_window = { path = "../amethyst_window", version = "0.16.0" }
 log = { version = "0.4", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
@@ -38,7 +38,7 @@ glsl-layout = "0.4"
 err-derive = "0.3"
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 criterion = "0.3"
 more-asserts = "0.2"
 approx = "0.4"

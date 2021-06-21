@@ -51,6 +51,7 @@ contains an `InputHandler` system which captures inputs, and maps them to the
 axes we defined. Let's make the following changes to `main.rs`.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::prelude::*;
 # use amethyst::window::DisplayConfig;
@@ -103,6 +104,7 @@ mod paddle;
 We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
 ```rust
+# extern crate amethyst;
 # mod pong {
 #   pub enum Side {
 #       Left,
@@ -197,6 +199,7 @@ mod systems; // Import the module
 ```
 
 ```rust
+# extern crate amethyst;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::input::StringBindings;
 # use amethyst::prelude::*;
@@ -244,6 +247,7 @@ Let's make it update the position of the paddle. To do this, we'll modify the y
 component of the transform's translation.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::core::Transform;
 # use amethyst::ecs::{System, World};
 # use amethyst::input::InputHandler;
@@ -297,6 +301,7 @@ to `PADDLE_HEIGHT * 0.5` (the bottom of the arena plus the offset).
 Our run function should now look something like this:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::core::Transform;
 # use amethyst::ecs::{System, World};
 # use amethyst::input::InputHandler;
@@ -349,6 +354,7 @@ we no longer need to manually register it with the `world`: the system
 will take care of that for us, as well as set up the storage.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::Handle;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;

@@ -4,7 +4,7 @@
 
 In order to use the tiles package you need add the `tiles` feature to your `Cargo.toml`:
 
-```rust
+```text
 [dependencies]
 amethyst = { version = "LATEST_CRATES.IO_VERSION", features = ["tiles"] }
 ```
@@ -14,6 +14,7 @@ amethyst = { version = "LATEST_CRATES.IO_VERSION", features = ["tiles"] }
 Now you can add the render pass to your application:
 
 ```rust
+# extern crate amethyst;
 use amethyst::{
     core::math::Point3,
     ecs::World,

@@ -26,6 +26,7 @@ initialization code from the Pong code.
    following `use` statements. These are needed to make it through this chapter:
 
    ```rust
+   # extern crate amethyst;
    use amethyst::{
        assets::{AssetStorage, DefaultLoader, Handle, Loader},
        core::transform::Transform,
@@ -52,6 +53,7 @@ First, in `pong.rs`, let's add a new method to our `State` implementation: `on_s
 This method is called when the State starts. We will leave it empty for now.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::prelude::*;
 # struct Pong;
 impl SimpleState for Pong {
@@ -85,6 +87,7 @@ will.
    In pong, we want the camera to cover the entire arena. Let's do it in a new function `initialize_camera`:
 
    ```rust
+   # extern crate amethyst;
    # const ARENA_HEIGHT: f32 = 100.0;
    # const ARENA_WIDTH: f32 = 100.0;
    # use amethyst::core::Transform;
@@ -128,6 +131,7 @@ will.
    Pong state's `on_start` method:
 
    ```rust
+   # extern crate amethyst;
    # use amethyst::ecs::World;
    # use amethyst::prelude::*;
    # fn initialize_camera(world: &mut World) {}
@@ -195,6 +199,7 @@ include that component and add them to our `World`.
 First let's look at our imports:
 
 ```rust
+# extern crate amethyst;
 use amethyst::core::transform::Transform;
 ```
 
@@ -212,6 +217,7 @@ image we will want to render on top of them. This is a good rule to follow in
 general, as it makes operations like rotation easier.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::core::Transform;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;
@@ -254,6 +260,7 @@ As a sanity check, let's make sure the code for initializing the paddles
 compiles. Update the `on_start` method to the following:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;
 # fn initialize_paddles(world: &mut World) {}
@@ -292,6 +299,7 @@ this by adding the following line before `initialize_paddles(world)` in the
 `on_start` method:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::World;
 # struct Paddle;
 # fn register() {
@@ -321,6 +329,7 @@ registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
 
 ```rust
+# extern crate amethyst;
 use amethyst::core::transform::TransformBundle;
 # use amethyst::{prelude::*, utils::application_root_dir};
 # 
@@ -361,6 +370,7 @@ function in `pong.rs` called `load_sprite_sheet`.
 First, let's declare the function and load the sprite sheet's image data.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   assets::{AssetStorage, DefaultLoader, Handle, Loader},
 #   core::transform::Transform,
@@ -443,6 +453,7 @@ List((
 Finally, we load the file containing the position of each sprite on the sheet.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   assets::{AssetStorage, DefaultLoader, Handle, Loader},
 #   core::transform::Transform,
@@ -492,6 +503,7 @@ to the paddles. We update the `initialize_paddles` function by changing its
 signature to:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
 fn initialize_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>)
@@ -504,6 +516,7 @@ only need one here, since the only difference between the two paddles is that
 the right one is flipped horizontally.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::{
 #   assets::Handle,
@@ -522,6 +535,7 @@ sprite in the sprite sheet, we use `0` for the `sprite_number`.
 Next we simply add the components to the paddle entities:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::Handle;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;
@@ -541,6 +555,7 @@ We're nearly there, we have to wire up the sprite to the paddles. We put it
 all together in the `on_start()` method:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::assets::Handle;
 # use amethyst::ecs::World;
 # use amethyst::prelude::*;

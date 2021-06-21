@@ -16,6 +16,7 @@ are essential (like rendering, input and UI).
 Let's start by creating the `GameData` structure:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::Dispatcher;
 # 
 pub struct CustomGameData<'a, 'b> {
@@ -27,6 +28,7 @@ pub struct CustomGameData<'a, 'b> {
 We also add a utility function for performing dispatch:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{Dispatcher, World};
 # 
 # pub struct CustomGameData<'a, 'b> {
@@ -55,6 +57,7 @@ a builder that implements `DataInit`, as well as implement `DataDispose` for our
 `GameData` structure.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::core::SystemBundle;
 # use amethyst::ecs::{Dispatcher, DispatcherBuilder, System, World};
 # use amethyst::{DataDispose, DataInit, Error};
@@ -139,6 +142,7 @@ We can now use `CustomGameData` in place of the provided `GameData` when buildin
 our `Application`, but first we should create some `State`s.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{Dispatcher, World};
 # use amethyst::input::{is_close_requested, is_key_down, VirtualKeyCode};
 # use amethyst::prelude::*;
@@ -239,6 +243,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 `Application`.
 
 ```rust
+# extern crate amethyst;
 # use amethyst::{
 #   core::{transform::TransformBundle, SystemBundle},
 #   ecs::{Dispatcher, DispatcherBuilder, World},

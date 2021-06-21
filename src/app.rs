@@ -1,6 +1,12 @@
 //! The core engine framework.
 
-use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
+use std::{
+    env,
+    marker::PhantomData,
+    path::{Path, PathBuf},
+    sync::Arc,
+    time::Duration,
+};
 
 use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
@@ -9,13 +15,15 @@ use rayon::ThreadPoolBuilder;
 use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 use winit::event::{Event, WindowEvent};
 
+#[cfg(feature = "asset-daemon")]
+use crate::assets::AssetDaemon;
+
 use crate::{
-    assets::{start_asset_daemon, DefaultLoader, Source},
+    assets::{DefaultLoader, Source},
     core::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
-        timing::{Stopwatch, Time},
-        ArcThreadPool, EventReader,
+        ArcThreadPool, EventReader, Stopwatch, Time,
     },
     ecs::*,
     error::Error,
@@ -58,6 +66,9 @@ where
     states: StateMachine<'a, T, E>,
     ignore_window_close: bool,
     data: T,
+    #[cfg(feature = "asset-daemon")]
+    #[derivative(Debug = "ignore")]
+    asset_daemon: AssetDaemon,
 }
 
 /// An Application is the root object of the game engine. It binds the OS
@@ -161,12 +172,6 @@ where
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
     ///        game logic.
     ///
-    /// # Lifetimes
-    ///
-    /// - `a`: The lifetime of the `State` objects.
-    /// - `b`: This lifetime is inherited from `specs` and `shred`, it is
-    ///        the minimum lifetime of the systems used by `CoreApplication`
-    ///
     /// # Errors
     ///
     /// Application will return an error if the internal thread pool fails
@@ -245,8 +250,7 @@ where
                 let mut stopwatch = self.resources.get_mut::<Stopwatch>().unwrap();
                 let elapsed = stopwatch.elapsed();
                 let mut time = self.resources.get_mut::<Time>().unwrap();
-                time.increment_frame_number();
-                time.set_delta_time(elapsed);
+                time.advance_frame(elapsed);
                 stopwatch.stop();
                 stopwatch.restart();
             }
@@ -256,6 +260,9 @@ where
 
     /// Sets up the application.
     fn initialize(&mut self) {
+        #[cfg(feature = "asset-daemon")]
+        self.asset_daemon.start_on_new_thread();
+
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
         self.states
@@ -341,12 +348,6 @@ where
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
 
-            {
-                self.resources
-                    .get_mut::<Time>()
-                    .unwrap()
-                    .start_fixed_update();
-            }
             while {
                 self.resources
                     .get_mut::<Time>()
@@ -358,12 +359,6 @@ where
                     &mut self.resources,
                     &mut self.data,
                 ));
-            }
-            {
-                self.resources
-                    .get_mut::<Time>()
-                    .unwrap()
-                    .finish_fixed_update();
             }
         }
         {
@@ -384,6 +379,9 @@ where
 
     /// Cleans up after the quit signal is received.
     fn shutdown(&mut self) {
+        #[cfg(feature = "asset-daemon")]
+        self.asset_daemon.stop_and_join();
+
         info!("Engine is shutting down");
         self.data.dispose(&mut self.world, &mut self.resources);
     }
@@ -410,13 +408,14 @@ where
 /// object is created.
 #[allow(missing_debug_implementations)]
 pub struct ApplicationBuilder<S, T, E, R> {
-    // config: Config,
     initial_state: S,
     /// Used by bundles to initialize any entities in the world
     pub world: World,
     /// Used by bundles to initialize any resources in the world
     pub resources: Resources,
     ignore_window_close: bool,
+    #[allow(dead_code)]
+    asset_dirs: Vec<PathBuf>,
     phantom: PhantomData<(T, E, R)>,
 }
 
@@ -444,12 +443,6 @@ where
     ///
     /// - `S`: A type that implements the `State` trait. e.g. Your initial
     ///        game logic.
-    ///
-    /// # Lifetimes
-    ///
-    /// - `a`: The lifetime of the `State` objects.
-    /// - `b`: This lifetime is inherited from `specs` and `shred`, it is
-    ///        the minimum lifetime of the systems used by `CoreApplication`
     ///
     /// # Errors
     ///
@@ -512,9 +505,6 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
-        let asset_dirs = vec![path.as_ref().to_path_buf()];
-        start_asset_daemon(asset_dirs);
-
         let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
             .as_ref()
             .map(|s| {
@@ -542,8 +532,6 @@ where
         } else {
             pool = thread_pool_builder.build().map(Arc::new)?;
         }
-        // FIXME check that the loader is added to the resources
-        // resources.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
         resources.insert(pool);
         resources.insert(EventChannel::<Event<'static, ()>>::with_capacity(2000));
         //resources.insert(EventChannel::<UiEvent>::with_capacity(40));
@@ -551,12 +539,15 @@ where
         resources.insert(Stopwatch::default());
         resources.insert(Time::default());
 
+        let asset_dirs = vec![path.as_ref().to_path_buf()];
+
         Ok(Self {
             initial_state,
             world,
             resources,
             ignore_window_close: false,
             phantom: PhantomData,
+            asset_dirs,
         })
     }
 
@@ -850,6 +841,8 @@ where
             data,
             event_reader_id,
             trans_reader_id,
+            #[cfg(feature = "asset-daemon")]
+            asset_daemon: AssetDaemon::new(self.asset_dirs),
         })
     }
 }

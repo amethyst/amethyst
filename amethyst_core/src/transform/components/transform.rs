@@ -15,7 +15,7 @@ use crate::math::{
 ///
 /// Used for rendering position and orientation.
 ///
-/// The transforms are preformed in this order: scale, then rotation, then translation.
+/// The transforms are performed in this order: scale, then rotation, then translation.
 #[derive(
     Clone,
     Copy,
@@ -636,6 +636,17 @@ pub struct TransformValues {
     translation: [f32; 3],
     rotation: [f32; 4],
     scale: [f32; 3],
+}
+
+impl TransformValues {
+    /// Initialize a new TransformValues object that can later be use to generate a `Transform`
+    pub fn new(translation: [f32; 3], rotation: [f32; 4], scale: [f32; 3]) -> Self {
+        Self {
+            translation,
+            rotation,
+            scale,
+        }
+    }
 }
 
 impl Default for TransformValues {

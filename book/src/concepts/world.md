@@ -9,6 +9,7 @@ are singletons available across all systems.  See [Resources][res] for more abou
 ## Creating entities
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{World};
 
 #[derive(Default)]
@@ -25,6 +26,7 @@ struct MyComponent {
 ## Accessing a `Component`
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{World};
 # #[derive(Default)]
 # struct MyComponent {
@@ -47,6 +49,7 @@ struct MyComponent {
 This is almost the same as accessing a component:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::{ World};
 # #[derive(Default)]
 # struct MyComponent {
@@ -67,6 +70,7 @@ This is almost the same as accessing a component:
 Single:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::World;
 # fn main() {
     let mut world = World::default();
@@ -78,6 +82,7 @@ Single:
 All:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::World;
 # fn main() {
 #   let mut world = World::default();
@@ -90,6 +95,7 @@ __Note: Entities are lazily deleted, which means that deletion only happens at t
 ## Check if the entity was deleted
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::World;
 # fn main() {
 #   let mut world = World::default();

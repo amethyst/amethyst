@@ -15,6 +15,8 @@ If you are defining a new format that may be useful to others, [please send us a
    derive `Serialize`, `Deserialize` and `TypeUuid` for use in prefabs.
 
    ```rust
+   # extern crate type_uuid;
+   # extern crate serde;
    use serde::{Deserialize, Serialize};
    use type_uuid::TypeUuid;
 
@@ -33,6 +35,9 @@ If you are defining a new format that may be useful to others, [please send us a
    In this example the RON deserializer is used, though it is [already a supported format][doc_ron_format].
 
    ```rust
+   # extern crate amethyst;
+   # extern crate serde;
+   # extern crate type_uuid;
    # use amethyst::assets::{Asset, Handle};
    # use serde::{Deserialize, Serialize};
    # use type_uuid::TypeUuid;
@@ -118,6 +123,10 @@ If you are defining a new format that may be useful to others, [please send us a
    The custom format can now be used:
 
    ```rust
+   # extern crate amethyst;
+   # extern crate serde;
+   # extern crate type_uuid;
+   # extern crate ron;
    # use amethyst::assets::{Asset, AssetStorage, Format, Handle, ProcessingState, ProgressCounter};
    # use ron::de::Deserializer;
    # use serde::{Deserialize, Serialize};

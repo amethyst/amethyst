@@ -37,12 +37,12 @@ impl System for MapMovementSystem {
                     }
                     if self.rotate {
                         for (_, transform) in query.iter_mut(world) {
-                            transform.rotate_2d(time.delta_seconds());
+                            transform.rotate_2d(time.delta_time().as_secs_f32());
                         }
                     }
                     if self.translate {
                         for (_, transform) in query.iter_mut(world) {
-                            transform.prepend_translation(self.vector * time.delta_seconds());
+                            transform.prepend_translation(self.vector * time.delta_time().as_secs_f32());
                             if transform.translation().x > 500.0 {
                                 self.vector = Vector3::new(-100.0, 0.0, 0.0);
                             } else if transform.translation().x < -500.0 {

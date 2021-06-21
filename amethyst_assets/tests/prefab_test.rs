@@ -5,7 +5,7 @@ use amethyst_assets::{
     AssetHandle, AssetStorage, DefaultLoader, Handle, LoadStatus, Loader,
 };
 use amethyst_core::ecs::{world::ComponentError, Dispatcher, Entity, IntoQuery, Resources, World};
-use log::warn;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use serial_test::serial;
@@ -72,7 +72,7 @@ fn a_prefab_is_applied_to_an_entity() {
         execute_dispatcher_until_prefab_is_applied(dispatcher, world, resources, entity);
 
         <(Entity, &Position2D)>::query().for_each(world, |(entity, position)| {
-            println!("Entity: {:?}, Position: {:?}", entity, position);
+            info!("Entity: {:?}, Position: {:?}", entity, position);
         });
 
         let entry = world
@@ -113,7 +113,7 @@ fn a_prefab_with_dependencies_is_applied_to_an_entity() {
 
         let mut query = <(Entity, &Position2D)>::query();
         query.for_each(world, |(entity, position)| {
-            println!("Entity: {:?}, Position: {:?}", entity, position);
+            info!("Entity: {:?}, Position: {:?}", entity, position);
         });
 
         let entry = world

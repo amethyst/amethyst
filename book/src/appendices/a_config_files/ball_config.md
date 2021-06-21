@@ -7,6 +7,8 @@ separately.
 To prepare for our `BallConfig`, add the following line to the top of `config.rs`:
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 use amethyst::core::math::Vector2;
 ```
 
@@ -17,6 +19,8 @@ handle arrays as tuples, so it will read in a tuple and convert the color values
 particular function (e.g., in `pong.rs`).
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 use amethyst::core::math::Vector2;
 use serde::{Deserialize, Serialize};
 
@@ -31,6 +35,8 @@ pub struct BallConfig {
 We'll also add the `Default` trait to this config that will match what the full example uses.
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # use amethyst::core::math::Vector2;
 # use serde::{Deserialize, Serialize};
 # 
@@ -56,6 +62,8 @@ Still in `config.rs`, add the following structure definition at the bottom. This
 backed by the whole `config.ron` file.
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # use amethyst::core::math::Vector2;
 # use serde::{Deserialize, Serialize};
 # 
@@ -108,6 +116,8 @@ the `ArenaConfig`.
 In `pong.rs`, underneath our loading of the `ArenaConfig`, add the following lines
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # use amethyst::core::math::Vector2;
 # use amethyst::ecs::Resources;
 # use serde::{Deserialize, Serialize};
@@ -161,18 +171,24 @@ add each resource separately so systems can use only what they want.
 First, we need to change what `main.rs` is using. Change
 
 ```rust ,ignore
+# extern crate amethyst;
+# extern crate serde;
 use crate::config::ArenaConfig;
 ```
 
 to
 
 ```rust ,ignore
+# extern crate amethyst;
+# extern crate serde;
 use crate::config::PongConfig;
 ```
 
 Now, modify the `main` function, from
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # use amethyst::{
 #   assets::LoaderBundle,
 #   config::Config,
@@ -217,6 +233,8 @@ Now, modify the `main` function, from
 to
 
 ```rust
+# extern crate amethyst;
+# extern crate serde;
 # use amethyst::{
 #   assets::LoaderBundle,
 #   config::Config,

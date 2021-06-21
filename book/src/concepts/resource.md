@@ -12,6 +12,7 @@ Resources are stored in the `Resources` container.
 Adding a resource to a `Resources` instance is done like this:
 
 ```rust
+# extern crate amethyst;
 use amethyst::ecs::Resources;
 
 struct MyResource {
@@ -32,6 +33,7 @@ fn main() {
 Fetching a resource can be done like this:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::Resources;
 # #[derive(Debug, PartialEq)]
 # struct MyResource {
@@ -54,6 +56,7 @@ Fetching a resource can be done like this:
 If you want to get a resource and create it if it doesn't exist:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::Resources;
 # struct MyResource;
 # fn main() {
@@ -69,6 +72,7 @@ If you want to get a resource and create it if it doesn't exist:
 If you want to change a resource that is already inside of `Resources`:
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::Resources;
 # struct MyResource {
 #   pub game_score: i32,
@@ -94,6 +98,7 @@ Other ways of fetching a resource will be covered in the system section of the b
 ## Deleting a resource
 
 ```rust
+# extern crate amethyst;
 # use amethyst::ecs::Resources;
 # struct MyResource {
 #   pub game_score: i32,

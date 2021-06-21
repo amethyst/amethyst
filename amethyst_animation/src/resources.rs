@@ -11,7 +11,6 @@ use amethyst_assets::{
 };
 use amethyst_core::{
     ecs::*,
-    timing::{duration_to_secs, secs_to_duration},
     Transform,
 };
 use derivative::Derivative;
@@ -471,7 +470,7 @@ where
     where
         T: AnimationSampling,
     {
-        let dur = secs_to_duration(input);
+        let dur = Duration::from_secs_f32(input);
         self.samplers
             .iter_mut()
             .filter(|t| t.control_id == control_id)
@@ -530,7 +529,7 @@ where
             .filter(|t| t.control_id == control_id)
             .map(|t| {
                 if let ControlState::Running(dur) = t.state {
-                    duration_to_secs(dur)
+                    dur.as_secs_f32()
                 } else {
                     0.
                 }
@@ -547,7 +546,7 @@ fn set_step_state<T>(
     T: AnimationSampling,
 {
     if let ControlState::Running(dur) = control.state {
-        let dur_s = duration_to_secs(dur);
+        let dur_s = dur.as_secs_f32();
         let new_index = match (get_input_index(dur_s, &sampler.input), direction) {
             (Some(index), &StepDirection::Forward) if index >= sampler.input.len() - 1 => {
                 sampler.input.len() - 1
@@ -557,7 +556,7 @@ fn set_step_state<T>(
             (Some(index), &StepDirection::Backward) => index - 1,
             (None, _) => 0,
         };
-        control.state = ControlState::Running(secs_to_duration(sampler.input[new_index]));
+        control.state = ControlState::Running(Duration::from_secs_f32(sampler.input[new_index]));
     }
 }
 

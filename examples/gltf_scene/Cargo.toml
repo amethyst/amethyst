@@ -9,7 +9,7 @@ path = "main.rs"
 name = "gltf"
 
 [dependencies]
-amethyst = { path = "../../", features = ["optional"] }
+amethyst = { path = "../../", features = ["optional", "gltf"] }
 log = { version = "^0.4", features = ["serde"] }
 serde = "^1"
 derivative = "^2"
