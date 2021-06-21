@@ -156,7 +156,7 @@ fn main() -> amethyst::Result<()> {
     dispatcher.add_bundle(LoaderBundle);
     dispatcher.add_bundle(TransformBundle);
     dispatcher
-        .add_bundle(InputBundle::new().with_bindings_from_file("examples/tiles/config/input.ron")?);
+        .add_bundle(InputBundle::new().with_bindings_from_file("config/input.ron")?);
 
     dispatcher.add_system(systems::MapMovementSystem::default());
     dispatcher.add_system(systems::CameraSwitchSystem::default());
