@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_derive"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "Simon Rönnberg <seamonr@gmail.com>",
     "Amethyst Foundation <contact@amethyst.rs>",
@@ -25,7 +25,7 @@ glob = "0.3.0"
 regex = "1.4.3"
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 
 [lib]
 name = "amethyst_derive"

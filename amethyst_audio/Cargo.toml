@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_audio"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "Xaeroxe <kieseljake@gmail.com>",
     "Amethyst Foundation <contact@amethyst.rs>",
@@ -19,9 +19,9 @@ readme = "README.md"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.15.3" }
-amethyst_core = { path = "../amethyst_core", version = "0.15.3" }
-amethyst_error = { path = "../amethyst_error", version = "0.15.3" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.16.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
 cpal = "0.11"
 derive-new = "0.5"
 log = "0.4"
@@ -32,8 +32,8 @@ thread_profiler = { version = "0.3", optional = true }
 type-uuid = "0.1"
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
-amethyst_utils = { path = "../amethyst_utils", version = "0.15.3" }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
+amethyst_utils = { path = "../amethyst_utils", version = "0.16.0" }
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

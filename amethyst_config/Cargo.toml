@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_config"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "Aceeri <conmcclusk@gmail.com>",
     "Amethyst Foundation <contact@amethyst.rs>",
@@ -25,7 +25,7 @@ encoding_rs_io = "0.1"
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

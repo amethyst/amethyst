@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_test"
-version = "0.15.3"
+version = "0.16.0"
 authors = [
     "Azriel Hoh <azriel91@gmail.com>",
     "Amethyst Foundation <contact@amethyst.rs>",
@@ -16,7 +16,7 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst = { path = "..", version = "0.15.3", default-features = false }
+amethyst = { path = "..", version = "0.16.0", default-features = false }
 derivative = "2.1.1"
 derive-new = "0.5"
 derive_deref = "1.1.0"
@@ -24,7 +24,7 @@ lazy_static = "1.4"
 log = "0.4"
 
 [dev-dependencies]
-amethyst = { path = "../", version = "0.15.3", features = ["renderer"] }
+amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 serde = "1"
 
 [features]
