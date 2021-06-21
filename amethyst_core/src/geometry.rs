@@ -95,8 +95,8 @@ where
     /// Returns the intersection distance of the provided line given a point and direction, or `None` if none occurs.
     pub fn intersect_line(&self, point: &Point3<T>, direction: &Vector3<T>) -> Option<T> {
         let fv = self.dot(direction);
-        let distance = self.dot_point(point) / fv;
-        if fv.abs() > T::min_value() {
+        if fv.abs().is_positive() {
+            let distance = -self.dot_point(point) / fv;
             Some(distance)
         } else {
             None
@@ -131,7 +131,7 @@ where
 
     /// Returns a `Point` along the ray at a distance `t` from it's origin.
     pub fn at_distance(&self, z: T) -> Point3<T> {
-        self.origin - (self.direction * z)
+        self.origin + (self.direction * z)
     }
 }
 
@@ -151,6 +151,7 @@ pub mod tests {
             direction: Vector3::new(0.179_559_51, -0.294_313_04, -0.938_689_65),
         };
         let distance = ray.intersect_plane(&plane).unwrap();
+        assert!(distance > 0.0);
         let point = ray.at_distance(distance);
         assert_ulps_eq!(point, Point3::new(9.927_818, -16.272_524, 0.0));
 
@@ -171,7 +172,7 @@ pub mod tests {
                 direction: Vector3::new(0.2, -0.3, -0.9),
             }
             .at_distance(5.0),
-            Point3::new(-1., 1.5, 54.5)
+            Point3::new(1., -1.5, 45.5)
         )
     }
 }
