@@ -232,10 +232,10 @@ impl System for UiTransformSystem {
                         let modified_children: Vec<(Entity, Entity)> = transform_with_parent_query
                             .iter_mut(&mut else_world)
                             .filter(|(entity, _, parent)| {
-                                let self_dirty = modified_entities.contains(&entity);
+                                let self_dirty = modified_entities.contains(entity);
                                 match parents_query.get(&parent_world, parent.0).ok() {
                                     Some((e, _)) => {
-                                        let parent_dirty = modified_entities.contains(&e);
+                                        let parent_dirty = modified_entities.contains(e);
                                         parent_dirty || self_dirty || screen_resized
                                     }
                                     None => false,

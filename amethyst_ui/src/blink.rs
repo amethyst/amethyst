@@ -41,7 +41,7 @@ impl System for BlinkSystem {
                     let abs_sec = time.delta_time().as_secs_f32();
                     let abs_unscaled_sec = time.delta_real_time().as_secs_f32();
 
-                    let (mut blinks_world, mut subworld) = world.split_for_query(&blinks);
+                    let (mut blinks_world, mut subworld) = world.split_for_query(blinks);
 
                     blinks.for_each_mut(&mut blinks_world, |(entity, mut blink)| {
                         if blink.absolute_time {

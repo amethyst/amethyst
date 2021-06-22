@@ -237,7 +237,7 @@ impl<B: Backend> System for UiGlyphsSystem<B> {
                         let glyph_tex = {
                             glyphs_res.glyph_tex.get_or_insert_with(|| {
                                 let (w, h) = self.glyph_brush.texture_dimensions();
-                                loader.load_from_data(GlyphTextureData { w, h }, (), &tex_queue)
+                                loader.load_from_data(GlyphTextureData { w, h }, (), tex_queue)
                             })
                         };
 
@@ -487,11 +487,10 @@ impl<B: Backend> System for UiGlyphsSystem<B> {
                                                     advance_width,
                                                 };
                                                 last_cached_glyph = Some(cached_glyph);
-                                                last_cached_glyph
                                             } else {
                                                 last_cached_glyph = nonempty_cached_glyphs.next();
-                                                last_cached_glyph
                                             }
+                                            last_cached_glyph
                                         });
                                         ui_text.cached_glyphs.extend(all_glyphs);
 
@@ -794,7 +793,7 @@ impl<B: Backend> System for UiGlyphsSystem<B> {
                                         let glyph_tex: Handle<Texture> = loader.load_from_data(
                                             GlyphTextureData { w, h },
                                             (),
-                                            &tex_queue,
+                                            tex_queue,
                                         );
 
                                         tex = tex_storage

@@ -110,7 +110,7 @@ fn camera_ray_to_tile_coords<T: Tile, E: CoordinateEncoder>(
     map_transform: Option<&Transform>,
 ) -> Point3<i64> {
     // Intersect rays with the tilemap, get intersecting tile coordinates
-    let distance = ray.intersect_plane(&tile_plane).unwrap_or(0.0);
+    let distance = ray.intersect_plane(tile_plane).unwrap_or(0.0);
     map.to_tile(&ray.at_distance(distance).coords, map_transform)
         .map_or_else(
             |e| {
@@ -358,7 +358,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                         .into(),
                     });
 
-                    compute_region::<T, E, Z>(&tile_map, transform, aux)
+                    compute_region::<T, E, Z>(tile_map, transform, aux)
                         .iter()
                         .filter_map(|coord| {
                             let tile = tile_map.get(&coord).unwrap();
@@ -383,7 +383,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                             None
                         })
                         .for_each_group(|tex_id, batch_data| {
-                            sprites_ref.insert(tex_id, tilemap_args_index, batch_data.drain(..))
+                            sprites_ref.insert(tex_id, tilemap_args_index, batch_data.drain(..));
                         });
                 }
             }
@@ -438,7 +438,7 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                 if self.textures.loaded(tex) {
                     self.textures.bind(layout, 1, tex, &mut encoder);
                     unsafe {
-                        encoder.draw(0..4, range.to_owned());
+                        encoder.draw(0..4, range.clone());
                     }
                 }
             }

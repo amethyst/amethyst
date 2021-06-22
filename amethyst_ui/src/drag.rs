@@ -120,7 +120,7 @@ impl System for DragWidgetSystem {
                                 get_parent_pixel_size(
                                     maybe_parent_current,
                                     maybe_transform_iter,
-                                    &screen_dimensions,
+                                    screen_dimensions,
                                 )
                             };
 
