@@ -176,7 +176,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         let whole_range = 0..slight_range.end;
 
         let new_buffer = util::ensure_buffer(
-            &factory,
+            factory,
             &mut self.buffer,
             hal::buffer::Usage::UNIFORM,
             rendy::memory::Dynamic,

@@ -1,6 +1,6 @@
 use amethyst::{
     assets::{DefaultLoader, Handle, Loader, ProcessingQueue},
-    core::{Time, transform::Transform},
+    core::{transform::Transform, Time},
     prelude::*,
     renderer::{Camera, SpriteRender, SpriteSheet, Texture},
 };

@@ -1,13 +1,15 @@
-use crate::{prefab::PrefabImporter, simple_importer::get_source_importers};
-use amethyst_error::Error;
-use distill::daemon::AssetDaemon as AtelierAssetDaemon;
 use std::{
     net::{AddrParseError, SocketAddr},
     path::PathBuf,
     thread::JoinHandle,
 };
+
+use amethyst_error::Error;
+use distill::daemon::AssetDaemon as AtelierAssetDaemon;
 use structopt::StructOpt;
 use tokio::sync::oneshot::Sender;
+
+use crate::{prefab::PrefabImporter, simple_importer::get_source_importers};
 
 /// Parameters to the asset daemon.
 ///
@@ -134,7 +136,7 @@ impl StartedDaemon {
     fn stop_and_join(&mut self) -> AssetDaemonState {
         self.shutdown
             .take()
-            .ok_or(Error::from_string("Shutdown Sender not present"))
+            .ok_or_else(|| Error::from_string("Shutdown Sender not present"))
             .and_then(|s| {
                 s.send(true)
                     .map_err(|_| Error::from_string("failure sending shutdown to assetdaemon"))
@@ -142,7 +144,7 @@ impl StartedDaemon {
             .and_then(|_| {
                 self.join_handle
                     .take()
-                    .ok_or(Error::from_string("JoinHandle not present"))
+                    .ok_or_else(|| Error::from_string("JoinHandle not present"))
             })
             .and_then(|h| {
                 h.join()

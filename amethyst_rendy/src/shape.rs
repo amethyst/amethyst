@@ -108,7 +108,7 @@ impl Shape {
     {
         upload
             .loader
-            .load_from_data(self.generate::<V>(scale).into(), progress, &upload.storage)
+            .load_from_data(self.generate::<V>(scale).into(), progress, upload.storage)
     }
 
     /// Generate `MeshBuilder` for the `Shape`

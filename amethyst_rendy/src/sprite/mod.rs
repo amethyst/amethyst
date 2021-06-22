@@ -120,8 +120,8 @@ impl Sprite {
         let tex_coords = TextureCoordinates {
             left,
             right,
-            top,
             bottom,
+            top,
         };
 
         Sprite {

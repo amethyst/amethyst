@@ -60,7 +60,7 @@ pub fn is_close_requested(event: &Event<'_, ()>) -> bool {
 /// If the name is None, it will return the default value of the axis (0.0).
 pub fn get_input_axis_simple(name: &Option<Cow<'static, str>>, input: &InputHandler) -> f32 {
     name.as_ref()
-        .and_then(|ref n| input.axis_value(n))
+        .and_then(|n| input.axis_value(n))
         .unwrap_or(0.0)
 }
 
@@ -68,7 +68,7 @@ pub fn get_input_axis_simple(name: &Option<Cow<'static, str>>, input: &InputHand
 /// If the action name is None, it will default to false.
 pub fn get_action_simple(name: &Option<Cow<'static, str>>, input: &InputHandler) -> bool {
     name.as_ref()
-        .and_then(|ref n| input.action_is_down(n))
+        .and_then(|n| input.action_is_down(n))
         .unwrap_or(false)
 }
 

@@ -124,7 +124,7 @@ pub fn vertex_desc(
     let mut attributes = Vec::with_capacity(formats.len());
 
     let mut sorted: SmallVec<[_; 16]> = formats.iter().enumerate().collect();
-    sorted.sort_unstable_by(|a, b| a.1.cmp(&b.1));
+    sorted.sort_unstable_by(|a, b| a.1.cmp(b.1));
 
     let mut loc_offset = 0;
     for (loc_base, (format, rate)) in sorted {

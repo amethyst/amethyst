@@ -89,7 +89,7 @@ impl LoadNotifier {
         }
 
         if let Some(tracker) = self.tracker {
-            tracker.fail(self.load_handle.0, &"", "".to_string(), error);
+            tracker.fail(self.load_handle.0, "", "".to_string(), error);
         }
     }
 }

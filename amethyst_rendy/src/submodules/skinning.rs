@@ -123,7 +123,7 @@ impl<B: Backend> PerImageSkinningSub<B> {
         }
 
         let allocated = util::ensure_buffer(
-            &factory,
+            factory,
             &mut self.buffer,
             hal::buffer::Usage::STORAGE,
             rendy::memory::Dynamic,

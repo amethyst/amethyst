@@ -137,7 +137,7 @@ impl System for VisibilitySortingSystem {
                             entity_query
                                 .iter(world)
                                 .map(|(entity, transform, transparent, sphere)| {
-                                    let pos = sphere.clone().map_or(origin, |s| s.center);
+                                    let pos = sphere.map_or(origin, |s| s.center);
                                     let matrix = transform.global_matrix();
                                     (
                                         *entity,

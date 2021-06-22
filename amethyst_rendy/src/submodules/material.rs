@@ -270,7 +270,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
             return None;
         }
 
-        let pod = pod::Material::from_material(&mat).std140();
+        let pod = pod::Material::from_material(mat).std140();
 
         if self.allocator.would_overflow() {
             self.collect_unused();

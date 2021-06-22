@@ -139,7 +139,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
 
                     let sprite = &sprites[sprite_render.sprite_number];
 
-                    let batch_data = SpriteArgs::from_data(&sprite, &global, tint);
+                    let batch_data = SpriteArgs::from_data(sprite, global, tint);
 
                     let (tex_id, _) = textures_ref.insert(
                         factory,
@@ -316,7 +316,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
 
                     let sprite = &sprites[sprite_render.sprite_number];
 
-                    let batch_data = SpriteArgs::from_data(&sprite, &global, tint);
+                    let batch_data = SpriteArgs::from_data(sprite, global, tint);
 
                     let (tex_id, this_changed) = textures_ref.insert(
                         factory,
