@@ -23,14 +23,14 @@ impl ImageFormat {
 pub fn _load_image(
     _image: &gltf::Image<'_>,
     _state: &mut GltfImporterState,
-    _buffers: &Vec<Data>,
+    _buffers: &[Data],
 ) -> Vec<ImportedAsset> {
     vec![]
 }
 
 pub fn read_image_data(
     image: &gltf::Image<'_>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
 ) -> Result<(Vec<u8>, ImageFormat), Error> {
     match image.source() {
         Source::View { view, mime_type } => {

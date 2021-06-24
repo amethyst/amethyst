@@ -33,7 +33,7 @@ use crate::importer::{
 pub fn load_material(
     material: &gltf::Material<'_>,
     op: &mut ImportOp,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     state: &mut GltfImporterState,
 ) -> Vec<ImportedAsset> {
     if state.material_uuids.is_none() {
@@ -127,7 +127,7 @@ pub fn load_material(
 fn load_texture_with_factor(
     texture: Option<gltf::texture::Info<'_>>,
     factor: [f32; 4],
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     srgb: bool,
 ) -> Result<(TextureBuilder<'static>, [f32; 4]), Error> {
     match texture {
@@ -153,7 +153,7 @@ fn load_texture_with_factor(
 
 fn load_albedo(
     pbr: &PbrMetallicRoughness<'_>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
     material_name: String,
@@ -188,7 +188,7 @@ fn load_albedo(
 
 fn load_metallic_roughness(
     pbr: &PbrMetallicRoughness<'_>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
     material_name: String,
@@ -224,7 +224,7 @@ fn load_metallic_roughness(
 fn load_emission(
     em_factor: &[f32; 3],
     em_texture: Option<Info<'_>>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
     material_name: String,
@@ -259,7 +259,7 @@ fn load_emission(
 
 fn load_normal(
     normal_texture: Option<NormalTexture<'_>>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
     material_name: String,
@@ -298,7 +298,7 @@ fn load_normal(
 
 fn load_occlusion(
     occlusion_texture: Option<OcclusionTexture<'_>>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
     material_name: String,
@@ -362,7 +362,7 @@ fn load_cavity(
 
 fn load_texture(
     texture: &gltf::Texture<'_>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     srgb: bool,
 ) -> Result<TextureBuilder<'static>, Error> {
     let (data, format) = read_image_data(&texture.source(), buffers)?;

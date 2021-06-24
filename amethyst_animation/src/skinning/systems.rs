@@ -103,7 +103,7 @@ impl System for VertexSkinningSystem {
                     let (mut left, right) = world.split_for_query(&q);
 
                     for (entity, mesh_global, joint_transform) in q.iter_mut(&mut left) {
-                        if updated.contains(&entity) {
+                        if updated.contains(entity) {
                             if let Some(global_inverse) = mesh_global.global_matrix().try_inverse()
                             {
                                 if let Ok(skin) = <&Skin>::query().get(&right, joint_transform.skin)

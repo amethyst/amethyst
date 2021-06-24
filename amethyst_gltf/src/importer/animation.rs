@@ -42,7 +42,7 @@ register_component_type!(NodeEntityIdentifier);
 
 pub fn load_animations(
     animations: iter::Animations<'_>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     node_map: &HashMap<usize, Entity>,
     op: &mut ImportOp,
     state: &mut GltfImporterState,
@@ -142,7 +142,7 @@ pub fn load_animations(
 
 fn load_samplers(
     animation: &gltf::Animation<'_>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
 ) -> Result<Vec<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>)>, Error> {
     Ok(animation
         .channels()
@@ -153,7 +153,7 @@ fn load_samplers(
 
 fn load_channel(
     channel: &gltf::animation::Channel<'_>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
 ) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), Error> {
     use gltf::animation::util::ReadOutputs::*;
     let sampler = channel.sampler();
@@ -171,13 +171,13 @@ fn load_channel(
 
     let input = reader
         .read_inputs()
-        .ok_or(Error::Custom("Channel missing inputs".to_string()))?
+        .ok_or_else(|| Error::Custom("Channel missing inputs".to_string()))?
         .collect();
     let node_index = target.node().index();
 
     match reader
         .read_outputs()
-        .ok_or(Error::Custom("Channel missing outputs".to_string()))?
+        .ok_or_else(|| Error::Custom("Channel missing outputs".to_string()))?
     {
         Translations(translations) => {
             Ok((

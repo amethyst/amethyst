@@ -36,12 +36,12 @@ pub struct AssetDaemonArgs {
     pub asset_dirs: Vec<PathBuf>,
 }
 
-impl Into<AssetDaemonOpt> for AssetDaemonArgs {
-    fn into(self) -> AssetDaemonOpt {
+impl From<AssetDaemonArgs> for AssetDaemonOpt {
+    fn from(args: AssetDaemonArgs) -> AssetDaemonOpt {
         AssetDaemonOpt {
-            db_dir: self.db_dir,
-            address: self.address,
-            asset_dirs: self.asset_dirs,
+            db_dir: args.db_dir,
+            address: args.address,
+            asset_dirs: args.asset_dirs,
         }
     }
 }

@@ -170,11 +170,11 @@ impl GltfNodeExtent {
     }
 }
 
-impl Into<BoundingSphere> for GltfNodeExtent {
-    fn into(self) -> BoundingSphere {
+impl From<GltfNodeExtent> for BoundingSphere {
+    fn from(value: GltfNodeExtent) -> BoundingSphere {
         BoundingSphere {
-            center: convert(self.centroid()),
-            radius: convert(self.distance().magnitude() * 0.5),
+            center: convert(value.centroid()),
+            radius: convert(value.distance().magnitude() * 0.5),
         }
     }
 }

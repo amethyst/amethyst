@@ -61,7 +61,7 @@ where
                     #[cfg(feature = "profiler")]
                     profile_scope!("animation_control_system");
                     remove_sets.clear();
-                    let (mut query_world, mut world) = world.split_for_query(&query);
+                    let (mut query_world, mut world) = world.split_for_query(query);
 
                     for (entity, control_set, hierarchy) in query.iter_mut(&mut query_world) {
 
@@ -112,7 +112,7 @@ where
                                         ControlState::Running(_) => {
                                             let val = *hierarchy
                                                 .and_then(|h| h.nodes.values().next())
-                                                .unwrap_or(&entity);
+                                                .unwrap_or(entity);
                                             find_max_duration(
                                                 control.id,
                                                 world
