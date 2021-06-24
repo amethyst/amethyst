@@ -57,7 +57,7 @@ impl EventRetrigger for UiSoundRetrigger {
         };
 
         if let Some(ev) = event_to_trigger {
-            out.receive_one(&ev);
+            out.receive_one(ev);
         }
     }
 }

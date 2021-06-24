@@ -156,7 +156,7 @@ impl CoordinateEncoder for MortonEncoder2D {
             if x > check || y > check || z > check {
                 panic!(
                     "These provided coordinates are outside of the encodable coordinate range for a u32"
-                )
+                );
             }
         }
 
