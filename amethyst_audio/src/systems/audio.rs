@@ -45,7 +45,7 @@ impl System for AudioSystem {
                         profile_scope!("audio_system");
                         // Process emitters and listener.
                         if let Some((entity, listener)) = if let Some(entity) = select_listener.0 {
-                            // Find entity refered by SelectedListener resource
+                            // Find entity referred by SelectedListener resource
                             world
                                 .entry_ref(entity)
                                 .ok()

@@ -129,7 +129,7 @@ mod window {
             self.dirty = false;
 
             let window = resources.get::<Window>().unwrap();
-            // Explicitly deref so we get a type that implements HasRawWindowHandle.
+            // Explicitly deref, so we get a type that implements HasRawWindowHandle.
             let window: &Window = &window;
             let surface = factory.create_surface(window)?;
             let dimensions = self.dimensions.as_ref().unwrap();

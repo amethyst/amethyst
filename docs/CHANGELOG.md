@@ -77,7 +77,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - Removed far plane from perspective projection ([#2118])
 - Experimented with CI solutions, selected GitHub Actions. Fixed bors & stalebot. ([#2262], [#2380], [#2382], [#2410], [#2413], [#2414], [#2415])
 - `amethyst_rendy::shape::Shape::upload` takes `&ShapeUpload`. ([#2264])
-- Updated examples, with special attention to the pong example. Improved readmes, updated screenshots, colocated assets with example code ([#2248], [#2289], [#2305], [#2201], [#2310], [#2312], [#2349], [#2384], [#2396], [#2422])
+- Updated examples, with special attention to the pong example. Improved readmes, updated screenshots, collocated assets with example code ([#2248], [#2289], [#2305], [#2201], [#2310], [#2312], [#2349], [#2384], [#2396], [#2422])
 - `UiText` now requires 2 more arguments `line_mode` and `align` ([#2358])
 - Updated the style of The Book ([#2355])
 
@@ -156,8 +156,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 - Support settings module log levels from a RON file. ([#2115])
-- Export the `get_parent_pixel_size` functions from the ui module. ([[#2128])
-- Export the `pixel_width` and `pixel_height` methods on the `UiTransform`. ([[#2128])
+- Export the `get_parent_pixel_size` functions from the ui module. ([#2128])
+- Export the `pixel_width` and `pixel_height` methods on the `UiTransform`. ([#2128])
 - Support UiEvents targeting multiple overlapping entities. ([#2138])
 - `"storage-event-control"` feature enables the `specs` `"storage-event-control"` feature. ([#2152])
 
@@ -257,7 +257,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - `Config` types no longer require a `Default` impl ([#1989])
 - Fixed Incorrect path for sprite_camera_follow example ([#2004])
 - Run `System::setup` for pausable systems' delegate. ([#2029])
-- Fixed an incorrect dimensions being used in Tile Encoders, causing bad lookups in assymetric maps in any Z-level besides 0 ([#2017])
+- Fixed an incorrect dimensions being used in Tile Encoders, causing bad lookups in asymmetric maps in any Z-level besides 0 ([#2017])
 - Fix encoders dimensional cases and optimize storage space ([#2059])
 - Fixed off by one issue in to_tile function ([#2103])
 - Fix dragging UI widgets that have ScaleMode::Percent ([#2111])
@@ -479,7 +479,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 - `AutoFov` and `AutoFovSystem` to adjust horizontal FOV to screen aspect ratio. ([#1281])
 - Add `icon` to `DisplayConfig` to set a window icon using a path to a file ([#1373])
 - Added setting to control gfx_device_gl logging level separately, and set it to Warn by default. ([#1404])
-- Add `loaded_icon` to `DisplayConfig` to set a window icon programatically ([#1405])
+- Add `loaded_icon` to `DisplayConfig` to set a window icon programmatically ([#1405])
 - Added optional feature gates which will reduce compilation times when used. ([#1412])
 - Several passes got `with_transparency_settings` which changes the transparency settings for the pass. ([#1419])
 - Add `SpriteRenderPrefab`. ([#1435])

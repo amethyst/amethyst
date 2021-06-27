@@ -152,7 +152,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
     fn on_start(&mut self, data: StateData<'_, CustomGameData>) {
-        data.world.push((self.scene.clone(),);
+        data.world.push(self.scene.clone());
     }
 
     fn handle_event(

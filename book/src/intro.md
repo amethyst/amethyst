@@ -84,7 +84,7 @@ If you were not to use Amethyst, not only would you need to create all those fea
 
 Amethyst does all of this for you, so that you can focus on making your game instead of worrying about the low-level details.
 
-Futhermore, because of the architecture of Amethyst, almost all the parts are both configurable and replaceable. This means that if you do want to change something to suit your needs, there's always a way to do it.
+Furthermore, because of the architecture of Amethyst, almost all the parts are both configurable and replaceable. This means that if you do want to change something to suit your needs, there's always a way to do it.
 
 For example, the [rodio](https://github.com/tomaka/rodio) crate is currently used for the audio features in the engine, but if you would rather use something more complex or a custom solution, all you have to do is add some glue that moves the data coming from Specs into the library that you are using to play and control the audio, without even having to touch the engine code!
 

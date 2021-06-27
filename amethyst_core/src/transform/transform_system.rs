@@ -195,7 +195,7 @@ mod tests {
 
         let e3 = world.push((local3, Parent(e2)));
 
-        // Current transform system is inneficient and needs multiple passed for deep hierarchy
+        // Current transform system is inefficient and needs multiple passed for deep hierarchy
         dispatcher.execute(&mut world, &mut res);
         dispatcher.execute(&mut world, &mut res);
 
@@ -255,7 +255,7 @@ mod tests {
         world.entry(e2).unwrap().add_component(Parent(e1));
         world.entry(e3).unwrap().add_component(Parent(e2));
 
-        // Current transform system is inneficient and needs multiple passed for deep hierarchy
+        // Current transform system is inefficient and needs multiple passed for deep hierarchy
         dispatcher.execute(&mut world, &mut res);
         dispatcher.execute(&mut world, &mut res);
 

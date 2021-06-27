@@ -26,7 +26,7 @@ pub struct Draggable;
 pub struct DragWidgetSystem {
     event_reader: ReaderId<UiEvent>,
 
-    /// hashmap whose keys are every entities being dragged,
+    /// hashmap whose keys are every entity's being dragged,
     /// and whose element is a tuple whose first element is
     /// the original mouse position when drag first started,
     /// and second element the mouse position one frame ago

@@ -25,7 +25,7 @@ pub struct LoggerConfig {
     pub level_filter: LevelFilter,
     /// If set, enables logging to file at the given path.
     pub log_file: Option<PathBuf>,
-    /// If set, allows the config values to be overriden via the corresponding environmental variables.
+    /// If set, allows the config values to be overridden via the corresponding environmental variables.
     pub allow_env_override: bool,
     /// Sets a different level for gfx_backend if Some
     pub log_gfx_backend_level: Option<LevelFilter>,

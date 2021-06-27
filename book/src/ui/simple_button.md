@@ -2,7 +2,7 @@
 
 In this chapter we will guide you through building your own button in Amethyst!
 
-### Bulding blocks
+### Building blocks
 
 The components you can use in order to build your button are as goes:
 
@@ -38,7 +38,7 @@ let ui_transform = UiTransform::new(
 ```
 
 The `id` field of the transform is basically like the name. You can use this in combination with the
-[UiFinder](https://docs.amethyst.rs/master/amethyst_ui/struct.UiFinder.html) to fetch the transfrom through a system.
+[UiFinder](https://docs.amethyst.rs/master/amethyst_ui/struct.UiFinder.html) to fetch the transform through a system.
 
 Assuming the entity has no parent, whatever is set as the `anchor` field will be placed relative to the screen. In our case
 we set it to `Anchor::Middle` and it will be drawn in the middle of the screen. The `pivot` field will center the widget

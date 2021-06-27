@@ -23,11 +23,11 @@ pub struct EnergyBlast {
 }
 
 impl Asset for EnergyBlast {
-    type Data = Self;
-
     fn name() -> &'static str {
         "EnergyBlast"
     }
+
+    type Data = Self;
 }
 
 pub struct LoadingState {

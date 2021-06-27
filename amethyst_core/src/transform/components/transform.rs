@@ -612,7 +612,7 @@ impl From<Vector3<f32>> for Transform {
     }
 }
 /// Creates a Transform using the `Vector3<f64>` as the translation vector.
-/// Provided for convinience when providing constants.
+/// Provided for convenience when providing constants.
 /// ```
 /// # use amethyst::core::transform::Transform;
 /// # use amethyst::core::math::Vector3;
@@ -814,7 +814,7 @@ mod tests {
         let mut transform = Transform::default();
         assert!(transform.is_finite());
 
-        transform.global_matrix.fill_row(2, std::f32::NAN);
+        transform.global_matrix.fill_row(2, f32::NAN);
         assert!(!transform.is_finite());
     }
 }

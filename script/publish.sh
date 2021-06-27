@@ -21,7 +21,7 @@ for crate in "${crates[@]}"
 do
   echo "Publishing ${crate}"
 
-  (cd $crate && cargo publish)
+  (cd "$crate" && cargo publish)
 
   # Rate limit ourselves as `crates.io` takes a while to update cache.
   sleep 30
@@ -49,7 +49,7 @@ do
   then
     cargo publish --all-features
   else
-    (cd $crate && cargo publish --all-features)
+    (cd "$crate" && cargo publish --all-features)
   fi
 
   # Rate limit ourselves as `crates.io` takes a while to update cache.

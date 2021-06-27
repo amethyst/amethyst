@@ -21,7 +21,7 @@ where
     K: PartialEq,
 {
     /// Perform grouping. Evaluates passed closure on every next
-    /// countiguous list of data with same group identifier.
+    /// contiguous list of data with same group identifier.
     fn for_each_group<F>(self, on_group: F)
     where
         F: FnMut(K, &mut Vec<V>);
@@ -269,7 +269,7 @@ where
         }
     }
 
-    /// Removes any empty grouping indicies.
+    /// Removes any empty grouping indices.
     pub fn prune(&mut self) {
         self.map.retain(|_, b| !b.is_empty());
     }

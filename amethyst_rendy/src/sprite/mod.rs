@@ -5,7 +5,7 @@ use type_uuid::TypeUuid;
 
 use crate::types::Texture;
 
-/// Meta data for a sprite sheet texture.
+/// Metadata for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TypeUuid)]

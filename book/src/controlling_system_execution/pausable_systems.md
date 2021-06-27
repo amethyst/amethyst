@@ -80,7 +80,7 @@ struct GameplayState;
 impl SimpleState for GameplayState {
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
 #       let my_condition = true;
-        if (my_condition) {
+        if my_condition {
             *data.world.write_resource::<CurrentState>() = CurrentState::Paused;
         }
 

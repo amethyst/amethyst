@@ -118,8 +118,8 @@ register_component_type!(GltfNodeExtent);
 impl Default for GltfNodeExtent {
     fn default() -> Self {
         Self {
-            start: Point3::from(Vector3::from_element(std::f32::MAX)),
-            end: Point3::from(Vector3::from_element(std::f32::MIN)),
+            start: Point3::from(Vector3::from_element(f32::MAX)),
+            end: Point3::from(Vector3::from_element(f32::MIN)),
         }
     }
 }

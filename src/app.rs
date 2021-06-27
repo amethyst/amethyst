@@ -109,7 +109,7 @@ where
 /// }
 /// ```
 ///
-/// You can also setup your own logging system. Simply intialize any global logger that supports
+/// You can also setup your own logging system. Simply initialize any global logger that supports
 /// [log], and it will be used instead of the default logger:
 ///
 /// ```

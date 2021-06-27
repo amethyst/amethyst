@@ -17,7 +17,7 @@ use super::{
     *,
 };
 
-/// This structs holds state information about keyboard modifiers
+/// This struct holds state information about keyboard modifiers
 #[derive(Debug, Default)]
 pub struct KeyboardModifiersState {
     shift: bool,
@@ -673,7 +673,7 @@ impl InputHandler {
     ) {
         let mut events = Vec::<InputEvent>::new();
 
-        // determine if a horizontal scroll happend
+        // determine if a horizontal scroll happened
         let dir_x = match delta_x {
             dx if dx > 0.0 => {
                 events.push(MouseWheelMoved(ScrollDirection::ScrollRight));
@@ -686,7 +686,7 @@ impl InputHandler {
             _ => None,
         };
 
-        // determine if a vertical scroll happend
+        // determine if a vertical scroll happened
         let dir_y = match delta_y {
             dy if dy < 0.0 => {
                 events.push(MouseWheelMoved(ScrollDirection::ScrollDown));
@@ -1009,7 +1009,7 @@ mod tests {
         // Register an axis triggered by two keys
         // Check that with nothing pressed we return 0.
         // Press the positive and check for a positive response
-        // Release the positive, press the negative and check for a negative respones
+        // Release the positive, press the negative and check for a negative responses
         // Press both and check for 0.
         // Release both and check for 0.
 

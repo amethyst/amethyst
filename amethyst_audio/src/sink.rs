@@ -5,7 +5,7 @@ use rodio::{Decoder, Sink};
 use crate::{output::Output, source::Source, DecoderError};
 
 /// This structure provides a way to programmatically pick and play music.
-// TODO: This needs a proper debug implementeation. This should probably propigate up to a TODO
+// TODO: This needs a proper debug implementation. This should probably propagate up to a TODO
 // for rodeo, as its missing them as well.
 #[allow(missing_debug_implementations)]
 pub struct AudioSink {

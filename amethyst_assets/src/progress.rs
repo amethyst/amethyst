@@ -151,7 +151,7 @@ impl Tracker for ProgressCounterTracker {
         });
         self.num_failed.fetch_add(1, Ordering::Relaxed);
 
-        // Failed assets are not requeued for loading, so we subtract it from the number that tracks
+        // Failed assets are not requeue for loading, so we subtract it from the number that tracks
         // the assets that are still loading.
         self.num_loading.fetch_sub(1, Ordering::Relaxed);
     }

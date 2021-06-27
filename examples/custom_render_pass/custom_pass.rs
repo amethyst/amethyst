@@ -240,7 +240,7 @@ fn build_custom_pipeline<B: Backend>(
         )
         .build(factory, None);
 
-    // Destoy the shaders once loaded
+    // Destroy the shaders once loaded
     unsafe {
         factory.destroy_shader_module(shader_vertex);
         factory.destroy_shader_module(shader_fragment);

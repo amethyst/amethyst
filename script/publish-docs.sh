@@ -174,7 +174,7 @@ function invalidate_aws {
   if [[ -f "docs-paths-updated" ]]; then
     echo "Invalidating cloudfront docs paths..."
     # Loop through updated docs paths and create an invalidation for each
-    while read p; do
+    while read -r p; do
       echo "Creating invalidation for docs path $p"
       /usr/local/bin/aws cloudfront create-invalidation \
         --distribution-id "$AWS_DOCS_DISTRIBUTION_ID" \
@@ -186,7 +186,7 @@ function invalidate_aws {
   if [[ -f "book-paths-updated" ]]; then
     echo "Invalidating cloudfront book paths..."
     # Loop through updated book paths and create an invalidation for each
-    while read p; do
+    while read -r p; do
       echo "Creating invalidation for book path $p"
       /usr/local/bin/aws cloudfront create-invalidation \
         --distribution-id "$AWS_BOOK_DISTRIBUTION_ID" \

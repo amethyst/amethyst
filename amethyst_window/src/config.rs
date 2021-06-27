@@ -52,7 +52,7 @@ pub struct DisplayConfig {
     /// Whether the window is resizable or not.
     #[serde(default = "default_resizable")]
     pub resizable: bool,
-    /// Whether the the window should be transparent. If this is true, writing
+    /// Whether the window should be transparent. If this is true, writing
     /// colors with alpha values different than 1.0 will produce a transparent
     /// window.
     #[serde(default)]

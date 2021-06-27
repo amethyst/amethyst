@@ -50,12 +50,12 @@ impl SlotAllocator {
         if let Some((i, vaccant)) = self.vaccants[self.lowest_vaccant_idx..]
             .iter_mut()
             .enumerate()
-            .find(|(_, vaccant)| **vaccant != std::u64::MAX)
+            .find(|(_, vaccant)| **vaccant != u64::MAX)
         {
             let vaccant_idx = self.lowest_vaccant_idx + i;
             let free_subid = (!*vaccant).trailing_zeros();
             *vaccant |= 1 << free_subid;
-            self.lowest_vaccant_idx = if *vaccant == std::u64::MAX {
+            self.lowest_vaccant_idx = if *vaccant == u64::MAX {
                 vaccant_idx + 1
             } else {
                 vaccant_idx

@@ -82,9 +82,9 @@ pub fn load_material(
                 .as_mut()
                 .expect("Meshes hashmap didn't work")
                 .insert(material_name.clone());
-            std::f32::MIN_POSITIVE
+            f32::MIN_POSITIVE
         }
-        AlphaMode::Mask => material.alpha_cutoff().unwrap_or(std::f32::MIN_POSITIVE),
+        AlphaMode::Mask => material.alpha_cutoff().unwrap_or(f32::MIN_POSITIVE),
         AlphaMode::Opaque => 0.0,
     };
 

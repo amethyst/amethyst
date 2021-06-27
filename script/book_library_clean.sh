@@ -1,4 +1,4 @@
-# /bin/sh
+#! /bin/sh
 #
 # Clean amethyst build artifacts so `mdbook test` does not fail on multiple
 # built libraries found.

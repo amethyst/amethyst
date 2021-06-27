@@ -44,7 +44,7 @@ macro_rules! profile_scope_impl {
 
 /// Define drawing opaque 3d meshes with specified shaders and texture set
 pub trait Base3DPassDef: 'static + std::fmt::Debug + Send + Sync {
-    /// The human readable name of this pass
+    /// The human-readable name of this pass
     const NAME: &'static str;
 
     /// The [mtl::StaticTextureSet] type implementation for this pass

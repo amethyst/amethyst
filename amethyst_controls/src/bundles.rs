@@ -50,7 +50,7 @@ impl FlyControlBundle {
         }
     }
 
-    /// Alters the mouse sensitivy on this `FlyControlBundle`
+    /// Alters the mouse sensitivity on this `FlyControlBundle`
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;
         self.sensitivity_y = y;

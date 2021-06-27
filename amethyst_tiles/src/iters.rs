@@ -9,7 +9,7 @@ use crate::morton;
 /// in that it considers both min and max values as being inside the region.
 ///
 /// The values of this region are stored and computed as morton values instead of `Vector3` values, allowing for
-/// fast BMI2 instrinsic use for iteration and comparison.
+/// fast BMI2 intrinsic use for iteration and comparison.
 #[derive(Copy, Clone, Default, Debug, Eq, PartialEq, Hash)]
 pub struct MortonRegion {
     min: u32,

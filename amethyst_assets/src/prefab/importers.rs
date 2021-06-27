@@ -29,16 +29,16 @@ pub struct PrefabImporterState {
 pub struct PrefabImporter {}
 
 impl Importer for PrefabImporter {
-    type State = PrefabImporterState;
-    type Options = PrefabImporterOptions;
-
     fn version_static() -> u32 {
         1
     }
-
     fn version(&self) -> u32 {
         Self::version_static()
     }
+
+    type Options = PrefabImporterOptions;
+
+    type State = PrefabImporterState;
 
     fn import(
         &self,

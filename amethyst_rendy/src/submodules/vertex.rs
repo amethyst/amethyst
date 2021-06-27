@@ -237,11 +237,11 @@ impl<B: Backend, V: VertexDataBufferType> PerImageDynamicVertexData<B, V> {
     }
 
     /// Maps the allocated buffer for writing.
-    fn map<'a>(
-        &'a mut self,
+    fn map(
+        &mut self,
         factory: &Factory<B>,
         range: Range<u64>,
-    ) -> Option<(bool, MappedRange<'a, B>)> {
+    ) -> Option<(bool, MappedRange<'_, B>)> {
         let alloc = self.ensure(factory, range.end);
         self.buffer
             .as_mut()

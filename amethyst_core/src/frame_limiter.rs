@@ -51,7 +51,7 @@
 //!   consistent frame timings of yielding, while reducing CPU usage compared to the yield-only
 //!   approach.
 //!
-//! By default amethyst will use the `Yield` strategy, which is fine for desktop and console
+//! By default, amethyst will use the `Yield` strategy, which is fine for desktop and console
 //! games that aren't as affected by extra CPU usage. For mobile devices, the `Sleep` strategy
 //! will help conserve battery life.
 //!

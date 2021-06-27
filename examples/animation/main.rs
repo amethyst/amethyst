@@ -153,39 +153,6 @@ impl SimpleState for Example {
         self.sphere = Some(world.push((Transform::default(), mesh, mtl, animation_set)));
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let mut query = <(Entity, Read<AnimationSet<AnimationId, Transform>>)>::query();
-        let mut buffer = CommandBuffer::new(data.world);
-
-        if let Some(ref progress_counter) = self.progress_counter {
-            // Checks progress
-            if progress_counter.is_complete() {
-                let (query_world, mut subworld) = data.world.split_for_query(&query);
-                for (entity, animation_set) in query.iter(&query_world) {
-                    // Creates a new AnimationControlSet for the entity
-                    if let Some(control_set) =
-                        get_animation_set(&mut subworld, &mut buffer, *entity)
-                    {
-                        if control_set.is_empty() {
-                            // Adds the `Fly` animation to AnimationControlSet and loops infinitely
-                            control_set.add_animation(
-                                AnimationId::Test,
-                                &animation_set.get(&AnimationId::Test).unwrap(),
-                                EndControl::Loop(None),
-                                1.0,
-                                AnimationCommand::Start,
-                            );
-                            self.progress_counter = None;
-                        }
-                    }
-                }
-            }
-        }
-        buffer.flush(data.world);
-
-        Trans::None
-    }
-
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         let StateData { world, .. } = data;
         let mut buffer = CommandBuffer::new(world);
@@ -302,6 +269,39 @@ impl SimpleState for Example {
             };
         }
         buffer.flush(world);
+
+        Trans::None
+    }
+
+    fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
+        let mut query = <(Entity, Read<AnimationSet<AnimationId, Transform>>)>::query();
+        let mut buffer = CommandBuffer::new(data.world);
+
+        if let Some(ref progress_counter) = self.progress_counter {
+            // Checks progress
+            if progress_counter.is_complete() {
+                let (query_world, mut subworld) = data.world.split_for_query(&query);
+                for (entity, animation_set) in query.iter(&query_world) {
+                    // Creates a new AnimationControlSet for the entity
+                    if let Some(control_set) =
+                        get_animation_set(&mut subworld, &mut buffer, *entity)
+                    {
+                        if control_set.is_empty() {
+                            // Adds the `Fly` animation to AnimationControlSet and loops infinitely
+                            control_set.add_animation(
+                                AnimationId::Test,
+                                &animation_set.get(&AnimationId::Test).unwrap(),
+                                EndControl::Loop(None),
+                                1.0,
+                                AnimationCommand::Start,
+                            );
+                            self.progress_counter = None;
+                        }
+                    }
+                }
+            }
+        }
+        buffer.flush(data.world);
 
         Trans::None
     }
