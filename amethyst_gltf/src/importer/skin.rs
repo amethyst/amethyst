@@ -12,7 +12,7 @@ use crate::importer::SkinInfo;
 
 pub fn load_skin(
     skin: &gltf::Skin<'_>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     entity: Entity,
     skin_infos: &SkinInfo,
     node_map: &HashMap<usize, Entity>,

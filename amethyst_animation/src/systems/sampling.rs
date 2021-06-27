@@ -56,8 +56,8 @@ where
                         inner.clear();
 
                         for control in control_set.samplers.iter_mut() {
-                            if let Some(ref sampler) = samplers.get(&control.sampler) {
-                                process_sampler(control, sampler, &time, &mut inner);
+                            if let Some(sampler) = samplers.get(&control.sampler) {
+                                process_sampler(control, sampler, time, &mut inner);
                             }
                         }
                         if !inner.is_empty() {
@@ -109,7 +109,7 @@ fn process_sampler<T>(
 {
     use crate::resources::ControlState::*;
 
-    let (new_state, new_end) = update_duration_and_check(&control, sampler, time);
+    let (new_state, new_end) = update_duration_and_check(control, sampler, time);
 
     // If a new end condition has been computed, update in control state
     if let Some(end) = new_end {
@@ -203,7 +203,7 @@ where
                 .input
                 .last()
                 .cloned()
-                .map(|t| Duration::from_secs_f32(t))
+                .map(Duration::from_secs_f32)
                 .unwrap_or_else(|| Duration::from_secs(0));
             // duration is past last frame of sampling
             if current_dur > last_frame {

@@ -90,8 +90,8 @@ impl UiText {
     ) -> UiText {
         UiText {
             text,
-            color,
             font_size,
+            color,
             font,
             line_mode,
             align,

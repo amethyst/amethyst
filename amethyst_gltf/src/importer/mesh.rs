@@ -14,7 +14,7 @@ use crate::GltfSceneOptions;
 
 pub fn load_mesh(
     mesh: &gltf::Mesh<'_>,
-    buffers: &Vec<Data>,
+    buffers: &[Data],
     options: &GltfSceneOptions,
 ) -> Result<Vec<(String, MeshBuilder<'static>, Option<usize>, Range<[f32; 3]>)>, Error> {
     debug!("Loading mesh");
@@ -87,11 +87,9 @@ pub fn load_mesh(
 
         let colors = try_compute_if(options.load_colors, || {
             debug!("Loading colors");
-            if let Some(colors) = reader.read_colors(0) {
-                Some(colors.into_rgba_f32().map(Color).collect::<Vec<_>>())
-            } else {
-                None
-            }
+            reader
+                .read_colors(0)
+                .map(|colors| colors.into_rgba_f32().map(Color).collect::<Vec<_>>())
         });
 
         let joints = try_compute_if(options.load_animations, || {
