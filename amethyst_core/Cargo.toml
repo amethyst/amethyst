@@ -21,9 +21,9 @@ game_clock = "1.1.1"
 fern = { version = "0.6", features = ["colored"] }
 type-uuid = "0.1"
 log = "0.4"
-num-traits = "0.2.11"
+num-traits = "0.2.14"
 serde = { version = "1", features = ["derive"] }
-approx = "0.4"
+approx = "0.5"
 derive-new = "0.5"
 getset = "0.1.1"
 legion = { version = "0.3.1", default-features = false, features = [
@@ -32,11 +32,12 @@ legion = { version = "0.3.1", default-features = false, features = [
     "codegen",
 ] }
 legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
-nalgebra = { version = "0.24", default-features = false, features = ["serde-serialize"] }
+nalgebra = { version = "0.25", default-features = false, features = ["serde-serialize"] }
 rayon = "1.5"
 shrev = "1.1.1"
-simba = { version = "0.3" }
-smallvec = "1.4"
+# Update simba only if nalgebra need a new version
+simba = { version = "0.4" }
+smallvec = "1.6"
 spin_sleep = "1.0.0"
 thread_profiler = { version = "0.3", optional = true }
 serde-diff = "0.4"

@@ -23,7 +23,7 @@ repository = "https://github.com/amethyst/amethyst"
 amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
 amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
 crossbeam-queue = "0.3"
-derivative = "2.1.1"
+derivative = "2.2.0"
 crossbeam-channel = "0.5"
 derive-new = "0.5"
 fnv = "1"
@@ -36,8 +36,8 @@ ron = "0.6.4"
 thread_profiler = { version = "0.3", optional = true }
 err-derive = "0.3"
 dyn-clone = "1.0"
-erased-serde = "0.3.9"
-inventory = "0.1.5"
+erased-serde = "0.3.16"
+inventory = "0.1.10"
 lazy_static = "1.4"
 distill = { version = "0.0.3", features = [
     "serde-1",
@@ -48,7 +48,7 @@ distill = { version = "0.0.3", features = [
     "handle",
 ] }
 uuid = { version = "0.8", features = ["v4"] }
-bincode = "1.1"
+bincode = "1.3"
 type-uuid = "0.1"
 futures-executor = { version = "0.3", default-features = false }
 legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
@@ -57,7 +57,7 @@ encoding_rs_io = "0.1"
 serde-diff = "0.4"
 structopt = { version = "0.3", default-features = false, optional = true }
 # TODO remove this dependency by wrapping it in distill
-tokio = { version = "1.0", features = ["sync"], optional = true }
+tokio = { version = "1.7", features = ["sync"], optional = true }
 
 [dev-dependencies]
 amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }

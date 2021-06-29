@@ -26,18 +26,18 @@ amethyst_input = { path = "../amethyst_input", version = "0.16.0" }
 amethyst_rendy = { path = "../amethyst_rendy", version = "0.16.0" }
 amethyst_window = { path = "../amethyst_window", version = "0.16.0" }
 copypasta = "0.7.1"
-derivative = "2.1.1"
+derivative = "2.2.0"
 derive-new = "0.5"
 fnv = "1"
 glsl-layout = "0.4"
 ron = "0.6.4"
 serde = { version = "1", features = ["derive"] }
-smallvec = "1.2"
+smallvec = "1.6"
 unicode-normalization = "0.1"
-unicode-segmentation = "1.6"
+unicode-segmentation = "1.7"
 winit = { version = "0.25", features = ["serde"] }
 log = "0.4"
-font-kit = "0.10.0"
+font-kit = "0.10.1"
 paste = "1"
 rand = "0.8"
 lazy_static = "1.4"

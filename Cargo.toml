@@ -114,18 +114,18 @@ amethyst_window = { path = "amethyst_window", version = "0.16.0" }
 amethyst_tiles = { path = "amethyst_tiles", version = "0.16.0", optional = true }
 winit = { version = "0.25", features = ["serde"] }
 crossbeam-channel = "0.5"
-derivative = "2.1.1"
+derivative = "2.2.0"
 log = { version = "0.4", features = ["serde"] }
 rayon = "1.5"
 rustc_version_runtime = "0.2.0"
 sentry = { version = "0.22.0", optional = true }
 serde = { version = "1", features = ["derive"] }
-palette = { version = "0.4", default-features = false, features = ["serde"] }
+palette = { version = "0.5", default-features = false, features = ["serde", "std"] }
 thread_profiler = { version = "0.3.0", optional = true }
 lazy_static = "1.4.0"
 glsl-layout = "0.4"
 # until https://github.com/amethyst/legion/pull/186 passed
-legion = { version = "0.3", default-features = false, features = [
+legion = { version = "0.4", default-features = false, features = [
     "serialize",
     "crossbeam-events",
     "codegen",
@@ -133,12 +133,12 @@ legion = { version = "0.3", default-features = false, features = [
 
 [build-dependencies]
 dirs-next = "2.0.0"
-vergen = "3.1.0"
+vergen = "3.2.0"
 
 [dev-dependencies]
-derive_more = "0.99.11"
+derive_more = "0.99.14"
 doc-comment = "0.3.3"
-env_logger = "0.8.2"
+env_logger = "0.8.4"
 err-derive = "0.3.0"
 glob = "0.3.0"
 ron = "0.6.4"

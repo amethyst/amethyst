@@ -28,9 +28,9 @@ log = { version = "0.4", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
 fnv = "1"
-derivative = "2.1.1"
-hibitset = { version = "0.6.2", features = ["parallel"] }
-smallvec = "1.2.0"
+derivative = "2.2.0"
+hibitset = { version = "0.6.3", features = ["parallel"] }
+smallvec = "1.6.1"
 lazy_static = "1.4"
 rayon = "1.5"
 bitintr = "0.3"
@@ -41,7 +41,7 @@ err-derive = "0.3"
 amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
 criterion = "0.3"
 more-asserts = "0.2"
-approx = "0.4"
+approx = "0.5"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

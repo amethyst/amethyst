@@ -2,10 +2,10 @@ use amethyst_assets::distill_importer::Error;
 use gltf::Document;
 
 pub fn convert_bytes(
-    bytes: &Vec<u8>,
+    bytes: &[u8],
 ) -> Result<(Document, Vec<gltf::buffer::Data>, Vec<gltf::image::Data>), Error> {
     log::debug!("Starting Gltf import");
-    let result = gltf::import_slice(&bytes.as_slice());
+    let result = gltf::import_slice(&bytes);
     if let Err(err) = result {
         log::error!("Import error: {:?}", err);
         return Err(Error::Boxed(Box::new(err)));

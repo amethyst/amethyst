@@ -21,7 +21,7 @@ log = "0.4"
 serde = { version = "1", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
 winit = { version = "0.25", features = ["serde"] }
-image = "0.23.13"
+image = "0.23.14"
 
 [dev-dependencies]
 amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
