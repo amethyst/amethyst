@@ -20,12 +20,12 @@ amethyst_animation = { path = "../amethyst_animation", version = "0.16.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
 amethyst_error = { path = "../amethyst_error", version = "0.16.0" }
 amethyst_rendy = { path = "../amethyst_rendy", version = "0.16.0" }
-err-derive = "0.2.3"
-base64 = "0.11"
+err-derive = "0.3.0"
+base64 = "0.13"
 fnv = "1"
 gltf = { version = "0.16", features = ["KHR_lights_punctual"] }
 legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
-hibitset = { version = "0.6.2", features = ["parallel"] }
+hibitset = { version = "0.6.3", features = ["parallel"] }
 log = "0.4"
 mikktspace = "0.2.0"
 serde = { version = "1", features = ["derive"] }
@@ -34,8 +34,8 @@ type-uuid = "0.1"
 uuid = { version = "0.8", features = ["v4"] }
 
 thread_profiler = { version = "0.3", optional = true }
-image = "0.23.12"
-derivative = "2.1.1"
+image = "0.23.14"
+derivative = "2.2.0"
 
 [dev-dependencies]
 amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }

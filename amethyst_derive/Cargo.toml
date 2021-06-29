@@ -22,7 +22,7 @@ syn = { version = "1.0", default-features = false }
 quote = "1.0"
 proc-macro2 = "1.0"
 glob = "0.3.0"
-regex = "1.4.3"
+regex = "1.5.4"
 
 [dev-dependencies]
 amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
