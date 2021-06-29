@@ -229,7 +229,7 @@ fn load_node(
     };
 
     if let Some(camera) = load_camera(node) {
-        debug!("Adding a camera component to to the current node entity and has parent ?");
+        debug!("Adding a camera component to the current node entity and has parent ?");
         world
             .entry(current_node_entity)
             .expect("We just added this entity")
@@ -296,7 +296,7 @@ fn load_node(
                                 .as_ref()
                                 .expect("Meshes hashmap didn't work")
                                 .get(&convert_optional_index_to_string(material_index))
-                                .expect("A requested material is not loded"),
+                                .expect("A requested material is not loaded"),
                         )));
 
                     if let Some(ref mut skin) = skin {
@@ -341,7 +341,7 @@ fn load_node(
                                 .as_ref()
                                 .expect("Meshes hashmap didn't work")
                                 .get(&convert_optional_index_to_string(material_index))
-                                .expect("A requested material is not loded"),
+                                .expect("A requested material is not loaded"),
                         )),
                     ));
                     primitive_index += 1;

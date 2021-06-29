@@ -17,7 +17,7 @@ pub trait SystemBundle {
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error>;
 
-    /// This method is called once [Dispatcher] is disposed. It can be used to cleanup entities or resources from ECS.
+    /// This method is called once [Dispatcher] is disposed. It can be used to clean up entities or resources from ECS.
     fn unload(&mut self, _world: &mut World, _resources: &mut Resources) -> Result<(), Error> {
         Ok(())
     }

@@ -458,7 +458,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     /// Retrieve an image produced by other render target.
     ///
     /// Results in an error if such image doesn't exist or
-    /// retreiving it would result in a dependency cycle.
+    /// retrieving it would result in a dependency cycle.
     pub fn get_image(&mut self, image: TargetImage) -> Result<ImageId, Error> {
         self.plan_context.get_image(image).map(|i| {
             let node = self
@@ -472,7 +472,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     /// Retrieve an image produced by other render target.
     /// Returns `None` when such image isn't registered.
     ///
-    /// Results in an error if retreiving it would result in a dependency cycle.
+    /// Results in an error if retrieving it would result in a dependency cycle.
     pub fn try_get_image(&mut self, image: TargetImage) -> Result<Option<ImageId>, Error> {
         self.plan_context.try_get_image(image).map(|i| {
             i.map(|i| {
@@ -589,9 +589,9 @@ impl<B: Backend> TargetPlan<B> {
             .as_ref()
             .map(|TargetPlanOutputs { colors, depth }| {
                 use std::cmp::min;
-                let mut framebuffer_width = u32::max_value();
-                let mut framebuffer_height = u32::max_value();
-                let mut framebuffer_layers = u16::max_value();
+                let mut framebuffer_width = u32::MAX;
+                let mut framebuffer_height = u32::MAX;
+                let mut framebuffer_layers = u16::MAX;
 
                 for color in colors {
                     match color {

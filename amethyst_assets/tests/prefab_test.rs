@@ -81,7 +81,7 @@ fn a_prefab_is_applied_to_an_entity() {
 
         let component = entry
             .get_component::<Position2D>()
-            .expect("Could not retrive compont from entry");
+            .expect("Could not retrieve component from entry");
 
         let expected = Position2D { x: 100, y: 100 };
 
@@ -122,7 +122,7 @@ fn a_prefab_with_dependencies_is_applied_to_an_entity() {
 
         let component = entry
             .get_component::<Position2D>()
-            .expect("Could not retrive compont from entry");
+            .expect("Could not retrieve component from entry");
 
         let expected = Position2D { x: 100, y: 0 };
 

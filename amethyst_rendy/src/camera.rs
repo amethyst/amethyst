@@ -469,7 +469,7 @@ mod tests {
         );
 
         // Check view matrix.
-        // The view matrix is used to transfrom a point from world space to eye space.
+        // The view matrix is used to transform a point from world space to eye space.
         // Changes the base of a vector from world origin to your eye.
         let our_view: Matrix4<f32> = gatherer_calc_view_matrix(camera_transform);
         assert_ulps_eq!(our_view, view_matrix.to_homogeneous(),);
@@ -491,7 +491,7 @@ mod tests {
         let left = -width / 2.0;
         let right = width / 2.0;
 
-        // Our standrd projection has a far clipping plane of 2000.0
+        // Our standard projection has a far clipping plane of 2000.0
         let proj = Camera::orthographic(left, right, bottom, top, 0.125, 2000.0);
         let our_proj = Camera::standard_2d(width, height);
 

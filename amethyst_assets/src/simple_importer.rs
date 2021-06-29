@@ -38,9 +38,6 @@ impl<A, T: Format<A> + TypeUuid + Send + 'static> Importer for SimpleImporter<A,
 where
     A: SerdeObj,
 {
-    type State = SimpleImporterState;
-    type Options = T;
-
     fn version_static() -> u32
     where
         Self: Sized,
@@ -50,6 +47,9 @@ where
     fn version(&self) -> u32 {
         Self::version_static()
     }
+
+    type Options = T;
+    type State = SimpleImporterState;
 
     fn import(
         &self,
@@ -110,8 +110,7 @@ pub fn get_source_importers(
 /// # Examples
 ///
 /// ```
-/// use amethyst::assets::Format;
-/// use amethyst::error::Error;
+/// use amethyst::{assets::Format, error::Error};
 /// use serde::{Deserialize, Serialize};
 /// use type_uuid::TypeUuid;
 ///
@@ -126,7 +125,7 @@ pub fn get_source_importers(
 ///     fn name(&self) -> &'static str {
 ///         "WAV"
 ///     }
-
+///
 ///     fn import_simple(&self, bytes: Vec<u8>) -> Result<AudioData, Error> {
 ///         Ok(AudioData(bytes))
 ///     }

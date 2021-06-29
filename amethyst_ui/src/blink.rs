@@ -9,7 +9,7 @@ use thread_profiler::profile_scope;
 ///
 /// ## Visibility Period
 /// During the first half period, the entity is visible.
-/// [0, delay/2[
+/// [0, delay/2]
 ///
 /// During the second half period, the entity is invisible.
 /// [delay/2, delay]

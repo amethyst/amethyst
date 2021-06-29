@@ -9,7 +9,7 @@ pub enum Axis2 {
     Y,
 }
 
-/// A three dimensional axis.
+/// A three-dimensional axis.
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Axis3 {
     /// The X axis. Often the horizontal (left-right) position.

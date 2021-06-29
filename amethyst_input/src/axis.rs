@@ -6,7 +6,7 @@ use super::{Button, ControllerAxis, MouseAxis};
 /// Retrieve the value of this with [axis_value](struct.InputHandler.html#method.axis_value).
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum Axis {
-    /// Represents an emulated analogue axis made up of pair of digital inputs,
+    /// Represents an emulated analogue axis made up of a pair of digital inputs,
     /// like W and S keyboard buttons or `DPadUp` and `DPadDown` controller buttons.
     Emulated {
         /// Positive button, when pressed down axis value will return 1 if `neg` is not pressed down.

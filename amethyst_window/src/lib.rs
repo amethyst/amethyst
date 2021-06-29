@@ -1,4 +1,4 @@
-//! Crate abstracting and seperating out the window and display handling within amethyst, and as such
+//! Crate abstracting and separating out the window and display handling within amethyst, and as such
 //! its usage of winit.
 
 #![doc(

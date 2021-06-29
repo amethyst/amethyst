@@ -634,7 +634,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     /// Removes all states from the stack and replaces it with a new state.
     pub(crate) fn replace(&mut self, state: Box<dyn State<T, E>>, data: StateData<'_, T>) {
         if self.running {
-            //Pemove all current states
+            //Remove all current states
             let StateData {
                 world,
                 resources,

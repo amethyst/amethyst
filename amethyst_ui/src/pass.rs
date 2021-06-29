@@ -71,6 +71,10 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
         Ok(())
     }
 
+    fn should_rebuild(&mut self, _world: &World, _resources: &Resources) -> bool {
+        false
+    }
+
     fn on_plan(
         &mut self,
         plan: &mut RenderPlan<B>,
@@ -83,10 +87,6 @@ impl<B: Backend> RenderPlugin<B> for RenderUi {
             Ok(())
         });
         Ok(())
-    }
-
-    fn should_rebuild(&mut self, _world: &World, _resources: &Resources) -> bool {
-        false
     }
 }
 
@@ -281,7 +281,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
             *z = query_transforms
                 .get(*world, entity)
-                .expect("Unreachable: Enities are collected from a cache of prepopulate entities")
+                .expect("Unreachable: Entities are collected from a cache of prepopulate entities")
                 .1
                 .global_z();
         }

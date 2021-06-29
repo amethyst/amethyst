@@ -97,7 +97,7 @@ register_component_type!(Material);
 // }
 
 /// A resource providing default textures for `Material`.
-/// These will be be used by the renderer in case a texture
+/// These will be used by the renderer in case a texture
 /// handle points to a texture which is not loaded already.
 /// Additionally, you can use it to fill up the fields of
 /// `Material` you don't want to specify.

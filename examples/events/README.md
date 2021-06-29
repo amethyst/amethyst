@@ -1,6 +1,6 @@
 ## Events
 
-Sends and recieves the events `A, B, C`.
+Sends and receives the events `A, B, C`.
 
 ```log
 Sending A

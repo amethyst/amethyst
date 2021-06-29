@@ -61,7 +61,7 @@ cargo (build/test/run) --features profiler
 ```
 
 The next time you will run a project, upon closing it, a file will be created at the root of the project called `thread_profile.json`.
-You can open this file using the chromium browser (or google chrome) and navigating to chrome://tracing
+You can open this file using the chromium browser (or Google Chrome) and navigating to chrome://tracing
 
 ## Amethyst as a dependency
 

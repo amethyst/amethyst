@@ -71,7 +71,7 @@ impl LoadNotifier {
         }
     }
 
-    /// Signals that this load operation has completed succesfully.
+    /// Signals that this load operation has completed successfully.
     pub fn complete(self) {
         if let Some(asset_load_op) = self.asset_load_op {
             asset_load_op.complete();

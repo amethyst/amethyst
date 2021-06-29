@@ -1,4 +1,4 @@
-//! An example showing how to create a dispatcher inside of a State.
+//! An example showing how to create a dispatcher inside a State.
 
 use std::marker::PhantomData;
 

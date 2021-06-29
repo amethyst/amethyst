@@ -39,5 +39,5 @@ pub type DrawFlatDesc<B> = DrawBase3DDesc<B, FlatPassDef>;
 pub type DrawFlat<B> = DrawBase3D<B, FlatPassDef>;
 /// Describes a Flat 3D pass with Transparency
 pub type DrawFlatTransparentDesc<B> = DrawBase3DTransparentDesc<B, FlatPassDef>;
-/// Draws a Flat 3D pass with transpency.
+/// Draws a Flat 3D pass with transparency.
 pub type DrawFlatTransparent<B> = DrawBase3DTransparent<B, FlatPassDef>;

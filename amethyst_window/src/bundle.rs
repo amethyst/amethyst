@@ -12,7 +12,7 @@ pub const SCREEN_WIDTH: u32 = 800;
 #[cfg(feature = "test-support")]
 pub const SCREEN_HEIGHT: u32 = 600;
 
-/// Bundle providing easy initializing of the appopriate `Window`, `WindowSystem` `EventLoop` and
+/// Bundle providing easy initializing of the appropriate `Window`, `WindowSystem` `EventLoop` and
 /// `EventLoopSystem` constructs used for creating the rendering window of amethyst with `winit`
 #[derive(Debug)]
 pub struct WindowBundle {

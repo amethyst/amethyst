@@ -81,7 +81,7 @@ impl<'a> System for TextEditingCursorSystem {
                     .expect("Unreachable: Entity just created.");
             }
             // TODO: Move the cursor to the correct location.
-            // TODO: Ajust cursor thicc-ness depending on is block cursor and text char width.
+            // TODO: Adjust cursor thicc-ness depending on is block cursor and text char width.
         }
     }
 }

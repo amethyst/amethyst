@@ -22,7 +22,7 @@ Adding _not_ inverts the meaning of the keywords.
 
 Custom errors _must_ be defined in a module called `error`.
 
-The error _must_ implement `std::error::Error`, which in turn requires `std::fmt::Display` and `std::fmt::Debug`).
+The error _must_ implement `std::error::Error`, which in turn requires (`std::fmt::Display` and `std::fmt::Debug`).
 
 The `std::fmt::Display` implementation _must not_ format the wrapped error since this is already provided through
 `source` (see below).

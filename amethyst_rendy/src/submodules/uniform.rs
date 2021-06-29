@@ -137,7 +137,7 @@ where
         }
     }
 
-    fn map<'a>(&'a mut self, factory: &Factory<B>) -> MappedRange<'a, B> {
+    fn map(&mut self, factory: &Factory<B>) -> MappedRange<'_, B> {
         let range = 0..self.buffer.size();
         self.buffer.map(factory.device(), range).unwrap()
     }

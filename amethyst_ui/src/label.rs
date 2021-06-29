@@ -255,7 +255,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
 
         // FIXME : The current parent update system in amethyst_core is updating based on the Transform component...
         // That's actually a 'bad' linkage. Later to legion port, we'll replace the system by legion_transform which is better,
-        // the following 4 lines won't be usefull anymore.
+        // the following 4 lines won't be useful anymore.
         text_entry.add_component(Transform::default());
 
         (id, widget)
