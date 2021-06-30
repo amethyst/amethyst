@@ -16,6 +16,7 @@ pub struct SimpleButtonSystem;
 
 impl System for SimpleButtonSystem {
     fn run(&mut self, data: Self::SystemData) {}
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 
@@ -44,6 +45,7 @@ impl System for SimpleButtonSystem {
     type SystemData = .read_resource::<EventChannel<UiEvent>>();
 
     fn run(&mut self, events: Self::SystemData) {}
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 
@@ -86,6 +88,7 @@ To add the system to our game data we actually need a `SystemDesc` implementatio
 #   type SystemData = .read_resource::<EventChannel<UiEvent>>();
 # 
 #   fn run(&mut self, events: Self::SystemData) {}
+#   fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 # }
 # impl SimpleButtonSystem {
 #   pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
@@ -125,6 +128,7 @@ In our systems `run` method we are going to loop through all the events:
             println!("{:?}", event);
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 # }
 ```
 
@@ -149,6 +153,7 @@ we used for our entity - `UiTransform` and `UiText`.
 #           println!("{:?}", event);
 #       }
 #   }
+#   fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 # }
 ```
 

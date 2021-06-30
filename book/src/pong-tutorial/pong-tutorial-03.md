@@ -151,6 +151,7 @@ impl System for PaddleSystem {
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 # fn main() {}
 ```
@@ -223,9 +224,9 @@ fn main() -> amethyst::Result<()> {
 // ...
 .add_bundle(TransformBundle::new())?
 .add_bundle(input_bundle)?
-.with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
+.with(systems::PaddleSystem, "paddle_system", &["input_system"]); // Add this line
 // ...
-#;
+#
 #   let assets_dir = "/";
 #   struct Pong;
 #   impl SimpleState for Pong {}
@@ -279,6 +280,7 @@ component of the transform's translation.
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 # }
 ```
 
@@ -341,6 +343,7 @@ Our run function should now look something like this:
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> { Ok(())}
 # }
 ```
 

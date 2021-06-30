@@ -35,7 +35,7 @@ impl Tile for SimpleTile {
 #   let game_data = DispatcherBuilder::default().add_bundle(
         // inside your rendering bundle setup
         RenderingBundle::<DefaultBackend>::new().with_plugin(RenderFlat2D::default()),
-#   )?;
+#   );
 #   Ok(())
 # }
 ```

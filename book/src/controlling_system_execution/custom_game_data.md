@@ -258,6 +258,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 #   utils::application_root_dir,
 #   DataDispose, DataInit, Error,
 # };
+# use amethyst_rendy::bundle::Target::Main;
 # 
 # pub struct CustomGameData<'a, 'b> {
 #   core_dispatcher: Option<Dispatcher>,
@@ -281,7 +282,7 @@ The only thing that remains now is to use our `CustomDispatcherBuilder` when bui
 #   }
 #   pub fn with_base_bundle<B>(mut self, world: &mut World, bundle: B) -> Result<Self, Error>
 #   where
-#       B: SystemBundle<'a, 'b>,
+#       B: SystemBundle<>,
 #   {
 #       unimplemented!()
 #   }

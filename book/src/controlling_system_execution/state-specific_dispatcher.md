@@ -26,8 +26,8 @@ To add `System`s to the `DispatcherBuilder` we use a similar syntax to the one w
 # };
 #
 # struct MoveBallsSystem; struct MovePaddlesSystem;
-# impl System for MoveBallsSystem { fn run(&mut self, _: ()) {} }
-# impl System for MovePaddlesSystem { fn run(&mut self, _: ()) {} }
+# impl System for MoveBallsSystem { fn run(&mut self, _: ()) {} fn build(self) -> Box<(dyn ParallelRunnable + 'static)> { Ok(()) }}
+# impl System for MovePaddlesSystem { fn run(&mut self, _: ()) {} fn build(self) -> Box<(dyn ParallelRunnable + 'static)> { Ok(()) }}
 let mut dispatcher_builder = DispatcherBuilder::new();
 
 dispatcher_builder.add(MoveBallsSystem, "move_balls_system", &[]);
@@ -45,10 +45,11 @@ Alternatively we can add `Bundle`s of `System`s to our `DispatcherBuilder` direc
 #     prelude::*,
 # };
 # #[derive(Default)] struct PongSystemsBundle;
-# impl SystemBundle<'a, 'b> for PongSystemsBundle {
+# impl SystemBundle<> for PongSystemsBundle {
 #     fn build(self, _: &mut World, _: &mut DispatcherBuilder) -> Result<(), amethyst::Error> {
 #         Ok(())
 #     }
+#     fn load(&mut self, _: &mut World, _: &mut Resources, _: &mut DispatcherBuilder) -> Result<(), amethyst::Error> { Ok(())}
 # }
 #
 # let mut world = World::default();

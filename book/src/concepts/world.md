@@ -58,7 +58,7 @@ This is almost the same as accessing a component:
 # fn main() {
   let mut world = World::default();
     let my_entity =     world.push((MyComponent::default(),));
-    if let Some(entry) = world.entry(my_entity) {
+    if let Some(mut entry) = world.entry(my_entity) {
         let mut my_component = entry.get_component_mut::<MyComponent>().unwrap();
         my_component.value = 5;
     }

@@ -66,7 +66,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
    # 
    # use serde::{Deserialize, Serialize};
    # 
-   #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+   #[derive(Clone, Debug, Deserialize, Serialize)]
    pub enum CameraPrefab {
        Orthographic {
            left: f32,

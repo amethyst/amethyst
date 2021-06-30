@@ -65,6 +65,7 @@ Once you have ron file ready, you can load it using the texture handle of the sh
 # use amethyst::assets::{AssetStorage, Handle, Loader};
 # use amethyst::ecs::World;
 # use amethyst::renderer::{SpriteSheet, SpriteSheetFormat, Texture};
+# use amethyst_assets::DefaultLoader;
 # 
 # fn load_texture() -> Handle<Texture> {
 #   unimplemented!()

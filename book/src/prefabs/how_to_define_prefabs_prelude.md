@@ -76,7 +76,7 @@ If you are looking for a guide to define prefab data for a `Component`, first we
   # extern crate amethyst;
   # use amethyst_audio::output::Output;
   # use amethyst_core::{
-  #   ecs::{storage::HashMapStorage, Component},
+  #   ecs::{storage::HashMapStorage, component},
   #   math::Point3,
   # };
   # 

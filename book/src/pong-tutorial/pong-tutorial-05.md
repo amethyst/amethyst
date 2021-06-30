@@ -71,6 +71,7 @@ impl System for WinnerSystem {
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 # fn main() {}
 ```
@@ -167,7 +168,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
             RenderingBundle::<DefaultBackend>::new()
                 // ...
                 .with_plugin(RenderUi::default()),
-        )?;
+        );
 #   Ok(())
 # }
 ```
@@ -182,8 +183,8 @@ Finally, add the `UiBundle` after the `InputBundle`:
 #   let display_config_path = "";
 #   struct Pong;
 #   let game_data = DispatcherBuilder::default()
-.add_bundle(UiBundle::new())?
-#;
+.add_bundle(UiBundle::new());
+#
 # 
 #   Ok(())
 # }
@@ -230,6 +231,8 @@ rendered to the screen. We'll create those next:
 ```rust
 # extern crate amethyst;
 use amethyst::ui::{Anchor, LineMode, TtfFormat, UiText, UiTransform};
+use amethyst::{GameData, SimpleState, StateData};
+use amethyst_assets::DefaultLoader;
 
 # pub struct Pong;
 # 
@@ -273,7 +276,7 @@ fn initialize_scoreboard(world: &mut World) {
     );
 
     let p1_score = world
-        .push((p1_transform,UiText::new(
+        .push(p1_transform,UiText::new(
             font.clone(),
             "0".to_string(),
             [1., 1., 1., 1.],
@@ -283,7 +286,7 @@ fn initialize_scoreboard(world: &mut World) {
         ));
 
     let p2_score = world
-        .push((p2_transform,UiText::new(
+        .push(p2_transform,UiText::new(
             font,
             "0".to_string(),
             [1., 1., 1., 1.],
@@ -420,6 +423,7 @@ impl System for WinnerSystem {
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 # fn main() {}
 ```

@@ -14,7 +14,7 @@
 # struct MySystem;
 # 
 # impl System for MySystem {
-#   type SystemData = ReadExpect<'s, ApplicationResource>;
+#   type SystemData = ReadExpect<ApplicationResource>;
 # 
 #   fn build(mut self) -> Box<dyn ParallelRunnable> {}
 # }
@@ -22,7 +22,7 @@
 #[derive(Debug)]
 struct MyBundle;
 
-impl SystemBundle<'a, 'b> for MyBundle {
+impl SystemBundle<> for MyBundle {
     fn build(self, world: &mut World, builder: &mut DispatcherBuilder) -> Result<(), Error> {
         // System that adds `ApplicationResource` to the `World`
         builder.add(MySystem.build(world), "my_system", &[]);
@@ -107,7 +107,7 @@ struct MyResource(pub i32);
 struct MySystem;
 
 impl System for MySystem {
-    type SystemData = WriteExpect<'s, MyResource>;
+    type SystemData = WriteExpect<MyResource>;
 
     fn run(&mut self, mut my_resource: Self::SystemData) {
         my_resource.0 += 1

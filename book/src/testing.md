@@ -27,11 +27,11 @@ The following shows a simple example of testing a `State`. More examples are in 
 #   }
 # }
 
-impl<'a, 'b, E> State<GameData<'a, 'b>, E> for LoadingState
+impl<'a, 'b, E> State<GameData<>, E> for LoadingState
 where
     E: Send + Sync + 'static,
 {
-    fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData<'a, 'b>, E> {
+    fn update(&mut self, data: StateData<'_, GameData>) -> Trans<GameData<>, E> {
         data.data.update(&data.world);
 
         data.resources.insert(LoadResource);
