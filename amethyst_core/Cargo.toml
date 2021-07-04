@@ -26,12 +26,12 @@ serde = { version = "1", features = ["derive"] }
 approx = "0.5"
 derive-new = "0.5"
 getset = "0.1.1"
-legion = { version = "0.3.1", default-features = false, features = [
+legion = { version = "0.4", default-features = false, features = [
     "serialize",
     "crossbeam-events",
     "codegen",
 ] }
-legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "7c30249f106e6177549e223ca2823eec8ab6c70b" }
+legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "8565883493aaf6044e210ffe2e72eec519d46369" }
 nalgebra = { version = "0.25", default-features = false, features = ["serde-serialize"] }
 rayon = "1.5"
 shrev = "1.1.1"
