@@ -16,7 +16,7 @@ use amethyst::{input::InputBundle, prelude::*};
     let mut world = World::default();
     let game_data = DispatcherBuilder::default()
         //..
-        .add_bundle(input_bundle)?;
+        .add_bundle(input_bundle);
 
 #   Ok(())
 # }
@@ -36,6 +36,8 @@ struct ExampleSystem;
 
 impl System for ExampleSystem {
     type SystemData = .read_resource::<InputHandler>();
+    
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> { Ok(()) }
 
     fn run(&mut self, input: Self::SystemData) {
         // Gets mouse coordinates
@@ -68,6 +70,7 @@ Now you have to add the `System` to the game data, like you would do with any ot
 # struct ExampleSystem;
 # impl System for ExampleSystem {
 #   fn run(&mut self, _: ()) {}
+#   fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 # }
 # fn main() {
     let game_data = DispatcherBuilder::default()
@@ -168,6 +171,7 @@ impl System for MovementSystem {
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 

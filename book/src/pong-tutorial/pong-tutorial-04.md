@@ -66,7 +66,7 @@ fn initialize_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) 
         .push((sprite_render),Ball {
             radius: BALL_RADIUS,
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
-        },local_transform));
+        },local_transform);
 }
 ```
 
@@ -151,6 +151,7 @@ impl System for MoveBallsSystem {
             local.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 # fn main() {}
 ```
@@ -256,6 +257,7 @@ impl System for BounceSystem {
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 
 // A point is in a box when its coordinates are smaller or equal than the top
@@ -272,8 +274,10 @@ The following image illustrates how collisions with paddles are checked.
 
 We will need to add `mod move_balls` and `mod bounce` as well as `MoveBallsSystem` and
 `BounceSystem` to our `systems/mod.rs`:
+
 ```rust
 # extern crate amethyst;
+
 pub use self::paddle::PaddleSystem;
 pub use self::move_balls::MoveBallsSystem;
 pub use self::bounce::BounceSystem;
@@ -374,6 +378,7 @@ Let's add some fields to our `Pong` struct:
 ```rust
 # extern crate amethyst;
 # use amethyst::assets::Handle;
+# use amethyst_rendy::SpriteSheet;
 #[derive(Default)]
 pub struct Pong {
     ball_spawn_timer: Option<f32>,

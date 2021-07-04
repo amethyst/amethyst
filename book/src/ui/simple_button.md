@@ -65,7 +65,7 @@ to set the area big enough for the text to fit in!
 #       get_default_font(&loader, &font_storage)
 #   };
     let ui_text = UiText::new(
-        font_handle,                   // font
+        Some(font_handle),             // font
         String::from("Simple Button"), // text
         [1.0, 1.0, 1.0, 0.5],          // color
         25f32,                         // font_size
@@ -115,7 +115,7 @@ If you had some state implemented you can create the button on its `on_start` me
         /* Create the text */
         let ui_text = UiText::new(
             // ...
-#           font_handle,                   // font
+#           Some(font_handle),             // font
 #           String::from("Simple Button"), // text
 #           [1.0, 1.0, 1.0, 0.5],          // color
 #           25f32,                         // font_size
@@ -176,7 +176,7 @@ The code snippet would look like this now:
 #   };
 #   /* Create the text */
 #   let ui_text = UiText::new(
-#       font_handle,                   // font
+#       Some(font_handle),             // font
 #       String::from("Simple Button"), // text
 #       [1.0, 1.0, 1.0, 0.5],          // color
 #       25f32,                         // font_size

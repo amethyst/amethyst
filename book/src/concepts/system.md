@@ -79,6 +79,7 @@ impl System for WalkPlayerUp {
             .unwrap()
             .prepend_translation_y(0.1);
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 
@@ -119,6 +120,7 @@ impl System for MakeObjectsFall {
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 
@@ -149,6 +151,7 @@ impl System for NotFallingObjects {
             transform.prepend_translation_y(0.1);
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 
@@ -174,7 +177,7 @@ impl System for SpawnEnemies {
     type SystemData = (
         .write_component::<Transform>()
         .write_component::<Enemy>()
-        Entities<'a>,
+        Entities,
     );
 
     fn run(&mut self, (mut transforms, mut enemies, entities): Self::SystemData) {
@@ -188,6 +191,7 @@ impl System for SpawnEnemies {
             self.counter = 0;
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 
@@ -203,11 +207,12 @@ Deleting an entity is very easy using `Entities<'a>`.
 #   entity: Entity,
 # }
 # impl System for MySystem {
-#   type SystemData = Entities<'a>;
+#   type SystemData = Entities;
 #   fn run(&mut self, entities: Self::SystemData) {
 #       let entity = self.entity;
         entities.delete(entity);
 #   }
+#    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 # }
 ```
 
@@ -223,7 +228,7 @@ struct MakeObjectsFall;
 
 impl System for MakeObjectsFall {
     type SystemData = (
-        Entities<'a>,
+        Entities,
         .write_component::<Transform>()
       .read_component::<FallingObject>(),
     );
@@ -237,6 +242,7 @@ impl System for MakeObjectsFall {
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 
@@ -263,6 +269,7 @@ To do that, you need to get a mutable storage of the component you want to modif
         // Remove the component
         write_storage.remove(entity);
 #   }
+#    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 # }
 ```
 
@@ -441,6 +448,7 @@ impl System for MyGameplaySystem {
             _ => {}
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 
@@ -496,7 +504,7 @@ struct MySystemData<'a> {
 struct MyFirstSystem;
 
 impl System for MyFirstSystem {
-    type SystemData = MySystemData<'a>;
+    type SystemData = MySystemData;
 
     fn run(&mut self, mut data: Self::SystemData) {
         if data.baz.should_process() {
@@ -505,6 +513,7 @@ impl System for MyFirstSystem {
             }
         }
     }
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 

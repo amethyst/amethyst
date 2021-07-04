@@ -117,6 +117,7 @@ load extra `Asset`s as part of a `Prefab`:
 # };
 # use amethyst::ecs::{Entity};
 # use amethyst::Error;
+# use serde::{Deserialize, Serialize};
 # 
 #[derive(Deserialize, Serialize)]
 pub enum AssetPrefab<A, F>

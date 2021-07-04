@@ -87,7 +87,9 @@ impl SystemName {
         }
     }
 }
-# impl System for SystemName {}
+# impl System for SystemName {
+#    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
+# }
 ```
 
 <details>
@@ -111,7 +113,9 @@ impl SystemName {
 #   }
 # }
 # 
-# impl System for SystemName {}
+# impl System for SystemName {
+#    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
+# }
 # 
 /// Builds a `SystemName`.
 #[derive(Default, Debug)]
@@ -145,7 +149,9 @@ will call  `SystemName::default()`:
 pub struct SystemName {
     field_0: u32,
 }
-# impl System for SystemName {}
+# impl System for SystemName {
+#    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
+# }
 ```
 
 <details>
@@ -160,7 +166,9 @@ pub struct SystemName {
 #   field_0: u32,
 # }
 # 
-# impl System for SystemName {}
+# impl System for SystemName {
+#   fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
+# }
 # 
 /// Builds a `SystemName`.
 #[derive(Debug)]
@@ -200,7 +208,9 @@ impl SystemName {
         SystemName { reader_id }
     }
 }
-# impl System for SystemName {}
+# impl System for SystemName {
+#    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
+# }
 ```
 
 <details>
@@ -224,7 +234,9 @@ impl SystemName {
 #   }
 # }
 # 
-# impl System for SystemName {}
+# impl System for SystemName {
+#    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
+# }
 # 
 /// Builds a `SystemName`.
 #[derive(Debug)]
@@ -326,6 +338,7 @@ pub struct SystemName;
 
 impl System for SystemName {
     type SystemData = ReadExpect<'a, NonDefault>;
+    fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 }
 ```
 
@@ -342,7 +355,8 @@ impl System for SystemName {
 # pub struct SystemName;
 # 
 # impl System for SystemName {
-#   type SystemData = ReadExpect<'a, NonDefault>;
+#   type SystemData = ReadExpect<NonDefault>;
+#   fn build(self) -> Box<(dyn ParallelRunnable + 'static)> {}
 # }
 # 
 /// Builds a `SystemName`.

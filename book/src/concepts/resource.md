@@ -65,7 +65,7 @@ If you want to get a resource and create it if it doesn't exist:
     // it will insert the instance we created earlier.
     let fetched = resources.get_or_insert_with(|| MyResource);
     // or
-    let fetched = resources.get_or_default::<MyResource>();
+    // let fetched = resources.get::<MyResource>();
 # }
 ```
 

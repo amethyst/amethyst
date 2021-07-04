@@ -19,7 +19,7 @@ authors = []
 edition = "2018"
 
 [dependencies.amethyst]
-version = "0.15"
+version = "0.16"
 features = ["vulkan"]
 ```
 
@@ -27,7 +27,7 @@ Alternatively, if you are developing on macOS, you might want to use the `metal`
 
 ```toml
 [dependencies.amethyst]
-version = "0.15"
+version = "0.16"
 features = ["metal"]
 ```
 
@@ -35,8 +35,8 @@ We can start with editing the `main.rs` file inside `src` directory.
 You can delete everything in that file, then add these imports:
 
 ```rust
-# extern crate amethyst;
 //! Pong Tutorial 1
+# extern crate amethyst;
 
 use amethyst::{
     prelude::*,
@@ -69,6 +69,8 @@ used by Amethyst's state machine to start, stop, and update the game.
 
 ```rust
 # extern crate amethyst;
+# use amethyst::SimpleState;
+# struct Pong;
 impl SimpleState for Pong {}
 ```
 
@@ -131,7 +133,7 @@ project manually, go ahead and create it now.
 In either case, open `display.ron` and change its contents to the
 following:
 
-```rust
+```ron
 (
     title: "Pong!",
     dimensions: Some((500, 500)),
@@ -233,7 +235,7 @@ Last time we left our `DispatcherBuilder` instance empty, now we'll add some sys
             )
             // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
             .with_plugin(RenderFlat2D::default()),
-    )?;
+    );
 #   Ok(())
 # }
 ```

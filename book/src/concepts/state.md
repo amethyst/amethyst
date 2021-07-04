@@ -200,7 +200,7 @@ use amethyst::{
     input::{is_key_down, VirtualKeyCode},
     prelude::*,
     ui::UiEvent,
-    winit::Event,
+    winit::event::Event,
 };
 
 #[derive(Clone, Debug)]

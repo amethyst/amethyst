@@ -16,6 +16,7 @@ Create a file called `audio.rs`:
 
 ```rust
 # extern crate amethyst;
+use amethyst_assets::DefaultLoader;
 use amethyst::{
     assets::Loader,
     audio::{OggFormat, SourceHandle},
@@ -31,7 +32,7 @@ pub struct Sounds {
 }
 
 /// Loads an ogg audio track.
-fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
+fn load_audio_track(loader: &dyn Loader, world: &World, file: &str) -> SourceHandle {
     loader.load(file)
 }
 
@@ -60,6 +61,7 @@ Then, we'll need to add the Sounds Resource to our World. Update `pong.rs`:
 
 ```rust
 # extern crate amethyst;
+use amethyst::{GameData, SimpleState, StateData};
 use crate::audio::initialize_audio;
 
 impl SimpleState for Pong {
@@ -296,6 +298,7 @@ Next, we need to add the Music Resource to our World. Update `initialize_audio`:
 # extern crate amethyst;
 # use std::{iter::Cycle, vec::IntoIter};
 # 
+use amethyst_assets::DefaultLoader;
 use amethyst::{
     assets::Loader,
     audio::{AudioSink, SourceHandle},
@@ -309,7 +312,7 @@ use amethyst::{
 #   "audio/Computer_Music_All-Stars_-_Albatross_v2.ogg",
 # ];
 # 
-# fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
+# fn load_audio_track(loader: &dyn Loader, world: &World, file: &str) -> SourceHandle {
 #   unimplemented!()
 # }
 # 
@@ -357,7 +360,7 @@ Finally, let's add a DJ System to our game to play the music. In `main.rs`:
 ```rust
 # extern crate amethyst;
 use crate::audio::Music;
-use amethyst::audio::DjSystemDesc;
+use amethyst::audio::DjSystem;
 
 fn main() -> amethyst::Result<()> {
     // --snip--
