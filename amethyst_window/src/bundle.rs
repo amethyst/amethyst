@@ -1,5 +1,5 @@
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
 use winit::event_loop::EventLoop;
 
@@ -21,6 +21,7 @@ pub struct WindowBundle {
 
 impl WindowBundle {
     /// Builds a new window bundle from a loaded `DisplayConfig`.
+    #[must_use]
     pub fn from_config(config: DisplayConfig) -> Self {
         WindowBundle { config }
     }
@@ -41,6 +42,7 @@ impl WindowBundle {
     /// * `dimensions` is changed to `Some((SCREEN_WIDTH, SCREEN_HEIGHT))`.
     /// * `visibility` is `false`.
     #[cfg(feature = "test-support")]
+    #[must_use]
     pub fn from_test_config() -> Self {
         let display_config = DisplayConfig {
             dimensions: Some((SCREEN_WIDTH, SCREEN_HEIGHT)),

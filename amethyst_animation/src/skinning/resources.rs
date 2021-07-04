@@ -6,7 +6,7 @@ use amethyst_assets::{
         SerdeDiff,
     },
 };
-use amethyst_core::{ecs::*, math::Matrix4};
+use amethyst_core::{ecs::Entity, math::Matrix4};
 use type_uuid::TypeUuid;
 
 /// Joint, attach to an entity with a `Transform`

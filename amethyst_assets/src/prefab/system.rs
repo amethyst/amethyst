@@ -43,8 +43,7 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
             {
                 let instance_version = instance
                     .as_ref()
-                    .map(|instance| instance.version)
-                    .unwrap_or(0);
+                    .map_or(0, |instance| instance.version);
                 if instance_version < *prefab_version {
                     let mut entity_map = instance
                         .as_ref()
@@ -62,7 +61,7 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
         },
     );
 
-    for (entity, prefab, version, prev_entity_map) in prefabs.into_iter() {
+    for (entity, prefab, version, prev_entity_map) in prefabs {
         let entity_map = world.clone_from(
             &prefab.world,
             &query::any(),

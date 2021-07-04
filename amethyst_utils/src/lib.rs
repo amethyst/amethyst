@@ -4,13 +4,13 @@
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
     html_root_url = "https://docs.amethyst.rs/stable"
 )]
-#![warn(
+#![deny(
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
     rust_2018_compatibility
 )]
-#![warn(clippy::all)]
+#![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::new_without_default)]
 
 pub use self::app_root_dir::*;

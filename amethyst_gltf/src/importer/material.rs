@@ -49,32 +49,32 @@ pub fn load_material(
     let em_factor = material.emissive_factor();
     let material_name = convert_optional_index_to_string(material.index());
 
-    let (albedo_id, albedo_asset) = load_albedo(&pbr, buffers, state, op, material_name.clone());
+    let (albedo_id, albedo_asset) = load_albedo(&pbr, buffers, state, op, &*material_name);
     let (roughness_id, roughness_asset) =
-        load_metallic_roughness(&pbr, buffers, state, op, material_name.clone());
+        load_metallic_roughness(&pbr, buffers, state, op, &*material_name);
     let (emission_id, emission_asset) = load_emission(
         &em_factor,
         material.emissive_texture(),
         buffers,
         state,
         op,
-        material_name.clone(),
+        &*material_name,
     );
     let (normal_id, normal_asset) = load_normal(
         material.normal_texture(),
         buffers,
         state,
         op,
-        material_name.clone(),
+        &*material_name,
     );
     let (occlusion_id, occlusion_asset) = load_occlusion(
         material.occlusion_texture(),
         buffers,
         state,
         op,
-        material_name.clone(),
+        &*material_name,
     );
-    let (cavity_id, cavity_asset) = load_cavity(state, op, material_name.clone());
+    let (cavity_id, cavity_asset) = load_cavity(state, op, &*material_name);
     let alpha_cutoff = match material.alpha_mode() {
         AlphaMode::Blend => {
             state
@@ -103,7 +103,7 @@ pub fn load_material(
         metallic_roughness: make_handle(roughness_id),
         ambient_occlusion: make_handle(occlusion_id),
         cavity: make_handle(cavity_id),
-        uv_offset: Default::default(),
+        uv_offset: amethyst_rendy::mtl::TextureOffset::default(),
     };
     let id = *state
         .material_uuids
@@ -156,7 +156,7 @@ fn load_albedo(
     buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
-    material_name: String,
+    material_name: &str,
 ) -> (AssetUuid, ImportedAsset) {
     let albedo: TextureData = load_texture_with_factor(
         pbr.base_color_texture(),
@@ -191,7 +191,7 @@ fn load_metallic_roughness(
     buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
-    material_name: String,
+    material_name: &str,
 ) -> (AssetUuid, ImportedAsset) {
     let roughness: TextureData = load_texture_with_factor(
         pbr.metallic_roughness_texture(),
@@ -227,7 +227,7 @@ fn load_emission(
     buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
-    material_name: String,
+    material_name: &str,
 ) -> (AssetUuid, ImportedAsset) {
     let emission: TextureData = load_texture_with_factor(
         em_texture,
@@ -262,7 +262,7 @@ fn load_normal(
     buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
-    material_name: String,
+    material_name: &str,
 ) -> (AssetUuid, ImportedAsset) {
     let normal: TextureData = {
         match normal_texture {
@@ -301,7 +301,7 @@ fn load_occlusion(
     buffers: &[Data],
     state: &mut GltfImporterState,
     op: &mut ImportOp,
-    material_name: String,
+    material_name: &str,
 ) -> (AssetUuid, ImportedAsset) {
     let occlusion: TextureData = {
         match occlusion_texture {
@@ -338,7 +338,7 @@ fn load_occlusion(
 fn load_cavity(
     state: &mut GltfImporterState,
     op: &mut ImportOp,
-    material_name: String,
+    material_name: &str,
 ) -> (AssetUuid, ImportedAsset) {
     let cavity: TextureData = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0)).into();
     let id = *state
@@ -390,10 +390,10 @@ fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::Sample
     };
 
     let (min_filter, mip_filter) = match sampler.min_filter() {
-        Some(MinFilter::Nearest) | Some(MinFilter::NearestMipmapNearest) => {
+        Some(MinFilter::Nearest | MinFilter::NearestMipmapNearest) => {
             (Filter::Nearest, Filter::Nearest)
         }
-        None | Some(MinFilter::Linear) | Some(MinFilter::LinearMipmapLinear) => {
+        None | Some(MinFilter::Linear | MinFilter::LinearMipmapLinear) => {
             (Filter::Linear, Filter::Linear)
         }
         Some(MinFilter::NearestMipmapLinear) => (Filter::Nearest, Filter::Linear),
@@ -411,11 +411,7 @@ fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::Sample
 }
 
 pub fn convert_optional_index_to_string(index: Option<usize>) -> String {
-    if let Some(i) = index {
-        i.to_string()
-    } else {
-        String::from("default")
-    }
+    index.map_or_else(|| String::from("default"), |i| i.to_string())
 }
 
 fn map_wrapping(gltf_wrap: gltf::texture::WrappingMode) -> hal::image::WrapMode {

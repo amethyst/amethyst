@@ -2,7 +2,7 @@
 
 use std::{io, net::UdpSocket};
 
-use amethyst_core::{ecs::*, EventChannel};
+use amethyst_core::{ecs::{DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World}, EventChannel};
 use amethyst_error::Error;
 use bytes::Bytes;
 
@@ -142,6 +142,7 @@ impl UdpSocketResource {
 
 impl UdpSocketResource {
     /// Returns an immutable reference to the socket if there is one configured.
+    #[must_use]
     pub fn get(&self) -> Option<&UdpSocket> {
         self.socket.as_ref()
     }

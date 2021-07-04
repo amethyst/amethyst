@@ -26,7 +26,7 @@ type BundleAddFn = Box<
         DispatcherBuilder<'static, 'static>,
     ) -> Result<DispatcherBuilder<'static, 'static>, Error>,
 >;
-// Hack: Ideally we want a `SendBoxFnOnce`. However implementing it got too crazy:
+// Hack: Ideally we want a `SendBoxFnOnce`. However, implementing it got too crazy:
 //
 // * When taking in `ApplicationBuilder<StateLocal>` as a parameter, I couldn't get the type
 //   parameters to be happy. `StateLocal` had to change depending on the first state, but it
@@ -150,7 +150,7 @@ where
 
     // Hack to get around `S` or `T` not being `Send`
     // We take a function that constructs `S`, and the function itself is `Send`.
-    // However, `Self` has `PhantomData<T>`, which means we cannot send `self` to a thread. Instead
+    // However, `Self` has `PhantomData<T>`, which means we cannot send `self` to a thread. Instead,
     // we have to take all of the other fields and send those through.
     //
     // Need to `#[allow(clippy::type_complexity)]` because the type declaration would have unused type

@@ -13,6 +13,7 @@ use crate::{
     storage::AssetStorage,
     AssetHandle, ProcessingQueue, ProcessingState, WeakHandle,
 };
+use crate::storage::MutateAssetInStorage;
 
 crate::register_asset_type!(Prefab => Prefab; PrefabProcessorSystem);
 
@@ -105,7 +106,7 @@ fn prefab_asset_processor(
             .get_for_load_handle(dependee)
             .iter()
             .flat_map(|p| p.dependers.iter())
-            .flat_map(|weak_handle| {
+            .filter_map(|weak_handle| {
                 storage
                     .get_asset_with_version(weak_handle)
                     .map(move |(prefab, _)| (weak_handle, prefab))
@@ -121,8 +122,7 @@ fn prefab_asset_processor(
             })
             .collect();
 
-        use crate::storage::MutateAssetInStorage;
-        for (handle, cooked_prefab) in updates.into_iter() {
+        for (handle, cooked_prefab) in updates {
             storage.mutate_asset_in_storage(&handle, move |prefab| {
                 prefab.cooked = Some(cooked_prefab);
                 prefab.version += 1;

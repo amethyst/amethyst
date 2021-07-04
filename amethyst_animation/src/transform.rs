@@ -27,7 +27,7 @@ pub enum TransformChannel {
 // feb635f3-752a-456f-96a6-87cff13595b9
 impl TypeUuid for Animation<Transform> {
     const UUID: type_uuid::Bytes =
-        *Uuid::from_u128(338570003214035303785978659011038647737).as_bytes();
+        *Uuid::from_u128(338_570_003_214_035_303_785_978_659_011_038_647_737).as_bytes();
 }
 register_asset_type!(Animation<Transform> => Animation<Transform>; AssetProcessorSystem<Animation<Transform>>);
 
@@ -41,8 +41,8 @@ impl AnimationSampling for Transform {
         data: &Self::Primitive,
         _buffer: &mut CommandBuffer,
     ) {
-        use self::TransformChannel::*;
-        use crate::util::SamplerPrimitive::*;
+        use self::TransformChannel::{Rotation, Scale, Translation};
+        use crate::util::SamplerPrimitive::{Vec3, Vec4};
 
         match (channel, *data) {
             (&Translation, Vec3(ref d)) => {
@@ -59,7 +59,7 @@ impl AnimationSampling for Transform {
     }
 
     fn current_sample(&self, channel: &Self::Channel) -> Self::Primitive {
-        use self::TransformChannel::*;
+        use self::TransformChannel::{Rotation, Scale, Translation};
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),
             Rotation => SamplerPrimitive::Vec4((*self.rotation().as_vector()).into()),
@@ -68,11 +68,10 @@ impl AnimationSampling for Transform {
     }
 
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
-        use self::TransformChannel::*;
+        use self::TransformChannel::{Rotation, Scale, Translation};
         match channel {
-            Translation => SamplerPrimitive::Vec3([zero(); 3]),
+            Translation | Scale => SamplerPrimitive::Vec3([zero(); 3]),
             Rotation => SamplerPrimitive::Vec4([zero(); 4]),
-            Scale => SamplerPrimitive::Vec3([zero(); 3]),
         }
     }
 

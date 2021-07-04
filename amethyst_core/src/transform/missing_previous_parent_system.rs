@@ -1,9 +1,9 @@
-//! System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
+//! System that inserts `PreviousParent` components for entities that have [Transform] and [Parent]
 
-use super::components::*;
-use crate::ecs::*;
+use super::components::{Parent, PreviousParent, Transform};
+use crate::ecs::{component, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder};
 
-/// System that inserts [PreviousParent] components for entities that have [Transform] and [Parent]
+/// System that inserts `PreviousParent` components for entities that have [Transform] and [Parent]
 #[derive(Debug)]
 pub struct MissingPreviousParentSystem;
 

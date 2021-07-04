@@ -1,8 +1,8 @@
-//! CircularBuffer
+//! `CircularBuffer`
 
 use std::collections::VecDeque;
 
-/// A CircularBuffer that drops the oldest element inserted when full.
+/// A `CircularBuffer` that drops the oldest element inserted when full.
 /// # Example
 ///
 /// ```
@@ -25,7 +25,8 @@ pub struct CircularBuffer<A> {
 }
 
 impl<A> CircularBuffer<A> {
-    ///Creates a new CircularBuffer with fixed size
+    ///Creates a new `CircularBuffer` with fixed size
+    #[must_use]
     pub fn new(size: usize) -> Self {
         CircularBuffer {
             queue: VecDeque::with_capacity(size),
@@ -33,7 +34,7 @@ impl<A> CircularBuffer<A> {
         }
     }
 
-    ///Add a value to the CircularBuffer
+    ///Add a value to the `CircularBuffer`
     ///Returns the popped value if the buffer is full
     pub fn push(&mut self, elem: A) -> Option<A> {
         let out = if self.queue.len() == self.cap {
@@ -47,12 +48,14 @@ impl<A> CircularBuffer<A> {
         out
     }
 
-    ///Get an immutable reference to the values inside the CircularBuffer
+    ///Get an immutable reference to the values inside the `CircularBuffer`
+    #[must_use]
     pub fn queue(&self) -> &VecDeque<A> {
         &self.queue
     }
 
     /// Returns the capacity of the circular buffer.
+    #[must_use]
     pub fn capacity(&self) -> usize {
         self.cap
     }

@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use amethyst_core::{
-    ecs::*,
+    ecs::{Entity, EntityStore, IntoQuery, ParallelRunnable, Read, System, SystemBuilder, maybe_changed},
     math::{convert, Matrix4},
     transform::Transform,
 };
@@ -10,7 +10,7 @@ use log::error;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use super::resources::*;
+use super::resources::{Joint, Skin};
 
 /// System for performing vertex skinning.
 ///
@@ -50,7 +50,7 @@ impl System for VertexSkinningSystem {
                     let mut q = <(Entity, &Transform, &mut JointTransforms)>::query();
                     let (mut left, mut right) = world.split_for_query(&q);
 
-                    for entity in updated_skins.iter() {
+                    for entity in &updated_skins {
                         if let Ok(mut entry) = right.entry_mut(*entity) {
                             if let Ok(skin) = entry.get_component_mut::<Skin>() {
                                 // Compute the joint global_transforms
@@ -60,7 +60,7 @@ impl System for VertexSkinningSystem {
                                     skin.joints
                                         .iter()
                                         .zip(skin.inverse_bind_matrices.iter())
-                                        .map(|(joint_entity, inverse_bind_matrix)| {
+                                        .filter_map(|(joint_entity, inverse_bind_matrix)| {
                                             if let Ok(transform) =
                                                 global_transforms.get(&left, *joint_entity)
                                             {
@@ -70,7 +70,6 @@ impl System for VertexSkinningSystem {
                                                 None
                                             }
                                         })
-                                        .flatten()
                                         .map(|(global, inverse_bind_matrix)| {
                                             global.1.global_matrix()
                                                 * inverse_bind_matrix

@@ -1,4 +1,4 @@
-//! WidgetID Implementation
+//! `WidgetID` Implementation
 
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -20,13 +20,13 @@ pub fn impl_widget_id(ast: &DeriveInput) -> TokenStream {
                 .collect::<Vec<Ident>>();
 
             if maybe_marked_default.len() > 1 {
-                panic!("Only 1 variant can be marked as default widget id")
+                panic!("Only 1 variant can be marked as default widget id");
             }
 
-            if !maybe_marked_default.is_empty() {
-                maybe_marked_default[0].clone()
-            } else {
+            if maybe_marked_default.is_empty() {
                 data_enum.variants[0].ident.clone()
+            } else {
+                maybe_marked_default[0].clone()
             }
         }
         _ => panic!("WidgetId derive only supports enums"),

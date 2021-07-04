@@ -6,6 +6,7 @@ use std::sync::{
 use amethyst_error::Error;
 use log::error;
 use parking_lot::Mutex;
+use crate::progress;
 
 /// Completion status, returned by `ProgressCounter::complete`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -53,37 +54,44 @@ pub struct ProgressCounter {
 
 impl ProgressCounter {
     /// Creates a new `Progress` struct.
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        progress::ProgressCounter::default()
     }
 
     /// Removes all errors and returns them.
+    #[must_use]
     pub fn errors(&self) -> Vec<AssetErrorMeta> {
         let mut lock = self.errors.lock();
         lock.drain(..).collect()
     }
 
     /// Returns the number of assets this struct is tracking.
+    #[must_use]
     pub fn num_assets(&self) -> usize {
         self.num_assets
     }
 
     /// Returns the number of assets that have failed.
+    #[must_use]
     pub fn num_failed(&self) -> usize {
         self.num_failed.load(Ordering::Relaxed)
     }
 
     /// Returns the number of assets that are still loading.
+    #[must_use]
     pub fn num_loading(&self) -> usize {
         self.num_loading.load(Ordering::Relaxed)
     }
 
     /// Returns the number of assets that have successfully loaded.
+    #[must_use]
     pub fn num_finished(&self) -> usize {
         self.num_assets - self.num_loading() - self.num_failed()
     }
 
     /// Returns `Completion::Complete` if all tracked assets are finished.
+    #[must_use]
     pub fn complete(&self) -> Completion {
         match (
             self.num_failed.load(Ordering::Relaxed),
@@ -96,6 +104,7 @@ impl ProgressCounter {
     }
 
     /// Returns `true` if all assets have been imported without error.
+    #[must_use]
     pub fn is_complete(&self) -> bool {
         self.complete() == Completion::Complete
     }

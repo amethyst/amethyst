@@ -24,7 +24,7 @@ use crate::{
         shrev::{EventChannel, ReaderId},
         ArcThreadPool, EventReader, Stopwatch, Time,
     },
-    ecs::*,
+    ecs::{Resource, Resources, World},
     error::Error,
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
@@ -145,7 +145,7 @@ where
     E: Clone + Send + Sync + 'static,
     R: EventReader<Event = E> + 'static,
 {
-    /// Creates a new CoreApplication with the given initial game state.
+    /// Creates a new `CoreApplication` with the given initial game state.
     /// This will create and allocate all the needed resources for
     /// the event loop of the game engine. It is a shortcut for convenience
     /// if you need more control over how the engine is configured you should
@@ -203,7 +203,7 @@ where
         ApplicationBuilder::new(path, initial_state)?.build(init)
     }
 
-    /// Creates a new ApplicationBuilder with the given initial game state.
+    /// Creates a new `ApplicationBuilder` with the given initial game state.
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
@@ -227,12 +227,10 @@ where
     /// [`new`](struct.Application.html#examples) method.
     pub fn run(mut self) {
         #[cfg(feature = "sentry")]
-        let _sentry_guard = if let Some(dsn) = option_env!("SENTRY_DSN") {
+        let _sentry_guard = option_env!("SENTRY_DSN").map_or(None, |dsn| {
             let guard = sentry::init(dsn);
             Some(guard)
-        } else {
-            None
-        };
+        });
 
         self.initialize();
 
@@ -424,7 +422,7 @@ where
     E: 'static,
 {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
-    /// that wraps the initial_state. This is the more verbose way of initializing
+    /// that wraps the `initial_state`. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
     /// away from the default.
     ///
@@ -445,7 +443,7 @@ where
     ///
     /// # Errors
     ///
-    /// CoreApplication will return an error if the internal threadpool fails
+    /// `CoreApplication` will return an error if the internal threadpool fails
     /// to initialize correctly because of systems resource limitations
     ///
     /// # Examples
@@ -569,7 +567,7 @@ where
     ///
     /// # Returns
     ///
-    /// This function returns ApplicationBuilder after it has modified it.
+    /// This function returns `ApplicationBuilder` after it has modified it.
     ///
     /// # Examples
     ///
@@ -619,7 +617,7 @@ where
     ///
     /// # Returns
     ///
-    /// This function returns ApplicationBuilder after it has modified it.
+    /// This function returns `ApplicationBuilder` after it has modified it.
     ///
     /// # Examples
     ///
@@ -674,7 +672,7 @@ where
     ///
     /// # Returns
     ///
-    /// This function returns ApplicationBuilder after it has modified it.
+    /// This function returns `ApplicationBuilder` after it has modified it.
     ///
     /// # Examples
     ///
@@ -728,7 +726,7 @@ where
     ///
     /// # Returns
     ///
-    /// This function returns the ApplicationBuilder after modifying it.
+    /// This function returns the `ApplicationBuilder` after modifying it.
     pub fn with_frame_limit(mut self, strategy: FrameRateLimitStrategy, max_fps: u32) -> Self {
         self.resources.insert(FrameLimiter::new(strategy, max_fps));
         self
@@ -742,7 +740,7 @@ where
     ///
     /// # Returns
     ///
-    /// This function returns the ApplicationBuilder after modifying it.
+    /// This function returns the `ApplicationBuilder` after modifying it.
     pub fn with_frame_limit_config(mut self, config: FrameRateLimitConfig) -> Self {
         self.resources.insert(FrameLimiter::from_config(config));
         self
@@ -756,7 +754,7 @@ where
     ///
     /// # Returns
     ///
-    /// This function returns the ApplicationBuilder after modifying it.
+    /// This function returns the `ApplicationBuilder` after modifying it.
     pub fn with_fixed_step_length(self, duration: Duration) -> Self {
         self.resources
             .get_mut::<Time>()
@@ -775,7 +773,7 @@ where
     ///
     /// # Returns
     ///
-    /// This function returns the ApplicationBuilder after modifying it.
+    /// This function returns the `ApplicationBuilder` after modifying it.
     pub fn ignore_window_close(mut self, ignore: bool) -> Self {
         self.ignore_window_close = ignore;
         self

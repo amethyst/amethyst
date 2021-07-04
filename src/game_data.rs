@@ -1,4 +1,7 @@
-use crate::{core::ecs::*, error::Error};
+use crate::{
+    core::ecs::{Dispatcher, DispatcherBuilder, Resources, World},
+    error::Error,
+};
 
 /// initialize trait for game data
 pub trait DataInit<T> {
@@ -20,6 +23,7 @@ pub struct GameData {
 
 impl GameData {
     /// Create new game data
+    #[must_use]
     pub fn new(dispatcher: Dispatcher) -> Self {
         GameData {
             dispatcher: Some(dispatcher),

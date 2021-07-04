@@ -7,7 +7,7 @@ use std::{
     },
 };
 
-use amethyst_core::{ecs::*, math::convert, transform::Transform};
+use amethyst_core::{ecs::{Entity, EntityStore, IntoQuery, ParallelRunnable, Read, System, SystemBuilder, Write}, math::convert, transform::Transform};
 use rodio::SpatialSink;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -22,9 +22,9 @@ use crate::{
 #[derive(Debug)]
 pub struct AudioSystem;
 
-/// Add this structure to world as a resource with ID 0 to select an entity whose AudioListener
+/// Add this structure to world as a resource with ID 0 to select an entity whose `AudioListener`
 /// component will be used.  If this resource isn't found then the system will arbitrarily select
-/// the first AudioListener it finds.
+/// the first `AudioListener` it finds.
 #[derive(Debug, Default)]
 pub struct SelectedListener(pub Option<Entity>);
 

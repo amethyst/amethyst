@@ -5,7 +5,7 @@ use fnv::FnvHashSet;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
-use crate::{asset::Asset, Handle, WeakHandle};
+use crate::{asset::Asset, Handle, WeakHandle, prefab};
 
 /// Prefab Asset, containing a cooked world.
 #[derive(TypeUuid, Serialize, Deserialize, SerdeImportable)]
@@ -30,10 +30,11 @@ pub struct Prefab {
 
 impl Prefab {
     /// Create a new Amethyst Prefab giving a legion Prefab object
+    #[must_use]
     pub fn new(raw: legion_prefab::Prefab) -> Self {
         Self {
             raw,
-            ..Default::default()
+            ..prefab::assets::Prefab::default()
         }
     }
 }

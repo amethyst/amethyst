@@ -11,7 +11,9 @@
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
     html_root_url = "https://docs.amethyst.rs/stable"
 )]
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+#![deny(missing_docs, rust_2018_idioms, rust_2018_compatibility, clippy::all)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
 
 pub use rayon::ThreadPool;
 
@@ -48,7 +50,7 @@ pub use type_uuid::TypeUuid;
 pub use {erased_serde, inventory, lazy_static};
 
 #[cfg(feature = "asset-daemon")]
-/// internal AssetDaemon control
+/// internal `AssetDaemon` control
 pub use crate::daemon::AssetDaemon;
 #[cfg(feature = "json")]
 pub use crate::json::JsonFormat;

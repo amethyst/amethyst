@@ -1,10 +1,10 @@
 use std::{hash::Hash, marker};
 
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use derivative::Derivative;
 use marker::PhantomData;
 
-use crate::{resources::AnimationSampling, skinning::VertexSkinningSystem};
+use crate::{resources::AnimationSampling, skinning::VertexSkinningSystem, bundle};
 
 /// Bundle for vertex skinning
 ///
@@ -15,8 +15,9 @@ pub struct VertexSkinningBundle;
 
 impl VertexSkinningBundle {
     /// Create a new sampling bundle
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        bundle::VertexSkinningBundle::default()
     }
 }
 

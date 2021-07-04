@@ -4,10 +4,9 @@ use std::{
     collections::HashMap,
     io::{self, Read as IORead, Write as IOWrite},
     net::{SocketAddr, TcpListener, TcpStream},
-    ops::DerefMut,
 };
 
-use amethyst_core::{ecs::*, EventChannel};
+use amethyst_core::{ecs::{DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World}, EventChannel};
 use amethyst_error::Error;
 use bytes::Bytes;
 use log::warn;
@@ -27,6 +26,7 @@ pub struct TcpNetworkBundle {
 }
 
 impl TcpNetworkBundle {
+    #[must_use]
     pub fn new(listener: Option<TcpListener>, recv_buffer_size_bytes: usize) -> Self {
         Self {
             listener,
@@ -121,7 +121,7 @@ impl System for TcpConnectionListenerSystem {
                 .write_resource::<TcpNetworkResource>()
                 .write_resource::<EventChannel<NetworkSimulationEvent>>()
                 .build(move |_commands, _world, (net, event_channel), _| {
-                    let resource = net.deref_mut();
+                    let resource = &mut **net;
                     if let Some(ref listener) = resource.listener {
                         loop {
                             match listener.accept() {
@@ -212,8 +212,8 @@ impl System for TcpNetworkRecvSystem {
                 .write_resource::<TcpNetworkResource>()
                 .write_resource::<EventChannel<NetworkSimulationEvent>>()
                 .build(move |_commands, _world, (net, event_channel), _| {
-                    let resource = net.deref_mut();
-                    for (_, (active, stream)) in resource.streams.iter_mut() {
+                    let resource = &mut **net;
+                    for (active, stream) in resource.streams.values_mut() {
                         // If we can't get a peer_addr, there is likely something pretty wrong with the
                         // connection so we'll mark it inactive.
                         let peer_addr = match stream.peer_addr() {
@@ -270,6 +270,7 @@ pub struct TcpNetworkResource {
 }
 
 impl TcpNetworkResource {
+    #[must_use]
     pub fn new(listener: Option<TcpListener>, recv_buffer_size_bytes: usize) -> Self {
         Self {
             listener,
@@ -279,6 +280,7 @@ impl TcpNetworkResource {
     }
 
     /// Returns an immutable reference to the listener if there is one configured.
+    #[must_use]
     pub fn get(&self) -> Option<&TcpListener> {
         self.listener.as_ref()
     }
@@ -298,7 +300,7 @@ impl TcpNetworkResource {
         self.listener = None;
     }
 
-    /// Returns a tuple of an active TcpStream and whether ot not that stream is active
+    /// Returns a tuple of an active `TcpStream` and whether ot not that stream is active
     pub fn get_stream(&mut self, addr: SocketAddr) -> Option<&mut (bool, TcpStream)> {
         self.streams.get_mut(&addr)
     }

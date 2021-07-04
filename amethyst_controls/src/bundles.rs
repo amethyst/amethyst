@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 
-use amethyst_core::{ecs::*, math::one, shrev::EventChannel};
+use amethyst_core::{ecs::{DispatcherBuilder, Resources, SystemBundle, World}, math::one, shrev::EventChannel};
 use amethyst_error::Error;
 use winit::event::Event;
 
-use super::*;
+use super::{ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem, HideCursor, MouseFocusUpdateSystem, WindowFocus};
 
 /// The bundle that creates a flying movement system.
 ///
@@ -35,6 +35,7 @@ pub struct FlyControlBundle {
 
 impl FlyControlBundle {
     /// Builds a new fly control bundle using the provided axes as controls.
+    #[must_use]
     pub fn new(
         horizontal_axis: Option<Cow<'static, str>>,
         vertical_axis: Option<Cow<'static, str>>,
@@ -51,6 +52,7 @@ impl FlyControlBundle {
     }
 
     /// Alters the mouse sensitivity on this `FlyControlBundle`
+    #[must_use]
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;
         self.sensitivity_y = y;
@@ -58,6 +60,7 @@ impl FlyControlBundle {
     }
 
     /// Alters the speed on this `FlyControlBundle`.
+    #[must_use]
     pub fn with_speed(mut self, speed: f32) -> Self {
         self.speed = speed;
         self
@@ -108,7 +111,7 @@ impl SystemBundle for FlyControlBundle {
 /// The bundle that creates an arc ball movement system.
 /// Note: Will not actually create a moving entity. It will only register the needed resources and systems.
 /// The generic parameters A and B are the ones used in InputHandler<A,B>.
-/// You might want to add "fly_movement" and "free_rotation" as dependencies of the TransformSystem.
+/// You might want to add `fly_movement` and `free_rotation` as dependencies of the `TransformSystem`.
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
 ///
 /// See the `arc_ball_camera` example to see how to use the arc ball camera.
@@ -120,6 +123,7 @@ pub struct ArcBallControlBundle {
 
 impl ArcBallControlBundle {
     /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
+    #[must_use]
     pub fn new() -> Self {
         ArcBallControlBundle {
             sensitivity_x: 1.0,
@@ -128,6 +132,7 @@ impl ArcBallControlBundle {
     }
 
     /// Builds a new `ArcBallControlBundle` with the provided mouse sensitivity values.
+    #[must_use]
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;
         self.sensitivity_y = y;

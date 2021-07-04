@@ -6,7 +6,10 @@ use amethyst_assets::{
     AssetHandle, AssetStorage, DefaultLoader, Handle, LoadHandle, Loader, ProcessingQueue,
     ProcessingState,
 };
-use amethyst_core::{ecs::*, Hidden, HiddenPropagate};
+use amethyst_core::{
+    ecs::{component, Entity, IntoQuery, ParallelRunnable, Resources, System, SystemBuilder},
+    Hidden, HiddenPropagate,
+};
 use amethyst_rendy::{
     rendy::{
         command::QueueId,
@@ -370,7 +373,7 @@ impl<B: Backend> System for UiGlyphsSystem<B> {
                                                     (rest, base_color),
                                                 ]
                                                 .iter()
-                                                .cloned()
+                                                .copied()
                                                 .flat_map(|(subsection_len, color)| {
                                                     password_sections(subsection_len).map(
                                                         move |text| {
@@ -406,13 +409,11 @@ impl<B: Backend> System for UiGlyphsSystem<B> {
                                             }
                                         };
 
-                                        let next_z = if let Some(val) =
-                                            self.glyph_entity_cache.keys().last()
-                                        {
-                                            val + 1
-                                        } else {
-                                            0
-                                        };
+                                        let next_z = self
+                                            .glyph_entity_cache
+                                            .keys()
+                                            .last()
+                                            .map_or(0, |val| val + 1);
 
                                         self.glyph_entity_cache.insert(next_z, *entity);
 
@@ -856,7 +857,7 @@ fn mul_blend(a: &[f32; 4], b: &[f32; 4]) -> [f32; 4] {
     [a[0] * b[0], a[1] * b[1], a[2] * b[2], a[3] * b[3]]
 }
 
-const PASSWORD_STR: &str = "••••••••••••••••";
+const PASSWORD_STR: &str = "\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}\u{2022}";
 const PASSWORD_STR_GRAPHEMES: usize = 16; // 3 bytes per grapheme
 fn password_sections(len: usize) -> impl Iterator<Item = &'static str> {
     let full_chunks = len / PASSWORD_STR_GRAPHEMES;

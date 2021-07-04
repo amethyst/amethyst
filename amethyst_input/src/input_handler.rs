@@ -12,10 +12,11 @@ use winit::{
 
 use super::{
     controller::{ControllerButton, ControllerEvent},
-    event::InputEvent::{self, *},
+    event::InputEvent::{self, ActionPressed, ActionReleased, ActionWheelMoved, AxisMoved, ButtonPressed, ButtonReleased, CursorMoved, KeyPressed, KeyReleased, KeyTyped, MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseWheelMoved},
     scroll_direction::ScrollDirection,
-    *,
+    Axis, Bindings, Button, ControllerAxis, ElementState, Iterator, MouseAxis,
 };
+use crate::input_handler;
 
 /// This struct holds state information about keyboard modifiers
 #[derive(Debug, Default)]
@@ -28,21 +29,25 @@ pub struct KeyboardModifiersState {
 
 impl KeyboardModifiersState {
     /// Return the current state of the shift modifier (either left or right)
+    #[must_use]
     pub fn shift(&self) -> bool {
         self.shift
     }
 
     /// Return the current state of the ctrl modifier (either left or right)
+    #[must_use]
     pub fn ctrl(&self) -> bool {
         self.ctrl
     }
 
     /// Return the current state of the logo modifier (either left or right)
+    #[must_use]
     pub fn logo(&self) -> bool {
         self.logo
     }
 
     /// Return the current state of the alt modifier (either left or right, no difference made for GR)
+    #[must_use]
     pub fn alt(&self) -> bool {
         self.alt
     }
@@ -76,13 +81,14 @@ pub struct InputHandler {
 
 impl InputHandler {
     /// Creates a new input handler.
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        input_handler::InputHandler::default()
     }
 
     /// Updates the input handler with a new engine event.
     ///
-    /// The Amethyst game engine will automatically call this if the InputHandler is attached to
+    /// The Amethyst game engine will automatically call this if the `InputHandler` is attached to
     /// the world as a resource.
     pub fn send_event(
         &mut self,
@@ -123,7 +129,7 @@ impl InputHandler {
                                 .cloned(),
                             );
                             self.send_axis_moved_events_key(event_handler, key_code, scancode);
-                            for (action, combinations) in self.bindings.actions.iter() {
+                            for (action, combinations) in &self.bindings.actions {
                                 for combination in combinations.iter().filter(|c| {
                                     c.contains(&Button::Key(key_code))
                                         || c.contains(&Button::ScanCode(scancode))
@@ -161,7 +167,7 @@ impl InputHandler {
                                 .cloned(),
                             );
                             self.send_axis_moved_events_key(event_handler, key_code, scancode);
-                            for (action, combinations) in self.bindings.actions.iter() {
+                            for (action, combinations) in &self.bindings.actions {
                                 for combination in combinations {
                                     if combination.contains(&Button::Key(key_code))
                                         && combination
@@ -204,7 +210,7 @@ impl InputHandler {
                                 .cloned(),
                             );
                             self.send_axis_moved_events_mouse(event_handler, mouse_button);
-                            for (action, combinations) in self.bindings.actions.iter() {
+                            for (action, combinations) in &self.bindings.actions {
                                 for combination in combinations
                                     .iter()
                                     .filter(|c| c.contains(&Button::Mouse(mouse_button)))
@@ -240,7 +246,7 @@ impl InputHandler {
                                 .cloned(),
                             );
                             self.send_axis_moved_events_mouse(event_handler, mouse_button);
-                            for (action, combinations) in self.bindings.actions.iter() {
+                            for (action, combinations) in &self.bindings.actions {
                                 for combination in combinations {
                                     if combination.contains(&Button::Mouse(mouse_button))
                                         && combination
@@ -315,7 +321,7 @@ impl InputHandler {
 
     /// Updates the input handler with a new controller event.
     ///
-    /// Called internally from SdlEventsSystem when using sdl_controller feature.
+    /// Called internally from `SdlEventsSystem` when using `sdl_controller` feature.
     /// You should invoke it in your system if you provide
     /// your own controller input implementation.
     pub fn send_controller_event(
@@ -323,7 +329,7 @@ impl InputHandler {
         event: &ControllerEvent,
         event_handler: &mut EventChannel<InputEvent>,
     ) {
-        use self::ControllerEvent::*;
+        use self::ControllerEvent::{ControllerAxisMoved, ControllerButtonPressed, ControllerButtonReleased, ControllerConnected, ControllerDisconnected};
 
         match *event {
             ControllerAxisMoved { which, axis, value } => {
@@ -355,7 +361,7 @@ impl InputHandler {
                             .iter()
                             .cloned(),
                         );
-                        for (action, combinations) in self.bindings.actions.iter() {
+                        for (action, combinations) in &self.bindings.actions {
                             for combination in combinations
                                 .iter()
                                 .filter(|c| c.contains(&Button::Controller(controller_id, button)))
@@ -387,7 +393,7 @@ impl InputHandler {
                             .iter()
                             .cloned(),
                         );
-                        for (action, combinations) in self.bindings.actions.iter() {
+                        for (action, combinations) in &self.bindings.actions {
                             for combination in combinations {
                                 if combination.contains(&Button::Controller(controller_id, button))
                                 {
@@ -451,6 +457,7 @@ impl InputHandler {
     }
 
     /// Checks if a key is down.
+    #[must_use]
     pub fn key_is_down(&self, key: VirtualKeyCode) -> bool {
         self.pressed_keys.iter().any(|&k| k.0 == key)
     }
@@ -461,6 +468,7 @@ impl InputHandler {
     }
 
     /// Checks if a mouse button is down.
+    #[must_use]
     pub fn mouse_button_is_down(&self, mouse_button: MouseButton) -> bool {
         self.pressed_mouse_buttons
             .iter()
@@ -471,6 +479,7 @@ impl InputHandler {
     ///
     /// If "horizontal" is true this will return the horizontal mouse value. You almost always want the
     /// vertical mouse value.
+    #[must_use]
     pub fn mouse_wheel_value(&self, horizontal: bool) -> f32 {
         if horizontal {
             self.mouse_wheel_horizontal
@@ -485,6 +494,7 @@ impl InputHandler {
     }
 
     /// Checks if the key corresponding to a scan code is down.
+    #[must_use]
     pub fn scan_code_is_down(&self, scan_code: u32) -> bool {
         self.pressed_keys.iter().any(|&k| k.1 == scan_code)
     }
@@ -497,6 +507,7 @@ impl InputHandler {
     }
 
     /// Checks if a controller button is down on specific controller.
+    #[must_use]
     pub fn controller_button_is_down(
         &self,
         controller_id: u32,
@@ -515,6 +526,7 @@ impl InputHandler {
     }
 
     /// Returns true if a controller with the given id is connected.
+    #[must_use]
     pub fn is_controller_connected(&self, controller_id: u32) -> bool {
         self.connected_controllers
             .iter()
@@ -525,6 +537,7 @@ impl InputHandler {
     ///
     /// this method can return None, either if no mouse is connected, or if no mouse events have
     /// been recorded
+    #[must_use]
     pub fn mouse_position(&self) -> Option<(f32, f32)> {
         self.mouse_position
     }
@@ -549,13 +562,14 @@ impl InputHandler {
     }
 
     /// Checks if a button is down.
+    #[must_use]
     pub fn button_is_down(&self, button: Button) -> bool {
         match button {
             Button::Key(k) => self.key_is_down(k),
             Button::Mouse(b) => self.mouse_button_is_down(b),
             Button::ScanCode(s) => self.scan_code_is_down(s),
             Button::Controller(g, b) => self.controller_button_is_down(g, b),
-            _ => false,
+            Button::MouseWheel(_) => false,
         }
     }
 
@@ -579,7 +593,7 @@ impl InputHandler {
                     .iter()
                     .find(|&&(id, a, _)| id == *controller_id && a == *axis)
                     .map(|&(_, _, val)| if *invert { -val } else { val })
-                    .map(|val| {
+                    .map_or(0.0, |val| {
                         let dead_zone = *dead_zone as f32;
                         if val < -dead_zone {
                             (val + dead_zone) / (1.0 - dead_zone)
@@ -589,7 +603,6 @@ impl InputHandler {
                             0.0
                         }
                     })
-                    .unwrap_or(0.0)
             }
             Axis::Mouse {
                 axis,
@@ -627,6 +640,7 @@ impl InputHandler {
     }
 
     /// Returns the value of an axis by the id, if the id doesn't exist this returns None.
+    #[must_use]
     pub fn axis_value(&self, id: &str) -> Option<f32> {
         self.bindings.axes.get(id).map(|a| self.axis_value_impl(a))
     }
@@ -635,6 +649,7 @@ impl InputHandler {
     /// the actions bindings is not down. Returns None if the given action is not found.
     ///
     /// If a binding represents a combination of buttons, all of them need to be down.
+    #[must_use]
     pub fn action_is_down(&self, action: &str) -> Option<bool> {
         self.bindings.actions.get(action).map(|combinations| {
             combinations.iter().any(|combination| {
@@ -647,7 +662,7 @@ impl InputHandler {
 
     /// Retrieve next free controller number to allocate new controller to
     fn alloc_controller_id(&self) -> u32 {
-        let mut i = 0u32;
+        let mut i = 0_u32;
         loop {
             if !self.connected_controllers.iter().any(|ids| ids.0 == i) {
                 return i;
@@ -656,7 +671,7 @@ impl InputHandler {
         }
     }
 
-    /// Map controller's index from external event into controller_id
+    /// Map controller's index from external event into `controller_id`
     fn controller_idx_to_id(&self, index: u32) -> Option<u32> {
         self.connected_controllers
             .iter()
@@ -664,7 +679,7 @@ impl InputHandler {
             .map(|ids| ids.0)
     }
 
-    /// Iterates all input bindings and invokes ActionWheelMoved for each action bound to the mouse wheel
+    /// Iterates all input bindings and invokes `ActionWheelMoved` for each action bound to the mouse wheel
     fn invoke_wheel_moved(
         &self,
         delta_x: f32,
@@ -700,7 +715,7 @@ impl InputHandler {
         };
 
         // check for actions being bound to any invoked mouse wheel
-        for (action, combinations) in self.bindings.actions.iter() {
+        for (action, combinations) in &self.bindings.actions {
             for combination in combinations {
                 if let Some(dir) = dir_x {
                     if combination.contains(&Button::MouseWheel(dir))
@@ -735,7 +750,7 @@ impl InputHandler {
         key_code: VirtualKeyCode,
         scancode: u32,
     ) {
-        for (axis, input_axis) in self.bindings.axes.iter() {
+        for (axis, input_axis) in &self.bindings.axes {
             if let Axis::Emulated { pos, neg } = input_axis {
                 let value = self
                     .axis_value(axis)
@@ -780,7 +795,7 @@ impl InputHandler {
         event_handler: &mut EventChannel<InputEvent>,
         mouse_button: MouseButton,
     ) {
-        for (axis, input_axis) in self.bindings.axes.iter() {
+        for (axis, input_axis) in &self.bindings.axes {
             if let Axis::Emulated { pos, neg } = input_axis {
                 let value = self
                     .axis_value(axis)

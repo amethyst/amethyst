@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::HashMap};
 
 use amethyst_core::{
     dispatcher::ThreadLocalSystem,
-    ecs::*,
+    ecs::{Entity, EntityStore, IntoQuery, System, SystemBuilder, component, systems},
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     transform::Transform,
@@ -78,16 +78,13 @@ impl System for ArcBallRotationSystem {
 
                     let targets: HashMap<Entity, Transform> = queries
                         .0
-                        .iter(world)
-                        .map(|ctrl| {
+                        .iter(world).filter_map(|ctrl| {
                             world
                                 .entry_ref(ctrl.target)
                                 .ok()
                                 .and_then(|e| e.into_component::<Transform>().ok())
                                 .map(|trans| (ctrl.target, *trans))
                         })
-                        .filter(|t| t.is_some())
-                        .map(|t| t.unwrap())
                         .collect();
 
                     for (control, transform) in queries.1.iter_mut(world) {
@@ -186,7 +183,7 @@ impl System for MouseFocusUpdateSystem {
 }
 
 /// System which hides the cursor when the window is focused.
-/// Requires the usage MouseFocusUpdateSystem at the same time.
+/// Requires the usage `MouseFocusUpdateSystem` at the same time.
 #[derive(Debug)]
 pub struct CursorHideSystem;
 

@@ -4,8 +4,11 @@ use std::collections::HashMap;
 
 use smallvec::SmallVec;
 
-use super::components::*;
-use crate::ecs::*;
+use super::components::{Children, Parent, PreviousParent, Transform};
+use crate::ecs::{
+    component, maybe_changed, Entity, EntityStore, IntoQuery, ParallelRunnable, System,
+    SystemBuilder, Write,
+};
 
 /// System that generates [Children] components for entities that are targeted by [Parent] component.
 #[derive(Debug)]
@@ -121,14 +124,14 @@ impl System for ParentUpdateSystem {
                     // Flush the `children_additions` to the command buffer. It is stored separate to
                     // collect multiple new children that point to the same parent into the same
                     // SmallVec, and to prevent redundant add+remove operations.
-                    children_additions.iter().for_each(|(k, v)| {
+                    for (k, v) in &children_additions {
                         log::trace!(
                             "Flushing: Entity {:?} adding `Children` component {:?}",
                             k,
                             v
                         );
                         commands.add_component(*k, Children::with(v));
-                    });
+                    };
                 }),
         )
     }

@@ -1,14 +1,14 @@
 //! ECS audio bundles
 
 //use amethyst_assets::AssetProcessorSystemBundle;
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
 
-use crate::{output::OutputWrapper, systems::*};
+use crate::{output::OutputWrapper, systems::{AudioSystem, SelectedListener}};
 
 /// Audio bundle
 ///
-/// This will add an empty SelectedListener, OutputWrapper, add the audio system and the asset processor for `Source`.
+/// This will add an empty `SelectedListener`, `OutputWrapper`, add the audio system and the asset processor for `Source`.
 ///
 /// `DjSystem` must be added separately if you want to use our background music system.
 #[derive(Default, Debug)]

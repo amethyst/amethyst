@@ -1,23 +1,28 @@
 //! Util Resources
 
-use amethyst_core::{ecs::*, Time};
+use amethyst_core::{
+    ecs::{
+        DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World,
+    },
+    Time,
+};
 use amethyst_error::Error;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use crate::circular_buffer::CircularBuffer;
 
-/// The FpsCounter resource needed by the FpsCounterSystem.
+/// The `FpsCounter` resource needed by the `FpsCounterSystem`.
 ///
-/// Add it to your resources to be able to use the FpsCounterSystem.
+/// Add it to your resources to be able to use the `FpsCounterSystem`.
 ///
 /// # Usage
-/// Get the FpsCounter resource from the world then call either `frame_fps` or `sampled_fps` to
+/// Get the `FpsCounter` resource from the world then call either `frame_fps` or `sampled_fps` to
 /// get the FPS.
 ///
-/// frame_fps will return the framerate of the current frame. That is, the framerate at which the
+/// `frame_fps` will return the framerate of the current frame. That is, the framerate at which the
 /// game would be running if all frames were exactly like this one.
-/// sampled_fps will return the averaged framerate. This gives a better approximation of the "felt"
+/// `sampled_fps` will return the averaged framerate. This gives a better approximation of the "felt"
 /// framerate by the user.
 ///
 /// # Example
@@ -42,7 +47,8 @@ impl Default for FpsCounter {
 }
 
 impl FpsCounter {
-    ///Creates a new FpsCounter that calculates the average fps over samplesize values.
+    /// Creates a new `FpsCounter` that calculates the average fps over samplesize values.
+    #[must_use]
     pub fn new(samplesize: usize) -> FpsCounter {
         FpsCounter {
             buf: CircularBuffer::<u64>::new(samplesize),
@@ -50,7 +56,7 @@ impl FpsCounter {
         }
     }
 
-    ///Add a new delta time value.
+    /// Add a new delta time value.
     pub fn push(&mut self, elem: u64) {
         self.sum += elem;
         if let Some(front) = self.buf.push(elem) {
@@ -58,7 +64,8 @@ impl FpsCounter {
         }
     }
 
-    ///Get the fps of the this frame.
+    /// Get the fps of the this frame.
+    #[must_use]
     pub fn frame_fps(&self) -> f32 {
         if let Some(back) = self.buf.queue().back() {
             return 1.0e9 / *back as f32;
@@ -66,7 +73,8 @@ impl FpsCounter {
         0.0
     }
 
-    ///Get the average fps over the samplesize frames.
+    /// Get the average fps over the samplesize frames.
+    #[must_use]
     pub fn sampled_fps(&self) -> f32 {
         if self.sum == 0 || self.buf.queue().is_empty() {
             return 0.0;
@@ -101,7 +109,7 @@ impl System for FpsCounterSystem {
     }
 }
 
-///Automatically adds a `FpsCounterSystem` and a [`FpsCounter`] resource with the specified sample size.
+/// Automatically adds a `FpsCounterSystem` and a [`FpsCounter`] resource with the specified sample size.
 #[derive(Default, Debug)]
 pub struct FpsCounterBundle {
     samplesize: Option<usize>,
@@ -109,11 +117,13 @@ pub struct FpsCounterBundle {
 
 impl FpsCounterBundle {
     /// Create a new [`FpsCounterBundle`].
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Set the sample size the [`FpsCounter`] uses. The default is 20.
+    #[must_use]
     pub fn sample_size(self, samplesize: usize) -> Self {
         Self {
             samplesize: Some(samplesize),

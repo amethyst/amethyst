@@ -10,7 +10,7 @@ use crate::{
     types::{MaterialHandle, MeshHandle},
 };
 
-/// This will attach a Handle<Mesh> to any Entity with a MeshHandle, and remove the Meshhandle
+/// This will attach a Handle<Mesh> to any Entity with a `MeshHandle`, and remove the Meshhandle
 pub(crate) fn mesh_handle_loading(world: &mut World, _resources: &mut Resources) {
     let mut entity_mesh = Vec::new();
 
@@ -30,7 +30,7 @@ pub(crate) fn mesh_handle_loading(world: &mut World, _resources: &mut Resources)
     }
 }
 
-/// This will attach a Handle<Material> to any Entity with a MaterialHandle, and remove the MaterialHandle
+/// This will attach a Handle<Material> to any Entity with a `MaterialHandle`, and remove the `MaterialHandle`
 pub(crate) fn material_handle_loading(world: &mut World, _resources: &mut Resources) {
     let mut entity_material = Vec::new();
 
@@ -50,7 +50,7 @@ pub(crate) fn material_handle_loading(world: &mut World, _resources: &mut Resour
     }
 }
 
-/// This will attach a new AnimationHierarchy on any entity with a UniqueAnimationHierarchyId component
+/// This will attach a new `AnimationHierarchy` on any entity with a `UniqueAnimationHierarchyId` component
 pub(crate) fn animation_hierarchy_loading(world: &mut World, _resources: &mut Resources) {
     let mut accumulator = Vec::new();
     let mut query_hierarchy_id = <(Entity, &UniqueAnimationHierarchyId)>::query()
@@ -66,7 +66,7 @@ pub(crate) fn animation_hierarchy_loading(world: &mut World, _resources: &mut Re
         accumulator.push((*entity, node_ids));
     });
 
-    accumulator.iter().for_each(|(entity, nodes)| {
+    for (entity, nodes) in &accumulator {
         world.entry(*entity).expect("Unreachable").add_component(
             AnimationHierarchy::<Transform>::new_many(
                 nodes
@@ -78,5 +78,5 @@ pub(crate) fn animation_hierarchy_loading(world: &mut World, _resources: &mut Re
                     .collect(),
             ),
         )
-    });
+    };
 }

@@ -256,7 +256,7 @@ fn load_node(
     // load graphics
     if let Some(mesh) = node.mesh() {
         if state.mesh_uuids.is_none() {
-            state.mesh_uuids = Some(Default::default());
+            state.mesh_uuids = Some(std::collections::HashMap::default());
         }
         let mut loaded_primitives = load_mesh(&mesh, buffers, options).expect("It should work");
         match loaded_primitives.len().cmp(&1) {
@@ -352,7 +352,7 @@ fn load_node(
                     }
                 }
             }
-            _ => {
+            Ordering::Less => {
                 // Nothing to do here
             }
         }

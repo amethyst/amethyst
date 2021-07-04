@@ -24,6 +24,7 @@ pub struct TransportResource {
 
 impl TransportResource {
     /// Creates a new `TransportResource`.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             messages: VecDeque::new(),
@@ -34,6 +35,7 @@ impl TransportResource {
     }
 
     /// Returns estimated number of bytes you can reliably send this frame.
+    #[must_use]
     pub fn frame_budget_bytes(&self) -> i32 {
         self.frame_budget_bytes
     }
@@ -54,6 +56,7 @@ impl TransportResource {
     }
 
     /// Returns the estimated nanosecond round-trip latency for messages.
+    #[must_use]
     pub fn latency_nanos(&self) -> i64 {
         self.latency_nanos
     }
@@ -64,6 +67,7 @@ impl TransportResource {
     }
 
     /// Returns the estimated loss percentage of packets in 0.0-1.0.
+    #[must_use]
     pub fn packet_loss(&self) -> f32 {
         self.packet_loss
     }
@@ -108,11 +112,13 @@ impl TransportResource {
     }
 
     /// Returns true if there are messages enqueued to be sent.
+    #[must_use]
     pub fn has_messages(&self) -> bool {
         !self.messages.is_empty()
     }
 
     /// Returns a reference to the owned messages.
+    #[must_use]
     pub fn get_messages(&self) -> &VecDeque<Message> {
         &self.messages
     }

@@ -21,10 +21,11 @@ pub struct AssetStorage<A> {
 
 impl<A> AssetStorage<A> {
     /// Creates a new asset storage.
+    #[must_use]
     pub fn new(indirection_table: IndirectionTable) -> Self {
         Self {
-            assets: Default::default(),
-            uncommitted: Default::default(),
+            assets: std::collections::HashMap::default(),
+            uncommitted: std::collections::HashMap::default(),
             to_drop: SegQueue::new(),
             indirection_table,
         }
@@ -113,7 +114,7 @@ impl<A> AssetStorage<A> {
     ///
     /// # Parameters
     ///
-    /// * `load_handle`: LoadHandle of the asset.
+    /// * `load_handle`: `LoadHandle` of the asset.
     pub fn get_for_load_handle(&self, load_handle: LoadHandle) -> Option<&A> {
         self.get_asset_state(load_handle).map(|a| &a.asset)
     }

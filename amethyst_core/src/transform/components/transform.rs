@@ -1,14 +1,17 @@
 //! Local transform component.
-use getset::*;
+use getset::{Getters, MutGetters, Setters};
 use legion_prefab::register_component_type;
 use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use simba::scalar::SubsetOf;
 use type_uuid::TypeUuid;
 
-use crate::math::{
-    self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
-    Vector3,
+use crate::{
+    math::{
+        self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
+        Vector3,
+    },
+    transform,
 };
 
 /// Local position, rotation, and scale (from parent if it exists).
@@ -133,6 +136,7 @@ impl Transform {
 
     /// Returns the local object matrix for the transform.
     #[inline]
+    #[must_use]
     pub fn matrix(&self) -> Matrix4<f32> {
         self.isometry
             .to_homogeneous()
@@ -141,6 +145,7 @@ impl Transform {
 
     /// Returns a reference to the translation vector.
     #[inline]
+    #[must_use]
     pub fn translation(&self) -> &Vector3<f32> {
         &self.isometry.translation.vector
     }
@@ -153,6 +158,7 @@ impl Transform {
 
     /// Returns a reference to the rotation quaternion.
     #[inline]
+    #[must_use]
     pub fn rotation(&self) -> &UnitQuaternion<f32> {
         &self.isometry.rotation
     }
@@ -510,6 +516,7 @@ impl Transform {
     /// using `nalgebra`'s `euler_angles` or `from_euler_angles` methods, be aware that
     /// 'roll' in that context will mean rotation about the x axis, 'pitch' will mean
     /// rotation about the y axis, and 'yaw' will mean rotation about the z axis.
+    #[must_use]
     pub fn euler_angles(&self) -> (f32, f32, f32) {
         self.isometry.rotation.euler_angles()
     }
@@ -529,6 +536,7 @@ impl Transform {
     }
 
     /// Verifies that the global `Matrix4` doesn't contain any NaN values.
+    #[must_use]
     pub fn is_finite(&self) -> bool {
         self.global_matrix
             .as_slice()
@@ -540,6 +548,7 @@ impl Transform {
     /// the local transformation, and ignores any `Parent`s of this entity.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
+    #[must_use]
     pub fn view_matrix(&self) -> Matrix4<f32> {
         let inv_scale = Vector3::new(1.0 / self.scale.x, 1.0 / self.scale.y, 1.0 / self.scale.z);
         self.isometry
@@ -553,6 +562,7 @@ impl Transform {
     /// global transformation of the entity, and so takes into account `Parent`s.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
+    #[must_use]
     pub fn global_view_matrix(&self) -> Matrix4<f32> {
         let mut res = self.global_matrix;
 
@@ -607,7 +617,7 @@ impl From<Vector3<f32>> for Transform {
     fn from(translation: Vector3<f32>) -> Self {
         Transform {
             isometry: Isometry3::new(translation, na::zero()),
-            ..Default::default()
+            ..transform::components::transform::Transform::default()
         }
     }
 }
@@ -623,7 +633,7 @@ impl From<Vector3<f64>> for Transform {
     fn from(translation: Vector3<f64>) -> Self {
         Transform {
             isometry: Isometry3::new(na::convert(translation), na::zero()),
-            ..Default::default()
+            ..transform::components::transform::Transform::default()
         }
     }
 }
@@ -639,7 +649,8 @@ pub struct TransformValues {
 }
 
 impl TransformValues {
-    /// Initialize a new TransformValues object that can later be use to generate a `Transform`
+    /// Initialize a new `TransformValues` object that can later be use to generate a `Transform`
+    #[must_use]
     pub fn new(translation: [f32; 3], rotation: [f32; 4], scale: [f32; 3]) -> Self {
         Self {
             translation,
@@ -682,7 +693,7 @@ impl From<TransformValues> for Transform {
         Transform {
             isometry,
             scale,
-            ..Default::default()
+            ..transform::components::transform::Transform::default()
         }
     }
 }

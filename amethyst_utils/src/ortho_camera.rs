@@ -1,6 +1,9 @@
 //! Provides a automatically resized orthographic camera.
 
-use amethyst_core::{ecs::*, Axis2};
+use amethyst_core::{
+    ecs::{IntoQuery, Runnable, SystemBuilder, Write},
+    Axis2,
+};
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
 use derive_new::new;
@@ -28,6 +31,7 @@ pub struct CameraOrthoWorldCoordinates {
 
 impl CameraOrthoWorldCoordinates {
     /// Creates coordinates with (0,0) at the bottom left, and (1,1) at the top right
+    #[must_use]
     pub fn normalized() -> CameraOrthoWorldCoordinates {
         CameraOrthoWorldCoordinates {
             left: 0.0,
@@ -40,16 +44,19 @@ impl CameraOrthoWorldCoordinates {
     }
 
     /// Returns width / height of the desired camera coordinates.
+    #[must_use]
     pub fn aspect_ratio(&self) -> f32 {
         self.width() / self.height()
     }
 
     /// Returns size of the x-axis.
+    #[must_use]
     pub fn width(&self) -> f32 {
         self.right - self.left
     }
 
     /// Returns size of the y-axis.
+    #[must_use]
     pub fn height(&self) -> f32 {
         // abs is in case you're using upside-down coordinates
         (self.top - self.bottom).abs()
@@ -63,7 +70,7 @@ impl Default for CameraOrthoWorldCoordinates {
 }
 
 /// `Component` attached to the camera's entity that allows automatically adjusting the camera's matrix according
-/// to preferences in the "mode" and "world_coordinates" fields.
+/// to preferences in the "mode" and `world_coordinates` fields.
 /// It adjusts the camera so that the camera's world coordinates are always visible.
 /// You must add the `CameraOrthoSystem` to your dispatcher for this to take effect (no dependencies required).
 ///
@@ -94,6 +101,7 @@ pub struct CameraOrtho {
 
 impl CameraOrtho {
     /// Creates a Camera that maintains window coordinates of (0,0) in the bottom left, and (1,1) at the top right
+    #[must_use]
     pub fn normalized(mode: CameraNormalizeMode) -> CameraOrtho {
         CameraOrtho {
             mode,
@@ -103,6 +111,7 @@ impl CameraOrtho {
     }
 
     /// Get the camera matrix offsets according to the specified options.
+    #[must_use]
     pub fn camera_offsets(&self, window_aspect_ratio: f32) -> (f32, f32, f32, f32) {
         self.mode
             .camera_offsets(window_aspect_ratio, &self.world_coordinates)
@@ -226,6 +235,7 @@ impl Default for CameraNormalizeMode {
 
 /// System that automatically changes the camera matrix according to the settings in
 /// the `CameraOrtho` attached to the camera entity.
+#[must_use]
 pub fn build_camera_normalize_system() -> impl Runnable {
     SystemBuilder::new("camera_ortho_system")
         .read_resource::<ScreenDimensions>()

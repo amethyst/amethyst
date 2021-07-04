@@ -2,7 +2,7 @@
 
 use std::time::Instant;
 
-use amethyst_core::{ecs::*, EventChannel};
+use amethyst_core::{ecs::{DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World}, EventChannel};
 use amethyst_error::Error;
 use bytes::Bytes;
 pub use laminar::{Config as LaminarConfig, ErrorKind, Socket as LaminarSocket};
@@ -22,6 +22,7 @@ pub struct LaminarNetworkBundle {
 }
 
 impl LaminarNetworkBundle {
+    #[must_use]
     pub fn new(socket: Option<LaminarSocket>) -> Self {
         Self { socket }
     }
@@ -162,13 +163,10 @@ impl System for LaminarNetworkRecvSystem {
                                         Bytes::copy_from_slice(packet.payload()),
                                     )
                                 }
-                                SocketEvent::Disconnect(addr) => {
+                                SocketEvent::Disconnect(addr) | SocketEvent::Timeout(addr) => {
                                     NetworkSimulationEvent::Disconnect(addr)
                                 }
                                 SocketEvent::Connect(addr) => NetworkSimulationEvent::Connect(addr),
-                                SocketEvent::Timeout(addr) => {
-                                    NetworkSimulationEvent::Disconnect(addr)
-                                }
                             };
                             event_channel.single_write(event);
                         }
@@ -191,11 +189,13 @@ impl Default for LaminarSocketResource {
 
 impl LaminarSocketResource {
     /// Creates a new instance of the `UdpSocketResource`.
+    #[must_use]
     pub fn new(socket: Option<LaminarSocket>) -> Self {
         Self { socket }
     }
 
     /// Returns a reference to the socket if there is one configured.
+    #[must_use]
     pub fn get(&self) -> Option<&LaminarSocket> {
         self.socket.as_ref()
     }

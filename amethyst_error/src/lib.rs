@@ -13,13 +13,14 @@
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
     html_root_url = "https://docs.amethyst.rs/stable"
 )]
-#![warn(
+#![deny(
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rust_2018_compatibility
+    rust_2018_compatibility,
+    clippy::all,
+    clippy::pedantic
 )]
-#![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
 use std::{
@@ -101,6 +102,7 @@ impl Error {
     }
 
     /// Get backtrace.
+    #[must_use]
     pub fn backtrace(&self) -> Option<&Backtrace> {
         self.inner.backtrace.as_ref()
     }
@@ -127,6 +129,7 @@ impl Error {
     /// assert_eq!("top", e.to_string());
     /// assert_eq!("wrapped", e.source().expect("no source").to_string());
     /// ```
+    #[must_use]
     pub fn source(&self) -> Option<&Error> {
         self.inner.source.as_deref()
     }
@@ -151,6 +154,7 @@ impl Error {
     /// let messages = e.causes().map(|e| e.to_string()).collect::<Vec<_>>();
     /// assert_eq!(vec!["other", "failing"], messages);
     /// ```
+    #[must_use]
     pub fn causes(&self) -> Causes<'_> {
         Causes {
             current: Some(self),
@@ -163,6 +167,7 @@ impl Error {
     ///
     /// **Warning:** This erases most diagnostics in favor of returning only the top error.
     /// `std::error::Error` is expanded further.
+    #[must_use]
     pub fn as_error(&self) -> &(dyn error::Error + 'static) {
         self.inner.error.as_ref()
     }
@@ -173,6 +178,7 @@ impl Error {
     ///
     /// **Warning:** This erases most diagnostics in favor of returning only the top error.
     /// `std::error::Error` is expanded further.
+    #[must_use]
     pub fn into_error(self) -> Box<dyn error::Error + 'static + Send + Sync> {
         self.inner.error
     }
@@ -211,6 +217,7 @@ where
 {
     /// Provide a context for the result in case it is an error.
     ///
+    /// # Errors
     /// The context callback is expected to return a new error, which will replace the given error
     /// and set the replaced error as its [`source`](struct.Error.html#method.source).
     ///

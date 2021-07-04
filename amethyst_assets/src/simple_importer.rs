@@ -16,7 +16,7 @@ pub struct SimpleImporterState {
     id: Option<AssetUuid>,
 }
 
-/// Wrapper struct to be able to impl Importer for any SimpleFormat
+/// Wrapper struct to be able to impl Importer for any `SimpleFormat`
 pub struct SimpleImporter<A: 'static, T: Format<A> + TypeUuid>(
     pub T,
     ::std::marker::PhantomData<A>,
@@ -78,7 +78,7 @@ where
         })
     }
 }
-/// Use [inventory::submit!] to register an importer to use for a file extension.
+/// Use [`inventory::submit!`] to register an importer to use for a file extension.
 #[derive(Debug)]
 pub struct SourceFileImporter {
     /// File extension for this type of file

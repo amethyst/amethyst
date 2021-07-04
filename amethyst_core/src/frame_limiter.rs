@@ -81,6 +81,8 @@ use std::{
 use derive_new::new;
 use serde::{Deserialize, Serialize};
 
+use crate::frame_limiter;
+
 const ZERO: Duration = Duration::from_millis(0);
 
 /// Frame rate limiting strategy.
@@ -140,7 +142,7 @@ impl Default for FrameRateLimitConfig {
     fn default() -> Self {
         FrameRateLimitConfig {
             fps: 144,
-            strategy: Default::default(),
+            strategy: frame_limiter::FrameRateLimitStrategy::default(),
         }
     }
 }
@@ -159,16 +161,17 @@ pub struct FrameLimiter {
 
 impl Default for FrameLimiter {
     fn default() -> Self {
-        FrameLimiter::from_config(Default::default())
+        FrameLimiter::from_config(frame_limiter::FrameRateLimitConfig::default())
     }
 }
 
 impl FrameLimiter {
     /// Creates a new frame limiter.
+    #[must_use]
     pub fn new(strategy: FrameRateLimitStrategy, fps: u32) -> Self {
         let mut s = Self {
             frame_duration: Duration::from_secs(0),
-            strategy: Default::default(),
+            strategy: frame_limiter::FrameRateLimitStrategy::default(),
             last_call: Instant::now(),
         };
         s.set_rate(strategy, fps);
@@ -186,6 +189,7 @@ impl FrameLimiter {
     }
 
     /// Creates a new frame limiter with the given config.
+    #[must_use]
     pub fn from_config(config: FrameRateLimitConfig) -> Self {
         Self::new(config.strategy, config.fps)
     }
@@ -206,7 +210,7 @@ impl FrameLimiter {
     ///
     /// [`Application`]: ../../amethyst/type.Application.html
     pub fn wait(&mut self) {
-        use self::FrameRateLimitStrategy::*;
+        use self::FrameRateLimitStrategy::{Sleep, SleepAndYield, Unlimited, Yield};
         match self.strategy {
             Unlimited => yield_now(),
 
@@ -234,9 +238,8 @@ impl FrameLimiter {
             let elapsed = Instant::now() - self.last_call;
             if elapsed >= frame_duration {
                 break;
-            } else {
-                spin_sleep::sleep(frame_duration - elapsed);
             }
+            spin_sleep::sleep(frame_duration - elapsed);
         }
     }
 }

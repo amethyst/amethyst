@@ -20,8 +20,7 @@ pub fn get_all_font_handles() -> Result<Vec<Handle>, SelectionError> {
         .into_iter()
         .flat_map(|fam| source.select_family_by_name(&fam));
     let font_handles = family_handles
-        .map(|fam| fam.fonts().to_owned())
-        .flatten()
+        .flat_map(|fam| fam.fonts().to_owned())
         .collect::<Vec<_>>();
     Ok(font_handles)
 }

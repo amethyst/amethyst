@@ -7,7 +7,10 @@ use derivative::Derivative;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{ecs::*, GameData, StateEvent};
+use crate::{
+    ecs::{Resources, World},
+    GameData, StateEvent,
+};
 
 /// Error type for errors occurring in `StateMachine`
 #[derive(Debug)]
@@ -378,6 +381,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     }
 
     /// Checks whether the state machine is running.
+    #[must_use]
     pub fn is_running(&self) -> bool {
         self.running
     }
@@ -518,7 +522,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     }
 
     /// Performs a state transition.
-    /// Usually called by update or fixed_update by the user's defined `State`.
+    /// Usually called by update or `fixed_update` by the user's defined `State`.
     /// This method can also be called when there are one or multiple `Trans` stored in the
     /// global `EventChannel<TransEvent<T, E>>`. Such `Trans` will be passed to this method
     /// sequentially in the order of insertion.

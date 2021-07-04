@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use amethyst_core::{
-    ecs::*,
+    ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     shrev::{EventChannel, ReaderId},
 };
 use amethyst_input::InputHandler;

@@ -16,7 +16,7 @@ use crate::{sink::AudioSink, source::Source, DecoderError};
 
 #[derive(Default)]
 #[allow(missing_debug_implementations)]
-/// A wrapper designed to keep the output and audio_sink used by Audio systems
+/// A wrapper designed to keep the output and `audio_sink` used by Audio systems
 pub struct OutputWrapper {
     /// Speaker used to play any sound
     pub output: Option<Output>,
@@ -51,6 +51,7 @@ impl Default for Output {
 
 impl Output {
     /// Gets the name of the output
+    #[must_use]
     pub fn name(&self) -> String {
         self.device.name().unwrap_or_else(|e| {
             error!("Failed to determine output device name: {}", e);
@@ -60,6 +61,7 @@ impl Output {
 
     /// Play a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
+    /// # Errors
     /// This will return an Error if the loaded audio file in source could not be decoded.
     pub fn try_play_once(&self, source: &Source, volume: f32) -> Result<(), DecoderError> {
         self.try_play_n_times(source, volume, 1)
@@ -83,6 +85,7 @@ impl Output {
 
     /// Play a sound n times. A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
+    /// # Errors
     /// This will return an Error if the loaded audio file in source could not be decoded.
     pub fn try_play_n_times(
         &self,
@@ -126,6 +129,7 @@ impl Iterator for OutputIterator {
 }
 
 /// Get the default output, returns none if no outputs are available.
+#[must_use]
 pub fn default_output() -> Option<Output> {
     default_output_device().map(|device| {
         Output {
@@ -135,6 +139,7 @@ pub fn default_output() -> Option<Output> {
 }
 
 /// Get a list of outputs available to the system.
+#[must_use]
 pub fn outputs() -> OutputIterator {
     let devices =
         output_devices().unwrap_or_else(|e| panic!("Error retrieving output devices: `{}`", e));

@@ -16,6 +16,7 @@ pub trait Source: Send + Sync + 'static {
 
     /// Loads the bytes given a path.
     ///
+    /// # Errors
     /// The id should always use `/` as separator in paths.
     fn load(&self, path: &str) -> Result<Vec<u8>, Error>;
 

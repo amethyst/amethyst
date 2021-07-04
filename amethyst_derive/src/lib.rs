@@ -6,15 +6,16 @@
     html_root_url = "https://docs.amethyst.rs/stable"
 )]
 #![recursion_limit = "256"]
-#![warn(
+#![deny(
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
     rust_2018_compatibility,
     clippy::all
 )]
+#![warn(clippy::pedantic)]
 // Needed because `nightly` warns on `extern crate proc_macro;`, but `stable` still requires it.
-#![allow(unused_extern_crates)]
+#![allow(unused_extern_crates, clippy::module_name_repetitions)]
 
 extern crate proc_macro;
 
@@ -25,7 +26,7 @@ use syn::{parse_macro_input, DeriveInput};
 mod event_reader;
 mod widget_id;
 
-/// EventReader
+/// `EventReader`
 #[proc_macro_derive(EventReader, attributes(reader))]
 pub fn event_reader_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);

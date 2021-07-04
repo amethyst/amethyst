@@ -1,6 +1,11 @@
 use std::collections::HashSet;
 
-use amethyst_core::{ecs::*, math::Vector2, shrev::EventChannel, Hidden, HiddenPropagate};
+use amethyst_core::{
+    ecs::{component, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
+    math::Vector2,
+    shrev::EventChannel,
+    Hidden, HiddenPropagate,
+};
 use amethyst_input::InputHandler;
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
@@ -64,7 +69,8 @@ pub struct UiEvent {
 }
 
 impl UiEvent {
-    /// Creates a new UiEvent.
+    /// Creates a new `UiEvent`.
+    #[must_use]
     pub fn new(event_type: UiEventType, target: Entity) -> Self {
         UiEvent { event_type, target }
     }
@@ -77,7 +83,7 @@ impl TargetedEvent for UiEvent {
 }
 
 /// A component that tags an entity as reactive to ui events.
-/// Will only work if the entity has a UiTransform component attached to it.
+/// Will only work if the entity has a `UiTransform` component attached to it.
 /// Without this, the ui element will not generate events.
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct Interactable;
@@ -93,7 +99,7 @@ pub struct UiMouseSystem {
 }
 
 impl UiMouseSystem {
-    /// Creates a new UiMouseSystem.
+    /// Creates a new `UiMouseSystem`.
     pub fn new() -> Self {
         UiMouseSystem {
             was_down: false,
@@ -143,7 +149,7 @@ impl System for UiMouseSystem {
 
                             if click_started {
                                 self.click_started_on = targets.clone();
-                                for target in targets.iter() {
+                                for target in &targets {
                                     events.single_write(UiEvent::new(
                                         UiEventType::ClickStart,
                                         *target,

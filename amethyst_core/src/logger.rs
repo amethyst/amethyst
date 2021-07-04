@@ -153,7 +153,7 @@ impl Logger {
                 .level_for("rendy_wsi", LevelFilter::Warn);
         }
 
-        for (module, level) in config.module_levels.into_iter() {
+        for (module, level) in config.module_levels {
             logger.dispatch = logger.dispatch.level_for(Cow::Owned(module), level);
         }
 
@@ -169,6 +169,7 @@ impl Logger {
     }
 
     /// Create a new Logger from [`LoggerConfig`]
+    #[must_use]
     pub fn from_config(config: LoggerConfig) -> Self {
         Logger::new_with_config(config, Logger::new())
     }

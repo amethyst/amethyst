@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_diff::SerdeDiff;
 use type_uuid::TypeUuid;
 
-use crate::ecs::*;
+use crate::ecs::Entity;
 
 /// Component used for hierarchy definition.
 /// Parent entity will automatically get [Children] component.

@@ -1,12 +1,12 @@
 use std::{collections::HashSet, marker::PhantomData};
 
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use crate::{Selectable, Selected};
 
-/// Resource dedicated to the CacheSelectionOrderSystem behaviour
+/// Resource dedicated to the `CacheSelectionOrderSystem` behaviour
 #[derive(Debug, Clone, Default)]
 pub struct CachedSelectionOrderResource {
     /// A track of current cached entities
@@ -32,6 +32,7 @@ impl CachedSelectionOrderResource {
     }
 
     /// Returns the index in the cache for the specified entity.
+    #[must_use]
     pub fn index_of(&self, entity: Entity) -> Option<usize> {
         self.cache
             .iter()
@@ -51,6 +52,7 @@ pub struct CacheSelectionSystem<G> {
 
 impl<G> CacheSelectionSystem<G> {
     /// Constructs a new `CacheSelectionSystem<G>`.
+    #[must_use]
     pub fn new() -> CacheSelectionSystem<G> {
         CacheSelectionSystem { _m: PhantomData }
     }

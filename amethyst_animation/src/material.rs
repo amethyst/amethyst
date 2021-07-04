@@ -27,7 +27,7 @@ use uuid::Uuid;
 
 impl TypeUuid for Sampler<MaterialPrimitive> {
     const UUID: type_uuid::Bytes =
-        *Uuid::from_u128(241595315345789436729706626074361057644).as_bytes();
+        *Uuid::from_u128(241_595_315_345_789_436_729_706_626_074_361_057_644).as_bytes();
 }
 register_asset_type!(Sampler<MaterialPrimitive> => Sampler<MaterialPrimitive>; AssetProcessorSystem<Sampler<MaterialPrimitive>>);
 
@@ -110,7 +110,7 @@ fn texture_offset(u: (f32, f32), v: (f32, f32)) -> TextureOffset {
 
 impl TypeUuid for Animation<Material> {
     const UUID: type_uuid::Bytes =
-        *Uuid::from_u128(83822419317134738729184959262618377566).as_bytes();
+        *Uuid::from_u128(83_822_419_317_134_738_729_184_959_262_618_377_566).as_bytes();
 }
 register_asset_type!(Animation<Material> => Animation<Material>; AssetProcessorSystem<Animation<Material>>);
 
@@ -145,7 +145,7 @@ impl AnimationSampling for Material {
             }
 
             (MaterialChannel::UvOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.uv_offset = texture_offset(*u, *v)
+                self.uv_offset = texture_offset(*u, *v);
             }
 
             _ => panic!("Bad combination of data in Material animation"),

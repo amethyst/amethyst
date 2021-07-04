@@ -5,7 +5,7 @@ use bytes::Bytes;
 use super::requirements::{DeliveryRequirement, UrgencyRequirement};
 
 /// Structure used to hold message payloads before they are consumed and sent by an underlying
-/// NetworkSystem.
+/// `NetworkSystem`.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Message {
     /// The destination to send the message.

@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
 use crate::prefab::Prefab;
+use crate::prefab;
 
 #[derive(Default, Deserialize, Serialize, TypeUuid, Clone, Copy)]
 #[uuid = "80583980-24d4-4034-8394-ea749b43f55d"]
@@ -83,7 +84,7 @@ impl Importer for PrefabImporter {
 
         let prefab_asset = Prefab {
             raw: raw_prefab,
-            ..Default::default()
+            ..prefab::assets::Prefab::default()
         };
 
         // STEP 3: Now we need to save it into an asset

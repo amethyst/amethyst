@@ -2,12 +2,12 @@ use amethyst_error::Error;
 
 use crate::ecs::{
     systems::{Executor, ParallelRunnable, Step},
-    *,
+    Resources, Runnable, Schedule, World,
 };
 
-/// A SystemBundle is a structure that adds multiple systems to the [Dispatcher] and loads/unloads all required resources.
+/// A `SystemBundle` is a structure that adds multiple systems to the [Dispatcher] and loads/unloads all required resources.
 pub trait SystemBundle {
-    /// This method is lazily evaluated when [Dispatcher] is built with [DispatcherBuilder::build].
+    /// This method is lazily evaluated when [Dispatcher] is built with [`DispatcherBuilder::build`].
     /// It is used to add systems or bundles (recursive) into [Dispatcher]. [World] and [Resources] are
     /// also provided to initialize any entities or resources used by the system.
     fn load(
@@ -23,7 +23,7 @@ pub trait SystemBundle {
     }
 }
 
-/// A System builds a ParallelRunnable for the Dispatcher
+/// A System builds a `ParallelRunnable` for the Dispatcher
 pub trait System {
     /// builds the Runnable part of System
     fn build(self) -> Box<dyn ParallelRunnable + 'static>;
@@ -55,8 +55,8 @@ where
     }
 }
 
-/// This structure is an intermediate step for building [Dispatcher]. When [DispatcherBuilder::build] is called,
-/// all system bundles are evaluated by calling [SystemBundle::load]. This structure is used to split systems
+/// This structure is an intermediate step for building [Dispatcher]. When [`DispatcherBuilder::build`] is called,
+/// all system bundles are evaluated by calling [`SystemBundle::load`]. This structure is used to split systems
 /// (executable by [Schedule]) and system bundles (used for cleanup with unload).
 #[derive(Default)]
 #[allow(missing_debug_implementations)]
@@ -120,7 +120,7 @@ impl<'a> DispatcherBuilder {
         self
     }
 
-    /// Adds [SystemBundle] to the dispatcher. System bundles allow inserting multiple systems
+    /// Adds [`SystemBundle`] to the dispatcher. System bundles allow inserting multiple systems
     /// and initialize any required entities or resources.
     pub fn add_bundle<T: SystemBundle + 'static>(&mut self, bundle: T) -> &mut Self {
         self.items
@@ -128,7 +128,7 @@ impl<'a> DispatcherBuilder {
         self
     }
 
-    /// Evaluates all system bundles (recursively). Resulting systems and unpacked bundles are put into [DispatcherData].
+    /// Evaluates all system bundles (recursively). Resulting systems and unpacked bundles are put into [`DispatcherData`].
     pub fn load(
         &'a mut self,
         world: &mut World,
@@ -164,7 +164,7 @@ impl<'a> DispatcherBuilder {
         Ok(())
     }
 
-    /// Finalizes the builder into a [Dispatcher]. This also evaluates all system bundles by calling [SystemBundle::load].
+    /// Finalizes the builder into a [Dispatcher]. This also evaluates all system bundles by calling [`SystemBundle::load`].
     pub fn build(
         &mut self,
         world: &mut World,
@@ -181,7 +181,7 @@ impl<'a> DispatcherBuilder {
     }
 }
 
-/// Dispatcher items. This is different from [Step] in that it contains [SystemBundle].
+/// Dispatcher items. This is different from [Step] in that it contains [`SystemBundle`].
 #[allow(missing_debug_implementations)]
 pub enum DispatcherItem {
     /// A simple system.
@@ -196,7 +196,7 @@ pub enum DispatcherItem {
     SystemBundle(Box<dyn SystemBundle + 'static>),
 }
 
-/// Dispatcher is created by [DispatcherBuilder] and contains [Schedule] used to execute all systems.
+/// Dispatcher is created by [`DispatcherBuilder`] and contains [Schedule] used to execute all systems.
 #[allow(missing_debug_implementations)]
 pub struct Dispatcher {
     // Used to execute unload on system bundles once dispatcher is disposed.
@@ -211,7 +211,7 @@ impl Dispatcher {
         self.schedule.execute(world, resources);
     }
 
-    /// Unloads any resources by calling [SystemBundle::unload] for stored system bundles and returns [DispatcherBuilder]
+    /// Unloads any resources by calling [`SystemBundle::unload`] for stored system bundles and returns [`DispatcherBuilder`]
     /// containing the same bundles.
     pub fn unload(mut self, world: &mut World, resources: &mut Resources) -> Result<(), Error> {
         for bundle in &mut self.bundles {

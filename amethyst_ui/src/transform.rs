@@ -1,5 +1,8 @@
 use amethyst_assets::prefab::{legion_prefab, register_component_type, serde_diff, SerdeDiff};
-use amethyst_core::{ecs::*, transform::Parent};
+use amethyst_core::{
+    ecs::{Entity, EntityStore, IntoQuery},
+    transform::Parent,
+};
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
@@ -21,7 +24,7 @@ impl UiFinder {
     }
 }
 
-/// The UiTransform represents the transformation of a ui element.
+/// The `UiTransform` represents the transformation of a ui element.
 /// Values are in pixel and the position is calculated from the bottom left of the screen
 /// to the center of the ui element's area.
 #[derive(Clone, Default, Debug, Serialize, Deserialize, TypeUuid, SerdeDiff)]
@@ -90,8 +93,9 @@ pub struct UiTransform {
 register_component_type!(UiTransform);
 
 impl UiTransform {
-    /// Creates a new UiTransform.
+    /// Creates a new `UiTransform`.
     /// By default, it is considered opaque.
+    #[must_use]
     pub fn new(
         id: String,
         anchor: Anchor,
@@ -122,8 +126,9 @@ impl UiTransform {
             transparent_target: false,
         }
     }
-    /// Checks if the input position is in the UiTransform rectangle.
+    /// Checks if the input position is in the `UiTransform` rectangle.
     /// Uses local coordinates (ignores layouting).
+    #[must_use]
     pub fn position_inside_local(&self, x: f32, y: f32) -> bool {
         x > self.local_x - self.width / 2.0
             && y > self.local_y - self.height / 2.0
@@ -131,7 +136,8 @@ impl UiTransform {
             && y < self.local_y + self.height / 2.0
     }
 
-    /// Checks if the input position is in the UiTransform rectangle.
+    /// Checks if the input position is in the `UiTransform` rectangle.
+    #[must_use]
     pub fn position_inside(&self, x: f32, y: f32) -> bool {
         x > self.pixel_x - self.pixel_width / 2.0
             && y > self.pixel_y - self.pixel_height / 2.0
@@ -141,12 +147,14 @@ impl UiTransform {
 
     /// Renders this UI element by evaluating transform as a percentage of the parent size,
     /// rather than rendering it with pixel units.
+    #[must_use]
     pub fn into_percent(mut self) -> Self {
         self.scale_mode = ScaleMode::Percent;
         self
     }
 
     /// Sets the opaque variable to false, allowing ui events to go through this ui element.
+    #[must_use]
     pub fn into_transparent(mut self) -> Self {
         self.opaque = false;
         self
@@ -158,27 +166,27 @@ impl UiTransform {
         self
     }
 
-    /// Returns the global x coordinate of this UiTransform as computed by the `UiTransformSystem`.
+    /// Returns the global x coordinate of this `UiTransform` as computed by the `UiTransformSystem`.
     pub fn pixel_x(&self) -> f32 {
         self.pixel_x
     }
 
-    /// Returns the global y coordinate of this UiTransform as computed by the `UiTransformSystem`.
+    /// Returns the global y coordinate of this `UiTransform` as computed by the `UiTransformSystem`.
     pub fn pixel_y(&self) -> f32 {
         self.pixel_y
     }
 
-    /// Returns the global z order of this UiTransform as computed by the `UiTransformSystem`.
+    /// Returns the global z order of this `UiTransform` as computed by the `UiTransformSystem`.
     pub fn global_z(&self) -> f32 {
         self.global_z
     }
 
-    /// Returns the width of this UiTransform (in pixels) as computed by the `UiTransformSystem`.
+    /// Returns the width of this `UiTransform` (in pixels) as computed by the `UiTransformSystem`.
     pub fn pixel_width(&self) -> f32 {
         self.pixel_width
     }
 
-    /// Returns the height of this UiTransform (in pixels) as computed by the `UiTransformSystem`.
+    /// Returns the height of this `UiTransform` (in pixels) as computed by the `UiTransformSystem`.
     pub fn pixel_height(&self) -> f32 {
         self.pixel_height
     }

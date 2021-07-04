@@ -1,7 +1,5 @@
-use std::ops::DerefMut;
-
 use amethyst_core::{
-    ecs::{storage::Component, *},
+    ecs::{storage::Component, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     shrev::{Event, EventChannel, ReaderId},
 };
 #[cfg(feature = "profiler")]
@@ -83,7 +81,7 @@ impl<T: EventRetrigger + 'static> System for EventRetriggerSystem<T> {
                             if let Ok((_, entity_retrigger)) =
                                 retrigger.get_mut(world, event.get_target())
                             {
-                                entity_retrigger.apply(event, out_channel.deref_mut());
+                                entity_retrigger.apply(event, &mut **out_channel);
                             }
                         }
                     },

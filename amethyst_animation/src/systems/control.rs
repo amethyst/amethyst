@@ -1,7 +1,7 @@
 use std::{collections::HashMap, hash::Hash, marker::PhantomData, time::Duration};
 
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{CommandBuffer, Entity, EntityStore, IntoQuery, ParallelRunnable, SubWorld, System, SystemBuilder, TryRead, Write};
 use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::{debug, error};
@@ -69,7 +69,7 @@ where
                         state_set.clear();
 
                         // process each animation in control set
-                        for (ref id, ref mut control) in control_set.animations.iter_mut() {
+                        for (ref id, ref mut control) in &mut control_set.animations {
                             let mut remove = false;
 
                             if let Some(state) =
@@ -199,14 +199,14 @@ where
                         self.next_id = next_id;
                         for id in &remove_ids {
                             debug!("Removing AnimationControlSet {:?}", id);
-                            control_set.remove(*id);
+                            control_set.remove(&*id);
                             if control_set.is_empty() {
                                 remove_sets.push(*entity);
                             }
                         }
                     }
 
-                    for entity in remove_sets.iter() {
+                    for entity in &remove_sets {
                         buffer.remove_component::<AnimationControlSet<I, T>>(*entity)
                     }
                 }
@@ -292,7 +292,7 @@ where
 
     match (&control.state, &control.command) {
         // Check for aborted or done animation
-        (_, &AnimationCommand::Abort) | (&ControlState::Abort, _) | (&ControlState::Done, _) => {
+        (_, &AnimationCommand::Abort) | (&(ControlState::Abort | ControlState::Done), _) => {
             debug!("Aborting Animation");
             // signal samplers to abort, and remove control object if all samplers are done and removed
             if check_and_terminate_animation(control.id, hierarchy, world, buffer) {
@@ -305,8 +305,7 @@ where
         // We ignore the command here because we need the animation to be
         // started before we can pause it, and to avoid a lot of checks for
         // abort. The command will be processed next frame.
-        (&ControlState::Requested, &AnimationCommand::Start)
-        | (&ControlState::Deferred(..), &AnimationCommand::Start) => {
+        (&(ControlState::Requested | ControlState::Deferred(..)), &AnimationCommand::Start) => {
             debug!("Starting animation!");
             control.id = *next_id;
             *next_id += 1;

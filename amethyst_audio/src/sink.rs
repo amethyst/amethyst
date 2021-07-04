@@ -14,6 +14,7 @@ pub struct AudioSink {
 
 impl AudioSink {
     /// Creates a new `AudioSink` using the given audio output.
+    #[must_use]
     pub fn new(output: &Output) -> AudioSink {
         AudioSink {
             sink: Sink::new(&output.device),
