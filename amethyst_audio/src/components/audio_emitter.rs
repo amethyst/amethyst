@@ -6,7 +6,7 @@ use std::{
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
 
-use crate::{source::Source, DecoderError};
+use crate::{source::Source, DecoderError, components};
 
 /// An audio source, add this component to anything that emits sound.
 /// TODO: This should get a proper Debug impl parsing the sinks and sound queue
@@ -19,11 +19,12 @@ pub struct AudioEmitter {
 }
 
 impl AudioEmitter {
-    /// Creates a new AudioEmitter component initialized to the given positions.
+    /// Creates a new `AudioEmitter` component initialized to the given positions.
     /// These positions will stay synced with Transform if the Transform component is available
     /// on this entity.
+    #[must_use]
     pub fn new() -> AudioEmitter {
-        Default::default()
+        components::audio_emitter::AudioEmitter::default()
     }
 
     /// Plays an audio source from this emitter.
@@ -33,7 +34,7 @@ impl AudioEmitter {
         Ok(())
     }
 
-    /// An emitter's picker will be called by the AudioSystem whenever the emitter runs out of
+    /// An emitter's picker will be called by the `AudioSystem` whenever the emitter runs out of
     /// sounds to play.
     ///
     /// During callback the picker is separated from the emitter in order to avoid multiple

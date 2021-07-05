@@ -7,6 +7,7 @@ use amethyst_rendy::{
     skinning::JointCombined,
 };
 use gltf::buffer::Data;
+use gltf::mesh::util::ReadIndices;
 use log::{debug, trace, warn};
 use mikktspace::{generate_tangents, Geometry};
 
@@ -24,7 +25,6 @@ pub fn load_mesh(
         let reader = primitive.reader(|buffer| buffers.get(buffer.index()).map(|x| &**x));
 
         debug!("Loading indices");
-        use gltf::mesh::util::ReadIndices;
         let indices = match reader.read_indices() {
             Some(ReadIndices::U8(iter)) => Indices::U16(iter.map(u16::from).collect()),
             Some(ReadIndices::U16(iter)) => Indices::U16(iter.collect()),
@@ -51,7 +51,7 @@ pub fn load_mesh(
 
         let tex_coords = compute_if(options.load_texcoords || options.load_tangents, || {
             debug!("Loading texture coordinates");
-            if let Some(tex_coords) = reader.read_tex_coords(0).map(|t| t.into_f32()) {
+            if let Some(tex_coords) = reader.read_tex_coords(0).map(gltf::mesh::util::ReadTexCoords::into_f32) {
                 if options.flip_v_coord {
                     tex_coords
                         .map(|[u, v]| TexCoord([u, 1. - v]))
@@ -71,9 +71,7 @@ pub fn load_mesh(
         let tangents = compute_if(options.load_tangents, || {
             debug!("Loading tangents");
             let tangents = reader.read_tangents();
-            match tangents {
-                Some(tangents) => tangents.map(Tangent).collect::<Vec<_>>(),
-                None => {
+            if let Some(tangents) = tangents { tangents.map(Tangent).collect::<Vec<_>>() } else {
                     debug!("Calculating tangents");
                     calculate_tangents(
                         &positions,
@@ -82,7 +80,6 @@ pub fn load_mesh(
                         &indices,
                     )
                 }
-            }
         });
 
         let colors = try_compute_if(options.load_colors, || {

@@ -1,7 +1,10 @@
 use std::{cmp::Ordering, collections::HashSet};
 
 use amethyst_assets::{AssetStorage, DefaultLoader, Handle, Loader, ProcessingQueue};
-use amethyst_core::{ecs::*, Hidden, HiddenPropagate};
+use amethyst_core::{
+    ecs::{component, DispatcherBuilder, Entity, IntoQuery, Resources, World},
+    Hidden, HiddenPropagate,
+};
 use amethyst_error::Error;
 use amethyst_rendy::{
     batch::OrderedOneLevelBatch,
@@ -44,7 +47,7 @@ use crate::{
     Selected, TextEditing, UiImage, UiTransform,
 };
 
-/// A [RenderPlugin] for rendering UI elements.
+/// A [`RenderPlugin`] for rendering UI elements.
 #[derive(Debug, Default)]
 pub struct RenderUi {
     target: Target,
@@ -136,7 +139,7 @@ lazy_static::lazy_static! {
 pub struct DrawUiDesc;
 
 impl DrawUiDesc {
-    /// Create new DrawUI pass description
+    /// Create new `DrawUI` pass description
     pub fn new() -> Self {
         Default::default()
     }
@@ -382,7 +385,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
                             (false, false) => (0., 0.),
                             (true, false) => (2., glyph_data.height),
                             (false, true) => {
-                                (glyph_data.space_width, 1.0f32.max(glyph_data.height * 0.1))
+                                (glyph_data.space_width, 1.0_f32.max(glyph_data.height * 0.1))
                             }
                             (true, true) => (glyph_data.space_width, glyph_data.height),
                         };

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World};
 use amethyst_error::Error;
 use log::error;
 #[cfg(feature = "profiler")]
@@ -28,7 +28,7 @@ where
     F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
     R: Send + Sync + 'static,
 {
-    /// Creates a new [DjSystemBundle] where [f] is a function which produces music [SourceHandle].
+    /// Creates a new [`DjSystemBundle`] where [f] is a function which produces music [`SourceHandle`].
     pub fn new(f: F) -> Self {
         Self {
             f,

@@ -67,10 +67,7 @@ impl ThreadLocalSystem<'static> for EventLoopSystem {
                 .build(move |_commands, _world, event_channel, _query| {
                     self.event_loop.run_return(|event, _, flow| {
                         match event {
-                            Event::WindowEvent { .. } => {
-                                events.push(event.to_static().unwrap());
-                            }
-                            Event::DeviceEvent { .. } => {
+                            Event::WindowEvent { .. } | Event::DeviceEvent { .. } => {
                                 events.push(event.to_static().unwrap());
                             }
                             _ => {}

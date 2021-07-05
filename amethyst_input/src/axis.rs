@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::{Button, ControllerAxis, MouseAxis};
 
 /// Represents any input represented by a float value from -1 to 1.
-/// Retrieve the value of this with [axis_value](struct.InputHandler.html#method.axis_value).
+/// Retrieve the value of this with [`axis_value`](struct.InputHandler.html#method.axis_value).
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum Axis {
     /// Represents an emulated analogue axis made up of a pair of digital inputs,
@@ -54,9 +54,9 @@ pub(super) enum Conflict {
 }
 
 impl Axis {
-    pub(super) fn conflicts_with_button(&self, other: &Button) -> bool {
+    pub(super) fn conflicts_with_button(&self, other: Button) -> bool {
         match self {
-            Axis::Emulated { pos, neg } => other == pos || other == neg,
+            Axis::Emulated { pos, neg } => other == *pos || other == *neg,
             Axis::Multiple(axes) => axes.iter().any(|a| a.conflicts_with_button(other)),
             _ => false,
         }
@@ -67,7 +67,7 @@ impl Axis {
             if let Some(inner_conflict) = axes
                 .iter()
                 .map(|a| self.conflicts_with_axis(a))
-                .find(|x| x.is_some())
+                .find(std::option::Option::is_some)
             {
                 return inner_conflict;
             }
@@ -122,7 +122,7 @@ impl Axis {
                 if let Some(inner_conflict) = axes
                     .iter()
                     .map(|a| a.conflicts_with_axis(other))
-                    .find(|x| x.is_some())
+                    .find(std::option::Option::is_some)
                 {
                     return inner_conflict;
                 }

@@ -1,14 +1,17 @@
 use amethyst_assets::AssetStorage;
 use amethyst_audio::{output::OutputWrapper, Source, SourceHandle};
 use amethyst_core::{
-    ecs::*,
+    ecs::{ParallelRunnable, System, SystemBuilder},
     shrev::{EventChannel, ReaderId},
 };
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use crate::{
-    event::{UiEvent, UiEventType::*},
+    event::{
+        UiEvent,
+        UiEventType::{ClickStart, ClickStop, HoverStart, HoverStop},
+    },
     event_retrigger::{EventRetrigger, EventRetriggerSystem},
     EventReceiver,
 };

@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 
 use super::{axis, Axis, Button};
+use crate::bindings;
 
 /// Used for saving and loading input settings.
 ///
@@ -150,8 +151,9 @@ impl Error for ActionRemovedError {}
 
 impl Bindings {
     /// Creates a new empty Bindings structure
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        bindings::Bindings::default()
     }
 }
 
@@ -318,13 +320,13 @@ impl Bindings {
             }
         }
         if bind.len() == 1 {
-            for (k, a) in self.axes.iter() {
-                if a.conflicts_with_button(&bind[0]) {
+            for (k, a) in &self.axes {
+                if a.conflicts_with_button(bind[0]) {
                     return Err(BindingError::ButtonBoundToAxis(k.clone(), a.clone()));
                 }
             }
         }
-        for (k, a) in self.actions.iter() {
+        for (k, a) in &self.actions {
             for c in a {
                 if c.len() == bind.len() && bind.iter().all(|bind| c.iter().any(|c| c == bind)) {
                     return Err(BindingError::ComboAlreadyBound(k.clone()));
@@ -352,10 +354,10 @@ impl Bindings {
             }
         }
 
-        for (k, a) in self.actions.iter() {
+        for (k, a) in &self.actions {
             for c in a {
                 // Since you can't bind combos to an axis we only need to check combos with length 1.
-                if c.len() == 1 && axis.conflicts_with_button(&c[0]) {
+                if c.len() == 1 && axis.conflicts_with_button(c[0]) {
                     return Err(BindingError::AxisButtonAlreadyBoundToAction(
                         k.clone(),
                         c[0],

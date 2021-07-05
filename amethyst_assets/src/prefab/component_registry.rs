@@ -12,7 +12,7 @@ use legion_prefab::{
 use prefab_format::ComponentTypeUuid;
 
 /// registers prefab components that can be created by prefab
-/// use register_component_type! macro to add new components
+/// use `register_component_type!` macro to add new components
 #[derive(Default)]
 pub struct ComponentRegistryBuilder {
     components: FnvHashMap<ComponentTypeId, ComponentRegistration>,
@@ -21,7 +21,8 @@ pub struct ComponentRegistryBuilder {
 }
 
 impl ComponentRegistryBuilder {
-    /// registers components that can be spawned, called by LoaderBundle
+    /// registers components that can be spawned, called by `LoaderBundle`
+    #[must_use]
     pub fn auto_register_components(mut self) -> Self {
         let comp_registrations = legion_prefab::iter_component_registrations();
 
@@ -33,6 +34,7 @@ impl ComponentRegistryBuilder {
     }
 
     /// registers a single component to this registry
+    #[must_use]
     pub fn register_component(mut self, registration: &ComponentRegistration) -> Self {
         self.components
             .insert(registration.component_type_id(), registration.clone());
@@ -42,6 +44,7 @@ impl ComponentRegistryBuilder {
     }
 
     /// adds a mapping between prefab component and spawned component
+    #[must_use]
     pub fn add_spawn_mapping_into<FromT: Component + Clone + Into<IntoT>, IntoT: Component>(
         mut self,
     ) -> Self {
@@ -50,6 +53,7 @@ impl ComponentRegistryBuilder {
     }
 
     /// adds a mapping between prefab component and spawned for already initialized component memory
+    #[must_use]
     pub fn add_spawn_mapping<FromT: Component + Clone + SpawnInto<IntoT>, IntoT: Component>(
         mut self,
     ) -> Self {
@@ -78,6 +82,7 @@ impl ComponentRegistryBuilder {
     }
 
     /// builds the component registry with spawn mappings
+    #[must_use]
     pub fn build(self) -> ComponentRegistry {
         ComponentRegistry {
             components: self.components,
@@ -96,21 +101,25 @@ pub struct ComponentRegistry {
 
 impl ComponentRegistry {
     /// returns reference to the components map
+    #[must_use]
     pub fn components(&self) -> &FnvHashMap<ComponentTypeId, ComponentRegistration> {
         &self.components
     }
 
     /// returns reference to the components mapped by their UUID
+    #[must_use]
     pub fn components_by_uuid(&self) -> &FnvHashMap<ComponentTypeUuid, ComponentRegistration> {
         &self.components_by_uuid
     }
 
     /// allows to trivially copy components in to a world
+    #[must_use]
     pub fn copy_clone_impl(&self) -> CopyCloneImpl<'_, FnvBuildHasher> {
         CopyCloneImpl::new(&self.components)
     }
 
     /// the full spawn clone which will map components by their spawn handlers
+    #[must_use]
     pub fn spawn_clone_impl<'a, 'b, 'c>(
         &'a self,
         resources: &'b Resources,

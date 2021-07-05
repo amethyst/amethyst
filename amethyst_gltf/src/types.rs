@@ -14,7 +14,7 @@ use amethyst_rendy::{visibility::BoundingSphere, Material, Mesh};
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
-/// MeshHandle is a component that will handle the fact that we attach
+/// `MeshHandle` is a component that will handle the fact that we attach
 /// a mesh to an entity as an asset handle that will later be loaded.
 #[derive(Serialize, Deserialize, TypeUuid, Clone)]
 #[uuid = "34310974-b4cf-4dc2-a81b-40627c20543a"]
@@ -48,7 +48,7 @@ impl SerdeDiff for MeshHandle {
 
 register_component_type!(MeshHandle);
 
-/// MaterialHandle is a component that will handle the fact that we attach
+/// `MaterialHandle` is a component that will handle the fact that we attach
 /// a material handle to an entity as an asset handle that will later be loaded.
 #[derive(Serialize, Deserialize, TypeUuid, Clone)]
 #[uuid = "40a2d8f7-54e8-46ad-b668-66d759feb806"]

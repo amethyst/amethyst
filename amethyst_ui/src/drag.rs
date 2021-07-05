@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use amethyst_core::{
-    ecs::{IntoQuery, SystemBuilder, *},
+    ecs::{component, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     math::Vector2,
     shrev::{EventChannel, ReaderId},
     transform::Parent,
@@ -17,7 +17,7 @@ use crate::{
 };
 
 /// Component that denotes whether a given ui widget is draggable.
-/// Requires UiTransform to work.
+/// Requires `UiTransform` to work.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Draggable;
 
@@ -94,7 +94,7 @@ impl System for DragWidgetSystem {
                             }
                         });
 
-                        for (entity, _) in self.record.iter() {
+                        for entity in self.record.keys() {
                             if hiddens.get(world, *entity).is_ok()
                                 || hidden_props.get(world, *entity).is_ok()
                             {
@@ -102,7 +102,7 @@ impl System for DragWidgetSystem {
                             }
                         }
 
-                        for (entity, (first, prev)) in self.record.iter_mut() {
+                        for (entity, (first, prev)) in &mut self.record {
                             ui_events.single_write(UiEvent::new(
                                 UiEventType::Dragging {
                                     offset_from_mouse: mouse_pos - *first,
@@ -136,7 +136,7 @@ impl System for DragWidgetSystem {
                             *prev = mouse_pos;
                         }
 
-                        for entity in click_stopped.iter() {
+                        for entity in &click_stopped {
                             ui_events.single_write(UiEvent::new(
                                 UiEventType::Dropped {
                                     dropped_on: targeted_below(

@@ -5,7 +5,7 @@ use amethyst_assets::{
     Handle,
 };
 use amethyst_core::{
-    ecs::*,
+    ecs::{IntoQuery, ParallelRunnable, System, SystemBuilder},
     shrev::{EventChannel, ReaderId},
     Time,
 };
@@ -16,7 +16,7 @@ use type_uuid::TypeUuid;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use winit::event::{ElementState, Event, MouseButton, WindowEvent};
 
-use super::*;
+use super::{FontAsset, Selected};
 use crate::Anchor;
 
 /// How lines should behave when they are longer than the maximum line length.
@@ -30,7 +30,7 @@ pub enum LineMode {
     Wrap,
 }
 
-/// A component used to display text in this entity's UiTransform
+/// A component used to display text in this entity's `UiTransform`
 #[derive(Clone, Derivative, Deserialize, Serialize, SerdeDiff, TypeUuid)]
 #[uuid = "a12ccc08-c89b-4476-96ec-1c9b04d34aa2"]
 #[derivative(Debug, Default)]
@@ -70,7 +70,7 @@ pub(crate) struct CachedGlyph {
 }
 
 impl UiText {
-    /// Initializes a new UiText
+    /// Initializes a new `UiText`
     ///
     /// # Parameters
     ///
@@ -80,6 +80,7 @@ impl UiText {
     /// * `font_size`: A uniform scale applied to the glyphs
     /// * `line_mode`: Text mode allowing single line or multiple lines
     /// * `align`: Text alignment within its `UiTransform`
+    #[must_use]
     pub fn new(
         font: Option<Handle<FontAsset>>,
         text: String,
@@ -100,7 +101,7 @@ impl UiText {
     }
 }
 
-/// If this component is attached to an entity with a UiText then that UiText is editable.
+/// If this component is attached to an entity with a `UiText` then that `UiText` is editable.
 /// This component also controls how that editing works.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TextEditing {
@@ -127,7 +128,8 @@ pub struct TextEditing {
 }
 
 impl TextEditing {
-    /// Create a new TextEditing Component
+    /// Create a new `TextEditing` Component
+    #[must_use]
     pub fn new(
         max_length: usize,
         selected_text_color: [f32; 4],

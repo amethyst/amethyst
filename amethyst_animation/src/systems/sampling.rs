@@ -2,7 +2,7 @@ use std::{collections::HashSet, marker::PhantomData, time::Duration};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    ecs::{systems::ParallelRunnable, *},
+    ecs::{systems::ParallelRunnable, IntoQuery, System, SystemBuilder, Write},
     Time,
 };
 use derivative::Derivative;
@@ -55,7 +55,7 @@ where
 
                         inner.clear();
 
-                        for control in control_set.samplers.iter_mut() {
+                        for control in &mut control_set.samplers {
                             if let Some(sampler) = samplers.get(&control.sampler) {
                                 process_sampler(control, sampler, time, &mut inner);
                             }
@@ -107,7 +107,7 @@ fn process_sampler<T>(
 ) where
     T: AnimationSampling,
 {
-    use crate::resources::ControlState::*;
+    use crate::resources::ControlState::{Done, Paused, Running};
 
     let (new_state, new_end) = update_duration_and_check(control, sampler, time);
 
@@ -139,7 +139,7 @@ fn process_sampler<T>(
                 ));
             }
             if let EndControl::Stay = control.end {
-                let last_frame = sampler.input.last().cloned().unwrap_or(0.);
+                let last_frame = sampler.input.last().copied().unwrap_or(0.);
 
                 output.push((
                     control.blend_weight,
@@ -180,7 +180,7 @@ fn update_duration_and_check<T>(
 where
     T: AnimationSampling,
 {
-    use crate::resources::ControlState::*;
+    use crate::resources::ControlState::{Abort, Deferred, Done, Requested, Running};
     // Update state with new duration
     // Check duration for end of sampling
     match control.state {
@@ -202,9 +202,8 @@ where
             let last_frame = sampler
                 .input
                 .last()
-                .cloned()
-                .map(Duration::from_secs_f32)
-                .unwrap_or_else(|| Duration::from_secs(0));
+                .copied()
+                .map_or_else(|| Duration::from_secs(0), Duration::from_secs_f32);
             // duration is past last frame of sampling
             if current_dur > last_frame {
                 // Check end conditions

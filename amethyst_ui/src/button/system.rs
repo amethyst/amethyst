@@ -1,12 +1,16 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use amethyst_core::{
-    ecs::*,
+    ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     shrev::{EventChannel, ReaderId},
     transform::Parent,
 };
 
-use crate::{UiButtonAction, UiButtonActionType::*, UiImage, UiText};
+use crate::{
+    UiButtonAction,
+    UiButtonActionType::{SetImage, SetTextColor, UnsetTextColor, UnsetTexture},
+    UiImage, UiText,
+};
 
 #[derive(Debug)]
 struct ActionChangeStack<T: Debug + Clone + PartialEq> {
@@ -30,11 +34,10 @@ where
     }
 
     pub fn remove(&mut self, change: &T) -> Option<T> {
-        if let Some(idx) = self.stack.iter().position(|it| it == change) {
-            Some(self.stack.remove(idx))
-        } else {
-            None
-        }
+        self.stack
+            .iter()
+            .position(|it| it == change)
+            .map(|idx| self.stack.remove(idx))
     }
 
     pub fn is_empty(&self) -> bool {
@@ -70,8 +73,8 @@ impl UiButtonSystem {
     pub fn new(event_reader: ReaderId<UiButtonAction>) -> Self {
         Self {
             event_reader,
-            set_images: Default::default(),
-            set_text_colors: Default::default(),
+            set_images: std::collections::HashMap::default(),
+            set_text_colors: std::collections::HashMap::default(),
         }
     }
 }

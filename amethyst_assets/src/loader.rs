@@ -3,7 +3,6 @@ use std::{
     collections::HashMap,
     error::Error,
     fs::File,
-    ops::{Deref, DerefMut},
     path::PathBuf,
     sync::Arc,
 };
@@ -32,7 +31,7 @@ use log::debug;
 use serde::de::Deserialize;
 
 use crate::{
-    processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset, TypeUuid,
+    processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset, TypeUuid, loader,
 };
 
 /// Manages asset loading and storage for an application.
@@ -46,7 +45,7 @@ pub trait Loader: Send + Sync {
     ///
     /// Be careful not to confuse `AssetUuid` with `AssetTypeId`:
     ///
-    /// * `AssetUuid`: For an asset, such as "player_texture.png".
+    /// * `AssetUuid`: For an asset, such as `player_texture.png`.
     /// * `AssetTypeId`: For an asset type, such as `Texture`.
     ///
     /// # Parameters
@@ -62,7 +61,7 @@ pub trait Loader: Send + Sync {
     ///
     /// Be careful not to confuse `AssetUuid` with `AssetTypeId`:
     ///
-    /// * `AssetUuid`: For an asset, such as "player_texture.png".
+    /// * `AssetUuid`: For an asset, such as `player_texture.png`.
     /// * `AssetTypeId`: For an asset type, such as `Texture`.
     ///
     /// # Parameters
@@ -97,8 +96,7 @@ pub trait Loader: Send + Sync {
     /// * `id`: UUID of the asset.
     fn get_load_status(&self, id: AssetUuid) -> LoadStatus {
         self.get_load(id)
-            .map(|h| self.get_load_status_handle(h.load_handle()))
-            .unwrap_or(LoadStatus::NotRequested)
+            .map_or(LoadStatus::NotRequested, |h| self.get_load_status_handle(h.load_handle()))
     }
 
     /// Returns the load status for the asset with the given load handle.
@@ -123,7 +121,7 @@ pub trait Loader: Send + Sync {
         id: AssetUuid,
         storage: &'a AssetStorage<T>,
     ) -> Option<&'a T> {
-        self.get_load(id).map(|h| storage.get(&h)).flatten()
+        self.get_load(id).and_then(|h| storage.get(&h))
     }
 
     /// Load an asset from data and return a handle.
@@ -189,7 +187,7 @@ impl DefaultLoader {
         Self {
             indirection_table: loader.indirection_table(),
             loader,
-            storage_map: Default::default(),
+            storage_map: loader::AssetStorageMap::default(),
             ref_sender: tx,
             ref_receiver: rx,
             handle_allocator,
@@ -242,12 +240,12 @@ impl Loader for DefaultLoader {
     }
 
     fn init_world(&mut self, resources: &mut Resources) {
-        for (_, storage) in self.storage_map.storages_by_asset_uuid.iter() {
+        for storage in self.storage_map.storages_by_asset_uuid.values() {
             (storage.create_storage)(resources, &self.indirection_table);
         }
     }
     fn init_dispatcher(&mut self, builder: &mut DispatcherBuilder) {
-        for (_, storage) in self.storage_map.storages_by_asset_uuid.iter() {
+        for storage in self.storage_map.storages_by_asset_uuid.values() {
             (storage.register_system)(builder);
         }
     }
@@ -522,6 +520,7 @@ crate::inventory::collect!(AssetType);
 ///
 /// This function is not intended to be called be directly. Use the `register_asset_type!` macro
 /// macro instead.
+#[must_use]
 pub fn create_asset_type<Intermediate, Asset, ProcessorSystem>() -> AssetType
 where
     Asset: 'static + TypeUuid + Send + Sync,
@@ -543,12 +542,10 @@ where
         },
         with_storage: |res, func| {
             func(&mut (
-                res.get::<ProcessingQueue<Intermediate>>()
-                    .expect("Could not get ProcessingQueue")
-                    .deref(),
-                res.get_mut::<AssetStorage<Asset>>()
-                    .expect("Could not get_mut AssetStorage")
-                    .deref_mut(),
+                &*res.get::<ProcessingQueue<Intermediate>>()
+                    .expect("Could not get ProcessingQueue"),
+                &mut *res.get_mut::<AssetStorage<Asset>>()
+                    .expect("Could not get_mut AssetStorage"),
             ))
         },
     }

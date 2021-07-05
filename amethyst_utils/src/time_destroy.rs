@@ -1,6 +1,9 @@
 //! Allows you to automatically delete an entity after a set time has elapsed.
 
-use amethyst_core::{ecs::*, Time};
+use amethyst_core::{
+    ecs::{Entity, IntoQuery, Read, Runnable, SystemBuilder, Write},
+    Time,
+};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -22,6 +25,7 @@ pub struct DestroyInTime {
 }
 
 /// The system in charge of destroying entities with the `DestroyAtTime` component.
+#[must_use]
 pub fn build_destroy_at_time_system() -> impl Runnable {
     SystemBuilder::new("destroy_at_time_system")
         .read_resource::<Time>()
@@ -39,6 +43,7 @@ pub fn build_destroy_at_time_system() -> impl Runnable {
 }
 
 /// The system in charge of destroying entities with the `DestroyInTime` component.
+#[must_use]
 pub fn build_destroy_in_time_system() -> impl Runnable {
     SystemBuilder::new("destroy_in_time_system")
         .read_resource::<Time>()
@@ -48,7 +53,7 @@ pub fn build_destroy_in_time_system() -> impl Runnable {
             profile_scope!("destroy_in_time_system");
 
             for (ent, mut dit) in dit_query.iter_mut(subworld) {
-                if dit.timer <= 0f64 {
+                if dit.timer <= 0_f64 {
                     commands.remove(*ent);
                 }
 

@@ -3,14 +3,14 @@ use amethyst_assets::{
     register_asset_type, AssetProcessorSystem,
 };
 use amethyst_core::{
-    ecs::*,
+    ecs::{CommandBuffer, Entity, EntityStore},
     math::{convert, RealField, Vector2, Vector3, Vector4},
-    simd::scalar::*,
+    simd::scalar::{SubsetOf, SupersetOf},
 };
 use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
 
-use self::SamplerPrimitive::*;
+use self::SamplerPrimitive::{Scalar, Vec2, Vec3, Vec4};
 use crate::{
     resources::{AnimationControlSet, AnimationSampling},
     Sampler,
@@ -124,7 +124,7 @@ use uuid::Uuid;
 // e05c777b-575e-4f7a-930e-d8ea83bb227b
 impl TypeUuid for Sampler<SamplerPrimitive<f32>> {
     const UUID: type_uuid::Bytes =
-        *Uuid::from_u128(298227185745652393685123926184903254651).as_bytes();
+        *Uuid::from_u128(298_227_185_745_652_393_685_123_926_184_903_254_651).as_bytes();
 }
 #[typetag::serde]
 impl SerdeImportable for Sampler<SamplerPrimitive<f32>> {}

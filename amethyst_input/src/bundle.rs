@@ -3,7 +3,7 @@
 use std::{error, fmt, path::Path};
 
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{ecs::*, shrev::EventChannel};
+use amethyst_core::{ecs::{DispatcherBuilder, Resources, SystemBundle, World}, shrev::EventChannel};
 use amethyst_error::Error;
 use derivative::Derivative;
 use winit::event::Event;
@@ -12,11 +12,11 @@ use winit::event::Event;
 use crate::sdl_events_system::ControllerMappings;
 #[cfg(feature = "sdl_controller")]
 use crate::InputEvent;
-use crate::{BindingError, Bindings, InputHandler, InputSystem};
+use crate::{BindingError, Bindings, InputHandler, InputSystem, bundle};
 
 /// Bundle for adding the `InputHandler`.
 ///
-/// This also adds the Winit EventHandler and the `InputEvent` EventHandler
+/// This also adds the Winit `EventHandler` and the `InputEvent` `EventHandler`
 /// where `T::Action` is the type for Actions you have assigned here.
 ///
 /// ## Type parameters
@@ -37,11 +37,13 @@ pub struct InputBundle {
 
 impl InputBundle {
     /// Create a new input bundle with no bindings
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        bundle::InputBundle::default()
     }
 
     /// Use the provided bindings with the `InputHandler`
+    #[must_use]
     pub fn with_bindings(mut self, bindings: Bindings) -> Self {
         self.bindings = Some(bindings);
         self

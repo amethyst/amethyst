@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Animation, AnimationSampling, BlendMethod, Sampler};
 
-/// Sampler primitive for SpriteRender animations
+/// Sampler primitive for `SpriteRender` animations
 /// Note that sprites can only ever be animated with `Step`, or a panic will occur.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum SpriteRenderPrimitive {
@@ -27,7 +27,7 @@ use uuid::Uuid;
 // 8716643e-4d3a-11eb-bdd2-d7a177713b84
 impl TypeUuid for Sampler<SpriteRenderPrimitive> {
     const UUID: type_uuid::Bytes =
-        *Uuid::from_u128(179562043138858398183947466578368478084).as_bytes();
+        *Uuid::from_u128(179_562_043_138_858_398_183_947_466_578_368_478_084).as_bytes();
 }
 #[typetag::serde]
 impl SerdeImportable for Sampler<SpriteRenderPrimitive> {}
@@ -75,7 +75,7 @@ pub enum SpriteRenderChannel {
 // 9ef0c4bb-45d2-8d45-b418-5001f89cbb0d
 impl TypeUuid for Animation<SpriteRender> {
     const UUID: type_uuid::Bytes =
-        *Uuid::from_u128(211268164769622779683751576167574715149).as_bytes();
+        *Uuid::from_u128(211_268_164_769_622_779_683_751_576_167_574_715_149).as_bytes();
 }
 register_asset_type!(Animation<SpriteRender> => Animation<SpriteRender>; AssetProcessorSystem<Animation<SpriteRender>>);
 

@@ -16,9 +16,9 @@ use serde::{Deserialize, Serialize};
 /// name is actually an owned or borrowed string.
 ///
 /// `Entity`
-/// [`Cow<'static, str>`]: https://doc.rust-lang.org/std/borrow/enum.Cow.html
-/// [`String`]: https://doc.rust-lang.org/std/string/struct.String.html
-/// [str]: https://doc.rust-lang.org/std/primitive.str.html
+/// [`Cow<'static, str>`]("https://doc.rust-lang.org/std/borrow/enum.Cow.html")
+/// [`String`]("https://doc.rust-lang.org/std/string/struct.String.html")
+/// [str]("https://doc.rust-lang.org/std/primitive.str.html")
 /// [`Named::new`]: #method.new
 ///
 /// # Examples

@@ -21,11 +21,12 @@ where
     A: Clone,
 {
     /// Creates a new `Cache` and initializes it with the default values.
+    #[must_use]
     pub fn new(tx: Sender<RefOp>) -> Self {
         Self {
-            map: Default::default(),
+            map: std::collections::HashMap::default(),
             tx,
-            marker: Default::default(),
+            marker: std::marker::PhantomData::default(),
         }
     }
 

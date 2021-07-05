@@ -22,7 +22,7 @@ use type_uuid::TypeUuid;
 
 use crate::importer::GltfImporterState;
 
-/// A struct to be able to link this hierarchy to its entities using the file AssetUuid as identifier
+/// A struct to be able to link this hierarchy to its entities using the file `AssetUuid` as identifier
 #[derive(TypeUuid, Serialize, Debug, Deserialize, PartialEq, SerdeDiff, Clone, Default)]
 #[uuid = "6f7bccdf-2939-4f9d-89a4-8a65ddd9c20b"]
 pub struct UniqueAnimationHierarchyId {
@@ -62,7 +62,7 @@ pub fn load_animations(
             .expect("UUID generation for main scene prefab didn't work")
             .to_string(),
     },));
-    node_map.iter().for_each(|(node, entity)| {
+    for (node, entity) in node_map.iter() {
         world
             .entry(*entity)
             .expect("Unreachable")
@@ -73,7 +73,7 @@ pub fn load_animations(
                     .expect("UUID generation for main scene prefab didn't work")
                     .to_string(),
             })
-    });
+    };
 
     let mut asset_accumulator = Vec::new();
     let mut animations_accumulator = FnvHashMap::default();
@@ -155,7 +155,7 @@ fn load_channel(
     channel: &gltf::animation::Channel<'_>,
     buffers: &[Data],
 ) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), Error> {
-    use gltf::animation::util::ReadOutputs::*;
+    use gltf::animation::util::ReadOutputs::{MorphTargetWeights, Rotations, Scales, Translations};
     let sampler = channel.sampler();
     let target = channel.target();
 
@@ -236,7 +236,7 @@ fn map_interpolation_type<T>(ty: gltf::animation::Interpolation) -> Interpolatio
 where
     T: InterpolationPrimitive,
 {
-    use gltf::animation::Interpolation::*;
+    use gltf::animation::Interpolation::{CubicSpline, Linear, Step};
 
     match ty {
         Linear => InterpolationFunction::Linear,

@@ -1,4 +1,4 @@
-use crate::ecs::*;
+use crate::ecs::Resources;
 
 /// Read events generically
 pub trait EventReader {

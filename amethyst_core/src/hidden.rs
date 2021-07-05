@@ -3,8 +3,8 @@
 #[derive(Clone, Debug, Default)]
 pub struct Hidden;
 
-/// Like [Hidden](struct.Hidden.html), but can propagate through children when the [HideHierarchySystem](struct.HideHierarchySystem.html)
-/// is enabled in the [RenderBundle](struct.RenderBundle.html).
+/// Like [Hidden](struct.Hidden.html), but can propagate through children when the [`HideHierarchySystem`](struct.HideHierarchySystem.html)
+/// is enabled in the [`RenderBundle`](struct.RenderBundle.html).
 #[derive(Clone, Debug)]
 pub struct HiddenPropagate {
     /// Whether this is inserted automatically by propagation though the `ParentHierarchy`.
@@ -15,21 +15,23 @@ pub struct HiddenPropagate {
 }
 
 impl HiddenPropagate {
-    /// Creates an instance of HiddenPropagate.
+    /// Creates an instance of `HiddenPropagate`.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             is_propagated: false,
         }
     }
 
-    /// Is meant to be used only by HideHierarchySystem.
+    /// Is meant to be used only by `HideHierarchySystem`.
     pub(crate) fn new_propagated() -> Self {
         Self {
             is_propagated: true,
         }
     }
 
-    /// Returns true if this component was propagated by [HideHierarchySystem](struct.HideHierarchySystem.html) automatically.
+    /// Returns true if this component was propagated by [`HideHierarchySystem`](struct.HideHierarchySystem.html) automatically.
+    #[must_use]
     pub fn is_propagated(&self) -> bool {
         self.is_propagated
     }

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use winit::{event_loop::EventLoop, monitor::MonitorHandle, window::Window};
 
 /// A struct that can resolve monitors.
-/// Usually either a Window or an EventLoop.
+/// Usually either a Window or an `EventLoop`.
 pub trait MonitorsAccess {
     /// Returns an iterator over the available monitors
     fn iter(&self) -> VecDeque<MonitorHandle>;
@@ -82,9 +82,11 @@ impl MonitorIdent {
             .iter()
             .into_iter()
             .enumerate()
-            .filter(|(_, m)| m.name().map(|n| n == self.1).unwrap_or(false))
+            .filter(|(_, m)| m.name().map_or(false, |n| n == self.1))
             .max_by_key(|(i, _)| (*i as i32 - i32::from(self.0)).abs() as u16)
-            .map(|(_, m)| m)
-            .unwrap_or_else(|| monitors.primary().expect("No Primary Monitor Found!"))
+            .map_or_else(
+                || monitors.primary().expect("No Primary Monitor Found!"),
+                |(_, m)| m,
+            )
     }
 }

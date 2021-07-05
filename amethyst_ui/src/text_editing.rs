@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use amethyst_core::{
-    ecs::*,
+    ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     shrev::{EventChannel, ReaderId},
 };
 use amethyst_input::{InputHandler, KeyboardModifiersState};

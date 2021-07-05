@@ -1,6 +1,6 @@
 //! Input system
 use amethyst_core::{
-    ecs::*,
+    ecs::{System, SystemBuilder, systems},
     shrev::{EventChannel, ReaderId},
 };
 #[cfg(feature = "profiler")]

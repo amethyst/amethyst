@@ -3,7 +3,10 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::ProcessingQueue;
-use amethyst_core::{ecs::*, shrev::EventChannel};
+use amethyst_core::{
+    ecs::{DispatcherBuilder, Resources, SystemBundle, World},
+    shrev::EventChannel,
+};
 use amethyst_error::Error;
 use amethyst_rendy::types::DefaultBackend;
 use derive_new::new;
@@ -28,9 +31,9 @@ use crate::{
 /// UI bundle
 ///
 /// Will register all necessary components and systems needed for UI, along with any resources.
-/// The generic type T represent the T generic parameter of the InputHandler<T>.
+/// The generic type T represent the T generic parameter of the `InputHandler<T>`.
 ///
-/// Will fail with error 'No resource with the given id' if either the InputBundle or TransformBundle are not added.
+/// Will fail with error 'No resource with the given id' if either the `InputBundle` or `TransformBundle` are not added.
 #[derive(new, Debug, Default)]
 pub struct UiBundle</* C = NoCustomUi, */ W = u32, G = ()> {
     #[new(default)]
@@ -121,7 +124,7 @@ where
 /// Audio UI bundle
 ///
 /// Will register all necessary components and systems needed for UI, along with any resources.
-/// The generic type T represent the T generic parameter of the InputHandler<T>.
+/// The generic type T represent the T generic parameter of the `InputHandler<T>`.
 ///
 /// Will fail if no Output added. Add it with `amethyst_audio::output::init_output`
 #[derive(new, Debug, Default)]

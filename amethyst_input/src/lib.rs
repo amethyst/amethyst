@@ -4,14 +4,14 @@
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
     html_root_url = "https://docs.amethyst.rs/stable"
 )]
-#![warn(
+#![deny(
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
     rust_2018_compatibility
 )]
-#![warn(clippy::all)]
-#![allow(clippy::new_without_default)]
+#![warn(clippy::all, clippy::pedantic)]
+#![allow(clippy::new_without_default, clippy::module_name_repetitions, clippy::pub_enum_variant_names)]
 
 use std::iter::Iterator;
 

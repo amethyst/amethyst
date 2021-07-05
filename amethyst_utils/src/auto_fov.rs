@@ -1,6 +1,6 @@
 //! Utility to adjust the aspect ratio of cameras automatically
 
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{IntoQuery, ParallelRunnable, System, SystemBuilder, Write};
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use thread_profiler::profile_scope;
 
 /// A component that stores the parameters that the associated camera should have
-/// when it is managed by the AutoFovSystem.
+/// when it is managed by the `AutoFovSystem`.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
 pub struct AutoFov {
@@ -21,6 +21,7 @@ pub struct AutoFov {
 
 impl AutoFov {
     /// Creates a new instance with vertical fov of pi/3 and near plane of 0.125.
+    #[must_use]
     pub fn new() -> Self {
         Default::default()
     }

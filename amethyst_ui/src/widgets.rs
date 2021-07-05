@@ -12,7 +12,7 @@ use derivative::Derivative;
 use rand::{self, distributions::Alphanumeric, Rng};
 
 /// A widget is an object that keeps track of all components and entities
-/// that make up an element of the user interface. Using the widget_components!
+/// that make up an element of the user interface. Using the `widget_components!`
 /// macro, it's possible to generate methods that let you easily retrieve
 /// all components for a widget, and basically annotate which components the
 /// widget will definitely or maybe contain.
@@ -21,13 +21,13 @@ use rand::{self, distributions::Alphanumeric, Rng};
 /// for the entity Ids it consist of.
 pub trait Widget {}
 
-/// A WidgetId is the type by which the different widgets of a type will be
+/// A `WidgetId` is the type by which the different widgets of a type will be
 /// differentiated when you create and retrieve them. Generally you'll want something
 /// here that can generate a random id with a low chance of collision, since
 /// auto generation will be used whenever you don't explicitly don't provide an
 /// id to widget builders.
-/// It's possible to use something like a bare enum as a WidgetId, but be aware
-/// that whenever you're not supplying a WidgetId, you'll probably overwrite an
+/// It's possible to use something like a bare enum as a `WidgetId`, but be aware
+/// that whenever you're not supplying a `WidgetId`, you'll probably overwrite an
 /// existing widget that had the same default id.
 pub trait WidgetId: Clone + PartialEq + Eq + Hash + Send + Sync + Display + 'static {
     /// Generate a new widget id. This function can optionally be passed the last ID
@@ -58,7 +58,7 @@ impl WidgetId for String {
     }
 }
 
-/// Widgets is an alias for a HashMap containing widgets mapped by their
+/// Widgets is an alias for a `HashMap` containing widgets mapped by their
 /// respective Id type. It's meant to be used as a resource for every widget type.
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
@@ -74,6 +74,7 @@ where
     I: WidgetId,
 {
     /// Creates a new `Widgets` and initializes it with the default values.
+    #[must_use]
     pub fn new() -> Self {
         Default::default()
     }
@@ -93,13 +94,13 @@ where
     }
 
     /// Retrieves a widget by its ID.
-    pub fn get(&self, id: I) -> Option<&T> {
-        self.items.get(&id)
+    pub fn get(&self, id: &I) -> Option<&T> {
+        self.items.get(id)
     }
 
     /// Mutably retrieves a widget by its ID.
-    pub fn get_mut(&mut self, id: I) -> Option<&mut T> {
-        self.items.get_mut(&id)
+    pub fn get_mut(&mut self, id: &I) -> Option<&mut T> {
+        self.items.get_mut(id)
     }
 
     /// Provides an iterator over all widgets.

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use amethyst_assets::prefab::{serde_diff, SerdeDiff};
 use amethyst_core::{
-    ecs::*,
+    ecs::{component, maybe_changed, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     transform::{Children, Parent},
 };
 use amethyst_window::ScreenDimensions;
@@ -56,6 +56,7 @@ impl Anchor {
     /// Returns the normalized offset using the `Anchor` setting.
     /// The normalized offset is a [-0.5,0.5] value
     /// indicating the relative offset multiplier from the parent's position (centered).
+    #[must_use]
     pub fn norm_offset(self) -> (f32, f32) {
         match self {
             Anchor::TopLeft => (-0.5, 0.5),
@@ -73,15 +74,11 @@ impl Anchor {
     /// Vertical align. Used by the `UiGlyphsSystem`.
     pub(crate) fn vertical_align(self) -> VerticalAlign {
         match self {
-            Anchor::TopLeft => VerticalAlign::Top,
-            Anchor::TopMiddle => VerticalAlign::Top,
-            Anchor::TopRight => VerticalAlign::Top,
-            Anchor::MiddleLeft => VerticalAlign::Center,
-            Anchor::Middle => VerticalAlign::Center,
-            Anchor::MiddleRight => VerticalAlign::Center,
-            Anchor::BottomLeft => VerticalAlign::Bottom,
-            Anchor::BottomMiddle => VerticalAlign::Bottom,
-            Anchor::BottomRight => VerticalAlign::Bottom,
+            Anchor::TopLeft | Anchor::TopMiddle | Anchor::TopRight => VerticalAlign::Top,
+            Anchor::MiddleLeft | Anchor::Middle | Anchor::MiddleRight => VerticalAlign::Center,
+            Anchor::BottomLeft | Anchor::BottomMiddle | Anchor::BottomRight => {
+                VerticalAlign::Bottom
+            }
         }
     }
 

@@ -5,6 +5,8 @@
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
     html_root_url = "https://docs.amethyst.rs/stable"
 )]
+#![deny(clippy::all, clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
 #[macro_use]
 extern crate derive_new;
 

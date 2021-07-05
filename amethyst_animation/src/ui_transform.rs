@@ -19,7 +19,7 @@ pub enum UiTransformChannel {
 
 impl TypeUuid for Animation<UiTransform> {
     const UUID: type_uuid::Bytes =
-        *Uuid::from_u128(338570003214035303785978659011038647737).as_bytes();
+        *Uuid::from_u128(338_570_003_214_035_303_785_978_659_011_038_647_737).as_bytes();
 }
 register_asset_type!(Animation<UiTransform> => Animation<UiTransform>; AssetProcessorSystem<Animation<UiTransform>>);
 
@@ -33,8 +33,8 @@ impl AnimationSampling for UiTransform {
         data: &SamplerPrimitive<f32>,
         _buffer: &mut CommandBuffer,
     ) {
-        use self::UiTransformChannel::*;
-        use crate::util::SamplerPrimitive::*;
+        use self::UiTransformChannel::Translation;
+        use crate::util::SamplerPrimitive::Vec2;
 
         match (channel, *data) {
             (&Translation, Vec2(ref d)) => {
@@ -46,13 +46,13 @@ impl AnimationSampling for UiTransform {
     }
 
     fn current_sample(&self, channel: &Self::Channel) -> SamplerPrimitive<f32> {
-        use self::UiTransformChannel::*;
+        use self::UiTransformChannel::Translation;
         match channel {
             Translation => SamplerPrimitive::Vec2([self.local_x, self.local_y]),
         }
     }
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
-        use self::UiTransformChannel::*;
+        use self::UiTransformChannel::Translation;
         match channel {
             Translation => SamplerPrimitive::Vec2([zero(); 2]),
         }

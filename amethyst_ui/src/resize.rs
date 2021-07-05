@@ -1,12 +1,12 @@
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{maybe_changed, IntoQuery, ParallelRunnable, System, SystemBuilder};
 use amethyst_window::ScreenDimensions;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use super::*;
+use super::UiTransform;
 
 /// Whenever the window is resized the function in this component will be called on this
-/// entity's UiTransform, along with the new width and height of the window.
+/// entity's `UiTransform`, along with the new width and height of the window.
 ///
 /// The function in this component is also guaranteed to be called at least once by the
 /// `ResizeSystem` when either the component is attached, or the function is changed.
@@ -36,7 +36,8 @@ pub struct ResizeSystem {
 }
 
 impl ResizeSystem {
-    /// Creates a new ResizeSystem that listens with the given reader Id.
+    /// Creates a new `ResizeSystem` that listens with the given reader Id.
+    #[must_use]
     pub fn new() -> ResizeSystem {
         let screen_size = (0.0, 0.0);
 

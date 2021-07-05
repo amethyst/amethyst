@@ -1,7 +1,10 @@
 //! System that updates global transform matrices based on hierarchy relations.
 
-use super::components::*;
-use crate::ecs::*;
+use super::components::{Parent, Transform};
+use crate::ecs::{
+    component, maybe_changed, Entity, EntityStore, IntoQuery, ParallelRunnable, System,
+    SystemBuilder,
+};
 
 /// System that updates global transform matrices based on hierarchy relations.
 #[derive(Debug)]

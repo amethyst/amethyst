@@ -1,4 +1,7 @@
 use std::time::{Duration, Instant};
+
+use crate::timing;
+
 /// A stopwatch which accurately measures elapsed time.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Stopwatch {
@@ -19,11 +22,13 @@ impl Default for Stopwatch {
 
 impl Stopwatch {
     /// Creates a new stopwatch.
+    #[must_use]
     pub fn new() -> Stopwatch {
-        Default::default()
+        timing::Stopwatch::default()
     }
 
     /// Retrieves the elapsed time.
+    #[must_use]
     pub fn elapsed(&self) -> Duration {
         match *self {
             Stopwatch::Waiting => Duration::new(0, 0),
@@ -48,7 +53,7 @@ impl Stopwatch {
             Stopwatch::Ended(dur) => {
                 *self = Stopwatch::Started(dur, Instant::now());
             }
-            _ => {}
+            Stopwatch::Started(..) => {}
         }
     }
 

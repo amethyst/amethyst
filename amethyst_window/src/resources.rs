@@ -14,6 +14,7 @@ pub struct ScreenDimensions {
 
 impl ScreenDimensions {
     /// Creates a new screen dimensions object with the given width and height.
+    #[must_use]
     pub fn new(w: u32, h: u32) -> Self {
         ScreenDimensions {
             w: f64::from(w),
@@ -24,21 +25,25 @@ impl ScreenDimensions {
     }
 
     /// Returns the current logical size of window as diagonal vector.
+    #[must_use]
     pub fn diagonal(&self) -> Vector2<f32> {
         Vector2::new(self.width(), self.height())
     }
 
     /// Returns the current logical width of the window.
+    #[must_use]
     pub fn width(&self) -> f32 {
         self.w as f32
     }
 
     /// Returns the current logical height of the window.
+    #[must_use]
     pub fn height(&self) -> f32 {
         self.h as f32
     }
 
     /// Returns the current aspect ratio of the window.
+    #[must_use]
     pub fn aspect_ratio(&self) -> f32 {
         self.aspect_ratio
     }

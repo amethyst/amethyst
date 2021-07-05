@@ -5,13 +5,14 @@
     html_root_url = "https://docs.amethyst.rs/stable"
 )]
 #![crate_name = "amethyst_config"]
-#![warn(
+#![deny(
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rust_2018_compatibility
+    rust_2018_compatibility,
+    clippy::all
 )]
-#![warn(clippy::all)]
+#![warn(clippy::pedantic)]
 #![allow(clippy::new_without_default)]
 
 use std::{
@@ -64,8 +65,7 @@ impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ConfigError::File(ref err) => write!(f, "{}", err),
-            ConfigError::Parser(ref msg) => write!(f, "{}", msg),
-            ConfigError::Serializer(ref msg) => write!(f, "{}", msg),
+            ConfigError::Parser(ref msg) | ConfigError::Serializer(ref msg) => write!(f, "{}", msg),
             ConfigError::Extension(ref path) => {
                 let found = match path.extension() {
                     Some(extension) => format!("{:?}", extension),
@@ -189,18 +189,21 @@ where
             buffer
         };
 
-        if let Some(extension) = path.extension().and_then(std::ffi::OsStr::to_str) {
-            match extension {
-                "ron" => Self::load_bytes_format(ConfigFormat::Ron, &content),
-                #[cfg(feature = "json")]
-                "json" => Self::load_bytes_format(ConfigFormat::Json, &content),
-                #[cfg(feature = "binary")]
-                "bin" => Self::load_bytes_format(ConfigFormat::Binary, &content),
-                _ => Err(ConfigError::Extension(path.to_path_buf())),
-            }
-        } else {
-            Err(ConfigError::Extension(path.to_path_buf()))
-        }
+        path.extension()
+            .and_then(std::ffi::OsStr::to_str)
+            .map_or_else(
+                || Err(ConfigError::Extension(path.to_path_buf())),
+                |extension| {
+                    match extension {
+                        "ron" => Self::load_bytes_format(ConfigFormat::Ron, &content),
+                        #[cfg(feature = "json")]
+                        "json" => Self::load_bytes_format(ConfigFormat::Json, &content),
+                        #[cfg(feature = "binary")]
+                        "bin" => Self::load_bytes_format(ConfigFormat::Binary, &content),
+                        _ => Err(ConfigError::Extension(path.to_path_buf())),
+                    }
+                },
+            )
     }
 
     fn load_bytes_format(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError> {
@@ -238,7 +241,7 @@ where
 
         match format {
             ConfigFormat::Ron => {
-                let str = ron::ser::to_string_pretty(self, Default::default())?;
+                let str = ron::ser::to_string_pretty(self, ron::ser::PrettyConfig::default())?;
                 File::create(path)?.write_all(str.as_bytes())?;
             }
             #[cfg(feature = "json")]

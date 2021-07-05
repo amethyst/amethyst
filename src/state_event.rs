@@ -4,7 +4,7 @@ use winit::event::Event;
 use crate::ui::UiEvent;
 use crate::{
     core::{
-        ecs::*,
+        ecs::Resources,
         shrev::{EventChannel, ReaderId},
         EventReader,
     },

@@ -6,13 +6,14 @@
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
     html_root_url = "https://docs.amethyst.rs/stable"
 )]
-#![warn(
+#![deny(
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rust_2018_compatibility
+    rust_2018_compatibility,
+    clippy::all,
+    clippy::pedantic
 )]
-#![warn(clippy::all)]
 
 use amethyst_assets::{
     register_asset_type, register_importer, Asset, AssetProcessorSystem, AssetStorage, Format,
@@ -21,7 +22,7 @@ use amethyst_assets::{
 use amethyst_error::Error;
 pub use fluent::{concurrent::FluentBundle, FluentResource};
 use serde::{Deserialize, Serialize};
-use type_uuid::*;
+use type_uuid::TypeUuid;
 use unic_langid::langid;
 
 /// Internal representation of a Locale

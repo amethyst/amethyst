@@ -9,7 +9,10 @@ use amethyst_assets::{
     },
     Asset, AssetStorage, Handle,
 };
-use amethyst_core::{ecs::*, Transform};
+use amethyst_core::{
+    ecs::{CommandBuffer, Entity, EntityStore, SubWorld},
+    Transform,
+};
 use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::debug;
@@ -144,11 +147,13 @@ where
     T: AnimationSampling,
 {
     /// Create a new hierarchy
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Create a new hierarchy containing a single given entity
+    #[must_use]
     pub fn new_single(index: usize, entity: Entity) -> Self {
         AnimationHierarchy {
             nodes: hashmap![index => entity],
@@ -157,6 +162,7 @@ where
     }
 
     /// Create a new hierarchy with the given entity map
+    #[must_use]
     pub fn new_many(nodes: FnvHashMap<usize, Entity>) -> Self {
         AnimationHierarchy {
             nodes,
@@ -185,7 +191,7 @@ where
 // d8d687ef-da49-a839-5066-c0d703b99bdc
 impl TypeUuid for AnimationSet<usize, Transform> {
     const UUID: type_uuid::Bytes =
-        *Uuid::from_u128(288227155745652393685123926184903154652).as_bytes();
+        *Uuid::from_u128(288_227_155_745_652_393_685_123_926_184_903_154_652).as_bytes();
 }
 
 impl SerdeDiff for AnimationSet<usize, Transform> {
@@ -241,6 +247,7 @@ where
     T: AnimationSampling,
 {
     /// Create new empty animation
+    #[must_use]
     pub fn new() -> Self {
         Animation { nodes: vec![] }
     }
@@ -307,11 +314,13 @@ pub enum ControlState {
 
 impl ControlState {
     /// Is the state `Running`
+    #[must_use]
     pub fn is_running(&self) -> bool {
         matches!(*self, ControlState::Running(_))
     }
 
     /// Is the state `Paused`
+    #[must_use]
     pub fn is_paused(&self) -> bool {
         matches!(*self, ControlState::Paused(_))
     }
@@ -411,6 +420,7 @@ where
     }
 
     /// Check if set is empty
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.samplers.is_empty()
     }
@@ -479,6 +489,7 @@ where
     }
 
     /// Check if a control set can be terminated
+    #[must_use]
     pub fn check_termination(&self, control_id: u64) -> bool {
         self.samplers
             .iter()
@@ -520,6 +531,7 @@ where
     }
 
     /// Get the max running duration of the control set
+    #[must_use]
     pub fn get_running_duration(&self, control_id: u64) -> Option<f32> {
         self.samplers
             .iter()
@@ -548,10 +560,9 @@ fn set_step_state<T>(
             (Some(index), &StepDirection::Forward) if index >= sampler.input.len() - 1 => {
                 sampler.input.len() - 1
             }
-            (Some(0), &StepDirection::Backward) => 0,
+            (Some(0), &StepDirection::Backward) | (None, _) => 0,
             (Some(index), &StepDirection::Forward) => index + 1,
             (Some(index), &StepDirection::Backward) => index - 1,
-            (None, _) => 0,
         };
         control.state = ControlState::Running(Duration::from_secs_f32(sampler.input[new_index]));
     }
@@ -623,6 +634,7 @@ where
     T: AnimationSampling,
 {
     /// Creates a new `AnimationControl`
+    #[must_use]
     pub fn new(
         animation: Handle<Animation<T>>,
         end: EndControl,
@@ -700,6 +712,7 @@ where
     T: AnimationSampling,
 {
     /// Is the animation set empty?
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.animations.is_empty() && self.deferred_animations.is_empty()
     }
@@ -708,20 +721,20 @@ where
     ///
     /// This should be used with care, as this will leave all linked samplers in place. If in
     /// doubt, use `abort()` instead.
-    pub fn remove(&mut self, id: I) -> &mut Self {
-        if let Some(index) = self.animations.iter().position(|a| a.0 == id) {
+    pub fn remove(&mut self, id: &I) -> &mut Self {
+        if let Some(index) = self.animations.iter().position(|a| a.0 == *id) {
             self.animations.remove(index);
         }
         self
     }
 
-    fn set_command(&mut self, id: I, command: AnimationCommand<T>) -> &mut Self {
-        if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
+    fn set_command(&mut self, id: &I, command: AnimationCommand<T>) -> &mut Self {
+        if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == *id) {
             control.command = command;
         } else if let Some(ref mut control) = self
             .deferred_animations
             .iter_mut()
-            .find(|a| a.animation_id == id)
+            .find(|a| a.animation_id == *id)
         {
             control.control.command = command;
         }
@@ -730,18 +743,18 @@ where
     }
 
     /// Start animation if it exists
-    pub fn start(&mut self, id: I) -> &mut Self {
-        self.set_command(id, AnimationCommand::Start)
+    pub fn start(&mut self, id: &I) -> &mut Self {
+        self.set_command(&id, AnimationCommand::Start)
     }
 
     /// Pause animation if it exists
-    pub fn pause(&mut self, id: I) -> &mut Self {
-        self.set_command(id, AnimationCommand::Pause)
+    pub fn pause(&mut self, id: &I) -> &mut Self {
+        self.set_command(&id, AnimationCommand::Pause)
     }
 
     /// Toggle animation if it exists
-    pub fn toggle(&mut self, id: I) -> &mut Self {
-        if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
+    pub fn toggle(&mut self, id: &I) -> &mut Self {
+        if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == *id) {
             if control.state.is_running() {
                 control.command = AnimationCommand::Pause;
             } else {
@@ -753,14 +766,14 @@ where
     }
 
     /// Set animation rate
-    pub fn set_rate(&mut self, id: I, rate_multiplier: f32) -> &mut Self {
-        if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
+    pub fn set_rate(&mut self, id: &I, rate_multiplier: f32) -> &mut Self {
+        if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == *id) {
             control.rate_multiplier = rate_multiplier;
         }
         if let Some(ref mut control) = self
             .deferred_animations
             .iter_mut()
-            .find(|a| a.animation_id == id)
+            .find(|a| a.animation_id == *id)
         {
             control.control.rate_multiplier = rate_multiplier;
         }
@@ -769,23 +782,23 @@ where
     }
 
     /// Step animation
-    pub fn step(&mut self, id: I, direction: StepDirection) -> &mut Self {
-        self.set_command(id, AnimationCommand::Step(direction))
+    pub fn step(&mut self, id: &I, direction: StepDirection) -> &mut Self {
+        self.set_command(&id, AnimationCommand::Step(direction))
     }
 
     /// Set animation input value (point of interpolation)
-    pub fn set_input(&mut self, id: I, input: f32) -> &mut Self {
-        self.set_command(id, AnimationCommand::SetInputValue(input))
+    pub fn set_input(&mut self, id: &I, input: f32) -> &mut Self {
+        self.set_command(&id, AnimationCommand::SetInputValue(input))
     }
 
     /// Set blend weights
-    pub fn set_blend_weight(&mut self, id: I, weights: Vec<(usize, T::Channel, f32)>) -> &mut Self {
-        self.set_command(id, AnimationCommand::SetBlendWeights(weights))
+    pub fn set_blend_weight(&mut self, id: &I, weights: Vec<(usize, T::Channel, f32)>) -> &mut Self {
+        self.set_command(&id, AnimationCommand::SetBlendWeights(weights))
     }
 
     /// Abort animation
-    pub fn abort(&mut self, id: I) -> &mut Self {
-        self.set_command(id, AnimationCommand::Abort)
+    pub fn abort(&mut self, id: &I) -> &mut Self {
+        self.set_command(&id, AnimationCommand::Abort)
     }
 
     /// Add animation with the given id, unless it already exists
@@ -849,8 +862,8 @@ where
     }
 
     /// Check if there is an animation with the given id in the set
-    pub fn has_animation(&self, id: I) -> bool {
-        self.animations.iter().any(|a| a.0 == id)
+    pub fn has_animation(&self, id: &I) -> bool {
+        self.animations.iter().any(|a| a.0 == *id)
     }
 }
 
@@ -888,6 +901,7 @@ where
     T: AnimationSampling,
 {
     /// Create
+    #[must_use]
     pub fn new() -> Self {
         AnimationSet {
             animations: FnvHashMap::default(),
@@ -911,7 +925,7 @@ register_component_type!(AnimationSet<usize, Transform>);
 // d8160db6-6dc5-49fd-4c08-8b81739b175c
 impl TypeUuid for AnimationHierarchy<Transform> {
     const UUID: type_uuid::Bytes =
-        *Uuid::from_u128(287227755745252393685123926184901154652).as_bytes();
+        *Uuid::from_u128(287_227_755_745_252_393_685_123_926_184_901_154_652).as_bytes();
 }
 
 impl SerdeDiff for AnimationHierarchy<Transform> {

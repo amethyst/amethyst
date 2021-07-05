@@ -3,7 +3,7 @@
 
 use std::{ops::RangeInclusive, time::Duration};
 
-use amethyst_core::{ecs::*, Time};
+use amethyst_core::{ecs::{ParallelRunnable, System, SystemBuilder}, Time};
 
 /// Default number of network simulation frames per second.
 const DEFAULT_SIM_FRAME_RATE: u32 = 30;
@@ -46,17 +46,20 @@ pub struct NetworkSimulationTime {
 
 impl NetworkSimulationTime {
     /// Returns the simulation frame numbers needed to be run this game frame.
+    #[must_use]
     pub fn sim_frames_to_run(&self) -> RangeInclusive<u32> {
         (self.frame_number + 1 - self.frame_lag)..=self.frame_number
     }
 
     /// Determines whether or not to send a message in the current frame based on the
     /// `message_send_rate`
+    #[must_use]
     pub fn should_send_message_now(&self) -> bool {
         self.should_send_message(self.frame_number)
     }
 
     /// Determines whether or not to send a message based on the `message_send_rate`
+    #[must_use]
     pub fn should_send_message(&self, frame: u32) -> bool {
         frame % u32::from(self.message_send_rate) == 0
     }
@@ -79,6 +82,7 @@ impl NetworkSimulationTime {
     }
 
     /// Returns the current simulation frame number
+    #[must_use]
     pub fn frame_number(&self) -> u32 {
         self.frame_number
     }
@@ -90,24 +94,28 @@ impl NetworkSimulationTime {
     }
 
     /// Returns the total duration since the last simulation frame
+    #[must_use]
     pub fn elapsed_duration(&self) -> Duration {
         self.elapsed_duration
     }
 
     /// Returns the duration between each simulation frame. This number is calculated when a frame rate
     /// is set
+    #[must_use]
     pub fn per_frame_duration(&self) -> Duration {
         self.per_frame_duration
     }
 
     /// Returns the rate at which messages should be sent over the network.
     /// i.e. 'every N frames' where N is `message_send_rate`.
+    #[must_use]
     pub fn message_send_rate(&self) -> u8 {
         self.message_send_rate
     }
 
     /// Returns the number of frames which the simulation is behind. This will usually be 0 or 1 if the ECS system
     /// is keeping up.
+    #[must_use]
     pub fn frame_lag(&self) -> u32 {
         self.frame_lag
     }
@@ -117,7 +125,7 @@ impl NetworkSimulationTime {
         self.per_frame_duration = Duration::from_secs(1) / new_rate;
     }
 
-    /// Set the rate which messages are sent. Specified as 'every N frames' where N is new_rate.
+    /// Set the rate which messages are sent. Specified as 'every N frames' where N is `new_rate`.
     pub fn set_message_send_rate(&mut self, new_rate: u8) {
         self.message_send_rate = new_rate;
     }

@@ -4,13 +4,13 @@ use std::collections::HashSet;
 use thread_profiler::profile_scope;
 
 use crate::{
-    ecs::*,
+    ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     transform::{Children, Parent},
     HiddenPropagate,
 };
 
-/// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children
-/// of an entity with a [HiddenPropagate](struct.HiddenPropagate.html) and removes it when it is removed
+/// This system adds a [`HiddenPropagate`](struct.HiddenPropagate.html)-component to all children
+/// of an entity with a [`HiddenPropagate`](struct.HiddenPropagate.html) and removes it when it is removed
 /// from the parent.
 #[derive(Debug)]
 pub struct HideHierarchySystem;
@@ -56,9 +56,9 @@ impl System for HideHierarchySystem {
                             children_without_hidden_parent.remove(&entity);
                         }
                     }
-                    children_with_hidden_parent.iter().for_each(|e| {
+                    for e in &children_with_hidden_parent {
                         commands.add_component(**e, HiddenPropagate::new_propagated())
-                    });
+                    }
                     children_without_hidden_parent
                         .iter()
                         .for_each(|e| commands.remove_component::<HiddenPropagate>(**e));

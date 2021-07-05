@@ -13,6 +13,7 @@ use std::{env, io, path};
 /// * If the executable name can be found using [`std::env::current_exe`], resolve all symlinks and
 ///   use the directory it resides in as application root.
 ///
+/// # Errors
 /// If none of the above works, an error is returned.
 ///
 /// [cargo-ref]: https://doc.rust-lang.org/cargo/reference/environment-variables.html

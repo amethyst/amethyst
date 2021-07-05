@@ -1,6 +1,9 @@
-//! Module for the Blink component and BlinkSystem.
+//! Module for the Blink component and `BlinkSystem`.
 
-use amethyst_core::{ecs::*, Hidden, Time};
+use amethyst_core::{
+    ecs::{Entity, IntoQuery, ParallelRunnable, System, SystemBuilder, Write},
+    Hidden, Time,
+};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 

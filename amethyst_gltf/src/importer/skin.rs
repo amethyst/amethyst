@@ -21,7 +21,7 @@ pub fn load_skin(
     let joint_entities = skin
         .joints()
         .map(|j| {
-            node_map.get(&j.index()).cloned().expect(
+            node_map.get(&j.index()).copied().expect(
                 "Unreachable: `node_map` is initialized with the indexes from the `Gltf` object",
             )
         })
@@ -56,7 +56,7 @@ pub fn load_skin(
             .push(entity);
     }
 
-    for (entity, skins) in aggregator.iter() {
+    for (entity, skins) in &aggregator {
         let joint = Joint {
             skins: skins.clone(),
         };

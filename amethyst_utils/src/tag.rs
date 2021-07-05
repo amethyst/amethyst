@@ -2,7 +2,7 @@
 
 use std::marker::PhantomData;
 
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{Entity, IntoQuery, Read, SubWorld};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 

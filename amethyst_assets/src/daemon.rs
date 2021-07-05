@@ -87,11 +87,12 @@ struct StartedDaemon {
 }
 
 impl AssetDaemon {
-    /// Returns an AssetDaemon initialized with asset directories.
+    /// Returns an `AssetDaemon` initialized with asset directories.
     ///
     /// # Arguments
     ///
     /// * `asset_dirs` - The directories to load assets from.
+    #[must_use]
     pub fn new(asset_dirs: Vec<PathBuf>) -> Self {
         let opt = AssetDaemonOpt {
             db_dir: ".assets_db".into(),

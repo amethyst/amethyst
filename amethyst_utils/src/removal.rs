@@ -2,7 +2,7 @@
 
 use std::fmt::Debug;
 
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{CommandBuffer, Entity, IntoQuery, SubWorld, World};
 use serde::{Deserialize, Serialize};
 
 /// A marker `Component` used to remove entities and clean up your scene.
@@ -55,7 +55,7 @@ where
     }
 }
 
-/// Removes all entities that have the `Removal<I>` component with the specified removal_id.
+/// Removes all entities that have the `Removal<I>` component with the specified `removal_id`.
 pub fn exec_removal<I>(commands: &mut CommandBuffer, subworld: &mut SubWorld<'_>, removal_id: I)
 where
     I: Debug + Clone + PartialEq + Send + Sync + 'static,

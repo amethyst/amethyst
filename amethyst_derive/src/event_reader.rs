@@ -1,4 +1,4 @@
-//! EventReader Implementation
+//! `EventReader` Implementation
 
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
