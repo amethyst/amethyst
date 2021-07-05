@@ -6,6 +6,7 @@ use std::sync::{
 use amethyst_error::Error;
 use log::error;
 use parking_lot::Mutex;
+
 use crate::progress;
 
 /// Completion status, returned by `ProgressCounter::complete`.

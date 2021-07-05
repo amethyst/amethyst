@@ -4,7 +4,7 @@ use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use derivative::Derivative;
 use marker::PhantomData;
 
-use crate::{resources::AnimationSampling, skinning::VertexSkinningSystem, bundle};
+use crate::{bundle, resources::AnimationSampling, skinning::VertexSkinningSystem};
 
 /// Bundle for vertex skinning
 ///

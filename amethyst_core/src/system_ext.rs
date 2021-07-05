@@ -123,7 +123,7 @@ where
     }
 
     fn prepare(&mut self, world: &World) {
-        self.system.prepare(world)
+        self.system.prepare(world);
     }
 
     fn accesses_archetypes(&self) -> &ArchetypeAccess {

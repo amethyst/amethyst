@@ -43,14 +43,14 @@ impl MonitorIdent {
     /// Get the identifier for current primary monitor.
     pub fn from_primary(monitors: &impl MonitorsAccess) -> Self {
         let primary = monitors.primary().expect("Primary monitor not found!");
-        Self::from_monitor_id(monitors, primary)
+        Self::from_monitor_id(monitors, &primary)
             .expect("Primary monitor not found in the list of all monitors")
     }
 
     /// Get the identifier for specific monitor id.
     pub fn from_monitor_id(
         monitors: &impl MonitorsAccess,
-        monitor_id: MonitorHandle,
+        monitor_id: &MonitorHandle,
     ) -> Option<Self> {
         #[cfg(target_os = "ios")]
         use winit::platform::ios::MonitorHandleExtIOS;

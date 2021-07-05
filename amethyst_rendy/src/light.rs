@@ -75,7 +75,7 @@ pub struct DirectionalLight {
 impl Default for DirectionalLight {
     fn default() -> Self {
         DirectionalLight {
-            color: Default::default(),
+            color: palette::rgb::Rgb::default(),
             intensity: 1.0,
             direction: [-1.0, -1.0, -1.0].into(),
         }
@@ -127,7 +127,7 @@ pub struct PointLight {
 impl Default for PointLight {
     fn default() -> Self {
         PointLight {
-            color: Default::default(),
+            color: palette::rgb::Rgb::default(),
             intensity: 10.0,
             radius: 10.0,
             smoothness: 4.0,
@@ -166,7 +166,7 @@ impl Default for SpotLight {
     fn default() -> Self {
         SpotLight {
             angle: std::f32::consts::FRAC_PI_3,
-            color: Default::default(),
+            color: palette::rgb::Rgb::default(),
             direction: [0.0, -1.0, 0.0].into(),
             intensity: 10.0,
             range: 10.0,
@@ -201,7 +201,7 @@ impl Default for SunLight {
     fn default() -> Self {
         SunLight {
             angle: 0.0093_f32.to_radians(),
-            color: Default::default(),
+            color: palette::rgb::Rgb::default(),
             direction: [-1.0, -1.0, -1.0].into(),
             intensity: 64_000.0,
         }

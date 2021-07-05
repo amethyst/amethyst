@@ -1,9 +1,10 @@
 //! Material abstraction submodule.
 use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle, WeakHandle};
-use amethyst_core::ecs::*;
-use glsl_layout::*;
+use amethyst_core::ecs::Resources;
+use glsl_layout::Uniform;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+use util::{desc_write, slice_as_bytes, texture_desc};
 
 use crate::{
     mtl::{Material, StaticTextureSet},
@@ -168,7 +169,10 @@ pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
 impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     /// Create a new `MaterialSub` using the provided rendy `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
-        use rendy::hal::pso::*;
+        use rendy::hal::pso::{
+            BufferDescriptorFormat, BufferDescriptorType, DescriptorType, ImageDescriptorType,
+            ShaderStageFlags,
+        };
 
         let layout = factory
             .create_descriptor_set_layout(util::set_layout_bindings(vec![
@@ -213,6 +217,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     }
 
     /// Returns the raw `DescriptorSetLayout` for this environment
+    #[must_use]
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }
@@ -229,7 +234,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         for material in self.materials.iter_mut().filter(|m| {
             match m {
                 MaterialState::Loaded { generation, .. } => *generation < cur_generation,
-                _ => false,
+                MaterialState::Unloaded { .. } => false,
             }
         }) {
             if let MaterialState::Loaded { slot, .. } = material {
@@ -250,8 +255,6 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     ) -> Option<MaterialState<B>> {
         #[cfg(feature = "profiler")]
         profile_scope!("try_insert");
-
-        use util::{desc_write, slice_as_bytes, texture_desc};
 
         let mat_storage = resources.get::<AssetStorage<Material>>().unwrap();
         let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
@@ -379,6 +382,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
 
     /// Returns `true` if the supplied `MaterialId` is already loaded.
     #[inline]
+    #[must_use]
     pub fn loaded(&self, material_id: MaterialId) -> bool {
         matches!(
             &self.materials[material_id.0 as usize],
@@ -404,7 +408,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                     std::iter::empty(),
                 );
             },
-            _ => panic!("Trying to bind unloaded material"),
+            MaterialState::Unloaded { .. } => panic!("Trying to bind unloaded material"),
         };
     }
 }

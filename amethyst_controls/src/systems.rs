@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::HashMap};
 
 use amethyst_core::{
     dispatcher::ThreadLocalSystem,
-    ecs::{Entity, EntityStore, IntoQuery, System, SystemBuilder, component, systems},
+    ecs::{component, systems, Entity, EntityStore, IntoQuery, System, SystemBuilder},
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     transform::Transform,
@@ -78,7 +78,8 @@ impl System for ArcBallRotationSystem {
 
                     let targets: HashMap<Entity, Transform> = queries
                         .0
-                        .iter(world).filter_map(|ctrl| {
+                        .iter(world)
+                        .filter_map(|ctrl| {
                             world
                                 .entry_ref(ctrl.target)
                                 .ok()

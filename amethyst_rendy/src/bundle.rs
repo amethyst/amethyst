@@ -1,13 +1,14 @@
-//! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
+//! A home of [`RenderingBundle`] with it's rendering plugins system and all types directly related to it.
 
 use std::collections::HashMap;
 
 use amethyst_assets::{register_asset_type, AssetProcessorSystem, AssetStorage};
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::{format_err, Error};
 use rendy::init::Rendy;
 
 use crate::{
+    bundle,
     camera::ActiveCamera,
     mtl::{Material, MaterialDefaults},
     rendy::{
@@ -43,6 +44,7 @@ pub struct RenderingBundle<B: Backend> {
 impl<B: Backend> RenderingBundle<B> {
     /// Create empty `RenderingBundle`. You must register a plugin using
     /// [`with_plugin`] in order to actually display anything.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             plugins: Vec::new(),
@@ -140,7 +142,7 @@ struct PluggableRenderGraphCreator<B: Backend> {
 impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
     fn rebuild(&mut self, world: &World, resources: &Resources) -> bool {
         let mut rebuild = false;
-        for plugin in self.plugins.iter_mut() {
+        for plugin in &mut self.plugins {
             rebuild = plugin.should_rebuild(world, resources) || rebuild;
         }
         rebuild
@@ -157,7 +159,7 @@ impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
         }
 
         let mut plan = RenderPlan::new();
-        for plugin in self.plugins.iter_mut() {
+        for plugin in &mut self.plugins {
             plugin
                 .on_plan(&mut plan, factory, world, resources)
                 .unwrap();
@@ -166,7 +168,7 @@ impl<B: Backend> GraphCreator<B> for PluggableRenderGraphCreator<B> {
     }
 }
 
-/// Basic building block of rendering in [RenderingBundle].
+/// Basic building block of rendering in [`RenderingBundle`].
 ///
 /// Can be used to register rendering-related systems to the dispatcher,
 /// building render graph by registering render targets, adding [RenderableAction]s to them
@@ -207,7 +209,7 @@ pub struct RenderPlan<B: Backend> {
 impl<B: Backend> RenderPlan<B> {
     fn new() -> Self {
         Self {
-            targets: Default::default(),
+            targets: std::collections::HashMap::default(),
             roots: vec![],
         }
     }
@@ -259,8 +261,8 @@ impl<B: Backend> RenderPlan<B> {
                 .filter_map(|(k, t)| unsafe { t.metadata(factory.physical()) }.map(|m| (*k, m)))
                 .collect(),
             targets: self.targets,
-            passes: Default::default(),
-            outputs: Default::default(),
+            passes: std::collections::HashMap::default(),
+            outputs: std::collections::HashMap::default(),
             graph_builder: GraphBuilder::new(),
         };
 
@@ -282,7 +284,7 @@ impl EvaluationState {
     fn node(&self) -> Option<NodeId> {
         match self {
             EvaluationState::Built(node) => Some(*node),
-            _ => None,
+            EvaluationState::Evaluating => None,
         }
     }
 
@@ -331,14 +333,13 @@ impl<B: Backend> PlanContext<B> {
 
     fn submit_pass(&mut self, target: Target, pass: RenderPassNodeBuilder<B, GraphAuxData>) {
         match self.passes.get(&target) {
-            None => {}
-            Some(EvaluationState::Evaluating) => {}
+            None | Some(EvaluationState::Evaluating) => {}
             // this case is not a soft runtime error, as this should never be allowed by the API.
             Some(EvaluationState::Built(_)) => {
                 panic!(
                     "Trying to resubmit a render pass for {:?}. This is a RenderingBundle bug.",
                     target
-                )
+                );
             }
         };
         let node = self.graph_builder.add_node(pass);
@@ -346,20 +347,21 @@ impl<B: Backend> PlanContext<B> {
     }
 
     fn get_pass_node_raw(&self, target: Target) -> Option<NodeId> {
-        self.passes.get(&target).and_then(|p| p.node())
+        self.passes
+            .get(&target)
+            .and_then(bundle::EvaluationState::node)
     }
 
     pub fn get_node(&mut self, target: Target) -> Result<NodeId, Error> {
-        match self.get_pass_node_raw(target) {
-            Some(node) => Ok(node),
-            None => {
-                self.evaluate_target(target)?;
-                Ok(self
-                    .passes
-                    .get(&target)
-                    .and_then(|p| p.node())
-                    .expect("Just built"))
-            }
+        if let Some(node) = self.get_pass_node_raw(target) {
+            Ok(node)
+        } else {
+            self.evaluate_target(target)?;
+            Ok(self
+                .passes
+                .get(&target)
+                .and_then(bundle::EvaluationState::node)
+                .expect("Just built"))
         }
     }
 
@@ -380,11 +382,11 @@ impl<B: Backend> PlanContext<B> {
         if !self
             .passes
             .get(&image_ref.target())
-            .map_or(false, |t| t.is_built())
+            .map_or(false, bundle::EvaluationState::is_built)
         {
             self.evaluate_target(image_ref.target())?;
         }
-        Ok(self.outputs.get(&image_ref).cloned())
+        Ok(self.outputs.get(&image_ref).copied())
     }
 
     fn register_output(&mut self, output: TargetImage, image: ImageId) -> Result<(), Error> {
@@ -402,7 +404,7 @@ impl<B: Backend> PlanContext<B> {
         &mut self.graph_builder
     }
 
-    pub fn create_image(&mut self, options: ImageOptions) -> ImageId {
+    pub fn create_image(&mut self, options: &ImageOptions) -> ImageId {
         self.graph_builder
             .create_image(options.kind, options.levels, options.format, options.clear)
     }
@@ -446,17 +448,20 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     }
 
     /// Get number of color outputs of current render target.
+    #[must_use]
     pub fn colors(&self) -> usize {
         self.colors
     }
 
     /// Check if current render target has a depth output.
+    #[must_use]
     pub fn depth(&self) -> bool {
         self.depth
     }
 
     /// Retrieve an image produced by other render target.
     ///
+    /// # Errors
     /// Results in an error if such image doesn't exist or
     /// retrieving it would result in a dependency cycle.
     pub fn get_image(&mut self, image: TargetImage) -> Result<ImageId, Error> {
@@ -472,6 +477,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     /// Retrieve an image produced by other render target.
     /// Returns `None` when such image isn't registered.
     ///
+    /// # Errors
     /// Results in an error if retrieving it would result in a dependency cycle.
     pub fn try_get_image(&mut self, image: TargetImage) -> Result<Option<ImageId>, Error> {
         self.plan_context.try_get_image(image).map(|i| {
@@ -495,7 +501,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
         }
     }
 
-    /// Access underlying rendy's GraphBuilder directly.
+    /// Access underlying rendy's `GraphBuilder` directly.
     /// This is useful for adding custom rendering nodes
     /// that are not just standard graphics render passes,
     /// e.g. for compute dispatch.
@@ -504,11 +510,12 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     }
 
     /// Retrieve render target metadata, e.g. size.
+    #[must_use]
     pub fn target_metadata(&self, target: Target) -> Option<TargetMetadata> {
         self.plan_context.target_metadata(target)
     }
 
-    /// Access computed NodeId of render target.
+    /// Access computed `NodeId` of render target.
     pub fn get_node(&mut self, target: Target) -> Result<NodeId, Error> {
         self.plan_context.get_node(target)
     }
@@ -525,10 +532,10 @@ pub enum TargetImage {
 
 impl TargetImage {
     /// Retrieve target identifier for this image
+    #[must_use]
     pub fn target(&self) -> Target {
         match self {
-            TargetImage::Color(target, _) => *target,
-            TargetImage::Depth(target) => *target,
+            TargetImage::Color(target, _) | TargetImage::Depth(target) => *target,
         }
     }
 }
@@ -700,7 +707,7 @@ impl<B: Backend> TargetPlan<B> {
                     pass.add_surface(surface, suggested_extent, clear);
                 }
                 OutputColor::Image(opts) => {
-                    let node = ctx.create_image(opts);
+                    let node = ctx.create_image(&opts);
                     ctx.register_output(TargetImage::Color(self.key, i), node)?;
                     subpass.add_color(node);
                 }
@@ -708,7 +715,7 @@ impl<B: Backend> TargetPlan<B> {
         }
 
         if let Some(opts) = outputs.depth {
-            let node = ctx.create_image(opts);
+            let node = ctx.create_image(&opts);
             ctx.register_output(TargetImage::Depth(self.key), node)?;
             subpass.set_depth_stencil(node);
         }

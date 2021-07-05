@@ -74,6 +74,7 @@ impl Sprite {
     /// * `pixel_top`: Pixel Y coordinate of the top of the sprite.
     /// * `offsets`: Number of pixels to shift the sprite to the left and down relative to the
     ///              entity.
+    #[must_use]
     pub fn from_pixel_values(
         image_w: u32,
         image_h: u32,
@@ -193,6 +194,7 @@ pub struct SpriteRender {
 
 impl SpriteRender {
     /// Create a new `SpriteRender`.
+    #[must_use]
     pub fn new(sprite_sheet: Handle<SpriteSheet>, sprite_number: usize) -> SpriteRender {
         SpriteRender {
             sprite_sheet,
@@ -364,6 +366,7 @@ register_asset_type!(Sprites => Sprites; AssetProcessorSystem<Sprites>);
 
 impl Sprites {
     /// returns sprites in this sheet as an indexable Vec
+    #[must_use]
     pub fn build_sprites(&self) -> Vec<Sprite> {
         match self {
             Sprites::List(list) => list.build_sprites(),
@@ -374,6 +377,7 @@ impl Sprites {
 
 impl SpriteList {
     /// Creates a `Vec<Sprite>` from `SpriteList`.
+    #[must_use]
     pub fn build_sprites(&self) -> Vec<Sprite> {
         self.sprites
             .iter()
@@ -421,6 +425,7 @@ impl SpriteGrid {
     }
 
     /// number of sprites in this sheet
+    #[must_use]
     pub fn sprite_count(&self) -> u32 {
         self.sprite_count
             .unwrap_or_else(|| self.columns * self.rows())
@@ -440,6 +445,7 @@ impl SpriteGrid {
     }
 
     /// Creates a `Vec<Sprite>` from `SpriteGrid`.
+    #[must_use]
     pub fn build_sprites(&self) -> Vec<Sprite> {
         let rows = self.rows();
         let sprite_count = self.sprite_count();

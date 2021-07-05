@@ -41,7 +41,7 @@ where
     T: Clone + Send + Sync + 'static,
 {
     /// Returns the first entity found with the tag in question.
-    pub fn find(&self, subworld: &mut SubWorld<'_>) -> Option<Entity> {
+    pub fn find(subworld: &mut SubWorld<'_>) -> Option<Entity> {
         <(Entity, Read<Tag<T>>)>::query()
             .iter(subworld)
             .map(|(ent, _)| *ent)

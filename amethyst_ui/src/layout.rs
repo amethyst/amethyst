@@ -85,15 +85,9 @@ impl Anchor {
     /// Horizontal align. Used by the `UiGlyphsSystem`.
     pub(crate) fn horizontal_align(self) -> HorizontalAlign {
         match self {
-            Anchor::TopLeft => HorizontalAlign::Left,
-            Anchor::TopMiddle => HorizontalAlign::Center,
-            Anchor::TopRight => HorizontalAlign::Right,
-            Anchor::MiddleLeft => HorizontalAlign::Left,
-            Anchor::Middle => HorizontalAlign::Center,
-            Anchor::MiddleRight => HorizontalAlign::Right,
-            Anchor::BottomLeft => HorizontalAlign::Left,
-            Anchor::BottomMiddle => HorizontalAlign::Center,
-            Anchor::BottomRight => HorizontalAlign::Right,
+            Anchor::TopLeft | Anchor::MiddleLeft | Anchor::BottomLeft => HorizontalAlign::Left,
+            Anchor::TopMiddle | Anchor::Middle | Anchor::BottomMiddle => HorizontalAlign::Center,
+            Anchor::TopRight | Anchor::MiddleRight | Anchor::BottomRight => HorizontalAlign::Right,
         }
     }
 }
@@ -241,7 +235,7 @@ impl System for UiTransformSystem {
                             .map(|(entity, _, parent)| (*entity, parent.0))
                             .collect();
 
-                        for (entity, parent_entity) in modified_children.iter() {
+                        for (entity, parent_entity) in &modified_children {
                             let parent_transform_copy = {
                                 if let Ok(transform) =
                                     all_transforms_query.get_mut(world, *parent_entity)
@@ -331,11 +325,11 @@ impl System for UiTransformSystem {
                         }
 
                         self.modified_last_iter.clear();
-                        for e in modified_entities.iter() {
+                        for e in &modified_entities {
                             self.modified_last_iter.insert(*e);
                         }
 
-                        for (e, _) in modified_children.iter() {
+                        for (e, _) in &modified_children {
                             self.modified_last_iter.insert(*e);
                         }
                     },

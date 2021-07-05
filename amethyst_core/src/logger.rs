@@ -82,7 +82,7 @@ impl Logger {
                 level = record.level(),
                 target = record.target(),
                 message = message,
-            ))
+            ));
         });
         Self { dispatch }
     }
@@ -112,7 +112,7 @@ impl Logger {
             StdoutLog::Colored => {
                 logger.dispatch = logger
                     .dispatch
-                    .chain(colored_stdout(fern::colors::ColoredLevelConfig::new()))
+                    .chain(colored_stdout(fern::colors::ColoredLevelConfig::new()));
             }
             StdoutLog::Off => {}
         }
@@ -123,14 +123,14 @@ impl Logger {
                 .level_for("gfx_backend_empty", log_gfx_backend_level)
                 .level_for("gfx_backend_vulkan", log_gfx_backend_level)
                 .level_for("gfx_backend_dx12", log_gfx_backend_level)
-                .level_for("gfx_backend_metal", log_gfx_backend_level)
+                .level_for("gfx_backend_metal", log_gfx_backend_level);
         } else {
             logger.dispatch = logger
                 .dispatch
                 .level_for("gfx_backend_empty", LevelFilter::Warn)
                 .level_for("gfx_backend_vulkan", LevelFilter::Warn)
                 .level_for("gfx_backend_dx12", LevelFilter::Warn)
-                .level_for("gfx_backend_metal", LevelFilter::Warn)
+                .level_for("gfx_backend_metal", LevelFilter::Warn);
         }
 
         if let Some(log_gfx_rendy_level) = config.log_gfx_rendy_level {
@@ -159,9 +159,9 @@ impl Logger {
 
         if let Some(path) = config.log_file {
             if let Ok(log_file) = fern::log_file(path) {
-                logger.dispatch = logger.dispatch.chain(log_file)
+                logger.dispatch = logger.dispatch.chain(log_file);
             } else {
-                eprintln!("Unable to access the log file, as such it will not be used")
+                eprintln!("Unable to access the log file, as such it will not be used");
             }
         }
 
@@ -194,7 +194,7 @@ impl Logger {
     /// Starts [`Logger`] by consuming it.
     pub fn start(self) {
         self.dispatch.apply().unwrap_or_else(|_| {
-            debug!("Global logger already set, default Amethyst logger will not be used")
+            debug!("Global logger already set, default Amethyst logger will not be used");
         });
     }
 }
@@ -248,7 +248,7 @@ fn colored_stdout(color_config: fern::colors::ColoredLevelConfig) -> fern::Dispa
                 color = format!("\x1B[{}m", color.to_fg_str()),
                 message = message,
                 color_reset = "\x1B[0m",
-            ))
+            ));
         })
 }
 

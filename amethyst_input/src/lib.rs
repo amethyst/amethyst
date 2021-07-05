@@ -11,7 +11,11 @@
     rust_2018_compatibility
 )]
 #![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::new_without_default, clippy::module_name_repetitions, clippy::pub_enum_variant_names)]
+#![allow(
+    clippy::new_without_default,
+    clippy::module_name_repetitions,
+    clippy::pub_enum_variant_names
+)]
 
 use std::iter::Iterator;
 

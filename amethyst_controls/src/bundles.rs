@@ -1,10 +1,17 @@
 use std::borrow::Cow;
 
-use amethyst_core::{ecs::{DispatcherBuilder, Resources, SystemBundle, World}, math::one, shrev::EventChannel};
+use amethyst_core::{
+    ecs::{DispatcherBuilder, Resources, SystemBundle, World},
+    math::one,
+    shrev::EventChannel,
+};
 use amethyst_error::Error;
 use winit::event::Event;
 
-use super::{ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem, HideCursor, MouseFocusUpdateSystem, WindowFocus};
+use super::{
+    ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem, HideCursor,
+    MouseFocusUpdateSystem, WindowFocus,
+};
 
 /// The bundle that creates a flying movement system.
 ///

@@ -1,7 +1,10 @@
 use std::collections::HashSet;
 
 use amethyst_core::{
-    ecs::{Entity, EntityStore, IntoQuery, ParallelRunnable, Read, System, SystemBuilder, maybe_changed},
+    ecs::{
+        maybe_changed, Entity, EntityStore, IntoQuery, ParallelRunnable, Read, System,
+        SystemBuilder,
+    },
     math::{convert, Matrix4},
     transform::Transform,
 };

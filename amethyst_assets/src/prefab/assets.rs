@@ -5,7 +5,7 @@ use fnv::FnvHashSet;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
-use crate::{asset::Asset, Handle, WeakHandle, prefab};
+use crate::{asset::Asset, prefab, Handle, WeakHandle};
 
 /// Prefab Asset, containing a cooked world.
 #[derive(TypeUuid, Serialize, Deserialize, SerdeImportable)]

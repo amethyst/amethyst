@@ -12,7 +12,11 @@
     clippy::all
 )]
 #![warn(clippy::pedantic)]
-#![allow(clippy::new_without_default, clippy::module_name_repetitions, clippy::similar_names)]
+#![allow(
+    clippy::new_without_default,
+    clippy::module_name_repetitions,
+    clippy::similar_names
+)]
 
 use amethyst_animation::{Animation, Joint};
 use amethyst_assets::{

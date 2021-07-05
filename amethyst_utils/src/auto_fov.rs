@@ -23,7 +23,7 @@ impl AutoFov {
     /// Creates a new instance with vertical fov of pi/3 and near plane of 0.125.
     #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        AutoFov::default()
     }
 
     /// Set the vertical fov

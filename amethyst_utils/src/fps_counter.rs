@@ -84,7 +84,7 @@ impl FpsCounter {
 }
 
 /// Add this system to your game to automatically push FPS values
-/// to the [FpsCounter](../resources/struct.FpsCounter.html) resource with id 0
+/// to the [`FpsCounter`](../resources/struct.FpsCounter.html) resource with id 0
 struct FpsCounterSystem;
 
 impl System for FpsCounterSystem {
@@ -124,7 +124,7 @@ impl FpsCounterBundle {
 
     /// Set the sample size the [`FpsCounter`] uses. The default is 20.
     #[must_use]
-    pub fn sample_size(self, samplesize: usize) -> Self {
+    pub fn sample_size(samplesize: usize) -> Self {
         Self {
             samplesize: Some(samplesize),
         }

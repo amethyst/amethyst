@@ -31,7 +31,7 @@ where
         if next.is_none() {
             let f = mem::replace(&mut self.f, None);
             if let Some(f) = f {
-                f()
+                f();
             }
         }
         next

@@ -41,9 +41,7 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
                 ..
             }) = prefab_storage.get(handle)
             {
-                let instance_version = instance
-                    .as_ref()
-                    .map_or(0, |instance| instance.version);
+                let instance_version = instance.as_ref().map_or(0, |instance| instance.version);
                 if instance_version < *prefab_version {
                     let mut entity_map = instance
                         .as_ref()
@@ -76,7 +74,7 @@ pub fn prefab_spawning_tick(world: &mut World, resources: &mut Resources) {
 
         for value in prev_entities.difference(&live_entities).copied() {
             if world.remove(value) {
-                log::debug!("Removed entity {:?}", value)
+                log::debug!("Removed entity {:?}", value);
             }
         }
 

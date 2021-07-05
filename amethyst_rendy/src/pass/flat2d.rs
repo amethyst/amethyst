@@ -1,6 +1,6 @@
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    ecs::{systems::ResourceSet, *},
+    ecs::{systems::ResourceSet, IntoQuery, Read},
     transform::Transform,
 };
 use derivative::Derivative;
@@ -19,7 +19,9 @@ use rendy::{
 use thread_profiler::profile_scope;
 
 use crate::{
+    batch,
     batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
+    pass,
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::SpriteArgs,
     resources::Tint,
@@ -38,8 +40,9 @@ pub struct DrawFlat2DDesc;
 
 impl DrawFlat2DDesc {
     /// Create instance of `DrawFlat2D` render group
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        pass::flat2d::DrawFlat2DDesc::default()
     }
 }
 
@@ -78,7 +81,7 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawFlat2DDesc {
             env,
             textures,
             vertex,
-            sprites: Default::default(),
+            sprites: batch::OneLevelBatch::default(),
         }))
     }
 }
@@ -150,7 +153,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2D<B> {
                     Some((tex_id, batch_data))
                 })
                 .for_each_group(|tex_id, batch_data| {
-                    sprites_ref.insert(tex_id, batch_data.drain(..))
+                    sprites_ref.insert(tex_id, batch_data.drain(..));
                 });
         }
 
@@ -212,8 +215,9 @@ pub struct DrawFlat2DTransparentDesc;
 
 impl DrawFlat2DTransparentDesc {
     /// Create instance of `DrawFlat2D` render group
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        pass::flat2d::DrawFlat2DTransparentDesc::default()
     }
 }
 
@@ -252,8 +256,8 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawFlat2DTransparentDesc 
             env,
             textures,
             vertex,
-            sprites: Default::default(),
-            change: Default::default(),
+            sprites: batch::OrderedOneLevelBatch::default(),
+            change: util::ChangeDetection::default(),
         }))
     }
 }
@@ -329,7 +333,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawFlat2DTransparent<B> {
                     Some((tex_id, batch_data))
                 })
                 .for_each_group(|tex_id, batch_data| {
-                    sprites_ref.insert(tex_id, batch_data.drain(..))
+                    sprites_ref.insert(tex_id, batch_data.drain(..));
                 });
         }
 

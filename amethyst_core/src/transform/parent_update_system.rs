@@ -131,7 +131,7 @@ impl System for ParentUpdateSystem {
                             v
                         );
                         commands.add_component(*k, Children::with(v));
-                    };
+                    }
                 }),
         )
     }

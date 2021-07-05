@@ -1,7 +1,10 @@
 use std::{collections::HashMap, hash::Hash, marker::PhantomData, time::Duration};
 
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::ecs::{CommandBuffer, Entity, EntityStore, IntoQuery, ParallelRunnable, SubWorld, System, SystemBuilder, TryRead, Write};
+use amethyst_core::ecs::{
+    CommandBuffer, Entity, EntityStore, IntoQuery, ParallelRunnable, SubWorld, System,
+    SystemBuilder, TryRead, Write,
+};
 use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::{debug, error};
@@ -207,7 +210,7 @@ where
                     }
 
                     for entity in &remove_sets {
-                        buffer.remove_component::<AnimationControlSet<I, T>>(*entity)
+                        buffer.remove_component::<AnimationControlSet<I, T>>(*entity);
                     }
                 }
                 ))

@@ -12,7 +12,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// struct MyType(#[serde(with = "amethyst_rendy::serde_shim::srgb")] pub palette::Srgb);
 /// ```
 pub mod srgb {
-    use super::*;
+    use super::{Deserialize, Deserializer, Serialize, Serializer};
     #[derive(Serialize, Deserialize)]
     struct Srgb(f32, f32, f32);
 
@@ -36,7 +36,7 @@ pub mod srgb {
 /// struct MyType(#[serde(with = "amethyst_rendy::serde_shim::srgba")] pub palette::Srgba);
 /// ```
 pub mod srgba {
-    use super::*;
+    use super::{Deserialize, Deserializer, Serialize, Serializer};
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
     struct Srgba(f32, f32, f32, f32);
 

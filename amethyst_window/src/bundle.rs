@@ -28,6 +28,7 @@ impl WindowBundle {
 
     /// Builds a new window bundle by loading the `DisplayConfig` from `path`.
     ///
+    /// # Errors
     /// Will fall back to `DisplayConfig::default()` in case of an error.
     pub fn from_config_path(path: impl AsRef<std::path::Path>) -> Result<Self, ConfigError> {
         Ok(WindowBundle::from_config(DisplayConfig::load(
@@ -47,7 +48,7 @@ impl WindowBundle {
         let display_config = DisplayConfig {
             dimensions: Some((SCREEN_WIDTH, SCREEN_HEIGHT)),
             visibility: false,
-            ..Default::default()
+            ..DisplayConfig::default()
         };
 
         WindowBundle::from_config(display_config)

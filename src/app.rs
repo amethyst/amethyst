@@ -206,7 +206,7 @@ where
     /// Creates a new `ApplicationBuilder` with the given initial game state.
     ///
     /// This is identical in function to
-    /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
+    /// [`ApplicationBuilder::new`](struct.ApplicationBuilder.html#method.new).
     pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, T, E, R>, Error>
     where
         P: AsRef<Path>,
@@ -421,7 +421,7 @@ where
     T: DataDispose + 'static,
     E: 'static,
 {
-    /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
+    /// Creates a new [`ApplicationBuilder`](struct.ApplicationBuilder.html) instance
     /// that wraps the `initial_state`. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
     /// away from the default.
@@ -757,7 +757,6 @@ where
     /// This function returns the `ApplicationBuilder` after modifying it.
     ///
     /// # Panics
-    ///
     pub fn with_fixed_step_length(self, duration: Duration) -> Self {
         self.resources
             .get_mut::<Time>()

@@ -10,10 +10,9 @@ use crate::{
     self as amethyst_assets,
     loader::{DefaultLoader, Loader},
     prefab::{ComponentRegistry, Prefab},
-    storage::AssetStorage,
+    storage::{AssetStorage, MutateAssetInStorage},
     AssetHandle, ProcessingQueue, ProcessingState, WeakHandle,
 };
-use crate::storage::MutateAssetInStorage;
 
 crate::register_asset_type!(Prefab => Prefab; PrefabProcessorSystem);
 

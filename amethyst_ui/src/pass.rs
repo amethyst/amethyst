@@ -55,6 +55,7 @@ pub struct RenderUi {
 
 impl RenderUi {
     /// Select render target on which UI should be rendered.
+    #[must_use]
     pub fn with_target(mut self, target: Target) -> Self {
         self.target = target;
         self
@@ -140,8 +141,9 @@ pub struct DrawUiDesc;
 
 impl DrawUiDesc {
     /// Create new `DrawUI` pass description
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        DrawUiDesc::default()
     }
 }
 
@@ -192,7 +194,7 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawUiDesc {
             textures,
             vertex,
             change: Default::default(),
-            cached_draw_order: Default::default(),
+            cached_draw_order: CachedDrawOrder::default(),
             batches: Default::default(),
             white_tex,
         }))
@@ -277,9 +279,9 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
             keep
         });
 
-        to_remove.iter().for_each(|e| {
+        for e in &to_remove {
             self.cached_draw_order.cached.remove(e);
-        });
+        }
 
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
             *z = query_transforms
@@ -306,12 +308,12 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
                         Some(pos) => {
                             self.cached_draw_order
                                 .cache
-                                .insert(pos, (transform.global_z(), *entity))
+                                .insert(pos, (transform.global_z(), *entity));
                         }
                         None => {
                             self.cached_draw_order
                                 .cache
-                                .push((transform.global_z(), *entity))
+                                .push((transform.global_z(), *entity));
                         }
                     }
                 }
@@ -373,7 +375,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
             if let Some(glyph_data) = maybe_glyph {
                 if !glyph_data.sel_vertices.is_empty() {
                     self.batches
-                        .insert(white_tex_id, glyph_data.sel_vertices.iter().cloned());
+                        .insert(white_tex_id, glyph_data.sel_vertices.iter().copied());
                 }
 
                 // blinking cursor
@@ -417,13 +419,13 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawUi<B> {
                                 color: tint.unwrap_or([1., 1., 1., 1.]).into(),
                                 color_bias: [0., 0., 0., 0.].into(),
                             }),
-                        )
+                        );
                     }
                 }
 
                 if !glyph_data.vertices.is_empty() {
                     self.batches
-                        .insert(glyph_tex_id, glyph_data.vertices.iter().cloned());
+                        .insert(glyph_tex_id, glyph_data.vertices.iter().copied());
                 }
             }
         }
@@ -594,20 +596,7 @@ fn render_image<B: Backend>(
     };
 
     match raw_image {
-        UiImage::Texture(tex) => {
-            if let Some((tex_id, this_changed)) = textures.insert(
-                factory,
-                aux.resources,
-                tex,
-                hal::image::Layout::ShaderReadOnlyOptimal,
-            ) {
-                batches.insert(tex_id, Some(args));
-                this_changed
-            } else {
-                false
-            }
-        }
-        UiImage::PartialTexture { tex, .. } => {
+        UiImage::Texture(tex) | UiImage::PartialTexture { tex, .. } => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
                 aux.resources,
@@ -716,7 +705,7 @@ fn render_image<B: Backend>(
                 false
             }
         }
-        _ => {
+        UiImage::SolidColor(_) => {
             batches.insert(white_tex_id, Some(args));
             false
         }

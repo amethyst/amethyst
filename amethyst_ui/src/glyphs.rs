@@ -435,7 +435,7 @@ impl<B: Backend> System for UiGlyphsSystem<B> {
                                             // distinguish computed glyphs indented to be used for various entities
                                             // FIXME: This will be a problem because entities are now u64 and not u32....
                                             z: next_z as f32,
-                                            layout: Default::default(), // overriden on queue
+                                            layout: glyph_brush::Layout::default(), // overriden on queue
                                             text,
                                         };
 
@@ -465,16 +465,12 @@ impl<B: Backend> System for UiGlyphsSystem<B> {
                                         let mut last_cached_glyph: Option<CachedGlyph> = None;
                                         let all_glyphs = ui_text.text.chars().filter_map(|c| {
                                             if c.is_whitespace() {
-                                                let (x, y) = if let Some(last_cached_glyph) =
-                                                    last_cached_glyph
-                                                {
+                                                let (x, y) = last_cached_glyph.map_or((0.0, 0.0), |last_cached_glyph| {
                                                     let x = last_cached_glyph.x
                                                         + last_cached_glyph.advance_width;
                                                     let y = last_cached_glyph.y;
                                                     (x, y)
-                                                } else {
-                                                    (0.0, 0.0)
-                                                };
+                                                });
 
                                                 let advance_width = font_asset
                                                     .glyph(c)

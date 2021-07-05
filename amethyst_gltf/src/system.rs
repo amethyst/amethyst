@@ -77,6 +77,6 @@ pub(crate) fn animation_hierarchy_loading(world: &mut World, _resources: &mut Re
                     })
                     .collect(),
             ),
-        )
-    };
+        );
+    }
 }

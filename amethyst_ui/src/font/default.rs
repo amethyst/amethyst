@@ -64,7 +64,7 @@ pub fn get_default_font(
             warn!(
             "Failed to find suitable default system font. Falling back to built-in.\nError: {:?}",
             e
-        )
+        );
         }
     }
 

@@ -16,6 +16,7 @@ use thread_profiler::profile_scope;
 
 use crate::{
     palette::Srgb,
+    pass,
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::IntoPod,
     shape::Shape,
@@ -64,12 +65,14 @@ pub struct DrawSkyboxDesc {
 }
 
 impl DrawSkyboxDesc {
-    /// Create instance of [DrawSkybox] render group
+    /// Create instance of [`DrawSkybox`] render group
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        pass::skybox::DrawSkyboxDesc::default()
     }
 
-    /// Defines the [SkyboxSettings] colors to initialize for this render group
+    /// Defines the [`SkyboxSettings`] colors to initialize for this render group
+    #[must_use]
     pub fn with_colors(nadir_color: Srgb, zenith_color: Srgb) -> Self {
         Self {
             default_settings: SkyboxSettings {
@@ -153,8 +156,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawSkybox<B> {
         let settings = aux
             .resources
             .get::<SkyboxSettings>()
-            .map(|s| s.uniform())
-            .unwrap_or_else(|| self.default_settings.uniform());
+            .map_or_else(|| self.default_settings.uniform(), |s| s.uniform());
 
         self.env.process(factory, index, aux.world, aux.resources);
         let changed = self.colors.write(factory, index, settings);

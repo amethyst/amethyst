@@ -76,7 +76,7 @@ where
     /// Creates a new `Widgets` and initializes it with the default values.
     #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        Widgets::default()
     }
 
     /// Adds a widget to the map and returns the ID that was created
@@ -230,6 +230,7 @@ macro_rules! define_widget {
 
         impl $t {
             /// Create a new $t widget from its associated entities.
+            #[must_use]
             pub fn new(
                 $($field: amethyst_core::ecs::Entity),*
             ) -> Self {

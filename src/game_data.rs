@@ -42,7 +42,6 @@ impl GameData {
 
     /// Dispose game data, dropping the dispatcher
     /// # Panics
-    /// 
     pub fn dispose(&mut self, world: &mut World, resources: &mut Resources) {
         if let Some(dispatcher) = self.dispatcher.take() {
             dispatcher.unload(world, resources).unwrap();

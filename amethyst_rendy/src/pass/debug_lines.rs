@@ -1,6 +1,6 @@
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{IntoQuery, Read};
 use derivative::Derivative;
-use glsl_layout::*;
+use glsl_layout::{vec2, Uniform};
 use rendy::{
     command::{QueueId, RenderPassEncoder},
     factory::Factory,
@@ -17,6 +17,7 @@ use thread_profiler::profile_scope;
 
 use crate::{
     debug_drawing::{DebugLine, DebugLines, DebugLinesComponent, DebugLinesParams},
+    pass,
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::ViewArgs,
     submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertexBuffer},
@@ -37,8 +38,9 @@ pub struct DrawDebugLinesDesc;
 
 impl DrawDebugLinesDesc {
     /// Create instance of `DrawDebugLines` render group
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        pass::debug_lines::DrawDebugLinesDesc::default()
     }
 }
 
@@ -79,7 +81,7 @@ impl<B: Backend> RenderGroupDesc<B, GraphAuxData> for DrawDebugLinesDesc {
             framebuffer_width: framebuffer_width as f32,
             framebuffer_height: framebuffer_height as f32,
             lines: Vec::new(),
-            change: Default::default(),
+            change: util::ChangeDetection::default(),
         }))
     }
 }
@@ -125,8 +127,7 @@ impl<B: Backend> RenderGroup<B, GraphAuxData> for DrawDebugLines<B> {
         let cam = CameraGatherer::gather(world, resources);
         let line_width = resources
             .get::<DebugLinesParams>()
-            .map(|p| p.line_width)
-            .unwrap_or(DebugLinesParams::default().line_width);
+            .map_or(DebugLinesParams::default().line_width, |p| p.line_width);
 
         self.env.write(factory, index, cam.projview);
         self.args.write(

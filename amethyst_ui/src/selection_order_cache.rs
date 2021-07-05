@@ -80,9 +80,9 @@ where
                             }
                             keep
                         });
-                        rm.iter().for_each(|e| {
+                        for e in &rm {
                             cache.cached.remove(e);
-                        });
+                        }
                     }
 
                     for &mut (ref mut t, entity) in &mut cache.cache {
@@ -109,7 +109,7 @@ where
 
                                     match pos {
                                         Some(pos) => {
-                                            inserts.push((pos, (selectable.order, entity)))
+                                            inserts.push((pos, (selectable.order, entity)));
                                         }
                                         None => pushes.push((selectable.order, entity)),
                                     }

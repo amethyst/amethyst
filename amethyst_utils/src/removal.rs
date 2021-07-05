@@ -56,14 +56,14 @@ where
 }
 
 /// Removes all entities that have the `Removal<I>` component with the specified `removal_id`.
-pub fn exec_removal<I>(commands: &mut CommandBuffer, subworld: &mut SubWorld<'_>, removal_id: I)
+pub fn exec_removal<I>(commands: &mut CommandBuffer, subworld: &mut SubWorld<'_>, removal_id: &I)
 where
     I: Debug + Clone + PartialEq + Send + Sync + 'static,
 {
     let mut removal_query = <(Entity, &Removal<I>)>::query();
     for (ent, _) in removal_query
         .iter_mut(subworld)
-        .filter(|(_, rm)| rm.id == removal_id)
+        .filter(|(_, rm)| rm.id == *removal_id)
     {
         commands.remove(*ent);
     }
@@ -82,6 +82,6 @@ pub fn add_removal_to_entity<T: PartialEq + Clone + Debug + Send + Sync + 'stati
             panic!(
                 "Failed to insert `Removal` component id to entity: {:?}.",
                 entity,
-            )
+            );
         });
 }

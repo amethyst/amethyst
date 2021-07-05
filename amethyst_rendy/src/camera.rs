@@ -9,7 +9,7 @@ use amethyst_assets::{
     Asset,
 };
 use amethyst_core::{
-    ecs::*,
+    ecs::Entity,
     geometry::Ray,
     math::{Matrix4, Point2, Point3, Vector2},
     transform::Transform,
@@ -39,7 +39,7 @@ use type_uuid::TypeUuid;
 /// The camera also stores the inverse transformation in order to avoid recomputing it.
 ///
 /// If you change `matrix` you must also change `inverse` so that they stay in sync.
-/// You should probably use from_matrix instead.
+/// You should probably use `from_matrix` instead.
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize, TypeUuid, Default)]
 #[uuid = "56946ce2-356e-4038-82ad-e55a69ddfde9"]
 pub struct Camera {
@@ -85,6 +85,7 @@ impl Camera {
     /// Will use an orthographic projection centered around (0, 0) of size (width, height)
     /// Bottom left corner is (-width/2.0, -height/2.0)
     /// View transformation will be multiplicative identity.
+    #[must_use]
     pub fn standard_2d(width: f32, height: f32) -> Self {
         // TODO: Check if bottom = height/2.0 is really the solution we want here.
         // Maybe the same problem as with the perspective matrix.
@@ -113,7 +114,9 @@ impl Camera {
     /// * `z_near` - The distance between the viewer (the origin) and the closest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the closest clipping plane.
     /// * `z_far` - The distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
     ///
+    /// # Panics
     /// * panics if `left` equals `right`, `bottom` equals `top` or `z_near` equals `z_far`
+    #[must_use]
     pub fn orthographic(
         left: f32,
         right: f32,
@@ -155,6 +158,7 @@ impl Camera {
     /// Will use a perspective projection with aspect from the given screen dimensions and a field
     /// of view of π/3 radians (60 degrees).
     /// View transformation will be multiplicative identity.
+    #[must_use]
     pub fn standard_3d(width: f32, height: f32) -> Self {
         Self::perspective(width / height, std::f32::consts::FRAC_PI_3, 0.125)
     }
@@ -169,9 +173,11 @@ impl Camera {
     ///
     /// * aspect - Aspect Ratio represented as a `f32` ratio.
     /// * fov - Field of View represented in radians
-    /// * z_near - Near clip plane distance
+    /// * `z_near` - Near clip plane distance
     ///
+    /// # Panics
     /// * panics when matrix is not invertible
+    #[must_use]
     pub fn perspective(aspect: f32, fov: f32, z_near: f32) -> Self {
         if cfg!(debug_assertions) {
             assert!(
@@ -195,6 +201,7 @@ impl Camera {
     /// Makes a camera with the matrix provided.
     ///
     /// * panics if the matrix is not invertible
+    #[must_use]
     pub fn from_matrix(matrix: Matrix4<f32>) -> Self {
         Self{
             matrix,
@@ -208,6 +215,7 @@ impl Camera {
     ///
     /// The screen coordinate (0, 0) is the top-left corner of the top-left pixel.
     /// `screen_diagonal` is the bottom-right corner of the bottom-right pixel.
+    #[must_use]
     pub fn screen_ray(
         &self,
         screen_position: Point2<f32>,
@@ -235,6 +243,7 @@ impl Camera {
     /// Transforms the provided (X, Y, Z) screen coordinate into world coordinates.
     /// This method fires a ray from the camera in its view direction, and returns the Point at `screen_position.z`
     /// world space distance from the camera origin.
+    #[must_use]
     pub fn screen_to_world_point(
         &self,
         screen_position: Point3<f32>,
@@ -249,6 +258,7 @@ impl Camera {
     ///
     /// The screen coordinate (0, 0) is the top-left corner of the top-left pixel.
     /// `screen_diagonal` is the bottom-right corner of the bottom-right pixel.
+    #[must_use]
     pub fn world_to_screen(
         &self,
         world_position: Point3<f32>,

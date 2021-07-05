@@ -4,7 +4,10 @@
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
 
-use crate::{output::OutputWrapper, systems::{AudioSystem, SelectedListener}};
+use crate::{
+    output::OutputWrapper,
+    systems::{AudioSystem, SelectedListener},
+};
 
 /// Audio bundle
 ///

@@ -4,7 +4,7 @@ use amethyst_core::{
     math::{convert, Matrix4, Vector4},
     transform::Transform,
 };
-use glsl_layout::*;
+use glsl_layout::{float, int, mat4, vec2, vec3, vec4, Uniform};
 use rendy::{
     hal::format::Format,
     mesh::{AsAttribute, AsVertex, Model, VertexFormat},
@@ -12,7 +12,7 @@ use rendy::{
 
 use crate::{mtl, resources::Tint as TintComponent, Sprite};
 
-/// TextureOffset
+/// `TextureOffset`
 /// ```glsl
 /// struct UvOffset {
 ///    vec2 u_offset;
@@ -30,6 +30,7 @@ pub struct TextureOffset {
 
 impl TextureOffset {
     /// Helper function from proper type to Pod type.
+    #[must_use]
     pub fn from_offset(offset: &crate::mtl::TextureOffset) -> Self {
         TextureOffset {
             u_offset: [offset.u.0, offset.u.1].into(),
@@ -38,7 +39,7 @@ impl TextureOffset {
     }
 }
 
-/// ViewArgs
+/// `ViewArgs`
 /// ```glsl
 /// uniform ViewArgs {
 ///    uniform mat4 proj;
@@ -91,6 +92,7 @@ impl VertexArgs {
     /// Populates a `VertexArgs` instance-rate structure with the information from a `Transform`
     /// and `TintComponent` components.
     #[inline]
+    #[must_use]
     pub fn from_object_data(transform: &Transform, tint: Option<&TintComponent>) -> Self {
         let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*transform.global_matrix()).into();
         VertexArgs {
@@ -152,6 +154,7 @@ impl AsVertex for SkinnedVertexArgs {
 impl SkinnedVertexArgs {
     /// Populate `SkinnedVertexArgs` from the supplied `Transform` and `TintComponent`
     #[inline]
+    #[must_use]
     pub fn from_object_data(
         transform: &Transform,
         tint: Option<&TintComponent>,
@@ -277,7 +280,8 @@ pub struct Material {
 }
 
 impl Material {
-    /// Helper function from amethyst_rendy 'proper' type to POD type.
+    /// Helper function from `amethyst_rendy` 'proper' type to POD type.
+    #[must_use]
     pub fn from_material(mat: &mtl::Material) -> Self {
         Material {
             uv_offset: TextureOffset::from_offset(&mat.uv_offset),
@@ -337,6 +341,7 @@ impl SpriteArgs {
     /// * `sprite_storage` - `SpriteSheet` Storage
     /// * `sprite_render` - `SpriteRender` component reference
     /// * `transform` - 'Transform' component reference
+    #[must_use]
     pub fn from_data<'a>(
         sprite: &'a Sprite,
         transform: &Transform,

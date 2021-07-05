@@ -96,7 +96,7 @@ impl UiText {
             font,
             line_mode,
             align,
-            ..Default::default()
+            ..UiText::default()
         }
     }
 }
@@ -312,6 +312,5 @@ fn closest_glyph_index_to_mouse(mouse_x: f32, mouse_y: f32, glyphs: &[CachedGlyp
             };
             dist(g1).partial_cmp(&dist(g2)).expect("Unexpected NaN!")
         })
-        .map(|(i, _)| i)
-        .unwrap_or(0) as isize
+        .map_or(0, |(i, _)| i) as isize
 }

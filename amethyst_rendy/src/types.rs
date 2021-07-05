@@ -234,14 +234,14 @@ impl Asset for Texture {
     type Data = TextureData;
 }
 
-/// Newtype for MeshBuilder prefab usage.
+/// Newtype for `MeshBuilder` prefab usage.
 #[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
 #[uuid = "c5870fe0-1733-4fb4-827c-4353f8c6002d"]
 pub struct MeshData(
     #[serde(deserialize_with = "deserialize_data")] pub rendy::mesh::MeshBuilder<'static>,
 );
 
-/// Newtype for TextureBuilder prefab usage.
+/// Newtype for `TextureBuilder` prefab usage.
 #[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
 #[uuid = "25063afd-6cc0-487e-982f-a63fed7d7393"]
 pub struct TextureData(pub rendy::texture::TextureBuilder<'static>);
