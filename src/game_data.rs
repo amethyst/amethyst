@@ -6,6 +6,9 @@ use crate::{
 /// initialize trait for game data
 pub trait DataInit<T> {
     /// Build game data
+    /// # Errors
+    ///
+    /// Will return a `Error`
     fn build(self, world: &mut World, resources: &mut Resources) -> Result<T, Error>;
 }
 
@@ -38,6 +41,8 @@ impl GameData {
     }
 
     /// Dispose game data, dropping the dispatcher
+    /// # Panics
+    /// 
     pub fn dispose(&mut self, world: &mut World, resources: &mut Resources) {
         if let Some(dispatcher) = self.dispatcher.take() {
             dispatcher.unload(world, resources).unwrap();

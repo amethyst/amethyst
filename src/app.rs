@@ -755,6 +755,9 @@ where
     /// # Returns
     ///
     /// This function returns the `ApplicationBuilder` after modifying it.
+    ///
+    /// # Panics
+    ///
     pub fn with_fixed_step_length(self, duration: Duration) -> Self {
         self.resources
             .get_mut::<Time>()
@@ -789,6 +792,8 @@ where
     ///
     /// This function currently will not produce an error, returning a result
     /// type was strictly for future possibilities.
+    ///
+    /// # Panics
     ///
     /// # Notes
     ///

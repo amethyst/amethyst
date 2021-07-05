@@ -178,9 +178,9 @@ impl System for TcpNetworkSendSystem {
                                 }
                                 delivery => {
                                     panic!(
-                            "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
-                            delivery
-                        )
+                                        "{:?} is unsupported. TCP only supports ReliableOrdered by design.",
+                                        delivery
+                                    );
                                 }
                             }
                         }
