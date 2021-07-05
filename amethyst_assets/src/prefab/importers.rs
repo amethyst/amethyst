@@ -9,8 +9,7 @@ use prefab_format::ComponentTypeUuid;
 use serde::{Deserialize, Serialize};
 use type_uuid::TypeUuid;
 
-use crate::prefab::Prefab;
-use crate::prefab;
+use crate::{prefab, prefab::Prefab};
 
 #[derive(Default, Deserialize, Serialize, TypeUuid, Clone, Copy)]
 #[uuid = "80583980-24d4-4034-8394-ea749b43f55d"]

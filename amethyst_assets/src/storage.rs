@@ -69,7 +69,7 @@ impl<A> AssetStorage<A> {
     pub(crate) fn commit_asset(&mut self, handle: LoadHandle, version: u32) {
         if let Some(data) = self.uncommitted.remove(&handle) {
             if data.version != version {
-                panic!("attempted to commit asset version which mismatches with existing uncommitted version")
+                panic!("attempted to commit asset version which mismatches with existing uncommitted version");
             }
 
             if let Some(existing) = self.assets.insert(

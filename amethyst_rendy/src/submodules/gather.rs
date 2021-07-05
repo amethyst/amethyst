@@ -1,10 +1,10 @@
 //! Helper gatherer structures for collecting information about the world.
 use amethyst_core::{
-    ecs::*,
+    ecs::{Entity, EntityStore, IntoQuery, Read, Resources, World},
     math::{convert, Matrix4, Vector3},
     transform::Transform,
 };
-use glsl_layout::{Uniform, *};
+use glsl_layout::{vec3, Uniform};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -25,12 +25,13 @@ pub struct CameraGatherer {
 
 impl CameraGatherer {
     /// Collect just the entity which has the current `ActiveCamera`
+    #[must_use]
     pub fn gather_camera_entity(world: &World, resources: &Resources) -> Option<Entity> {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_camera (1st)");
 
         // Get camera entity from `ActiveCamera` resource
-        let active_camera = resources.get::<ActiveCamera>().map(|r| r.entity).flatten();
+        let active_camera = resources.get::<ActiveCamera>().and_then(|r| r.entity);
 
         // Find if such camera exists
         let entity = active_camera
@@ -60,6 +61,7 @@ impl CameraGatherer {
     /// projection matrix.
     ///
     /// The matrix returned is the camera's `Projection` matrix and the camera `Transform::global_view_matrix`
+    #[must_use]
     pub fn gather(world: &World, resources: &Resources) -> Self {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_cameras");
@@ -69,20 +71,17 @@ impl CameraGatherer {
 
         let camera_entity = Self::gather_camera_entity(world, resources);
 
-        let camera = camera_entity
-            .map(|e| world.entry_ref(e).unwrap().into_component::<Camera>().ok())
-            .flatten();
+        let camera =
+            camera_entity.and_then(|e| world.entry_ref(e).unwrap().into_component::<Camera>().ok());
         let camera = camera.as_deref().unwrap_or(&defcam);
 
-        let transform = camera_entity
-            .map(|e| {
-                world
-                    .entry_ref(e)
-                    .unwrap()
-                    .into_component::<Transform>()
-                    .ok()
-            })
-            .flatten();
+        let transform = camera_entity.and_then(|e| {
+            world
+                .entry_ref(e)
+                .unwrap()
+                .into_component::<Transform>()
+                .ok()
+        });
         let transform = transform.as_deref().unwrap_or(&identity);
 
         let camera_position =
@@ -114,6 +113,7 @@ impl CameraGatherer {
 pub struct AmbientGatherer;
 impl AmbientGatherer {
     /// If an `AmbientColor` exists in the resources, return it - otherwise return pure white.
+    #[must_use]
     pub fn gather(resources: &Resources) -> vec3 {
         resources
             .get::<AmbientColor>()

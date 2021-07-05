@@ -115,6 +115,7 @@ pub trait StaticTextureSet<'a>:
     fn textures(mat: &'a Material) -> Self::Iter;
 
     /// ALWAYS RETURNS 1
+    #[must_use]
     fn len() -> usize {
         1
     }

@@ -207,22 +207,22 @@ pub trait EmptyState {
 impl<T: EmptyState> State<(), StateEvent> for T {
     /// Executed when the game state begins.
     fn on_start(&mut self, data: StateData<'_, ()>) {
-        self.on_start(data)
+        self.on_start(data);
     }
 
     /// Executed when the game state exits.
     fn on_stop(&mut self, data: StateData<'_, ()>) {
-        self.on_stop(data)
+        self.on_stop(data);
     }
 
     /// Executed when a different game state is pushed onto the stack.
     fn on_pause(&mut self, data: StateData<'_, ()>) {
-        self.on_pause(data)
+        self.on_pause(data);
     }
 
     /// Executed when the application returns to this game state once again.
     fn on_resume(&mut self, data: StateData<'_, ()>) {
-        self.on_resume(data)
+        self.on_resume(data);
     }
 
     /// Executed on every frame before updating, for use in reacting to events.
@@ -310,22 +310,22 @@ pub trait SimpleState {
 impl<T: SimpleState> State<GameData, StateEvent> for T {
     /// Executed when the game state begins.
     fn on_start(&mut self, data: StateData<'_, GameData>) {
-        self.on_start(data)
+        self.on_start(data);
     }
 
     /// Executed when the game state exits.
     fn on_stop(&mut self, data: StateData<'_, GameData>) {
-        self.on_stop(data)
+        self.on_stop(data);
     }
 
     /// Executed when a different game state is pushed onto the stack.
     fn on_pause(&mut self, data: StateData<'_, GameData>) {
-        self.on_pause(data)
+        self.on_pause(data);
     }
 
     /// Executed when the application returns to this game state once again.
     fn on_resume(&mut self, data: StateData<'_, GameData>) {
-        self.on_resume(data)
+        self.on_resume(data);
     }
 
     /// Executed on every frame before updating, for use in reacting to events.

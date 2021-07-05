@@ -105,7 +105,7 @@ impl CameraOrtho {
     pub fn normalized(mode: CameraNormalizeMode) -> CameraOrtho {
         CameraOrtho {
             mode,
-            world_coordinates: Default::default(),
+            world_coordinates: CameraOrthoWorldCoordinates::default(),
             aspect_ratio_cache: 0.0,
         }
     }

@@ -7,7 +7,11 @@ use std::{
     },
 };
 
-use amethyst_core::{ecs::{Entity, EntityStore, IntoQuery, ParallelRunnable, Read, System, SystemBuilder, Write}, math::convert, transform::Transform};
+use amethyst_core::{
+    ecs::{Entity, EntityStore, IntoQuery, ParallelRunnable, Read, System, SystemBuilder, Write},
+    math::convert,
+    transform::Transform,
+};
 use rodio::SpatialSink;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;

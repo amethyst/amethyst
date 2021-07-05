@@ -8,10 +8,11 @@
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
-    rust_2018_compatibility
+    rust_2018_compatibility,
+    clippy::all
 )]
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::new_without_default)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::new_without_default, clippy::module_name_repetitions)]
 
 pub use self::app_root_dir::*;
 

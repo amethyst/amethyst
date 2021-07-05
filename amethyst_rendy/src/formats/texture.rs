@@ -162,7 +162,8 @@ fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> Textu
 }
 
 impl TextureGenerator {
-    /// Converts the provided texture enum variant values in a generic TextureData format.
+    /// Converts the provided texture enum variant values in a generic `TextureData` format.
+    #[must_use]
     pub fn data(&self) -> TextureData {
         use palette::{LinSrgba, Srgba};
         use rendy::texture::palette::{load_from_linear_rgba, load_from_srgba};

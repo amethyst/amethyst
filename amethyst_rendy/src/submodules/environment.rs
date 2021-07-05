@@ -1,13 +1,14 @@
 //! Environment submodule for shared environmental descriptor set data.
 //! Fetches and sets projection and lighting descriptor set information.
 use amethyst_core::{
-    ecs::*,
+    ecs::{IntoQuery, Read, Resources, World},
     math::{convert, Vector3},
     transform::Transform,
 };
-use glsl_layout::*;
+use glsl_layout::Uniform;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+use util::{usize_range, write_into_slice};
 
 use crate::{
     light::Light,
@@ -58,7 +59,7 @@ impl<B: Backend> EnvironmentSub<B> {
         factory: &Factory<B>,
         flags: [hal::pso::ShaderStageFlags; 2],
     ) -> Result<Self, CreationError> {
-        use rendy::hal::pso::*;
+        use rendy::hal::pso::{BufferDescriptorFormat, BufferDescriptorType, DescriptorType};
 
         let layout = factory
             .create_descriptor_set_layout(util::set_layout_bindings(vec![
@@ -92,6 +93,7 @@ impl<B: Backend> EnvironmentSub<B> {
     }
 
     /// Returns the raw `DescriptorSetLayout` for this environment
+    #[must_use]
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }
@@ -294,7 +296,6 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 })
                 .take(MAX_SPOT_LIGHTS);
 
-            use util::{usize_range, write_into_slice};
             write_into_slice(
                 &mut dst_slice[usize_range(plight_range)],
                 point_lights.tap_count(&mut env.point_light_count),

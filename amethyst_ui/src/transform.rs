@@ -161,32 +161,38 @@ impl UiTransform {
     }
 
     /// Adds stretching to this ui element so it can fill its parent.
+    #[must_use]
     pub fn with_stretch(mut self, stretch: Stretch) -> Self {
         self.stretch = stretch;
         self
     }
 
     /// Returns the global x coordinate of this `UiTransform` as computed by the `UiTransformSystem`.
+    #[must_use]
     pub fn pixel_x(&self) -> f32 {
         self.pixel_x
     }
 
     /// Returns the global y coordinate of this `UiTransform` as computed by the `UiTransformSystem`.
+    #[must_use]
     pub fn pixel_y(&self) -> f32 {
         self.pixel_y
     }
 
     /// Returns the global z order of this `UiTransform` as computed by the `UiTransformSystem`.
+    #[must_use]
     pub fn global_z(&self) -> f32 {
         self.global_z
     }
 
     /// Returns the width of this `UiTransform` (in pixels) as computed by the `UiTransformSystem`.
+    #[must_use]
     pub fn pixel_width(&self) -> f32 {
         self.pixel_width
     }
 
     /// Returns the height of this `UiTransform` (in pixels) as computed by the `UiTransformSystem`.
+    #[must_use]
     pub fn pixel_height(&self) -> f32 {
         self.pixel_height
     }

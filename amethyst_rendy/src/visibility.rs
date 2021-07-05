@@ -2,7 +2,7 @@
 use std::cmp::Ordering;
 
 use amethyst_core::{
-    ecs::{systems::ParallelRunnable, *},
+    ecs::{component, systems::ParallelRunnable, Entity, IntoQuery, System, SystemBuilder},
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
     transform::Transform,
     Hidden, HiddenPropagate,
@@ -47,11 +47,13 @@ impl Default for BoundingSphere {
 
 impl BoundingSphere {
     /// Create a new `BoundingSphere` with the supplied radius and center.
+    #[must_use]
     pub fn new(center: Point3<f32>, radius: f32) -> Self {
         Self { center, radius }
     }
 
     /// Returns the center of the sphere.
+    #[must_use]
     pub fn origin(radius: f32) -> Self {
         Self {
             center: Point3::origin(),
@@ -199,6 +201,7 @@ pub struct Frustum {
 
 impl Frustum {
     /// Create a new simple frustum from the provided matrix.
+    #[must_use]
     pub fn new(matrix: Matrix4<f32>) -> Self {
         let planes = [
             (matrix.row(3) + matrix.row(0)).transpose(),
@@ -221,6 +224,7 @@ impl Frustum {
     }
 
     /// Check if the given sphere is within the Frustum
+    #[must_use]
     pub fn check_sphere(&self, center: &Point3<f32>, radius: f32) -> bool {
         for plane in &self.planes {
             if plane.xyz().dot(&center.coords) + plane.w <= -radius {

@@ -3,7 +3,9 @@ use rendy::{
     shader::SpirvShader,
 };
 
-use super::base_3d::*;
+use super::base_3d::{
+    Base3DPassDef, DrawBase3D, DrawBase3DDesc, DrawBase3DTransparent, DrawBase3DTransparentDesc,
+};
 use crate::{mtl::FullTextureSet, skinning::JointCombined};
 
 /// Implementation of `Base3DPassDef` for Physically-based (PBR) rendering pass.

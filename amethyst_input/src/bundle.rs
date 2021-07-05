@@ -3,7 +3,10 @@
 use std::{error, fmt, path::Path};
 
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{ecs::{DispatcherBuilder, Resources, SystemBundle, World}, shrev::EventChannel};
+use amethyst_core::{
+    ecs::{DispatcherBuilder, Resources, SystemBundle, World},
+    shrev::EventChannel,
+};
 use amethyst_error::Error;
 use derivative::Derivative;
 use winit::event::Event;
@@ -12,7 +15,7 @@ use winit::event::Event;
 use crate::sdl_events_system::ControllerMappings;
 #[cfg(feature = "sdl_controller")]
 use crate::InputEvent;
-use crate::{BindingError, Bindings, InputHandler, InputSystem, bundle};
+use crate::{bundle, BindingError, Bindings, InputHandler, InputSystem};
 
 /// Bundle for adding the `InputHandler`.
 ///

@@ -164,7 +164,7 @@ impl<T> ProcessingQueue<T> {
             load_notifier,
             version,
             commit,
-        })
+        });
     }
 
     pub(crate) fn enqueue_changed(&self, handle: LoadHandle) {

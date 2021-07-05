@@ -13,7 +13,7 @@ impl error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use self::Error::*;
+        use self::Error::LoadSpritesheetError;
 
         match *self {
             LoadSpritesheetError(..) => write!(fmt, "Failed to parse SpriteSheet"),

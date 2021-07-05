@@ -125,6 +125,7 @@ impl Shape {
     /// - `Vec<PosNormTex>`
     /// - `Vec<PosNormTangTex>`
     /// - `ComboMeshCreator`
+    #[must_use]
     pub fn generate<V>(&self, scale: Option<(f32, f32, f32)>) -> MeshBuilder<'static>
     where
         V: FromShape + Into<MeshBuilder<'static>>,
@@ -146,6 +147,7 @@ impl Shape {
     /// - `Vec<PosNormTex>`
     /// - `Vec<PosNormTangTex>`
     /// - `ComboMeshCreator`
+    #[must_use]
     pub fn generate_vertices<V>(&self, scale: Option<(f32, f32, f32)>) -> V
     where
         V: FromShape,
@@ -160,16 +162,13 @@ impl Shape {
             Shape::Cone(u) => generate_vertices(Cone::new(u), scale),
             Shape::Cylinder(u, h) => {
                 generate_vertices(
-                    h.map(|h| Cylinder::subdivide(u, h))
-                        .unwrap_or_else(|| Cylinder::new(u)),
+                    h.map_or_else(|| Cylinder::new(u), |h| Cylinder::subdivide(u, h)),
                     scale,
                 )
             }
             Shape::IcoSphere(divide) => {
                 generate_vertices(
-                    divide
-                        .map(IcoSphere::subdivide)
-                        .unwrap_or_else(IcoSphere::new),
+                    divide.map_or_else(IcoSphere::new, IcoSphere::subdivide),
                     scale,
                 )
             }
@@ -181,9 +180,7 @@ impl Shape {
             }
             Shape::Plane(divide) => {
                 generate_vertices(
-                    divide
-                        .map(|(x, y)| Plane::subdivide(x, y))
-                        .unwrap_or_else(Plane::new),
+                    divide.map_or_else(Plane::new, |(x, y)| Plane::subdivide(x, y)),
                     scale,
                 )
             }
@@ -210,9 +207,10 @@ where
         .map(|f| {
             f.map_vertex(|u| {
                 let v = vertices[u];
-                let pos = scale
-                    .map(|(x, y, z)| Vector3::new(v.pos.x * x, v.pos.y * y, v.pos.z * z))
-                    .unwrap_or_else(|| Vector3::new(v.pos.x, v.pos.y, v.pos.z));
+                let pos = scale.map_or_else(
+                    || Vector3::new(v.pos.x, v.pos.y, v.pos.z),
+                    |(x, y, z)| Vector3::new(v.pos.x * x, v.pos.y * y, v.pos.z * z),
+                );
                 let normal = scale
                     .map(|(x, y, z)| {
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()

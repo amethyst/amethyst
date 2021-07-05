@@ -6,7 +6,7 @@ use std::{
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
 
-use crate::{source::Source, DecoderError, components};
+use crate::{components, source::Source, DecoderError};
 
 /// An audio source, add this component to anything that emits sound.
 /// TODO: This should get a proper Debug impl parsing the sinks and sound queue

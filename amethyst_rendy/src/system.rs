@@ -1,7 +1,7 @@
 //! Renderer system
 
 use amethyst_assets::{AssetStorage, DefaultLoader, Loader, ProcessingQueue, ProcessingState};
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{ParallelRunnable, Resources, System, SystemBuilder, World};
 use derivative::Derivative;
 use palette::{LinSrgba, Srgba};
 use rendy::{
@@ -33,6 +33,7 @@ pub struct InternalGraphAuxData<'a> {
 // `InternalGraphAuxData<'static>` and ensure that none of the graph nodes store the references.
 // Simplified issue: https://github.com/rust-lang/rust/issues/51567
 #[allow(missing_docs)]
+#[must_use]
 pub fn make_graph_aux_data(world: &World, resources: &Resources) -> GraphAuxData {
     unsafe { std::mem::transmute(InternalGraphAuxData { world, resources }) }
 }
@@ -115,11 +116,11 @@ where
         .graph
         .as_mut()
         .unwrap()
-        .run(&mut factory, &mut state.families, &aux)
+        .run(&mut factory, &mut state.families, &aux);
 }
 
 /// Main render function to be executed as thread local system.
-/// This should not be used directly and [RenderingBundle] should be used instead.
+/// This should not be used directly and [`RenderingBundle`] should be used instead.
 pub fn render<B, G>(world: &mut World, resources: &mut Resources)
 where
     B: Backend,

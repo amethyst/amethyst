@@ -162,7 +162,7 @@ pub fn init_output(res: &mut Resources) {
             wrapper.output = Some(o);
         }
     } else {
-        error!("Failed finding a default audio output to hook AudioSink to, audio will not work!")
+        error!("Failed finding a default audio output to hook AudioSink to, audio will not work!");
     }
 }
 

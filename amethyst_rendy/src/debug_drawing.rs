@@ -3,7 +3,7 @@ use amethyst_core::math::{Point2, Point3, UnitQuaternion, Vector2, Vector3};
 use palette::Srgba;
 use rendy::mesh::{AsVertex, Color, PosColor, VertexFormat};
 
-use crate::pod::IntoPod;
+use crate::{debug_drawing, pod::IntoPod};
 
 /// Debug lines are stored as a pair of position and color.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -38,7 +38,7 @@ impl Default for DebugLinesParams {
     }
 }
 
-/// Component that stores persistent debug lines to be rendered in DebugLinesPass draw pass.
+/// Component that stores persistent debug lines to be rendered in `DebugLinesPass` draw pass.
 /// The vector can only be cleared manually.
 #[derive(Debug, Default)]
 pub struct DebugLinesComponent {
@@ -47,12 +47,14 @@ pub struct DebugLinesComponent {
 }
 
 impl DebugLinesComponent {
-    /// Creates a new debug lines component with an empty DebugLine vector.
+    /// Creates a new debug lines component with an empty `DebugLine` vector.
+    #[must_use]
     pub fn new() -> DebugLinesComponent {
         Self::default()
     }
 
     /// Builder method to pre-allocate a number of lines.
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             lines: Vec::with_capacity(capacity),
@@ -370,7 +372,7 @@ impl DebugLinesComponent {
     }
 }
 
-/// Resource that stores non-persistent debug lines to be rendered in DebugLinesPass draw pass.
+/// Resource that stores non-persistent debug lines to be rendered in `DebugLinesPass` draw pass.
 /// The vector is automatically cleared after being rendered.
 #[derive(Debug, Default)]
 pub struct DebugLines {
@@ -379,10 +381,11 @@ pub struct DebugLines {
 }
 
 impl DebugLines {
-    /// Creates a new debug lines component with an empty DebugLine vector.
+    /// Creates a new debug lines component with an empty `DebugLine` vector.
+    #[must_use]
     pub fn new() -> DebugLines {
         Self {
-            inner: Default::default(),
+            inner: debug_drawing::DebugLinesComponent::default(),
         }
     }
 

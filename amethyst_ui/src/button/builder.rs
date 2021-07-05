@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use amethyst_assets::{DefaultLoader, Handle, Loader, ProcessingQueue};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
-    ecs::*,
+    ecs::{Entity, Resources, World},
     transform::{Children, Parent, Transform},
 };
 use amethyst_rendy::{
@@ -14,7 +14,7 @@ use smallvec::{smallvec, SmallVec};
 use crate::{
     Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, UiButton, UiButtonAction,
     UiButtonActionRetrigger,
-    UiButtonActionType::{self, *},
+    UiButtonActionType::{self, SetImage, SetTextColor, UnsetTextColor, UnsetTexture},
     UiImage, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
 
@@ -26,9 +26,9 @@ const DEFAULT_BKGD_COLOR: [f32; 4] = [0.82, 0.83, 0.83, 1.0];
 const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 /// Convenience structure for building a button
-/// Note that since there can only be one "ui_loader" in use, and WidgetId of the UiBundle and
-/// UiButtonBuilder should match, you can only use one type of WidgetId, e.g. you cant use both
-/// UiButtonBuilder<(), u32> and UiButtonBuilder<(), String>.
+/// Note that since there can only be one `ui_loader` in use, and `WidgetId` of the `UiBundle` and
+/// `UiButtonBuilder` should match, you can only use one type of `WidgetId`, e.g. you cant use both
+/// `UiButtonBuilder<(), u32>` and `UiButtonBuilder<(), String>`.
 #[derive(Debug, Clone)]
 pub struct UiButtonBuilder<G, I: WidgetId> {
     id: Option<I>,
@@ -96,14 +96,14 @@ where
 }
 
 impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I> {
-    /// Construct a new UiButtonBuilder.
+    /// Construct a new `UiButtonBuilder`.
     /// This allows easy use of default values for text and button appearance and allows the user
     /// to easily set other UI-related options. It also allows easy retrieval and updating through
     /// the appropriate widgets resouce, see [`Widgets`](../../struct.Widgets.html).
-    pub fn new<S: ToString>(text: S) -> UiButtonBuilder<G, I> {
+    pub fn new<S: ToString>(text: &S) -> UiButtonBuilder<G, I> {
         UiButtonBuilder {
             text: text.to_string(),
-            ..Default::default()
+            ..UiButtonBuilder::default()
         }
     }
 
@@ -136,7 +136,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     /// characters will appear. If you need to change the font size, color, etc., then you should
     /// use
     /// [`with_uitext`](#with_uitext) and provide a new `UiText` object.
-    pub fn with_text<S>(mut self, text: S) -> Self
+    pub fn with_text<S>(mut self, text: &S) -> Self
     where
         S: ToString,
     {
@@ -158,9 +158,9 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
 
     /// Provide an X and Y position for the button.
     ///
-    /// This will create a default UiTransform if one is not already attached.
+    /// This will create a default `UiTransform` if one is not already attached.
     /// See `DEFAULT_Z`, `DEFAULT_WIDTH`, `DEFAULT_HEIGHT`, and `DEFAULT_TAB_ORDER` for
-    /// the values that will be provided to the default UiTransform.
+    /// the values that will be provided to the default `UiTransform`.
     pub fn with_position(mut self, x: f32, y: f32) -> Self {
         self.x = x;
         self.y = y;

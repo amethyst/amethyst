@@ -1,8 +1,9 @@
 //! Texture submodule for per-image submission.
 use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle, WeakHandle};
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::Resources;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+use util::{desc_write, texture_desc};
 
 use crate::{
     rendy::{
@@ -45,7 +46,7 @@ pub struct TextureSub<B: Backend> {
 impl<B: Backend> TextureSub<B> {
     /// Create a new Texture for submission, allocated using the provided `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
-        use rendy::hal::pso::*;
+        use rendy::hal::pso::{DescriptorType, ImageDescriptorType, ShaderStageFlags};
 
         let layout = factory
             .create_descriptor_set_layout(util::set_layout_bindings(vec![(
@@ -66,6 +67,7 @@ impl<B: Backend> TextureSub<B> {
     }
 
     /// Returns the raw `DescriptorSetLayout` for a Texture
+    #[must_use]
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }
@@ -76,9 +78,8 @@ impl<B: Backend> TextureSub<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
 
-        use util::{desc_write, texture_desc};
         let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
-        for state in self.textures.iter_mut() {
+        for state in &mut self.textures {
             match state {
                 TextureState::Loaded {
                     generation,
@@ -125,7 +126,6 @@ impl<B: Backend> TextureSub<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("try_insert");
 
-        use util::{desc_write, texture_desc};
         let tex_storage = resources.get::<AssetStorage<Texture>>().unwrap();
 
         let (tex, version) = tex_storage.get_asset_with_version(handle)?;
@@ -195,6 +195,7 @@ impl<B: Backend> TextureSub<B> {
 
     /// Returns true of the supplied `TextureId` is already loaded.
     #[inline]
+    #[must_use]
     pub fn loaded(&self, texture_id: TextureId) -> bool {
         matches!(
             &self.textures[texture_id.0 as usize],
@@ -220,7 +221,7 @@ impl<B: Backend> TextureSub<B> {
                     std::iter::empty(),
                 );
             },
-            _ => panic!("Trying to bind unloaded texture"),
+            TextureState::Unloaded { .. } => panic!("Trying to bind unloaded texture"),
         }
     }
 }

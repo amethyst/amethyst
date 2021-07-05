@@ -48,7 +48,7 @@ where
         factory: &Factory<B>,
         flags: hal::pso::ShaderStageFlags,
     ) -> Result<Self, hal::pso::CreationError> {
-        use rendy::hal::pso::*;
+        use rendy::hal::pso::{BufferDescriptorFormat, BufferDescriptorType, DescriptorType};
 
         Ok(Self {
             layout: factory
@@ -68,6 +68,7 @@ where
     }
 
     /// Returns the `DescriptSetLayout` for this set.
+    #[must_use]
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }

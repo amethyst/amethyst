@@ -50,11 +50,13 @@ pub struct PipelineDescBuilder<'a, B: Backend> {
 
 impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     /// Create a new builder instance.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Build with the provided `GraphicsShadersSet`
+    #[must_use]
     pub fn with_shaders(mut self, shaders: GraphicsShaderSet<'a, B>) -> Self {
         self.set_shaders(shaders);
         self
@@ -65,6 +67,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `Rasterizer`
+    #[must_use]
     pub fn with_rasterizer(mut self, rasterizer: Rasterizer) -> Self {
         self.set_rasterizer(rasterizer);
         self
@@ -75,6 +78,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `VertexBufferDesc` collection
+    #[must_use]
     pub fn with_vertex_buffers(mut self, vertex_buffers: Vec<VertexBufferDesc>) -> Self {
         self.set_vertex_buffers(vertex_buffers);
         self
@@ -85,6 +89,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `AttributeDesc` collection
+    #[must_use]
     pub fn with_attributes(mut self, attributes: Vec<AttributeDesc>) -> Self {
         self.set_attributes(attributes);
         self
@@ -95,6 +100,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `InputAssemblerDesc`
+    #[must_use]
     pub fn with_input_assembler(mut self, input_assembler: InputAssemblerDesc) -> Self {
         self.set_input_assembler(input_assembler);
         self
@@ -105,6 +111,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `BlendDesc`
+    #[must_use]
     pub fn with_blender(mut self, blender: BlendDesc) -> Self {
         self.set_blender(blender);
         self
@@ -115,6 +122,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `DepthStencilDesc`
+    #[must_use]
     pub fn with_depth_stencil(mut self, depth_stencil: DepthStencilDesc) -> Self {
         self.set_depth_stencil(depth_stencil);
         self
@@ -125,6 +133,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `Multisampling`
+    #[must_use]
     pub fn with_multisampling(mut self, multisampling: Option<Multisampling>) -> Self {
         self.set_multisampling(multisampling);
         self
@@ -135,6 +144,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `BakedStates`
+    #[must_use]
     pub fn with_baked_states(mut self, baked_states: BakedStates) -> Self {
         self.set_baked_states(baked_states);
         self
@@ -155,6 +165,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `Subpass`
+    #[must_use]
     pub fn with_subpass(mut self, subpass: Subpass<'a, B>) -> Self {
         self.set_subpass(subpass);
         self
@@ -165,6 +176,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `PipelineCreationFlags`
+    #[must_use]
     pub fn with_flags(mut self, flags: PipelineCreationFlags) -> Self {
         self.set_flags(flags);
         self
@@ -175,20 +187,22 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `BasePipeline`
-    pub fn with_parent(mut self, parent: BasePipeline<'a, B::GraphicsPipeline>) -> Self {
+    #[must_use]
+    pub fn with_parent(mut self, parent: &BasePipeline<'a, B::GraphicsPipeline>) -> Self {
         self.set_parent(parent);
         self
     }
     /// Set to use the provided `BasePipeline`
-    pub fn set_parent(&mut self, parent: BasePipeline<'a, B::GraphicsPipeline>) {
+    pub fn set_parent(&mut self, parent: &BasePipeline<'a, B::GraphicsPipeline>) {
         self.parent = match parent {
             BasePipeline::Pipeline(p) => LocalBasePipeline::Pipeline(p),
-            BasePipeline::Index(i) => LocalBasePipeline::Index(i),
+            BasePipeline::Index(i) => LocalBasePipeline::Index(*i),
             BasePipeline::None => LocalBasePipeline::None,
         };
     }
 
     /// Build with the provided framebuffer size.
+    #[must_use]
     pub fn with_framebuffer_size(mut self, fb_w: u32, fb_h: u32) -> Self {
         self.set_framebuffer_size(fb_w, fb_h);
         self
@@ -209,10 +223,11 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
             }),
             scissor: Some(rect),
             ..old_baked_states
-        })
+        });
     }
 
     /// Build with the provided `DepthTest`
+    #[must_use]
     pub fn with_depth_test(mut self, depth_test: DepthTest) -> Self {
         self.set_depth_test(depth_test);
         self
@@ -223,6 +238,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `Face` culling.
+    #[must_use]
     pub fn with_face_culling(mut self, cull_face: Face) -> Self {
         self.set_face_culling(cull_face);
         self
@@ -233,6 +249,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided vertex description.
+    #[must_use]
     pub fn with_vertex_desc(mut self, desc: &[(VertexFormat, VertexInputRate)]) -> Self {
         self.set_vertex_desc(desc);
         self
@@ -245,6 +262,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     }
 
     /// Build with the provided `ColorBlendDesc` collection.
+    #[must_use]
     pub fn with_blend_targets(mut self, targets: Vec<ColorBlendDesc>) -> Self {
         self.set_blend_targets(targets);
         self
@@ -254,6 +272,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
         self.blender.targets = targets;
     }
     /// Finalize and construct the `GraphicsPipelineDesc`
+    #[must_use]
     pub fn build(self) -> GraphicsPipelineDesc<'a, B> {
         GraphicsPipelineDesc {
             shaders: self.shaders.expect("Pipeline is missing shaders"),
@@ -305,6 +324,7 @@ pub struct PipelinesBuilder<'a, B: Backend> {
 
 impl<'a, B: Backend> PipelinesBuilder<'a, B> {
     /// Create a new pipeline builder.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             builders: Vec::new(),
@@ -312,6 +332,7 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
     }
 
     /// Build with an additional `PipelineDescBuilder` instance.
+    #[must_use]
     pub fn with_pipeline(mut self, builder: PipelineDescBuilder<'a, B>) -> Self {
         self.add_pipeline(builder);
         self
@@ -323,6 +344,7 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
     }
 
     /// Build with an additional child `PipelineDescBuilder` instance.
+    #[must_use]
     pub fn with_child_pipeline(
         mut self,
         index: usize,
@@ -336,7 +358,7 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
     pub fn add_child_pipeline(&mut self, index: usize, builder: PipelineDescBuilder<'a, B>) {
         self.builders[index].flags |= PipelineCreationFlags::ALLOW_DERIVATIVES;
         self.builders
-            .push(builder.with_parent(BasePipeline::Index(index)));
+            .push(builder.with_parent(&BasePipeline::Index(index)));
     }
 
     /// Finalize and construct the `GraphicsPipeline`
@@ -349,9 +371,10 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
         profile_scope!("create_pipelines");
 
         let mut pipelines = unsafe {
-            factory
-                .device()
-                .create_graphics_pipelines(self.builders.into_iter().map(|b| b.build()), cache)
+            factory.device().create_graphics_pipelines(
+                self.builders.into_iter().map(PipelineDescBuilder::build),
+                cache,
+            )
         };
 
         if let Some(err) = pipelines.iter().find_map(|p| p.as_ref().err().cloned()) {
@@ -363,6 +386,9 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
             return Err(err);
         }
 
-        Ok(pipelines.into_iter().map(|p| p.unwrap()).collect())
+        Ok(pipelines
+            .into_iter()
+            .map(std::result::Result::unwrap)
+            .collect())
     }
 }

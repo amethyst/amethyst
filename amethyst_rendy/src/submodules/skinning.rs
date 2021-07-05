@@ -1,5 +1,5 @@
 //! 3D Skinned per-image buffer handling.
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::Entity;
 use fnv::FnvHashMap;
 use rendy::resource::SubRange;
 #[cfg(feature = "profiler")]
@@ -36,7 +36,9 @@ struct PerImageSkinningSub<B: Backend> {
 impl<B: Backend> SkinningSub<B> {
     /// Create a new `SkinningSub`, allocating using the provided `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, hal::pso::CreationError> {
-        use rendy::hal::pso::*;
+        use rendy::hal::pso::{
+            BufferDescriptorFormat, BufferDescriptorType, DescriptorType, ShaderStageFlags,
+        };
 
         let layout = factory
             .create_descriptor_set_layout(util::set_layout_bindings(vec![(
@@ -53,13 +55,14 @@ impl<B: Backend> SkinningSub<B> {
 
         Ok(Self {
             layout,
-            skin_offset_map: Default::default(),
+            skin_offset_map: std::collections::HashMap::default(),
             staging: Vec::new(),
             per_image: Vec::new(),
         })
     }
 
     /// Returns the raw `DescriptorSetLayout` of a skinning submission.
+    #[must_use]
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }

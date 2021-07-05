@@ -1,7 +1,9 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::ecs::{DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World};
+use amethyst_core::ecs::{
+    DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World,
+};
 use amethyst_error::Error;
 use log::error;
 #[cfg(feature = "profiler")]

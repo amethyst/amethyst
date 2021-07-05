@@ -72,8 +72,8 @@ pub fn load_animations(
                     .id
                     .expect("UUID generation for main scene prefab didn't work")
                     .to_string(),
-            })
-    };
+            });
+    }
 
     let mut asset_accumulator = Vec::new();
     let mut animations_accumulator = FnvHashMap::default();

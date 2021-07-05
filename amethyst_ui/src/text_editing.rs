@@ -294,8 +294,7 @@ impl System for TextEditingInputSystem {
                                                             .text
                                                             .grapheme_indices(true)
                                                             .nth(focused_edit.cursor_position as usize)
-                                                            .map(|i| i.0)
-                                                            .unwrap_or_else(|| focused_text.text.len());
+                                                            .map_or_else(|| focused_text.text.len(), |i| i.0);
 
                                                         focused_text.text.insert(start_byte, '\n');
                                                         focused_edit.cursor_position += 1;
@@ -362,8 +361,7 @@ fn cursor_byte_index(edit: &TextEditing, text: &UiText) -> usize {
     text.text
         .grapheme_indices(true)
         .nth(edit.cursor_position as usize)
-        .map(|i| i.0)
-        .unwrap_or_else(|| text.text.len())
+        .map_or_else(|| text.text.len(), |i| i.0)
 }
 
 /// Returns the byte indices that are highlighted in the string.
@@ -378,14 +376,12 @@ fn highlighted_bytes(edit: &TextEditing, text: &UiText) -> Range<usize> {
         .text
         .grapheme_indices(true)
         .nth(start)
-        .map(|i| i.0)
-        .unwrap_or_else(|| text.text.len());
+        .map_or_else(|| text.text.len(), |i| i.0);
     let end_byte = text
         .text
         .grapheme_indices(true)
         .nth(end)
-        .map(|i| i.0)
-        .unwrap_or_else(|| text.text.len());
+        .map_or_else(|| text.text.len(), |i| i.0);
     start_byte..end_byte
 }
 

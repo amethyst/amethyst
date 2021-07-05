@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use amethyst_assets::{AssetHandle, AssetStorage, Handle, LoadHandle};
-use amethyst_core::{ecs::*, transform::Transform};
+use amethyst_core::{ecs::IntoQuery, transform::Transform};
 use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
@@ -17,8 +17,10 @@ use rendy::{
 use smallvec::SmallVec;
 
 use crate::{
+    batch,
     batch::{GroupIterator, OrderedTwoLevelBatch, TwoLevelBatch},
     mtl::{FullTextureSet, Material, StaticTextureSet},
+    pass,
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::{SkinnedVertexArgs, VertexArgs},
     resources::Tint,
@@ -47,7 +49,7 @@ pub trait Base3DPassDef: 'static + std::fmt::Debug + Send + Sync {
     /// The human-readable name of this pass
     const NAME: &'static str;
 
-    /// The [mtl::StaticTextureSet] type implementation for this pass
+    /// The [`mtl::StaticTextureSet`] type implementation for this pass
     type TextureSet: for<'a> StaticTextureSet<'a>;
 
     /// Returns the vertex `SpirvShader` which will be used for this pass
@@ -76,11 +78,13 @@ pub struct DrawBase3DDesc<B: Backend, T: Base3DPassDef> {
 
 impl<B: Backend, T: Base3DPassDef> DrawBase3DDesc<B, T> {
     /// Create pass in default configuration
+    #[must_use]
     pub fn new() -> Self {
-        Default::default()
+        pass::base_3d::DrawBase3DDesc::default()
     }
 
     /// Create pass in with vertex skinning enabled
+    #[must_use]
     pub fn skinned() -> Self {
         Self {
             skinning: true,
@@ -89,6 +93,7 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DDesc<B, T> {
     }
 
     /// Create pass in with vertex skinning enabled if true is passed
+    #[must_use]
     pub fn with_skinning(mut self, skinned: bool) -> Self {
         self.skinning = skinned;
         self
@@ -146,8 +151,8 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData> for DrawBase
             pipeline_basic: pipelines.remove(0),
             pipeline_skinned: pipelines.pop(),
             pipeline_layout,
-            static_batches: Default::default(),
-            skinned_batches: Default::default(),
+            static_batches: batch::TwoLevelBatch::default(),
+            skinned_batches: batch::TwoLevelBatch::default(),
             vertex_format_base,
             vertex_format_skinned,
             env,
@@ -161,7 +166,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData> for DrawBase
 }
 
 /// Base implementation of a 3D render pass which can be consumed by actual 3D render passes,
-/// such as [pass::pbr::DrawPbr]
+/// such as [`pass::pbr::DrawPbr`]
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
 pub struct DrawBase3D<B: Backend, T: Base3DPassDef> {
@@ -419,6 +424,7 @@ pub struct DrawBase3DTransparentDesc<B: Backend, T: Base3DPassDef> {
 
 impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
     /// Create pass in default configuration
+    #[must_use]
     pub fn new() -> Self {
         Self {
             skinning: false,
@@ -427,6 +433,7 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
     }
 
     /// Create pass in with vertex skinning enabled
+    #[must_use]
     pub fn skinned() -> Self {
         Self {
             skinning: true,
@@ -435,6 +442,7 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
     }
 
     /// Create pass in with vertex skinning enabled if true is passed
+    #[must_use]
     pub fn with_skinning(mut self, skinned: bool) -> Self {
         self.skinning = skinned;
         self
@@ -493,8 +501,8 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData>
             pipeline_basic: pipelines.remove(0),
             pipeline_skinned: pipelines.pop(),
             pipeline_layout,
-            static_batches: Default::default(),
-            skinned_batches: Default::default(),
+            static_batches: batch::OrderedTwoLevelBatch::default(),
+            skinned_batches: batch::OrderedTwoLevelBatch::default(),
             vertex_format_base,
             vertex_format_skinned,
             env,
@@ -502,7 +510,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, GraphAuxData>
             skinning,
             models: DynamicVertexBuffer::new(),
             skinned_models: DynamicVertexBuffer::new(),
-            change: Default::default(),
+            change: util::ChangeDetection::default(),
             marker: PhantomData,
         }))
     }

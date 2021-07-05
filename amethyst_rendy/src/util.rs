@@ -7,7 +7,7 @@ use core::{
 
 use amethyst_core::num::PrimInt;
 use derivative::Derivative;
-use glsl_layout::*;
+use glsl_layout::Uniform;
 use rendy::{
     factory::Factory,
     graph::render::PrepareResult,
@@ -30,6 +30,7 @@ pub fn next_range<T: Add<Output = T> + Clone>(prev: &Range<T>, length: T) -> Ran
 
 /// Helper function to convert `Range` to a `SubRange`
 #[inline]
+#[must_use]
 pub fn sub_range(range: Range<u64>) -> SubRange {
     SubRange {
         offset: range.start,
@@ -39,6 +40,7 @@ pub fn sub_range(range: Range<u64>) -> SubRange {
 
 /// Helper function to convert `Range` types.
 #[inline]
+#[must_use]
 pub fn usize_range(range: Range<u64>) -> Range<usize> {
     range.start as usize..range.end as usize
 }
@@ -57,7 +59,7 @@ pub fn ensure_buffer<B: Backend>(
     #[cfg(feature = "profiler")]
     profile_scope!("ensure_buffer");
 
-    if buffer.as_ref().map(|b| b.size()).unwrap_or(0) < min_size {
+    if buffer.as_ref().map_or(0, |b| b.size()) < min_size {
         let new_size = min_size.next_power_of_two();
         let new_buffer = factory.create_buffer(
             BufferInfo {
@@ -74,6 +76,7 @@ pub fn ensure_buffer<B: Backend>(
 }
 
 /// Helper function for memory alignment.
+#[must_use]
 pub fn align_size<T: Uniform>(align: u64, array_len: usize) -> u64
 where
     T::Std140: Sized,
@@ -117,6 +120,7 @@ pub fn simple_shader_set_ext<'a, B: Backend>(
 
 /// Helper function which takes an array of vertex format information and returns allocated
 /// `VertexBufferDesc` and `AttributeDesc` collections.
+#[must_use]
 pub fn vertex_desc(
     formats: &[(VertexFormat, pso::VertexInputRate)],
 ) -> (Vec<pso::VertexBufferDesc>, Vec<pso::AttributeDesc>) {
@@ -158,7 +162,7 @@ pub fn push_vertex_desc(
         rate,
     });
 
-    for element in elements.into_iter() {
+    for element in elements {
         attributes.push(pso::AttributeDesc {
             location,
             binding: index,
@@ -185,6 +189,7 @@ pub fn desc_write<'a, B: Backend>(
 
 /// Helper function to create a `CombinedImageSampler` from a supplied `Texture` and `Layout`
 #[inline]
+#[must_use]
 pub fn texture_desc<B: Backend>(
     texture: &Texture,
     layout: hal::image::Layout,
@@ -196,7 +201,7 @@ pub fn texture_desc<B: Backend>(
 
 /// Combines an iterator of descriptor information in tuple form into a `DescriptorSetLayoutBinding`
 /// # Limitations
-/// * All descriptors are created as single count and immutable_samplers is false.
+/// * All descriptors are created as single count and `immutable_samplers` is false.
 pub fn set_layout_bindings(
     bindings: impl IntoIterator<Item = (u32, pso::DescriptorType, pso::ShaderStageFlags)>,
 ) -> Vec<pso::DescriptorSetLayoutBinding> {
@@ -225,6 +230,7 @@ pub struct LookupBuilder<I: Hash + Eq> {
 
 impl<I: Hash + Eq> LookupBuilder<I> {
     /// Create a new `LookupBuilder`
+    #[must_use]
     pub fn new() -> LookupBuilder<I> {
         LookupBuilder {
             forward: fnv::FnvHashMap::default(),
@@ -250,7 +256,7 @@ pub fn slice_as_bytes<T>(slice: &[T]) -> &[u8] {
     unsafe {
         // Inspecting any value as bytes should be safe.
         core::slice::from_raw_parts(
-            slice.as_ptr() as *const u8,
+            slice.as_ptr().cast::<u8>(),
             core::mem::size_of::<T>() * slice.len(),
         )
     }
@@ -336,7 +342,7 @@ pub enum ChangeDetection {
 impl ChangeDetection {
     /// Returns true if recording is not needed and the image can be re-used.
     pub fn can_reuse(&mut self, index: usize, changed: bool) -> bool {
-        use ChangeDetection::*;
+        use ChangeDetection::{Changed, Stable};
         match (*self, changed) {
             (_, true) => {
                 *self = Changed(index);

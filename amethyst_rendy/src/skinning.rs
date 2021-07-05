@@ -7,7 +7,7 @@ use amethyst_assets::{
         SerdeDiff,
     },
 };
-use amethyst_core::{ecs::*, math::Matrix4};
+use amethyst_core::{ecs::Entity, math::Matrix4};
 use rendy::{
     hal::format::Format,
     mesh::{AsAttribute, AsVertex, VertexFormat},

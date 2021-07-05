@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use amethyst_assets::{register_asset_type, Asset, AssetProcessorSystem, Handle};
 use amethyst_core::{
-    ecs::*,
+    ecs::{Entity, Resources, World},
     transform::{Parent, Transform},
 };
 
@@ -92,14 +92,14 @@ where
 }
 
 impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I> {
-    /// Construct a new UiLabelBuilder.
+    /// Construct a new `UiLabelBuilder`.
     /// This allows the user to easily build a UI element with a text that can
     /// easily be retrieved and updated through the appropriate resource,
     /// see [`Widgets`](../struct.Widgets.html).
-    pub fn new<S: ToString>(text: S) -> UiLabelBuilder<G, I> {
+    pub fn new<S: ToString>(text: &S) -> UiLabelBuilder<G, I> {
         UiLabelBuilder {
             text: text.to_string(),
-            ..Default::default()
+            ..UiLabelBuilder::default()
         }
     }
 
@@ -117,9 +117,9 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
         self
     }
 
-    /// This will create a default UiTransform if one is not already attached.
+    /// This will create a default `UiTransform` if one is not already attached.
     /// See `DEFAULT_Z`, `DEFAULT_WIDTH`, `DEFAULT_HEIGHT`, and `DEFAULT_TAB_ORDER` for
-    /// the values that will be provided to the default UiTransform.
+    /// the values that will be provided to the default `UiTransform`.
     pub fn with_position(mut self, x: f32, y: f32) -> Self {
         self.x = x;
         self.y = y;
@@ -147,7 +147,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiLabelBuilder<G, I>
     /// characters will appear. If you need to change the font size, color, etc., then you should
     /// use
     /// [`with_uitext`](#with_uitext) and provide a new `UiText` object.
-    pub fn with_text<S>(mut self, text: S) -> Self
+    pub fn with_text<S>(mut self, text: &S) -> Self
     where
         S: ToString,
     {

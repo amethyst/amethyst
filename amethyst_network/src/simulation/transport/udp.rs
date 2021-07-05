@@ -2,7 +2,12 @@
 
 use std::{io, net::UdpSocket};
 
-use amethyst_core::{ecs::{DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World}, EventChannel};
+use amethyst_core::{
+    ecs::{
+        DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World,
+    },
+    EventChannel,
+};
 use amethyst_error::Error;
 use bytes::Bytes;
 

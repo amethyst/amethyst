@@ -93,14 +93,12 @@ impl<PK, SK, C> TwoLevelBatch<PK, SK, C>
 where
     PK: Eq + std::hash::Hash,
     SK: PartialEq,
-    C: IntoIterator,
-    C: FromIterator<<C as IntoIterator>::Item>,
-    C: Extend<<C as IntoIterator>::Item>,
+    C: IntoIterator + FromIterator<<C as IntoIterator>::Item> + Extend<<C as IntoIterator>::Item>,
 {
     /// Clears all batch data.
     pub fn clear_inner(&mut self) {
         self.data_count = 0;
-        for (_, data) in self.map.iter_mut() {
+        for data in self.map.values_mut() {
             data.clear();
         }
     }
@@ -147,6 +145,7 @@ where
     }
 
     /// Returns the number of items currently in this batch.
+    #[must_use]
     pub fn count(&self) -> usize {
         self.data_count
     }
@@ -163,7 +162,7 @@ where
 ///
 /// Internally, this batch type is implemented with sorted tuple `Vec` structures.
 ///
-/// `OrderedTwoLevelBatch` differs from [TwoLevelBatch] in that it sorts and orders on both levels
+/// `OrderedTwoLevelBatch` differs from [`TwoLevelBatch`] in that it sorts and orders on both levels
 /// of batching.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
@@ -220,6 +219,7 @@ where
     }
 
     /// Returns the raw storage data of this batch container.
+    #[must_use]
     pub fn data(&self) -> &Vec<D> {
         &self.data_list
     }
@@ -235,11 +235,13 @@ where
     }
 
     /// Returns true if sorting this batch resulted in a change in order.
+    #[must_use]
     pub fn changed(&self) -> bool {
         self.pk_list != self.old_pk_list || self.sk_list != self.old_sk_list
     }
 
     /// Returns the number of items currently in this batch.
+    #[must_use]
     pub fn count(&self) -> usize {
         self.data_list.len()
     }
@@ -264,7 +266,7 @@ where
     /// Clears all data and indices from this batch set.
     pub fn clear_inner(&mut self) {
         self.data_count = 0;
-        for (_, data) in self.map.iter_mut() {
+        for data in self.map.values_mut() {
             data.clear();
         }
     }
@@ -312,6 +314,7 @@ where
     }
 
     /// Returns the number of items currently in this batch.
+    #[must_use]
     pub fn count(&self) -> usize {
         self.data_count
     }
@@ -366,6 +369,7 @@ where
     }
 
     /// Returns an iterator to raw data for this batch.
+    #[must_use]
     pub fn data(&self) -> &Vec<D> {
         &self.data_list
     }
@@ -381,11 +385,13 @@ where
     }
 
     /// Returns an iterator to raw data for this batch.
+    #[must_use]
     pub fn changed(&self) -> bool {
         self.keys_list != self.old_keys
     }
 
     /// Returns the number of items currently in this batch.
+    #[must_use]
     pub fn count(&self) -> usize {
         self.data_list.len()
     }

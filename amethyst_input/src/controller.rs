@@ -120,7 +120,10 @@ pub enum ControllerEvent {
 
 impl From<&ControllerEvent> for InputEvent {
     fn from(c: &ControllerEvent) -> Self {
-        use self::ControllerEvent::{ControllerAxisMoved, ControllerButtonPressed, ControllerButtonReleased, ControllerConnected, ControllerDisconnected};
+        use self::ControllerEvent::{
+            ControllerAxisMoved, ControllerButtonPressed, ControllerButtonReleased,
+            ControllerConnected, ControllerDisconnected,
+        };
         match *c {
             ControllerAxisMoved { which, axis, value } => {
                 InputEvent::ControllerAxisMoved { which, axis, value }

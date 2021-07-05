@@ -1,6 +1,6 @@
 //! Set of predefined implementations of `RenderPlugin` for use with `RenderingBundle`.
 
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{DispatcherBuilder, Resources, World};
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
@@ -8,8 +8,12 @@ use rendy::graph::render::RenderGroupDesc;
 pub use window::RenderToWindow;
 
 use crate::{
+    bundle,
     bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
-    pass::*,
+    pass::{
+        Base3DPassDef, DrawBase3DDesc, DrawBase3DTransparentDesc, DrawDebugLinesDesc,
+        DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawSkyboxDesc,
+    },
     sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
     visibility::{Visibility, VisibilitySortingSystem},
     Backend, Factory,
@@ -23,13 +27,16 @@ mod window {
     use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
     use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
 
-    use super::*;
+    use super::{
+        Backend, DispatcherBuilder, Error, Factory, RenderPlan, RenderPlugin, Resources, Target,
+        World,
+    };
     use crate::{
         bundle::{ImageOptions, OutputColor},
-        Format, Kind,
+        plugins, Format, Kind,
     };
 
-    /// A [RenderPlugin] for opening a window and displaying a render target to it.
+    /// A [`RenderPlugin`] for opening a window and displaying a render target to it.
     ///
     /// When you provide [`DisplayConfig`], it opens a window for you using [`WindowBundle`].
     #[derive(Default, Debug)]
@@ -42,20 +49,22 @@ mod window {
     }
 
     impl RenderToWindow {
-        /// Create RenderToWindow plugin with [`WindowBundle`] using specified config path.
+        /// Create `RenderToWindow` plugin with [`WindowBundle`] using specified config path.
         pub fn from_config_path(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
             Ok(Self::from_config(DisplayConfig::load(path)?))
         }
 
-        /// Create RenderToWindow plugin with [`WindowBundle`] using specified config.
+        /// Create `RenderToWindow` plugin with [`WindowBundle`] using specified config.
+        #[must_use]
         pub fn from_config(display_config: DisplayConfig) -> Self {
             Self {
                 config: Some(display_config),
-                ..Default::default()
+                ..plugins::window::RenderToWindow::default()
             }
         }
 
         /// Select render target which will be presented to window.
+        #[must_use]
         pub fn with_target(mut self, target: Target) -> Self {
             self.target = target;
             self
@@ -183,6 +192,7 @@ pub struct RenderBase3D<D: Base3DPassDef> {
 
 impl<D: Base3DPassDef> RenderBase3D<D> {
     /// Set target to which 3d meshes will be rendered.
+    #[must_use]
     pub fn with_target(mut self, target: Target) -> Self {
         self.target = target;
         self
@@ -191,6 +201,7 @@ impl<D: Base3DPassDef> RenderBase3D<D> {
     /// Enable rendering for skinned meshes.
     ///
     /// NOTE: You must register `VertexSkinningBundle` yourself.
+    #[must_use]
     pub fn with_skinning(mut self) -> Self {
         self.skinning = true;
         self
@@ -236,8 +247,8 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
     }
 }
 
-/// A [RenderPlugin] for drawing 2d objects with flat shading.
-/// Required to display sprites defined with [SpriteRender] component.
+/// A [`RenderPlugin`] for drawing 2d objects with flat shading.
+/// Required to display sprites defined with [`SpriteRender`] component.
 #[derive(Default, Debug)]
 pub struct RenderFlat2D {
     target: Target,
@@ -245,6 +256,7 @@ pub struct RenderFlat2D {
 
 impl RenderFlat2D {
     /// Set target to which 2d sprites will be rendered.
+    #[must_use]
     pub fn with_target(mut self, target: Target) -> Self {
         self.target = target;
         self
@@ -282,8 +294,8 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
     }
 }
 
-/// A [RenderPlugin] for drawing debug lines.
-/// Use with [debug_drawing::DebugLines] resource or [debug_drawing::DebugLinesComponent].
+/// A [`RenderPlugin`] for drawing debug lines.
+/// Use with [`debug_drawing::DebugLines`] resource or [`debug_drawing::DebugLinesComponent`].
 #[derive(Default, Debug)]
 pub struct RenderDebugLines {
     target: Target,
@@ -291,6 +303,7 @@ pub struct RenderDebugLines {
 
 impl RenderDebugLines {
     /// Set target to which debug lines will be rendered.
+    #[must_use]
     pub fn with_target(mut self, target: Target) -> Self {
         self.target = target;
         self
@@ -316,7 +329,7 @@ impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
     }
 }
 
-/// RenderPlugin for rendering skyboxes.
+/// `RenderPlugin` for rendering skyboxes.
 #[derive(Default, Debug)]
 pub struct RenderSkybox {
     target: Target,
@@ -325,14 +338,16 @@ pub struct RenderSkybox {
 
 impl RenderSkybox {
     /// Create skybox with specified nadir and zenith colors.
+    #[must_use]
     pub fn with_colors(nadir_color: Srgb, zenith_color: Srgb) -> Self {
         Self {
-            target: Default::default(),
+            target: bundle::Target::default(),
             colors: Some((nadir_color, zenith_color)),
         }
     }
 
     /// Set target to which skybox will be rendered.
+    #[must_use]
     pub fn with_target(mut self, target: Target) -> Self {
         self.target = target;
         self

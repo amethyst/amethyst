@@ -2,7 +2,7 @@
 use std::cmp::Ordering;
 
 use amethyst_core::{
-    ecs::*,
+    ecs::{component, Entity, IntoQuery, ParallelRunnable, System, SystemBuilder},
     math::{Point3, Vector3},
     transform::Transform,
     Hidden, HiddenPropagate,

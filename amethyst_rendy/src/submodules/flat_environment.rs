@@ -1,6 +1,6 @@
 //! Environment submodule for shared environmental descriptor set data.
 //! Fetches and sets projection set information for a flat pass.
-use amethyst_core::ecs::*;
+use amethyst_core::ecs::{Resources, World};
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -28,6 +28,7 @@ impl<B: Backend> FlatEnvironmentSub<B> {
     }
 
     /// Returns the raw `DescriptorSetLayout` for this environment
+    #[must_use]
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.uniform.raw_layout()
     }

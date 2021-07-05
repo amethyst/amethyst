@@ -57,7 +57,7 @@ impl System for HideHierarchySystem {
                         }
                     }
                     for e in &children_with_hidden_parent {
-                        commands.add_component(**e, HiddenPropagate::new_propagated())
+                        commands.add_component(**e, HiddenPropagate::new_propagated());
                     }
                     children_without_hidden_parent
                         .iter()

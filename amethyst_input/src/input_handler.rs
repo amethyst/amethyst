@@ -12,7 +12,11 @@ use winit::{
 
 use super::{
     controller::{ControllerButton, ControllerEvent},
-    event::InputEvent::{self, ActionPressed, ActionReleased, ActionWheelMoved, AxisMoved, ButtonPressed, ButtonReleased, CursorMoved, KeyPressed, KeyReleased, KeyTyped, MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseWheelMoved},
+    event::InputEvent::{
+        self, ActionPressed, ActionReleased, ActionWheelMoved, AxisMoved, ButtonPressed,
+        ButtonReleased, CursorMoved, KeyPressed, KeyReleased, KeyTyped, MouseButtonPressed,
+        MouseButtonReleased, MouseMoved, MouseWheelMoved,
+    },
     scroll_direction::ScrollDirection,
     Axis, Bindings, Button, ControllerAxis, ElementState, Iterator, MouseAxis,
 };
@@ -329,7 +333,10 @@ impl InputHandler {
         event: &ControllerEvent,
         event_handler: &mut EventChannel<InputEvent>,
     ) {
-        use self::ControllerEvent::{ControllerAxisMoved, ControllerButtonPressed, ControllerButtonReleased, ControllerConnected, ControllerDisconnected};
+        use self::ControllerEvent::{
+            ControllerAxisMoved, ControllerButtonPressed, ControllerButtonReleased,
+            ControllerConnected, ControllerDisconnected,
+        };
 
         match *event {
             ControllerAxisMoved { which, axis, value } => {

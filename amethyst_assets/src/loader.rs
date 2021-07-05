@@ -1,11 +1,4 @@
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    error::Error,
-    fs::File,
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{cell::RefCell, collections::HashMap, error::Error, fs::File, path::PathBuf, sync::Arc};
 
 use amethyst_core::{
     dispatcher::System,
@@ -31,7 +24,7 @@ use log::debug;
 use serde::de::Deserialize;
 
 use crate::{
-    processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset, TypeUuid, loader,
+    loader, processor::ProcessingQueue, progress::Progress, storage::AssetStorage, Asset, TypeUuid,
 };
 
 /// Manages asset loading and storage for an application.
@@ -95,8 +88,9 @@ pub trait Loader: Send + Sync {
     ///
     /// * `id`: UUID of the asset.
     fn get_load_status(&self, id: AssetUuid) -> LoadStatus {
-        self.get_load(id)
-            .map_or(LoadStatus::NotRequested, |h| self.get_load_status_handle(h.load_handle()))
+        self.get_load(id).map_or(LoadStatus::NotRequested, |h| {
+            self.get_load_status_handle(h.load_handle())
+        })
     }
 
     /// Returns the load status for the asset with the given load handle.
@@ -454,9 +448,9 @@ impl<'a> distill_loader::storage::AssetStorage for WorldStorages<'a> {
                             &data,
                             moved_op.replace(None).unwrap(),
                             version,
-                        ))
+                        ));
                     },
-                ))
+                ));
             });
         }
         result.unwrap()
@@ -485,7 +479,7 @@ impl<'a> distill_loader::storage::AssetStorage for WorldStorages<'a> {
             .get(asset_type)
             .expect("could not find asset type")
             .with_storage)(self.resources, &mut |storage: &mut dyn AssetTypeStorage| {
-            storage.free(load_handle, version)
+            storage.free(load_handle, version);
         });
     }
 }
@@ -542,11 +536,13 @@ where
         },
         with_storage: |res, func| {
             func(&mut (
-                &*res.get::<ProcessingQueue<Intermediate>>()
+                &*res
+                    .get::<ProcessingQueue<Intermediate>>()
                     .expect("Could not get ProcessingQueue"),
-                &mut *res.get_mut::<AssetStorage<Asset>>()
+                &mut *res
+                    .get_mut::<AssetStorage<Asset>>()
                     .expect("Could not get_mut AssetStorage"),
-            ))
+            ));
         },
     }
 }

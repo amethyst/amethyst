@@ -587,7 +587,7 @@ impl Transform {
     /// Useful for tests or other debug type access.
     #[inline]
     pub fn copy_local_to_global(&mut self) {
-        self.global_matrix = self.matrix()
+        self.global_matrix = self.matrix();
     }
 }
 

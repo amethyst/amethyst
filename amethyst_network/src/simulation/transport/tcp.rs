@@ -6,7 +6,12 @@ use std::{
     net::{SocketAddr, TcpListener, TcpStream},
 };
 
-use amethyst_core::{ecs::{DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World}, EventChannel};
+use amethyst_core::{
+    ecs::{
+        DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World,
+    },
+    EventChannel,
+};
 use amethyst_error::Error;
 use bytes::Bytes;
 use log::warn;

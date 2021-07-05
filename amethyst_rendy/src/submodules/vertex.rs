@@ -16,10 +16,10 @@ use crate::{
 };
 
 /// Type alias for a set of dynamic vertex buffer data to be managed. See the documentation
-/// for [DynamicVertexData] for implementation details.
+/// for [`DynamicVertexData`] for implementation details.
 pub type DynamicVertexBuffer<B, T> = DynamicVertexData<B, VertexData<B, T>, T>;
 /// Type alias for a set of dynamic index buffer data to be managed. See the documentation
-/// for [DynamicVertexData] for implementation details.
+/// for [`DynamicVertexData`] for implementation details.
 pub type DynamicIndexBuffer<B, T> = DynamicVertexData<B, IndexData<B, T>, T>;
 
 /// Type used to compile-time specify the type of vertex buffer data managed by a  `DynamicVertexData`
@@ -109,7 +109,7 @@ impl<B: Backend> IndexData<B, u32> {
     }
 }
 
-/// This structure wraps [PerImageDynamicVertexData], managing multiple instances and providing
+/// This structure wraps [`PerImageDynamicVertexData`], managing multiple instances and providing
 /// an easy-to-use interface for having per-image buffers. This is needed because multiple images
 /// (frames) can be in flight at any given time, so multiple buffers are needed for the same data.
 #[derive(Debug, Default)]
@@ -120,6 +120,7 @@ pub struct DynamicVertexData<B: Backend, V: VertexDataBufferType, T: 'static> {
 
 impl<B: Backend, V: VertexDataBufferType, T: 'static> DynamicVertexData<B, V, T> {
     /// Creates a new `DynamicVertexData`
+    #[must_use]
     pub fn new() -> Self {
         Self {
             per_image: Vec::new(),
@@ -206,7 +207,7 @@ impl<B: Backend> DynamicVertexData<B, IndexData<B, u32>, u32> {
 }
 
 /// an easy-to-use interface for managing, growing and binding a given vertex buffer type. This
-/// implementation also leverages the [VertexDataBufferType] trait type for statically dispatching
+/// implementation also leverages the [`VertexDataBufferType`] trait type for statically dispatching
 /// the appropriate binding and allocation functions, preventing hot-path branching.
 #[derive(Debug)]
 struct PerImageDynamicVertexData<B: Backend, V: VertexDataBufferType> {
@@ -215,7 +216,7 @@ struct PerImageDynamicVertexData<B: Backend, V: VertexDataBufferType> {
 }
 
 impl<B: Backend, V: VertexDataBufferType> PerImageDynamicVertexData<B, V> {
-    /// Creates a new 'PerImageDynamicVertexData'
+    /// Creates a new `PerImageDynamicVertexData`
     fn new() -> Self {
         Self {
             buffer: None,
@@ -223,8 +224,8 @@ impl<B: Backend, V: VertexDataBufferType> PerImageDynamicVertexData<B, V> {
         }
     }
 
-    /// Garuntees that at least max_size bytes of memory is allocated for this buffer
-    /// Calls the utility function, [util::ensure_buffer] to dynamically grow the buffer if needed.
+    /// Guarantees that at least `max_size` bytes of memory is allocated for this buffer
+    /// Calls the utility function, [`util::ensure_buffer`] to dynamically grow the buffer if needed.
     fn ensure(&mut self, factory: &Factory<B>, max_size: u64) -> bool {
         util::ensure_buffer(
             factory,

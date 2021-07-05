@@ -744,12 +744,12 @@ where
 
     /// Start animation if it exists
     pub fn start(&mut self, id: &I) -> &mut Self {
-        self.set_command(&id, AnimationCommand::Start)
+        self.set_command(id, AnimationCommand::Start)
     }
 
     /// Pause animation if it exists
     pub fn pause(&mut self, id: &I) -> &mut Self {
-        self.set_command(&id, AnimationCommand::Pause)
+        self.set_command(id, AnimationCommand::Pause)
     }
 
     /// Toggle animation if it exists
@@ -783,22 +783,26 @@ where
 
     /// Step animation
     pub fn step(&mut self, id: &I, direction: StepDirection) -> &mut Self {
-        self.set_command(&id, AnimationCommand::Step(direction))
+        self.set_command(id, AnimationCommand::Step(direction))
     }
 
     /// Set animation input value (point of interpolation)
     pub fn set_input(&mut self, id: &I, input: f32) -> &mut Self {
-        self.set_command(&id, AnimationCommand::SetInputValue(input))
+        self.set_command(id, AnimationCommand::SetInputValue(input))
     }
 
     /// Set blend weights
-    pub fn set_blend_weight(&mut self, id: &I, weights: Vec<(usize, T::Channel, f32)>) -> &mut Self {
-        self.set_command(&id, AnimationCommand::SetBlendWeights(weights))
+    pub fn set_blend_weight(
+        &mut self,
+        id: &I,
+        weights: Vec<(usize, T::Channel, f32)>,
+    ) -> &mut Self {
+        self.set_command(id, AnimationCommand::SetBlendWeights(weights))
     }
 
     /// Abort animation
     pub fn abort(&mut self, id: &I) -> &mut Self {
-        self.set_command(&id, AnimationCommand::Abort)
+        self.set_command(id, AnimationCommand::Abort)
     }
 
     /// Add animation with the given id, unless it already exists

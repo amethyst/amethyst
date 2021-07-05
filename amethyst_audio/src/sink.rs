@@ -50,7 +50,7 @@ impl AudioSink {
 
     /// Pauses playback, this can be resumed with `AudioSink::play`
     pub fn pause(&self) {
-        self.sink.pause()
+        self.sink.pause();
     }
 
     /// Returns true if the sink is currently paused.
