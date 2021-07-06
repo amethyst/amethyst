@@ -84,7 +84,7 @@ mod example_utils {
     };
 
     pub fn build_example_button(world: &mut World, resources: &mut Resources) {
-        UiButtonBuilder::<(), u32>::new("Made with UiButtonBuilder".to_string())
+        UiButtonBuilder::<(), u32>::new(&"Made with UiButtonBuilder".to_string())
             .with_font_size(32.0)
             .with_position(0.0, -256.0)
             .with_size(64.0 * 6.0, 64.0)
@@ -103,7 +103,7 @@ mod example_utils {
                 .unwrap()
                 .load("font/square.ttf")
         };
-        UiLabelBuilder::<(), u32>::new("Multiline\nText!")
+        UiLabelBuilder::<(), u32>::new(&"Multiline\nText!")
             .with_line_mode(LineMode::Wrap)
             .with_position(-200., 0.)
             .with_size(400., 200.)
@@ -116,7 +116,7 @@ mod example_utils {
     }
 
     pub fn build_editable_text(world: &mut World, resources: &mut Resources) {
-        let text = UiLabelBuilder::<(), u32>::new("Editable")
+        let text = UiLabelBuilder::<(), u32>::new(&"Editable")
             .with_line_mode(LineMode::Single)
             .with_position(270., 50.)
             .with_size(500., 75.)
@@ -162,7 +162,7 @@ mod example_utils {
                 .load("audio/confirm.ogg")
         };
 
-        UiButtonBuilder::<(), u32>::new("ComplexBtn".to_string())
+        UiButtonBuilder::<(), u32>::new(&"ComplexBtn".to_string())
             .with_font_size(20.0)
             .with_position(0.0, -32.0)
             .with_size(128., 64.0)
@@ -213,7 +213,7 @@ mod example_utils {
                 .unwrap()
                 .load("font/square.ttf")
         };
-        let (_, btn) = UiButtonBuilder::<(), u32>::new("Draggable".to_string())
+        let (_, btn) = UiButtonBuilder::<(), u32>::new(&"Draggable".to_string())
             .with_font_size(20.0)
             .with_position(250., -120.)
             .with_layer(1.)
