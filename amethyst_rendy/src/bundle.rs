@@ -11,6 +11,7 @@ use crate::{
     bundle,
     camera::ActiveCamera,
     mtl::{Material, MaterialDefaults},
+    prefab::shape_prefab_spawning_tick,
     rendy::{
         command::QueueId,
         factory::Factory,
@@ -103,6 +104,7 @@ impl<B: Backend> SystemBundle for RenderingBundle<B> {
         });
 
         builder.add_thread_local_fn(render::<B, PluggableRenderGraphCreator<B>>);
+        builder.add_thread_local_fn(shape_prefab_spawning_tick);
 
         Ok(())
     }

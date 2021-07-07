@@ -10,7 +10,7 @@ use amethyst::{
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::hal::command::ClearColor,
         types::DefaultBackend,
-        RenderingBundle,
+        Mesh, RenderingBundle,
     },
     utils::application_root_dir,
     Error,
@@ -51,6 +51,9 @@ impl SimpleState for AssetsExample {
                     log::info!("{:?}: {:?}", entity, entry.archetype());
                     if let Ok(pos) = entry.get_component::<Position2D>() {
                         log::info!("{:?}", pos);
+                    }
+                    if let Ok(mesh) = entry.get_component::<Handle<Mesh>>() {
+                        log::info!("{:?}", mesh);
                     }
                 }
             }
