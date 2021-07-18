@@ -154,7 +154,9 @@ impl SimpleState for Example {
     }
 
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
-        let StateData { world, .. } = data;
+        let StateData {
+            world, resources, ..
+        } = data;
         let mut buffer = CommandBuffer::new(world);
 
         if let StateEvent::Window(event) = &event {
@@ -165,6 +167,7 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::Space, ElementState::Pressed)) => {
                     add_animation(
                         world,
+                        resources,
                         self.sphere.unwrap(),
                         self.current_animation,
                         self.rate,
@@ -176,6 +179,7 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::D, ElementState::Pressed)) => {
                     add_animation(
                         world,
+                        resources,
                         self.sphere.unwrap(),
                         AnimationId::Translate,
                         self.rate,
@@ -184,6 +188,7 @@ impl SimpleState for Example {
                     );
                     add_animation(
                         world,
+                        resources,
                         self.sphere.unwrap(),
                         AnimationId::Rotate,
                         self.rate,
@@ -192,6 +197,7 @@ impl SimpleState for Example {
                     );
                     add_animation(
                         world,
+                        resources,
                         self.sphere.unwrap(),
                         AnimationId::Scale,
                         self.rate,
@@ -207,7 +213,7 @@ impl SimpleState for Example {
                         self.sphere.unwrap(),
                     )
                     .unwrap()
-                    .step(self.current_animation, StepDirection::Backward);
+                    .step(&self.current_animation, StepDirection::Backward);
                 }
 
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
@@ -217,7 +223,7 @@ impl SimpleState for Example {
                         self.sphere.unwrap(),
                     )
                     .unwrap()
-                    .step(self.current_animation, StepDirection::Forward);
+                    .step(&self.current_animation, StepDirection::Forward);
                 }
 
                 Some((VirtualKeyCode::F, ElementState::Pressed)) => {
@@ -228,7 +234,7 @@ impl SimpleState for Example {
                         self.sphere.unwrap(),
                     )
                     .unwrap()
-                    .set_rate(self.current_animation, self.rate);
+                    .set_rate(&self.current_animation, self.rate);
                 }
 
                 Some((VirtualKeyCode::V, ElementState::Pressed)) => {
@@ -239,7 +245,7 @@ impl SimpleState for Example {
                         self.sphere.unwrap(),
                     )
                     .unwrap()
-                    .set_rate(self.current_animation, self.rate);
+                    .set_rate(&self.current_animation, self.rate);
                 }
 
                 Some((VirtualKeyCode::H, ElementState::Pressed)) => {
@@ -250,7 +256,7 @@ impl SimpleState for Example {
                         self.sphere.unwrap(),
                     )
                     .unwrap()
-                    .set_rate(self.current_animation, self.rate);
+                    .set_rate(&self.current_animation, self.rate);
                 }
 
                 Some((VirtualKeyCode::R, ElementState::Pressed)) => {
@@ -268,7 +274,7 @@ impl SimpleState for Example {
                 _ => {}
             };
         }
-        buffer.flush(world);
+        buffer.flush(world, resources);
 
         Trans::None
     }
@@ -301,7 +307,7 @@ impl SimpleState for Example {
                 }
             }
         }
-        buffer.flush(data.world);
+        buffer.flush(data.world, data.resources);
 
         Trans::None
     }
@@ -339,6 +345,7 @@ fn main() -> amethyst::Result<()> {
 
 fn add_animation(
     world: &mut World,
+    resources: &mut Resources,
     entity: Entity,
     id: AnimationId,
     rate: f32,
@@ -362,8 +369,8 @@ fn add_animation(
 
         match defer {
             None => {
-                if toggle_if_exists && control_set.has_animation(id) {
-                    control_set.toggle(id);
+                if toggle_if_exists && control_set.has_animation(&id) {
+                    control_set.toggle(&id);
                 } else {
                     control_set.add_animation(
                         id,
@@ -388,6 +395,6 @@ fn add_animation(
             }
         }
 
-        buffer.flush(world);
+        buffer.flush(world, resources);
     }
 }

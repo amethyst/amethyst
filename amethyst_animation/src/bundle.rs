@@ -4,7 +4,10 @@ use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use derivative::Derivative;
 use marker::PhantomData;
 
-use crate::{bundle, resources::AnimationSampling, skinning::VertexSkinningSystem};
+use crate::{
+    bundle, resources::AnimationSampling, skinning::VertexSkinningSystem,
+    systems::sampling::sampler_interpolation_system,
+};
 
 /// Bundle for vertex skinning
 ///
@@ -56,7 +59,7 @@ where
         _resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> amethyst_core::Result<()> {
-        builder.add_system(crate::systems::sampling::SamplerInterpolationSystem::<T>::default());
+        builder.add_system(|| sampler_interpolation_system::<T>(Vec::new(), Vec::new()));
 
         Ok(())
     }
