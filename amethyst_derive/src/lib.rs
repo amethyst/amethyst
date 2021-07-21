@@ -35,7 +35,7 @@ pub fn event_reader_derive(input: TokenStream) -> TokenStream {
 }
 
 /// This allows the use of an enum as an ID for the `Widgets` resource. One
-/// variant has to be marked as the default variant with `#[widget_id_default]
+/// variant has to be marked as the default variant with `#[widget_id_default]`
 /// and will be used when a `Widget` is added to the resource without an
 /// explicit ID. Note that when using `Widgets::add`, this will overwrite
 /// an existing widget with the same default id!
