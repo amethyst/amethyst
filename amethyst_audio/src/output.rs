@@ -1,7 +1,10 @@
-//! Provides structures and functions used to get audio outputs.
+//! Provides structures and functions used to get audio outputs
 
 // We have to use types from this to provide an output iterator type.
-use std::fmt::{Debug, Formatter, Result as FmtResult};
+use std::{
+    error::Error,
+    fmt::{Debug, Display, Formatter, Result as FmtResult},
+};
 
 use log::error;
 pub use rodio::OutputStream;
@@ -10,60 +13,67 @@ use rodio::{Device, DeviceTrait, OutputStreamHandle, PlayError, StreamError};
 use crate::{sink::Sink, source::Source, DecoderError};
 
 /// An audio output that can be used to play audio directly,
-/// or to spawn `Sink`s that are more flexible.
+/// or to spawn a [`Sink`] which is much more useful and flexible.
 pub struct Output {
     /// Name of the output device being used
     pub name: String,
-    /// Handle to an `OutputStream` that can be shared across threads
+    /// Handle to an [`OutputStream`] that can be shared across threads
     pub stream_handle: OutputStreamHandle,
 }
 
 impl Output {
-    /// Spawn a new Sink (audio input).
+    /// Spawns a new [`Sink`].
+    ///
+    /// # Errors
+    /// The function will return a [`PlayError`] if the output device is missing.
     pub fn try_spawn_sink(&self) -> Result<Sink, PlayError> {
         Sink::try_new(&self.stream_handle)
     }
 
-    /// Play a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
+    /// Plays a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
     /// # Errors
     /// This will return an Error if the loaded audio file in source could not be decoded.
-    pub fn try_play_once(&self, source: &Source, volume: f32) -> Result<(), DecoderError> {
+    pub fn try_play_once(&self, source: &Source, volume: f32) -> Result<(), OutputError> {
         self.try_play_n_times(source, volume, 1)
     }
 
-    /// Play a sound once. A volume of 1.0 is unchanged, while 0.0 is silent.
+    /// Plays a sound once. A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
-    /// This may silently fail, in order to get error information use `try_play_once`.
+    /// This may silently fail, in order to get error information use [`try_play_once`].
     pub fn play_once(&self, source: &Source, volume: f32) {
         self.play_n_times(source, volume, 1);
     }
 
-    /// Play a sound n times. A volume of 1.0 is unchanged, while 0.0 is silent.
+    /// Plays a sound n times. A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
-    /// This may silently fail, in order to get error information use `try_play_n_times`.
+    /// This may silently fail, in order to get error information use [`try_play_n_times`].
     pub fn play_n_times(&self, source: &Source, volume: f32, n: u16) {
         if let Err(err) = self.try_play_n_times(source, volume, n) {
             error!("An error occurred while trying to play a sound: {:?}", err);
         }
     }
 
-    /// Play a sound n times. A volume of 1.0 is unchanged, while 0.0 is silent.
+    /// Plays a sound n times. A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
     /// # Errors
     /// This will return an Error if the loaded audio file in source could not be decoded.
+    ///
     /// # Panics
-    /// Blah blah
+    /// Panics
     pub fn try_play_n_times(
         &self,
         source: &Source,
         volume: f32,
         n: u16,
-    ) -> Result<(), DecoderError> {
-        let sink = self.try_spawn_sink().unwrap();
+    ) -> Result<(), OutputError> {
+        let sink = self
+            .try_spawn_sink()
+            .map_err(|e| OutputError::PlayError(e))?;
 
         for _ in 0..n {
-            sink.append(source, volume)?;
+            sink.append(source, volume)
+                .map_err(|e| OutputError::DecoderError(e))?;
         }
         sink.detach();
 
@@ -76,6 +86,23 @@ impl Debug for Output {
         f.debug_struct("Output")
             .field("device", &self.name)
             .finish()
+    }
+}
+
+/// Audio playback error.
+#[derive(Debug)]
+pub enum OutputError {
+    /// Indicates a problem with decoding a [`Source`].
+    DecoderError(DecoderError),
+    /// Rodio's error, might mean that rodio has failed to decode a fail or a device is lost.
+    PlayError(PlayError),
+}
+
+impl Error for OutputError {}
+
+impl Display for OutputError {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> FmtResult {
+        formatter.write_str("OutputError")
     }
 }
 
@@ -111,12 +138,15 @@ pub fn outputs() -> OutputIterator {
 }
 */
 
-/// Initialize default output
+/// Initializes ([`OutputStream`], [`Output`]) from the default output device.
+///
+/// If the default device is not available in the system, it will try to fallback to any other
+/// available output device.
 ///
 /// # Errors
 ///
-/// The result is a `StreamError` if initializing the `OutputStream` from default
-/// device has failed.
+/// There are many errors that could occur during the initialization of the OutputStream, but the
+/// most likely one is that there are no output devices available on the system.
 pub fn init_output() -> Result<(OutputStream, Output), StreamError> {
     let (stream, stream_handle) = OutputStream::try_default()?;
 
@@ -128,7 +158,7 @@ pub fn init_output() -> Result<(OutputStream, Output), StreamError> {
     Ok((stream, output))
 }
 
-/// Initialize default output
+/// Initializes ([`OutputStream`], [`Output`]) from the specified output device.
 ///
 /// # Errors
 ///
@@ -152,7 +182,11 @@ pub fn init_output_from_device(device: &Device) -> Result<(OutputStream, Output)
 mod tests {
     use std::{fs::File, io::Read, vec::Vec};
 
-    use crate::{output::init_output, source::Source, DecoderError};
+    use crate::{
+        output::{init_output, OutputError},
+        source::Source,
+        DecoderError,
+    };
     use amethyst_utils::app_root_dir::application_root_dir;
     use rodio::cpal::{default_host, traits::HostTrait};
 
@@ -213,7 +247,7 @@ mod tests {
         check_result(result_try_play_n_times, should_pass);
     }
 
-    fn check_result(result: Result<(), DecoderError>, should_pass: bool) {
+    fn check_result(result: Result<(), OutputError>, should_pass: bool) {
         match result {
             Ok(_pass) => {
                 assert!(
