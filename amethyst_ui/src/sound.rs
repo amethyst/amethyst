@@ -1,5 +1,5 @@
 use amethyst_assets::AssetStorage;
-use amethyst_audio::{output::OutputWrapper, Source, SourceHandle};
+use amethyst_audio::{output::Output, Source, SourceHandle};
 use amethyst_core::{
     ecs::{ParallelRunnable, System, SystemBuilder},
     shrev::{EventChannel, ReaderId},
@@ -87,21 +87,16 @@ impl System for UiSoundSystem {
             SystemBuilder::new("UiSoundSystem")
                 .write_resource::<EventChannel<UiPlaySoundAction>>()
                 .read_resource::<AssetStorage<Source>>()
-                .read_resource::<OutputWrapper>()
+                .read_resource::<Output>()
                 .build(
-                    move |_commands,
-                          _world,
-                          (sound_events, audio_storage, audio_output_wrapper),
-                          _| {
+                    move |_commands, _world, (sound_events, audio_storage, audio_output), _| {
                         #[cfg(feature = "profiler")]
                         profile_scope!("ui_sound_system");
                         let event_reader = &mut self.event_reader;
                         for event in sound_events.read(event_reader) {
                             if let Some(sound) = audio_storage.get(&event.0) {
-                                if let Some(output) = &audio_output_wrapper.output {
-                                    log::trace!("Playing sound");
-                                    output.play_once(sound, 1.0);
-                                }
+                                log::trace!("Playing sound");
+                                audio_output.play_once(sound, 1.0);
                             }
                         }
                     },
