@@ -9,7 +9,7 @@ use smallvec::SmallVec;
 use crate::{components, source::Source, DecoderError};
 
 /// An audio source, add this component to anything that emits sound.
-/// TODO: This should get a proper Debug impl parsing the sinks and sound queue
+// TODO: This should get a proper Debug impl parsing the sinks and sound queue
 #[allow(missing_debug_implementations)]
 #[derive(Default)]
 pub struct AudioEmitter {

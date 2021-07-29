@@ -5,10 +5,10 @@ use type_uuid::TypeUuid;
 
 use crate::formats::AudioData;
 
-/// A handle to a source asset.
+/// A handle to a [`Source`] asset.
 pub type SourceHandle = Handle<Source>;
 
-/// A loaded audio file
+/// A loaded audio file.
 #[derive(Clone, Debug, PartialEq, Eq, TypeUuid)]
 #[uuid = "5ba63907-3883-453e-a559-9b778288f5d2"]
 pub struct Source {

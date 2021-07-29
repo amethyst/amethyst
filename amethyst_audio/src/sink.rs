@@ -5,6 +5,9 @@ use rodio::{Decoder, OutputStreamHandle, PlayError, Sink as RodioSink, Source as
 use crate::{source::Source, DecoderError};
 
 /// This structure provides a way to programmatically pick and play music.
+///
+/// Please note that unless you `detach()` the sink explicitly, the audio playback stops
+/// immediately as the sink gets dropped (goes out of scope, for example).
 // TODO: This needs a proper debug implementation. This should probably propagate up to a TODO
 // for rodio, as its missing them as well.
 #[allow(missing_debug_implementations)]

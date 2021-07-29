@@ -8,7 +8,7 @@ use type_uuid::TypeUuid;
 pub struct AudioData(pub Vec<u8>);
 amethyst_assets::register_asset_type!(AudioData => crate::Source; amethyst_assets::AssetProcessorSystem<crate::Source>);
 
-/// Loads audio from wav files.
+/// Loads audio from WAV files.
 #[derive(Clone, Copy, Default, Debug, Serialize, Deserialize, TypeUuid)]
 #[uuid = "e78ea33f-d506-4d4f-8276-861660bb6145"]
 pub struct WavFormat;
@@ -24,7 +24,7 @@ impl Format<AudioData> for WavFormat {
     }
 }
 
-/// Loads audio from Ogg Vorbis files
+/// Loads audio from Ogg Vorbis files.
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, TypeUuid)]
 #[uuid = "8ce12d56-9091-4e25-b764-da162fa165aa"]
 pub struct OggFormat;

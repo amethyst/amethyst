@@ -4,6 +4,19 @@
 //! on many mainstream platforms, but supports different backends (e.g. Alsa and Jack on Linux).
 //!
 //! [rodio]: https://docs.rs/rodio/0.14.0/rodio/index.html
+//!
+//! # How to use
+//!
+//! **Make sure you have enabled Amethyst's "audio" feature in your game!**
+//!
+//! For basic audio output, you can:
+//! - Add an [`AudioBundle`] to your dispatcher.
+//! - Create audio [`SourceHandle`] by loading a file as an asset using the [`Loader`].
+//! - Access the [`Output`] resource in your system and play the sound from it directly or spawn a
+//! sink for more control.
+//!
+//! [`Output`]: output/struct.Output.html
+//! [`Loader`]: ../amethyst_assets/trait.Loader.html
 
 #![doc(
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
