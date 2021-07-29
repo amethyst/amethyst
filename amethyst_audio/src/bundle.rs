@@ -1,11 +1,13 @@
 //! ECS audio bundles
 
-//use amethyst_assets::AssetProcessorSystemBundle;
+use log::warn;
+
+// use amethyst_assets::AssetProcessorSystem;
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
 
 use crate::{
-    output::OutputWrapper,
+    output::{init_output, Output, OutputStream},
     systems::{AudioSystem, SelectedListener},
 };
 
@@ -24,8 +26,14 @@ impl SystemBundle for AudioBundle {
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        resources.get_or_default::<OutputWrapper>();
-        resources.get_or_default::<SelectedListener>();
+        // Try to initialize output using the system's default audio device.
+        if let Ok((stream, output)) = init_output() {
+            resources.get_or_insert::<OutputStream>(stream);
+            resources.get_or_insert::<Output>(output);
+            resources.get_or_default::<SelectedListener>();
+        } else {
+            warn!("The default audio device is not available, sound will not work!");
+        }
 
         builder.add_system(AudioSystem);
         Ok(())

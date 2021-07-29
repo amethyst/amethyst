@@ -19,7 +19,7 @@ use thread_profiler::profile_scope;
 use crate::{
     components::{AudioEmitter, AudioListener},
     end_signal::EndSignalSource,
-    output::OutputWrapper,
+    output::Output,
 };
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
@@ -36,32 +36,33 @@ impl System for AudioSystem {
     fn build(self) -> Box<dyn ParallelRunnable> {
         Box::new(
             SystemBuilder::new("AudioSystem")
-                .read_resource::<OutputWrapper>()
+                .read_resource::<Output>()
                 .read_resource::<SelectedListener>()
                 .with_query(<(Entity, Read<AudioListener>)>::query())
                 .with_query(<(Write<AudioEmitter>, Read<Transform>)>::query())
                 .build(
                     move |_commands,
                           world,
-                          (wrapper, select_listener),
+                          (output, select_listener),
                           (q_audio_listener, q_audio_emitter)| {
                         #[cfg(feature = "profiler")]
                         profile_scope!("audio_system");
                         // Process emitters and listener.
-                        if let Some((entity, listener)) = if let Some(entity) = select_listener.0 {
-                            // Find entity referred by SelectedListener resource
-                            world
-                                .entry_ref(entity)
-                                .ok()
-                                .and_then(|entry| entry.into_component::<AudioListener>().ok())
-                                .map(|audio_listener| (entity, audio_listener))
-                        } else {
-                            // Otherwise, select the first available AudioListener
-                            q_audio_listener
-                                .iter(world)
-                                .next()
-                                .map(|(entity, audio_listener)| (*entity, audio_listener))
-                        } {
+                        if let Some((entity, listener)) = select_listener.0.map_or_else(
+                            || {
+                                q_audio_listener
+                                    .iter(world)
+                                    .next()
+                                    .map(|(entity, audio_listener)| (*entity, audio_listener))
+                            },
+                            |entity| {
+                                world
+                                    .entry_ref(entity)
+                                    .ok()
+                                    .and_then(|entry| entry.into_component::<AudioListener>().ok())
+                                    .map(|audio_listener| (entity, audio_listener))
+                            },
+                        ) {
                             if let Some(listener_transform) = world
                                 .entry_ref(entity)
                                 .ok()
@@ -110,23 +111,21 @@ impl System for AudioSystem {
                                             }
                                         }
                                         while let Some(source) = audio_emitter.sound_queue.pop() {
-                                            if let Some(output) = &wrapper.output {
-                                                let sink = SpatialSink::new(
-                                                    &output.device,
-                                                    emitter_position,
-                                                    left_ear_position,
-                                                    right_ear_position,
-                                                );
-                                                let atomic_bool = Arc::new(AtomicBool::new(false));
-                                                let clone = atomic_bool.clone();
-                                                sink.append(EndSignalSource::new(
-                                                    source,
-                                                    move || {
-                                                        clone.store(true, Ordering::Relaxed);
-                                                    },
-                                                ));
-                                                audio_emitter.sinks.push((sink, atomic_bool));
-                                            }
+                                            let stream_handle = &output.stream_handle;
+
+                                            let sink = SpatialSink::try_new(
+                                                stream_handle,
+                                                emitter_position,
+                                                left_ear_position,
+                                                right_ear_position,
+                                            )
+                                            .unwrap();
+                                            let atomic_bool = Arc::new(AtomicBool::new(false));
+                                            let clone = atomic_bool.clone();
+                                            sink.append(EndSignalSource::new(source, move || {
+                                                clone.store(true, Ordering::Relaxed);
+                                            }));
+                                            audio_emitter.sinks.push((sink, atomic_bool));
                                         }
                                     },
                                 );
