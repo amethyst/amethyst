@@ -1,21 +1,26 @@
 //! ECS audio bundles
 
 use log::warn;
+use rodio::OutputStream;
 
 // use amethyst_assets::AssetProcessorSystem;
 use amethyst_core::ecs::{DispatcherBuilder, Resources, SystemBundle, World};
 use amethyst_error::Error;
 
 use crate::{
-    output::{init_output, Output, OutputStream},
+    output::{init_output, Output},
     systems::{AudioSystem, SelectedListener},
 };
 
-/// Audio bundle
+/// Bundle for [`AudioSystem`]; initializes output and loads necessary resources.
 ///
-/// This will add an empty `SelectedListener`, `OutputWrapper`, add the audio system and the asset processor for `Source`.
+/// This will initialize audio output by loading an [`OutputStream`], an [`Output`], and an empty
+/// [`SelectedListener`] to the world's resources. If no audio output devices are available in the
+/// system, it will not load any of these resources.
 ///
-/// `DjSystem` must be added separately if you want to use our background music system.
+/// [`DjSystem`] must be added separately if you want to use our background music system.
+///
+/// [`DjSystem`]: struct.DjSystem.html
 #[derive(Default, Debug)]
 pub struct AudioBundle;
 
@@ -36,6 +41,7 @@ impl SystemBundle for AudioBundle {
         }
 
         builder.add_system(AudioSystem);
+
         Ok(())
     }
 }

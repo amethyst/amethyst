@@ -7,7 +7,7 @@ use std::{
 };
 
 use log::error;
-pub use rodio::OutputStream;
+use rodio::OutputStream;
 use rodio::{Device, DeviceTrait, OutputStreamHandle, PlayError, StreamError};
 
 use crate::{sink::Sink, source::Source, DecoderError};
@@ -40,14 +40,14 @@ impl Output {
 
     /// Plays a sound once. A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
-    /// This may silently fail, in order to get error information use [`try_play_once`].
+    /// This may silently fail, in order to get error information use `try_play_once`.
     pub fn play_once(&self, source: &Source, volume: f32) {
         self.play_n_times(source, volume, 1);
     }
 
     /// Plays a sound n times. A volume of 1.0 is unchanged, while 0.0 is silent.
     ///
-    /// This may silently fail, in order to get error information use [`try_play_n_times`].
+    /// This may silently fail, in order to get error information use `try_play_n_times`.
     pub fn play_n_times(&self, source: &Source, volume: f32, n: u16) {
         if let Err(err) = self.try_play_n_times(source, volume, n) {
             error!("An error occurred while trying to play a sound: {:?}", err);
@@ -58,9 +58,6 @@ impl Output {
     ///
     /// # Errors
     /// This will return an Error if the loaded audio file in source could not be decoded.
-    ///
-    /// # Panics
-    /// Panics
     pub fn try_play_n_times(
         &self,
         source: &Source,
@@ -185,7 +182,6 @@ mod tests {
     use crate::{
         output::{init_output, OutputError},
         source::Source,
-        DecoderError,
     };
     use amethyst_utils::app_root_dir::application_root_dir;
     use rodio::cpal::{default_host, traits::HostTrait};

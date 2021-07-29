@@ -1,22 +1,26 @@
 use std::marker::PhantomData;
 
+use log::{error, warn};
+use rodio::OutputStream;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use amethyst_assets::AssetStorage;
 use amethyst_core::ecs::{
     DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World,
 };
 use amethyst_error::Error;
 
-use log::{error, warn};
-
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
 use crate::{
-    output::{init_output, Output, OutputStream},
+    output::{init_output, Output},
     source::{Source, SourceHandle},
 };
 
-/// Dj system bundle which is the default way to construct dj system as it initializes any required resources.
+/// Bundle for [`DjSystem`]; initializes output and loads necessary resources.
+///
+/// This will initialize audio output by loading an [`OutputStream`] and an [`Output`]
+/// to the world's resources. If no audio output devices are available in the system,
+/// it will not load any of these resources.
 #[derive(Debug)]
 pub struct DjSystemBundle<F, R>
 where
@@ -32,7 +36,7 @@ where
     F: FnMut(&mut R) -> Option<SourceHandle> + Send + Sync + 'static,
     R: Send + Sync + 'static,
 {
-    /// Creates a new [`DjSystemBundle`] where [f] is a function which produces music [`SourceHandle`].
+    /// Creates a new [`DjSystemBundle`] where `f` is a function which produces music [`SourceHandle`].
     pub fn new(f: F) -> Self {
         Self {
             f,
