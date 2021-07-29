@@ -1,31 +1,46 @@
 use std::io::Cursor;
 
-use rodio::{Decoder, Sink};
+use rodio::{Decoder, OutputStreamHandle, PlayError, Sink as RodioSink, Source as RodioSource};
 
-use crate::{output::Output, source::Source, DecoderError};
+use crate::{source::Source, DecoderError};
 
 /// This structure provides a way to programmatically pick and play music.
 // TODO: This needs a proper debug implementation. This should probably propagate up to a TODO
-// for rodeo, as its missing them as well.
+// for rodio, as its missing them as well.
 #[allow(missing_debug_implementations)]
-pub struct AudioSink {
-    sink: Sink,
+pub struct Sink {
+    sink: RodioSink,
 }
 
-impl AudioSink {
-    /// Creates a new `AudioSink` using the given audio output.
-    #[must_use]
-    pub fn new(output: &Output) -> AudioSink {
-        AudioSink {
-            sink: Sink::new(&output.device),
-        }
+impl Sink {
+    /// Creates a new `Sink` using the given output stream handle.
+    ///
+    /// # Errors
+    ///
+    /// The result is a `PlayError::NoDevice` if there is no output device associated
+    /// with the output stream handle provided to create the sink.
+    pub fn try_new(stream_handle: &OutputStreamHandle) -> Result<Self, PlayError> {
+        RodioSink::try_new(stream_handle).map(|sink| Sink { sink })
     }
 
     /// Adds a source to the sink's queue of music to play.
-    pub fn append(&self, source: &Source) -> Result<(), DecoderError> {
+    ///
+    /// # Errors
+    ///
+    /// The result is an Error if decoding the audio source fails.
+    pub fn append(&self, source: &Source, volume: f32) -> Result<(), DecoderError> {
         self.sink
-            .append(Decoder::new(Cursor::new(source.clone())).map_err(|_| DecoderError)?);
+            .append(Decoder::new(Cursor::new(source.clone()))?.amplify(volume));
         Ok(())
+    }
+
+    /// Drops the sink without stopping currently playing sounds.
+    ///
+    /// When a sink goes out of scope, for example, the audio output stops
+    /// immediately. If the sink is detached before it gets dropped, however,
+    /// the output continues until all the sounds appended to the sink are played.
+    pub fn detach(self) {
+        self.sink.detach();
     }
 
     /// Returns true if the sink has no more music to play.
@@ -48,7 +63,7 @@ impl AudioSink {
         self.sink.play();
     }
 
-    /// Pauses playback, this can be resumed with `AudioSink::play`
+    /// Pauses playback, this can be resumed with `Sink::play`
     pub fn pause(&self) {
         self.sink.pause();
     }
@@ -68,7 +83,7 @@ impl AudioSink {
 mod tests {
     #[cfg(target_os = "linux")]
     use {
-        crate::{output::Output, source::Source, AudioSink},
+        crate::{output::init_output, sink::Sink, source::Source},
         amethyst_utils::app_root_dir::application_root_dir,
         std::{fs::File, io::Read, vec::Vec},
     };
@@ -88,12 +103,12 @@ mod tests {
         // Create a Source from those bytes
         let src = Source { bytes: buffer };
 
-        // Create a Output and AudioSink
-        let output = Output::default();
-        let sink = AudioSink::new(&output);
+        // Create an Output and a Sink
+        let (_stream, output) = init_output().unwrap();
+        let sink = Sink::try_new(&output.stream_handle).unwrap();
 
         // Call play
-        match sink.append(&src) {
+        match sink.append(&src, 1.0) {
             Ok(_pass) => {
                 assert!(
                     should_pass,

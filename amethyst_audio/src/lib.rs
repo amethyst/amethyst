@@ -1,4 +1,9 @@
-//! Loading and playing of audio files.
+//! An audio module that enables basic audio output in Amethyst
+//!
+//! Based on [`rodio`], this crate provides audio output that works out of the box not only
+//! on many mainstream platforms, but supports different backends (e.g. Alsa and Jack on Linux).
+//!
+//! [rodio]: https://docs.rs/rodio/0.14.0/rodio/index.html
 
 #![doc(
     html_logo_url = "https://amethyst.rs/brand/logo-standard.svg",
@@ -23,7 +28,7 @@ pub use self::{
     bundle::AudioBundle,
     components::*,
     formats::{FlacFormat, Mp3Format, OggFormat, WavFormat},
-    sink::AudioSink,
+    sink::Sink,
     source::{Source, SourceHandle},
     systems::*,
 };

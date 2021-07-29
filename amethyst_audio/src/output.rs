@@ -1,62 +1,27 @@
 //! Provides structures and functions used to get audio outputs.
 
 // We have to use types from this to provide an output iterator type.
-use std::{
-    fmt::{Debug, Formatter, Result as FmtResult},
-    io::Cursor,
-    sync::Arc,
-};
+use std::fmt::{Debug, Formatter, Result as FmtResult};
 
-use amethyst_core::ecs::Resources;
-use cpal::{traits::DeviceTrait, Devices, OutputDevices};
 use log::error;
-use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
+pub use rodio::OutputStream;
+use rodio::{Device, DeviceTrait, OutputStreamHandle, PlayError, StreamError};
 
-use crate::{sink::AudioSink, source::Source, DecoderError};
+use crate::{sink::Sink, source::Source, DecoderError};
 
-#[derive(Default)]
-#[allow(missing_debug_implementations)]
-/// A wrapper designed to keep the output and `audio_sink` used by Audio systems
-pub struct OutputWrapper {
-    /// Speaker used to play any sound
-    pub output: Option<Output>,
-    /// A struct designed to programmatically pick and play music
-    pub audio_sink: Option<AudioSink>,
-}
-
-/// A speaker(s) through which audio can be played.
-///
-/// By convention, the default output is stored as a resource in the `World`.
-#[derive(Clone)]
+/// An audio output that can be used to play audio directly,
+/// or to spawn `Sink`s that are more flexible.
 pub struct Output {
-    pub(crate) device: Arc<Device>,
-}
-
-/// Convenience method for opening the default output device.
-///
-/// Since most modern hardware features audio output, this implementation fails if a device can't
-/// be initialized. Use an alternative initialization scheme if running on hardware without an
-/// integrated audio chip.
-impl Default for Output {
-    fn default() -> Self {
-        default_output_device()
-            .map(|device| {
-                Output {
-                    device: Arc::new(device),
-                }
-            })
-            .expect("No default output device")
-    }
+    /// Name of the output device being used
+    pub name: String,
+    /// Handle to an `OutputStream` that can be shared across threads
+    pub stream_handle: OutputStreamHandle,
 }
 
 impl Output {
-    /// Gets the name of the output
-    #[must_use]
-    pub fn name(&self) -> String {
-        self.device.name().unwrap_or_else(|e| {
-            error!("Failed to determine output device name: {}", e);
-            String::from("<unnamed_output_device>")
-        })
+    /// Spawn a new Sink (audio input).
+    pub fn try_spawn_sink(&self) -> Result<Sink, PlayError> {
+        Sink::try_new(&self.stream_handle)
     }
 
     /// Play a sound once.  A volume of 1.0 is unchanged, while 0.0 is silent.
@@ -87,17 +52,21 @@ impl Output {
     ///
     /// # Errors
     /// This will return an Error if the loaded audio file in source could not be decoded.
+    /// # Panics
+    /// Blah blah
     pub fn try_play_n_times(
         &self,
         source: &Source,
         volume: f32,
         n: u16,
     ) -> Result<(), DecoderError> {
-        let sink = Sink::new(&self.device);
+        let sink = self.try_spawn_sink().unwrap();
+
         for _ in 0..n {
-            sink.append(Decoder::new(Cursor::new(source.clone()))?.amplify(volume));
+            sink.append(source, volume)?;
         }
         sink.detach();
+
         Ok(())
     }
 }
@@ -105,11 +74,12 @@ impl Output {
 impl Debug for Output {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         f.debug_struct("Output")
-            .field("device", &self.name())
+            .field("device", &self.name)
             .finish()
     }
 }
 
+/*
 /// An iterator over outputs
 #[allow(missing_debug_implementations)]
 pub struct OutputIterator {
@@ -120,50 +90,61 @@ impl Iterator for OutputIterator {
     type Item = Output;
 
     fn next(&mut self) -> Option<Output> {
-        self.devices.next().map(|device| {
-            Output {
-                device: Arc::new(device),
-            }
+        self.devices.next().map(|device| Output {
+            device: Arc::new(device),
         })
     }
 }
 
-/// Get the default output, returns none if no outputs are available.
-#[must_use]
-pub fn default_output() -> Option<Output> {
-    default_output_device().map(|device| {
-        Output {
-            device: Arc::new(device),
-        }
-    })
-}
-
 /// Get a list of outputs available to the system.
+///
+/// # Panics
+///
+/// Panics if the system does not support audio output and hence no output devices
+/// are found.
 #[must_use]
 pub fn outputs() -> OutputIterator {
-    let devices =
-        output_devices().unwrap_or_else(|e| panic!("Error retrieving output devices: `{}`", e));
+    let devices = cpal::default_host()
+        .output_devices()
+        .unwrap_or_else(|e| panic!("Error retrieving output devices: `{}`", e));
     OutputIterator { devices }
+}
+*/
+
+/// Initialize default output
+///
+/// # Errors
+///
+/// The result is a `StreamError` if initializing the `OutputStream` from default
+/// device has failed.
+pub fn init_output() -> Result<(OutputStream, Output), StreamError> {
+    let (stream, stream_handle) = OutputStream::try_default()?;
+
+    let output = Output {
+        name: String::from("default"),
+        stream_handle,
+    };
+
+    Ok((stream, output))
 }
 
 /// Initialize default output
-pub fn init_output(res: &mut Resources) {
-    if !res.contains::<OutputWrapper>() {
-        res.insert(OutputWrapper::default());
-    }
+///
+/// # Errors
+///
+/// The result is a `StreamError` if initializing the `OutputStream` from the specified
+/// device has failed.
+pub fn init_output_from_device(device: &Device) -> Result<(OutputStream, Output), StreamError> {
+    let (stream, stream_handle) = OutputStream::try_from_device(device)?;
 
-    let mut wrapper = res.get_mut::<OutputWrapper>().unwrap();
+    let output = Output {
+        name: device
+            .name()
+            .unwrap_or_else(|_| String::from("Unknown device")),
+        stream_handle,
+    };
 
-    if let Some(o) = default_output() {
-        if wrapper.audio_sink.is_none() {
-            wrapper.audio_sink = Some(AudioSink::new(&o));
-        }
-        if wrapper.output.is_none() {
-            wrapper.output = Some(o);
-        }
-    } else {
-        error!("Failed finding a default audio output to hook AudioSink to, audio will not work!");
-    }
+    Ok((stream, output))
 }
 
 #[cfg(test)]
@@ -171,9 +152,9 @@ pub fn init_output(res: &mut Resources) {
 mod tests {
     use std::{fs::File, io::Read, vec::Vec};
 
+    use crate::{output::init_output, source::Source, DecoderError};
     use amethyst_utils::app_root_dir::application_root_dir;
-
-    use crate::{output::Output, source::Source, DecoderError};
+    use rodio::cpal::{default_host, traits::HostTrait};
 
     #[test]
     fn test_play_wav() {
@@ -215,11 +196,11 @@ mod tests {
         let src = Source { bytes: buffer };
 
         // Set volume and number of times to play
-        let vol: f32 = 4.0;
+        let vol: f32 = 1.0;
         let n: u16 = 5;
 
         // Test each of the play APIs
-        let output = Output::default();
+        let (_stream, output) = init_output().unwrap();
 
         output.play_once(&src, vol);
 
@@ -248,5 +229,14 @@ mod tests {
                 )
             }
         };
+    }
+
+    #[test]
+    fn output_devices() {
+        let mut dev: bool = false;
+        if default_host().default_output_device().is_some() {
+            dev = true;
+        }
+        assert!(dev);
     }
 }

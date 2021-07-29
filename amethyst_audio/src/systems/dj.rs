@@ -5,12 +5,14 @@ use amethyst_core::ecs::{
     DispatcherBuilder, ParallelRunnable, Resources, System, SystemBuilder, SystemBundle, World,
 };
 use amethyst_error::Error;
-use log::error;
+
+use log::{error, warn};
+
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use crate::{
-    output::{init_output, OutputWrapper},
+    output::{init_output, Output, OutputStream},
     source::{Source, SourceHandle},
 };
 
@@ -50,11 +52,19 @@ where
         resources: &mut Resources,
         builder: &mut DispatcherBuilder,
     ) -> Result<(), Error> {
-        init_output(resources);
+        // Try to initialize output using the system's default audio device.
+        if let Ok((stream, output)) = init_output() {
+            resources.get_or_insert::<OutputStream>(stream);
+            resources.get_or_insert::<Output>(output);
+        } else {
+            warn!("The default audio device is not available, sound will not work!");
+        }
+
         builder.add_system(DjSystem {
             f: self.f,
             _phantom: PhantomData,
         });
+
         Ok(())
     }
 }
@@ -79,24 +89,22 @@ where
         Box::new(
             SystemBuilder::new("DjSystem")
                 .read_resource::<AssetStorage<Source>>()
-                .read_resource::<OutputWrapper>()
+                .read_resource::<Output>()
                 .write_resource::<R>()
-                .build(
-                    move |_commands, _world, (storage, wrapper, res), _queries| {
-                        #[cfg(feature = "profiler")]
-                        profile_scope!("dj_system");
+                .build(move |_commands, _world, (storage, output, res), _queries| {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("dj_system");
 
-                        if let Some(sink) = &wrapper.audio_sink {
-                            if sink.empty() {
-                                if let Some(source) = (self.f)(res).and_then(|h| storage.get(&h)) {
-                                    if let Err(e) = sink.append(source) {
-                                        error!("DJ Cannot append source to sink. {}", e);
-                                    }
-                                }
+                    let sink = output.try_spawn_sink().unwrap();
+
+                    if sink.empty() {
+                        if let Some(source) = (self.f)(res).and_then(|h| storage.get(&h)) {
+                            if let Err(e) = sink.append(source, 1.0) {
+                                error!("DJ cannot append source to sink. {}", e);
                             }
                         }
-                    },
-                ),
+                    }
+                }),
         )
     }
 }
