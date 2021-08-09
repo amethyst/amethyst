@@ -135,7 +135,7 @@ in
       xlibs.libX11
     ];
 
-    APPEND_LIBRARY_PATH = stdenv.lib.makeLibraryPath [
+    APPEND_LIBRARY_PATH = lib.makeLibraryPath [
       vulkan-loader
       xlibs.libXcursor
       xlibs.libXi
