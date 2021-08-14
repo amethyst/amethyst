@@ -1,11 +1,10 @@
-use std::{collections::HashSet, marker::PhantomData, time::Duration};
+use std::{collections::HashSet, time::Duration};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    ecs::{systems::ParallelRunnable, IntoQuery, System, SystemBuilder, Write},
+    ecs::{system, CommandBuffer},
     Time,
 };
-use derivative::Derivative;
 use log::debug;
 use minterpolate::InterpolationPrimitive;
 #[cfg(feature = "profiler")]
@@ -27,67 +26,51 @@ use crate::resources::{
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
-#[derive(Derivative)]
-#[derivative(Default)]
-pub(crate) struct SamplerInterpolationSystem<T: AnimationSampling> {
-    _marker: PhantomData<T>,
-}
+#[system(for_each)]
+pub(crate) fn sampler_interpolation<T: AnimationSampling + std::fmt::Debug>(
+    control_set: &mut SamplerControlSet<T>,
+    comp: &mut T,
+    #[resource] time: &Time,
+    #[resource] samplers: &AssetStorage<Sampler<T::Primitive>>,
+    #[state] inner: &mut Vec<(f32, T::Channel, T::Primitive)>,
+    #[state] channels: &mut Vec<T::Channel>,
+    commands: &mut CommandBuffer,
+) {
+    #[cfg(feature = "profiler")]
+    profile_scope!("sampler_interpolation_system");
 
-impl<T> System for SamplerInterpolationSystem<T>
-where
-    T: AnimationSampling + std::fmt::Debug,
-{
-    fn build(self) -> Box<dyn ParallelRunnable> {
-        let mut inner = Vec::default();
-        let mut channels = Vec::default();
+    debug!("Processing SamplerControlSet: {:?}", control_set);
 
-        Box::new(
-            SystemBuilder::new("SamplerInterpolationSystem")
-                .read_resource::<Time>()
-                .read_resource::<AssetStorage<Sampler<T::Primitive>>>()
-                .with_query(<(Write<SamplerControlSet<T>>, Write<T>)>::query())
-                .build(move |commands, world, (time, samplers), query| {
-                    #[cfg(feature = "profiler")]
-                    profile_scope!("sampler_interpolation_system");
+    inner.clear();
 
-                    for (control_set, comp) in query.iter_mut(world) {
-                        debug!("Processing SamplerControlSet: {:?}", control_set);
-
-                        inner.clear();
-
-                        for control in &mut control_set.samplers {
-                            if let Some(sampler) = samplers.get(&control.sampler) {
-                                process_sampler(control, sampler, time, &mut inner);
-                            }
-                        }
-                        if !inner.is_empty() {
-                            channels.clear();
-                            channels
-                                .extend(inner.iter().map(|o| o.1.clone()).collect::<HashSet<_>>());
-                            for channel in &channels {
-                                match comp.blend_method(channel) {
-                                    None => {
-                                        if let Some(p) = inner
-                                            .iter()
-                                            .filter(|p| p.1 == *channel)
-                                            .map(|p| p.2.clone())
-                                            .last()
-                                        {
-                                            comp.apply_sample(channel, &p, commands);
-                                        }
-                                    }
-
-                                    Some(BlendMethod::Linear) => {
-                                        if let Some(p) = linear_blend::<T>(channel, &inner) {
-                                            comp.apply_sample(channel, &p, commands);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+    for control in &mut control_set.samplers {
+        if let Some(sampler) = samplers.get(&control.sampler) {
+            process_sampler(control, sampler, time, inner);
+        }
+    }
+    if !inner.is_empty() {
+        channels.clear();
+        channels.extend(inner.iter().map(|o| o.1.clone()).collect::<HashSet<_>>());
+        for channel in channels {
+            match comp.blend_method(channel) {
+                None => {
+                    if let Some(p) = inner
+                        .iter()
+                        .filter(|p| p.1 == *channel)
+                        .map(|p| p.2.clone())
+                        .last()
+                    {
+                        comp.apply_sample(channel, &p, commands);
                     }
-                }),
-        )
+                }
+
+                Some(BlendMethod::Linear) => {
+                    if let Some(p) = linear_blend::<T>(channel, &inner) {
+                        comp.apply_sample(channel, &p, commands);
+                    }
+                }
+            }
+        }
     }
 }
 
