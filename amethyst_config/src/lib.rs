@@ -36,6 +36,8 @@ pub enum ConfigError {
     File(io::Error),
     /// Errors related to serde's parsing of configuration files.
     Parser(ron::Error),
+    /// Similar to Parser, but carries a path of the ill-formed file.
+    FileParser(ron::Error, PathBuf),
     /// Occurs if a value is ill-formed during serialization (like a poisoned mutex).
     Serializer(ron::Error),
     /// Related to the path of the file.
@@ -66,6 +68,7 @@ impl fmt::Display for ConfigError {
         match *self {
             ConfigError::File(ref err) => write!(f, "{}", err),
             ConfigError::Parser(ref msg) | ConfigError::Serializer(ref msg) => write!(f, "{}", msg),
+            ConfigError::FileParser(ref msg, ref path) => write!(f, "{}: {}", path.display(), msg),
             ConfigError::Extension(ref path) => {
                 let found = match path.extension() {
                     Some(extension) => format!("{:?}", extension),
@@ -118,6 +121,7 @@ impl Error for ConfigError {
         match *self {
             ConfigError::File(_) => "Project file error",
             ConfigError::Parser(_) => "Project parser error",
+            ConfigError::FileParser(_, _) => "Project parser error",
             ConfigError::Serializer(_) => "Project serializer error",
             ConfigError::Extension(_) => "Invalid extension or directory for a file",
             #[cfg(feature = "json")]
@@ -204,6 +208,13 @@ where
                     }
                 },
             )
+            .map_err(|err| {
+                // Enrich parsing error with a path to the file being parsed.
+                match err {
+                    ConfigError::Parser(err) => ConfigError::FileParser(err, path.to_owned()),
+                    _ => err,
+                }
+            })
     }
 
     fn load_bytes_format(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError> {
@@ -263,6 +274,7 @@ mod test {
 
     use serde::{Deserialize, Serialize};
 
+    use super::ConfigError;
     use crate::Config;
 
     #[derive(Debug, PartialEq, Deserialize, Serialize)]
@@ -303,5 +315,18 @@ mod test {
             expected,
             utf16_be_bom.expect("Failed to parse UTF16-BE file with BOM")
         );
+    }
+
+    #[test]
+    fn fail_with_error_on_invalid_syntax() {
+        let real_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/invalid-syntax.ron");
+        let result = TestConfig::load(&real_path);
+
+        match result {
+            Err(ConfigError::FileParser(_, path)) => {
+                assert_eq!(real_path, path);
+            }
+            _ => panic!("{:?}", result),
+        }
     }
 }
