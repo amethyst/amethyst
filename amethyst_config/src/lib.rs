@@ -327,7 +327,7 @@ mod test {
             Err(ConfigError::FileParser(_, path)) => {
                 assert_eq!(real_path, path);
             }
-            _ => panic!("{:?}", result)
+            _ => panic!("{:?}", result),
         }
     }
 }
