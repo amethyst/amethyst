@@ -253,9 +253,7 @@ impl Loader for DefaultLoader {
                     self.loader.remove_ref(handle);
                 }
                 Ok(RefOp::Increase(handle)) => {
-                    self.loader
-                        .get_load_info(handle)
-                        .map(|info| self.loader.add_ref(info.asset_id));
+                    self.loader.add_ref_handle(handle);
                 }
                 Ok(RefOp::IncreaseUuid(uuid)) => {
                     self.loader.add_ref(uuid);
