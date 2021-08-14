@@ -212,9 +212,7 @@ where
             .map_err(|err| {
                 // Enrich parsing error with a path to the file being parsed.
                 match err {
-                    ConfigError::Parser(err) => {
-                        ConfigError::FileParser(err, path.to_owned())
-                    }
+                    ConfigError::Parser(err) => ConfigError::FileParser(err, path.to_owned()),
                     _ => err,
                 }
             })
@@ -327,12 +325,7 @@ mod test {
         let result = TestConfig::load(path);
 
         assert!(
-            matches!(
-                result,
-                Err(ConfigError::FileParser(
-                    _, ref path
-                ))
-            ),
+            matches!(result, Err(ConfigError::FileParser(_, ref path))),
             format!("{:?}", result)
         );
     }
