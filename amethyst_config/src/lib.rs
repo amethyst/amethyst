@@ -67,9 +67,8 @@ impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ConfigError::File(ref err) => write!(f, "{}", err),
-            ConfigError::Parser(ref msg) => write!(f, "{}", msg),
+            ConfigError::Parser(ref msg) | ConfigError::Serializer(ref msg) => write!(f, "{}", msg),
             ConfigError::FileParser(ref msg, ref path) => write!(f, "{}: {}", path.display(), msg),
-            ConfigError::Serializer(ref msg) => write!(f, "{}", msg),
             ConfigError::Extension(ref path) => {
                 let found = match path.extension() {
                     Some(extension) => format!("{:?}", extension),
@@ -227,7 +226,7 @@ where
                         de.end()?;
                         Ok(val)
                     })
-                    .map_err(|e| ConfigError::Parser(e))
+                    .map_err(ConfigError::Parser)
             }
             #[cfg(feature = "json")]
             ConfigFormat::Json => {
