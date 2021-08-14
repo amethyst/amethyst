@@ -35,7 +35,7 @@ pub enum ConfigError {
     /// Forward to the `std::io::Error` error.
     File(io::Error),
     /// Errors related to serde's parsing of configuration files.
-    Parser(ron::Error),
+    Parser(ron::Error, PathBuf),
     /// Occurs if a value is ill-formed during serialization (like a poisoned mutex).
     Serializer(ron::Error),
     /// Related to the path of the file.
@@ -65,7 +65,8 @@ impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ConfigError::File(ref err) => write!(f, "{}", err),
-            ConfigError::Parser(ref msg) | ConfigError::Serializer(ref msg) => write!(f, "{}", msg),
+            ConfigError::Parser(ref msg, ref path) => write!(f, "{}", msg),
+            ConfigError::Serializer(ref msg) => write!(f, "{}", msg),
             ConfigError::Extension(ref path) => {
                 let found = match path.extension() {
                     Some(extension) => format!("{:?}", extension),
@@ -89,7 +90,7 @@ impl fmt::Display for ConfigError {
 
 impl From<RonError> for ConfigError {
     fn from(e: RonError) -> Self {
-        ConfigError::Parser(e)
+        ConfigError::Parser(e, "<unknown>".into())
     }
 }
 
@@ -117,7 +118,7 @@ impl Error for ConfigError {
     fn description(&self) -> &str {
         match *self {
             ConfigError::File(_) => "Project file error",
-            ConfigError::Parser(_) => "Project parser error",
+            ConfigError::Parser(_, _) => "Project parser error",
             ConfigError::Serializer(_) => "Project serializer error",
             ConfigError::Extension(_) => "Invalid extension or directory for a file",
             #[cfg(feature = "json")]
@@ -215,7 +216,7 @@ where
                         de.end()?;
                         Ok(val)
                     })
-                    .map_err(ConfigError::Parser)
+                    .map_err(|e| ConfigError::Parser(e, "a".into()))
             }
             #[cfg(feature = "json")]
             ConfigFormat::Json => {
@@ -261,8 +262,10 @@ where
 mod test {
     use std::path::Path;
 
+    use ron::de::{ErrorCode, Position};
     use serde::{Deserialize, Serialize};
 
+    use super::ConfigError;
     use crate::Config;
 
     #[derive(Debug, PartialEq, Deserialize, Serialize)]
@@ -302,6 +305,26 @@ mod test {
         assert_eq!(
             expected,
             utf16_be_bom.expect("Failed to parse UTF16-BE file with BOM")
+        );
+    }
+
+    #[test]
+    fn fail_with_error_on_invalid_syntax() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/invalid-syntax.ron");
+        let result = TestConfig::load(path);
+
+        assert!(
+            matches!(
+                result,
+                Err(ConfigError::Parser(
+                    ron::Error {
+                        code: ErrorCode::ExpectedAttribute,
+                        position: Position { line: 1, col: 1 }
+                    },
+                    ref path
+                ))
+            ),
+            format!("{:?}", result)
         );
     }
 }
