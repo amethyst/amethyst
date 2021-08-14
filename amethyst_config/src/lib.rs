@@ -68,7 +68,7 @@ impl fmt::Display for ConfigError {
         match *self {
             ConfigError::File(ref err) => write!(f, "{}", err),
             ConfigError::Parser(ref msg) => write!(f, "{}", msg),
-            ConfigError::FileParser(ref msg, ref path) => write!(f, "{}", msg),
+            ConfigError::FileParser(ref msg, ref path) => write!(f, "{}: {}", path.display(), msg),
             ConfigError::Serializer(ref msg) => write!(f, "{}", msg),
             ConfigError::Extension(ref path) => {
                 let found = match path.extension() {
@@ -273,7 +273,6 @@ where
 mod test {
     use std::path::Path;
 
-    use ron::de::{ErrorCode, Position};
     use serde::{Deserialize, Serialize};
 
     use super::ConfigError;
@@ -321,12 +320,14 @@ mod test {
 
     #[test]
     fn fail_with_error_on_invalid_syntax() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/invalid-syntax.ron");
-        let result = TestConfig::load(path);
+        let real_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/invalid-syntax.ron");
+        let result = TestConfig::load(&real_path);
 
-        assert!(
-            matches!(result, Err(ConfigError::FileParser(_, ref path))),
-            format!("{:?}", result)
-        );
+        match result {
+            Err(ConfigError::FileParser(_, path)) => {
+                assert_eq!(real_path, path);
+            }
+            _ => panic!("{:?}", result)
+        }
     }
 }
