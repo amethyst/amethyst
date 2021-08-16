@@ -6,7 +6,7 @@ edition = "2018"
 description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 categories = ["rendering", "rendering::engine"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 [package.metadata.docs.rs]
 features = ["shader-compiler", "test-support", "winit", "vulkan"]

@@ -12,7 +12,7 @@ documentation = "https://docs.amethyst.rs/master/amethyst_tiles/"
 homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 [badges]
 appveyor = { repository = "amethyst/amethyst" }

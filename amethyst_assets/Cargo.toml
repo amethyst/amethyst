@@ -11,7 +11,7 @@ description = """
 Asynchronous asset management for games.
 """
 exclude = ["examples/*"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 keywords = ["game", "asset", "resource", "management", "amethyst"]
 categories = ["filesystem"]
 

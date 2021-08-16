@@ -12,7 +12,7 @@ Internal error handling for Amethyst.
 """
 keywords = ["game", "error", "amethyst"]
 categories = ["rust-patterns"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 documentation = "https://docs.amethyst.rs/stable/amethyst_error/"
 homepage = "https://amethyst.rs/"

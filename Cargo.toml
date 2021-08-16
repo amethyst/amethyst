@@ -16,7 +16,7 @@ homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 autoexamples = false # Our examples come with their own Cargo.toml and are in the [workspace] section
 

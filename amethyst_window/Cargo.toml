@@ -10,7 +10,7 @@ description = "Windowing support for Amethyst engine."
 documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_window/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.16.0" }
