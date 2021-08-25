@@ -9,8 +9,8 @@ use crate::input_handler::InputHandler;
 #[must_use]
 pub fn get_key(event: &Event<'_, ()>) -> Option<(VirtualKeyCode, ElementState)> {
     match *event {
-        Event::WindowEvent { ref event, .. } => {
-            match *event {
+        Event::WindowEvent {
+            event:
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
@@ -19,10 +19,9 @@ pub fn get_key(event: &Event<'_, ()>) -> Option<(VirtualKeyCode, ElementState)> 
                             ..
                         },
                     ..
-                } => Some((*virtual_keycode, state)),
-                _ => None,
-            }
-        }
+                },
+            ..
+        } => Some((*virtual_keycode, state)),
         _ => None,
     }
 }
@@ -52,12 +51,13 @@ pub fn is_key_up(event: &Event<'_, ()>, key_code: VirtualKeyCode) -> bool {
 /// Returns true if the event passed in is a request to close the game window.
 #[must_use]
 pub fn is_close_requested(event: &Event<'_, ()>) -> bool {
-    match *event {
-        Event::WindowEvent { ref event, .. } => {
-            matches!(*event, WindowEvent::CloseRequested)
+    matches!(
+        *event,
+        Event::WindowEvent {
+            event: WindowEvent::CloseRequested,
+            ..
         }
-        _ => false,
-    }
+    )
 }
 
 /// Gets the input axis value from the `InputHandler`.
@@ -83,12 +83,10 @@ pub fn get_action_simple(name: &Option<Cow<'static, str>>, input: &InputHandler)
 #[must_use]
 pub fn get_mouse_button(event: &Event<'_, ()>) -> Option<(MouseButton, ElementState)> {
     match *event {
-        Event::WindowEvent { ref event, .. } => {
-            match *event {
-                WindowEvent::MouseInput { button, state, .. } => Some((button, state)),
-                _ => None,
-            }
-        }
+        Event::WindowEvent {
+            event: WindowEvent::MouseInput { button, state, .. },
+            ..
+        } => Some((button, state)),
         _ => None,
     }
 }

@@ -134,16 +134,18 @@ impl System for FreeRotationSystem {
                     let focused = focus.is_focused;
                     for event in events.read(&mut self.reader) {
                         if focused && hide.hide {
-                            if let Event::DeviceEvent { ref event, .. } = *event {
-                                if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
-                                    for transform in controls.iter_mut(world) {
-                                        transform.append_rotation_x_axis(
-                                            (-(y as f32) * self.sensitivity_y).to_radians(),
-                                        );
-                                        transform.prepend_rotation_y_axis(
-                                            (-(x as f32) * self.sensitivity_x).to_radians(),
-                                        );
-                                    }
+                            if let Event::DeviceEvent {
+                                event: DeviceEvent::MouseMotion { delta: (x, y) },
+                                ..
+                            } = *event
+                            {
+                                for transform in controls.iter_mut(world) {
+                                    transform.append_rotation_x_axis(
+                                        (-(y as f32) * self.sensitivity_y).to_radians(),
+                                    );
+                                    transform.prepend_rotation_y_axis(
+                                        (-(x as f32) * self.sensitivity_x).to_radians(),
+                                    );
                                 }
                             }
                         }
@@ -171,11 +173,13 @@ impl System for MouseFocusUpdateSystem {
                     profile_scope!("mouse_focus_update_system");
 
                     for event in events.read(&mut self.reader) {
-                        if let Event::WindowEvent { ref event, .. } = *event {
-                            if let WindowEvent::Focused(focused) = *event {
-                                log::debug!("Window was focused.");
-                                focus.is_focused = focused;
-                            }
+                        if let Event::WindowEvent {
+                            event: WindowEvent::Focused(focused),
+                            ..
+                        } = *event
+                        {
+                            log::debug!("Window was focused.");
+                            focus.is_focused = focused;
                         }
                     }
                 }),

@@ -120,8 +120,7 @@ impl Error for ConfigError {
     fn description(&self) -> &str {
         match *self {
             ConfigError::File(_) => "Project file error",
-            ConfigError::Parser(_) => "Project parser error",
-            ConfigError::FileParser(_, _) => "Project parser error",
+            ConfigError::FileParser(_, _) | ConfigError::Parser(_) => "Project parser error",
             ConfigError::Serializer(_) => "Project serializer error",
             ConfigError::Extension(_) => "Invalid extension or directory for a file",
             #[cfg(feature = "json")]
