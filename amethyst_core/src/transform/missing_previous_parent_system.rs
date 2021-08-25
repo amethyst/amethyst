@@ -30,6 +30,7 @@ impl System for MissingPreviousParentSystem {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::ecs::*;
 
     #[test]
     fn previous_parent_added() {
@@ -49,7 +50,7 @@ mod test {
 
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             world
                 .entry(e1)
                 .unwrap()
@@ -58,7 +59,7 @@ mod test {
             false
         );
 
-        assert_eq!(
+        assert!(
             world
                 .entry(e2)
                 .unwrap()

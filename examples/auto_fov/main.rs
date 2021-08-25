@@ -153,7 +153,7 @@ impl SimpleState for Example {
                 buffer.remove(*entity)
             }
         }
-        buffer.flush(data.world);
+        buffer.flush(data.world, data.resources);
 
         let loader = data.resources.get::<DefaultLoader>().unwrap();
         let mesh_storage = data.resources.get::<ProcessingQueue<MeshData>>().unwrap();

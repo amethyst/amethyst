@@ -49,7 +49,7 @@ impl SimpleState for CustomShaderState {
     fn handle_event(&mut self, data: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         match &event {
             StateEvent::Window(event) => {
-                if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                if is_close_requested(event) || is_key_down(event, VirtualKeyCode::Escape) {
                     Trans::Quit
                 } else {
                     Trans::None

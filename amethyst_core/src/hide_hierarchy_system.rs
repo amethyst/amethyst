@@ -70,7 +70,10 @@ impl System for HideHierarchySystem {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::transform::{MissingPreviousParentSystem, Parent, ParentUpdateSystem, Transform};
+    use crate::{
+        ecs::*,
+        transform::{MissingPreviousParentSystem, Parent, ParentUpdateSystem, Transform},
+    };
 
     #[test]
     fn should_not_add_hidden_to_child_if_not_propagated() {
@@ -98,7 +101,7 @@ mod test {
 
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(parent)
@@ -107,7 +110,7 @@ mod test {
                 .is_err()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e1)
@@ -116,7 +119,7 @@ mod test {
                 .is_err()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e2)
@@ -132,7 +135,7 @@ mod test {
 
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(parent)
@@ -143,7 +146,7 @@ mod test {
 
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e1)
@@ -152,7 +155,7 @@ mod test {
                 .is_err()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e2)
@@ -190,7 +193,7 @@ mod test {
 
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(parent)
@@ -199,7 +202,7 @@ mod test {
                 .is_err()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e1)
@@ -214,7 +217,7 @@ mod test {
             .add_component(HiddenPropagate::new());
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(parent)
@@ -223,7 +226,7 @@ mod test {
                 .is_ok()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e1)
@@ -238,7 +241,7 @@ mod test {
             .remove_component::<HiddenPropagate>();
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(parent)
@@ -247,7 +250,7 @@ mod test {
                 .is_err()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e1)
@@ -283,7 +286,7 @@ mod test {
 
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(parent)
@@ -292,7 +295,7 @@ mod test {
                 .is_err()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e1)
@@ -301,7 +304,7 @@ mod test {
                 .is_err()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e2)
@@ -316,7 +319,7 @@ mod test {
 
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(parent)
@@ -327,7 +330,7 @@ mod test {
 
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e1)
@@ -336,7 +339,7 @@ mod test {
                 .is_ok()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e2)
@@ -350,7 +353,7 @@ mod test {
             .unwrap()
             .remove_component::<HiddenPropagate>();
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(parent)
@@ -361,7 +364,7 @@ mod test {
 
         schedule.execute(&mut world, &mut resources);
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e1)
@@ -370,7 +373,7 @@ mod test {
                 .is_err()
         );
 
-        assert_eq!(
+        assert!(
             true,
             world
                 .entry(e2)

@@ -120,7 +120,7 @@ impl SimpleState for ExampleState {
                 }
             }
         }
-        buffer.flush(data.world);
+        buffer.flush(data.world, data.resources);
 
         Trans::None
     }

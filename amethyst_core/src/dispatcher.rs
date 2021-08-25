@@ -300,6 +300,6 @@ pub mod tests {
 
         dispatcher.execute(&mut world, &mut resources);
 
-        assert_eq!(resources.get::<MyResource>().unwrap().0, true);
+        assert!(resources.get::<MyResource>().unwrap().0, true);
     }
 }

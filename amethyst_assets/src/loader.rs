@@ -167,7 +167,7 @@ impl DefaultLoader {
             log::info!("Using RpcIO");
             let rpc_io = connect_string
                 .and_then(|cs| RpcIO::new(cs).ok())
-                .unwrap_or_else(RpcIO::default);
+                .unwrap_or_default();
             Box::new(rpc_io)
         } else {
             log::info!("Using PackfileIO");

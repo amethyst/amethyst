@@ -35,7 +35,9 @@ impl SimpleState for GltfExample {
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let StateData { world, .. } = data;
+        let StateData {
+            world, resources, ..
+        } = data;
 
         let mut query = <(
             Entity,
@@ -67,7 +69,7 @@ impl SimpleState for GltfExample {
                 }
             }
         }
-        buffer.flush(world);
+        buffer.flush(world, resources);
 
         Trans::None
     }
