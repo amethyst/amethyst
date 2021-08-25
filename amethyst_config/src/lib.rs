@@ -221,8 +221,8 @@ where
             ConfigFormat::Ron => {
                 ron::de::Deserializer::from_bytes(bytes)
                     .and_then(|mut de| {
-                        let val = T::deserialize(&mut de)?;
                         de.end()?;
+                        let val = T::deserialize(&mut de)?;
                         Ok(val)
                     })
                     .map_err(ConfigError::Parser)
