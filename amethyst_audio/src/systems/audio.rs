@@ -48,20 +48,23 @@ impl System for AudioSystem {
                         #[cfg(feature = "profiler")]
                         profile_scope!("audio_system");
                         // Process emitters and listener.
-                        if let Some((entity, listener)) = if let Some(entity) = select_listener.0 {
+                        if let Some((entity, listener)) = select_listener.0.map_or_else(
+                            // Select the first available AudioListener by default
+                            || {
+                                q_audio_listener
+                                    .iter(world)
+                                    .next()
+                                    .map(|(entity, audio_listener)| (*entity, audio_listener))
+                            },
                             // Find entity referred by SelectedListener resource
-                            world
-                                .entry_ref(entity)
-                                .ok()
-                                .and_then(|entry| entry.into_component::<AudioListener>().ok())
-                                .map(|audio_listener| (entity, audio_listener))
-                        } else {
-                            // Otherwise, select the first available AudioListener
-                            q_audio_listener
-                                .iter(world)
-                                .next()
-                                .map(|(entity, audio_listener)| (*entity, audio_listener))
-                        } {
+                            |entity| {
+                                world
+                                    .entry_ref(entity)
+                                    .ok()
+                                    .and_then(|entry| entry.into_component::<AudioListener>().ok())
+                                    .map(|audio_listener| (entity, audio_listener))
+                            },
+                        ) {
                             if let Some(listener_transform) = world
                                 .entry_ref(entity)
                                 .ok()

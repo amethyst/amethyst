@@ -181,7 +181,7 @@ mod test {
     fn should_not_pause_if_resource_match_value() {
         let mut resources = Resources::default();
         let mut world = World::default();
-        resources.insert(0u32);
+        resources.insert(0_u32);
         resources.insert(CurrentState::Enabled);
 
         let mut dispatcher = DispatcherBuilder::default()
@@ -200,7 +200,7 @@ mod test {
     fn should_pause_if_resource_does_not_match_value() {
         let mut resources = Resources::default();
         let mut world = World::default();
-        resources.insert(0u32);
+        resources.insert(0_u32);
         resources.insert(CurrentState::Enabled);
 
         let mut dispatcher = DispatcherBuilder::default()

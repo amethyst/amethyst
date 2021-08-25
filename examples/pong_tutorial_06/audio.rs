@@ -69,7 +69,7 @@ pub fn initialize_audio(_: &mut World, resources: &mut Resources) {
 
 /// Plays the bounce sound when a ball hits a side or a paddle.
 pub fn play_bounce(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
-    if let Some(ref output) = output.as_ref() {
+    if let Some(output) = output.as_ref() {
         if let Some(sound) = storage.get(&sounds.bounce_sfx) {
             output.play_once(sound, 1.0);
         }

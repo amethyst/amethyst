@@ -97,11 +97,11 @@ impl SimpleState for Example {
         event: StateEvent,
     ) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+            if is_close_requested(event) || is_key_down(event, VirtualKeyCode::Escape) {
                 return Trans::Quit;
             };
 
-            match get_key(&event) {
+            match get_key(event) {
                 Some((VirtualKeyCode::T, ElementState::Pressed)) => {
                     self.transparent = !self.transparent;
                     info!(
@@ -140,14 +140,14 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::Up, ElementState::Pressed)) => {
                     self.camera_z += 1.0;
                     info!("Camera Z position is: {}", self.camera_z);
-                    self.adjust_camera(&mut data.world, &data.resources);
+                    self.adjust_camera(&mut data.world, data.resources);
                     self.redraw_sprites(&mut data.world);
                 }
 
                 Some((VirtualKeyCode::Down, ElementState::Pressed)) => {
                     self.camera_z -= 1.0;
                     info!("Camera Z position is: {}", self.camera_z);
-                    self.adjust_camera(&mut data.world, &data.resources);
+                    self.adjust_camera(&mut data.world, data.resources);
                     self.redraw_sprites(&mut data.world);
                 }
 
@@ -156,14 +156,14 @@ impl SimpleState for Example {
                         self.camera_depth_vision -= 1.0;
                         info!("Camera depth vision: {}", self.camera_depth_vision);
                     }
-                    self.adjust_camera(&mut data.world, &data.resources);
+                    self.adjust_camera(&mut data.world, data.resources);
                     self.redraw_sprites(&mut data.world);
                 }
 
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
                     self.camera_depth_vision += 1.0;
                     info!("Camera depth vision: {}", self.camera_depth_vision);
-                    self.adjust_camera(&mut data.world, &data.resources);
+                    self.adjust_camera(&mut data.world, data.resources);
                     self.redraw_sprites(&mut data.world);
                 }
 
@@ -278,7 +278,7 @@ impl Example {
             );
 
             // This combines multiple `Transform`ations.
-            sprite_transform.concat(&common_transform);
+            sprite_transform.concat(common_transform);
 
             let sprite_render = SpriteRender::new(sprite_sheet_handle.clone(), i as usize);
 

@@ -38,7 +38,7 @@ mod test {
                 assert_eq!(2, doc.textures().len());
             }
             Err(e) => {
-                panic!("Error during gltf import {:?}", e)
+                panic!("Error during gltf import {:?}", e);
             }
         }
     }
