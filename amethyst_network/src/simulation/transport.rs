@@ -197,9 +197,9 @@ mod tests {
     #[test]
     fn test_has_messages() {
         let mut resource = create_test_resource();
-        assert_eq!(resource.has_messages(), false);
+        assert!(resource.has_messages(), false);
         resource.send_immediate("127.0.0.1:3000".parse().unwrap(), test_payload());
-        assert_eq!(resource.has_messages(), true);
+        assert!(resource.has_messages(), true);
     }
 
     #[test]
@@ -270,7 +270,9 @@ mod tests {
 
     #[test]
     fn test_send_with_requirements() {
-        use DeliveryRequirement::*;
+        use DeliveryRequirement::{
+            Default, Reliable, ReliableOrdered, ReliableSequenced, Unreliable, UnreliableSequenced,
+        };
         let mut resource = create_test_resource();
         let addr = "127.0.0.1:3000".parse().unwrap();
 
@@ -283,7 +285,7 @@ mod tests {
             Default,
         ];
 
-        for req in requirements.iter().cloned() {
+        for req in requirements.iter().copied() {
             resource.send_with_requirements(addr, test_payload(), req, UrgencyRequirement::OnTick);
         }
 

@@ -65,7 +65,7 @@ pub(crate) fn sampler_interpolation<T: AnimationSampling + std::fmt::Debug>(
                 }
 
                 Some(BlendMethod::Linear) => {
-                    if let Some(p) = linear_blend::<T>(channel, &inner) {
+                    if let Some(p) = linear_blend::<T>(channel, inner) {
                         comp.apply_sample(channel, &p, commands);
                     }
                 }

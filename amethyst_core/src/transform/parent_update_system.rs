@@ -140,7 +140,7 @@ impl System for ParentUpdateSystem {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::transform::MissingPreviousParentSystem;
+    use crate::{ecs::*, transform::MissingPreviousParentSystem};
 
     #[test]
     fn correct_children() {

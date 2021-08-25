@@ -772,7 +772,7 @@ mod tests {
             bindings
                 .insert_action_binding(
                     TEST_ACTION,
-                    [Button::Key(VirtualKeyCode::C),].iter().cloned(),
+                    [Button::Key(VirtualKeyCode::C),].iter().copied(),
                 )
                 .unwrap_err(),
             BindingError::ButtonBoundToAxis(

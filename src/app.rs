@@ -345,12 +345,12 @@ where
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
 
-            while {
-                self.resources
-                    .get_mut::<Time>()
-                    .unwrap()
-                    .step_fixed_update()
-            } {
+            while self
+                .resources
+                .get_mut::<Time>()
+                .unwrap()
+                .step_fixed_update()
+            {
                 self.states.fixed_update(StateData::new(
                     &mut self.world,
                     &mut self.resources,
