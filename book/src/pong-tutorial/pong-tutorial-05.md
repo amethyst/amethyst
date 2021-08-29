@@ -314,8 +314,7 @@ our `UiText` components).
 
 Next, we create a transform for each of our two scores by giving them a unique
 id (`P1` and `P2`), a UI `Anchor` at the top middle of our window, and then
-adjust their global `x`, `y`, and `z` coordinates, `width`, `height`, and
-`tab-order`.
+adjust their global `x`, `y`, and `z` coordinates, along with `width` and `height`.
 
 After creating the `font` and `transform`s, we'll create an `Entity` in the
 world for each of our players' scores, with their `transform` and a `UiText`
