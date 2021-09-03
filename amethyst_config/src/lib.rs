@@ -219,10 +219,11 @@ where
     fn load_bytes_format(format: ConfigFormat, bytes: &[u8]) -> Result<Self, ConfigError> {
         match format {
             ConfigFormat::Ron => {
+                #[allow(clippy::shadow_unrelated)]
                 ron::de::Deserializer::from_bytes(bytes)
                     .and_then(|mut de| {
-                        de.end()?;
                         let val = T::deserialize(&mut de)?;
+                        de.end()?;
                         Ok(val)
                     })
                     .map_err(ConfigError::Parser)
