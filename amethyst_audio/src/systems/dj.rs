@@ -11,10 +11,7 @@ use amethyst_core::ecs::{
 };
 use amethyst_error::Error;
 
-use crate::{
-    output::{init_output, Output},
-    source::{Source, SourceHandle},
-};
+use crate::{Sink, output::{init_output, Output}, source::{Source, SourceHandle}};
 
 /// Bundle for [`DjSystem`]; initializes output and loads necessary resources.
 ///
@@ -60,6 +57,9 @@ where
         if let Ok((stream, output)) = init_output() {
             resources.get_or_insert::<OutputStream>(stream);
             resources.get_or_insert::<Output>(output);
+            
+            let dj_sink = resources.get_mut::<Output>().unwrap().try_spawn_sink().unwrap();
+            resources.get_or_insert::<Sink>(dj_sink);
         } else {
             warn!("The default audio device is not available, sound will not work!");
         }
@@ -93,18 +93,18 @@ where
         Box::new(
             SystemBuilder::new("DjSystem")
                 .read_resource::<AssetStorage<Source>>()
-                .read_resource::<Output>()
+                .read_resource::<Sink>()
                 .write_resource::<R>()
-                .build(move |_commands, _world, (storage, output, res), _queries| {
+                .build(move |_commands, _world, (storage, sink, res), _queries| {
                     #[cfg(feature = "profiler")]
                     profile_scope!("dj_system");
-
-                    let sink = output.try_spawn_sink().unwrap();
 
                     if sink.empty() {
                         if let Some(source) = (self.f)(res).and_then(|h| storage.get(&h)) {
                             if let Err(e) = sink.append(source, 1.0) {
                                 error!("DJ cannot append source to sink. {}", e);
+                            } else {
+                                sink.play();
                             }
                         }
                     }
