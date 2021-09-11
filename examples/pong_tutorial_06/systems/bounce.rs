@@ -1,6 +1,6 @@
 use amethyst::{
     assets::AssetStorage,
-    audio::{output::OutputWrapper, Source},
+    audio::{output::Output, Source},
     core::transform::Transform,
     ecs::SystemBuilder,
     prelude::*,
@@ -19,7 +19,7 @@ impl System for BounceSystem {
             SystemBuilder::new("BounceSystem")
                 .read_resource::<Sounds>()
                 .read_resource::<AssetStorage<Source>>()
-                .read_resource::<OutputWrapper>()
+                .read_resource::<Output>()
                 .with_query(<(&mut Ball, &Transform)>::query())
                 .with_query(<&Paddle>::query())
                 .read_component::<Paddle>()
@@ -28,7 +28,7 @@ impl System for BounceSystem {
                 .build(
                     move |_commands,
                           world,
-                          (sounds, storage, output_wrapper),
+                          (sounds, storage, output),
                           (query_balls, query_paddles)| {
                         let (mut ball_world, remaining) = world.split_for_query(query_balls);
 
@@ -65,7 +65,7 @@ impl System for BounceSystem {
                                     || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
                                 {
                                     println!("Bounce!");
-                                    play_bounce(sounds, storage, output_wrapper.output.as_ref());
+                                    play_bounce(sounds, storage, output);
                                     ball.velocity[0] = -ball.velocity[0];
                                 }
                             }

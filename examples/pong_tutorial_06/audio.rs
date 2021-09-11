@@ -3,7 +3,7 @@ use std::{iter::Cycle, vec::IntoIter};
 use amethyst::{
     assets::{AssetStorage, DefaultLoader, Loader},
     audio::{
-        output::{Output, OutputWrapper},
+        output::Output,
         Source, SourceHandle,
     },
     ecs::{Resources, World},
@@ -36,15 +36,6 @@ pub fn initialize_audio(_: &mut World, resources: &mut Resources) {
     let (sound_effects, music) = {
         let loader = resources.get::<DefaultLoader>().unwrap();
 
-        // Music is a bit loud, reduce the volume.
-        resources
-            .get_mut::<OutputWrapper>()
-            .unwrap()
-            .audio_sink
-            .as_mut()
-            .unwrap()
-            .set_volume(0.25);
-
         let music = AUDIO_MUSIC
             .iter()
             .map(|file| load_audio_track(&loader, file))
@@ -68,10 +59,8 @@ pub fn initialize_audio(_: &mut World, resources: &mut Resources) {
 }
 
 /// Plays the bounce sound when a ball hits a side or a paddle.
-pub fn play_bounce(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
-    if let Some(output) = output.as_ref() {
-        if let Some(sound) = storage.get(&sounds.bounce_sfx) {
-            output.play_once(sound, 1.0);
-        }
+pub fn play_bounce(sounds: &Sounds, storage: &AssetStorage<Source>, output: &Output) {
+    if let Some(sound) = storage.get(&sounds.bounce_sfx) {
+        output.play_once(sound, 1.0);
     }
 }
