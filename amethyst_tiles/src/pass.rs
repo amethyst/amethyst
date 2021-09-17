@@ -362,11 +362,17 @@ impl<B: Backend, T: Tile, E: CoordinateEncoder, Z: DrawTiles2DBounds> RenderGrou
                         .iter()
                         .filter_map(|coord| {
                             let tile = tile_map.get(&coord).unwrap();
-                            if let Some(sprite_number) = tile.sprite(coord, aux.world) {
+                            if let Some(sprite_number) =
+                                tile.sprite(coord, aux.world, aux.resources)
+                            {
                                 let batch_data = TileArgs::from_data(
                                     &sprites,
                                     sprite_number,
-                                    Some(&TintComponent(tile.tint(coord, aux.world))),
+                                    Some(&TintComponent(tile.tint(
+                                        coord,
+                                        aux.world,
+                                        aux.resources,
+                                    ))),
                                     &coord,
                                 );
 
@@ -490,12 +496,12 @@ fn build_tiles_pipeline<B: Backend>(
             .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
 
-    let mut shaders = SHADERS.build(factory, Default::default()).map_err(|e| {
-        match e {
+    let mut shaders = SHADERS
+        .build(factory, Default::default())
+        .map_err(|e| match e {
             hal::device::ShaderError::OutOfMemory(oom) => oom.into(),
             _ => pso::CreationError::Other,
-        }
-    })?;
+        })?;
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
