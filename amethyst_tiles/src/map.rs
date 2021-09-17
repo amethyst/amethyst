@@ -2,7 +2,7 @@
 
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::{
-    ecs::world::World,
+    ecs::{Resources, World},
     math::{Matrix4, Point3, Vector3},
     transform::Transform,
 };
@@ -14,12 +14,17 @@ use crate::{CoordinateEncoder, TileOutOfBoundsError};
 /// which must implement this trait to provide the `RenderPass` with the appropriate sprite and tint values.
 pub trait Tile: 'static + Clone + Send + Sync + Default {
     /// Takes an immutable reference to world to process this sprite and return its sprite.
-    fn sprite(&self, coordinates: Point3<u32>, world: &World) -> Option<usize> {
+    fn sprite(
+        &self,
+        coordinates: Point3<u32>,
+        world: &World,
+        resources: &Resources,
+    ) -> Option<usize> {
         None
     }
 
     /// Takes an immutable reference to world to process this sprite and return its tint.
-    fn tint(&self, coordinates: Point3<u32>, world: &World) -> Srgba {
+    fn tint(&self, coordinates: Point3<u32>, world: &World, resources: &Resources) -> Srgba {
         Srgba::new(1.0, 1.0, 1.0, 1.0)
     }
 }
