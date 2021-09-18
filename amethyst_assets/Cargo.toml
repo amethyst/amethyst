@@ -51,8 +51,8 @@ uuid = { version = "0.8", features = ["v4"] }
 bincode = "1.3"
 type-uuid = "0.1"
 futures-executor = { version = "0.3", default-features = false }
-legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "8565883493aaf6044e210ffe2e72eec519d46369" }
-prefab-format = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "8565883493aaf6044e210ffe2e72eec519d46369" }
+legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "49ba008a3b398033725726c641b96cd48b5a1080" }
+prefab-format = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "49ba008a3b398033725726c641b96cd48b5a1080" }
 encoding_rs_io = "0.1"
 serde-diff = "0.4"
 structopt = { version = "0.3", default-features = false, optional = true }

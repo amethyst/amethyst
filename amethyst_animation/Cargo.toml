@@ -31,8 +31,7 @@ thread_profiler = { version = "0.3", optional = true }
 alga = "0.9.3"
 type-uuid = "0.1.2"
 uuid = "0.8.2"
-legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "8565883493aaf6044e210ffe2e72eec519d46369" }
-legion = "0.4"
+legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "49ba008a3b398033725726c641b96cd48b5a1080" }
 
 [dev-dependencies]
 amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
