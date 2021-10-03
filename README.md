@@ -4,6 +4,8 @@
 [![Join us on Discord][s4]][di] [![Community forum][s5]][ds] [![Reddit][s7]][rd]
 [![Code coverage][s8]][cc] ![Lines of Code][s6]
 
+![Inactively Maintained](https://img.shields.io/badge/Maintenance%20Level-Inactively%20Maintained-yellowgreen.svg)
+
 ## What is Amethyst?
 
 Amethyst is a data-driven and data-oriented game engine aiming to be fast and as configurable as possible.
