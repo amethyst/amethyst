@@ -2,7 +2,9 @@
 
 [![Build Status][s1]][ac] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li]
 [![Join us on Discord][s4]][di] [![Community forum][s5]][ds] [![Reddit][s7]][rd]
-[![Code coverage][s8]][cc] ![Lines of Code][s6] ![Inactively Maintained](https://img.shields.io/badge/Maintenance%20Level-Inactively%20Maintained-yellowgreen.svg)
+[![Code coverage][s8]][cc] ![Lines of Code][s6]
+
+![Inactively Maintained](https://img.shields.io/badge/Maintenance%20Level-Inactively%20Maintained-yellowgreen.svg)
 
 ## What is Amethyst?
 
