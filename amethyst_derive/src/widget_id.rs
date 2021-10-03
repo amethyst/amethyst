@@ -20,7 +20,7 @@ pub fn impl_widget_id(ast: &DeriveInput) -> TokenStream {
                 .collect::<Vec<Ident>>();
 
             if maybe_marked_default.len() > 1 {
-                panic!("Only 1 variant can be marked as default widget id");
+                assert!(!maybe_marked_default.len() > 1, "Only 1 variant can be marked as default widget id");
             }
 
             if maybe_marked_default.is_empty() {

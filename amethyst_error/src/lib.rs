@@ -291,10 +291,8 @@ impl<'a> Iterator for Causes<'a> {
 /// ```
 /// use amethyst_error::format_err;
 ///
-/// fn main() {
 ///     let err = format_err!("number: {}", 42);
 ///     assert_eq!("number: 42", err.to_string());
-/// }
 /// ```
 #[macro_export]
 macro_rules! format_err {
