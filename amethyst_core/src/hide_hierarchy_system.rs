@@ -102,7 +102,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(parent)
                 .unwrap()
@@ -111,7 +110,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e1)
                 .unwrap()
@@ -120,7 +118,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e2)
                 .unwrap()
@@ -136,7 +133,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(parent)
                 .unwrap()
@@ -147,7 +143,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(e1)
                 .unwrap()
@@ -156,7 +151,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e2)
                 .unwrap()
@@ -194,7 +188,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(parent)
                 .unwrap()
@@ -203,7 +196,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e1)
                 .unwrap()
@@ -218,7 +210,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(parent)
                 .unwrap()
@@ -227,7 +218,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e1)
                 .unwrap()
@@ -242,7 +232,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(parent)
                 .unwrap()
@@ -251,7 +240,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e1)
                 .unwrap()
@@ -287,7 +275,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(parent)
                 .unwrap()
@@ -296,7 +283,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e1)
                 .unwrap()
@@ -305,7 +291,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e2)
                 .unwrap()
@@ -320,7 +305,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(parent)
                 .unwrap()
@@ -331,7 +315,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(e1)
                 .unwrap()
@@ -340,7 +323,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e2)
                 .unwrap()
@@ -354,7 +336,6 @@ mod test {
             .remove_component::<HiddenPropagate>();
 
         assert!(
-            true,
             world
                 .entry(parent)
                 .unwrap()
@@ -365,7 +346,6 @@ mod test {
         schedule.execute(&mut world, &mut resources);
 
         assert!(
-            true,
             world
                 .entry(e1)
                 .unwrap()
@@ -374,7 +354,6 @@ mod test {
         );
 
         assert!(
-            true,
             world
                 .entry(e2)
                 .unwrap()

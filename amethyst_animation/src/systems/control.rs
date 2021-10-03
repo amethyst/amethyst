@@ -188,7 +188,7 @@ where
                                         &mut def.control,
                                         hierarchy,
                                         &*sampler_storage,
-                                        &mut buffer,
+                                        buffer,
                                         &mut remove,
                                         &mut next_id,
                                     )
