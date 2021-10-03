@@ -3,6 +3,7 @@ use std::{collections::HashSet, time::Duration};
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{system, CommandBuffer},
+    legion,
     Time,
 };
 use log::debug;

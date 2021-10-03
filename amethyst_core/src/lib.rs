@@ -53,6 +53,9 @@ pub mod ecs {
     pub use crate::dispatcher::{Dispatcher, DispatcherBuilder, System, SystemBundle};
 }
 
+/// Re-export under name legion for proc macros
+pub use ecs as legion;
+
 /// Dispatcher module.
 pub mod dispatcher;
 

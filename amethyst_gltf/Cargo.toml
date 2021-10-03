@@ -24,7 +24,7 @@ err-derive = "0.3.0"
 base64 = "0.13"
 fnv = "1"
 gltf = { version = "0.16", features = ["KHR_lights_punctual"] }
-legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "8565883493aaf6044e210ffe2e72eec519d46369" }
+legion-prefab = { version = "0.1", git = "https://github.com/amethyst/prefab", rev = "49ba008a3b398033725726c641b96cd48b5a1080" }
 hibitset = { version = "0.6.3", features = ["parallel"] }
 log = "0.4"
 mikktspace = "0.2.0"

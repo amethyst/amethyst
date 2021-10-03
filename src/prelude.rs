@@ -5,6 +5,7 @@ pub use crate::{
     app::{Application, ApplicationBuilder, CoreApplication},
     config::Config,
     ecs::*,
+    ecs as legion,
     game_data::{DataInit, GameData},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, Trans, TransEvent,
