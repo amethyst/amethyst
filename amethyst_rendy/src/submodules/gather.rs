@@ -73,7 +73,7 @@ impl CameraGatherer {
 
         let camera =
             camera_entity.and_then(|e| world.entry_ref(e).unwrap().into_component::<Camera>().ok());
-        let camera = camera.as_deref().unwrap_or(&defcam);
+        let camera = camera.unwrap_or(&defcam);
 
         let transform = camera_entity.and_then(|e| {
             world
@@ -82,7 +82,7 @@ impl CameraGatherer {
                 .into_component::<Transform>()
                 .ok()
         });
-        let transform = transform.as_deref().unwrap_or(&identity);
+        let transform = transform.unwrap_or(&identity);
 
         let camera_position =
             convert::<_, Vector3<f32>>(transform.global_matrix().column(3).xyz()).into_pod();

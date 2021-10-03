@@ -107,7 +107,7 @@ impl System for AudioSystem {
                                             if let Some(mut picker) =
                                                 replace(&mut audio_emitter.picker, None)
                                             {
-                                                if picker(&mut audio_emitter) {
+                                                if picker(audio_emitter) {
                                                     audio_emitter.picker = Some(picker);
                                                 }
                                             }

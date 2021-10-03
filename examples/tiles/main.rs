@@ -71,7 +71,7 @@ fn init_player(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity 
 #[derive(Default, Clone)]
 struct ExampleTile;
 impl Tile for ExampleTile {
-    fn sprite(&self, _: Point3<u32>, _: &World) -> Option<usize> {
+    fn sprite(&self, _: Point3<u32>, _: &World, _: &Resources) -> Option<usize> {
         Some(1)
     }
 }

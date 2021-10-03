@@ -31,7 +31,7 @@ thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
 amethyst = { path = "../", version = "0.16.0", features = ["renderer"] }
-approx = "0.5"
+approx = "0.4"
 
 [features]
 profiler = ["thread_profiler/thread_profiler"]

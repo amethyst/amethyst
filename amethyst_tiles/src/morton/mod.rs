@@ -153,11 +153,7 @@ impl CoordinateEncoder for MortonEncoder2D {
         #[cfg(debug_assertions)]
         {
             let check = u32::max_value() / 3;
-            if x > check || y > check || z > check {
-                panic!(
-                    "These provided coordinates are outside of the encodable coordinate range for a u32"
-                );
-            }
+            assert!(x <= check && y <= check && z <= check, "These provided coordinates are outside of the encodable coordinate range for a u32");
         }
 
         let morton = (x.pdep(0x5555_5555) | y.pdep(0xAAAA_AAAA)) + (z * self.len);

@@ -342,7 +342,7 @@ impl<T: SimpleState> State<GameData, StateEvent> for T {
     /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, mut data: StateData<'_, GameData>) -> SimpleTrans {
         let r = self.update(&mut data);
-        data.data.update(&mut data.world, &mut data.resources);
+        data.data.update(data.world, data.resources);
         r
     }
 

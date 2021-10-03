@@ -364,6 +364,7 @@ fn new_backtrace() -> Option<Backtrace> {
 #[cfg(test)]
 mod tests {
     use super::{Error, ResultExt};
+    use std::io;
 
     #[test]
     fn test_error_from_string() {
@@ -391,6 +392,16 @@ mod tests {
         assert_eq!("wrapped", e.source().expect("no source").to_string());
     }
 
+
+    fn foo() -> Result<u32, io::Error> {
+        Err(io::Error::new(io::ErrorKind::Other, "foo"))
+    }
+
+    fn bar() -> Result<u32, Error> {
+        let v = foo().with_context(|_| Error::from_string("bar"))?;
+        Ok(v + 1)
+    }
+
     #[test]
     fn test_sources() {
         use std::io;
@@ -401,25 +412,15 @@ mod tests {
         let res = Result::Err::<(), Error>(a).with_context(|_| Error::from_string("top"));
         let e = res.expect_err("no error");
 
-        let messages = e.causes().map(|e| e.to_string()).collect::<Vec<_>>();
+        let messages = e.causes().map(std::string::ToString::to_string).collect::<Vec<_>>();
         assert_eq!(messages, vec!["top", "wrapped"]);
     }
-
-    #[test]
     fn test_try_compat() {
+
         use std::io;
 
-        fn foo() -> Result<u32, io::Error> {
-            Err(io::Error::new(io::ErrorKind::Other, "foo"))
-        }
-
-        fn bar() -> Result<u32, Error> {
-            let v = foo().with_context(|_| Error::from_string("bar"))?;
-            Ok(v + 1)
-        }
-
         let e = bar().expect_err("no error");
-        let messages = e.causes().map(|e| e.to_string()).collect::<Vec<_>>();
+        let messages = e.causes().map(std::string::ToString::to_string).collect::<Vec<_>>();
         assert_eq!(messages, vec!["bar", "foo"]);
     }
 
@@ -431,7 +432,14 @@ mod tests {
 
         let e = e.with_source(Error::from_string("bar"));
         assert_eq!(e.to_string(), "foo");
-        assert_eq!(e.source().map(|e| e.to_string()), Some(String::from("bar")));
+        assert_eq!(e.source().map(std::string::ToString::to_string), Some(String::from("bar")));
+    }
+
+    #[allow(warnings)]
+    #[inline(never)]
+    #[no_mangle]
+    fn a_really_unique_name_42() -> Error {
+        Error::from_string("an error")
     }
 
     // Note: all backtrace tests have to be in the same test case since they
@@ -444,20 +452,13 @@ mod tests {
 
         BACKTRACE_STATUS.store(2, atomic::Ordering::Relaxed);
 
-        #[allow(warnings)]
-        #[inline(never)]
-        #[no_mangle]
-        fn a_really_unique_name_42() -> Error {
-            Error::from_string("an error")
-        }
-
         let e = a_really_unique_name_42();
         let bt = e.backtrace().expect("a backtrace");
 
         let frame_names = bt
             .frames()
             .iter()
-            .flat_map(|f| f.symbols().iter().flat_map(|s| s.name()))
+            .flat_map(|f| f.symbols().iter().filter_map(backtrace::BacktraceSymbol::name))
             .map(|n| n.to_string())
             .collect::<Vec<_>>();
 

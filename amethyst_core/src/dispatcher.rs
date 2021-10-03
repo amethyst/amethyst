@@ -225,6 +225,7 @@ impl Dispatcher {
 #[cfg(test)]
 pub mod tests {
     use super::*;
+    use legion::SystemBuilder;
 
     struct MyResource(bool);
 

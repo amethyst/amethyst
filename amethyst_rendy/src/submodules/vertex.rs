@@ -158,7 +158,7 @@ impl<B: Backend, V: VertexDataBufferType, T: 'static> DynamicVertexData<B, V, T>
 
             iter.into_iter().for_each(|data| {
                 let data_slice = util::slice_as_bytes(data.as_ref());
-                let tmp = std::mem::replace(&mut slice, &mut []);
+                let tmp = std::mem::take(&mut slice);
                 let (dst_slice, rest) = tmp.split_at_mut(data_slice.len());
                 dst_slice.copy_from_slice(data_slice);
                 slice = rest;
