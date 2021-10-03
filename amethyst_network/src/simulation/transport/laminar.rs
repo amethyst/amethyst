@@ -182,14 +182,9 @@ impl System for LaminarNetworkRecvSystem {
 }
 
 /// Resource that owns the Laminar socket.
+#[derive(Default)]
 pub struct LaminarSocketResource {
     socket: Option<LaminarSocket>,
-}
-
-impl Default for LaminarSocketResource {
-    fn default() -> Self {
-        Self { socket: None }
-    }
 }
 
 impl LaminarSocketResource {
