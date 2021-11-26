@@ -197,9 +197,9 @@ mod tests {
     #[test]
     fn test_has_messages() {
         let mut resource = create_test_resource();
-        assert!(resource.has_messages(), false);
+        assert!(!resource.has_messages());
         resource.send_immediate("127.0.0.1:3000".parse().unwrap(), test_payload());
-        assert!(resource.has_messages(), true);
+        assert!(resource.has_messages());
     }
 
     #[test]

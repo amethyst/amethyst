@@ -174,9 +174,9 @@ mod tests {
         for i in 1..100 {
             // every second frame (even) should return true
             if i % 2 == 0 {
-                assert!(time.should_send_message(i), true);
+                assert!(time.should_send_message(i));
             } else {
-                assert!(time.should_send_message(i), false);
+                assert!(!time.should_send_message(i));
             }
         }
     }

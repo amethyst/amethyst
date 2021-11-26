@@ -55,8 +55,7 @@ mod test {
                 .entry(e1)
                 .unwrap()
                 .get_component::<PreviousParent>()
-                .is_ok(),
-            false
+                .is_err(),
         );
 
         assert!(
@@ -65,7 +64,6 @@ mod test {
                 .unwrap()
                 .get_component::<PreviousParent>()
                 .is_ok(),
-            true
         );
     }
 }
