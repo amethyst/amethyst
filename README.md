@@ -4,7 +4,15 @@
 [![Join us on Discord][s4]][di] [![Community forum][s5]][ds] [![Reddit][s7]][rd]
 [![Code coverage][s8]][cc] ![Lines of Code][s6]
 
+# Inactively Maintained!
 ![Inactively Maintained](https://img.shields.io/badge/Maintenance%20Level-Inactively%20Maintained-yellowgreen.svg)
+
+The Amethyst Game Engine has halted its development. Read this post about it:
+https://amethyst.rs/posts/amethyst--starting-fresh
+
+For 0.15.3 and older, the following Rust version has to be used for compiles to work.
+
+`rustup override set 1.47 `
 
 ## What is Amethyst?
 
